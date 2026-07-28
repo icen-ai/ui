@@ -2,7 +2,7 @@
 import Docs from '../../layouts/Docs.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import PmInstall from '../../components/PmInstall.astro';
-import { COMPONENTS, type ComponentDoc } from '../../lib/components';
+import { COMPONENTS, cssFor, type ComponentDoc } from '../../lib/components';
 
 export function getStaticPaths() {
   return COMPONENTS.map((doc, i) => ({
@@ -78,6 +78,9 @@ const bootData = JSON.stringify({
   <CodeBlock code={kitCode} lang="js" />
   <p class="doc-note">也可以用脚手架直接打印引入行：</p>
   <CodeBlock code={cliCode} lang="bash" />
+  <p class="doc-note doc-note--warn">
+    Astro 项目注意：kit 入口里的 CSS import 在页面 <code>&lt;script&gt;</code> 里会被 Astro 的 client bundle 摇掉——请改在布局 frontmatter 里引 CSS（<code>import '@icen.ai/ui/components/{cssFor(doc.slug)}';</code>），JS 行为仍可走 kit。Vite SPA / webpack 项目无此问题。
+  </p>
 
   <h2 class="doc-h2">用法</h2>
   <CodeBlock code={doc.usage} lang={usageLang} />
@@ -147,6 +150,13 @@ const bootData = JSON.stringify({
 
 <style is:global>
   .doc-note { font-size: 13px; color: var(--token-text-muted); margin: 14px 0 10px; }
+  .doc-note--warn {
+    padding: 10px 14px;
+    border-left: 2px solid var(--token-warning);
+    background: color-mix(in srgb, var(--token-warning) 6%, transparent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    line-height: 1.7;
+  }
 
   .doc-pager {
     display: flex;
