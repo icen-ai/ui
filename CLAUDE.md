@@ -26,8 +26,8 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 
 ## 规模
 
-- **31 个组件 CSS**（btn/form/input/select/slider/switch/tag-input/upload/modal/popover/tooltip/menu/tabs/nav/sidebar/breadcrumb/pagination/steps/segmented/accordion/tree/carousel/charts/table/stat/card/panel/pill/empty/feedback/content/media）
-- **19 个 behaviors TS**（theme/tabs/toast/copy/input/select/slider/tag-input/upload/modal/dropdown/popover/context-menu/accordion/tree/carousel/charts/nav/sidebar）
+- **41 个组件 CSS**（含 charts 基座 + 9 个细分图表 CSS：chart-line/bar/pie/radar/heatmap/area/stack/gauge/sparkline）
+- **20 个 behaviors TS**（theme/tabs/toast/copy/input/select/slider/tag-input/upload/modal/dropdown/popover/context-menu/accordion/tree/carousel/charts[10 种图]/nav/sidebar/datatable）
 - **4 个 token 文件**：colors.css（6 预设 × 明暗）、style-profiles.css（modern/retro/terminal）、typography.css、retro-effects.css（可选）
 
 ## 发布（OIDC Trusted Publishing，已配好）
