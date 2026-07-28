@@ -1,0 +1,25 @@
+name: publish
+
+on:
+  push:
+    tags: ['v*']          # 推 tag 即发版
+  release:
+    types: [published]    # 或发 GitHub Release，等价
+
+permissions:
+  id-token: write         # OIDC，必需
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'   # npm CLI >= 11.5.1（trusted publishing 要求）
+          registry-url: 'https://registry.npmjs.org'
+      - run: bun install && bun run build
+      - run: npm publish --access public
+        # 不要设 NODE_AUTH_TOKEN！有值（哪怕是空串）会遮蔽 OIDC
