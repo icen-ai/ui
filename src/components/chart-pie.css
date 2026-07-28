@@ -1,0 +1,26 @@
+/*
+ * @icen.ai/ui — Component: chart-pie（饼/环形图专属样式）
+ * 依赖：charts.css（基座 .chart-legend）
+ *
+ * DOM 由 behaviors/charts.ts 的 renderDonut 构建：
+ *   .chart-donut > svg[viewBox="0 0 120 120"]（-90° 起笔）
+ *   .chart-donut > .chart-legend
+ */
+
+.chart-donut {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-md);
+  min-height: 150px;
+}
+.chart-donut > svg {
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+}
+.chart-donut-center {
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+  fill: var(--token-text);
+  font-weight: 600;
+}

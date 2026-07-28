@@ -1,0 +1,15 @@
+/*
+ * @icen.ai/ui — Component: chart-area（面积图专属样式）
+ * 依赖：charts.css（基座）
+ *
+ * DOM 由 behaviors/charts.ts 的 renderArea 构建：
+ *   .chart-area > svg[viewBox="0 0 360 150"]
+ * 与折线同族，但以面积填充为视觉主体（渐变更浓、描边更细）。
+ */
+
+.chart-area > svg {
+  display: block;
+  width: 100%;
+  height: 150px;
+  overflow: visible;
+}

@@ -16,8 +16,10 @@ export const SLUGS = [
   'timeline', 'desc', 'tree', 'carousel',
   // 表格
   'table', 'datatable',
-  // 图表
+  // 图表（umbrella + 细分类型，按需安装）
   'charts',
+  'chart-line', 'chart-bar', 'chart-pie', 'chart-radar', 'chart-heatmap',
+  'chart-area', 'chart-stack', 'chart-gauge', 'chart-sparkline',
   // 反馈
   'alert', 'result', 'progress', 'spinner', 'skeleton',
   // 导航
@@ -69,9 +71,19 @@ export const SLUG_EXPORTS = {
   popover: ['openPopover', 'closePopover', 'computePopoverLayout'],
   charts: [
     'renderVBar', 'renderHBar', 'renderStack', 'renderDonut', 'renderLine',
-    'renderHeatmap', 'renderSparkline', 'renderGauge',
+    'renderArea', 'renderRadar', 'renderHeatmap', 'renderSparkline', 'renderGauge',
   ],
   datatable: ['createTable'],
+  // ── 图表细分类型：仅导出该类型的渲染函数 ──
+  'chart-line': ['renderLine'],
+  'chart-bar': ['renderVBar', 'renderHBar'],
+  'chart-pie': ['renderDonut'],
+  'chart-radar': ['renderRadar'],
+  'chart-heatmap': ['renderHeatmap'],
+  'chart-area': ['renderArea'],
+  'chart-stack': ['renderStack'],
+  'chart-gauge': ['renderGauge'],
+  'chart-sparkline': ['renderSparkline'],
 };
 
 /** slug → 对应组件 CSS 文件名。 */
@@ -79,7 +91,39 @@ export function cssOf(slug) {
   return MERGED_CSS[slug] ?? `${slug}.css`;
 }
 
+/**
+ * slug → behavior 模块名（缺省同 slug）。
+ * charts 细分类型的 behavior 统一在 charts.ts，slug 与文件名不同。
+ */
+export const SLUG_BEHAVIOR = {
+  'chart-line': 'charts',
+  'chart-bar': 'charts',
+  'chart-pie': 'charts',
+  'chart-radar': 'charts',
+  'chart-heatmap': 'charts',
+  'chart-area': 'charts',
+  'chart-stack': 'charts',
+  'chart-gauge': 'charts',
+  'chart-sparkline': 'charts',
+};
+
 /** slug → kit 入口需附加引入的其他 CSS（如 datatable 右键菜单依赖 menu.css）。 */
 export const EXTRA_CSS = {
   datatable: ['menu.css'],
+  // charts umbrella：引入全部细分类型 CSS，一条 import 拿到所有图表样式
+  charts: [
+    'chart-line.css', 'chart-bar.css', 'chart-pie.css', 'chart-radar.css',
+    'chart-heatmap.css', 'chart-area.css', 'chart-stack.css',
+    'chart-gauge.css', 'chart-sparkline.css',
+  ],
+  // 图表细分类型依赖共享基座 charts.css
+  'chart-line': ['charts.css'],
+  'chart-bar': ['charts.css'],
+  'chart-pie': ['charts.css'],
+  'chart-radar': ['charts.css'],
+  'chart-heatmap': ['charts.css'],
+  'chart-area': ['charts.css'],
+  'chart-stack': ['charts.css'],
+  'chart-gauge': ['charts.css'],
+  'chart-sparkline': ['charts.css'],
 };

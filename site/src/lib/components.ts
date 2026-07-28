@@ -1124,9 +1124,9 @@ initCarousel();
   },
   {
     slug: 'charts',
-    name: '图表',
+    name: '图表总览',
     group: '图表',
-    desc: '零依赖纯 SVG/DOM 渲染（无 ECharts）：vbar / hbar / stack / donut / line / heatmap 贡献图 / sparkline / gauge 八种。完全按需——不 import 这两行，图表 JS/CSS 一个字节都不进你的包。',
+    desc: '零依赖纯 SVG/DOM 渲染（无 ECharts）——10 种图表一站式总览。实际使用时请按需安装细分类型（kit/chart-line 等），只引你需要的图表的 CSS + JS。',
     demo: `<div class="chart-grid">
   <div>
     <p class="chart-cap">垂直柱状 · 每月投稿</p>
@@ -1197,6 +1197,222 @@ on('chart-heatmap', (el) => {
   });
   renderHeatmap(el, { values, weeks: 26 });
 });`,
+  },
+  {
+    slug: 'chart-line',
+    name: '折线图',
+    group: '图表',
+    desc: '面积渐变 + 网格 + 数据点的折线趋势图。独立安装：只引这一份 CSS + renderLine。',
+    demo: `<div class="chart-grid">
+  <div style="grid-column:1/-1">
+    <p class="chart-cap">一周活跃用户趋势</p>
+    <div class="chart" id="line-demo"></div>
+  </div>
+</div>`,
+    usage: `import '@icen.ai/ui/kit/chart-line';
+import { renderLine } from '@icen.ai/ui/kit/chart-line';
+
+renderLine(el, { labels: ['周一','周二','周三','周四','周五','周六','周日'], values: [8, 14, 9, 18, 22, 16, 25] });`,
+    behaviors: ['charts'],
+    script: `const renderLine = chartsMod.renderLine;
+const el = document.getElementById('line-demo');
+if (el) renderLine(el, { labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], values: [8, 14, 9, 18, 22, 16, 25] });`,
+  },
+  {
+    slug: 'chart-bar',
+    name: '柱状图',
+    group: '图表',
+    desc: 'renderVBar 垂直柱状 + renderHBar 水平条形两种形态，同一 kit 入口。',
+    demo: `<div class="chart-grid">
+  <div>
+    <p class="chart-cap">月度投稿（垂直柱状）</p>
+    <div class="chart" id="bar-vbar"></div>
+  </div>
+  <div>
+    <p class="chart-cap">流量来源（水平条形）</p>
+    <div class="chart" id="bar-hbar"></div>
+  </div>
+</div>`,
+    usage: `import { renderVBar, renderHBar } from '@icen.ai/ui/kit/chart-bar';
+
+renderVBar(el,  { labels: ['一月','二月'], values: [12, 19] });
+renderHBar(el,  { labels: ['搜索','直接'], values: [320, 80], tone: 'success' });`,
+    behaviors: ['charts'],
+    script: `const renderVBar = chartsMod.renderVBar;
+const renderHBar = chartsMod.renderHBar;
+const on = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
+on('bar-vbar', (el) => renderVBar(el, { labels: ['一月', '二月', '三月', '四月', '五月', '六月'], values: [12, 19, 8, 24, 16, 28] }));
+on('bar-hbar', (el) => renderHBar(el, { labels: ['搜索', '推荐', '分享', '直接访问'], values: [320, 240, 160, 80], tone: 'success' }));`,
+  },
+  {
+    slug: 'chart-pie',
+    name: '饼图',
+    group: '图表',
+    desc: '环形分割图（renderDonut）+ 图例百分比。支持多段、自定义色调与格式化。',
+    demo: `<div class="chart-grid">
+  <div>
+    <p class="chart-cap">工时分布（环形）</p>
+    <div class="chart" id="pie-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderDonut } from '@icen.ai/ui/kit/chart-pie';
+
+renderDonut(el, {
+  segments: [
+    { label: '研发', value: 48 },
+    { label: '设计', value: 32, tone: 'success' },
+    { label: '测试', value: 20, tone: 'warning' },
+  ],
+});`,
+    behaviors: ['charts'],
+    script: `const renderDonut = chartsMod.renderDonut;
+const el = document.getElementById('pie-demo');
+if (el) renderDonut(el, { segments: [{ label: '研发', value: 48 }, { label: '设计', value: 32, tone: 'success' }, { label: '测试', value: 20, tone: 'warning' }] });`,
+  },
+  {
+    slug: 'chart-radar',
+    name: '雷达图',
+    group: '图表',
+    desc: 'N 轴蛛网雷达图（renderRadar），支持多系列叠加对比 + 图例。',
+    demo: `<div class="chart-grid">
+  <div>
+    <p class="chart-cap">角色能力对比</p>
+    <div class="chart" id="radar-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderRadar } from '@icen.ai/ui/kit/chart-radar';
+
+renderRadar(el, {
+  axes: ['攻击', '防御', '速度', '技巧', '魔法', '运气'],
+  series: [
+    { name: '战士', values: [9, 8, 5, 6, 2, 5] },
+    { name: '法师', values: [3, 4, 6, 7, 9, 6], tone: 'success' },
+  ],
+});`,
+    behaviors: ['charts'],
+    script: `const renderRadar = chartsMod.renderRadar;
+const el = document.getElementById('radar-demo');
+if (el) renderRadar(el, {
+  axes: ['攻击', '防御', '速度', '技巧', '魔法', '运气'],
+  series: [
+    { name: '战士', values: [9, 8, 5, 6, 2, 5] },
+    { name: '法师', values: [3, 4, 6, 7, 9, 6], tone: 'success' },
+  ],
+});`,
+  },
+  {
+    slug: 'chart-heatmap',
+    name: '热力图',
+    group: '图表',
+    desc: 'GitHub 式贡献图热力格（renderHeatmap）：7 行 × N 周，5 档色阶。支持精确日期或便捷数组。',
+    demo: `<div class="chart-grid">
+  <div style="grid-column:1/-1">
+    <p class="chart-cap">近 26 周活跃热力图</p>
+    <div class="chart" id="heatmap-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderHeatmap } from '@icen.ai/ui/kit/chart-heatmap';
+
+renderHeatmap(el, { values: 近180天数值数组, weeks: 26 });       // 便捷形态
+renderHeatmap(el, { data: [{ date: '2026-07-01', value: 5 }] }); // 精确日期形态`,
+    behaviors: ['charts'],
+    script: `const renderHeatmap = chartsMod.renderHeatmap;
+const el = document.getElementById('heatmap-demo');
+if (el) {
+  const values = Array.from({ length: 182 }, (_, i) => {
+    const base = Math.abs(Math.sin(i * 0.61)) * 7;
+    const spike = i % 17 === 0 ? 8 : 0;
+    const rest = i % 11 === 0 ? -99 : 0;
+    return Math.max(0, Math.round(base + spike + rest));
+  });
+  renderHeatmap(el, { values, weeks: 26 });
+}`,
+  },
+  {
+    slug: 'chart-area',
+    name: '面积图',
+    group: '图表',
+    desc: '以面积填充为主体的趋势图（renderArea），与折线同族但视觉更厚重。',
+    demo: `<div class="chart-grid">
+  <div style="grid-column:1/-1">
+    <p class="chart-cap">季度营收趋势（面积）</p>
+    <div class="chart" id="area-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderArea } from '@icen.ai/ui/kit/chart-area';
+
+renderArea(el, {
+  labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+  values: [120, 180, 150, 210],
+  tone: 'success',
+});`,
+    behaviors: ['charts'],
+    script: `const renderArea = chartsMod.renderArea;
+const el = document.getElementById('area-demo');
+if (el) renderArea(el, { labels: ['Q1', 'Q2', 'Q3', 'Q4'], values: [120, 180, 150, 210], tone: 'success' });`,
+  },
+  {
+    slug: 'chart-stack',
+    name: '堆叠条',
+    group: '图表',
+    desc: '100% 堆叠条形图（renderStack），展示各部分占比 + 图例。',
+    demo: `<div class="chart-grid">
+  <div style="grid-column:1/-1">
+    <p class="chart-cap">任务进度分布</p>
+    <div class="chart" id="stack-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderStack } from '@icen.ai/ui/kit/chart-stack';
+
+renderStack(el, {
+  segments: [
+    { label: '已完成', value: 45, tone: 'success' },
+    { label: '进行中', value: 30 },
+    { label: '待处理', value: 25, tone: 'warning' },
+  ],
+});`,
+    behaviors: ['charts'],
+    script: `const renderStack = chartsMod.renderStack;
+const el = document.getElementById('stack-demo');
+if (el) renderStack(el, { segments: [{ label: '已完成', value: 45, tone: 'success' }, { label: '进行中', value: 30 }, { label: '待处理', value: 25, tone: 'warning' }] });`,
+  },
+  {
+    slug: 'chart-gauge',
+    name: '仪表盘',
+    group: '图表',
+    desc: '环形单值仪表盘（renderGauge），中心显示百分比，适合 KPI 完成率。',
+    demo: `<div class="chart-grid">
+  <div>
+    <p class="chart-cap">发布完成率</p>
+    <div class="chart" id="gauge-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderGauge } from '@icen.ai/ui/kit/chart-gauge';
+
+renderGauge(el, { value: 64, label: '完成率' });`,
+    behaviors: ['charts'],
+    script: `const renderGauge = chartsMod.renderGauge;
+const el = document.getElementById('gauge-demo');
+if (el) renderGauge(el, { value: 64, label: '完成率' });`,
+  },
+  {
+    slug: 'chart-sparkline',
+    name: '迷你趋势',
+    group: '图表',
+    desc: '无轴迷你趋势线（renderSparkline），嵌入指标卡 / 表格单元格的利器。',
+    demo: `<div class="chart-grid">
+  <div>
+    <p class="chart-cap">近 14 天活跃（迷你）</p>
+    <div class="chart" id="spark-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderSparkline } from '@icen.ai/ui/kit/chart-sparkline';
+
+renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15] });`,
+    behaviors: ['charts'],
+    script: `const renderSparkline = chartsMod.renderSparkline;
+const el = document.getElementById('spark-demo');
+if (el) renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19] });`,
   },
   {
     slug: 'datatable',

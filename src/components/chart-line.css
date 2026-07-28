@@ -1,0 +1,15 @@
+/*
+ * @icen.ai/ui — Component: chart-line（折线图专属样式）
+ * 依赖：charts.css（基座）
+ *
+ * DOM 由 behaviors/charts.ts 的 renderLine 构建：
+ *   .chart-line > svg[viewBox="0 0 360 150"]
+ * 含面积渐变 + 网格线 + 数据点 + 底部 .chart-labels。
+ */
+
+.chart-line > svg {
+  display: block;
+  width: 100%;
+  height: 150px;
+  overflow: visible;
+}

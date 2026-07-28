@@ -13,6 +13,8 @@
  *   renderStack(el, { segments:[{label,value,tone?}] })   堆叠条 + 图例
  *   renderDonut(el, { segments })                         环形（SVG viewBox 120，r42 粗 14，-90° 起笔）+ 图例百分比
  *   renderLine(el,  { labels, values, tone? })            折线（SVG 360×150，面积渐变 + 4 网格线 + ≤7 轴标签）
+ *   renderArea(el,  { labels, values, tone? })            面积（与折线同族，面积渐变更浓、无数据点强调）
+ *   renderRadar(el, { axes, series })                     雷达/蛛网（N 轴 + 多系列 + 图例）
  *   renderHeatmap(el, { data | values, weeks?, tone? })   GitHub 贡献图式热力格（7 行 × N 周，5 档色阶 + 图例）
  *   renderSparkline(el, { values, tone? })                迷你趋势线（SVG 96×28，无轴，末点高亮）
  *   renderGauge(el, { value, max?, tone?, label? })       进度环（环形单值 + 中心百分比）
@@ -301,6 +303,217 @@ export function renderLine(el: HTMLElement, opts: ChartSeriesOptions): void {
 
   wrap.append(svg, labelsRow(labels.slice(-7)));
   el.appendChild(wrap);
+}
+
+/** 面积图（与折线同族，以面积填充为视觉主体） */
+export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): void {
+  if (typeof document === 'undefined') return;
+  el.textContent = '';
+  const n = Math.min(opts.labels.length, opts.values.length);
+  if (n === 0) { renderEmpty(el, opts.emptyLabel); return; }
+
+  const labels = opts.labels.slice(0, n);
+  const values = opts.values.slice(0, n);
+
+  const width = 360;
+  const height = 150;
+  const pad = 14;
+  const max = Math.max(...values, 1);
+  const tone = toneVar(opts.tone);
+
+  const points = values.map((value, i) => ({
+    x: values.length <= 1 ? width / 2 : pad + (i / (values.length - 1)) * (width - pad * 2),
+    y: height - pad - (value / max) * (height - pad * 2),
+    value,
+    label: labels[i] ?? '',
+  }));
+  const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const last = points[points.length - 1]!;
+  const first = points[0]!;
+  const area = `${line} L${last.x.toFixed(1)},${height - pad} L${first.x.toFixed(1)},${height - pad} Z`;
+  const gradientId = `icen-chart-area-${++lineGradientSeq}`;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-area';
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
+
+  const defs = svgEl('defs', {});
+  const gradient = svgEl('linearGradient', { id: gradientId, x1: '0', x2: '0', y1: '0', y2: '1' });
+  gradient.appendChild(svgEl('stop', { offset: '0%', 'stop-color': tone, 'stop-opacity': '0.5' }));
+  gradient.appendChild(svgEl('stop', { offset: '100%', 'stop-color': tone, 'stop-opacity': '0.05' }));
+  defs.appendChild(gradient);
+  svg.appendChild(defs);
+
+  for (let i = 0; i < 4; i++) {
+    const y = pad + (i * (height - pad * 2)) / 3;
+    svg.appendChild(svgEl('line', {
+      x1: String(pad), x2: String(width - pad), y1: String(y), y2: String(y),
+      stroke: 'var(--token-line-soft)', 'stroke-width': '1',
+    }));
+  }
+
+  svg.appendChild(svgEl('path', { d: area, fill: `url(#${gradientId})` }));
+  svg.appendChild(svgEl('path', {
+    d: line, fill: 'none', stroke: tone,
+    'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+  }));
+
+  for (const p of points) {
+    const title = svgEl('title', {});
+    title.textContent = `${p.label}: ${fmt(opts, p.value)}`;
+    const inv = svgEl('circle', {
+      cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '2',
+      fill: 'transparent',
+    });
+    inv.appendChild(title);
+    svg.appendChild(inv);
+  }
+
+  wrap.append(svg, labelsRow(labels.slice(-7)));
+  el.appendChild(wrap);
+}
+
+/* ═══════════ 雷达图 ═══════════ */
+
+export interface RadarSeries {
+  name: string;
+  /** 各轴的值（0..max，顺序与 axes 一致）。元素类型须可转 number。 */
+  values: number[];
+  tone?: ChartTone;
+}
+
+export interface ChartRadarOptions {
+  /** 各轴名（顺时针排列，首轴指向正上方） */
+  axes: string[];
+  /** 一个或多个系列。values 长度须等于 axes 长度 */
+  series: RadarSeries[];
+  /** 各轴最大值（默认取全部系列该轴最大向上取整） */
+  max?: number;
+  /** 网格环层数（默认 4） */
+  levels?: number;
+  emptyLabel?: string;
+  formatValue?: (value: number) => string;
+}
+
+/** 雷达图（N 轴蛛网 + 多系列多边形 + 图例）。 */
+export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): void {
+  if (typeof document === 'undefined') return;
+  el.textContent = '';
+  const axes = opts.axes;
+  const n = axes.length;
+  if (n < 3 || opts.series.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
+
+  // 计算最大值（单一 max 或从数据推断）
+  let maxVal = opts.max ?? 0;
+  if (opts.max == null) {
+    for (const s of opts.series) {
+      for (let i = 0; i < n; i++) maxVal = Math.max(maxVal, s.values[i] ?? 0);
+    }
+    maxVal = niceCeil(maxVal);
+  }
+  if (maxVal <= 0) maxVal = 1;
+
+  const size = 200;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = 78;
+  const levels = Math.max(2, opts.levels ?? 4);
+
+  const angleOf = (i: number): number => -Math.PI / 2 + (i * 2 * Math.PI) / n;
+  const pointAt = (i: number, r: number): { x: number; y: number } => ({
+    x: cx + r * Math.cos(angleOf(i)),
+    y: cy + r * Math.sin(angleOf(i)),
+  });
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-radar';
+  const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, role: 'img' });
+
+  // 网格环（levels 层正多边形）
+  for (let lv = 1; lv <= levels; lv++) {
+    const r = (radius * lv) / levels;
+    const pts = Array.from({ length: n }, (_, i) => {
+      const p = pointAt(i, r);
+      return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+    }).join(' ');
+    svg.appendChild(svgEl('polygon', {
+      points: pts,
+      fill: 'none',
+      stroke: 'var(--token-line-soft)',
+      'stroke-width': '1',
+      'stroke-dasharray': lv === levels ? '0' : '3 2',
+    }));
+  }
+
+  // 轴线 + 轴标签
+  for (let i = 0; i < n; i++) {
+    const edge = pointAt(i, radius);
+    svg.appendChild(svgEl('line', {
+      x1: String(cx), y1: String(cy),
+      x2: edge.x.toFixed(1), y2: edge.y.toFixed(1),
+      stroke: 'var(--token-line-soft)', 'stroke-width': '1',
+    }));
+    const labelP = pointAt(i, radius + 14);
+    const txt = svgEl('text', {
+      x: labelP.x.toFixed(1), y: labelP.y.toFixed(1),
+      'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      'font-size': '9', fill: 'var(--token-text-muted)',
+    });
+    txt.textContent = axes[i] ?? '';
+    svg.appendChild(txt);
+  }
+
+  // 数据多边形（各系列）
+  const legend = document.createElement('div');
+  legend.className = 'chart-legend';
+  for (const s of opts.series) {
+    const tone = toneVar(s.tone);
+    const pts = Array.from({ length: n }, (_, i) => {
+      const v = Math.max(0, Math.min(maxVal, s.values[i] ?? 0));
+      const p = pointAt(i, (v / maxVal) * radius);
+      return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+    }).join(' ');
+
+    const polyFill = svgEl('polygon', {
+      points: pts,
+      fill: tone,
+      'fill-opacity': '0.16',
+      stroke: tone,
+      'stroke-width': '2',
+      'stroke-linejoin': 'round',
+    });
+    const title = svgEl('title', {});
+    title.textContent = `${s.name}: ${s.values.map((v) => fmt(opts, v)).join(' / ')}`;
+    polyFill.appendChild(title);
+    svg.appendChild(polyFill);
+
+    for (let i = 0; i < n; i++) {
+      const v = Math.max(0, Math.min(maxVal, s.values[i] ?? 0));
+      const p = pointAt(i, (v / maxVal) * radius);
+      svg.appendChild(svgEl('circle', {
+        cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '2.5',
+        fill: 'var(--token-card)', stroke: tone, 'stroke-width': '1.5',
+      }));
+    }
+    legend.appendChild(legendItem(s.name, '', s.tone));
+  }
+
+  wrap.append(svg, legend);
+  el.appendChild(wrap);
+}
+
+/** 把一个正数向上取整到 "好看" 的刻度值（1/2/5/10/20/50/…） */
+function niceCeil(v: number): number {
+  if (v <= 0) return 1;
+  const exp = Math.floor(Math.log10(v));
+  const base = Math.pow(10, exp);
+  const frac = v / base;
+  let nice: number;
+  if (frac <= 1) nice = 1;
+  else if (frac <= 2) nice = 2;
+  else if (frac <= 5) nice = 5;
+  else nice = 10;
+  return nice * base;
 }
 
 /* ═══════════ 贡献图 / 迷你趋势 / 进度环 ═══════════ */

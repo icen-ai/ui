@@ -1,0 +1,19 @@
+/*
+ * @icen.ai/ui — Component: chart-radar（雷达图专属样式）
+ * 依赖：charts.css（基座 .chart-legend）
+ *
+ * DOM 由 behaviors/charts.ts 的 renderRadar 构建：
+ *   .chart-radar > svg[viewBox="0 0 200 200"]（N 轴蛛网 + 数据多边形）
+ *                > .chart-legend
+ * 多系列时各系列分配 chart-tone-1..6，图例由 behavior 生成。
+ */
+
+.chart-radar > svg {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  aspect-ratio: 1;
+  overflow: visible;
+}
+.chart-radar { gap: var(--density-space-md); }

@@ -1,0 +1,14 @@
+/*
+ * @icen.ai/ui — Component: chart-sparkline（迷你趋势线专属样式）
+ * 依赖：charts.css（基座）
+ *
+ * DOM 由 behaviors/charts.ts 的 renderSparkline 构建：
+ *   .chart-sparkline > svg[viewBox="0 0 96 28"]（无轴，末点高亮）
+ */
+
+.chart-sparkline > svg {
+  display: block;
+  width: 96px;
+  height: 28px;
+  overflow: visible;
+}

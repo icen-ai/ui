@@ -1,13 +1,13 @@
 /*
- * @icen.ai/ui — Component: charts（轻量图表，与 behaviors/charts 配套）
+ * @icen.ai/ui — Component: charts base（图表共享基座，与 behaviors/charts 配套）
  *
- * 包含：.chart 容器 / .chart-empty / .chart-legend（图例行）/ .chart-labels（轴标签行）/
- *       vbar（垂直柱状）/ hbar（水平条形）/ stack（堆叠条）/ donut（环形）/ line（折线）/
- *       heatmap（贡献图热力格）/ sparkline（迷你趋势）/ gauge（进度环）
+ * 仅含所有图表类型共用的契约：.chart 容器、.chart-empty 空态、.chart-legend 图例、
+ * .chart-labels 轴标签行、.chart-tone-* 调色盘。
+ * 各图表类型的专属样式在独立 CSS 文件中（chart-line / chart-bar / chart-pie /
+ * chart-stack / chart-heatmap / chart-sparkline / chart-gauge / chart-radar / chart-area），
+ * 按需引入——kit/chart-<type> 入口会自动带上本基座 + 对应专属 CSS。
  *
- * 完整契约：DOM 全部由 behaviors/charts.ts 以 createElement(NS) + textContent 构建；
  * 单色调通过容器或条上的 --chart-tone 自定义属性注入（默认 var(--token-accent)）。
- * 规格源自 opengal src/presentation/ui/data/charts.tsx。
  */
 
 .chart {
@@ -78,210 +78,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── vbar · 垂直柱状 ── */
-.chart-vbar {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--density-space-xs);
-  height: 112px;
-}
-.chart-vbar-track {
-  flex: 1;
-  height: 100%;
-  min-width: 0;
-  display: flex;
-  align-items: flex-end;
-  background: color-mix(in srgb, var(--token-fill-2) 45%, transparent);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-.chart-vbar-bar {
-  width: 100%;
-  border-radius: var(--radius-sm);
-  background: var(--chart-tone, var(--token-accent));
-  transition: height var(--icen-tx-slow);
-}
-.chart-vbar-bar:hover {
-  filter: brightness(1.08);
-}
-
-/* ── hbar · 水平条形 ── */
-.chart-hbar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--density-space-xs);
-}
-.chart-hbar-row {
-  display: grid;
-  grid-template-columns: minmax(72px, 1fr) minmax(90px, 2fr) 52px;
-  gap: var(--density-space-xs);
-  align-items: center;
-  font-size: var(--density-font-size-xs);
-}
-.chart-hbar-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--token-text-muted);
-}
-.chart-hbar-track {
-  height: 10px;
-  overflow: hidden;
-  border-radius: var(--radius-full);
-  background: var(--token-fill-2);
-}
-.chart-hbar-bar {
-  height: 100%;
-  border-radius: var(--radius-full);
-  background: var(--chart-tone, var(--token-accent));
-  transition: width var(--icen-tx-slow);
-}
-.chart-hbar-bar:hover {
-  filter: brightness(1.08);
-}
-.chart-hbar-value {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: var(--token-text-faint);
-}
-
-/* ── stack · 堆叠条 ── */
-.chart-stack {
-  height: 16px;
-  display: flex;
-  overflow: hidden;
-  border-radius: var(--radius-full);
-  background: var(--token-fill-2);
-  margin-bottom: var(--density-space-sm);
-}
-.chart-stack-seg {
-  height: 100%;
-  min-width: 3px;
-  background: var(--chart-tone, var(--token-accent));
-  transition: width var(--icen-tx-slow);
-}
-.chart-stack-seg:hover {
-  filter: brightness(1.08);
-}
-
-/* ── donut · 环形 ── */
-.chart-donut {
-  display: flex;
-  align-items: center;
-  gap: var(--density-space-md);
-  min-height: 150px;
-}
-.chart-donut > svg {
-  width: 132px;
-  height: 132px;
-  flex-shrink: 0;
-}
-.chart-donut-center {
-  font-variant-numeric: tabular-nums;
-  text-anchor: middle;
-  fill: var(--token-text);
-  font-weight: 600;
-}
-
-/* ── line · 折线 ── */
-.chart-line > svg {
-  display: block;
-  width: 100%;
-  height: 150px;
-  overflow: visible;
-}
-
-/* ── heatmap · 贡献图（GitHub 式 7 行 × N 周） ── */
-.chart-heatmap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--density-space-xs);
-}
-.chart-heatmap-grid {
-  display: grid;
-  grid-template-rows: repeat(7, 1fr);
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 3px;
-  width: 100%;
-}
-.chart-heatmap-cell {
-  aspect-ratio: 1;
-  border-radius: 2px;
-  background: var(--token-fill-2);
-}
-.chart-heatmap-cell.is-blank { background: transparent; }
-.chart-heatmap-cell[data-level='1'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 28%, var(--token-fill-2)); }
-.chart-heatmap-cell[data-level='2'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 50%, var(--token-fill-2)); }
-.chart-heatmap-cell[data-level='3'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 74%, var(--token-fill-2)); }
-.chart-heatmap-cell[data-level='4'] { background: var(--chart-tone, var(--token-accent)); }
-.chart-heatmap-cell:not(.is-blank):hover {
-  outline: 1px solid var(--chart-tone, var(--token-accent));
-  outline-offset: 0;
-}
-.chart-heatmap-legend {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 3px;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
-}
-.chart-heatmap-legend .chart-heatmap-cell {
-  width: 10px;
-  height: 10px;
-  aspect-ratio: auto;
-}
-.chart-heatmap-legend > span:first-child { margin-right: 2px; }
-.chart-heatmap-legend > span:last-child { margin-left: 2px; }
-
-/* ── sparkline · 迷你趋势 ── */
-.chart-sparkline > svg {
-  display: block;
-  width: 96px;
-  height: 28px;
-  overflow: visible;
-}
-
-/* ── gauge · 进度环 ── */
-.chart-gauge {
-  position: relative;
-  width: 132px;
-  flex-shrink: 0;
-}
-.chart-gauge > svg {
-  display: block;
-  width: 132px;
-  height: 132px;
-}
-.chart-gauge-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-}
-.chart-gauge-value {
-  font-size: 20px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--token-text);
-}
-.chart-gauge-label {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
-}
-
-/* ── 调色盘：多系列图（donut/stack/line）由 behavior 选用 ── */
+/* ── 调色盘：多系列图（donut/stack/line/radar）由 behavior 选用 ── */
 .chart-tone-1 { --chart-tone: var(--token-accent); }
 .chart-tone-2 { --chart-tone: var(--token-accent-cold); }
 .chart-tone-3 { --chart-tone: var(--token-success); }
 .chart-tone-4 { --chart-tone: var(--token-warning); }
 .chart-tone-5 { --chart-tone: var(--token-info); }
 .chart-tone-6 { --chart-tone: color-mix(in srgb, var(--token-text) 50%, transparent); }
-
-@media (prefers-reduced-motion: reduce) {
-  .chart-vbar-bar, .chart-hbar-bar, .chart-stack-seg { transition: none; }
-}

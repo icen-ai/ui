@@ -4,7 +4,7 @@
 import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SLUGS, SLUG_INIT, SLUG_EXPORTS, EXTRA_CSS, cssOf } from './slugs.mjs';
+import { SLUGS, SLUG_INIT, SLUG_EXPORTS, SLUG_BEHAVIOR, EXTRA_CSS, cssOf } from './slugs.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SRC = join(ROOT, 'src');
@@ -57,6 +57,7 @@ await writeFile(join(DIST, 'ui.css'), uiOut);
 
 // 3b. kit 一行入口：dist/components/<slug>.mjs = import css + re-export behavior（有的话）
 //     消费侧 `import '@icen.ai/ui/kit/<slug>'` 即可，无需知道内部 CSS 合并文件名。
+//     图表细分类型（chart-line 等）behavior 模块为 charts.ts，仅导出该类型的渲染函数。
 const behaviorSet = new Set(
   (await readdir(join(SRC, 'behaviors'))).filter(f => f.endsWith('.ts')).map(f => f.replace(/\.ts$/, '')),
 );
@@ -64,16 +65,22 @@ const slugsRegistry: Record<string, { css: string; extraCss?: string[]; behavior
 for (const slug of SLUGS) {
   const css = cssOf(slug);
   const extra = EXTRA_CSS[slug] ?? [];
-  const hasBehavior = behaviorSet.has(slug);
+  const behaviorMod = SLUG_BEHAVIOR?.[slug] ?? null;
+  const ownBehavior = !behaviorMod && behaviorSet.has(slug);
   const init = SLUG_INIT[slug];
+  const explicitExports = behaviorMod ? SLUG_EXPORTS[slug] : null;
   const lines = [`// @icen.ai/ui — kit: ${slug}（CSS + behavior 一行入口；构建产物，勿手改）`, `import './${css}';`];
   for (const e of extra) lines.push(`import './${e}';`);
-  if (hasBehavior) lines.push(`export * from '../behaviors/${slug}.mjs';`);
+  if (behaviorMod && explicitExports) {
+    lines.push(`export { ${explicitExports.join(', ')} } from '../behaviors/${behaviorMod}.mjs';`);
+  } else if (ownBehavior) {
+    lines.push(`export * from '../behaviors/${slug}.mjs';`);
+  }
   await writeFile(join(DIST, 'components', `${slug}.mjs`), lines.join('\n') + '\n');
   slugsRegistry[slug] = {
     css,
     ...(extra.length ? { extraCss: extra } : {}),
-    ...(hasBehavior ? { behavior: slug } : {}),
+    ...(behaviorMod ? { behavior: behaviorMod } : ownBehavior ? { behavior: slug } : {}),
     ...(init ? { init } : {}),
     ...(SLUG_EXPORTS[slug] ? { exports: SLUG_EXPORTS[slug] } : {}),
   };

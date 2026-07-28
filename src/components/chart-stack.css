@@ -1,0 +1,30 @@
+/*
+ * @icen.ai/ui — Component: chart-stack（堆叠条图专属样式）
+ * 依赖：charts.css（基座 .chart-legend）
+ *
+ * DOM 由 behaviors/charts.ts 的 renderStack 构建：
+ *   .chart-stack > .chart-stack-seg[]
+ *   .chart-legend
+ */
+
+.chart-stack {
+  height: 16px;
+  display: flex;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--token-fill-2);
+  margin-bottom: var(--density-space-sm);
+}
+.chart-stack-seg {
+  height: 100%;
+  min-width: 3px;
+  background: var(--chart-tone, var(--token-accent));
+  transition: width var(--icen-tx-slow);
+}
+.chart-stack-seg:hover {
+  filter: brightness(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-stack-seg { transition: none; }
+}
