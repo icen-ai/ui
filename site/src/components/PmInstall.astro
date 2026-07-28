@@ -1,0 +1,47 @@
+---
+import { highlightLines } from '../lib/highlight';
+
+interface Props {
+  pkg?: string;
+}
+const { pkg = '@icen.ai/ui' } = Astro.props;
+
+const managers = [
+  { id: 'bun', cmd: `bun add ${pkg}` },
+  { id: 'pnpm', cmd: `pnpm add ${pkg}` },
+  { id: 'npm', cmd: `npm install ${pkg}` },
+  { id: 'yarn', cmd: `yarn add ${pkg}` },
+];
+const copySvg = `<svg class="ic-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
+const checkSvg = `<svg class="ic-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>`;
+---
+<div class="pm-install" data-tabs>
+  <div class="pm-head">
+    <span class="pm-term" aria-hidden="true"><Fragment set:html={termSvg} /></span>
+    <nav class="pm-tabs" aria-label="包管理器">
+      {managers.map((m, i) => (
+        <button
+          class:list={['pm-tab', { active: i === 0 }]}
+          type="button"
+          data-tab={m.id}
+        >{m.id}</button>
+      ))}
+    </nav>
+  </div>
+  {managers.map((m, i) => (
+    <div class="pm-panel" data-tab-panel={m.id} hidden={i !== 0}>
+      <pre><code>{highlightLines(m.cmd, 'bash').map((l) => <span class="cl" set:html={l} />)}</code></pre>
+      <button class="copy-btn copy-btn--icon pm-copy" type="button" data-copy={m.cmd} data-copy-icon aria-label="复制命令">
+        <Fragment set:html={copySvg + checkSvg} />
+      </button>
+    </div>
+  ))}
+</div>
+
+<script>
+  import { initTabs } from '../../../src/behaviors/tabs.ts';
+  import { initCopy } from '../../../src/behaviors/copy.ts';
+  initTabs();
+  initCopy();
+</script>

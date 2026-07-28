@@ -1,83 +1,648 @@
 ---
 import Base from '../layouts/Base.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import PmInstall from '../components/PmInstall.astro';
 
-const quickStart = `bun add @icen.ai/ui`;
-const quickStartCss = `import '@icen.ai/ui/tokens.css';
+import '../../../src/components/input.css';
+import '../../../src/components/form.css';
+import '../../../src/components/select.css';
+import '../../../src/components/switch.css';
+import '../../../src/components/tag-input.css';
+import '../../../src/components/stat.css';
+import '../../../src/components/table.css';
+import '../../../src/components/feedback.css';
+import '../../../src/components/media.css';
+import '../../../src/components/menu.css';
+import '../../../src/components/modal.css';
+import '../../../src/components/tooltip.css';
+import '../../../src/components/toast.css';
+
+const starSvg = `<svg viewBox="0 0 24 24" stroke-linejoin="round"><path d="M12 2.5l2.95 6.26 6.85.72-5.1 4.63 1.4 6.74L12 17.6l-6.1 3.25 1.4-6.74-5.1-4.63 6.85-.72z"/></svg>`;
+const svgX = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+const svgChevron = `<svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+const svgCheck = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>`;
+const svgWarn = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
+const avatarImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' fill='%23d97757'/><circle cx='24' cy='18' r='8' fill='%23fffdf9'/><path d='M8 44c3-10 10-14 16-14s13 4 16 14z' fill='%23fffdf9'/></svg>`;
+
+const importCss = `import '@icen.ai/ui/tokens.css';
 import '@icen.ai/ui/ui.css';`;
-const quickStartHtml = `<html class="piano dark"> … </html>`;
+const htmlPreset = `<html class="piano dark"> … </html>`;
 ---
-<Base title="ICEN UI · 设计系统">
+<Base title="ICEN UI · icen.ai 生态的设计系统">
+  <!-- ═══ Hero ═══ -->
   <section class="hero">
-    <h1 class="hero-title">ICEN UI</h1>
-    <p class="hero-sub">icen.ai 生态的统一设计系统——6 套色彩预设 × 明暗双模 × 无框架组件</p>
-    <div class="demo-row">
-      <a class="btn btn-primary" href="/components/">浏览组件 →</a>
-      <a class="btn" href="/primitives/">查看原语 →</a>
-      <a class="btn" href="https://github.com/icen-ai/ui" target="_blank" rel="noopener">GitHub</a>
+    <a class="hero-pill" href="/primitives/">
+      <span class="hero-pill-badge">v0.3</span>
+      <span>统一抽象层：6 个交互基元 + --icen-* 原语 token</span>
+      <span class="hero-pill-arrow" aria-hidden="true">→</span>
+    </a>
+    <h1 class="hero-title">icen.ai 生态的<br />设计系统基础</h1>
+    <p class="hero-sub">
+      设计 tokens + 无框架组件 CSS + 行为 JS。6 套色彩预设 × 3 种风格 × 明暗双模，
+      全部组件消费同一套 <code>--token-*</code>，换肤零改动。开源，开放代码。
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#quickstart">开始使用</a>
+      <a class="btn" href="/components/">浏览组件</a>
     </div>
   </section>
 
-  <div class="panel-block">
-    <div class="panel-title"><span>统一抽象层</span><span>v0.3 新增</span></div>
-    <div class="panel-body">
-      <p class="dim">31 个组件共享同一套抽象：<strong>6 个交互基元 class</strong>（<code>.pressable</code> / <code>.control</code> / <code>.field</code> / <code>.lift</code> / <code>.surface-elevated</code> / <code>.focus-ring</code>）+ <strong><code>--icen-*</code> 原语 token</strong>（聚焦环 / 悬停 / 按下 / 禁用 / 过渡）。风格 profile 只覆盖少数变量，全局换肤。</p>
-      <p class="dim" style="margin-top:10px"><a href="/primitives/">→ 前往原语页查看演示</a></p>
+  <!-- ═══ 组件陈列（tabs 切换四组卡片） ═══ -->
+  <section class="showcase" data-tabs>
+    <div class="showcase-bar">
+      <nav class="showcase-tabs" aria-label="组件分组">
+        <button class="showcase-tab active" type="button" data-tab="featured">精选</button>
+        <button class="showcase-tab" type="button" data-tab="form">表单</button>
+        <button class="showcase-tab" type="button" data-tab="data">数据</button>
+        <button class="showcase-tab" type="button" data-tab="overlay">浮层</button>
+      </nav>
+      <span class="showcase-hint">实时渲染 · 切换右上角预设 / 明暗查看换肤</span>
     </div>
-  </div>
 
-  <div class="panel-block">
-    <div class="panel-title"><span>设计 Tokens</span></div>
-    <div class="panel-body">
-      <div class="token-layers">
-        <div class="token-layer">
-          <div class="token-layer-name">色彩预设</div>
-          <p class="dim">6 套完整配色（clay / piano / art / vangogh / ink / retro），每套定义全部 --token-* 色板，挂同名类即切换。</p>
+    <div data-tab-panel="featured">
+      <div class="show-grid">
+        <div class="show-card">
+          <span class="show-card-cap">支付表单</span>
+          <div class="pay">
+            <label class="pay-field">
+              <span class="pay-label">持卡人姓名</span>
+              <div class="input-wrap control"><input class="input" placeholder="张三" /></div>
+            </label>
+            <div class="pay-row">
+              <label class="pay-field pay-field--grow">
+                <span class="pay-label">卡号</span>
+                <div class="input-wrap control"><input class="input" placeholder="1234 5678 9012 3456" /></div>
+              </label>
+              <label class="pay-field pay-field--cvv">
+                <span class="pay-label">CVV</span>
+                <div class="input-wrap control"><input class="input" placeholder="123" /></div>
+              </label>
+            </div>
+            <div class="pay-actions">
+              <button class="btn btn-primary btn-sm" type="button">提交</button>
+              <button class="btn btn-sm" type="button">取消</button>
+            </div>
+          </div>
         </div>
-        <div class="token-layer">
-          <div class="token-layer-name">风格配置</div>
-          <p class="dim">style-modern / style-retro / style-terminal 第二层抽象，只覆盖字体、圆角、阴影硬度等与颜色正交的变量。</p>
+
+        <div class="show-card">
+          <span class="show-card-cap">团队</span>
+          <div class="team">
+            <div class="team-avatars">
+              <span class="avatar"><img src={avatarImg} alt="林晚晴" /></span>
+              <span class="avatar">沈</span>
+              <span class="avatar">顾</span>
+            </div>
+            <p class="team-title">暂无团队成员</p>
+            <p class="team-desc">邀请你的团队协作完成此项目。</p>
+            <button class="btn btn-sm" type="button">＋ 邀请成员</button>
+          </div>
         </div>
-        <div class="token-layer">
-          <div class="token-layer-name">明暗双模</div>
-          <p class="dim">每个预设各含 .dark 变体，挂 dark 类即可在亮/暗之间切换，语义色与阴影随之整体翻转。</p>
+
+        <div class="show-card">
+          <span class="show-card-cap">安全设置</span>
+          <div class="sec">
+            <div class="sec-row">
+              <div>
+                <p class="sec-title">双重身份验证</p>
+                <p class="sec-desc">通过电子邮件或手机号进行验证。</p>
+              </div>
+              <button class="switch" type="button" role="switch" aria-checked="true" aria-label="双重身份验证"><span class="switch-thumb"></span></button>
+            </div>
+            <div class="sec-row sec-row--line">
+              <div>
+                <p class="sec-title">登录通知</p>
+                <p class="sec-desc">新设备登录时推送提醒。</p>
+              </div>
+              <button class="switch switch--sm" type="button" role="switch" aria-checked="false" aria-label="登录通知"><span class="switch-thumb"></span></button>
+            </div>
+          </div>
         </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">指标</span>
+          <div class="stat-grid stat-grid--home">
+            <div class="stat-card">
+              <div class="stat-num">1,280</div>
+              <div class="stat-label">用户总数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num accent">96.2%</div>
+              <div class="stat-label">本周可用性</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num warn">12</div>
+              <div class="stat-label">待处理告警</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">构建状态</span>
+          <div class="build">
+            <div class="build-row">
+              <span class="pill ok">运行中</span>
+              <span class="build-text">gateway · 3 分钟前</span>
+              <span class="spinner spinner--sm"></span>
+            </div>
+            <div class="progress">
+              <div class="progress-track"><div class="progress-bar" style="width:64%"></div></div>
+              <span class="progress-label">64%</span>
+            </div>
+            <div class="build-row">
+              <span class="pill warn">排队</span>
+              <span class="build-text">docs · 等待中</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">消息</span>
+          <div class="demo-col-wide" style="width:100%">
+            <div class="alert alert--success">
+              <span class="alert-icon" set:html={svgCheck}></span>
+              <div class="alert-content">
+                <p class="alert-title">构建成功</p>
+                <div class="alert-body">dist 产物已生成，耗时 42 秒。</div>
+              </div>
+            </div>
+            <div class="alert alert--warning">
+              <span class="alert-icon" set:html={svgWarn}></span>
+              <div class="alert-content">
+                <p class="alert-title">配额将尽</p>
+                <div class="alert-body">本月构建时长已用 80%。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-tab-panel="form" hidden>
+      <div class="show-grid">
+        <div class="show-card">
+          <span class="show-card-cap">输入框</span>
+          <div class="demo-col" style="width:100%;max-width:none">
+            <div class="input-wrap control input-wrap--sm">
+              <input class="input" placeholder="小号（32px）" />
+            </div>
+            <div class="input-wrap control">
+              <span class="input-leading">¥</span>
+              <input class="input" placeholder="0.00" />
+              <span class="input-trailing">元</span>
+            </div>
+            <div class="input-wrap control">
+              <input class="input" value="点右侧 × 可清空" />
+              <button class="input-clear" type="button" aria-label="清空" set:html={svgX}></button>
+            </div>
+            <div class="input-wrap control is-error">
+              <input class="input" value="校验未通过的内容" />
+            </div>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">选择器</span>
+          <div class="demo-col" style="width:100%;max-width:none">
+            <div class="select" data-select>
+              <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span class="select-value is-empty">选择一种水果</span>
+                <Fragment set:html={svgChevron} />
+              </button>
+              <div class="select-panel" hidden>
+                <button class="select-option" type="button" data-value="apple">苹果</button>
+                <button class="select-option" type="button" data-value="banana">香蕉</button>
+                <button class="select-option" type="button" data-value="orange">橙子</button>
+              </div>
+              <input type="hidden" data-select-value name="fruit" />
+            </div>
+            <p class="home-note">↑↓ 移动 · Enter 选中 · Esc / 外点关闭</p>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">标签输入</span>
+          <div class="demo-col" style="width:100%;max-width:none">
+            <div class="tag-input control" data-tags="设计,前端" data-max="5">
+              <input class="tag-input-field" placeholder="输入后回车添加（最多 5 个）" />
+            </div>
+            <p class="home-note">Enter / 逗号提交 · 空草稿 Backspace 删尾</p>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">开关与勾选</span>
+          <div class="demo-col" style="width:100%;max-width:none">
+            <div class="demo-row">
+              <button class="switch" type="button" role="switch" aria-checked="true" aria-label="开关（开）"><span class="switch-thumb"></span></button>
+              <button class="switch" type="button" role="switch" aria-checked="false" aria-label="开关（关）"><span class="switch-thumb"></span></button>
+              <button class="switch switch--sm" type="button" role="switch" aria-checked="true" aria-label="小号开关"><span class="switch-thumb"></span></button>
+            </div>
+            <div class="demo-row">
+              <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="false" aria-label="未选中"></button>
+              <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="true" aria-label="已选中"></button>
+              <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="mixed" aria-label="半选"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-tab-panel="data" hidden>
+      <div class="show-grid">
+        <div class="show-card show-card--wide">
+          <span class="show-card-cap">表格</span>
+          <div class="table-wrap" style="width:100%">
+            <table class="admin-table">
+              <thead>
+                <tr><th>名称</th><th>状态</th><th class="ops">操作</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>gateway</td><td><span class="pill ok">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+                <tr><td>accounts</td><td><span class="pill ok">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+                <tr><td>billing</td><td><span class="pill warn">降级</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+                <tr><td>archive</td><td><span class="pill bad">已停止</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">启用</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">进度</span>
+          <div class="demo-col-wide" style="width:100%">
+            <div class="progress">
+              <div class="progress-track"><div class="progress-bar" style="width:64%"></div></div>
+              <span class="progress-label">64%</span>
+            </div>
+            <div class="progress progress--sm">
+              <div class="progress-track"><div class="progress-bar" style="width:32%"></div></div>
+              <span class="progress-label">32%</span>
+            </div>
+            <div class="demo-row" style="margin-top:6px">
+              <div class="spinner spinner--sm"></div>
+              <div class="spinner"></div>
+              <div class="spinner spinner--lg"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">评分</span>
+          <div class="demo-row">
+            <div class="rating" role="group" aria-label="评分 3.5 星，满分 5 星">
+              <button class="rating-star is-filled" type="button" aria-label="1 星" set:html={starSvg}></button>
+              <button class="rating-star is-filled" type="button" aria-label="2 星" set:html={starSvg}></button>
+              <button class="rating-star is-filled" type="button" aria-label="3 星" set:html={starSvg}></button>
+              <button class="rating-star is-half" type="button" aria-label="4 星" set:html={starSvg}></button>
+              <button class="rating-star" type="button" aria-label="5 星" set:html={starSvg}></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">骨架屏</span>
+          <div style="width:100%">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="skeleton skeleton--circle" style="width:40px;height:40px"></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                <div class="skeleton" style="height:12px;width:45%"></div>
+                <div class="skeleton" style="height:12px;width:80%"></div>
+              </div>
+            </div>
+            <div class="skeleton" style="height:12px;width:100%;margin-top:12px"></div>
+            <div class="skeleton" style="height:12px;width:66%;margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-tab-panel="overlay" hidden>
+      <div class="show-grid">
+        <div class="show-card">
+          <span class="show-card-cap">下拉菜单</span>
+          <div class="dropdown" data-dropdown>
+            <button class="btn dropdown-trigger" data-dropdown-trigger aria-haspopup="menu" type="button">操作 ▾</button>
+            <div data-dropdown-menu hidden>
+              <div class="menu-label">文件</div>
+              <button class="menu-item pressable" type="button">
+                <span class="menu-item-icon"></span>
+                <span class="menu-item-label">重命名</span>
+                <span class="menu-item-shortcut">F2</span>
+              </button>
+              <button class="menu-item pressable" type="button">
+                <span class="menu-item-icon"></span>
+                <span class="menu-item-label">分享</span>
+              </button>
+              <div class="menu-separator"></div>
+              <button class="menu-item pressable menu-item--danger" type="button">
+                <span class="menu-item-icon"></span>
+                <span class="menu-item-label">删除</span>
+                <span class="menu-item-shortcut">⌫</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">对话框</span>
+          <button class="btn" type="button" data-modal-open="home-modal">打开对话框</button>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">提示</span>
+          <div class="demo-row">
+            <button class="btn" type="button" data-tooltip="默认在上方">上</button>
+            <button class="btn" type="button" data-tooltip="下方提示" data-tooltip-side="bottom">下</button>
+            <button class="btn" type="button" data-tooltip="左侧提示" data-tooltip-side="left">左</button>
+            <button class="btn" type="button" data-tooltip="右侧提示" data-tooltip-side="right">右</button>
+          </div>
+        </div>
+
+        <div class="show-card">
+          <span class="show-card-cap">轻提示</span>
+          <div class="demo-row">
+            <button class="btn" id="home-toast-ok" type="button">成功提示</button>
+            <button class="btn" id="home-toast-err" type="button">错误提示</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 特性 ═══ -->
+  <section class="features">
+    <div class="feature">
+      <h3 class="feature-title">三层正交</h3>
+      <p class="feature-desc">色彩预设 × 风格 profile × 明暗，三层互不耦合，任意组合都自洽。</p>
+    </div>
+    <div class="feature">
+      <h3 class="feature-title">无框架</h3>
+      <p class="feature-desc">纯 CSS class 契约 + 按需 behavior JS，React / Vue / 原生都能接。</p>
+    </div>
+    <div class="feature">
+      <h3 class="feature-title">统一抽象层</h3>
+      <p class="feature-desc">6 个交互基元 class + <code>--icen-*</code> 原语 token，31 个组件共享同一套状态语义。</p>
+    </div>
+    <div class="feature">
+      <h3 class="feature-title">SSR 友好</h3>
+      <p class="feature-desc">全部 behavior 带 SSR 守卫，文本赋值只用 textContent，无注入面。</p>
+    </div>
+  </section>
+
+  <!-- ═══ 快速开始 ═══ -->
+  <section class="quickstart" id="quickstart">
+    <h2 class="qs-title">快速开始</h2>
+    <div class="qs-step">
+      <h3 class="qs-step-title"><span class="qs-num">1</span>安装设计系统包</h3>
+      <PmInstall />
+    </div>
+    <div class="qs-step">
+      <h3 class="qs-step-title"><span class="qs-num">2</span>在入口引入 tokens 与全部组件样式</h3>
+      <CodeBlock code={importCss} lang="js" />
+    </div>
+    <div class="qs-step">
+      <h3 class="qs-step-title"><span class="qs-num">3</span>在 <code>&lt;html&gt;</code> 上挂预设与明暗类</h3>
+      <CodeBlock code={htmlPreset} lang="html" />
+    </div>
+  </section>
+
+  <!-- 对话框 demo 的挂载点（portal 到 body 前藏于页面底部） -->
+  <div class="modal-backdrop" data-modal="home-modal" hidden>
+    <div class="modal modal--sm">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">确认发布</h3>
+          <p class="modal-description">Esc / 点击遮罩可关闭</p>
+        </div>
+        <button class="modal-close" data-modal-close aria-label="关闭" type="button">×</button>
+      </div>
+      <div class="modal-body">
+        <p>焦点已锁定在对话框内，关闭后焦点还原到触发按钮。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" data-modal-close type="button">取消</button>
+        <button class="btn btn-sm btn-primary" data-modal-close type="button">确定</button>
       </div>
     </div>
   </div>
 
-  <div class="panel-block">
-    <div class="panel-title"><span>快速开始</span></div>
-    <div class="panel-body">
-      <p class="dim">安装设计系统包：</p>
-      <pre><code>{quickStart}</code></pre>
-      <p class="dim">在入口引入 tokens 与全部组件样式：</p>
-      <pre><code>{quickStartCss}</code></pre>
-      <p class="dim">在 <code>&lt;html&gt;</code> 上挂预设与明暗类（示例：piano 预设 + 暗色）：</p>
-      <pre><code>{quickStartHtml}</code></pre>
-    </div>
-  </div>
+  <script>
+    import { initTabs } from '../../../src/behaviors/tabs.ts';
+    import { initCopy } from '../../../src/behaviors/copy.ts';
+    import { initInput } from '../../../src/behaviors/input.ts';
+    import { initSelect } from '../../../src/behaviors/select.ts';
+    import { initTagInput } from '../../../src/behaviors/tag-input.ts';
+    import { initDropdown } from '../../../src/behaviors/dropdown.ts';
+    import { initModal } from '../../../src/behaviors/modal.ts';
+    import { toast } from '../../../src/behaviors/toast.ts';
+
+    initTabs();
+    initCopy();
+    initInput();
+    initSelect();
+    initTagInput();
+    initDropdown();
+    initModal();
+
+    document.getElementById('home-toast-ok')?.addEventListener('click', () => toast.ok('保存成功'));
+    document.getElementById('home-toast-err')?.addEventListener('click', () => toast.err('保存失败：网络超时'));
+
+    // 纯 CSS 状态组件的演示接线（实际项目由使用方状态驱动）
+    document.querySelectorAll('.switch[role="switch"], .checkbox[role="checkbox"]').forEach((el) => {
+      el.addEventListener('click', () => {
+        el.setAttribute('aria-checked', el.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
+      });
+    });
+  </script>
 </Base>
 
-<style>
-  .hero { padding: 48px 0 40px; }
+<style is:global>
+  /* ═══ Hero ═══ */
+  .hero { padding: 88px 0 72px; text-align: center; }
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px 5px 5px;
+    border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-full);
+    background: var(--token-surface);
+    color: var(--token-text-muted);
+    font-size: 12.5px;
+    transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+  }
+  .hero-pill:hover { border-color: var(--token-accent); color: var(--token-text); text-decoration: none; }
+  .hero-pill-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--token-surface);
+    background: var(--token-accent);
+    border-radius: var(--radius-full);
+    padding: 2px 8px;
+  }
+  .hero-pill-arrow { color: var(--token-text-faint); }
   .hero-title {
     font-family: var(--font-heading);
-    font-size: 56px;
-    letter-spacing: 4px;
-    margin: 0 0 12px;
+    font-size: clamp(38px, 6vw, 60px);
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1.22;
+    margin: 28px 0 18px;
   }
   .hero-sub {
     color: var(--token-text-muted);
     font-size: 15px;
-    margin: 0 0 26px;
+    line-height: 1.9;
+    max-width: 620px;
+    margin: 0 auto 32px;
   }
-  .token-layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-  .token-layer-name {
+  .hero-actions { display: flex; justify-content: center; gap: 12px; }
+
+  /* ═══ 陈列区 ═══ */
+  .showcase { margin-top: 8px; }
+  .showcase-bar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--token-line-soft);
+  }
+  .showcase-tabs { display: flex; gap: 4px; }
+  .showcase-tab {
+    font: inherit;
+    font-size: 13.5px;
+    color: var(--token-text-muted);
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+  .showcase-tab:hover { color: var(--token-text); }
+  .showcase-tab.active {
+    color: var(--token-text);
+    font-weight: 600;
+    border-bottom-color: var(--token-accent);
+  }
+  .showcase-hint {
+    font-size: 11.5px;
+    color: var(--token-text-faint);
+    padding-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+  .show-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    padding: 28px 0 8px;
+  }
+  .show-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-lg);
+    background: var(--token-surface);
+    padding: 18px 20px 22px;
+    transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .show-card:hover { border-color: var(--token-line); box-shadow: var(--token-shadow-card); }
+  .show-card--wide { grid-column: span 2; }
+  .show-card-cap {
+    font-size: 11.5px;
+    letter-spacing: 0.5px;
+    color: var(--token-text-faint);
+  }
+  .home-note { font-size: 11.5px; color: var(--token-text-faint); margin: 0; }
+
+  /* 支付卡 */
+  .pay { display: flex; flex-direction: column; gap: 12px; }
+  .pay-field { display: flex; flex-direction: column; gap: 5px; }
+  .pay-field--grow { flex: 1; }
+  .pay-field--cvv { width: 84px; }
+  .pay-label { font-size: 12px; color: var(--token-text-muted); }
+  .pay-row { display: flex; gap: 10px; }
+  .pay-actions { display: flex; gap: 8px; margin-top: 2px; }
+
+  /* 团队卡 */
+  .team { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 6px 0; }
+  .team-avatars { display: flex; margin-bottom: 6px; }
+  .team-avatars .avatar { margin-left: -8px; box-shadow: 0 0 0 2px var(--token-surface); }
+  .team-avatars .avatar:first-child { margin-left: 0; }
+  .team-title { font-size: 14px; font-weight: 600; margin: 0; }
+  .team-desc { font-size: 12px; color: var(--token-text-muted); margin: 0 0 6px; }
+
+  /* 安全卡 */
+  .sec { display: flex; flex-direction: column; }
+  .sec-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
+  .sec-row--line { border-top: 1px solid var(--token-line-soft); }
+  .sec-title { font-size: 13.5px; font-weight: 600; margin: 0; }
+  .sec-desc { font-size: 12px; color: var(--token-text-muted); margin: 2px 0 0; }
+
+  /* 指标 / 构建卡 */
+  .stat-grid--home { grid-template-columns: repeat(3, 1fr); }
+  .build { display: flex; flex-direction: column; gap: 12px; }
+  .build-row { display: flex; align-items: center; gap: 10px; }
+  .build-row .spinner { margin-left: auto; }
+  .build-text { font-size: 12px; color: var(--token-text-muted); }
+
+  /* ═══ 特性 ═══ */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    padding: 56px 0;
+    border-top: 1px solid var(--token-line-soft);
+    margin-top: 48px;
+  }
+  .feature-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--token-text);
+  }
+  .feature-desc { font-size: 13px; color: var(--token-text-muted); line-height: 1.7; margin: 0; }
+
+  /* ═══ 快速开始 ═══ */
+  .quickstart { max-width: 720px; margin: 0 auto; padding-bottom: 24px; }
+  .qs-title {
     font-family: var(--font-heading);
-    font-size: 15px;
+    font-size: 24px;
     font-weight: 700;
-    margin-bottom: 6px;
-    color: var(--token-accent-deep, var(--token-accent));
+    letter-spacing: 2px;
+    text-align: center;
+    margin: 0 0 28px;
   }
-  .token-layer p { margin: 0; font-size: 13px; }
+  .qs-step { margin-bottom: 24px; }
+  .qs-step-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  .qs-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-full);
+    background: var(--token-accent-subtle);
+    color: var(--token-accent);
+    font-size: 12px;
+    font-weight: 700;
+    flex: none;
+  }
+
+  @media (max-width: 720px) {
+    .hero { padding: 56px 0 48px; }
+    .showcase-hint { display: none; }
+    .show-card--wide { grid-column: span 1; }
+    .stat-grid--home { grid-template-columns: 1fr; }
+  }
 </style>

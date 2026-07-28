@@ -4,13 +4,11 @@ import '../../../src/tokens/style-profiles.css';
 import '../../../src/tokens/typography.css';
 import '../../../src/base.css';
 import '../../../src/components/btn.css';
-import '../../../src/components/panel.css';
 import '../../../src/components/pill.css';
-import '../../../src/components/form.css';
-import '../../../src/components/tabs.css';
-import '../../../src/components/stat.css';
-import '../../../src/components/table.css';
-import '../../../src/components/toast.css';
+import '../../../src/components/select.css';
+import '../styles/site.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 
 interface Props {
   title?: string;
@@ -54,127 +52,18 @@ const canonical = new URL(Astro.url.pathname, 'https://ui.icen.ai').toString();
     </script>
   </head>
   <body>
-    <header class="site-nav">
-      <div class="site-nav-inner">
-        <a class="brand" href="/">ICEN UI · 设计系统</a>
-        <nav class="nav-links">
-          <a href="/">首页</a>
-          <a href="/tokens/">色彩</a>
-          <a href="/components/">组件</a>
-          <a href="https://github.com/icen-ai/ui" target="_blank" rel="noopener">GitHub</a>
-        </nav>
-        <div class="nav-controls">
-          <select id="preset-select" aria-label="色彩预设">
-            <option value="clay">clay 陶土</option>
-            <option value="piano">piano 钢琴</option>
-            <option value="art">art 艺术</option>
-            <option value="vangogh">vangogh 梵高</option>
-            <option value="ink">ink 墨</option>
-            <option value="retro">retro 复古</option>
-          </select>
-          <select id="style-select" aria-label="风格">
-            <option value="modern">modern 现代</option>
-            <option value="retro">retro 像素</option>
-            <option value="terminal">terminal 终端</option>
-          </select>
-          <button id="dark-toggle" class="btn btn-sm" type="button">暗</button>
-        </div>
-      </div>
-    </header>
+    <SiteHeader />
     <main class="site-main">
       <slot />
     </main>
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        @icen.ai/ui — icen.ai 生态的统一设计系统 · 6 色彩预设 × 明暗双模 × 无框架组件
-      </div>
-    </footer>
-    <script>
-      import { initTheme, setTheme, toggleDark, type ThemeState } from '../../../src/behaviors/theme.ts';
-
-      const presetSel = document.getElementById('preset-select') as HTMLSelectElement;
-      const styleSel = document.getElementById('style-select') as HTMLSelectElement;
-      const darkBtn = document.getElementById('dark-toggle') as HTMLButtonElement;
-
-      function reflect(t: ThemeState): void {
-        presetSel.value = t.preset;
-        styleSel.value = t.style;
-        darkBtn.textContent = t.dark ? '亮' : '暗';
-      }
-
-      reflect(initTheme());
-
-      presetSel.addEventListener('change', () => reflect(setTheme({ preset: presetSel.value })));
-      styleSel.addEventListener('change', () => reflect(setTheme({ style: styleSel.value })));
-      darkBtn.addEventListener('click', () => reflect(toggleDark()));
-    </script>
+    <SiteFooter />
   </body>
 </html>
 
 <style is:global>
-  /* ── 布局骨架：只用 --token-* / --font-* 设计变量 ── */
-  .site-nav {
-    background: var(--token-surface);
-    border-bottom: 1px solid var(--token-line-soft);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .site-nav-inner {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 0 20px;
-    min-height: 56px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    flex-wrap: wrap;
-  }
-  .brand {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: 16px;
-    color: var(--token-text);
-    letter-spacing: 1px;
-  }
-  .brand:hover { text-decoration: none; color: var(--token-accent); }
-  .nav-links { display: flex; gap: 14px; }
-  .nav-links a { color: var(--token-text-muted); font-size: 13px; }
-  .nav-links a:hover { color: var(--token-accent); text-decoration: none; }
-  .nav-controls { margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 8px 0; }
-  .nav-controls select {
-    background: var(--token-bg);
-    color: var(--token-text);
-    border: 1px solid var(--token-line-soft);
-    border-radius: var(--radius-sm);
-    font: inherit;
-    font-size: 12px;
-    padding: 5px 8px;
-  }
-
   .site-main {
-    max-width: 960px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 36px 20px 72px;
+    padding: 0 24px 96px;
   }
-
-  .site-footer { border-top: 1px solid var(--token-line-soft); }
-  .site-footer-inner {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 20px;
-    color: var(--token-text-faint);
-    font-size: 12px;
-    letter-spacing: 1px;
-  }
-
-  /* ── 页面共享辅助类（panel.css 只提供外壳与标题栏） ── */
-  .panel-body { padding: 18px 20px 22px; }
-  .preview {
-    border: 1px dashed var(--token-line-dashed);
-    border-radius: var(--radius-sm);
-    padding: 20px;
-    margin: 14px 0;
-  }
-  .demo-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 </style>

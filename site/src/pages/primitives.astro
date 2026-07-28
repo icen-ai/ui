@@ -1,5 +1,6 @@
 ---
 import Docs from '../layouts/Docs.astro';
+import CodeBlock from '../components/CodeBlock.astro';
 const primitives = [
   {
     cls: 'pressable',
@@ -84,8 +85,8 @@ const tokens = [
     <div class="panel-title"><span>6 个交互基元</span><span>composition API</span></div>
     <div class="panel-body">
       <p class="dim">用法（任选其一）：</p>
-      <pre><code>{`<button class="btn pressable focus-ring">  <!-- 类组合，体积最小 -->
-<button class="btn">                  <!-- 自洽，CSS 引用 --icen-* 同一原语 -->`}</code></pre>
+      <CodeBlock code={`<button class="btn pressable focus-ring">  <!-- 类组合，体积最小 -->
+<button class="btn">                  <!-- 自洽，CSS 引用 --icen-* 同一原语 -->`} lang="html" />
       <p class="dim" style="margin-top:14px">下方演示直接挂原语 class（不带任何组件 class），可见其承载的最小可识别交互：</p>
 
       {primitives.map((p) => (
@@ -119,12 +120,12 @@ const tokens = [
         </tbody>
       </table>
       <p class="dim" style="margin-top:14px">retro profile 覆盖示例：</p>
-      <pre><code>{`.style-retro {
+      <CodeBlock code={`.style-retro {
   --icen-ring: 2px solid var(--token-accent);
   --icen-press: translate(2px, 2px);
   --icen-hover-border: var(--token-accent);
   /* 全部 31 个组件自动获得像素风聚焦环 + 按下位移 */
-}`}</code></pre>
+}`} lang="css" />
     </div>
   </section>
 
@@ -145,7 +146,7 @@ const tokens = [
 
 <style is:global>
   .page-title { font-family: var(--font-heading); letter-spacing: 2px; margin: 0 0 8px; }
-  .page-desc { color: var(--token-text-muted); font-size: 13px; line-height: 1.7; margin: 0 0 28px; max-width: 720px; }
+  .page-desc { color: var(--token-text-muted); font-size: 14px; line-height: 1.7; margin: 0 0 28px; max-width: 720px; }
   .page-desc strong { color: var(--token-text); font-weight: 600; }
   .page-desc code, .primitive-name, .desc-item dd code, td code {
     font-family: var(--font-mono);

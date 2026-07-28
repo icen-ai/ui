@@ -2,6 +2,7 @@
  * @icen.ai/ui — Behavior: copy（复制按钮，事件委托）
  * 命中最近的 .copy-btn[data-copy] → navigator.clipboard.writeText，
  * 失败回退 textarea + execCommand；成功后按钮文本变「已复制」加 .done 类，1.4s 还原。
+ * 图标按钮：按钮带 data-copy-icon 属性时不改文本，只加 .done 类（由 CSS 切换图标，如剪贴板→对勾）。
  * 同一 root 重复 init 幂等。
  */
 
@@ -41,11 +42,12 @@ async function copyText(text: string): Promise<boolean> {
 function flashDone(btn: HTMLElement): void {
   const prev = flashing.get(btn);
   if (prev) window.clearTimeout(prev.timer);
-  const original = prev ? prev.original : btn.textContent;
-  btn.textContent = '已复制';
+  const iconOnly = btn.hasAttribute('data-copy-icon');
+  const original = prev ? prev.original : iconOnly ? null : btn.textContent;
+  if (!iconOnly) btn.textContent = '已复制';
   btn.classList.add('done');
   const timer = window.setTimeout(() => {
-    btn.textContent = original;
+    if (!iconOnly) btn.textContent = original;
     btn.classList.remove('done');
     flashing.delete(btn);
   }, 1400);

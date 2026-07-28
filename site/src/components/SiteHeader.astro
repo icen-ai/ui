@@ -1,0 +1,127 @@
+---
+const path = Astro.url.pathname;
+const isActive = (href: string): boolean => path.startsWith(href);
+
+const presets = [
+  ['clay', 'clay 陶土'],
+  ['piano', 'piano 钢琴'],
+  ['art', 'art 艺术'],
+  ['vangogh', 'vangogh 梵高'],
+  ['ink', 'ink 墨'],
+  ['retro', 'retro 复古'],
+] as const;
+const styles = [
+  ['modern', 'modern 现代'],
+  ['retro', 'retro 像素'],
+  ['terminal', 'terminal 终端'],
+] as const;
+
+const chevronSvg = `<svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+const searchSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
+const sunSvg = `<svg data-icon="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+const moonSvg = `<svg data-icon="moon" hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+const githubSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.35.77 1.05.77 2.12v3.15c0 .3.21.67.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>`;
+const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="var(--token-accent)"/><path d="M12 6.5 17.5 12 12 17.5 6.5 12z" fill="var(--token-bg)"/><circle cx="12" cy="12" r="1.6" fill="var(--token-accent)"/></svg>`;
+---
+<header class="site-nav">
+  <div class="site-nav-inner">
+    <a class="brand" href="/" aria-label="ICEN UI 首页">
+      <Fragment set:html={logoSvg} />
+      <span class="brand-name">ICEN UI</span>
+      <span class="brand-tag">设计系统</span>
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a class:list={[{ active: isActive('/components/') }]} href="/components/">组件</a>
+      <a class:list={[{ active: isActive('/primitives/') }]} href="/primitives/">原语</a>
+      <a class:list={[{ active: isActive('/tokens/') }]} href="/tokens/">色彩</a>
+    </nav>
+    <div class="nav-controls">
+      <a class="nav-search" href="/components/" title="浏览全部组件">
+        <Fragment set:html={searchSvg} />
+        <span class="nav-search-text">搜索组件…</span>
+        <kbd class="nav-kbd">⌘K</kbd>
+      </a>
+      <span class="nav-sep" aria-hidden="true"></span>
+      <div class="select nav-select" id="preset-select" data-select data-value="clay">
+        <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="色彩预设">
+          <span class="select-value">clay 陶土</span>
+          <Fragment set:html={chevronSvg} />
+        </button>
+        <div class="select-panel" hidden role="listbox" aria-label="色彩预设">
+          {presets.map(([v, label], i) => (
+            <button class:list={['select-option', { 'is-selected': i === 0 }]} type="button" data-value={v}>{label}</button>
+          ))}
+        </div>
+        <input type="hidden" data-select-value name="preset" value="clay" />
+      </div>
+      <div class="select nav-select nav-select--style" id="style-select" data-select data-value="modern">
+        <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="风格">
+          <span class="select-value">modern 现代</span>
+          <Fragment set:html={chevronSvg} />
+        </button>
+        <div class="select-panel" hidden role="listbox" aria-label="风格">
+          {styles.map(([v, label], i) => (
+            <button class:list={['select-option', { 'is-selected': i === 0 }]} type="button" data-value={v}>{label}</button>
+          ))}
+        </div>
+        <input type="hidden" data-select-value name="style" value="modern" />
+      </div>
+      <button id="dark-toggle" class="nav-icon-btn" type="button" aria-label="切换明暗">
+        <Fragment set:html={sunSvg + moonSvg} />
+      </button>
+      <a class="nav-icon-btn" href="https://github.com/icen-ai/ui" target="_blank" rel="noopener" aria-label="GitHub 仓库">
+        <Fragment set:html={githubSvg} />
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  import { initTheme, setTheme, toggleDark, type ThemeState } from '../../../src/behaviors/theme.ts';
+  import { initSelect } from '../../../src/behaviors/select.ts';
+
+  const presetBox = document.getElementById('preset-select');
+  const styleBox = document.getElementById('style-select');
+  const darkBtn = document.getElementById('dark-toggle');
+
+  // 程序化同步 select 组件的展示态（choose() 之外的第二写入口：主题恢复/跨控件联动）
+  function syncSelect(box: HTMLElement, value: string): void {
+    const opts = box.querySelectorAll('.select-option');
+    let label = '';
+    opts.forEach((o) => {
+      const on = o.getAttribute('data-value') === value;
+      o.classList.toggle('is-selected', on);
+      if (on) label = o.textContent ?? '';
+    });
+    const valueEl = box.querySelector('.select-value');
+    if (valueEl && label) {
+      valueEl.textContent = label;
+      valueEl.classList.remove('is-empty');
+    }
+    box.setAttribute('data-value', value);
+    const input = box.querySelector('input[data-select-value]');
+    if (input instanceof HTMLInputElement) input.value = value;
+  }
+
+  function reflect(t: ThemeState): void {
+    if (presetBox) syncSelect(presetBox, t.preset);
+    if (styleBox) syncSelect(styleBox, t.style);
+    darkBtn?.querySelectorAll('svg').forEach((s) => {
+      (s as SVGSVGElement).toggleAttribute(
+        'hidden',
+        (s.getAttribute('data-icon') === 'sun') === t.dark,
+      );
+    });
+  }
+
+  initSelect();
+  reflect(initTheme());
+
+  presetBox?.querySelector('input[data-select-value]')?.addEventListener('change', (ev) => {
+    reflect(setTheme({ preset: (ev.target as HTMLInputElement).value }));
+  });
+  styleBox?.querySelector('input[data-select-value]')?.addEventListener('change', (ev) => {
+    reflect(setTheme({ style: (ev.target as HTMLInputElement).value }));
+  });
+  darkBtn?.addEventListener('click', () => reflect(toggleDark()));
+</script>

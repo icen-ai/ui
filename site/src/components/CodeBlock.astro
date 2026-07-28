@@ -1,0 +1,48 @@
+---
+import { highlightLines } from '../lib/highlight';
+
+interface Props {
+  code: string;
+  lang?: string;
+  /** 折叠为固定高度 + 底部渐隐，点「展开代码」放开（shadcn View Code 式） */
+  collapsible?: boolean;
+  /** 无外边距/边框/圆角，用于嵌在卡片内部 */
+  flat?: boolean;
+}
+const { code, lang = 'bash', collapsible = false, flat = false } = Astro.props;
+const lines = highlightLines(code, lang);
+const copySvg = `<svg class="ic-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
+const checkSvg = `<svg class="ic-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+const chevron = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+---
+<div class:list={['code-collapse', { 'is-collapsible': collapsible }]}>
+  <div class:list={['codeblock', { 'codeblock--flat': flat }]}>
+    <button class="copy-btn copy-btn--icon" type="button" data-copy={code} data-copy-icon aria-label="复制代码">
+      <Fragment set:html={copySvg + checkSvg} />
+    </button>
+    <pre><code>{lines.map((l) => <span class="cl" set:html={l || ' '} />)}</code></pre>
+  </div>
+  {collapsible && (
+    <button class="code-toggle" type="button" aria-expanded="false">
+      <span class="code-toggle-label" data-label="more">展开代码 <Fragment set:html={chevron} /></span>
+      <span class="code-toggle-label" data-label="less">收起 <Fragment set:html={chevron} /></span>
+    </button>
+  )}
+</div>
+
+<script>
+  import { initCopy } from '../../../src/behaviors/copy.ts';
+  initCopy();
+
+  // View Code 折叠/展开（事件委托；copy 的 init 幂等，多实例安全）
+  document.addEventListener('click', (ev) => {
+    const t = ev.target;
+    if (!(t instanceof Element)) return;
+    const btn = t.closest('.code-toggle');
+    if (!btn) return;
+    const wrap = btn.closest('.code-collapse');
+    if (!wrap) return;
+    const open = wrap.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', String(open));
+  });
+</script>
