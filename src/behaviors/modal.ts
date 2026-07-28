@@ -129,7 +129,7 @@ export function initModal(root: ParentNode = document): void {
     const opener = target.closest<HTMLElement>('[data-modal-open]');
     if (opener?.dataset.modalOpen) {
       opener.setAttribute('aria-haspopup', 'dialog');
-      open(opener.dataset.modalOpen);
+      openModal(opener.dataset.modalOpen);
       return;
     }
 
