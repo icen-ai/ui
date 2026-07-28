@@ -1,6 +1,6 @@
 {
   "name": "@icen.ai/ui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Icen Design System — 设计 tokens（6 预设 × 明暗）、无框架组件 CSS 与行为 JS",
   "repository": {
     "type": "git",
