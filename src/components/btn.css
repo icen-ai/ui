@@ -1,0 +1,23 @@
+/*
+ * @icen.ai/ui — Component: btn（按钮）
+ * 用法：<button class="btn btn-primary"> / .btn-danger / .btn-sm / .btn-block
+ */
+
+.btn {
+  display: inline-block; padding: 10px 22px;
+  background: var(--token-surface); color: var(--token-text);
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 13px; letter-spacing: 1px;
+  cursor: pointer; transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+.btn:hover { border-color: var(--token-accent); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary { background: var(--token-accent); border-color: var(--token-accent); color: var(--token-on-accent, #fff); }
+.btn-primary:hover { background: var(--token-accent-deep); border-color: var(--token-accent-deep); }
+
+.btn-danger { color: var(--token-error); border-color: color-mix(in srgb, var(--token-error) 35%, transparent); }
+.btn-danger:hover { border-color: var(--token-error); }
+
+.btn-block { display: block; width: 100%; text-align: center; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }

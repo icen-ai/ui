@@ -1,0 +1,31 @@
+/*
+ * @icen.ai/ui — Component: form（表单字段/输入/错误与成功提示）
+ */
+
+.form-field { margin-bottom: 18px; }
+.form-label { display: block; font-size: 12px; color: var(--token-text-muted); margin-bottom: 6px; letter-spacing: 1px; }
+.form-input {
+  width: 100%; padding: 11px 14px;
+  background: var(--token-bg); color: var(--token-text);
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: 14px;
+  outline: none; transition: border-color var(--duration-fast) var(--ease-out);
+}
+.form-input:focus { border-color: var(--token-accent); }
+.form-input::placeholder { color: var(--token-text-faint); }
+
+.form-error {
+  background: color-mix(in srgb, var(--token-error) 7%, transparent); color: var(--token-error);
+  border: 1px solid color-mix(in srgb, var(--token-error) 25%, transparent); border-radius: var(--radius-sm);
+  padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px;
+  font-family: var(--font-heading);
+}
+.form-ok {
+  background: color-mix(in srgb, var(--token-success) 8%, transparent); color: var(--token-success);
+  border: 1px solid color-mix(in srgb, var(--token-success) 25%, transparent); border-radius: var(--radius-sm);
+  padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px;
+  font-family: var(--font-heading);
+}
+
+/* 页面级横幅（与表单提示同族，用于操作结果/引导提示） */
+.banner-ok, .banner-err { margin-bottom: 20px; }

@@ -1,0 +1,540 @@
+/*
+ * Icen Design System — 风格配置 (Style Profiles)
+ *
+ * 这是颜色主题之上的第二层抽象：
+ *   .style-modern   → 默认现代风格（不覆盖）
+ *   .style-retro    → 8-bit / 红白机 / 像素风
+ *   .style-terminal → 命令行 / CRT 终端（预留）
+ *
+ * 规则：
+ *   1. 这些类挂在 <html> 上，与 .clay/.piano/.art/.vangogh/.ink/.retro 共存。
+ *   2. 只覆盖与“风格”相关的变量：字体、圆角、阴影硬度、抗锯齿、图像渲染。
+ *   3. 颜色仍由 preset 决定，保持正交。
+ */
+
+/* ══════════════════════════════════════════════════════════════
+   字体资源
+   ══════════════════════════════════════════════════════════════ */
+
+/* Press Start 2P — 经典 8-bit 像素字体（西文） */
+@font-face {
+  font-family: "Pixel Retro";
+  src:
+    local("Press Start 2P"),
+    local("VT323"),
+    url("https://fonts.gstatic.com/s/pressstart2p/v15/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* 中文像素风回退：无通用免费像素中文字体，使用系统等宽/宋体保持清晰 */
+@font-face {
+  font-family: "Pixel CJK Fallback";
+  src:
+    local("Zpix"),
+    local("SimSun"),
+    local("Songti SC"),
+    local("STSong"),
+    local("Noto Serif SC"),
+    local("PingFang SC"),
+    local("Microsoft YaHei");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ══════════════════════════════════════════════════════════════
+     风格底层 token（兜底值）
+     由 .style-* 覆盖；保持与颜色 preset 正交。
+     ══════════════════════════════════════════════════════════════ */
+
+  /* ── Density 密度 ── */
+  --density-space-xs: 0.25rem;
+  --density-space-sm: 0.5rem;
+  --density-space-md: 0.75rem;
+  --density-space-lg: 1rem;
+  --density-input-height-sm: 28px;
+  --density-input-height-md: 36px;
+  --density-input-height-lg: 44px;
+  --density-font-size-xs: 11px;
+  --density-font-size-sm: 12px;
+  --density-font-size-md: 13px;
+  --density-font-size-lg: 14px;
+
+  /* ── Motion 动效 ── */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --ease-linear: linear;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Typography 字体 ── */
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono-paper: ui-monospace, SFMono-Regular, 'JetBrains Mono', 'Courier New', monospace;
+  --font-heading: var(--font-body);
+  --letter-spacing-body: 0;
+  --letter-spacing-heading: 0;
+  --line-height-body: 1.5;
+  --line-height-heading: 1.2;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODERN — 默认现代风格（兜底值即为现代值，显式声明便于阅读）
+   ══════════════════════════════════════════════════════════════ */
+
+.style-modern {
+  /* ── Density ── */
+  --density-space-xs: 0.25rem;
+  --density-space-sm: 0.5rem;
+  --density-space-md: 0.75rem;
+  --density-space-lg: 1rem;
+  --density-input-height-sm: 28px;
+  --density-input-height-md: 36px;
+  --density-input-height-lg: 44px;
+  --density-font-size-xs: 11px;
+  --density-font-size-sm: 12px;
+  --density-font-size-md: 13px;
+  --density-font-size-lg: 14px;
+
+  /* ── Motion ── */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Typography ── */
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono-paper: ui-monospace, SFMono-Regular, 'JetBrains Mono', 'Courier New', monospace;
+  --font-heading: var(--font-body);
+  --letter-spacing-body: 0;
+  --letter-spacing-heading: 0;
+  --line-height-body: 1.5;
+  --line-height-heading: 1.2;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RETRO — 8-bit / 红白机 / 像素风
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro {
+  /* ── Density：像素风更紧凑 ── */
+  --density-space-xs: 0.125rem;
+  --density-space-sm: 0.25rem;
+  --density-space-md: 0.5rem;
+  --density-space-lg: 0.75rem;
+  --density-input-height-sm: 24px;
+  --density-input-height-md: 32px;
+  --density-input-height-lg: 40px;
+  --density-font-size-xs: 9px;
+  --density-font-size-sm: 10px;
+  --density-font-size-md: 11px;
+  --density-font-size-lg: 12px;
+
+  /* ── Motion：像素风瞬间切换 ── */
+  --duration-fast: 0ms;
+  --duration-normal: 0ms;
+  --duration-slow: 0ms;
+  --ease-out: linear;
+
+  /* ── Typography：像素字体 ── */
+  --font-body: "Pixel Retro", "Pixel CJK Fallback", "Press Start 2P", "VT323", "SimSun", "Songti SC", "STSong", monospace;
+  --font-mono: "Pixel Retro", "VT323", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-mono-paper: "Pixel Retro", "JetBrains Mono", "Courier New", monospace;
+  --font-heading: "Pixel Retro", "Press Start 2P", "VT323", var(--font-body);
+  --letter-spacing-body: 0.02em;
+  --letter-spacing-heading: 0.04em;
+  --line-height-body: 1.5;
+  --line-height-heading: 1.2;
+
+  /* ── 圆角：像素风几乎无圆角 ── */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-full: 0px;
+
+  /* ── 滚动条 ── */
+  --token-scrollbar-size: 10px;
+
+  /* ── 渲染 ── */
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+}
+
+/* 全局排版覆盖 */
+.style-retro body {
+  font-family: "Numeric Math", var(--font-body);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-body);
+}
+
+/* 标题强化像素感 */
+.style-retro h1,
+.style-retro h2,
+.style-retro h3,
+.style-retro h4,
+.style-retro h5,
+.style-retro h6 {
+  font-family: var(--font-heading);
+  letter-spacing: var(--letter-spacing-heading);
+  line-height: var(--line-height-heading);
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   按钮 / 可点击元素 — 8-bit 像素按钮
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro .og-pressable,
+.style-retro button,
+.style-retro [role="button"],
+.style-retro input[type="button"],
+.style-retro input[type="submit"],
+.style-retro input[type="reset"] {
+  position: relative;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--token-line-strong);
+  box-shadow:
+    inset -2px -2px 0 var(--token-line-soft),
+    inset 2px 2px 0 var(--token-surface-strong),
+    2px 2px 0 var(--token-line);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.style-retro .og-pressable::after,
+.style-retro button::after {
+  display: none;
+}
+
+/* 悬停：像素高亮 */
+.style-retro .og-pressable:hover,
+.style-retro button:hover {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+
+/* 按下：内移 + 阴影消失 */
+.style-retro .og-pressable:active,
+.style-retro button:active,
+.style-retro [role="button"]:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    inset -2px -2px 0 var(--token-line-soft),
+    inset 2px 2px 0 var(--token-surface-strong);
+}
+
+/* 禁用状态 */
+.style-retro .og-pressable:where(:disabled, [aria-disabled="true"], [data-disabled]),
+.style-retro button:disabled {
+  transform: none;
+  box-shadow: none;
+  outline: none;
+  opacity: 0.5;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   输入框 / 表单元素 — 像素输入框
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro .og-control,
+.style-retro input,
+.style-retro textarea,
+.style-retro select {
+  border-radius: var(--radius-md);
+  border: 2px solid var(--token-line);
+  background: var(--token-bg);
+  box-shadow:
+    inset 2px 2px 0 var(--token-line-soft),
+    inset -1px -1px 0 var(--token-surface-strong);
+  transition: none;
+}
+
+.style-retro .og-control::after {
+  display: none;
+}
+
+/* 被 og-control / vn-editable-field 容器包裹的输入框：自身边框透明化，
+   完全交给外层容器承担像素边框，避免常驻/聚焦状态出现双层内框。 */
+.style-retro .og-control input:not([type="checkbox"]):not([type="radio"]),
+.style-retro .og-control textarea,
+.style-retro .og-control select,
+.style-retro .vn-editable-field input:not([type="checkbox"]):not([type="radio"]),
+.style-retro .vn-editable-field textarea,
+.style-retro .vn-editable-field [contenteditable="true"] {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.style-retro input:hover,
+.style-retro textarea:hover,
+.style-retro select:hover,
+.style-retro .og-control:hover,
+.style-retro .vn-editable-field:hover {
+  border-color: var(--token-accent);
+}
+
+.style-retro .og-control:focus-within,
+.style-retro .vn-editable-field:focus-within {
+  border-color: var(--token-accent);
+  box-shadow:
+    inset 2px 2px 0 var(--token-line-soft),
+    inset -1px -1px 0 var(--token-surface-strong);
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+
+/* 文本输入区自身无焦点环，完全交给外层容器 */
+.style-retro input:focus,
+.style-retro textarea:focus,
+.style-retro select:focus,
+.style-retro input:focus-visible,
+.style-retro textarea:focus-visible,
+.style-retro select:focus-visible,
+.style-retro [contenteditable="true"]:focus,
+.style-retro [contenteditable="true"]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* 占位符文字 */
+.style-retro input::placeholder,
+.style-retro textarea::placeholder {
+  color: var(--token-text-faint);
+  opacity: 0.7;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   开关 / 复选框 — 像素开关
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro input[type="checkbox"],
+.style-retro input[type="radio"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--token-line-strong);
+  background: var(--token-bg);
+  box-shadow:
+    inset -2px -2px 0 var(--token-line-soft),
+    inset 2px 2px 0 var(--token-surface-strong);
+  cursor: pointer;
+}
+
+.style-retro input[type="checkbox"]:checked,
+.style-retro input[type="radio"]:checked {
+  background: var(--token-accent);
+  border-color: var(--token-accent);
+  box-shadow:
+    inset 2px 2px 0 color-mix(in srgb, var(--token-on-accent) 50%, transparent),
+    inset -2px -2px 0 color-mix(in srgb, var(--token-accent-cold) 30%, transparent);
+}
+
+.style-retro input[type="checkbox"]:checked::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 10px;
+  margin: 1px 0 0 4px;
+  border: solid var(--token-on-accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.style-retro input[type="radio"] {
+  border-radius: 0;
+}
+
+.style-retro input[type="radio"]:checked::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 3px;
+  background: var(--token-on-accent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   卡片 / 面板 / 表面 — 硬像素边框
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro .surface-elevated,
+.style-retro [class*="shadow-[var(--token-shadow-card)"] {
+  box-shadow:
+    2px 2px 0 var(--token-line);
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--token-line-strong);
+}
+
+/* 禁用平滑悬停提升 */
+.style-retro .og-surface-lift:hover {
+  transform: none;
+  box-shadow:
+    2px 2px 0 var(--token-accent);
+  border-color: var(--token-accent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   滚动条 — 方块像素滚动条
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--token-accent) var(--token-bg-soft);
+}
+
+.style-retro ::-webkit-scrollbar {
+  width: var(--token-scrollbar-size);
+  height: var(--token-scrollbar-size);
+}
+
+.style-retro ::-webkit-scrollbar-track {
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line);
+}
+
+.style-retro ::-webkit-scrollbar-thumb {
+  background: var(--token-accent);
+  border: 1px solid var(--token-line-strong);
+  border-radius: 0;
+}
+
+.style-retro ::-webkit-scrollbar-thumb:hover {
+  background: var(--token-accent-cold);
+}
+
+.style-retro ::-webkit-scrollbar-button {
+  display: block;
+  width: var(--token-scrollbar-size);
+  height: var(--token-scrollbar-size);
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line);
+}
+
+.style-retro ::-webkit-scrollbar-button:hover {
+  background: var(--token-accent-subtle);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   光标 /  caret
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro * {
+  caret-color: var(--token-accent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   悬停效果 — 像素高亮
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro a:hover,
+.style-retro [role="link"]:hover {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Markdown / 富文本 — 禁用圆角
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro .markdown-body img,
+.style-retro .markdown-body blockquote,
+.style-retro .markdown-body code,
+.style-retro .markdown-body pre {
+  border-radius: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RETRO 全局硬化 — 处理无法仅靠 token 表达的现代风残留
+   ══════════════════════════════════════════════════════════════ */
+
+/* 禁用现代毛玻璃，用实色面板替代 */
+.style-retro .backdrop-blur-sm,
+.style-retro .backdrop-blur-md,
+.style-retro .backdrop-blur-xl,
+.style-retro .backdrop-blur-2xl {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* 兜底：覆盖仍使用固定 Tailwind 圆角工具类的组件/页面元素。
+   组件层已迁移到 radiusClass() 读取 --radius-*，但 feature 页面和
+   第三方类名可能仍残留 rounded-*，这里做最后一层保险。 */
+.style-retro .rounded-none { border-radius: 0; }
+.style-retro .rounded-sm,
+.style-retro .rounded,
+.style-retro .rounded-md,
+.style-retro .rounded-lg,
+.style-retro .rounded-xl,
+.style-retro .rounded-2xl,
+.style-retro .rounded-3xl {
+  border-radius: var(--radius-md);
+}
+/* Note: we do NOT override .rounded-full globally. Components that should be
+   theme-aware use radiusClass('full') which reads --radius-full; elements that
+   are inherently circular (e.g. loading spinners) keep Tailwind's rounded-full. */
+
+/* 兜底：现代柔和阴影在 retro 下转为硬像素投影 */
+.style-retro .shadow-sm,
+.style-retro .shadow-md,
+.style-retro .shadow-lg,
+.style-retro .shadow-xl,
+.style-retro .shadow-2xl {
+  box-shadow: var(--token-shadow-card);
+}
+
+/* 非文本元素的硬像素焦点环（已在 retro-effects.css 有基础，这里强化 specificity） */
+.style-retro :focus-visible:not(input):not(textarea):not(select):not([contenteditable="true"]) {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+  box-shadow: none;
+  border-radius: var(--radius-md);
+}
+
+/* 非输入按钮在 retro 下禁用现代渐变高光（::after 渐变由 .og-pressable 提供） */
+.style-retro .og-pressable::after {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TERMINAL — 命令行 / CRT 终端（预留，可组合任意 dark preset）
+   ══════════════════════════════════════════════════════════════ */
+
+.style-terminal {
+  /* ── 字体 ── */
+  --font-body: ui-monospace, SFMono-Regular, "JetBrains Mono", "Courier New", "Noto Sans Mono CJK SC", "SimSun", monospace;
+  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", "Consolas", "Noto Sans Mono CJK SC", monospace;
+  --font-mono-paper: "JetBrains Mono", "Courier New", monospace;
+
+  /* ── 圆角 ── */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 0px;
+
+  /* ── 滚动条 ── */
+  --token-scrollbar-size: 8px;
+
+  /* ── 渲染 ── */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.style-terminal body {
+  font-family: var(--font-body);
+  line-height: 1.4;
+}

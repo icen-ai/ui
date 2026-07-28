@@ -1,0 +1,55 @@
+/*
+ * @icen.ai/ui — Base（元素基线 + 滚动条）
+ * 全部消费 --token-*；任何 preset/明暗/style profile 下自洽。
+ * 在 tokens 之后、components 之前引入。
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--token-bg);
+  color: var(--token-text);
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+a { color: var(--token-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code, pre {
+  font-family: var(--font-mono);
+  background: var(--token-bg-soft);
+  border-radius: var(--radius-xs);
+}
+code { padding: 1px 5px; }
+pre { padding: 12px 14px; overflow-x: auto; }
+pre code { padding: 0; background: none; }
+
+button { font: inherit; }
+img { max-width: 100%; }
+
+::selection {
+  background: color-mix(in srgb, var(--token-accent) 25%, transparent);
+}
+
+/* ── 全局滚动条：细薄、无上下箭头、贴 token ── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--token-text) 16%, transparent);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--token-accent) 50%, transparent);
+}
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-button:single-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar-corner { background: transparent; }
+html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--token-text) 16%, transparent) transparent; }
+
+/* ── 通用工具类 ── */
+.mono { font-family: var(--font-mono); }
+.dim { color: var(--token-text-muted); }
+.faint { color: var(--token-text-faint); }

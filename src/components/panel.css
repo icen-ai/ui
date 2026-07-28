@@ -1,0 +1,19 @@
+/*
+ * @icen.ai/ui — Component: panel（白卡片容器 + 标题栏）
+ * 用法：<div class="panel-block"><div class="panel-title"><span>标题</span></div> …内容… </div>
+ */
+
+.panel-block {
+  background: var(--token-surface);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--token-shadow-elevated);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.panel-title {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid var(--token-line-soft);
+  font-size: 12px; letter-spacing: 2px; color: var(--token-text-muted);
+  text-transform: uppercase;
+}

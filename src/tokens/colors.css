@@ -1,0 +1,1318 @@
+/*
+ * Icen Design System — 色彩 Tokens
+ *
+ * 5 体系 × 2 模式 = 10 套完整配色
+ * 每套: 12 base + 4 glow + 8 derived + 8 semantic + 8 fill + 4 border + 2 shadow + n bridge
+ *
+ * 用法: import "./colors.css";
+ */
+
+/* ══════════════════════════════════════════════════════════════
+   CLAY — 温暖纸感 · 陶土橙 + 牛皮纸白
+   Warm Paper · Clay-Dust Orange × Parchment Cream
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── 12 Base Tokens ── */
+  --token-bg:             #faf9f5;
+  --token-bg-soft:        #f5f3ec;
+  --token-surface:        #ffffff;
+  --token-surface-strong: #f5f3ec;
+  --token-line-soft:      rgba(43, 41, 38, 0.12);
+  --token-line:           rgba(43, 41, 38, 0.22);
+  --token-line-strong:    rgba(43, 41, 38, 0.38);
+  --token-text:           #1f1e1c;
+  --token-text-muted:     #5e5d58;
+  --token-text-faint:     #9d9b93;
+  --token-accent:         #d97757;
+  --token-accent-cold:    #7a9cb0;
+  --token-accent-deep:    #c6613f;
+
+  /* ── Glow (background radial accents) ── */
+  --token-glow:      rgba(217,119,87,.12);
+  --token-glow-cold: rgba(122,156,176,.06);
+
+  /* ── Derived ── */
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface) 92%, var(--token-accent) 8%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 10%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 55%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 92%, transparent);
+  --token-on-accent:      #ffffff;
+
+  /* ── Shadow ── */
+  --token-shadow-elevated: 0 12px 32px rgba(31, 30, 29, 0.05);
+  --token-shadow-overlay:  0 18px 44px rgba(31, 30, 29, 0.08);
+
+  /* ── Semantic ── */
+  --token-success:      #3d8a5a;
+  --token-success-muted: color-mix(in srgb, var(--token-success) 12%, transparent);
+  --token-warning:      #b8860b;
+  --token-warning-muted: rgba(184,134,11,.12);
+  --token-error:        #c0392b;
+  --token-error-muted:  color-mix(in srgb, var(--token-error) 12%, transparent);
+  --token-info:         #6a8ea0;
+  --token-info-muted:   rgba(106,142,160,.12);
+
+  /* ── Fill Scale (overlay textures) ── */
+  --token-fill-1: color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 8%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 14%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 22%, transparent);
+
+  /* ── Surface Glass ── */
+  --token-surface-glass: color-mix(in srgb, var(--token-bg-soft) 88%, transparent);
+
+  /* ═══════════════════════════════════════════
+     BRIDGE — legacy component token names
+     ═══════════════════════════════════════════ */
+
+  /* ── 主色 ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #c6613f;
+  --accent-clay-light: #e8a087;
+  --accent-cold: var(--token-accent-cold);
+
+  /* ── 背景 ── */
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: #fffdfa;
+  --bg-card-muted: #f7f0e4;
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+
+  /* ── 文字 ── */
+  --text-primary: var(--token-text);
+  --text-secondary: #383834;
+  --text-tertiary: var(--token-text-muted);
+  --text-muted: #87867f;
+  --text-subtle: var(--token-text-faint);
+
+  /* ── 边框 ── */
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+
+  /* ── 阴影 ── */
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+
+  /* ── 语义色 ── */
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: #87867f;
+  --color-pending-bg: #f9f9f8;
+
+  /* ── 装饰色 ── */
+  --accent-clay-bg: color-mix(in srgb, var(--token-accent) 8%, transparent);
+  --accent-clay-bg-strong: var(--token-accent-subtle);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 22%, transparent);
+}
+
+/* ── CLAY DARK ── */
+.dark {
+  /* ── 12 Base Tokens ── */
+  --token-bg:             #171410;
+  --token-bg-soft:        #211d19;
+  --token-surface:        #2a2520;
+  --token-surface-strong: #302b25;
+  --token-line-soft:      #3b352f;
+  --token-line:           #4c433b;
+  --token-line-strong:    #5e5349;
+  --token-text:           #f5f4f0;
+  --token-text-muted:     #a8a6a0;
+  --token-text-faint:     #6a6863;
+  --token-accent:         #e08a68;
+  --token-accent-cold:    #7aa0b8;
+
+  /* ── Glow ── */
+  --token-glow:      rgba(224,138,104,.10);
+  --token-glow-cold: rgba(122,160,184,.05);
+
+  /* ── Derived ── */
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface) 90%, var(--token-accent) 10%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 12%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 8%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 55%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 94%, transparent);
+  --token-on-accent:      #ffffff;
+
+  /* ── Shadow ── */
+  --token-shadow-elevated: 0 1px 2px rgba(0,0,0,.18), 0 4px 12px rgba(0,0,0,.16);
+  --token-shadow-overlay:  0 2px 4px rgba(0,0,0,.22), 0 8px 24px rgba(0,0,0,.26);
+
+  /* ── Semantic ── */
+  --token-success:      #8fbfaa;
+  --token-success-muted: rgba(143,191,170,.15);
+  --token-warning:      #d4a520;
+  --token-warning-muted: rgba(212,165,32,.15);
+  --token-error:        #d46a45;
+  --token-error-muted:  rgba(212,106,69,.15);
+  --token-info:         #6a9ab8;
+  --token-info-muted:   rgba(106,154,184,.15);
+
+  /* ── Fill ── */
+  --token-fill-1: color-mix(in srgb, var(--token-text) 5%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 10%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 16%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 24%, transparent);
+
+  /* ── Surface Glass ── */
+  --token-surface-glass: color-mix(in srgb, var(--token-bg-soft) 82%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #d47a57;
+  --accent-clay-light: #eba38a;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: #221f1b;
+  --bg-card-muted: #26221d;
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: #d4d3ce;
+  --text-tertiary: var(--token-text-muted);
+  --text-muted: #7a7872;
+  --text-subtle: var(--token-text-faint);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: #7a7872;
+  --color-pending-bg: #222120;
+  --accent-clay-bg: color-mix(in srgb, var(--token-accent) 8%, transparent);
+  --accent-clay-bg-strong: var(--token-accent-subtle);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 22%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PIANO — 象牙琴键 · 乌木黑键 · 大漆光泽
+   Piano Keys · Ivory × Ebony Lacquer · Brass Nameplate
+   ══════════════════════════════════════════════════════════════ */
+
+.piano {
+  /* ── 12 Base Tokens ── */
+  --token-bg:             #f1eee6;
+  --token-bg-soft:        #e5dfd2;
+  --token-surface:        #faf8f2;
+  --token-surface-strong: #eee8db;
+  --token-line-soft:      #d2cab9;
+  --token-line:           #b8ad9a;
+  --token-line-strong:    #8f8578;
+  --token-text:           #11100e;
+  --token-text-muted:     #4e4b45;
+  --token-text-faint:     #8b857b;
+  --token-accent:         #b89145;
+  --token-accent-cold:    #566370;
+
+  /* ── Glow ── */
+  --token-glow:      rgba(184,145,69,.12);
+  --token-glow-cold: rgba(22,24,26,.05);
+
+  /* ── Derived ── */
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface-strong) 88%, var(--token-accent) 12%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 10%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 55%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 92%, transparent);
+  --token-on-accent:      #12100b;
+
+  /* ── Shadow · 漆面冷反光 ── */
+  --token-shadow-elevated: 0 1px 2px rgba(17,16,14,.06), 0 7px 20px rgba(17,16,14,.08);
+  --token-shadow-overlay:  0 2px 5px rgba(17,16,14,.10), 0 16px 42px rgba(17,16,14,.16);
+
+  /* ── Semantic ── */
+  --token-success:      #5a9e7a;
+  --token-success-muted: rgba(90,158,122,.10);
+  --token-warning:      #b89145;
+  --token-warning-muted: rgba(184,145,69,.12);
+  --token-error:        #a84a42;
+  --token-error-muted:  rgba(168,74,66,.10);
+  --token-info:         #5a7488;
+  --token-info-muted:   rgba(90,116,136,.10);
+
+  /* ── Fill ── */
+  --token-fill-1: color-mix(in srgb, var(--token-text) 3%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 6%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 10%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 16%, transparent);
+
+  /* ── Surface Glass ── */
+  --token-surface-glass: color-mix(in srgb, var(--token-surface) 86%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #967333;
+  --accent-clay-light: #d2b36f;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-surface);
+  --bg-card-muted: var(--token-bg-soft);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: #2e2b27;
+  --text-tertiary: var(--token-text-muted);
+  --text-muted: #8b857b;
+  --text-subtle: var(--token-text-faint);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: #8b857b;
+  --color-pending-bg: var(--token-bg-soft);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 20%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 24%, transparent);
+}
+
+/* ── PIANO DARK ── */
+.piano.dark {
+  /* ── 12 Base Tokens ── */
+  --token-bg:             #090909;
+  --token-bg-soft:        #11100f;
+  --token-surface:        #1a1917;
+  --token-surface-strong: #24221f;
+  --token-line-soft:      #2f2c27;
+  --token-line:           #463f34;
+  --token-line-strong:    #685b45;
+  --token-text:           #f6f1e7;
+  --token-text-muted:     #b7afa2;
+  --token-text-faint:     #736b60;
+  --token-accent:         #d6b567;
+  --token-accent-cold:    #7c8a94;
+
+  /* ── Glow ── */
+  --token-glow:      rgba(214,181,103,.14);
+  --token-glow-cold: rgba(210,220,225,.04);
+
+  /* ── Derived ── */
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface-strong) 88%, var(--token-accent) 12%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 12%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 8%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 60%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 95%, transparent);
+  --token-on-accent:      #0a0a0a;
+
+  /* ── Shadow ── */
+  --token-shadow-elevated: 0 1px 2px rgba(0,0,0,.28), 0 10px 26px rgba(0,0,0,.34);
+  --token-shadow-overlay:  0 2px 5px rgba(0,0,0,.34), 0 18px 46px rgba(0,0,0,.46);
+
+  /* ── Semantic ── */
+  --token-success:      #7ac09a;
+  --token-success-muted: rgba(122,192,154,.12);
+  --token-warning:      #d6b567;
+  --token-warning-muted: rgba(214,181,103,.13);
+  --token-error:        #d07668;
+  --token-error-muted:  rgba(208,118,104,.12);
+  --token-info:         #7293aa;
+  --token-info-muted:   rgba(114,147,170,.12);
+
+  /* ── Fill ── */
+  --token-fill-1: color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 8%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 14%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 22%, transparent);
+
+  /* ── Surface Glass ── */
+  --token-surface-glass: color-mix(in srgb, var(--token-bg-soft) 82%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #b8954b;
+  --accent-clay-light: #e7cf8b;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-bg-soft);
+  --bg-card-muted: var(--token-surface);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: #d8d0c2;
+  --text-tertiary: var(--token-text-muted);
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-text-faint);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-bg-soft);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 16%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 24%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ART — 莫奈 · 日出印象 + 睡莲
+   Monet · Impression, Sunrise × Water Lilies
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── ART LIGHT · 日出印象 (Claude Monet, 1872) ── */
+.art {
+  /* 勒阿弗尔晨雾 · 日出橙红 · 港湾青灰 */
+  --token-bg:             #dce8e3;
+  --token-bg-soft:        #ccdcd6;
+  --token-surface:        #edf3ee;
+  --token-surface-strong: #d8e6df;
+  --token-line-soft:      #b7c9c1;
+  --token-line:           #96aaa2;
+  --token-line-strong:    #718980;
+  --token-text:           #172226;
+  --token-text-muted:     #445553;
+  --token-text-faint:     #768985;
+  --token-accent:         #d66f4f;
+  --token-accent-cold:    #4f8f90;
+
+  /* ── Glow · 雾霭橙光 ── */
+  --token-glow:      rgba(214,111,79,.12);
+  --token-glow-cold: rgba(79,143,144,.07);
+
+  /* ── Derived ── */
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface-strong) 88%, var(--token-accent) 12%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 12%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 8%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 55%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 94%, transparent);
+  --token-on-accent:      #ffffff;
+
+  --token-shadow-elevated: 0 1px 2px rgba(23,34,38,.05), 0 6px 18px rgba(23,34,38,.08);
+  --token-shadow-overlay:  0 2px 5px rgba(23,34,38,.08), 0 12px 32px rgba(23,34,38,.12);
+
+  --token-success:      #5a8c6e;
+  --token-success-muted: rgba(90,140,110,.10);
+  --token-warning:      #b67933;
+  --token-warning-muted: rgba(182,121,51,.11);
+  --token-error:        #b95e52;
+  --token-error-muted:  rgba(185,94,82,.11);
+  --token-info:         #568aa0;
+  --token-info-muted:   rgba(86,138,160,.11);
+
+  --token-fill-1: color-mix(in srgb, var(--token-text) 3%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 6%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 10%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 16%, transparent);
+
+  --token-surface-glass: color-mix(in srgb, var(--token-bg) 84%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #b95a3c;
+  --accent-clay-light: #e69a82;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-surface);
+  --bg-card-muted: var(--token-bg-soft);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: #556864;
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-line-strong);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-fill-1);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 20%, transparent);
+}
+
+/* ── ART DARK · 莫奈睡莲 (Water Lilies) ── */
+.art.dark {
+  /* 睡莲池水 · 暮色蓝绿 · 莲粉紫影 */
+  --token-bg:             #172521;
+  --token-bg-soft:        #1d312c;
+  --token-surface:        #263d37;
+  --token-surface-strong: #304a42;
+  --token-line-soft:      #35554c;
+  --token-line:           #4c7167;
+  --token-line-strong:    #659082;
+  --token-text:           #edf1e8;
+  --token-text-muted:     #c1cabd;
+  --token-text-faint:     #7f9188;
+  --token-accent:         #d59ab1;
+  --token-accent-cold:    #78aaa2;
+
+  /* ── Glow · 池面粉紫和水光 ── */
+  --token-glow:      rgba(213,154,177,.10);
+  --token-glow-cold: rgba(120,170,162,.10);
+
+  /* ── Derived ── */
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface) 86%, var(--token-accent-cold) 14%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 12%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 8%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 60%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 92%, transparent);
+
+  --token-shadow-elevated: 0 1px 2px rgba(0,0,0,.18), 0 8px 22px rgba(0,0,0,.24);
+  --token-shadow-overlay:  0 2px 5px rgba(0,0,0,.24), 0 14px 36px rgba(0,0,0,.32);
+
+  --token-success:      #5ab88a;
+  --token-success-muted: rgba(90,184,138,.12);
+  --token-warning:      #c5aa68;
+  --token-warning-muted: rgba(197,170,104,.12);
+  --token-error:        #d1847e;
+  --token-error-muted:  rgba(209,132,126,.12);
+  --token-info:         #78aaa2;
+  --token-info-muted:   rgba(120,170,162,.12);
+
+  --token-fill-1: color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 8%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 14%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 22%, transparent);
+
+  --token-surface-glass: color-mix(in srgb, var(--token-bg-soft) 82%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #bc7f9a;
+  --accent-clay-light: #e4b7ca;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-bg-soft);
+  --bg-card-muted: var(--token-surface);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: #a5b1aa;
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-line-strong);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-fill-1);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 22%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VANGOGH — 麦田鸦群 + 星空
+   Van Gogh · Wheatfield × Starry Night
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── VANGOGH LIGHT · 麦田鸦群 ── */
+.vangogh {
+  /* 干麦秆画布 · 麦浪金 · 普鲁士蓝阴影 */
+  --token-bg:             #e8ddb2;
+  --token-bg-soft:        #d5c58f;
+  --token-surface:        #f2e8bd;
+  --token-surface-strong: #decb85;
+  --token-line-soft:      #c0ad6e;
+  --token-line:           #9f8b53;
+  --token-line-strong:    #70623f;
+  --token-text:           #1f241b;
+  --token-text-muted:     #4a5138;
+  --token-text-faint:     #767b57;
+  --token-accent:         #1f527c;
+  --token-accent-cold:    #476f45;
+
+  --token-glow:      rgba(31,82,124,.09);
+  --token-glow-cold: rgba(71,111,69,.07);
+
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface-strong) 90%, var(--token-accent) 10%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 10%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 7%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 60%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 94%, transparent);
+  --token-on-accent:      #fff3c5;
+
+  --token-shadow-elevated: 0 1px 2px rgba(31,36,27,.06), 0 7px 20px rgba(31,36,27,.10);
+  --token-shadow-overlay:  0 2px 5px rgba(31,36,27,.09), 0 16px 40px rgba(31,36,27,.15);
+
+  --token-success:      #3f7d50;
+  --token-success-muted: rgba(63,125,80,.12);
+  --token-warning:      #a97824;
+  --token-warning-muted: rgba(169,120,36,.12);
+  --token-error:        #9c513a;
+  --token-error-muted:  rgba(156,81,58,.11);
+  --token-info:         #2d638e;
+  --token-info-muted:   rgba(45,99,142,.11);
+
+  --token-fill-1: color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 8%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 13%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 20%, transparent);
+
+  --token-surface-glass: color-mix(in srgb, var(--token-surface) 82%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #173f64;
+  --accent-clay-light: #5b82a6;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-surface);
+  --bg-card-muted: var(--token-bg-soft);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: #606847;
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-line-strong);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-fill-1);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 16%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 24%, transparent);
+}
+
+/* ── VANGOGH DARK · 星空 ── */
+.vangogh.dark {
+  /* 钴蓝夜空 · 漩涡青蓝 · 星点暖黄 */
+  --token-bg:             #0f1b2e;
+  --token-bg-soft:        #142440;
+  --token-surface:        #1a3050;
+  --token-surface-strong: #223a60;
+  --token-line-soft:      #1c3455;
+  --token-line:           #2a4a75;
+  --token-line-strong:    #3a5a8a;
+  --token-text:           #f0ece0;
+  --token-text-muted:     #c0bcb0;
+  --token-text-faint:     #77728b;
+  --token-accent:         #e8c840;
+  --token-accent-cold:    #4a98b8;
+
+  --token-glow:      rgba(232,200,64,.12);
+  --token-glow-cold: rgba(74,152,184,.08);
+
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface) 88%, var(--token-accent) 12%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 10%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 6%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 60%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 92%, transparent);
+  --token-on-accent:      #101824;
+
+  --token-shadow-elevated: 0 1px 2px rgba(0,0,0,.14), 0 4px 12px rgba(0,0,0,.20);
+  --token-shadow-overlay:  0 2px 4px rgba(0,0,0,.18), 0 8px 24px rgba(0,0,0,.28);
+
+  --token-success:      #5ab88a;
+  --token-success-muted: rgba(90,184,138,.12);
+  --token-warning:      #d4a028;
+  --token-warning-muted: rgba(212,160,40,.12);
+  --token-error:        #d06060;
+  --token-error-muted:  rgba(208,96,96,.12);
+  --token-info:         #6090c0;
+  --token-info-muted:   rgba(96,144,192,.12);
+
+  --token-fill-1: color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 8%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 14%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 22%, transparent);
+
+  --token-surface-glass: color-mix(in srgb, var(--token-bg-soft) 82%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #c8a830;
+  --accent-clay-light: #f0e070;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-bg-soft);
+  --bg-card-muted: var(--token-surface);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: #a0a098;
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-line-strong);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-fill-1);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 22%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INK — 水墨纸砚 · 松烟翠
+   Sumi Ink · Rice Paper × Pine-Soot Green
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── INK LIGHT · 宣纸水墨 ── */
+.ink {
+  /* 宣纸白底 · 墨灰 · 松烟绿 accent */
+  --token-bg:             #F5F2ED;
+  --token-bg-soft:        #EDE9E2;
+  --token-surface:        #E8E4DC;
+  --token-surface-strong: #E0DBD2;
+  --token-line-soft:      #D4CFC6;
+  --token-line:           #B8B2A8;
+  --token-line-strong:    #969088;
+  --token-text:           #1A1816;
+  --token-text-muted:     #5C5854;
+  --token-text-faint:     #969088;
+  --token-accent:         #5B7A5E;
+  --token-accent-cold:    #6B7E8A;
+
+  --token-glow:      rgba(91,122,94,.08);
+  --token-glow-cold: rgba(107,126,138,.04);
+
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface) 94%, var(--token-accent) 6%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 10%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 6%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 55%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 94%, transparent);
+  --token-on-accent:      #ffffff;
+
+  --token-shadow-elevated: 0 1px 2px rgba(0,0,0,.04), 0 4px 14px rgba(0,0,0,.06);
+  --token-shadow-overlay:  0 2px 4px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.08);
+
+  --token-success:      #5A8E6A;
+  --token-success-muted: rgba(90,142,106,.10);
+  --token-warning:      #9A7A3A;
+  --token-warning-muted: rgba(154,122,58,.10);
+  --token-error:        #A05048;
+  --token-error-muted:  rgba(160,80,72,.10);
+  --token-info:         #5A7890;
+  --token-info-muted:   rgba(90,120,144,.10);
+
+  --token-fill-1: color-mix(in srgb, var(--token-text) 3%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 6%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 10%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 16%, transparent);
+
+  --token-surface-glass: color-mix(in srgb, var(--token-bg) 86%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #4A6A4E;
+  --accent-clay-light: #8AA88E;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: #FCFAF7;
+  --bg-card-muted: var(--token-bg-soft);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: #7A7672;
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-line-strong);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-fill-1);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 20%, transparent);
+}
+
+/* ── INK DARK · 夜墨松烟 ── */
+.ink.dark {
+  /* 墨色夜空 · 松烟暗绿 · 冷灰星点 */
+  --token-bg:             #131815;
+  --token-bg-soft:        #1A201D;
+  --token-surface:        #212824;
+  --token-surface-strong: #28302B;
+  --token-line-soft:      #2A322D;
+  --token-line:           #3A423D;
+  --token-line-strong:    #4A524D;
+  --token-text:           #F0EEE8;
+  --token-text-muted:     #B0AEAA;
+  --token-text-faint:     #74726e;
+  --token-accent:         #7AA87E;
+  --token-accent-cold:    #6A8EA0;
+
+  --token-glow:      rgba(122,168,126,.10);
+  --token-glow-cold: rgba(106,142,160,.05);
+
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface) 90%, var(--token-accent) 10%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 10%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 6%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 60%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 94%, transparent);
+  --token-on-accent:      #ffffff;
+
+  --token-shadow-elevated: 0 1px 2px rgba(0,0,0,.2), 0 4px 14px rgba(0,0,0,.22);
+  --token-shadow-overlay:  0 2px 4px rgba(0,0,0,.28), 0 10px 30px rgba(0,0,0,.34);
+
+  --token-success:      #6AB080;
+  --token-success-muted: rgba(106,176,128,.12);
+  --token-warning:      #B89A45;
+  --token-warning-muted: rgba(184,154,69,.12);
+  --token-error:        #C06860;
+  --token-error-muted:  rgba(192,104,96,.12);
+  --token-info:         #6A98B8;
+  --token-info-muted:   rgba(106,152,184,.12);
+
+  --token-fill-1: color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 8%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 14%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 22%, transparent);
+
+  --token-surface-glass: color-mix(in srgb, var(--token-bg-soft) 82%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #5A8A62;
+  --accent-clay-light: #A0CAA4;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-bg-soft);
+  --bg-card-muted: var(--token-surface);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: #989692;
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-line-strong);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-fill-1);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 22%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RETRO — 8-bit · 红白机 · 像素风
+   NES · Famicom · Pixel Art · CRT Glow
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── RETRO LIGHT · 经典像素 ── */
+.retro {
+  /* 像素风配色：纯白底 + 经典红 + 深蓝 */
+  --token-bg:             #f0f0e8;
+  --token-bg-soft:        #e0e0d0;
+  --token-surface:        #e8e8dc;
+  --token-surface-strong: #dcdcc8;
+  --token-line-soft:      #c0c0a8;
+  --token-line:           #a0a088;
+  --token-line-strong:    #808068;
+  --token-text:           #1a1a1a;
+  --token-text-muted:     #4a4a3a;
+  --token-text-faint:     #7a7a6a;
+  --token-accent:         #d03030;
+  --token-accent-cold:    #3030a0;
+
+  /* ── Glow ── */
+  --token-glow:      rgba(208,48,48,.10);
+  --token-glow-cold: rgba(48,48,160,.08);
+
+  /* ── Derived ── */
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface) 90%, var(--token-accent) 10%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 12%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 8%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 55%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 92%, transparent);
+  --token-on-accent:      #ffffff;
+
+  /* ── Shadow · 硬像素投影 ── */
+  --token-shadow-elevated: 2px 2px 0 rgba(26,26,26,.25);
+  --token-shadow-overlay:  3px 3px 0 rgba(26,26,26,.35);
+
+  /* ── Semantic ── */
+  --token-success:      #30a030;
+  --token-success-muted: rgba(48,160,48,.14);
+  --token-warning:      #c8a020;
+  --token-warning-muted: rgba(200,160,32,.14);
+  --token-error:        #d03030;
+  --token-error-muted:  rgba(208,48,48,.14);
+  --token-info:         #3030a0;
+  --token-info-muted:   rgba(48,48,160,.14);
+
+  /* ── Fill ── */
+  --token-fill-1: color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 8%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 14%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 22%, transparent);
+
+  /* ── Glass ── */
+  --token-surface-glass: color-mix(in srgb, var(--token-bg-soft) 88%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #a02020;
+  --accent-clay-light: #e06060;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-surface);
+  --bg-card-muted: var(--token-bg-soft);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: #5a5a4a;
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-line-strong);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-fill-1);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 20%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 24%, transparent);
+}
+
+/* ── RETRO DARK · 深夜像素 ── */
+.retro.dark {
+  /* 像素暗色：深蓝灰底 + 霓虹红 + 像素蓝 */
+  --token-bg:             #1a1a2e;
+  --token-bg-soft:        #222240;
+  --token-surface:        #2a2a50;
+  --token-surface-strong: #323260;
+  --token-line-soft:      #3a3a70;
+  --token-line:           #4a4a90;
+  --token-line-strong:    #5a5ab0;
+  --token-text:           #e8e8d8;
+  --token-text-muted:     #c0c0a8;
+  --token-text-faint:     #808070;
+  --token-accent:         #ff4040;
+  --token-accent-cold:    #5050ff;
+
+  /* ── Glow · 霓虹像素光 ── */
+  --token-glow:      rgba(255,64,64,.14);
+  --token-glow-cold: rgba(80,80,255,.10);
+
+  /* ── Derived ── */
+  --token-surface-hover:  color-mix(in srgb, var(--token-surface) 88%, var(--token-accent) 12%);
+  --token-accent-subtle:  color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --token-accent-glow:    color-mix(in srgb, var(--token-accent) 10%, transparent);
+  --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 60%, transparent);
+  --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 94%, transparent);
+  --token-on-accent:      #ffffff;
+
+  /* ── Shadow · 硬像素投影 ── */
+  --token-shadow-elevated: 2px 2px 0 rgba(0,0,0,.40);
+  --token-shadow-overlay:  3px 3px 0 rgba(0,0,0,.50);
+
+  /* ── Semantic ── */
+  --token-success:      #40ff40;
+  --token-success-muted: rgba(64,255,64,.16);
+  --token-warning:      #ffff40;
+  --token-warning-muted: rgba(255,255,64,.16);
+  --token-error:        #ff4040;
+  --token-error-muted:  rgba(255,64,64,.16);
+  --token-info:         #5050ff;
+  --token-info-muted:   rgba(80,80,255,.16);
+
+  /* ── Fill ── */
+  --token-fill-1: color-mix(in srgb, var(--token-text) 5%, transparent);
+  --token-fill-2: color-mix(in srgb, var(--token-text) 10%, transparent);
+  --token-fill-3: color-mix(in srgb, var(--token-text) 16%, transparent);
+  --token-fill-4: color-mix(in srgb, var(--token-text) 24%, transparent);
+
+  /* ── Glass ── */
+  --token-surface-glass: color-mix(in srgb, var(--token-bg-soft) 82%, transparent);
+
+  /* ── BRIDGE ── */
+  --accent-clay: var(--token-accent);
+  --accent-clay-dark: #d03030;
+  --accent-clay-light: #ff6060;
+  --accent-cold: var(--token-accent-cold);
+  --bg-primary: var(--token-bg);
+  --bg-secondary: var(--token-bg-soft);
+  --bg-tertiary: var(--token-surface);
+  --bg-card: var(--token-bg-soft);
+  --bg-card-muted: var(--token-surface);
+  --bg-panel: var(--token-surface-strong);
+  --bg-hover: var(--token-surface-hover);
+  --text-primary: var(--token-text);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: #a0a090;
+  --text-muted: var(--token-text-faint);
+  --text-subtle: var(--token-line-strong);
+  --border-subtle: var(--token-line-soft);
+  --border-default: var(--token-line);
+  --border-strong: var(--token-line-strong);
+  --shadow-sm: var(--token-shadow-elevated);
+  --shadow-md: var(--token-shadow-overlay);
+  --color-success: var(--token-success);
+  --color-success-bg: var(--token-success-muted);
+  --color-warning: var(--token-warning);
+  --color-warning-bg: var(--token-warning-muted);
+  --color-error: var(--token-error);
+  --color-error-bg: var(--token-error-muted);
+  --color-info: var(--token-info);
+  --color-info-bg: var(--token-info-muted);
+  --color-pending: var(--token-text-faint);
+  --color-pending-bg: var(--token-fill-1);
+  --accent-clay-bg: var(--token-accent-subtle);
+  --accent-clay-bg-strong: color-mix(in srgb, var(--token-accent) 16%, transparent);
+  --accent-clay-border: color-mix(in srgb, var(--token-accent) 24%, transparent);
+}
+
+/* ── RETRO Depth Tokens ── */
+.retro {
+  --token-canvas: var(--token-bg);
+  --token-sidebar: color-mix(in srgb, var(--token-bg-soft) 78%, var(--token-bg) 22%);
+  --token-panel: color-mix(in srgb, var(--token-bg-soft) 52%, var(--token-bg) 48%);
+  --token-card: color-mix(in srgb, var(--token-bg) 80%, var(--token-surface) 20%);
+  --token-card-strong: color-mix(in srgb, var(--token-bg) 66%, var(--token-surface) 34%);
+  --token-control: color-mix(in srgb, var(--token-bg-soft) 62%, var(--token-bg) 38%);
+  --token-control-hover: color-mix(in srgb, var(--token-surface-hover) 52%, var(--token-bg-soft) 48%);
+  --token-outline-soft: color-mix(in srgb, var(--token-line-soft) 82%, var(--token-bg) 18%);
+  --token-outline: color-mix(in srgb, var(--token-line) 84%, var(--token-bg) 16%);
+  --token-outline-strong: color-mix(in srgb, var(--token-line-strong) 86%, var(--token-text) 8%);
+  --token-shadow-card: 2px 2px 0 color-mix(in srgb, var(--token-text) 15%, transparent);
+  --token-shadow-inset: inset 2px 2px 0 color-mix(in srgb, var(--token-surface) 42%, transparent), inset -1px -1px 0 color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-top-highlight: color-mix(in srgb, var(--token-surface) 36%, transparent);
+}
+
+.retro.dark {
+  --token-canvas: var(--token-bg);
+  --token-sidebar: color-mix(in srgb, var(--token-bg-soft) 86%, var(--token-bg) 14%);
+  --token-panel: color-mix(in srgb, var(--token-bg-soft) 72%, var(--token-bg) 28%);
+  --token-card: color-mix(in srgb, var(--token-surface) 72%, var(--token-bg-soft) 28%);
+  --token-card-strong: color-mix(in srgb, var(--token-surface-strong) 72%, var(--token-surface) 28%);
+  --token-control: color-mix(in srgb, var(--token-bg-soft) 70%, var(--token-bg) 30%);
+  --token-control-hover: color-mix(in srgb, var(--token-surface-hover) 62%, var(--token-bg-soft) 38%);
+  --token-outline-soft: color-mix(in srgb, var(--token-line-soft) 82%, var(--token-bg) 18%);
+  --token-outline: color-mix(in srgb, var(--token-line) 84%, var(--token-text-faint) 8%);
+  --token-outline-strong: color-mix(in srgb, var(--token-line-strong) 86%, var(--token-text-muted) 8%);
+  --token-shadow-card: 2px 2px 0 rgba(0,0,0,.30);
+  --token-shadow-inset: inset 2px 2px 0 color-mix(in srgb, var(--token-text) 6%, transparent), inset -1px -1px 0 rgba(0,0,0,.22);
+  --token-top-highlight: color-mix(in srgb, var(--token-surface) 18%, transparent);
+}
+
+
+/* ── 圆角 ── */
+:root {
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 999px;
+}
+
+/* ── Depth Tokens ──
+   Semantic surface levels used by app chrome and primitives. These are
+   intentionally derived from theme tokens so every palette keeps its own voice
+   while gaining clearer functional separation. */
+:root {
+  --token-canvas: var(--token-bg);
+  --token-sidebar: color-mix(in srgb, var(--token-bg-soft) 78%, var(--token-bg) 22%);
+  --token-panel: color-mix(in srgb, var(--token-bg-soft) 52%, var(--token-bg) 48%);
+  --token-card: color-mix(in srgb, var(--token-bg) 80%, var(--token-surface) 20%);
+  --token-card-strong: color-mix(in srgb, var(--token-bg) 66%, var(--token-surface) 34%);
+  --token-control: color-mix(in srgb, var(--token-bg-soft) 62%, var(--token-bg) 38%);
+  --token-control-hover: color-mix(in srgb, var(--token-surface-hover) 52%, var(--token-bg-soft) 48%);
+  --token-outline-soft: color-mix(in srgb, var(--token-line-soft) 82%, var(--token-bg) 18%);
+  --token-outline: color-mix(in srgb, var(--token-line) 84%, var(--token-bg) 16%);
+  --token-outline-strong: color-mix(in srgb, var(--token-line-strong) 86%, var(--token-text) 8%);
+  --token-shadow-card: 0 1px 2px color-mix(in srgb, var(--token-text) 5%, transparent), 0 6px 18px color-mix(in srgb, var(--token-text) 5%, transparent);
+  --token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--token-surface) 42%, transparent), inset 0 -1px 1px color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-top-highlight: color-mix(in srgb, var(--token-surface) 36%, transparent);
+}
+
+.dark {
+  --token-canvas: var(--token-bg);
+  --token-sidebar: color-mix(in srgb, var(--token-bg-soft) 86%, var(--token-bg) 14%);
+  --token-panel: color-mix(in srgb, var(--token-bg-soft) 72%, var(--token-bg) 28%);
+  --token-card: color-mix(in srgb, var(--token-surface) 72%, var(--token-bg-soft) 28%);
+  --token-card-strong: color-mix(in srgb, var(--token-surface-strong) 72%, var(--token-surface) 28%);
+  --token-control: color-mix(in srgb, var(--token-bg-soft) 70%, var(--token-bg) 30%);
+  --token-control-hover: color-mix(in srgb, var(--token-surface-hover) 62%, var(--token-bg-soft) 38%);
+  --token-outline-soft: color-mix(in srgb, var(--token-line-soft) 82%, var(--token-bg) 18%);
+  --token-outline: color-mix(in srgb, var(--token-line) 84%, var(--token-text-faint) 8%);
+  --token-outline-strong: color-mix(in srgb, var(--token-line-strong) 86%, var(--token-text-muted) 8%);
+  --token-shadow-card: 0 1px 1px rgba(0,0,0,.22), 0 12px 28px rgba(0,0,0,.24);
+  --token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--token-text) 6%, transparent), inset 0 -1px 1px rgba(0,0,0,.22);
+  --token-top-highlight: color-mix(in srgb, var(--token-surface) 18%, transparent);
+}
+
+.piano {
+  --token-canvas: var(--token-bg);
+  --token-sidebar: color-mix(in srgb, var(--token-bg-soft) 84%, var(--token-bg) 16%);
+  --token-panel: color-mix(in srgb, var(--token-bg-soft) 68%, var(--token-bg) 32%);
+  --token-card: color-mix(in srgb, var(--token-surface) 56%, var(--token-bg) 44%);
+  --token-card-strong: color-mix(in srgb, var(--token-surface) 72%, var(--token-bg-soft) 28%);
+  --token-control: color-mix(in srgb, var(--token-bg-soft) 74%, var(--token-line-soft) 26%);
+  --token-control-hover: color-mix(in srgb, var(--token-surface-strong) 92%, var(--token-accent) 8%);
+  --token-outline-soft: color-mix(in srgb, var(--token-line-soft) 84%, var(--token-bg) 16%);
+  --token-outline: color-mix(in srgb, var(--token-line) 94%, var(--token-text-muted) 6%);
+  --token-outline-strong: color-mix(in srgb, var(--token-line-strong) 92%, var(--token-text) 8%);
+  --token-shadow-card: 0 1px 1px color-mix(in srgb, var(--token-text) 7%, transparent), 0 9px 24px color-mix(in srgb, var(--token-text) 7%, transparent);
+  --token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--token-surface) 70%, transparent), inset 0 -1px 1px color-mix(in srgb, var(--token-text) 5%, transparent);
+  --token-top-highlight: color-mix(in srgb, var(--token-surface) 52%, transparent);
+}
+
+.piano.dark {
+  --token-canvas: var(--token-bg);
+  --token-sidebar: color-mix(in srgb, var(--token-bg-soft) 86%, black 14%);
+  --token-panel: color-mix(in srgb, var(--token-bg-soft) 74%, var(--token-bg) 26%);
+  --token-card: color-mix(in srgb, var(--token-surface) 76%, var(--token-bg-soft) 24%);
+  --token-card-strong: color-mix(in srgb, var(--token-surface-strong) 78%, var(--token-surface) 22%);
+  --token-control: color-mix(in srgb, var(--token-bg-soft) 72%, black 28%);
+  --token-control-hover: color-mix(in srgb, var(--token-surface-strong) 92%, var(--token-accent) 8%);
+  --token-outline-soft: color-mix(in srgb, var(--token-line-soft) 86%, var(--token-bg) 14%);
+  --token-outline: color-mix(in srgb, var(--token-line) 92%, var(--token-accent) 8%);
+  --token-outline-strong: color-mix(in srgb, var(--token-line-strong) 88%, var(--token-accent) 12%);
+  --token-shadow-card: 0 1px 1px rgba(0,0,0,.32), 0 14px 34px rgba(0,0,0,.40);
+  --token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--token-text) 8%, transparent), inset 0 -1px 1px rgba(0,0,0,.30);
+  --token-top-highlight: color-mix(in srgb, var(--token-text) 8%, transparent);
+}
+
+.vangogh {
+  --token-canvas: color-mix(in srgb, var(--token-bg) 88%, #f6efd0 12%);
+  --token-sidebar: color-mix(in srgb, var(--token-bg-soft) 78%, var(--token-bg) 22%);
+  --token-panel: color-mix(in srgb, var(--token-bg) 70%, var(--token-bg-soft) 30%);
+  --token-card: color-mix(in srgb, var(--token-bg) 78%, var(--token-surface) 22%);
+  --token-card-strong: color-mix(in srgb, var(--token-bg) 58%, var(--token-surface) 42%);
+  --token-control: color-mix(in srgb, var(--token-bg-soft) 58%, var(--token-bg) 42%);
+  --token-control-hover: color-mix(in srgb, var(--token-surface-strong) 86%, var(--token-accent) 14%);
+  --token-outline-soft: color-mix(in srgb, var(--token-line-soft) 80%, var(--token-bg) 20%);
+  --token-outline: color-mix(in srgb, var(--token-line) 88%, var(--token-accent) 12%);
+  --token-outline-strong: color-mix(in srgb, var(--token-line-strong) 84%, var(--token-accent) 16%);
+  --token-shadow-card: 0 1px 2px color-mix(in srgb, var(--token-text) 5%, transparent), 0 8px 22px color-mix(in srgb, var(--token-text) 7%, transparent);
+  --token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--token-surface) 48%, transparent), inset 0 -1px 1px color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-top-highlight: color-mix(in srgb, var(--token-surface) 30%, transparent);
+}
+
+.vangogh.dark {
+  --token-canvas: var(--token-bg);
+  --token-sidebar: color-mix(in srgb, var(--token-bg-soft) 84%, var(--token-bg) 16%);
+  --token-panel: color-mix(in srgb, var(--token-bg-soft) 72%, var(--token-bg) 28%);
+  --token-card: color-mix(in srgb, var(--token-surface) 72%, var(--token-bg-soft) 28%);
+  --token-card-strong: color-mix(in srgb, var(--token-surface-strong) 76%, var(--token-surface) 24%);
+  --token-control: color-mix(in srgb, var(--token-bg-soft) 70%, var(--token-bg) 30%);
+  --token-control-hover: color-mix(in srgb, var(--token-surface-hover) 74%, var(--token-accent) 8%);
+  --token-outline-soft: color-mix(in srgb, var(--token-line-soft) 82%, var(--token-bg) 18%);
+  --token-outline: color-mix(in srgb, var(--token-line) 84%, var(--token-accent-cold) 8%);
+  --token-outline-strong: color-mix(in srgb, var(--token-line-strong) 84%, var(--token-accent) 10%);
+  --token-shadow-card: 0 1px 1px rgba(0,0,0,.22), 0 12px 28px rgba(0,0,0,.24);
+  --token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--token-text) 6%, transparent), inset 0 -1px 1px rgba(0,0,0,.22);
+  --token-top-highlight: color-mix(in srgb, var(--token-surface) 18%, transparent);
+}
+
+/* ── Workbench Chrome Tokens ──
+   Shared spatial hierarchy for Studio and Creation editors. These sit on top
+   of theme depth tokens so light/dark and style profiles keep their own voice
+   while still exposing clear IDE-like regions. */
+:root {
+  --token-workbench-canvas: color-mix(in srgb, var(--token-bg-soft) 78%, var(--token-line-soft) 22%);
+  --token-workbench-sidebar: color-mix(in srgb, var(--token-bg) 76%, var(--token-surface) 24%);
+  --token-workbench-editor: color-mix(in srgb, var(--token-bg) 82%, var(--token-surface) 18%);
+  --token-workbench-panel: color-mix(in srgb, var(--token-card) 82%, var(--token-surface) 18%);
+  --token-workbench-panel-strong: color-mix(in srgb, var(--token-card-strong) 78%, var(--token-surface) 22%);
+  --token-workbench-chrome: color-mix(in srgb, var(--token-workbench-panel) 86%, var(--token-surface) 14%);
+  --token-workbench-rail: color-mix(in srgb, var(--token-sidebar) 84%, var(--token-bg) 16%);
+  --token-workbench-gutter: color-mix(in srgb, var(--token-line-soft) 30%, transparent);
+  --token-workbench-edge: color-mix(in srgb, var(--token-text) 10%, transparent);
+  --token-workbench-edge-soft: color-mix(in srgb, var(--token-text) 7%, transparent);
+  --token-workbench-shadow: 0 1px 1px color-mix(in srgb, var(--token-text) 3%, transparent), 0 8px 22px color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-workbench-shadow-inset: inset 0 1px 0 color-mix(in srgb, var(--token-surface) 28%, transparent);
+  --token-editor-paper: #f5efe5;
+  --token-editor-paper-soft: color-mix(in srgb, var(--token-editor-paper) 88%, var(--token-bg-soft) 12%);
+  --token-editor-paper-chrome: color-mix(in srgb, var(--token-editor-paper) 92%, var(--token-surface) 8%);
+  --token-editor-paper-edge: color-mix(in srgb, var(--token-text) 7%, transparent);
+}
+
+.dark {
+  --token-workbench-canvas: color-mix(in srgb, var(--token-bg) 72%, black 28%);
+  --token-workbench-sidebar: color-mix(in srgb, var(--token-bg-soft) 72%, black 28%);
+  --token-workbench-editor: color-mix(in srgb, var(--token-bg) 84%, black 16%);
+  --token-workbench-panel: color-mix(in srgb, var(--token-panel) 82%, black 18%);
+  --token-workbench-panel-strong: color-mix(in srgb, var(--token-card-strong) 82%, black 18%);
+  --token-workbench-chrome: color-mix(in srgb, var(--token-workbench-panel) 78%, black 22%);
+  --token-workbench-rail: color-mix(in srgb, var(--token-sidebar) 76%, black 24%);
+  --token-workbench-gutter: color-mix(in srgb, var(--token-line-soft) 44%, transparent);
+  --token-workbench-edge: color-mix(in srgb, var(--token-text) 11%, transparent);
+  --token-workbench-edge-soft: color-mix(in srgb, var(--token-text) 8%, transparent);
+  --token-workbench-shadow: 0 1px 1px rgba(0,0,0,.16), 0 10px 26px rgba(0,0,0,.18);
+  --token-workbench-shadow-inset: inset 0 1px 0 color-mix(in srgb, var(--token-text) 4%, transparent);
+  --token-editor-paper: #26211b;
+  --token-editor-paper-soft: color-mix(in srgb, var(--token-editor-paper) 88%, var(--token-bg-soft) 12%);
+  --token-editor-paper-chrome: color-mix(in srgb, var(--token-editor-paper) 90%, var(--token-surface-strong) 10%);
+  --token-editor-paper-edge: color-mix(in srgb, var(--token-text) 8%, transparent);
+}
+
+.piano {
+  --token-editor-paper: #fbf8ef;
+}
+
+.piano.dark {
+  --token-editor-paper: #1d1b17;
+}
+
+.art {
+  --token-editor-paper: #e9f2ed;
+}
+
+.art.dark {
+  --token-editor-paper: #203a34;
+}
+
+.vangogh {
+  --token-editor-paper: #eee5bf;
+}
+
+.vangogh.dark {
+  --token-editor-paper: #172742;
+}
+
+.ink {
+  --token-editor-paper: #fbf8f1;
+}
+
+.ink.dark {
+  --token-editor-paper: #1b221e;
+}
+
+.retro {
+  --token-editor-paper: #f4f4ea;
+}
+
+.retro.dark {
+  --token-editor-paper: #24243f;
+}
+
+.style-retro {
+  --token-workbench-shadow: var(--token-shadow-card);
+  --token-workbench-shadow-inset: var(--token-shadow-inset);
+}
+
+/* ── 动画 ── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+

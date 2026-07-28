@@ -1,0 +1,74 @@
+---
+import Base from '../layouts/Base.astro';
+
+const quickStart = `bun add @icen.ai/ui`;
+const quickStartCss = `import '@icen.ai/ui/tokens.css';
+import '@icen.ai/ui/ui.css';`;
+const quickStartHtml = `<html class="piano dark"> … </html>`;
+---
+<Base title="ICEN UI · 设计系统">
+  <section class="hero">
+    <h1 class="hero-title">ICEN UI</h1>
+    <p class="hero-sub">icen.ai 生态的统一设计系统——6 套色彩预设 × 明暗双模 × 无框架组件</p>
+    <div class="demo-row">
+      <a class="btn btn-primary" href="/components/">浏览组件 →</a>
+      <a class="btn" href="https://github.com/icen-ai/ui" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </section>
+
+  <div class="panel-block">
+    <div class="panel-title"><span>设计 Tokens</span></div>
+    <div class="panel-body">
+      <div class="token-layers">
+        <div class="token-layer">
+          <div class="token-layer-name">色彩预设</div>
+          <p class="dim">6 套完整配色（clay / piano / art / vangogh / ink / retro），每套定义全部 --token-* 色板，挂同名类即切换。</p>
+        </div>
+        <div class="token-layer">
+          <div class="token-layer-name">风格配置</div>
+          <p class="dim">style-modern / style-retro / style-terminal 第二层抽象，只覆盖字体、圆角、阴影硬度等与颜色正交的变量。</p>
+        </div>
+        <div class="token-layer">
+          <div class="token-layer-name">明暗双模</div>
+          <p class="dim">每个预设各含 .dark 变体，挂 dark 类即可在亮/暗之间切换，语义色与阴影随之整体翻转。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-block">
+    <div class="panel-title"><span>快速开始</span></div>
+    <div class="panel-body">
+      <p class="dim">安装设计系统包：</p>
+      <pre><code>{quickStart}</code></pre>
+      <p class="dim">在入口引入 tokens 与全部组件样式：</p>
+      <pre><code>{quickStartCss}</code></pre>
+      <p class="dim">在 <code>&lt;html&gt;</code> 上挂预设与明暗类（示例：piano 预设 + 暗色）：</p>
+      <pre><code>{quickStartHtml}</code></pre>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .hero { padding: 48px 0 40px; }
+  .hero-title {
+    font-family: var(--font-heading);
+    font-size: 56px;
+    letter-spacing: 4px;
+    margin: 0 0 12px;
+  }
+  .hero-sub {
+    color: var(--token-text-muted);
+    font-size: 15px;
+    margin: 0 0 26px;
+  }
+  .token-layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .token-layer-name {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--token-accent-deep, var(--token-accent));
+  }
+  .token-layer p { margin: 0; font-size: 13px; }
+</style>

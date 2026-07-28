@@ -1,0 +1,73 @@
+/*
+ * @icen.ai/ui — Behavior: copy（复制按钮，事件委托）
+ * 命中最近的 .copy-btn[data-copy] → navigator.clipboard.writeText，
+ * 失败回退 textarea + execCommand；成功后按钮文本变「已复制」加 .done 类，1.4s 还原。
+ * 同一 root 重复 init 幂等。
+ */
+
+const initialized = new WeakSet<ParentNode>();
+const flashing = new WeakMap<HTMLElement, { original: string | null; timer: number }>();
+
+function legacyCopy(text: string): boolean {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
+  ta.remove();
+  return ok;
+}
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* clipboard 被拒（权限/非安全上下文）→ 回落 execCommand */
+  }
+  return legacyCopy(text);
+}
+
+function flashDone(btn: HTMLElement): void {
+  const prev = flashing.get(btn);
+  if (prev) window.clearTimeout(prev.timer);
+  const original = prev ? prev.original : btn.textContent;
+  btn.textContent = '已复制';
+  btn.classList.add('done');
+  const timer = window.setTimeout(() => {
+    btn.textContent = original;
+    btn.classList.remove('done');
+    flashing.delete(btn);
+  }, 1400);
+  flashing.set(btn, { original, timer });
+}
+
+function onClick(root: ParentNode, ev: Event): void {
+  const target = ev.target;
+  if (!(target instanceof Element)) return;
+  const btn = target.closest('.copy-btn[data-copy]');
+  // root 为 Element 时，closest 可能爬到 root 之外，需要兜住
+  if (!btn || !(root as Node).contains(btn)) return;
+  const text = btn.getAttribute('data-copy') ?? '';
+  void copyText(text).then((ok) => {
+    if (ok) flashDone(btn as HTMLElement);
+  });
+}
+
+/** 委托监听 click；同一 root（含默认的 document）重复调用幂等。 */
+export function initCopy(root: ParentNode = document): void {
+  if (typeof document === 'undefined') return;
+  if (initialized.has(root)) return;
+  initialized.add(root);
+  (root as EventTarget).addEventListener('click', (ev) => onClick(root, ev));
+}

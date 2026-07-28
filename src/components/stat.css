@@ -1,0 +1,18 @@
+/*
+ * @icen.ai/ui — Component: stat（指标卡）
+ * 用法：<div class="stat-grid"><div class="stat-card"><div class="stat-num">0</div><div class="stat-label">用户总数</div></div>…
+ */
+
+.stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px; margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--token-surface); border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+  box-shadow: var(--token-shadow-elevated);
+}
+.stat-num { font-size: 24px; font-weight: 700; line-height: 1.25; word-break: break-all; }
+.stat-num.accent { color: var(--token-accent); }
+.stat-num.warn { color: var(--token-warning); }
+.stat-label { color: var(--token-text-faint); font-size: 11px; letter-spacing: 1px; margin-top: 2px; }

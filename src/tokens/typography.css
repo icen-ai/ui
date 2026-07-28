@@ -1,0 +1,49 @@
+/*
+ * @icen.ai/ui — Typography Tokens（icen canonical）
+ * 美学基调：等宽数字精密感 × 衬线书卷气（宋体标题）
+ * 默认（:root）即 icen 品牌形态；.style-modern 显式回退 system-ui 栈（见 style-profiles.css）
+ */
+
+/* ── 数学/等宽数字字体（数字密集区的精密感） ── */
+@font-face {
+  font-family: "Numeric Math";
+  src:
+    local("Cambria Math"),
+    local("STIX Two Math"),
+    local("Latin Modern Math"),
+    local("Asana Math");
+  unicode-range: U+0025-003A, U+00A5, U+2212, U+223C;
+}
+
+:root {
+  /* ── icen 品牌字体栈 ──
+     body/mono：IBM Plex Mono（未安装时回退系统等宽，行为与 accounts 一致，不打包 webfont）
+     heading：CJK 宋体系（页面标题/品牌名的书卷气） */
+  --font-body: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
+  --font-mono: var(--font-body);
+  --font-heading: 'Songti SC', 'STSong', 'Noto Serif SC', 'Source Han Serif SC', SimSun, serif;
+  --font-cjk: var(--font-heading);
+  --line-height-body: 1.7;
+  --line-height-heading: 1.2;
+}
+
+/* ── 全局排版 ── */
+body {
+  font-family: "Numeric Math", var(--font-body);
+  line-height: var(--line-height-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  line-height: var(--line-height-heading);
+}
+
+/* ── 数字密集区工具类 ── */
+.font-math {
+  font-family: "Numeric Math", math, var(--font-body);
+  font-variant-numeric: lining-nums tabular-nums;
+}

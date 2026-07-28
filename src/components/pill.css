@@ -1,0 +1,28 @@
+/*
+ * @icen.ai/ui — Component: pill（状态徽章）
+ * 用法：<span class="pill ok|warn|bad|accent">文本</span>
+ * 语义色纪律：仅绿/黄/红 + 品牌 accent。
+ */
+
+.pill {
+  display: inline-block; padding: 2px 10px; border-radius: var(--radius-full);
+  font-size: 11px; letter-spacing: 1px;
+  background: var(--token-surface-strong); color: var(--token-text-muted);
+  border: 1px solid var(--token-line-soft);
+}
+.pill.ok {
+  color: var(--token-success); border-color: color-mix(in srgb, var(--token-success) 35%, transparent);
+  background: color-mix(in srgb, var(--token-success) 7%, transparent);
+}
+.pill.warn {
+  color: var(--token-warning); border-color: color-mix(in srgb, var(--token-warning) 35%, transparent);
+  background: color-mix(in srgb, var(--token-warning) 7%, transparent);
+}
+.pill.bad {
+  color: var(--token-error); border-color: color-mix(in srgb, var(--token-error) 35%, transparent);
+  background: color-mix(in srgb, var(--token-error) 7%, transparent);
+}
+.pill.accent {
+  color: var(--token-accent-deep); border-color: color-mix(in srgb, var(--token-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--token-accent) 7%, transparent);
+}
