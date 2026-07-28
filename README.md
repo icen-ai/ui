@@ -39,7 +39,7 @@ cd site && bun install && bun run build
 bunx wrangler pages deploy dist --project-name=icen-ui   # 需 CLOUDFLARE_ACCOUNT_ID
 ```
 
-Pages 项目 `icen-ui`（aidoll 账号），自定义域 `ui.icen.ai` → CNAME `icen-ui.pages.dev`（已在 dashboard 激活）。
+Pages 项目 `icen-ui`（aidoll 账号），自定义域 `ui.icen.ai` → CNAME `icen-ui.pages.dev`。**已接 Git 自动部署**：push 到 `main` 即由 Cloudflare 构建（根目录 `site`，命令 `bun install && bun run build`，输出 `dist`），无需 wrangler 手动部署、无需任何 token/secret。
 
 ## 构建
 
