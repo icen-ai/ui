@@ -1,5 +1,5 @@
 ---
-import Base from '../layouts/Base.astro';
+import Docs from '../layouts/Docs.astro';
 
 // 每个预设展示：亮/暗两个色板条 + 在该预设上下文里的组件小样
 const presets = [
@@ -18,7 +18,7 @@ const swatches = [
 ];
 ---
 
-<Base title="色彩预设 · ICEN UI">
+<Docs title="色彩预设 · ICEN UI">
   <h1 class="page-title">色彩预设</h1>
   <p class="page-sub">6 套预设 × 明暗双模。每套都定义完整的 <code>--token-*</code> 色彩面，组件全部消费 token，换肤零改动。导航栏可实时切换全站预设与明暗。</p>
 
@@ -78,7 +78,7 @@ const swatches = [
       if (out) out.textContent = v;
     });
   </script>
-</Base>
+</Docs>
 
 <style is:global>
   .page-title { font-family: var(--font-heading); font-size: 26px; margin: 0 0 8px; }

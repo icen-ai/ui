@@ -1,0 +1,180 @@
+---
+import Docs from '../../layouts/Docs.astro';
+import { COMPONENTS, cssFor, type ComponentDoc } from '../../lib/components';
+
+export function getStaticPaths() {
+  return COMPONENTS.map((doc, i) => ({
+    params: { slug: doc.slug },
+    props: { doc, prev: COMPONENTS[i - 1], next: COMPONENTS[i + 1] },
+  }));
+}
+
+interface Props {
+  doc: ComponentDoc;
+  prev?: ComponentDoc;
+  next?: ComponentDoc;
+}
+const { doc, prev, next } = Astro.props;
+
+const installCode = `bun add @icen.ai/ui\nimport '@icen.ai/ui/components/${cssFor(doc.slug)}';`;
+// 传给页面内联脚本的数据：< 转义防 </script> 提前闭合
+const bootData = JSON.stringify({
+  behaviors: doc.behaviors ?? [],
+  init: doc.behaviorInit ?? {},
+  script: doc.script ?? '',
+}).replace(/</g, '\\u003c');
+---
+<Docs title={`${doc.name} · 组件 · ICEN UI`} description={doc.desc}>
+  <nav class="doc-crumb">组件 / {doc.group}</nav>
+  <h1 class="doc-title">{doc.name}</h1>
+  <p class="doc-slug mono faint">{doc.slug}</p>
+  <p class="doc-desc">{doc.desc}</p>
+
+  <section class="panel-block doc-preview" data-tabs>
+    <div class="panel-title doc-preview-head">
+      <span>示例</span>
+      <nav class="page-tabs">
+        <button class="page-tab active" data-tab="preview" type="button">预览</button>
+        <button class="page-tab" data-tab="code" type="button">代码</button>
+      </nav>
+    </div>
+    <div data-tab-panel="preview">
+      <div class="demo-stage" set:html={doc.demo} />
+    </div>
+    <div data-tab-panel="code" hidden>
+      <div class="code-wrap code-wrap--flat">
+        <button class="copy-btn" type="button" data-copy={doc.demo}>复制</button>
+        <pre><code>{doc.demo}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="doc-h2">安装</h2>
+  <div class="code-wrap">
+    <button class="copy-btn" type="button" data-copy={installCode}>复制</button>
+    <pre><code>{installCode}</code></pre>
+  </div>
+
+  <h2 class="doc-h2">用法</h2>
+  <div class="code-wrap">
+    <button class="copy-btn" type="button" data-copy={doc.usage}>复制</button>
+    <pre><code>{doc.usage}</code></pre>
+  </div>
+
+  <nav class="doc-pager">
+    {prev ? (
+      <a class="doc-pager-link" href={`/components/${prev.slug}/`}>
+        <span class="doc-pager-label">上一个</span>
+        <span class="doc-pager-name">← {prev.name}</span>
+      </a>
+    ) : <span />}
+    {next ? (
+      <a class="doc-pager-link doc-pager-next" href={`/components/${next.slug}/`}>
+        <span class="doc-pager-label">下一个</span>
+        <span class="doc-pager-name">{next.name} →</span>
+      </a>
+    ) : <span />}
+  </nav>
+
+  <script type="application/json" id="doc-boot-data" set:html={bootData} />
+  <script>
+    import { initTabs } from '../../../../src/behaviors/tabs.ts';
+    import { initCopy } from '../../../../src/behaviors/copy.ts';
+
+    // 每页必调：预览/代码切换 + 代码块复制按钮（.copy-btn[data-copy] 事件委托）
+    initTabs();
+    initCopy();
+
+    type BootData = {
+      behaviors?: string[];
+      init?: Record<string, string>;
+      script?: string;
+    };
+
+    async function boot(): Promise<void> {
+      const el = document.getElementById('doc-boot-data');
+      if (!el) return;
+      const data = JSON.parse(el.textContent ?? '{}') as BootData;
+
+      // 按需动态加载本组件页声明的 behavior 模块
+      const mods = import.meta.glob('../../../../src/behaviors/*.ts');
+      const loaded: Record<string, Record<string, unknown>> = {};
+      for (const b of data.behaviors ?? []) {
+        const load = mods[`../../../../src/behaviors/${b}.ts`];
+        if (typeof load === 'function') {
+          loaded[b] = (await load()) as Record<string, unknown>;
+        }
+      }
+      // 按注册表给出的 init 函数名初始化（accordion→initAccordion 等）
+      for (const b of data.behaviors ?? []) {
+        const initName = data.init?.[b];
+        const fn = initName ? loaded[b]?.[initName] : undefined;
+        if (typeof fn === 'function') (fn as () => void)();
+      }
+      // 额外接线脚本（charts 渲染数据、context-menu 注册、演示回显等），
+      // 以 camelCase + 'Mod' 形参暴露各模块（context-menu → contextMenuMod）。
+      if (data.script) {
+        const keys = Object.keys(loaded);
+        const names = keys.map(
+          (b) => b.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase()) + 'Mod',
+        );
+        const fn = new Function(...names, data.script) as (...args: unknown[]) => void;
+        fn(...keys.map((k) => loaded[k]));
+      }
+    }
+    void boot();
+  </script>
+</Docs>
+
+<style is:global>
+  .doc-crumb { font-size: 11px; letter-spacing: 1px; color: var(--token-text-faint); margin: 0 0 10px; }
+  .doc-title { font-family: var(--font-heading); font-size: 26px; letter-spacing: 2px; margin: 0 0 4px; }
+  .doc-slug { font-size: 12px; margin: 0 0 10px; }
+  .doc-desc { color: var(--token-text-muted); font-size: 13px; margin: 0 0 26px; }
+  .doc-h2 { font-family: var(--font-heading); font-size: 17px; letter-spacing: 1px; margin: 32px 0 12px; }
+
+  /* 预览卡：标题栏右侧的 预览|代码 切换去掉 tabs 默认下边距与分隔线 */
+  .doc-preview-head { padding: 0 0 0 20px; min-height: 48px; }
+  .doc-preview-head .page-tabs { border-bottom: 0; margin-bottom: 0; }
+  .doc-preview-head .page-tab { padding: 13px 14px; }
+
+  .demo-stage { padding: 32px 24px; }
+  .demo-stage .demo-row { justify-content: center; }
+  .demo-stage .demo-col,
+  .demo-stage .demo-col-wide { margin-left: auto; margin-right: auto; }
+
+  /* 代码块 + 右上角复制按钮 */
+  .code-wrap { position: relative; margin: 0 0 8px; }
+  .code-wrap pre { margin: 0; max-height: 460px; overflow: auto; border-radius: var(--radius-sm); }
+  .code-wrap--flat pre { border-radius: 0; max-height: 520px; }
+  .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    font: inherit;
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-sm);
+    background: var(--token-surface);
+    color: var(--token-text-muted);
+    cursor: pointer;
+  }
+  .copy-btn:hover { color: var(--token-accent); border-color: var(--token-accent); }
+  .copy-btn.done { color: var(--token-success); border-color: var(--token-success); }
+
+  .doc-pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--token-line-soft);
+  }
+  .doc-pager-link { display: flex; flex-direction: column; gap: 2px; }
+  .doc-pager-link:hover { text-decoration: none; }
+  .doc-pager-next { margin-left: auto; text-align: right; }
+  .doc-pager-label { font-size: 11px; color: var(--token-text-faint); letter-spacing: 1px; }
+  .doc-pager-name { font-size: 14px; color: var(--token-accent); font-weight: 500; }
+</style>
