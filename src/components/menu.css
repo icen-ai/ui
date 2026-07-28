@@ -1,0 +1,85 @@
+/*
+ * @icen.ai/ui — Component: menu（菜单面板，与 behaviors/dropdown、context-menu 配套）
+ * 面板由 JS portal 到 document.body 并按 fixed 定位；data-side 决定进场位移方向。
+ * 规格源自 opengal overlay/dropdown + overlay/context-menu。
+ */
+
+.menu {
+  position: fixed; z-index: var(--z-popover);
+  min-width: 180px; max-height: min(70vh, 420px); overflow-y: auto;
+  margin: 0; padding: 4px;
+  background: color-mix(in srgb, var(--token-card-strong) 92%, transparent);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--token-outline);
+  box-shadow: var(--token-shadow-overlay);
+  border-radius: var(--radius-lg);
+  animation: icen-menu-in 150ms var(--ease-out);
+}
+.menu[data-side='top'] { animation-name: icen-menu-in-top; }
+
+/* 右键菜单修正（opengal context-menu：min 218 / max 286 / z 9999 / 入场 100ms） */
+.menu--context {
+  min-width: 218px; max-width: 286px; z-index: 9999;
+  animation-duration: 100ms;
+}
+
+/* ── 分组标签 / 头（context-menu 的 header 项） ── */
+.menu-label {
+  padding: 4px 8px; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--token-text-faint);
+}
+.menu-header { padding: 8px 10px 6px; }
+.menu-header-label {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 11px; font-weight: 500; line-height: 16px; color: var(--token-text);
+}
+.menu-header-desc {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 10px; line-height: 14px; color: var(--token-text-faint);
+}
+
+/* ── 菜单项 ── */
+.menu-item {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 6px 8px;
+  background: none; border: 0; font: inherit; font-size: 12px; text-align: left;
+  color: var(--token-text);
+  border-radius: var(--radius-md); cursor: pointer; user-select: none;
+}
+.menu-item.is-highlighted, .menu-item:focus {
+  background: var(--token-surface-hover); color: var(--token-accent); outline: none;
+}
+.menu-item--danger { color: var(--token-error); }
+.menu-item--danger.is-highlighted, .menu-item--danger:focus {
+  background: var(--token-error-muted); color: var(--token-error);
+}
+.menu-item.is-disabled, .menu-item:disabled { opacity: 0.5; pointer-events: none; }
+
+.menu-item-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; flex-shrink: 0;
+}
+.menu-item-icon:empty { width: 16px; height: auto; } /* 无图标时 16px 宽占位 */
+.menu-item-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.menu-item-sub { display: block; font-size: 10px; line-height: 1.2; color: var(--token-text-faint); }
+.menu-item-shortcut { font-size: 10px; color: var(--token-text-faint); }
+
+/* 勾选项：左勾 ✓ + 缩进 */
+.menu-item-check {
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  color: var(--token-accent); font-size: 12px; line-height: 1;
+}
+.menu-item--checked { padding-left: 28px; }
+
+.menu-separator { margin: 6px 8px; height: 1px; background: var(--token-line-soft); }
+
+/* ── 进场：fade + scale(.95→1)，bottom 从上方 8px 滑入、top 从下方 8px 滑入 ── */
+@keyframes icen-menu-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes icen-menu-in-top {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}

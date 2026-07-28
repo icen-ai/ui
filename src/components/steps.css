@@ -1,0 +1,61 @@
+/*
+ * @icen.ai/ui — Component: steps（步骤条，横向默认 / .steps--vertical 垂直）
+ * 用法：<ol class="steps">
+ *         <li class="step step--finish">
+ *           <span class="step-line"></span>
+ *           <span class="step-dot">✓</span>
+ *           <div class="step-body">
+ *             <div class="step-title">已完成</div>
+ *             <div class="step-desc">描述</div>
+ *           </div>
+ *         </li>
+ *       </ol>
+ * 三态：.step--finish（accent 实底，内容放 ✓）/ .step--process（accent 描边）/ .step--wait（灰）。
+ * 连接线画在「当前步 → 下一步」之间，颜色跟随当前步状态；末步不显示（.step:last-child）。
+ * 垂直版同一 DOM：.step-line 改为绝对左侧竖线，穿过 16px 间隙接到下一颗圆点。
+ */
+
+.steps { display: flex; list-style: none; margin: 0; padding: 0; }
+.step { flex: 1; position: relative; text-align: center; }
+
+.step-line {
+  position: absolute; top: 16px; left: calc(50% + 20px);
+  width: calc(100% - 40px); height: 1px;
+  background: var(--token-outline-soft);
+}
+.step:last-child .step-line { display: none; }
+.step--finish .step-line { background: color-mix(in srgb, var(--token-accent) 40%, transparent); }
+
+.step-dot {
+  width: 32px; height: 32px; border-radius: var(--radius-full);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; position: relative; z-index: 1;
+}
+.step--finish .step-dot { background: var(--token-accent); color: var(--token-on-accent); }
+.step--process .step-dot {
+  background: var(--token-accent-subtle); color: var(--token-accent);
+  border: 2px solid var(--token-accent);
+}
+.step--wait .step-dot {
+  background: var(--token-control); color: var(--token-text-faint);
+  border: 1px solid var(--token-outline-soft);
+}
+
+.step-title { font-size: 13px; font-weight: 500; margin-top: 6px; }
+.step--wait .step-title { color: var(--token-text-muted); }
+.step-desc {
+  font-size: 11px; color: var(--token-text-faint);
+  margin-top: 2px; max-width: 160px; margin-inline: auto;
+}
+
+/* ── 垂直变体 ── */
+.steps--vertical { flex-direction: column; gap: 16px; }
+.steps--vertical .step { flex: none; display: flex; gap: 12px; text-align: left; }
+.steps--vertical .step-line {
+  top: 36px; bottom: -16px; left: 16px;
+  width: 1px; height: auto;
+}
+.steps--vertical .step-dot { flex-shrink: 0; }
+.steps--vertical .step-body { padding-top: 4px; }
+.steps--vertical .step-title { margin-top: 0; }
+.steps--vertical .step-desc { max-width: none; margin-inline: 0; }

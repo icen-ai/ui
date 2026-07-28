@@ -44,13 +44,14 @@ await writeFile(join(DIST, 'ui.css'), uiOut);
 
 // 4. registry.json（cli / 文档站消费）
 const pkg = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf8'));
+const behaviorFiles = (await readdir(join(SRC, 'behaviors'))).filter(f => f.endsWith('.ts')).sort();
 await writeFile(join(DIST, 'registry.json'), JSON.stringify({
   name: pkg.name,
   version: pkg.version,
   tokens: TOKEN_ORDER,
   base: 'base.css',
   components,
-  behaviors: ['tabs', 'theme', 'toast', 'copy'],
+  behaviors: behaviorFiles.map(f => f.replace(/\.ts$/, '')),
 }, null, 2) + '\n');
 
 console.log(`build-css: ${TOKEN_ORDER.length} tokens + base + ${components.length} components → dist/`);

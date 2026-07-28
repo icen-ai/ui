@@ -1,0 +1,112 @@
+/*
+ * @icen.ai/ui — Component: segmented（分段控件 / 切换组 / 数字步进器 / OTP）
+ * 规格源自 opengal primitives/input.tsx 的 SegmentedControl 与 advanced-input.tsx
+ * 的 ToggleButtonGroup / NumberStepper / OtpInput。
+ * segmented 与 toggle-group 是纯 CSS 状态组件（.is-active）；stepper 由使用方接线；
+ * otp 单元格交互见 behaviors/input.ts 的 initInput。
+ */
+
+/* ── 分段控件（排他单选） ── */
+.segmented {
+  display: inline-flex; align-items: center; gap: 2px; padding: 2px;
+  background: var(--token-panel);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--token-shadow-inset);
+}
+
+.segmented-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; font-size: 12px; font-weight: 500;
+  border: none; background: transparent; cursor: pointer;
+  border-radius: var(--radius-md);
+  color: var(--token-text-muted);
+}
+.segmented-item:hover:not(.is-active) {
+  color: var(--token-text); background: var(--token-surface-hover);
+}
+.segmented-item.is-active {
+  background: var(--token-accent); color: var(--token-on-accent, #fff);
+  box-shadow: var(--token-shadow-elevated);
+}
+.segmented-item:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* 尺寸：容器修饰符驱动 item 内边距 / 字号 */
+.segmented--sm .segmented-item { padding: 4px 10px; font-size: 11px; }
+
+/* ── 切换组（segmented 同族变体：更松的 padding、item 更小圆角、active 阴影更轻） ── */
+.toggle-group {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px;
+  background: var(--token-panel);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-lg);
+}
+
+.toggle-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; font-size: 12px; font-weight: 500;
+  border: none; background: transparent; cursor: pointer;
+  border-radius: var(--radius-xs);
+  color: var(--token-text-muted);
+}
+.toggle-item:hover:not(.is-active) {
+  color: var(--token-text); background: var(--token-control-hover);
+}
+.toggle-item.is-active {
+  background: var(--token-accent); color: var(--token-on-accent, #fff);
+  box-shadow: var(--token-shadow-card);
+}
+.toggle-item:disabled { opacity: 0.4; cursor: not-allowed; }
+.toggle-group--sm .toggle-item { padding: 4px 10px; font-size: 11px; }
+
+/* ── 数字步进器 ── */
+.stepper {
+  display: inline-flex; align-items: stretch;
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.stepper-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 10px; border: none; background: transparent; cursor: pointer;
+  color: var(--token-text-muted);
+  transition: background-color var(--duration-normal) var(--ease-out),
+    color var(--duration-normal) var(--ease-out);
+}
+.stepper-btn:hover { background: var(--token-control-hover); color: var(--token-text); }
+.stepper-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.stepper-input {
+  width: 56px; padding: 8px 0;
+  text-align: center; font-variant-numeric: tabular-nums;
+  background: transparent; outline: none; border: none;
+  border-left: 1px solid var(--token-outline-soft);
+  border-right: 1px solid var(--token-outline-soft);
+  color: var(--token-text); font: inherit; font-size: 13px;
+}
+/* 隐藏原生 number 箭头（± 交给 .stepper-btn） */
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.stepper-input[type='number'] { -moz-appearance: textfield; appearance: textfield; }
+
+/* ── OTP 验证码单元格 ── */
+.otp { display: inline-flex; align-items: center; gap: 8px; }
+
+.otp-cell {
+  width: 40px; height: 48px; padding: 0;
+  text-align: center; font-size: 18px; font-weight: 600;
+  color: var(--token-text);
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+.otp-cell:focus-visible {
+  border-color: var(--token-accent);
+  box-shadow: 0 0 0 2px var(--token-accent-subtle);
+}
+.otp-cell:disabled { opacity: 0.4; cursor: not-allowed; }

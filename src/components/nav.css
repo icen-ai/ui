@@ -1,0 +1,59 @@
+/*
+ * @icen.ai/ui — Component: nav（玻璃顶栏，scroll 收缩配套 behaviors/nav）
+ * 用法：<nav class="nav nav--sticky" data-scroll-reactive>
+ *         <div class="nav-left">…</div><div class="nav-center">…</div><div class="nav-right">…</div>
+ *       </nav>
+ * 三段：.nav-left / .nav-center（flex:1 居中）/ .nav-right，整行补充用 .nav-bottom。
+ * 按钮：.nav-btn（HTML 组合 .motion .pressable 基元），.is-active / .is-disabled / .nav-btn--icon。
+ * 契约：sticky/fixed 挂 --z-chrome 层；data-scroll-reactive 时 behaviors/nav 依 scrollY>12 切
+ * .is-scrolled——未滚动更透且无边线，滚动后底色更实 + blur 16px。
+ */
+
+.nav {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+  height: 56px; padding: 0 16px;
+  background: var(--token-surface-glass);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  border-bottom: 1px solid var(--token-outline-soft);
+  transition: all var(--duration-slow) var(--ease-out);
+}
+/* 带整行 bottom 时放开固定高度，第一行仍保持 56px */
+.nav:has(.nav-bottom) { height: auto; min-height: 56px; }
+.nav--sticky { position: sticky; top: 0; z-index: var(--z-chrome); }
+.nav--fixed { position: fixed; top: 0; left: 0; right: 0; z-index: var(--z-chrome); }
+
+/* scroll-reactive：未滚动更透、底边线透明（滚动后由 .is-scrolled 接管） */
+.nav[data-scroll-reactive]:not(.is-scrolled) {
+  background: color-mix(in srgb, var(--token-surface-glass) 70%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom-color: transparent;
+}
+.nav.is-scrolled {
+  background: color-mix(in srgb, var(--token-surface-glass) 92%, transparent);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.nav-left, .nav-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.nav-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.nav-bottom { width: 100%; }
+
+.nav-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: var(--radius-full); padding: 6px 12px;
+  font-size: 13px; color: var(--token-text-muted);
+  background: none; border: 0; cursor: pointer;
+}
+.nav-btn > svg { width: 14px; height: 14px; flex-shrink: 0; }
+.nav-btn:not(.is-active):hover { color: var(--token-text); background: var(--token-control-hover); }
+.nav-btn.is-active {
+  background: var(--token-accent); color: var(--token-on-accent);
+  font-weight: 500; box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+}
+.nav-btn.is-disabled, .nav-btn:disabled { opacity: .4; pointer-events: none; }
+.nav-btn--icon { padding: 6px 10px; }
+.nav-btn--icon > svg { width: 15px; height: 15px; }
+
+.nav-divider { width: 1px; height: 20px; margin: 0 2px; background: var(--token-outline-soft); }

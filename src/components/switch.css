@@ -1,0 +1,95 @@
+/*
+ * @icen.ai/ui — Component: switch（开关 / 勾选框 / 单选行）
+ * 纯 CSS 状态组件：状态全走 aria-checked / .is-selected，交互由使用方（或演示页脚本）切换。
+ *
+ * 开关：<button class="switch [--sm]" role="switch" aria-checked="true"><span class="switch-thumb"></span></button>
+ * 勾选：<button class="checkbox focus-ring" role="checkbox" aria-checked="true|false|mixed"></button>
+ * 单选：<div class="radio-group" role="radiogroup">
+ *         <button class="radio-item motion is-selected"><span class="radio-dot"></span>…</button>
+ *       </div>
+ */
+
+/* ── 开关 ── */
+.switch {
+  position: relative; display: inline-flex; flex-shrink: 0;
+  width: 44px; height: 24px; padding: 0;
+  border: none; border-radius: var(--radius-full);
+  background: var(--token-control-hover); cursor: pointer;
+  transition: background-color var(--duration-normal) var(--ease-out);
+}
+.switch[aria-checked='true'] { background: var(--token-accent); }
+.switch:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.switch-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; border-radius: var(--radius-full);
+  background: var(--token-on-accent, #fff);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.switch[aria-checked='true'] .switch-thumb { transform: translateX(20px); }
+
+.switch--sm { width: 36px; height: 20px; }
+.switch--sm .switch-thumb { width: 16px; height: 16px; }
+.switch--sm[aria-checked='true'] .switch-thumb { transform: translateX(16px); }
+
+/* ── 勾选框（✓ 与半选横条均 ::before 自绘，无需内联 svg） ── */
+.checkbox {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 16px; height: 16px; padding: 0;
+  background: var(--token-control); color: transparent;
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: background-color var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out),
+    color var(--duration-normal) var(--ease-out);
+}
+.checkbox:hover:not([aria-checked='true']):not([aria-checked='mixed']) {
+  border-color: color-mix(in srgb, var(--token-accent) 50%, transparent);
+}
+.checkbox[aria-checked='true'], .checkbox[aria-checked='mixed'] {
+  background: var(--token-accent);
+  border-color: var(--token-accent);
+  color: var(--token-on-accent, #fff);
+}
+.checkbox::before {
+  content: ''; width: 10px; height: 10px;
+  background: currentColor; opacity: 0;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+.checkbox[aria-checked='true']::before { opacity: 1; }
+.checkbox[aria-checked='mixed']::before {
+  opacity: 1; width: 8px; height: 2px;
+  clip-path: none; border-radius: var(--radius-full);
+}
+.checkbox:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── 单选行 ── */
+.radio-group { display: flex; flex-direction: column; gap: 4px; }
+
+.radio-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 8px 12px; font-size: 13px; text-align: left;
+  border: none; background: transparent; color: var(--token-text);
+  border-radius: var(--radius-sm); cursor: pointer;
+}
+.radio-item.is-selected {
+  background: var(--token-accent-subtle); color: var(--token-accent); font-weight: 500;
+}
+.radio-item:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.radio-dot {
+  position: relative; width: 16px; height: 16px; flex-shrink: 0;
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-full);
+  transition: border-color var(--duration-normal) var(--ease-out);
+}
+.radio-item.is-selected .radio-dot { border-color: var(--token-accent); }
+.radio-dot::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 8px; height: 8px; border-radius: var(--radius-full);
+  background: var(--token-accent);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+.radio-item.is-selected .radio-dot::after { transform: translate(-50%, -50%) scale(1); }

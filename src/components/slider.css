@@ -1,0 +1,69 @@
+/*
+ * @icen.ai/ui — Component: slider（单值 / 双滑块）
+ * 规格源自 opengal primitives/input.tsx 的 Slider 与 advanced-input.tsx 的 DualRangeSlider；
+ * 与 behaviors/slider.ts 配套（透明原生 range 覆盖层驱动 fill/thumb 定位）。
+ *
+ * 契约（单值）：
+ *   <div class="slider">
+ *     <div class="slider-track"></div>
+ *     <div class="slider-fill" style="width:40%"></div>
+ *     <div class="slider-thumb" style="left:calc(40% - 8px)"></div>
+ *     <input class="slider-native" type="range" />
+ *   </div>
+ * 双滑块：.slider--dual 内 .slider-range（left/right 定位选中段）
+ *   + .slider-thumb--lo / .slider-thumb--hi + 两个 .slider-native[data-thumb=lo|hi]
+ * label 行：.slider-row（label + 当前值，tabular-nums）
+ */
+
+.slider { position: relative; height: 20px; width: 100%; }
+
+.slider-track {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  height: 6px; border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--token-line-soft) 50%, transparent);
+}
+
+.slider-fill {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  height: 6px; border-radius: var(--radius-full);
+  background: var(--token-accent);
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+/* 双滑块选中段：left = lo%、right = (100 - hi)% */
+.slider-range {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  height: 6px; border-radius: var(--radius-full);
+  background: var(--token-accent);
+  transition: left var(--duration-normal) var(--ease-out),
+    right var(--duration-normal) var(--ease-out);
+}
+
+.slider-thumb {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: var(--radius-full);
+  background: var(--token-card);
+  border: 2px solid var(--token-accent);
+  box-shadow: var(--token-shadow-card);
+  pointer-events: none;
+  transition: transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+/* 原生 input 透明，焦点环镜像到可见 thumb 上 */
+.slider:focus-within .slider-thumb {
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--token-accent) 50%, transparent),
+    0 0 0 3px var(--token-bg);
+}
+
+.slider-native {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  margin: 0; opacity: 0; cursor: pointer; z-index: 1;
+}
+.slider-native:disabled { cursor: not-allowed; }
+
+.slider-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: var(--token-text-muted);
+  font-variant-numeric: tabular-nums;
+}

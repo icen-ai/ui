@@ -1,0 +1,56 @@
+/*
+ * @icen.ai/ui — Component: card（组合卡片容器）
+ * 包含：.card 四变体（默认 / elevated / outlined / glass）+ .card--interactive + .is-selected
+ * 子结构：.card-head / .card-title / .card-desc / .card-body / .card-foot / .card-meta / .card-action
+ * 规格源自 opengal src/presentation/ui/data/card.tsx。
+ */
+
+.card {
+  background: var(--token-card);
+  border: 1px solid var(--token-outline-soft);
+  box-shadow: var(--token-shadow-inset);
+  border-radius: var(--radius-lg);
+}
+
+/* ── 变体 ── */
+.card--elevated { box-shadow: var(--token-shadow-card); }
+.card--outlined { border-color: var(--token-outline); box-shadow: none; }
+.card--glass {
+  background: var(--token-surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: none;
+}
+
+/* ── 修饰 ── */
+/* 可交互：cursor + .lift 基元同款效果（纯 CSS 无法组合类，规则在此复制一份） */
+.card--interactive {
+  cursor: pointer;
+  transition: border-color var(--duration-slow) var(--ease-out),
+    box-shadow var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out);
+}
+.card--interactive:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--token-accent) 26%, var(--token-outline-soft));
+  box-shadow: var(--token-shadow-card);
+}
+.card.is-selected {
+  box-shadow: 0 0 0 2px var(--token-accent), 0 0 0 4px var(--token-bg);
+}
+
+/* ── 子结构 ── */
+.card-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 16px;
+}
+.card-title { font-size: 15px; font-weight: 600; color: var(--token-text); line-height: 1.25; margin: 0; }
+.card-desc { font-size: 12px; color: var(--token-text-muted); margin: 2px 0 0; }
+.card-body { padding: 0 16px 16px; font-size: 13px; color: var(--token-text-muted); }
+.card-foot {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--token-outline-soft);
+}
+.card-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--token-text-faint); }
+.card-action { margin-left: auto; }

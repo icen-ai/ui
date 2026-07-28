@@ -4,7 +4,7 @@
  */
 
 .toast-container {
-  position: fixed; right: 20px; bottom: 20px; z-index: 9999;
+  position: fixed; right: 20px; bottom: 20px; z-index: var(--z-toast);
   display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
   pointer-events: none;
 }

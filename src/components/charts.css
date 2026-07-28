@@ -1,0 +1,95 @@
+/*
+ * @icen.ai/ui — Component: charts（轻量图表，与 behaviors/charts 配套）
+ * 包含：.chart 容器 / .chart-empty / .chart-legend（图例行）/ .chart-labels（轴标签行）/
+ *       vbar（垂直柱状）/ hbar（水平条形）/ stack（堆叠条）/ donut（环形）/ line（折线）
+ * DOM 全部由 behaviors/charts.ts 以 createElement(NS) + textContent 构建；
+ * 单色调通过容器或条上的 --chart-tone 自定义属性注入（默认 var(--token-accent)）。
+ * 规格源自 opengal src/presentation/ui/data/charts.tsx。
+ */
+
+.chart { width: 100%; }
+.chart-empty {
+  height: 150px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--token-text-faint);
+}
+
+/* ── 图例 / 轴标签（donut / stack / vbar / line 共用） ── */
+.chart-legend { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+.chart-legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; min-width: 0; }
+.chart-legend-dot {
+  width: 8px; height: 8px; flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--chart-tone, var(--token-accent));
+}
+.chart-legend-label {
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--token-text-muted);
+}
+.chart-legend-value { flex-shrink: 0; font-variant-numeric: tabular-nums; color: var(--token-text-faint); }
+
+.chart-labels { display: flex; gap: 8px; margin-top: 8px; }
+.chart-labels > span {
+  flex: 1; min-width: 0;
+  text-align: center; font-size: 9px; color: var(--token-text-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── vbar · 垂直柱状 ── */
+.chart-vbar { display: flex; align-items: flex-end; gap: 8px; height: 112px; }
+.chart-vbar-track {
+  flex: 1; height: 100%; min-width: 0;
+  display: flex; align-items: flex-end;
+  background: color-mix(in srgb, var(--token-fill-2) 45%, transparent);
+  border-radius: var(--radius-sm);
+}
+.chart-vbar-bar {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--chart-tone, var(--token-accent));
+  transition: height 500ms var(--ease-out);
+}
+
+/* ── hbar · 水平条形 ── */
+.chart-hbar { display: flex; flex-direction: column; gap: 8px; }
+.chart-hbar-row {
+  display: grid;
+  grid-template-columns: minmax(72px, 1fr) minmax(90px, 2fr) 52px;
+  gap: 8px; align-items: center;
+  font-size: 11px;
+}
+.chart-hbar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--token-text-muted); }
+.chart-hbar-track {
+  height: 10px; overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--token-fill-2);
+}
+.chart-hbar-bar {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--chart-tone, var(--token-accent));
+  transition: width 500ms var(--ease-out);
+}
+.chart-hbar-value { text-align: right; font-variant-numeric: tabular-nums; color: var(--token-text-faint); }
+
+/* ── stack · 堆叠条 ── */
+.chart-stack {
+  height: 16px;
+  display: flex; overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--token-fill-2);
+  margin-bottom: 12px;
+}
+.chart-stack-seg {
+  height: 100%; min-width: 3px;
+  background: var(--chart-tone, var(--token-accent));
+  transition: width 500ms var(--ease-out);
+}
+
+/* ── donut · 环形 ── */
+.chart-donut { display: flex; align-items: center; gap: 12px; min-height: 150px; }
+.chart-donut > svg { width: 132px; height: 132px; flex-shrink: 0; }
+
+/* ── line · 折线 ── */
+.chart-line > svg { display: block; width: 100%; height: 150px; overflow: visible; }

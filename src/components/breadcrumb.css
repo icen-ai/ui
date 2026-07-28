@@ -1,0 +1,31 @@
+/*
+ * @icen.ai/ui — Component: breadcrumb（面包屑）
+ * 用法：<nav class="breadcrumb" aria-label="面包屑"><ol>
+ *         <li><a class="breadcrumb-link" href="…">首页</a><span class="breadcrumb-sep" aria-hidden="true"></span></li>
+ *         <li><span class="breadcrumb-current" aria-current="page">当前页</span></li>
+ *       </ol></nav>
+ * 分隔符是 .breadcrumb-sep 的 ::after（›）；超长折叠用 .breadcrumb-ellipsis。
+ */
+
+.breadcrumb { display: flex; align-items: center; font-size: 13px; }
+.breadcrumb ol { display: flex; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.breadcrumb li { display: flex; align-items: center; gap: 6px; }
+
+.breadcrumb-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--token-text-muted); text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.breadcrumb-link:hover { color: var(--token-accent); text-decoration: none; }
+.breadcrumb-link > svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+.breadcrumb-sep { color: var(--token-text-faint); font-size: 13px; line-height: 1; }
+.breadcrumb-sep::after { content: '›'; }
+
+.breadcrumb-current {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--token-text); font-weight: 500;
+}
+.breadcrumb-current > svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+.breadcrumb-ellipsis { padding: 0 4px; color: var(--token-text-faint); }

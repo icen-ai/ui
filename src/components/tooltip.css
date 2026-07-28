@@ -1,0 +1,56 @@
+/*
+ * @icen.ai/ui — Component: tooltip（纯 CSS 气泡提示，无 JS）
+ * 契约：任意元素加 data-tooltip="文案"；默认在上方，
+ * data-tooltip-side="top|bottom|left|right" 换方向。
+ * hover 延迟 400ms 出现，focus-visible 立即出现。
+ */
+
+[data-tooltip] { position: relative; }
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute; z-index: var(--z-tooltip);
+  width: max-content; max-width: min(260px, calc(100vw - 32px));
+  padding: 4px 8px;
+  font-size: 11px; font-weight: 400; line-height: 1.375; white-space: normal; text-align: left;
+  background: var(--token-card-strong); color: var(--token-text);
+  border: 1px solid var(--token-outline-soft);
+  box-shadow: var(--token-shadow-overlay);
+  border-radius: var(--radius-md);
+  opacity: 0; pointer-events: none;
+  transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+  transition-delay: 400ms;
+
+  /* 默认：上方 */
+  bottom: calc(100% + 4px); left: 50%;
+  transform: translate(-50%, 4px);
+}
+
+[data-tooltip-side='bottom']::after {
+  bottom: auto; top: calc(100% + 4px); left: 50%;
+  transform: translate(-50%, -4px);
+}
+[data-tooltip-side='left']::after {
+  bottom: auto; top: 50%; left: auto; right: calc(100% + 4px);
+  transform: translate(4px, -50%);
+}
+[data-tooltip-side='right']::after {
+  bottom: auto; top: 50%; right: auto; left: calc(100% + 4px);
+  transform: translate(-4px, -50%);
+}
+
+[data-tooltip]:hover::after, [data-tooltip]:focus-visible::after {
+  opacity: 1; transform: translate(-50%, 0);
+}
+[data-tooltip-side='bottom']:hover::after, [data-tooltip-side='bottom']:focus-visible::after {
+  opacity: 1; transform: translate(-50%, 0);
+}
+[data-tooltip-side='left']:hover::after, [data-tooltip-side='left']:focus-visible::after {
+  opacity: 1; transform: translate(0, -50%);
+}
+[data-tooltip-side='right']:hover::after, [data-tooltip-side='right']:focus-visible::after {
+  opacity: 1; transform: translate(0, -50%);
+}
+
+/* 键盘聚焦立即出现（覆盖 400ms 延迟） */
+[data-tooltip]:focus-visible::after { transition-delay: 0ms; }

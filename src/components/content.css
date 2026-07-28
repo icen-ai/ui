@@ -1,0 +1,195 @@
+/*
+ * @icen.ai/ui — Component: content（内容展示族）
+ * 包含：kbd（按键）/ code-inline（行内代码）/ list（分隔列表）/ accordion（手风琴，behaviors/accordion 配套）/
+ *       timeline（时间线）/ desc（描述列表）/ tree（树形，behaviors/tree 配套）
+ * 规格源自 opengal src/presentation/ui/data/exhibit.tsx 与 data/display.tsx。
+ */
+
+/* ══════════════ kbd · 按键 ══════════════ */
+.kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  vertical-align: middle;
+  font-family: var(--font-mono); font-weight: 500;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--token-outline);
+  background: var(--token-control);
+  color: var(--token-text-muted);
+  box-shadow: var(--token-shadow-inset);
+  height: 20px; min-width: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+.kbd--sm { height: 16px; min-width: 16px; padding: 0 4px; font-size: 10px; }
+
+/* ══════════════ code-inline · 行内代码 ══════════════ */
+.code-inline {
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--token-accent);
+}
+
+/* ══════════════ list · 分隔列表 ══════════════ */
+.list { list-style: none; margin: 0; padding: 0; }
+.list-item {
+  padding: 8px;
+  border-radius: var(--radius-md);
+  transition: background-color var(--duration-normal) var(--ease-out);
+}
+.list-item:hover { background: var(--token-control-hover); }
+.list .list-item + .list-item { border-top: 1px solid var(--token-outline-soft); }
+
+/* ══════════════ accordion · 手风琴（behaviors/accordion 配套） ══════════════
+ * DOM 契约：
+ *   <div class="accordion" data-single?>
+ *     <div class="accordion-item">
+ *       <button class="accordion-trigger">标题 <svg class="accordion-chevron"/></button>
+ *       <div class="accordion-panel"><div class="accordion-panel-inner">内容</div></div>
+ *     </div>
+ *   </div>
+ * 展开 = item 挂 .is-open；panel 用 grid-template-rows 0fr→1fr 做过渡。
+ */
+.accordion-item { border-bottom: 1px solid var(--token-outline-soft); }
+.accordion-item:last-child { border-bottom: 0; }
+.accordion-trigger {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 12px 8px;
+  font-size: 14px; font-weight: 500;
+  color: var(--token-text); text-align: left;
+  background: none; border: 0; cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background-color var(--duration-normal) var(--ease-out);
+}
+.accordion-trigger:hover { background: var(--token-control-hover); }
+.accordion-chevron {
+  width: 14px; height: 14px; flex-shrink: 0;
+  color: var(--token-text-faint);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.accordion-item.is-open .accordion-chevron { transform: rotate(180deg); }
+.accordion-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-normal) var(--ease-out);
+}
+.accordion-item.is-open .accordion-panel { grid-template-rows: 1fr; }
+.accordion-panel-inner {
+  overflow: hidden;
+  padding: 0 8px 12px;
+  font-size: 13px;
+  color: var(--token-text-muted);
+  line-height: 1.6;
+}
+
+/* ══════════════ timeline · 时间线 ══════════════
+ * DOM 契约：.timeline-item > .timeline-dot + .timeline-body
+ * 连接线 = item 的 ::after（相对 item 绝对定位，从 dot 下方贯穿到下一项），末项不画。
+ */
+.timeline { display: flex; flex-direction: column; }
+.timeline-item {
+  position: relative;
+  display: flex; gap: 12px;
+  padding-bottom: 24px;
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 13.5px;              /* 28px dot 的水平中心 */
+  top: 32px;                 /* 28px dot + 4px 间距 */
+  bottom: 0;
+  width: 1px;
+  background: var(--token-outline-soft);
+}
+.timeline-dot {
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  color: var(--token-text-muted);
+  z-index: 1;
+}
+.timeline-dot svg { width: 13px; height: 13px; }
+.timeline-dot--accent  { background: var(--token-accent);  color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--success { background: var(--token-success); color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--warning { background: var(--token-warning); color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--error   { background: var(--token-error);   color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--info    { background: var(--token-info);    color: var(--token-on-accent); border-color: transparent; }
+.timeline-body { flex: 1; min-width: 0; }
+.timeline-head { display: flex; align-items: center; gap: 8px; }
+.timeline-title { font-size: 13px; font-weight: 500; color: var(--token-text); }
+.timeline-time { font-size: 11px; color: var(--token-text-faint); margin-left: auto; font-variant-numeric: tabular-nums; }
+.timeline-desc { font-size: 12px; color: var(--token-text-muted); margin: 4px 0 0; }
+
+/* ══════════════ desc · 描述列表 ══════════════
+ * 列数由容器 style="--desc-cols:N" 指定，默认 2；item 可用 style="--desc-span:N" 跨列。
+ * --bordered 变体：gap:1px 露出容器底色形成格线。
+ */
+.desc { display: flex; flex-direction: column; gap: 8px; }
+.desc-title { font-size: 13px; font-weight: 500; color: var(--token-text); margin: 0; }
+.desc-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--desc-cols, 2), minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+}
+.desc--bordered .desc-grid {
+  background: var(--token-outline-soft);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.desc-item { grid-column: span var(--desc-span, 1); }
+.desc--bordered .desc-item { background: var(--token-card); padding: 8px 12px; }
+.desc:not(.desc--bordered) .desc-item { display: flex; flex-direction: column; gap: 2px; }
+.desc-item dt { font-size: 11px; color: var(--token-text-faint); }
+.desc-item dd { font-size: 13px; color: var(--token-text); margin: 0; }
+
+/* ══════════════ tree · 树形（behaviors/tree 配套） ══════════════
+ * DOM 契约：
+ *   <ul class="tree"><li>
+ *     <div class="tree-node" style="--depth:0">
+ *       <button class="tree-toggle"><svg/></button>   <!-- 叶子用空 span.tree-toggle 占 18px -->
+ *       <span class="tree-label">节点</span>
+ *     </div>
+ *     <ul>…子节点…</ul>                                <!-- 可选；behavior 切换 hidden -->
+ *   </li></ul>
+ * 折叠 = toggle 挂 .is-collapsed（chevron 转 -90°）+ 子 ul hidden；选中 = node 挂 .is-selected。
+ */
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree { user-select: none; }
+.tree-node {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px 6px calc(4px + var(--depth, 0) * 14px);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--token-text);
+  cursor: pointer;
+  transition: background-color var(--duration-normal) var(--ease-out);
+}
+.tree-node:hover { background: var(--token-control-hover); }
+.tree-node.is-selected {
+  background: var(--token-accent-subtle);
+  color: var(--token-accent);
+  font-weight: 500;
+}
+.tree-node.is-disabled { opacity: 0.4; pointer-events: none; }
+.tree-toggle {
+  width: 18px; height: 18px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; border: 0; background: none;
+  color: var(--token-text-muted);
+  cursor: pointer;
+}
+.tree-toggle:hover { color: var(--token-text); }
+.tree-toggle svg {
+  width: 13px; height: 13px;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.tree-toggle.is-collapsed svg { transform: rotate(-90deg); }
+.tree-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

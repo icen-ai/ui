@@ -1,0 +1,106 @@
+/*
+ * @icen.ai/ui — Component: feedback（反馈族）
+ * 包含：alert（四态内联横幅）/ result（终态页）/ progress（线性进度）/ spinner（加载圈）/ skeleton（占位块）
+ * 规格源自 opengal src/presentation/ui/feedback/toast.tsx 的 Alert 与 data/exhibit.tsx 的 Result、
+ * data/display.tsx 的 Progress / Spinner / Skeleton。
+ * base.css 未提供 spin / skeleton-pulse 关键帧，在本文件自带。
+ */
+
+/* ══════════════ alert · 内联横幅 ══════════════ */
+.alert {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--token-shadow-inset);
+  border: 1px solid transparent;
+}
+.alert--info    { background: var(--token-info-muted);    border-color: color-mix(in srgb, var(--token-info) 15%, transparent); }
+.alert--success { background: var(--token-success-muted); border-color: color-mix(in srgb, var(--token-success) 15%, transparent); }
+.alert--warning { background: var(--token-warning-muted); border-color: color-mix(in srgb, var(--token-warning) 15%, transparent); }
+.alert--error   { background: var(--token-error-muted);   border-color: color-mix(in srgb, var(--token-error) 15%, transparent); }
+
+.alert-icon { flex-shrink: 0; margin-top: 2px; display: flex; }
+.alert-icon svg { width: 16px; height: 16px; }
+.alert--info .alert-icon,       .alert--info .alert-title    { color: var(--token-info); }
+.alert--success .alert-icon,    .alert--success .alert-title { color: var(--token-success); }
+.alert--warning .alert-icon,    .alert--warning .alert-title { color: var(--token-warning); }
+.alert--error .alert-icon,      .alert--error .alert-title   { color: var(--token-error); }
+
+.alert-content { flex: 1; min-width: 0; }
+.alert-title { font-size: 13px; font-weight: 500; margin: 0; }
+.alert-body { font-size: 12px; color: var(--token-text-muted); line-height: 1.6; }
+.alert-close {
+  margin-left: auto; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 2px; border: 0; border-radius: var(--radius-xs);
+  background: none; color: var(--token-text-faint); cursor: pointer;
+}
+.alert-close:hover { color: var(--token-text); background: color-mix(in srgb, var(--token-text) 6%, transparent); }
+.alert-close svg { width: 14px; height: 14px; }
+
+/* ══════════════ result · 终态页 ══════════════ */
+.result {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+}
+.result-icon {
+  width: 64px; height: 64px;
+  border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--token-shadow-inset);
+  border: 1px solid transparent;
+  margin-bottom: 16px;
+}
+.result-icon svg { width: 28px; height: 28px; }
+.result--success .result-icon { background: var(--token-success-muted); color: var(--token-success); border-color: color-mix(in srgb, var(--token-success) 10%, transparent); }
+.result--error   .result-icon { background: var(--token-error-muted);   color: var(--token-error);   border-color: color-mix(in srgb, var(--token-error) 10%, transparent); }
+.result--warning .result-icon { background: var(--token-warning-muted); color: var(--token-warning); border-color: color-mix(in srgb, var(--token-warning) 10%, transparent); }
+.result--info    .result-icon { background: var(--token-info-muted);    color: var(--token-info);    border-color: color-mix(in srgb, var(--token-info) 10%, transparent); }
+.result-title { font-size: 17px; font-weight: 600; color: var(--token-text); margin: 0; }
+.result-desc { font-size: 13px; color: var(--token-text-muted); margin: 4px 0 0; max-width: 360px; }
+.result-extra { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+
+/* ══════════════ progress · 线性进度 ══════════════ */
+.progress { display: flex; align-items: center; gap: 8px; }
+.progress-track {
+  flex: 1; height: 6px; overflow: hidden;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--token-line-soft) 40%, transparent);
+}
+.progress-bar {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--token-accent);
+  transition: width 500ms var(--ease-out);
+}
+.progress--sm .progress-track { height: 4px; }
+.progress-label { font-size: 11px; color: var(--token-text-muted); font-variant-numeric: tabular-nums; }
+
+/* ══════════════ spinner · 加载圈 ══════════════ */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--token-accent);
+  border-top-color: transparent;
+  border-radius: var(--radius-full);
+  animation: icen-spin 1s linear infinite;
+}
+.spinner--sm { width: 16px; height: 16px; }
+.spinner--lg { width: 32px; height: 32px; }
+
+@keyframes icen-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════ skeleton · 占位块 ══════════════ */
+.skeleton {
+  background: var(--token-control-hover);
+  border-radius: var(--radius-sm);
+  animation: icen-skeleton-pulse 2s ease-in-out infinite;
+}
+.skeleton--circle { border-radius: var(--radius-full); }
+
+@keyframes icen-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

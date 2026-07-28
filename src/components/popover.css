@@ -1,0 +1,25 @@
+/*
+ * @icen.ai/ui — Component: popover（锚定浮层，与 behaviors/popover 配套）
+ * 面板由 JS portal 到 document.body 并按 fixed 定位；data-side 由布局函数写入。
+ */
+
+.popover {
+  position: fixed; z-index: var(--z-popover);
+  padding: 8px;
+  background: var(--token-card-strong); color: var(--token-text);
+  border: 1px solid var(--token-outline);
+  box-shadow: var(--token-shadow-overlay);
+  border-radius: var(--radius-lg);
+  animation: icen-popover-in 150ms var(--ease-out);
+}
+.popover[data-side='top'] { animation-name: icen-popover-in-top; }
+
+/* 进场动画与 .menu 同参数：fade + scale(.95→1) + 按侧位移 8px */
+@keyframes icen-popover-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes icen-popover-in-top {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}

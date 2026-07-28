@@ -53,3 +53,75 @@ html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--token-te
 .mono { font-family: var(--font-mono); }
 .dim { color: var(--token-text-muted); }
 .faint { color: var(--token-text-faint); }
+
+/* ── z-index 标尺（全组件统一引用，浮层一律 portal 到 body） ── */
+:root {
+  --z-base: 0;
+  --z-raised: 10;
+  --z-toast: 100;
+  --z-chrome: 200;
+  --z-dialog: 500;
+  --z-popover: 620;
+  --z-tooltip: 700;
+}
+
+/* ── 交互基元（全组件地基，规格源自 opengal interaction-classes） ── */
+
+/* 可按压：hover 顶部高光 + active 下陷缩放 */
+.pressable {
+  position: relative; overflow: hidden; will-change: transform;
+  transition: background-color var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out),
+    color var(--duration-normal) var(--ease-out),
+    opacity var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+}
+.pressable::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  opacity: 0; pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--token-surface) 24%, transparent), transparent 46%);
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+.pressable:hover::after, .pressable:focus-visible::after { opacity: 1; }
+.pressable:active { transform: translateY(1px) scale(0.985); }
+.pressable:disabled, .pressable[aria-disabled='true'], .pressable[data-disabled] {
+  transform: none;
+}
+.pressable:disabled::after, .pressable[aria-disabled='true']::after, .pressable[data-disabled]::after { display: none; }
+
+/* 控件聚焦光晕（wrapper 式表单控件用 :focus-within） */
+.control {
+  transition: background-color var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+.control:focus-within {
+  box-shadow: var(--token-shadow-inset), 0 0 0 3px color-mix(in srgb, var(--token-accent) 12%, transparent);
+}
+
+/* 悬停浮起（可交互卡片） */
+.lift {
+  transition: border-color var(--duration-slow) var(--ease-out),
+    box-shadow var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out);
+}
+.lift:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--token-accent) 26%, var(--token-outline-soft));
+  box-shadow: var(--token-shadow-card);
+}
+
+/* 聚焦环（ring-2 + offset-1 等价） */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--token-bg), 0 0 0 3px color-mix(in srgb, var(--token-accent) 60%, transparent);
+}
+
+/* 动效开关（reduced-motion 时全部关闭） */
+@media (prefers-reduced-motion: no-preference) {
+  .motion { transition: all var(--duration-normal) var(--ease-out); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

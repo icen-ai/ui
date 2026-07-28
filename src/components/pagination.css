@@ -1,0 +1,32 @@
+/*
+ * @icen.ai/ui — Component: pagination（分页）
+ * 用法：<nav class="pagination" aria-label="分页">
+ *         <button class="page-btn motion is-disabled">‹</button>
+ *         <button class="page-btn motion">1</button>
+ *         <span class="page-ellipsis">…</span>
+ *         <button class="page-btn motion is-active" aria-current="page">5</button>
+ *         <button class="page-btn motion">›</button>
+ *       </nav>
+ * 翻页逻辑由消费方实现，这里只提供静态样式契约。
+ */
+
+.pagination { display: flex; align-items: center; gap: 4px; }
+
+.page-btn {
+  min-width: 28px; height: 28px; padding: 0 6px;
+  border-radius: var(--radius-md); font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--token-text-muted); background: none; border: 0; cursor: pointer;
+}
+.page-btn:not(.is-active):hover { background: var(--token-control-hover); color: var(--token-text); }
+.page-btn.is-active {
+  background: var(--token-accent); color: var(--token-on-accent);
+  font-weight: 500; box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+}
+.page-btn.is-disabled, .page-btn:disabled { opacity: .3; pointer-events: none; }
+
+.page-ellipsis {
+  min-width: 28px; height: 28px; font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--token-text-faint);
+}

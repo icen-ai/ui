@@ -1,0 +1,43 @@
+/*
+ * @icen.ai/ui — Component: upload（拖放上传区）
+ * 规格源自 opengal primitives/advanced-input.tsx 的 Upload；与 behaviors/upload.ts 配套。
+ *
+ * 契约：
+ *   <div class="upload control lift focus-ring" role="button" tabindex="0">
+ *     <input type="file" multiple />
+ *     <div class="upload-icon"><svg …></svg></div>
+ *     <p class="upload-title">…</p>
+ *     <p class="upload-desc">…</p>
+ *     <p class="upload-error" hidden>…</p>
+ *   </div>
+ * 拖入时 behavior 加 .is-drag。
+ */
+
+.upload {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 32px 16px;
+  border: 2px dashed var(--token-outline-soft);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+.upload:hover {
+  border-color: color-mix(in srgb, var(--token-accent) 60%, transparent);
+  background: var(--token-control-hover);
+}
+.upload.is-drag {
+  border-color: var(--token-accent);
+  background: var(--token-accent-subtle);
+}
+
+.upload input[type='file'] { display: none; }
+
+.upload-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; margin-bottom: 8px;
+  border-radius: var(--radius-lg);
+  background: var(--token-accent-subtle); color: var(--token-accent);
+}
+
+.upload-title { margin: 0; font-size: 13px; font-weight: 500; color: var(--token-text); }
+.upload-desc { margin: 2px 0 0; font-size: 11px; color: var(--token-text-faint); }
+.upload-error { margin: 4px 0 0; font-size: 11px; color: var(--token-error); }

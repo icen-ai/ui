@@ -1,0 +1,54 @@
+/*
+ * @icen.ai/ui — Component: sidebar（侧栏导航，分组折叠配套 behaviors/sidebar）
+ * 用法：<aside class="sidebar sidebar--sticky">
+ *         <div class="sidebar-group is-open">
+ *           <button class="sidebar-group-title" aria-expanded="true">分组</button>
+ *           <div class="sidebar-group-panel"><div class="sidebar-group-panel-inner">
+ *             <a class="sidebar-item is-active" href="…">条目</a>
+ *           </div></div>
+ *         </div>
+ *       </aside>
+ * 契约：.is-open 由 behaviors/sidebar 切换（同步 aria-expanded）；
+ * 展开动画 = grid-template-rows 0fr↔1fr（同 accordion 约定），内层 overflow:hidden。
+ * 滚动条样式归 base.css 全局纪律，这里只声明 overflow-y。
+ */
+
+.sidebar { width: 260px; flex-shrink: 0; overflow-y: auto; padding-right: 4px; }
+.sidebar--sticky { position: sticky; top: 80px; max-height: calc(100vh - 100px); }
+
+.sidebar-group { margin-bottom: 8px; }
+.sidebar-group-title {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-radius: var(--radius-md);
+  font-family: inherit; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--token-text-muted);
+  background: none; border: 0; cursor: pointer;
+}
+.sidebar-group-title:hover { background: var(--token-control-hover); color: var(--token-text); }
+/* chevron：闭合态 rotate(-90deg)，展开回正 */
+.sidebar-group-title::after {
+  content: '▾'; font-size: 12px; line-height: 1; color: var(--token-text-muted);
+  transform: rotate(-90deg);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.sidebar-group.is-open .sidebar-group-title::after { transform: none; }
+
+.sidebar-group-panel {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-normal) var(--ease-out);
+}
+.sidebar-group.is-open .sidebar-group-panel { grid-template-rows: 1fr; }
+.sidebar-group-panel-inner { overflow: hidden; min-height: 0; }
+
+.sidebar-item {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: var(--radius-lg);
+  font-size: 13px; color: var(--token-text); text-align: left;
+  text-decoration: none; background: none; border: 0; cursor: pointer;
+}
+.sidebar-item:hover { background: var(--token-control-hover); text-decoration: none; }
+.sidebar-item.is-active { background: var(--token-accent-subtle); color: var(--token-accent); font-weight: 500; }
+.sidebar-item > svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--token-text-muted); }
+.sidebar-item.is-active > svg { color: var(--token-accent); }
+.sidebar-item > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -1,0 +1,82 @@
+/*
+ * @icen.ai/ui — Component: input（wrapper 式输入框 / 多行 / 搜索）
+ * 规格源自 opengal primitives/input.tsx；与 behaviors/input.ts 配套。
+ *
+ * 契约：
+ *   <div class="input-wrap control [--sm|--lg] [.is-error] [.is-disabled]">
+ *     <span class="input-leading">…</span>            可选前缀
+ *     <input class="input" />
+ *     <button class="input-clear">…</button>          可选清除钮（behavior 清空并聚焦）
+ *     <button class="input-pw-toggle">…</button>      可选密码可见切换（behavior 驱动）
+ *     <span class="input-trailing">…</span>           可选后缀
+ *   </div>
+ *   多行：<div class="textarea-wrap control"><textarea class="textarea" data-autosize></textarea></div>
+ *   搜索：.input-wrap--search = leading 放大镜 + .input-clear 的结构约定（无额外视觉）
+ */
+
+.input-wrap {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  height: 36px; padding: 0 12px; font-size: 13px;
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--token-shadow-inset);
+}
+.input-wrap:focus-within { border-color: var(--token-accent); }
+.input-wrap.is-error, .input-wrap.is-error:focus-within { border-color: var(--token-error); }
+.input-wrap.is-disabled { opacity: 0.4; }
+.input-wrap.is-disabled .input { cursor: not-allowed; }
+
+/* 尺寸三档：高度 / 横向内边距 / 字号 */
+.input-wrap--sm { height: 32px; padding: 0 10px; font-size: 12px; }
+.input-wrap--lg { height: 40px; padding: 0 14px; font-size: 14px; }
+
+.input {
+  flex: 1; min-width: 0; padding: 0;
+  background: transparent; border: none; outline: none;
+  color: var(--token-text); font: inherit;
+}
+.input::placeholder { color: color-mix(in srgb, var(--token-text-faint) 60%, transparent); }
+
+.input-leading, .input-trailing {
+  display: inline-flex; align-items: center; flex-shrink: 0;
+  color: var(--token-text-faint);
+}
+
+.input-clear {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  padding: 2px; border: none; background: transparent; cursor: pointer;
+  border-radius: var(--radius-full); color: var(--token-text-faint);
+  transition: color var(--duration-normal) var(--ease-out),
+    background-color var(--duration-normal) var(--ease-out);
+}
+.input-clear:hover { color: var(--token-text); background: var(--token-surface-hover); }
+
+.input-pw-toggle {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  padding: 2px; border: none; background: transparent; cursor: pointer;
+  color: var(--token-text-faint);
+  transition: color var(--duration-normal) var(--ease-out);
+}
+.input-pw-toggle:hover { color: var(--token-text); }
+
+/* ── 多行：同一 wrapper 视觉，内部 textarea 裸奔 ── */
+.textarea-wrap {
+  display: flex; width: 100%;
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--token-shadow-inset);
+}
+.textarea-wrap:focus-within { border-color: var(--token-accent); }
+.textarea-wrap.is-error, .textarea-wrap.is-error:focus-within { border-color: var(--token-error); }
+.textarea-wrap.is-disabled { opacity: 0.4; }
+.textarea-wrap.is-disabled .textarea { cursor: not-allowed; }
+
+.textarea {
+  width: 100%; padding: 12px;
+  background: transparent; border: none; outline: none; resize: none;
+  color: var(--token-text); font: inherit; font-size: 13px; line-height: 1.5;
+  min-height: calc(3 * 1.5em + 24px); /* 3 行 + 上下 padding */
+}
+.textarea::placeholder { color: color-mix(in srgb, var(--token-text-faint) 60%, transparent); }

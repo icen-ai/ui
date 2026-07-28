@@ -1,0 +1,133 @@
+/*
+ * @icen.ai/ui — Component: media（媒体族）
+ * 包含：avatar（头像）/ media-card（封面卡，滑出 overlay）/ rating（星级评分）/ carousel（轮播，与 behaviors/carousel 配套）
+ * carousel 归入本文件（无独立 carousel.css 配额）；规格源自 opengal data/display.tsx 的 Avatar、
+ * data/cartridge-card.tsx 的 hover overlay、data/exhibit.tsx 的 Carousel 与 Rating。
+ */
+
+/* ══════════════ avatar · 头像 ══════════════ */
+.avatar {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--token-accent-subtle);
+  color: var(--token-accent);
+  font-weight: 600;
+  width: 36px; height: 36px; font-size: 12px;
+  flex-shrink: 0;
+}
+.avatar--xs { width: 20px; height: 20px; font-size: 9px; }
+.avatar--sm { width: 28px; height: 28px; font-size: 10px; }
+.avatar--lg { width: 48px; height: 48px; font-size: 14px; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ══════════════ media-card · 封面卡 ══════════════ */
+.media-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+}
+.media-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 20px var(--token-accent-glow);
+}
+.media-card-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+.media-card-overlay {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 32px 12px 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.35) 65%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  transform: translateY(100%);
+  transition: transform 200ms var(--ease-out);
+  pointer-events: none;
+}
+.media-card:hover .media-card-overlay {
+  transform: translateY(0);
+  transition-delay: 80ms;
+}
+
+/* ══════════════ rating · 星级评分 ══════════════ */
+.rating { display: inline-flex; align-items: center; gap: 2px; }
+.rating-star {
+  padding: 2px;
+  border-radius: var(--radius-xs);
+  background: none; border: 0;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.rating-star svg {
+  width: 18px; height: 18px; display: block;
+  fill: transparent;
+  stroke: var(--token-line-strong);
+  stroke-width: 1.6;
+  transition: fill var(--duration-normal) var(--ease-out), stroke var(--duration-normal) var(--ease-out);
+}
+.rating--sm .rating-star svg { width: 14px; height: 14px; }
+.rating--lg .rating-star svg { width: 22px; height: 22px; }
+.rating-star.is-filled svg { fill: var(--token-warning); stroke: var(--token-warning); }
+.rating-star.is-half svg {
+  fill: color-mix(in srgb, var(--token-warning) 50%, transparent);
+  stroke: var(--token-warning);
+}
+
+/* ══════════════ carousel · 轮播（behaviors/carousel 配套） ══════════════
+ * DOM 契约：
+ *   <div class="carousel">
+ *     <div class="carousel-track"><div class="carousel-slide">…</div>×n</div>
+ *     <button class="carousel-arrow carousel-arrow--prev">…</button>
+ *     <button class="carousel-arrow carousel-arrow--next">…</button>
+ *     <div class="carousel-dots"></div>   <!-- dots 由 behavior 自动生成 -->
+ *   </div>
+ */
+.carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--token-control);
+}
+.carousel-track {
+  display: flex;
+  transition: transform 300ms var(--ease-out);
+}
+.carousel-slide { width: 100%; flex-shrink: 0; }
+.carousel-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--token-card) 78%, transparent);
+  border: 1px solid var(--token-outline-soft);
+  color: var(--token-text);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: var(--token-shadow-card);
+  cursor: pointer;
+  transition: background-color var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+}
+.carousel-arrow:hover { background: var(--token-card-strong); }
+.carousel-arrow:active { transform: translateY(-50%) scale(0.95); }
+.carousel-arrow svg { width: 16px; height: 16px; }
+.carousel-arrow--prev { left: 8px; }
+.carousel-arrow--next { right: 8px; }
+.carousel-dots {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px;
+}
+.carousel-dot {
+  width: 6px; height: 6px; padding: 0;
+  border: 0; border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--token-card) 70%, transparent);
+  cursor: pointer;
+  transition: width var(--duration-normal) var(--ease-out), background-color var(--duration-normal) var(--ease-out);
+}
+.carousel-dot:hover { background: color-mix(in srgb, var(--token-accent) 70%, transparent); }
+.carousel-dot.active { width: 20px; background: var(--token-accent); }
