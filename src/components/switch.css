@@ -210,3 +210,145 @@
 .radio-item[aria-checked='true'] .radio-dot::after {
   transform: translate(-50%, -50%) scale(1);
 }
+
+/* ── 开关色彩变体 ── */
+.switch--success[aria-checked='true'] { background: var(--token-success); }
+.switch--warning[aria-checked='true'] { background: var(--token-warning); }
+.switch--danger[aria-checked='true']  { background: var(--token-error); }
+
+/* ── 开关带文字（on/off 文字嵌入） ── */
+.switch--text {
+  --switch-w: 52px;
+}
+.switch--text .switch-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: transparent;
+}
+.switch--text[aria-checked='true']::before {
+  content: 'ON';
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--token-on-accent, #fff);
+}
+.switch--text[aria-checked='false']::before {
+  content: 'OFF';
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--token-text-faint);
+}
+
+/* ── 带标签的开关行 ── */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm) 0;
+}
+.switch-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.switch-row-title {
+  font-size: var(--density-font-size-md);
+  color: var(--token-text);
+}
+.switch-row-desc {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+}
+
+/* ── 勾选行（checkbox + label 组合） ── */
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--density-space-sm);
+  cursor: pointer;
+}
+.checkbox-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── 单选卡片（富化版 radio-item，带描述与图标） ── */
+.radio-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  padding: var(--density-space-md);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-md);
+  background: var(--token-surface);
+  cursor: pointer;
+  transition:
+    border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.radio-card:hover {
+  border-color: var(--token-hover-border, color-mix(in srgb, var(--token-accent) 30%, transparent));
+}
+.radio-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+}
+.radio-card.is-selected,
+.radio-card[aria-checked='true'] {
+  border-color: var(--token-accent);
+  background: var(--token-accent-subtle);
+  box-shadow: var(--icen-ring-soft);
+}
+.radio-card:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.radio-card-title {
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  color: var(--token-text);
+}
+.radio-card-desc {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  line-height: 1.5;
+}
+
+/* 单选卡片网格 */
+.radio-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--density-space-sm);
+}
+
+/* ── 复选框组（多列网格） ── */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--density-space-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch-thumb { transition: none; }
+  .radio-dot::after { transition: none; }
+  .radio-card { transition: none; }
+}

@@ -133,3 +133,100 @@
 @media (prefers-reduced-motion: reduce) {
   .step-dot, .step-line { transition: none; }
 }
+
+/* ── 纯点变体（无数字/无标签，紧凑进度指示） ── */
+.steps--dots .step-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  font-size: 0;
+}
+.steps--dots .step-line { top: 20px; }
+.steps--dots .step-title,
+.steps--dots .step-desc { display: none; }
+.steps--dots .step { flex: none; }
+.steps--dots { gap: var(--density-space-xs); }
+
+/* ── 自定义图标槽（step-dot 内放 svg） ── */
+.step-dot-icon {
+  width: 16px;
+  height: 16px;
+}
+.step--finish .step-dot-icon { color: var(--token-on-accent, #fff); }
+.step--process .step-dot-icon { color: var(--token-accent); }
+.step--wait .step-dot-icon { color: var(--token-text-faint); }
+.step--error .step-dot-icon { color: var(--token-error); }
+
+/* ── 可点击步骤 ── */
+.step--clickable {
+  cursor: pointer;
+  transition: opacity var(--icen-tx-fast);
+}
+.step--clickable:hover .step-dot {
+  transform: scale(1.08);
+  box-shadow: var(--icen-ring-soft);
+}
+.step--clickable:hover .step-title {
+  color: var(--token-accent);
+}
+
+/* ── 进度条变体（步骤间的填充进度，非离散连线） ── */
+.steps--progress .step-line {
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--token-fill-2);
+  overflow: hidden;
+}
+.steps--progress .step-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--token-accent);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform var(--icen-tx-slow) var(--ease-out);
+}
+.steps--progress .step--finish .step-line::after { transform: scaleX(1); }
+
+/* ── 垂直模式的进度条变体 ── */
+.steps--vertical.steps--progress .step-line::after {
+  transform-origin: top;
+  transform: scaleY(0);
+}
+.steps--vertical.steps--progress .step--finish .step-line::after {
+  transform: scaleY(1);
+}
+
+/* ── 步骤描述富化（可选 icon + text） ── */
+.step-extra {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  justify-content: center;
+}
+.step--error .step-extra { color: var(--token-error); }
+
+/* ── 数字步骤的连接箭头（可选替代纯线条） ── */
+.steps--connected .step-line {
+  height: 0;
+  background: transparent;
+}
+.steps--connected .step-line::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-top: 1px dashed var(--token-outline-soft);
+}
+.steps--connected .step--finish .step-line::before {
+  border-top-style: solid;
+  border-top-color: var(--token-accent);
+}
+
+@media (max-width: 640px) {
+  /* 小屏：横向 steps 变为可横向滚动 */
+  .steps { overflow-x: auto; flex-wrap: nowrap; }
+  .step { min-width: 80px; }
+}

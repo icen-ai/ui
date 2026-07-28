@@ -51,33 +51,102 @@ export const COMPONENTS: ComponentDoc[] = [
     slug: 'btn',
     name: '按钮',
     group: '基础',
-    desc: '基础按钮：默认 / primary / danger / sm 四种变体。',
+    desc: '5 变体（默认 / primary / danger / ghost / link）+ 3 尺寸（sm / 默认 / lg）+ 图标钮 + loading spinner + 错误态 + block 通栏。',
     demo: `<div class="demo-row">
   <button class="btn">默认</button>
   <button class="btn btn-primary">主要</button>
   <button class="btn btn-danger">危险</button>
+  <button class="btn btn-ghost">幽灵</button>
+  <button class="btn btn-link">链接</button>
+</div>
+<div class="demo-row" style="margin-top:14px">
   <button class="btn btn-sm">小号</button>
+  <button class="btn">默认</button>
+  <button class="btn btn-lg">大号</button>
+</div>
+<div class="demo-row" style="margin-top:14px">
+  <button class="btn btn-primary"><svg class="btn-icon-start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新建项目</button>
+  <button class="btn btn-icon" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/></svg></button>
+  <button class="btn btn-sm is-loading" aria-busy="true">加载中</button>
+  <button class="btn is-error">错误态</button>
+  <button class="btn btn-block">通栏按钮</button>
 </div>`,
     usage: `<button class="btn">默认</button>
 <button class="btn btn-primary">主要</button>
 <button class="btn btn-danger">危险</button>
-<button class="btn btn-sm">小号</button>`,
+<button class="btn btn-ghost">幽灵</button>
+<button class="btn btn-link">链接</button>
+
+<!-- 尺寸 -->
+<button class="btn btn-sm">小号</button>
+<button class="btn btn-lg">大号</button>
+
+<!-- 图标 -->
+<button class="btn btn-primary">
+  <svg class="btn-icon-start">…</svg>
+  <span class="btn-text">文本</span>
+</button>
+<button class="btn btn-icon" aria-label="设置"><svg>…</svg></button>
+
+<!-- loading（加 .is-loading + aria-busy） -->
+<button class="btn is-loading" aria-busy="true">加载中</button>`,
   },
   {
     slug: 'panel',
     name: '面板',
     group: '基础',
-    desc: '白卡片容器（panel-block）+ 标题栏（panel-title），用于承载一组相关内容。',
+    desc: '白卡片容器（panel-block）+ 标题栏（panel-title），用于承载一组相关内容。增强：副标题（panel-subtitle）、可折叠（--collapsible + .is-collapsed）、强调变体（--accent）、平面变体（--flat）。',
     demo: `<div class="panel-block">
-  <div class="panel-title"><span>面板标题</span><span>PANEL</span></div>
-  <div class="panel-body">
-    白卡片容器 + 标题栏，用于承载一组相关内容。
+  <div class="panel-title">
+    <div class="panel-title-text">
+      <span>面板标题</span>
+      <span class="panel-subtitle">带副标题描述的示例</span>
+    </div>
+    <div class="panel-title-actions"><button class="btn btn-sm">刷新</button></div>
   </div>
+  <div class="panel-body">
+    白卡片容器 + 标题栏 + 副标题，用于承载一组相关内容。panel-subtitle 会自动缩小并转为描述色。
+  </div>
+  <div class="panel-foot">
+    <button class="btn btn-sm">取消</button>
+    <button class="btn btn-sm btn-primary">保存</button>
+  </div>
+</div>
+<div class="panel-block panel-block--collapsible" id="demo-panel-collapse" style="margin-top:16px">
+  <div class="panel-title">
+    <div class="panel-title-text">
+      <span>可折叠面板</span>
+      <span class="panel-subtitle">点击标题栏展开/折叠</span>
+    </div>
+    <div class="panel-title-actions">
+      <button class="panel-toggle" aria-expanded="true" type="button"><svg class="panel-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    </div>
+  </div>
+  <div class="panel-body">点击右上角箭头可折叠/展开此面板内容。</div>
 </div>`,
-    usage: `<div class="panel-block">
-  <div class="panel-title"><span>标题</span></div>
+    usage: `<div class="panel-block [--flush] [--accent] [--flat] [--collapsible] [.is-collapsed]">
+  <div class="panel-title">
+    <div class="panel-title-text">
+      <span>标题</span>
+      <span class="panel-subtitle">副标题</span>
+    </div>
+    <div class="panel-title-actions">…</div>
+  </div>
   <div class="panel-body">…内容…</div>
+  <div class="panel-foot">…底栏…</div>
 </div>`,
+    script: `// 可折叠面板的演示接线
+document.querySelectorAll('.panel-block--collapsible').forEach((panel) => {
+  const toggle = panel.querySelector('.panel-toggle');
+  const title = panel.querySelector('.panel-title');
+  const handler = () => {
+    panel.classList.toggle('is-collapsed');
+    const collapsed = panel.classList.contains('is-collapsed');
+    toggle?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  };
+  toggle?.addEventListener('click', (ev) => ev.stopPropagation());
+  title?.addEventListener('click', handler);
+});`,
   },
   {
     slug: 'pill',
@@ -174,25 +243,69 @@ initTabs();`,
     slug: 'stat',
     name: '指标卡',
     group: '基础',
-    desc: 'stat-grid 自适应网格 + stat-card；数字支持 accent / warn 变体。',
+    desc: 'stat-grid 自适应网格 + stat-card；支持趋势 delta、图标、交互 hover。增强：横向布局（dashboard 顶栏）、迷你 sparkline 槽、SVG 进度环、加载骨架态。',
     demo: `<div class="stat-grid">
-  <div class="stat-card">
-    <div class="stat-num">1,280</div>
-    <div class="stat-label">用户总数</div>
+  <div class="stat-card stat-card--interactive">
+    <div class="stat-head">
+      <span class="stat-label">用户总数</span>
+      <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num">1,280</div>
+      <div class="stat-delta up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 15 6-6 6 6"/></svg>
+        +12.4% <span class="stat-period">比上周</span>
+      </div>
+    </div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num accent">96.2%</div>
-    <div class="stat-label">本周可用性</div>
+  <div class="stat-card stat-card--interactive">
+    <div class="stat-head">
+      <span class="stat-label">可用性</span>
+      <span class="stat-icon icon--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></span>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num accent">96.2%</div>
+      <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 15 6-6 6 6"/></svg> +2.1%</div>
+    </div>
+    <div class="stat-progress">
+      <svg class="stat-ring" viewBox="0 0 36 36">
+        <circle class="stat-ring-track" cx="18" cy="18" r="15.5" fill="none" />
+        <circle class="stat-ring-fill" cx="18" cy="18" r="15.5" fill="none" style="stroke-dasharray:93.6,97.4" />
+      </svg>
+    </div>
   </div>
-  <div class="stat-card">
-    <div class="stat-num warn">12</div>
-    <div class="stat-label">待处理告警</div>
+  <div class="stat-card stat-card--interactive">
+    <div class="stat-head">
+      <span class="stat-label">待处理告警</span>
+      <span class="stat-icon icon--bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num warn">12</div>
+      <div class="stat-delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 9-6 6-6-6"/></svg> -3 <span class="stat-period">比昨日</span></div>
+    </div>
+  </div>
+  <div class="stat-card stat-card--horizontal">
+    <div class="stat-head">
+      <span class="stat-label">请求/秒</span>
+      <span class="stat-icon icon--info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num">8,452</div>
+      <div class="stat-delta flat">— <span class="stat-period">稳定</span></div>
+    </div>
   </div>
 </div>`,
-    usage: `<div class="stat-grid">
-  <div class="stat-card">
-    <div class="stat-num accent">96.2%</div>
-    <div class="stat-label">本周可用性</div>
+    usage: `<div class="stat-grid [--2|--3|--4]">
+  <div class="stat-card [--interactive] [--horizontal] [--sm] [.is-loading]">
+    <div class="stat-head">
+      <span class="stat-label">标签</span>
+      <span class="stat-icon [.icon--ok|.icon--warn|.icon--bad|.icon--info]">…svg…</span>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num [.accent|.warn|.bad|.info]">数字</div>
+      <div class="stat-delta [.up|.down|.flat]">趋势</div>
+    </div>
+    <div class="stat-progress">…SVG ring…</div>
   </div>
 </div>`,
   },
@@ -200,26 +313,36 @@ initTabs();`,
     slug: 'table',
     name: '表格',
     group: '表格',
-    desc: 'table-wrap 负责窄屏横向滚动；行 hover 高亮，ops 列右对齐放 btn-sm。',
-    demo: `<div class="table-wrap">
-  <table class="admin-table">
+    desc: 'table-wrap 负责窄屏横向滚动；行 hover 高亮，ops 列右对齐放 btn-sm。增强：--zebra 斑马纹、caption 标题、--sticky-col 首列粘滞、行状态色（row-success/warning/error）、展开行（row-expand）。',
+    demo: `<div class="table-wrap table-wrap--bordered">
+  <table class="admin-table admin-table--zebra">
+    <caption class="table-caption">服务实例清单 · 2026 年 7 月</caption>
     <thead>
-      <tr><th>名称</th><th>状态</th><th class="ops">操作</th></tr>
+      <tr><th>名称</th><th>区域</th><th>状态</th><th class="num">实例数</th><th class="ops">操作</th></tr>
     </thead>
     <tbody>
-      <tr><td>gateway</td><td><span class="pill ok">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-      <tr><td>accounts</td><td><span class="pill ok">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-      <tr><td>billing</td><td><span class="pill warn">降级</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-      <tr><td>archive</td><td><span class="pill bad">已停止</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">启用</button></td></tr>
+      <tr><td>gateway</td><td>us-east-1</td><td><span class="pill ok">运行中</span></td><td class="num">4</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+      <tr><td>accounts</td><td>us-west-2</td><td><span class="pill ok">运行中</span></td><td class="num">2</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+      <tr class="row-warning"><td>billing</td><td>eu-west-1</td><td><span class="pill warn">降级</span></td><td class="num">2</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+      <tr class="row-error"><td>archive</td><td>ap-northeast-1</td><td><span class="pill bad">已停止</span></td><td class="num">0</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">启用</button></td></tr>
+      <tr><td>search</td><td>us-east-1</td><td><span class="pill ok">运行中</span></td><td class="num">6</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
     </tbody>
+    <tfoot>
+      <tr><td colspan="3">合计</td><td class="num">14</td><td></td></tr>
+    </tfoot>
   </table>
 </div>`,
-    usage: `<div class="table-wrap">
-  <table class="admin-table">
+    usage: `<div class="table-wrap [--bordered]">
+  <table class="admin-table [--zebra] [--compact|--dense] [--sticky-col]">
+    <caption class="table-caption">标题</caption>
     <thead><tr><th>名称</th><th class="ops">操作</th></tr></thead>
     <tbody>
-      <tr><td>gateway</td><td class="ops"><button class="btn btn-sm">编辑</button></td></tr>
+      <tr class="row-link [.is-selected] [.row-success|.row-warning|.row-error]">
+        <td>gateway</td>
+        <td class="ops"><button class="btn btn-sm">编辑</button></td>
+      </tr>
     </tbody>
+    <tfoot><tr><td>合计</td></tr></tfoot>
   </table>
 </div>`,
   },
@@ -365,7 +488,7 @@ initSplitPane();
     slug: 'input',
     name: '输入框',
     group: '表单',
-    desc: 'wrapper 式输入族：三档尺寸，前后缀、清除钮、密码切换、错误/禁用态，含多行与搜索框。',
+    desc: 'wrapper 式输入族：三档尺寸，前后缀、清除钮、密码切换、错误/禁用态，含多行与搜索框。增强：字符计数器（maxlength / data-count）、输入掩码（data-mask）、IME 安全、blur 自动 trim。',
     demo: `<div class="demo-col">
   <div class="input-wrap control input-wrap--sm">
     <input class="input" placeholder="小号（32px）" />
@@ -391,6 +514,9 @@ initSplitPane();
     <input class="input" type="password" value="secret-123" />
     <button class="input-pw-toggle" type="button">${svgEye}${svgEyeOff}</button>
   </div>
+  <div class="input-wrap control">
+    <input class="input" value="带字符计数" maxlength="20" />
+  </div>
   <div class="input-wrap control is-error">
     <input class="input" value="校验未通过的内容" />
   </div>
@@ -399,8 +525,15 @@ initSplitPane();
   </div>
 </div>
 <div class="demo-col" style="margin-top:16px">
+  <p class="chart-cap" style="margin:0 0 6px">输入掩码（data-mask）——手机号 / 信用卡</p>
+  <div class="input-wrap control" style="max-width:240px">
+    <input class="input" data-mask="###-####-####" placeholder="138-1234-5678" />
+  </div>
+  <div class="input-wrap control" style="max-width:280px">
+    <input class="input" data-mask="####-####-####-####" placeholder="4111-2222-3333-4444" />
+  </div>
   <div class="textarea-wrap control">
-    <textarea class="textarea" data-autosize data-min-rows="3" data-max-rows="6" placeholder="输入多行文本，高度随内容自适应（3–6 行）"></textarea>
+    <textarea class="textarea" data-autosize data-min-rows="3" data-max-rows="6" maxlength="100" placeholder="带字符计数 + 自适应高度的多行文本（最多 100 字）"></textarea>
   </div>
   <div class="input-wrap control input-wrap--search">
     <span class="input-leading">${svgSearch}</span>
@@ -409,7 +542,17 @@ initSplitPane();
   </div>
 </div>`,
     usage: `import { initInput } from '@icen.ai/ui/behaviors/input';
-initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP`,
+initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计数 / 输入掩码
+
+<!-- 字符计数 -->
+<input class="input" maxlength="20" />
+
+<!-- 输入掩码（# 数字 / A 字母 / * 任意） -->
+<input class="input" data-mask="###-####-####" placeholder="手机号" />
+<input class="input" data-mask="####-####-####-####" placeholder="信用卡" />
+
+<!-- blur 自动去空白 -->
+<input class="input" data-trim />`,
     behaviors: ['input'],
     behaviorInit: { input: 'initInput' },
   },
@@ -417,9 +560,10 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP`,
     slug: 'select',
     name: '选择器',
     group: '表单',
-    desc: '触发器与 input 同视觉；弹层支持 ↑↓ 移动、Enter 选中、Esc / 外点关闭，选中值同步隐藏 input。',
+    desc: '触发器与 input 同视觉；弹层支持 ↑↓ 移动、Enter 选中、Esc / 外点关闭，选中值同步隐藏 input。增强：data-select-search 可搜索过滤、data-select-multiple 多选（逗号分隔）、data-select-max 上限。',
     demo: `<div class="demo-col">
-  <div class="select" data-select>
+  <p class="chart-cap" style="margin:0 0 6px">基础单选</p>
+  <div class="select" data-select style="max-width:280px">
     <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="select-value is-empty">选择一种水果</span>
       ${svgChevron}
@@ -428,12 +572,67 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP`,
       <button class="select-option" type="button" data-value="apple">苹果</button>
       <button class="select-option" type="button" data-value="banana">香蕉</button>
       <button class="select-option" type="button" data-value="orange">橙子</button>
+      <button class="select-option" type="button" data-value="grape">葡萄</button>
+      <button class="select-option" type="button" data-value="mango">芒果</button>
     </div>
     <input type="hidden" data-select-value name="fruit" />
   </div>
+  <p class="chart-cap" style="margin:14px 0 6px">可搜索（data-select-search）</p>
+  <div class="select" data-select data-select-search style="max-width:280px">
+    <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
+      <span class="select-value is-empty">搜索城市…</span>
+      ${svgChevron}
+    </button>
+    <div class="select-panel" hidden>
+      <div class="select-group">
+        <p class="select-group-label">华北</p>
+        <button class="select-option" type="button" data-value="bj">北京</button>
+        <button class="select-option" type="button" data-value="tj">天津</button>
+      </div>
+      <div class="select-group">
+        <p class="select-group-label">华东</p>
+        <button class="select-option" type="button" data-value="sh">上海</button>
+        <button class="select-option" type="button" data-value="hz">杭州</button>
+        <button class="select-option" type="button" data-value="nj">南京</button>
+      </div>
+      <div class="select-group">
+        <p class="select-group-label">华南</p>
+        <button class="select-option" type="button" data-value="gz">广州</button>
+        <button class="select-option" type="button" data-value="sz">深圳</button>
+      </div>
+    </div>
+    <input type="hidden" data-select-value name="city" />
+  </div>
+  <p class="chart-cap" style="margin:14px 0 6px">多选（data-select-multiple + data-select-max="3"）</p>
+  <div class="select" data-select data-select-multiple data-select-max="3" data-select-placeholder="选择标签（最多 3 个）" style="max-width:280px">
+    <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
+      <span class="select-value is-empty">选择标签（最多 3 个）</span>
+      <button class="select-clear" type="button" aria-label="清除">×</button>
+      ${svgChevron}
+    </button>
+    <div class="select-panel" hidden>
+      <button class="select-option" type="button" data-value="ts">TypeScript</button>
+      <button class="select-option" type="button" data-value="react">React</button>
+      <button class="select-option" type="button" data-value="vue">Vue</button>
+      <button class="select-option" type="button" data-value="svelte">Svelte</button>
+      <button class="select-option" type="button" data-value="rust">Rust</button>
+      <button class="select-option" type="button" data-value="go">Go</button>
+    </div>
+    <input type="hidden" data-select-value name="tags" />
+  </div>
 </div>`,
     usage: `import { initSelect } from '@icen.ai/ui/behaviors/select';
-initSelect();`,
+initSelect();
+
+<!-- 基础单选 -->
+<div class="select" data-select>…</div>
+
+<!-- 可搜索（带分组） -->
+<div class="select" data-select data-select-search>…</div>
+
+<!-- 多选 + 上限 -->
+<div class="select" data-select data-select-multiple data-select-max="3">…</div>
+<!-- 多选：trigger 内加 .select-clear 清除全部 -->`,
     behaviors: ['select'],
     behaviorInit: { select: 'initSelect' },
   },
@@ -608,27 +807,43 @@ document.querySelectorAll('.stepper').forEach((s) => {
     slug: 'upload',
     name: '上传',
     group: '表单',
-    desc: '点击 / Enter / Space 打开文件选择；拖入高亮，drop 后文件写入 input.files 并派发 change。',
+    desc: '点击 / Enter / Space 打开文件选择；拖入高亮，drop 后文件写入 input.files 并派发 change。增强（data-upload-list）：自动渲染文件列表，图片缩略图、大小格式化、单文件移除、accept/max-size/max-files 校验。',
     demo: `<div class="demo-col">
-  <div class="upload control lift focus-ring" role="button" tabindex="0" aria-label="上传文件">
-    <input type="file" multiple />
+  <div class="upload control lift focus-ring" data-upload-list data-max-size="5242880" data-max-files="6" role="button" tabindex="0" aria-label="上传文件" style="max-width:480px">
+    <input type="file" multiple accept="image/*,.pdf,.doc,.docx" />
     <div class="upload-icon">${svgPlus}</div>
     <p class="upload-title">点击或拖拽文件到此处上传</p>
-    <p class="upload-desc">支持多选，单文件不超过 2GB</p>
+    <p class="upload-desc">支持图片 / PDF / DOC，单个 ≤ 5 MB，最多 6 个</p>
     <p class="upload-error" id="demo-upload-files" hidden></p>
   </div>
 </div>`,
     usage: `import { initUpload } from '@icen.ai/ui/behaviors/upload';
-initUpload();`,
+initUpload();
+
+<!-- 基础上传（无列表） -->
+<div class="upload" role="button" tabindex="0">
+  <input type="file" multiple />
+  …
+</div>
+
+<!-- 增强上传（文件列表 + 校验） -->
+<div class="upload" data-upload-list data-max-size="5242880" data-max-files="6"
+     role="button" tabindex="0">
+  <input type="file" multiple accept="image/*,.pdf" />
+  …
+</div>
+<!-- 事件：icen:upload { files } / icen:upload-error { file, reason } / icen:upload-remove { file } -->`,
     behaviors: ['upload'],
     behaviorInit: { upload: 'initUpload' },
-    script: `document.querySelectorAll('.upload input[type="file"]').forEach((input) => {
-  input.addEventListener('change', () => {
+    script: `document.querySelectorAll('.upload[data-upload-list]').forEach((zone) => {
+  zone.addEventListener('icen:upload-error', (ev) => {
+    const detail = (ev as CustomEvent).detail;
     const msg = document.getElementById('demo-upload-files');
-    if (!(msg instanceof HTMLElement) || !(input instanceof HTMLInputElement)) return;
-    const names = Array.from(input.files ?? []).map((f) => f.name);
-    msg.hidden = names.length === 0;
-    msg.textContent = names.length > 0 ? '已选择：' + names.join('、') : '';
+    if (msg) {
+      msg.hidden = false;
+      msg.textContent = detail.reason + (detail.file ? '：' + detail.file.name : '');
+      setTimeout(() => { msg.hidden = true; }, 3000);
+    }
   });
 });`,
   },
@@ -1023,14 +1238,37 @@ COMPONENTS.push(
     slug: 'empty',
     name: '空状态',
     group: '数据展示',
-    desc: '图标 + 标题 + 描述 + 可选动作按钮。',
-    demo: `<div class="empty">
-  <div class="empty-icon">${inboxSvg}</div>
-  <p class="empty-title">暂无收藏</p>
-  <p class="empty-desc">你还没有收藏任何作品，去逛逛找点喜欢的吧。</p>
-  <div class="empty-action"><button class="btn btn-primary btn-sm">去发现</button></div>
+    desc: '图标 + 标题 + 描述 + 可选动作按钮。类型预设：--error / --404 / --search / --maintenance / --network，自动改图标底色与基调。',
+    demo: `<div class="demo-row" style="align-items:flex-start;gap:16px">
+  <div class="empty empty--illustrated" style="flex:1;min-width:200px">
+    <div class="empty-icon">${inboxSvg}</div>
+    <p class="empty-title">暂无收藏</p>
+    <p class="empty-desc">你还没有收藏任何作品，去逛逛找点喜欢的吧。</p>
+    <div class="empty-action"><button class="btn btn-primary btn-sm">去发现</button></div>
+  </div>
+  <div class="empty empty--search" style="flex:1;min-width:200px">
+    <div class="empty-icon">${svgSearch}</div>
+    <p class="empty-title">未找到匹配结果</p>
+    <p class="empty-desc">尝试调整搜索关键词或清除筛选条件</p>
+    <div class="empty-action"><button class="btn btn-sm">清除筛选</button></div>
+  </div>
+</div>
+<div class="demo-row" style="align-items:flex-start;gap:16px;margin-top:16px">
+  <div class="empty empty--error" style="flex:1;min-width:200px">
+    <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></div>
+    <p class="empty-title">加载失败</p>
+    <p class="empty-desc">数据获取异常，请稍后重试</p>
+    <div class="empty-action"><button class="btn btn-sm btn-primary">重试</button></div>
+  </div>
+  <div class="empty empty--404 empty--illustrated" style="flex:1;min-width:200px">
+    <h3 class="empty-title">404</h3>
+    <p class="empty-desc">你访问的页面不存在或已被移除</p>
+    <div class="empty-action"><button class="btn btn-sm">返回首页</button></div>
+  </div>
 </div>`,
-    usage: `<div class="empty">
+    usage: `<div class="empty [.empty--sm|.empty--lg]
+     [.empty--error|.empty--404|.empty--search|.empty--maintenance|.empty--network]
+     [.empty--illustrated]">
   <div class="empty-icon">…svg…</div>
   <p class="empty-title">暂无数据</p>
   <p class="empty-desc">描述文字</p>

@@ -108,6 +108,127 @@
   text-align: center;
 }
 
+/* ── 增强 ── */
+
+/* 尺寸变体 */
+.page-tabs--sm .page-tab {
+  padding: var(--density-space-xs) var(--density-space-sm);
+  font-size: var(--density-font-size-sm);
+}
+.page-tabs--lg .page-tab {
+  padding: var(--density-space-md) calc(var(--density-space-md) + 4px);
+  font-size: var(--density-font-size-lg);
+}
+
+/* Tab 带图标 */
+.page-tab-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+
+/* Tab 带徽章/计数 */
+.page-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: var(--density-space-xs);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--token-text-faint);
+  background: var(--token-fill-2);
+  border-radius: var(--radius-full);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.page-tab.active .page-tab-badge,
+.page-tab[aria-selected='true'] .page-tab-badge {
+  background: var(--token-accent);
+  color: var(--token-on-accent, #fff);
+}
+
+/* 可关闭 tab */
+.page-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: var(--density-space-xs);
+  margin-right: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.page-tab-close:hover {
+  color: var(--token-error);
+  background: var(--token-error-muted);
+}
+.page-tab-close svg { width: 10px; height: 10px; }
+
+/* 分段式 tab（替代底边线，用 segmented 视觉） */
+.page-tabs--segment {
+  display: inline-flex;
+  border-bottom: none;
+  gap: 2px;
+  padding: 2px;
+  background: var(--token-panel);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-inset);
+}
+.page-tabs--segment .page-tab {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: var(--density-space-xs) var(--density-space-md);
+  border-radius: var(--radius-sm);
+}
+.page-tabs--segment .page-tab.active,
+.page-tabs--segment .page-tab[aria-selected='true'] {
+  background: var(--token-accent);
+  color: var(--token-on-accent, #fff);
+  border-bottom-color: transparent;
+  font-weight: 500;
+}
+
+/* 垂直 tab（侧栏式） */
+.page-tabs--vertical {
+  flex-direction: column;
+  border-bottom: none;
+  border-right: 1px solid var(--token-line-soft);
+  margin-bottom: 0;
+  min-width: 160px;
+}
+.page-tabs--vertical .page-tab {
+  border-bottom: none;
+  border-right: 2px solid transparent;
+  margin-bottom: 0;
+  margin-right: -1px;
+}
+.page-tabs--vertical .page-tab.active,
+.page-tabs--vertical .page-tab[aria-selected='true'] {
+  border-right-color: var(--token-accent);
+  border-bottom-color: transparent;
+}
+
+/* tab 溢出渐变提示（窄屏溢出时右侧渐变遮罩——纯视觉提示，不违反"不滚动"纪律，仍 flex-wrap） */
+.page-tabs--scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.page-tabs--scroll::-webkit-scrollbar { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  .page-tab, .admin-tabs a { transition: none; }
+  .page-tab, .admin-tabs a, .page-tab-close { transition: none; }
 }

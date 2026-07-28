@@ -159,3 +159,102 @@
 @media (prefers-reduced-motion: reduce) {
   .nav, .nav-btn { transition: none; }
 }
+
+/* ── 增强 ── */
+
+/* 导航搜索槽 */
+.nav-search {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding: 0 var(--density-space-sm);
+  height: 32px;
+  min-width: 180px;
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-full);
+  color: var(--token-text-faint);
+  font-size: var(--density-font-size-sm);
+  cursor: pointer;
+  transition: border-color var(--icen-tx-fast);
+}
+.nav-search:hover { border-color: var(--token-accent); }
+.nav-search svg { width: 14px; height: 14px; flex-shrink: 0; }
+.nav-search-kbd {
+  margin-left: auto;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--token-text-faint);
+  background: var(--token-fill-2);
+  border-radius: var(--radius-xs);
+}
+
+/* 导航按钮上的通知徽标 */
+.nav-btn-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 8px;
+  height: 8px;
+  padding: 0;
+  background: var(--token-error);
+  border: 1.5px solid var(--token-surface-glass);
+  border-radius: var(--radius-full);
+  pointer-events: none;
+}
+.nav-btn { position: relative; }
+.nav-btn-badge--count {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--token-on-accent, #fff);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* 链接式导航项（a 标签替代 button） */
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding: 6px var(--density-space-sm);
+  font-size: var(--density-font-size-md);
+  color: var(--token-text-muted);
+  text-decoration: none;
+  border-radius: var(--radius-full);
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.nav-link:hover {
+  color: var(--token-text);
+  background: var(--token-control-hover);
+  text-decoration: none;
+}
+.nav-link.is-active,
+.nav-link[aria-current='page'] {
+  color: var(--token-accent);
+  background: var(--token-accent-subtle);
+}
+
+/* 导航用户区（头像 + 下拉触发器） */
+.nav-user {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding: 3px var(--density-space-xs) 3px 3px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--token-outline-soft);
+  background: var(--token-surface);
+  cursor: pointer;
+  transition: border-color var(--icen-tx-fast);
+}
+.nav-user:hover { border-color: var(--token-accent); }
+.nav-user-name {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text);
+}
+.nav-user svg { width: 12px; height: 12px; color: var(--token-text-faint); }

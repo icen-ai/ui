@@ -3,15 +3,24 @@
  * 规格源自 opengal primitives/input.tsx 的 Select；与 behaviors/select.ts 配套。
  *
  * 完整契约：
- *   <div class="select [data-disabled] [.is-open]" data-select>
+ *   <div class="select [data-disabled] [.is-open]" data-select
+ *        [data-select-search] [data-select-multiple] [data-select-max="3"]>
  *     <button class="select-trigger pressable focus-ring [--sm|--lg]" aria-haspopup="listbox"
  *             aria-expanded="false" [disabled]>
  *       <span class="select-leading">…</span>           可选前缀
  *       <span class="select-value is-empty">占位</span>
+ *       <button class="select-clear" aria-label="清除">×</button>  ← 多选时可选
  *       <svg class="select-chevron">…</svg>
  *     </button>
  *     <div class="select-panel" hidden role="listbox">
- *       <button class="select-option [.is-focused|.is-selected|.is-disabled]" data-value="x">…</button>
+ *       <div class="select-search">                      ← data-select-search 时 behavior 自动注入
+ *         <input class="select-search-input" placeholder="搜索…" />
+ *       </div>
+ *       <div class="select-group">                       ← 可选分组
+ *         <p class="select-group-label">组标题</p>
+ *         <button class="select-option [.is-focused|.is-selected|.is-disabled]" data-value="x">…</button>
+ *       </div>
+ *       <div class="select-empty">无匹配项</div>         ← 搜索无结果时 behavior 显示
  *     </div>
  *     <input type="hidden" data-select-value />     可选，behavior 同步 value
  *   </div>
@@ -19,6 +28,8 @@
  * behavior 维护：
  *   - .select.is-open ↔ aria-expanded；panel [hidden] 切换；ESC/外部点击关闭
  *   - 选项 .is-focused 跟随键盘箭头；Enter 选中 → 写回 .select-value / .is-selected
+ *   - data-select-search：面板顶部自动插入搜索框，实时过滤（含 data-keywords），空分组自动隐藏
+ *   - data-select-multiple：点击切选不关面板，trigger 显示计数，hidden input 同步逗号分隔值
  */
 
 .select {
@@ -177,4 +188,88 @@
   font-size: var(--density-font-size-sm);
   color: var(--token-text-faint);
   text-align: center;
+}
+
+/* ── 搜索框（data-select-search 时 behavior 自动注入） ── */
+.select-search {
+  padding: 4px 4px 6px;
+  border-bottom: 1px solid var(--token-outline-soft);
+  margin-bottom: 4px;
+  position: sticky;
+  top: 0;
+  background: var(--token-card-strong);
+  z-index: 1;
+}
+.select-search-input {
+  width: 100%;
+  height: 30px;
+  padding: 0 var(--density-space-sm);
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text);
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
+}
+.select-search-input:focus {
+  outline: none;
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+
+/* ── 多选清除按钮 ── */
+.select-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-faint);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.select-clear:hover {
+  color: var(--token-text);
+  background: var(--token-fill-1);
+}
+
+/* ── 多选 trigger 高度自适应（chips 可能换行） ── */
+.select[data-select-multiple] .select-trigger {
+  min-height: var(--density-input-height-md);
+  height: auto;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+/* 多选项 checkbox 指示器（选项左侧） */
+.select[data-select-multiple] .select-option::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--token-outline);
+  border-radius: var(--radius-xs);
+  transition: background-color var(--icen-tx-fast), border-color var(--icen-tx-fast);
+}
+.select[data-select-multiple] .select-option.is-selected::before {
+  background: var(--token-accent);
+  border-color: var(--token-accent);
+}
+.select[data-select-multiple] .select-option.is-selected::after {
+  content: '✓';
+  margin-left: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .select-panel { animation: none; }
+  .select-search-input,
+  .select-clear { transition: none; }
 }

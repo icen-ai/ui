@@ -2,16 +2,29 @@
  * @icen.ai/ui — Component: panel（白卡片容器 + 标题栏 + 可选 footer）
  *
  * 完整契约：
- *   <div class="panel-block [panel-block--flush]">
+ *   <div class="panel-block [panel-block--flush] [panel-block--accent]
+ *        [panel-block--collapsible] [.is-collapsed]">
  *     <div class="panel-title">
- *       <span>标题</span>
- *       <div class="panel-title-actions"><button class="btn btn-sm">…</button></div>
+ *       <div class="panel-title-text">
+ *         <span>标题</span>
+ *         <span class="panel-subtitle">副标题描述</span>     ← 可选
+ *       </div>
+ *       <div class="panel-title-actions">
+ *         <button class="btn btn-sm">…</button>
+ *         <button class="panel-toggle" aria-expanded="true">  ← collapsible 模式
+ *           <svg class="panel-toggle-icon">…chevron…</svg>
+ *         </button>
+ *       </div>
  *     </div>
  *     <div class="panel-body">…</div>
  *     <div class="panel-foot">…可选底栏</div>
  *   </div>
  *
  * --flush：body 不留 padding，使用方自行处理内层布局。
+ * --collapsible：标题栏出现展开/折叠钮（behavior 可选，也可靠纯 CSS details/summary）。
+ * --accent：强调色标题边。
+ * .panel-subtitle：标题下方的副标题/描述文字。
+ * .panel-block.is-collapsed：折叠态——隐藏 body + foot。
  */
 
 .panel-block {
@@ -22,6 +35,8 @@
   margin-bottom: var(--density-space-lg);
   overflow: hidden;
 }
+
+/* ── 标题栏 ── */
 .panel-title {
   display: flex;
   align-items: center;
@@ -35,9 +50,24 @@
   text-transform: uppercase;
   font-weight: 600;
 }
-.panel-title > span:first-child {
+.panel-title-text {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.panel-title-text > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.panel-subtitle {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--token-text-faint);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -49,6 +79,55 @@
   flex-shrink: 0;
 }
 
+/* ── 可折叠钮 ── */
+.panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.panel-toggle:hover {
+  color: var(--token-text);
+  background: var(--token-fill-1);
+}
+.panel-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.panel-toggle-icon {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--icen-tx-fast);
+}
+.panel-block.is-collapsed .panel-toggle-icon {
+  transform: rotate(-90deg);
+}
+
+/* ── 折叠态：隐藏 body + foot，去掉标题栏底边 ── */
+.panel-block.is-collapsed .panel-body,
+.panel-block.is-collapsed .panel-foot {
+  display: none;
+}
+.panel-block.is-collapsed .panel-title {
+  border-bottom-color: transparent;
+}
+.panel-block--collapsible .panel-body {
+  animation: panel-expand var(--icen-tx-normal) var(--ease-out);
+}
+@keyframes panel-expand {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── body / foot ── */
 .panel-body {
   padding: var(--density-space-md);
   font-size: var(--density-font-size-md);
@@ -66,9 +145,25 @@
   background: color-mix(in srgb, var(--token-bg-soft) 50%, transparent);
 }
 
-/* 强调变体：accent 色标题边（用于警告/告警面板） */
+/* ── 强调变体 ── */
 .panel-block--accent { border-color: color-mix(in srgb, var(--token-accent) 30%, transparent); }
 .panel-block--accent .panel-title {
   color: var(--token-accent);
   background: var(--token-accent-subtle);
+}
+
+/* ── 平面变体（无阴影，嵌套时用） ── */
+.panel-block--flat {
+  box-shadow: none;
+  background: var(--token-bg-soft);
+}
+
+/* ── 可折叠模式：标题栏可点（纯 CSS 方案用 details/summary） ── */
+.panel-block--collapsible .panel-title {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-toggle-icon { transition: none; }
+  .panel-block--collapsible .panel-body { animation: none; }
 }

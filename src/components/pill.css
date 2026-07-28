@@ -86,3 +86,73 @@
 .pill--solid.warn { background: var(--token-warning); border-color: var(--token-warning); color: var(--token-on-accent, #fff); }
 .pill--solid.bad  { background: var(--token-error);   border-color: var(--token-error);   color: var(--token-on-accent, #fff); }
 .pill--solid.info { background: var(--token-info);    border-color: var(--token-info);    color: var(--token-on-accent, #fff); }
+
+/* ── 增强 ── */
+
+/* 可关闭 pill */
+.pill-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+  margin-right: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.pill-close:hover { opacity: 1; background: color-mix(in srgb, currentColor 15%, transparent); }
+.pill-close svg { width: 9px; height: 9px; }
+
+/* 图标 pill */
+.pill-icon {
+  display: inline-flex;
+  align-items: center;
+}
+.pill-icon svg { width: 10px; height: 10px; }
+
+/* 实时脉冲（用于"直播"/"实时"状态） */
+.pill--live::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  margin-right: 2px;
+  animation: pill-pulse 1.5s ease-in-out infinite;
+}
+@keyframes pill-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* 纯数字计数（不带文字） */
+.pill--count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* 渐变变体 */
+.pill--gradient {
+  background: linear-gradient(135deg, var(--token-accent), var(--token-accent-deep, var(--token-accent)));
+  color: var(--token-on-accent, #fff);
+  border-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill--live::before { animation: none; }
+  .pill-close { transition: none; }
+}

@@ -114,6 +114,125 @@
 }
 .form-field[data-invalid='true'] .form-label { color: var(--token-error); }
 
+/* ── 表单增强 ── */
+
+/* 水平布局（label 与控件同行） */
+.form-field--horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--density-space-md);
+}
+.form-field--horizontal .form-label {
+  flex-shrink: 0;
+  width: 120px;
+  text-align: right;
+  padding-top: calc((var(--density-input-height-md) - 1lh) / 2);
+}
+.form-field--horizontal .form-field-control {
+  flex: 1;
+  min-width: 0;
+}
+
+/* label 带帮助提示图标 */
+.form-label-help {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  width: 14px;
+  height: 14px;
+  color: var(--token-text-faint);
+  cursor: help;
+}
+.form-label-help svg { width: 12px; height: 12px; }
+
+/* label 带可选标记 */
+.form-label-optional {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--token-text-faint);
+  margin-left: 4px;
+}
+
+/* 表单区块标题 */
+.form-section {
+  padding: var(--density-space-sm) 0;
+}
+.form-section-title {
+  font-size: var(--density-font-size-md);
+  font-weight: 600;
+  color: var(--token-text);
+  margin: 0 0 var(--density-space-sm);
+  padding-bottom: var(--density-space-xs);
+  border-bottom: 1px solid var(--token-outline-soft);
+}
+.form-section-desc {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  margin: calc(-1 * var(--density-space-xs)) 0 var(--density-space-sm);
+}
+
+/* 表单操作区（底部按钮行） */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  padding-top: var(--density-space-sm);
+  border-top: 1px solid var(--token-outline-soft);
+}
+.form-actions--right { justify-content: flex-end; }
+.form-actions--center { justify-content: center; }
+.form-actions--split { justify-content: space-between; }
+
+/* 行内表单（紧凑，单行多字段） */
+.form--inline {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var(--density-space-sm);
+  flex-wrap: wrap;
+}
+.form--inline .form-field {
+  flex: 1;
+  min-width: 160px;
+}
+
+/* 字段网格（多列布局） */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--form-cols, 2), 1fr);
+  gap: var(--density-space-md);
+}
+.form-grid .form-field--full { grid-column: 1 / -1; }
+
+/* 字段成功态 */
+.form-field[data-valid='true'] .form-label::after {
+  content: '✓';
+  margin-left: 4px;
+  color: var(--token-success);
+  font-weight: 700;
+}
+
+/* 表单加载遮罩 */
+.form-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.6;
+}
+.form-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border: 2px solid color-mix(in srgb, var(--token-accent) 30%, transparent);
+  border-top-color: var(--token-accent);
+  border-radius: 50%;
+  animation: form-loading-spin 0.8s linear infinite;
+}
+@keyframes form-loading-spin { to { transform: rotate(360deg); } }
+
 /* ── 页面级横幅：操作结果 / 引导提示 ── */
 .banner-ok,
 .banner-err {

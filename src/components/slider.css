@@ -202,6 +202,119 @@
   background: color-mix(in srgb, var(--token-text) 12%, transparent);
 }
 
+/* ── 带标签的刻度（marks）── */
+.slider-marks {
+  position: relative;
+  height: 20px;
+  margin-top: 2px;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.slider-mark {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast);
+}
+.slider-mark:hover {
+  color: var(--token-accent);
+}
+.slider-mark.is-active {
+  color: var(--token-accent);
+  font-weight: 500;
+}
+/* 刻度上的大点（配合 marks 使用） */
+.slider-mark::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -8px;
+  width: 3px;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--token-text-faint);
+  transform: translateX(-50%);
+  transition: background-color var(--icen-tx-fast);
+}
+.slider-mark:hover::before,
+.slider-mark.is-active::before {
+  background: var(--token-accent);
+}
+
+/* ── 值提示气泡（拖拽时出现）── */
+.slider-tooltip {
+  position: absolute;
+  bottom: calc(50% + var(--slider-thumb-size));
+  transform: translateX(-50%);
+  padding: 2px var(--density-space-xs);
+  background: var(--token-text);
+  color: var(--token-card-strong);
+  font-size: var(--density-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--icen-tx-fast);
+  z-index: 3;
+}
+.slider-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--token-text);
+}
+.slider:active .slider-tooltip,
+.slider:focus-within .slider-tooltip {
+  opacity: 1;
+}
+.slider--vertical .slider-tooltip {
+  bottom: auto;
+  left: calc(50% + var(--slider-thumb-size));
+  top: 50%;
+  transform: translate(0, -50%);
+}
+.slider--vertical .slider-tooltip::after {
+  top: 50%;
+  left: auto;
+  right: 100%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-right-color: var(--token-text);
+}
+
+/* ── 滑块拖拽态（active 时放大） ── */
+.slider:active .slider-thumb {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+.slider--vertical:active .slider-thumb {
+  transform: translate(-50%, 50%) scale(1.25);
+}
+
+/* ── 填充段带渐变（高级视觉） ── */
+.slider-fill--gradient,
+.slider-range--gradient {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--token-accent) 60%, transparent),
+    var(--token-accent));
+}
+
+/* ── 禁用态填充色变灰 ── */
+.slider.is-disabled .slider-fill,
+.slider.is-disabled .slider-range {
+  background: var(--token-fill-2);
+}
+.slider.is-disabled .slider-thumb {
+  border-color: var(--token-text-faint);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .slider-fill, .slider-range, .slider-thumb { transition: none; }
+  .slider-tooltip { transition: none; }
+  .slider-mark, .slider-mark::before { transition: none; }
 }

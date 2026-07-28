@@ -59,6 +59,42 @@
 .avatar-status--busy   { background: var(--token-error); }
 .avatar-status--away   { background: var(--token-warning); }
 
+/* 头像色彩变体（文字头像底色） */
+.avatar--info    { background: color-mix(in srgb, var(--token-info) 15%, transparent); color: var(--token-info); }
+.avatar--success { background: color-mix(in srgb, var(--token-success) 15%, transparent); color: var(--token-success); }
+.avatar--warning { background: color-mix(in srgb, var(--token-warning) 15%, transparent); color: var(--token-warning); }
+.avatar--error   { background: color-mix(in srgb, var(--token-error) 15%, transparent); color: var(--token-error); }
+
+/* 渐变底头像 */
+.avatar--gradient {
+  background: linear-gradient(135deg, var(--token-accent), var(--token-accent-deep, var(--token-accent)));
+  color: var(--token-on-accent, #fff);
+}
+
+/* 方形头像 */
+.avatar--square { border-radius: var(--radius-md); }
+
+/* 头像通知环（红圈外框） */
+.avatar--ring {
+  box-shadow: 0 0 0 2px var(--token-bg), 0 0 0 4px var(--token-error);
+}
+
+/* 头像组溢出计数 */
+.avatar-group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--token-text-muted);
+  background: var(--token-fill-2);
+  border: 2px solid var(--token-bg);
+  border-radius: var(--radius-full);
+  margin-left: -8px;
+}
+
 /* ══════════════ media-card · 封面卡 ══════════════ */
 .media-card {
   position: relative;
@@ -162,6 +198,53 @@
   font-size: var(--density-font-size-sm);
   color: var(--token-text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* 只读模式（不可交互） */
+.rating--readonly .rating-star {
+  cursor: default;
+}
+.rating--readonly .rating-star:hover {
+  transform: none;
+}
+
+/* 清除评分钮 */
+.rating-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.rating-clear:hover {
+  color: var(--token-text);
+  background: var(--token-fill-1);
+}
+.rating-clear svg { width: 12px; height: 12px; }
+
+/* 评分数（评价人数） */
+.rating-count {
+  margin-left: var(--density-space-xs);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 评分 + 文字摘要（如「4.5 · 128 条评价」） */
+.rating-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
 }
 
 /* ══════════════ carousel · 轮播（behaviors/carousel 配套） ══════════════
@@ -274,7 +357,67 @@
   transition: width var(--icen-tx-slow);
 }
 
+/* 缩略图导航条 */
+.carousel-thumbs {
+  display: flex;
+  gap: var(--density-space-xs);
+  margin-top: var(--density-space-sm);
+  padding: var(--density-space-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.carousel-thumbs::-webkit-scrollbar { display: none; }
+.carousel-thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--icen-tx-fast), border-color var(--icen-tx-fast);
+}
+.carousel-thumb:hover { opacity: 1; }
+.carousel-thumb.is-active,
+.carousel-thumb[aria-current='true'] {
+  opacity: 1;
+  border-color: var(--token-accent);
+}
+.carousel-thumb img,
+.carousel-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 轮播索引指示器（1 / 5） */
+.carousel-index {
+  position: absolute;
+  top: var(--density-space-sm);
+  right: var(--density-space-sm);
+  padding: 2px var(--density-space-sm);
+  font-size: var(--density-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--token-bg);
+  background: color-mix(in srgb, var(--token-text) 60%, transparent);
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+/* 渐入动画 */
+.carousel-slide {
+  animation: carousel-slide-fade var(--icen-tx-normal) var(--ease-out);
+}
+@keyframes carousel-slide-fade {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .carousel-track { transition: none; }
-  .media-card, .rating-star, .carousel-arrow { transition: none; }
+  .carousel-slide { animation: none; }
+  .media-card, .rating-star, .carousel-arrow, .carousel-thumb { transition: none; }
 }

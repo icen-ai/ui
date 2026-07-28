@@ -96,6 +96,63 @@
   padding: 0 2px;
   color: var(--token-text-faint);
   user-select: none;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.breadcrumb-ellipsis:hover {
+  color: var(--token-accent);
+  background: var(--token-fill-1);
+}
+
+/* ── 溢出下拉（behavior 可选：点击 … 展开被折叠的中间路径） ── */
+.breadcrumb-dropdown {
+  position: relative;
+}
+.breadcrumb-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--token-card-strong);
+  border: 1px solid var(--token-outline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-overlay);
+  z-index: var(--z-popover);
+  animation: breadcrumb-drop-in var(--icen-tx-fast);
+}
+.breadcrumb-dropdown-menu[hidden] { display: none; }
+.breadcrumb-dropdown-menu a {
+  display: block;
+  padding: 4px var(--density-space-sm);
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--icen-tx-fast), color var(--icen-tx-fast);
+}
+.breadcrumb-dropdown-menu a:hover {
+  background: var(--token-fill-1);
+  color: var(--token-text);
+}
+@keyframes breadcrumb-drop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── 面包屑分隔符变体 ── */
+.breadcrumb--slash .breadcrumb-sep::after { content: '/'; }
+.breadcrumb--arrow .breadcrumb-sep::after { content: '→'; }
+.breadcrumb--dot .breadcrumb-sep::after { content: '·'; font-size: 1.2em; }
+
+/* ── 面包屑尺寸变体 ── */
+.breadcrumb--sm {
+  font-size: var(--density-font-size-sm);
+}
+.breadcrumb--sm .breadcrumb-link,
+.breadcrumb--sm .breadcrumb-current {
+  max-width: 140px;
 }
 
 @media (max-width: 480px) {

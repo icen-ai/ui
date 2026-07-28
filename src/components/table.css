@@ -3,14 +3,19 @@
  *
  * 完整契约：
  *   <div class="table-wrap [table-wrap--bordered]">
- *     <table class="admin-table [admin-table--compact|admin-table--dense]">
+ *     <table class="admin-table [--zebra|--compact|--dense] [--sticky-col]">
+ *       <caption class="table-caption">标题说明</caption>     ← 可选
  *       <thead>
- *         <tr><th [colspan=rowspan]>列名</th>…</tr>
+ *         <tr><th [colspan=rowspan] [data-sort]>列名</th>…</tr>
  *       </thead>
  *       <tbody>
- *         <tr class="row-link [.is-selected]">           ← 整行可点
+ *         <tr class="row-link [.is-selected] [.is-expanded]>           ← 整行可点
+ *           <td class="col-fixed">…</td>                                ← 固定列（sticky-col 模式）
  *           <td>…</td>
  *           <td class="ops"><button class="btn btn-sm">…</button></td>
+ *         </tr>
+ *         <tr class="row-expand">                                       ← 展开行（配合 .is-expanded）
+ *           <td colspan="99">…展开详情…</td>
  *         </tr>
  *       </tbody>
  *       <tfoot><tr><td>合计</td>…</tr></tfoot>
@@ -18,7 +23,10 @@
  *   </div>
  *
  * .table-wrap：窄屏横向滚动（滚动条样式见 base.css）；--bordered 加外边框。
+ * .admin-table--zebra：斑马纹（奇数行底色）。
  * .admin-table--compact：紧凑（cell padding 缩小）；--dense：极紧凑（行高更紧）。
+ * .admin-table--sticky-col：首列水平粘滞（配合 td/th .col-fixed，长表横向滚动时保持可见）。
+ * .row-expand[hidden]：配合 .row-link.is-expanded 控制展开行显隐。
  */
 
 .table-wrap {
@@ -119,3 +127,78 @@
 }
 .admin-table th[data-sort='asc']::after { content: '↑'; opacity: 1; color: var(--token-accent); }
 .admin-table th[data-sort='desc']::after { content: '↓'; opacity: 1; color: var(--token-accent); }
+
+/* ── 斑马纹 ── */
+.admin-table--zebra tbody tr:nth-child(odd) {
+  background: color-mix(in srgb, var(--token-bg-soft) 50%, transparent);
+}
+.admin-table--zebra tbody tr:hover {
+  background: var(--token-surface-strong);
+}
+
+/* ── 表格标题（caption） ── */
+.table-caption {
+  text-align: left;
+  padding: var(--density-space-sm) calc(var(--density-space-md) + 2px);
+  font-size: var(--density-font-size-md);
+  font-weight: 600;
+  color: var(--token-text);
+  caption-side: top;
+}
+
+/* ── 首列粘滞（长表横向滚动时保持可见） ── */
+.admin-table--sticky-col th:first-child,
+.admin-table--sticky-col .col-fixed {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--token-bg-soft);
+  box-shadow: 2px 0 4px color-mix(in srgb, var(--token-shadow-card-base, rgba(0,0,0,0.06)) 40%, transparent);
+}
+.admin-table--sticky-col tbody td.col-fixed {
+  background: var(--token-surface);
+}
+.admin-table--sticky-col tbody tr:hover td.col-fixed {
+  background: var(--token-surface-strong);
+}
+
+/* ── 展开行 ── */
+.admin-table .row-expand > td {
+  padding: 0 var(--density-space-md);
+  background: var(--token-bg-soft);
+  border-bottom: 1px solid var(--token-line-soft);
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+}
+.admin-table .row-expand[hidden] { display: none; }
+/* 展开行的内容容器（使用方可加 padding/动画） */
+.row-expand-content {
+  padding: var(--density-space-sm) 0;
+  animation: row-expand-in var(--icen-tx-fast) var(--ease-out);
+}
+@keyframes row-expand-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 列宽工具类 ── */
+.admin-table .col-narrow { width: 80px; }
+.admin-table .col-wide { width: 240px; }
+.admin-table .col-action { width: 1%; white-space: nowrap; }
+
+/* ── 行状态色 ── */
+.admin-table tbody tr.row-success { background: color-mix(in srgb, var(--token-success) 6%, transparent); }
+.admin-table tbody tr.row-warning { background: color-mix(in srgb, var(--token-warning) 6%, transparent); }
+.admin-table tbody tr.row-error   { background: color-mix(in srgb, var(--token-error) 6%, transparent); }
+
+/* ── 粘滞表头阴影提示 ── */
+.admin-table thead th {
+  box-shadow: 0 1px 0 var(--token-line);
+}
+
+/* ── 表头分组（rowspan/colspan 样式） ── */
+.admin-table th[rowspan] { vertical-align: bottom; }
+
+@media (prefers-reduced-motion: reduce) {
+  .row-expand-content { animation: none; }
+}

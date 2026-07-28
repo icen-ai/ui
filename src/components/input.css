@@ -188,7 +188,19 @@
   color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
 }
 
-/* 字符计数（behavior 可挂到 .textarea-wrap 内尾部） */
+/* 字符计数（behavior 可挂到 .input-wrap 或 .textarea-wrap 内尾部） */
+.input-wrap { position: relative; }
+.input-wrap--has-counter { padding-right: calc(var(--density-space-sm) + 48px); }
+.input-wrap--has-counter .input-counter {
+  position: absolute;
+  right: var(--density-space-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
 .input-counter {
   position: absolute;
   right: var(--density-space-sm);
@@ -197,6 +209,17 @@
   color: var(--token-text-faint);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
+  transition: color var(--icen-tx-fast);
 }
+.input-counter.is-warn { color: var(--token-warning); }
+.input-counter.is-error { color: var(--token-error); font-weight: 600; }
+
 .textarea-wrap { position: relative; }
 .textarea-wrap .textarea { padding-bottom: 24px; }
+
+/* 有计数器时的 textarea 底部留空 */
+.textarea-wrap .input-counter {
+  position: absolute;
+  right: var(--density-space-sm);
+  bottom: var(--density-space-xs);
+}

@@ -80,6 +80,20 @@
   overflow: hidden;
   background: var(--token-bg-soft);
 }
+/* 封面比例变体 */
+.card-media--square { aspect-ratio: 1 / 1; }
+.card-media--tall { aspect-ratio: 3 / 4; }
+.card-media--wide { aspect-ratio: 21 / 9; }
+.card-media--auto { aspect-ratio: auto; }
+/* 封面 hover 放大（配合 .card--interactive） */
+.card--interactive:hover .card-media > img,
+.card--interactive:hover .card-media > video {
+  transform: scale(1.04);
+}
+.card-media > img,
+.card-media > video {
+  transition: transform var(--icen-tx-slow) var(--ease-out);
+}
 .card-media > img,
 .card-media > video {
   width: 100%;
@@ -154,3 +168,57 @@
 @media (prefers-reduced-motion: reduce) {
   .card--interactive { transition: none; }
 }
+
+/* ── 卡片网格（card-group）：自适应多列 ── */
+.card-group {
+  display: grid;
+  gap: var(--density-space-md);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.card-group--2 { grid-template-columns: repeat(2, 1fr); }
+.card-group--3 { grid-template-columns: repeat(3, 1fr); }
+.card-group--4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ── 卡片列表（横向铺开，常用于搜索结果/消息流） ── */
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-sm);
+}
+.card-list > .card {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+.card-list > .card .card-media {
+  width: 120px;
+  flex-shrink: 0;
+  aspect-ratio: auto;
+}
+.card-list > .card .card-head,
+.card-list > .card .card-body,
+.card-list > .card .card-foot {
+  flex: 1;
+}
+
+/* ── 卡片头副标题 ── */
+.card-subtitle {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  margin: 1px 0 0;
+  line-height: 1.4;
+}
+
+/* ── 卡片状态色边 ── */
+.card--success { border-color: color-mix(in srgb, var(--token-success) 35%, transparent); }
+.card--warning { border-color: color-mix(in srgb, var(--token-warning) 35%, transparent); }
+.card--error   { border-color: color-mix(in srgb, var(--token-error) 35%, transparent); }
+
+/* ── 卡片右上角徽标位 ── */
+.card-badge {
+  position: absolute;
+  top: var(--density-space-sm);
+  right: var(--density-space-sm);
+  z-index: 1;
+}
+.card { position: relative; }

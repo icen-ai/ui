@@ -1,15 +1,24 @@
 /*
- * @icen.ai/ui — Component: empty（空状态 / 无数据 / 404 占位）
+ * @icen.ai/ui — Component: empty（空状态 / 无数据 / 404 / 错误 / 维护中）
  *
  * 完整契约：
- *   <div class="empty [.empty--sm|.empty--lg]">
+ *   <div class="empty [.empty--sm|.empty--lg]
+ *        [.empty--error|.empty--404|.empty--search|.empty--maintenance|.empty--network]">
  *     <div class="empty-icon">…svg…</div>            ← 可选，缺省显示默认占位
  *     <h3 class="empty-title">暂无数据</h3>
  *     <p class="empty-desc">描述文案（可选）</p>
  *     <div class="empty-action">                       ← 可选：操作按钮位
  *       <button class="btn btn-primary">…</button>
+ *       <button class="btn">…</button>
  *     </div>
  *   </div>
+ *
+ * 类型预设（改图标底色与基调）：
+ *   .empty--error        错误（红底图标）
+ *   .empty--404          404（中性大字）
+ *   .empty--search       搜索无结果
+ *   .empty--maintenance  维护中（warning 底）
+ *   .empty--network      网络错误（info 底）
  *
  * 规格源自 opengal src/presentation/ui/data/display.tsx 的 EmptyState。
  */
@@ -25,6 +34,7 @@
 .empty--sm { padding: var(--density-space-md); }
 .empty--lg { padding: 64px var(--density-space-md); }
 
+/* ── 图标 ── */
 .empty-icon {
   width: 48px;
   height: 48px;
@@ -44,6 +54,28 @@
 .empty--lg .empty-icon svg { width: 32px; height: 32px; }
 .empty--sm .empty-icon svg { width: 18px; height: 18px; }
 
+/* ── 类型预设 ── */
+.empty--error .empty-icon {
+  background: color-mix(in srgb, var(--token-error) 10%, transparent);
+  border-color: color-mix(in srgb, var(--token-error) 20%, transparent);
+  color: var(--token-error);
+}
+.empty--maintenance .empty-icon {
+  background: color-mix(in srgb, var(--token-warning) 10%, transparent);
+  border-color: color-mix(in srgb, var(--token-warning) 20%, transparent);
+  color: var(--token-warning);
+}
+.empty--network .empty-icon {
+  background: color-mix(in srgb, var(--token-info) 10%, transparent);
+  border-color: color-mix(in srgb, var(--token-info) 20%, transparent);
+  color: var(--token-info);
+}
+.empty--search .empty-icon {
+  background: var(--token-fill-1);
+  color: var(--token-text-muted);
+}
+
+/* ── 标题与描述 ── */
 .empty-title {
   font-size: var(--density-font-size-md);
   font-weight: 500;
@@ -51,15 +83,53 @@
   margin: 0;
   line-height: 1.4;
 }
+.empty--error .empty-title { color: var(--token-error); }
 .empty-desc {
   font-size: var(--density-font-size-sm);
   color: var(--token-text-muted);
   margin: 4px 0 0;
-  max-width: 240px;
+  max-width: 280px;
   line-height: 1.5;
 }
+
+/* ── 操作区 ── */
 .empty-action {
   margin-top: var(--density-space-md);
   display: flex;
   gap: var(--density-space-xs);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── 404 大数字 ── */
+.empty--404 .empty-title {
+  font-size: 72px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--token-text-faint);
+  margin-bottom: var(--density-space-sm);
+}
+.empty--404 .empty-icon { display: none; }
+
+/* ── 插画背景（使用方可用渐变背景替代图标） ── */
+.empty--illustrated {
+  background: radial-gradient(ellipse at center,
+    color-mix(in srgb, var(--token-accent) 6%, transparent) 0%,
+    transparent 70%);
+  border-radius: var(--radius-lg);
+}
+
+/* ── 内嵌模式（empty 嵌入卡片/面板内时无 padding） ── */
+.empty--inline {
+  padding: var(--density-space-md) var(--density-space-sm);
+}
+
+@media (max-width: 480px) {
+  .empty--404 .empty-title { font-size: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty { animation: none; }
 }

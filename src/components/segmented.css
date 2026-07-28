@@ -259,3 +259,78 @@
 @media (prefers-reduced-motion: reduce) {
   .segmented-item, .toggle-item, .stepper-btn, .stepper, .otp-cell { transition: none; }
 }
+
+/* ── 增强 ── */
+
+/* 全宽分段（每项等宽） */
+.segmented--block,
+.toggle-group--block {
+  display: flex;
+  width: 100%;
+}
+.segmented--block .segmented-item,
+.toggle-group--block .toggle-item {
+  flex: 1;
+  justify-content: center;
+}
+
+/* 分段底色变体（幽灵底，用于次要分组） */
+.segmented--ghost,
+.toggle-group--ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.segmented--ghost .segmented-item.is-active,
+.toggle-group--ghost .toggle-item.is-active {
+  background: var(--token-fill-2);
+  color: var(--token-text);
+  box-shadow: none;
+}
+
+/* 分段错误态 */
+.segmented.is-error,
+.toggle-group.is-error {
+  border-color: var(--token-error);
+}
+
+/* 分段禁用整体 */
+.segmented.is-disabled,
+.toggle-group.is-disabled {
+  opacity: var(--icen-disabled-opacity);
+  pointer-events: none;
+}
+
+/* 步进器带单位后缀 */
+.stepper-unit {
+  display: inline-flex;
+  align-items: center;
+  padding-right: var(--density-space-sm);
+  color: var(--token-text-faint);
+  font-size: 0.85em;
+}
+
+/* OTP 分组分隔符（如 4-4 分两组时中间加横线） */
+.otp-separator {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--density-space-xs);
+  color: var(--token-text-faint);
+  font-size: var(--density-font-size-lg);
+  font-weight: 300;
+}
+
+/* OTP 错误态 */
+.otp.is-error .otp-cell { border-color: var(--token-error); }
+.otp.is-error .otp-cell.is-filled {
+  background: var(--token-error-muted);
+  border-color: var(--token-error);
+}
+
+/* OTP 完成（全部填满）态 */
+.otp.is-complete .otp-cell {
+  border-color: var(--token-success);
+}
+.otp.is-complete .otp-cell.is-filled {
+  background: color-mix(in srgb, var(--token-success) 8%, transparent);
+}

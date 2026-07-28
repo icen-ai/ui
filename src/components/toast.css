@@ -77,6 +77,120 @@
   box-shadow: var(--icen-ring);
 }
 
+/* ── 增强 ── */
+
+/* 语义图标 */
+.toast-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--token-text-faint);
+}
+.toast-icon svg { width: 16px; height: 16px; }
+.toast.ok .toast-icon { color: var(--token-success); }
+.toast.err .toast-icon { color: var(--token-error); }
+.toast.warn .toast-icon { color: var(--token-warning); }
+
+/* 关闭按钮 */
+.toast-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.toast-close:hover {
+  color: var(--token-text);
+  background: var(--token-fill-1);
+}
+.toast-close svg { width: 12px; height: 12px; }
+
+/* 富内容（标题 + 正文） */
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+.toast-title {
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  color: var(--token-text);
+  line-height: 1.4;
+}
+.toast-body {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+/* 超时进度条 */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  overflow: hidden;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+.toast-progress-fill {
+  height: 100%;
+  background: var(--token-accent);
+  transform-origin: left;
+  animation: toast-countdown linear forwards;
+}
+.toast.ok .toast-progress-fill { background: var(--token-success); }
+.toast.err .toast-progress-fill { background: var(--token-error); }
+.toast.warn .toast-progress-fill { background: var(--token-warning); }
+@keyframes toast-countdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+.toast { position: relative; overflow: hidden; }
+
+/* 容器定位变体 */
+.toast-container[data-position='top-left'] {
+  right: auto;
+  bottom: auto;
+  top: var(--density-space-md);
+  left: var(--density-space-md);
+  align-items: flex-start;
+}
+.toast-container[data-position='top-right'] {
+  bottom: auto;
+  top: var(--density-space-md);
+}
+.toast-container[data-position='top-center'] {
+  right: auto;
+  bottom: auto;
+  top: var(--density-space-md);
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+.toast-container[data-position='bottom-left'] {
+  right: auto;
+  left: var(--density-space-md);
+  align-items: flex-start;
+}
+.toast-container[data-position='bottom-center'] {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
 .toast.leaving {
   opacity: 0;
   transform: translateY(8px);
