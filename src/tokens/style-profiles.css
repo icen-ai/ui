@@ -10,6 +10,10 @@
  *   1. 这些类挂在 <html> 上，与 .clay/.piano/.art/.vangogh/.ink/.retro 共存。
  *   2. 只覆盖与“风格”相关的变量：字体、圆角、阴影硬度、抗锯齿、图像渲染。
  *   3. 颜色仍由 preset 决定，保持正交。
+ *
+ * 注：选择器引用的是 base.css 的交互基元（.pressable / .control / .lift），
+ *     而非源项目 opengal 的 .og-* 命名——切换 profile 时这些基元自动获得
+ *     对应风格的几何/边框/阴影形态。
  */
 
 /* ══════════════════════════════════════════════════════════════
@@ -164,6 +168,19 @@
   /* ── 滚动条 ── */
   --token-scrollbar-size: 10px;
 
+  /* ── icen 原语覆盖：retro 的聚焦环/按下/悬停全部像素化 ── */
+  --icen-ring: 2px solid var(--token-accent);
+  --icen-ring-soft: 2px solid var(--token-accent);
+  --icen-ring-error: 2px solid var(--token-error);
+  --icen-ring-success: 2px solid var(--token-success);
+  --icen-press: translate(2px, 2px);
+  --icen-press-soft: translate(1px, 1px);
+  --icen-hover-border: var(--token-accent);
+  --icen-hover-border-strong: var(--token-accent);
+  --icen-control-focus-shadow: inset 2px 2px 0 var(--token-line-soft), inset -1px -1px 0 var(--token-surface-strong);
+  --icen-control-focus-border: var(--token-accent);
+  --icen-control-error-shadow: inset 2px 2px 0 var(--token-line-soft), inset -1px -1px 0 var(--token-surface-strong);
+
   /* ── 渲染 ── */
   image-rendering: pixelated;
   -webkit-font-smoothing: none;
@@ -192,9 +209,13 @@
 
 /* ══════════════════════════════════════════════════════════════
    按钮 / 可点击元素 — 8-bit 像素按钮
+   base.css 的 .pressable / 原生 button / [role=button] / 复位按钮
+   注：聚焦环 / 按下形变 / 悬停边框 由 --icen-* 原语驱动，
+       在 .style-retro 块里已统一覆盖；这里只补"按钮的像素投影"，
+       这是 .pressable::after 高光无法表达的形态。
    ══════════════════════════════════════════════════════════════ */
 
-.style-retro .og-pressable,
+.style-retro .pressable,
 .style-retro button,
 .style-retro [role="button"],
 .style-retro input[type="button"],
@@ -210,42 +231,42 @@
   transition: all var(--duration-fast) var(--ease-out);
 }
 
-.style-retro .og-pressable::after,
+/* 禁用 .pressable::after 的现代渐变高光，retro 用硬投影表达层级 */
+.style-retro .pressable::after,
 .style-retro button::after {
   display: none;
 }
 
-/* 悬停：像素高亮 */
-.style-retro .og-pressable:hover,
-.style-retro button:hover {
-  outline: 2px solid var(--token-accent);
-  outline-offset: -2px;
+/* 悬停：边框高亮（聚焦环由 --icen-ring 接管，不再硬覆盖 outline） */
+.style-retro .pressable:hover,
+.style-retro button:hover,
+.style-retro [role="button"]:hover {
+  border-color: var(--token-accent);
 }
 
-/* 按下：内移 + 阴影消失 */
-.style-retro .og-pressable:active,
+/* 按下：内移 + 阴影消失（位移值由 --icen-press 驱动） */
+.style-retro .pressable:active,
 .style-retro button:active,
 .style-retro [role="button"]:active {
-  transform: translate(2px, 2px);
   box-shadow:
     inset -2px -2px 0 var(--token-line-soft),
     inset 2px 2px 0 var(--token-surface-strong);
 }
 
 /* 禁用状态 */
-.style-retro .og-pressable:where(:disabled, [aria-disabled="true"], [data-disabled]),
+.style-retro .pressable:where(:disabled, [aria-disabled="true"], [data-disabled]),
 .style-retro button:disabled {
-  transform: none;
   box-shadow: none;
   outline: none;
-  opacity: 0.5;
 }
 
 /* ══════════════════════════════════════════════════════════════
    输入框 / 表单元素 — 像素输入框
+   base.css 的 .control 是 wrapper 基元；原生 input/textarea/select 同样适用
+   注：聚焦阴影/边框已由 --icen-control-focus-* 接管，这里只补像素 inset 阴影
    ══════════════════════════════════════════════════════════════ */
 
-.style-retro .og-control,
+.style-retro .control,
 .style-retro input,
 .style-retro textarea,
 .style-retro select {
@@ -258,18 +279,12 @@
   transition: none;
 }
 
-.style-retro .og-control::after {
-  display: none;
-}
-
-/* 被 og-control / vn-editable-field 容器包裹的输入框：自身边框透明化，
+/* 被 .control 容器包裹的输入框：自身边框透明化，
    完全交给外层容器承担像素边框，避免常驻/聚焦状态出现双层内框。 */
-.style-retro .og-control input:not([type="checkbox"]):not([type="radio"]),
-.style-retro .og-control textarea,
-.style-retro .og-control select,
-.style-retro .vn-editable-field input:not([type="checkbox"]):not([type="radio"]),
-.style-retro .vn-editable-field textarea,
-.style-retro .vn-editable-field [contenteditable="true"] {
+.style-retro .control input:not([type="checkbox"]):not([type="radio"]),
+.style-retro .control textarea,
+.style-retro .control select,
+.style-retro .control [contenteditable="true"] {
   border-color: transparent !important;
   box-shadow: none !important;
   background: transparent !important;
@@ -278,22 +293,12 @@
 .style-retro input:hover,
 .style-retro textarea:hover,
 .style-retro select:hover,
-.style-retro .og-control:hover,
-.style-retro .vn-editable-field:hover {
-  border-color: var(--token-accent);
+.style-retro .control:hover {
+  border-color: var(--icen-hover-border);
 }
 
-.style-retro .og-control:focus-within,
-.style-retro .vn-editable-field:focus-within {
-  border-color: var(--token-accent);
-  box-shadow:
-    inset 2px 2px 0 var(--token-line-soft),
-    inset -1px -1px 0 var(--token-surface-strong);
-  outline: 2px solid var(--token-accent);
-  outline-offset: -2px;
-}
-
-/* 文本输入区自身无焦点环，完全交给外层容器 */
+/* 文本输入区自身无焦点环，完全交给外层容器；
+   .control:focus-within 的 box-shadow / border 由 --icen-control-focus-* 自动驱动 */
 .style-retro input:focus,
 .style-retro textarea:focus,
 .style-retro select:focus,
@@ -377,8 +382,8 @@
   border-color: var(--token-line-strong);
 }
 
-/* 禁用平滑悬停提升 */
-.style-retro .og-surface-lift:hover {
+/* 禁用平滑悬停提升；.lift 在 retro 下用硬投影 + 边框色变化表达悬停 */
+.style-retro .lift:hover {
   transform: none;
   box-shadow:
     2px 2px 0 var(--token-accent);
@@ -495,17 +500,12 @@
   box-shadow: var(--token-shadow-card);
 }
 
-/* 非文本元素的硬像素焦点环（已在 retro-effects.css 有基础，这里强化 specificity） */
+/* 非文本元素的硬像素焦点环 */
 .style-retro :focus-visible:not(input):not(textarea):not(select):not([contenteditable="true"]) {
   outline: 2px solid var(--token-accent);
   outline-offset: -2px;
   box-shadow: none;
   border-radius: var(--radius-md);
-}
-
-/* 非输入按钮在 retro 下禁用现代渐变高光（::after 渐变由 .og-pressable 提供） */
-.style-retro .og-pressable::after {
-  display: none;
 }
 
 /* ══════════════════════════════════════════════════════════════

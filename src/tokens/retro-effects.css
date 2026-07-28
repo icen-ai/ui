@@ -1,0 +1,264 @@
+/*
+ * @icen.ai/ui — Retro 效果层（按需引入）
+ *
+ * 与 tokens.css 不同，本文件 **不** 进 tokens.css 拼合，需显式 import：
+ *   import '@icen.ai/ui/retro-effects.css';
+ *
+ * 仅在 <html class="style-retro">（或叠加 .dark）激活时生效，对其它风格无副作用：
+ *   - CRT 扫描线 + 暗角 + 颗粒噪点
+ *   - 屏幕闪烁 / 抖动 / 游走扫描光
+ *   - RGB 色散 / 霓虹发光（暗色）
+ *   - 像素边框 / 像素按钮 / 像素分隔线工具类
+ *   - 开机自检 / 打字机光标 / 页面闪白动画
+ *
+ * 所有动画尊重 prefers-reduced-motion：在 reduce 下由 base.css 的全局兜底降为 0.01ms。
+ */
+
+/* ══════════════════════════════════════════════════════════════
+   CRT 显示器效果
+   ══════════════════════════════════════════════════════════════ */
+
+/* CRT 扫描线 overlay */
+.style-retro body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.14;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.35) 2px,
+      rgba(0, 0, 0, 0.35) 4px
+    );
+  mix-blend-mode: multiply;
+}
+
+.style-retro.dark body::before {
+  opacity: 0.22;
+  mix-blend-mode: screen;
+}
+
+/* CRT 暗角 + 轻微曲面 */
+.style-retro body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 55%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+  opacity: 0.55;
+}
+
+/* 屏幕闪烁（备用工具类，需要时挂在元素上） */
+@keyframes retro-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.985; }
+}
+
+/* 屏幕轻微抖动（备用工具类） */
+@keyframes retro-jitter {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(0.5px, 0); }
+  50% { transform: translate(-0.5px, 0.5px); }
+  75% { transform: translate(0, -0.5px); }
+}
+
+/* CRT 颗粒噪点 */
+@keyframes retro-grain {
+  0%, 100% { background-position: 0 0; }
+  10% { background-position: -5% -10%; }
+  20% { background-position: -15% 5%; }
+  30% { background-position: 7% -25%; }
+  40% { background-position: -5% 25%; }
+  50% { background-position: -15% 10%; }
+  60% { background-position: 15% 0%; }
+  70% { background-position: 0% 15%; }
+  80% { background-position: 3% 35%; }
+  90% { background-position: -10% 10%; }
+}
+
+.style-retro .retro-crt-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  animation: retro-grain 0.5s steps(10) infinite;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   全局动画关键帧 + 游走扫描光
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes retro-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes retro-scanline-slide {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* 游走的扫描线（偶尔闪过）—— 挂到 .style-retro 下的显式节点 */
+.style-retro .retro-scanline-beam,
+.retro-scanline-beam {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--token-accent) 30%, transparent),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 9996;
+  opacity: 0.4;
+  animation: retro-scanline-slide 4s linear infinite;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   开机自检 / 打字机效果
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes retro-boot-text {
+  0% { opacity: 0; transform: translateY(4px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+
+.retro-boot-line {
+  opacity: 0;
+  animation: retro-boot-text 0.3s steps(1) forwards;
+}
+
+.retro-boot-line:nth-child(1) { animation-delay: 0.1s; }
+.retro-boot-line:nth-child(2) { animation-delay: 0.25s; }
+.retro-boot-line:nth-child(3) { animation-delay: 0.4s; }
+.retro-boot-line:nth-child(4) { animation-delay: 0.55s; }
+.retro-boot-line:nth-child(5) { animation-delay: 0.7s; }
+
+/* 打字机光标 */
+.retro-cursor::after {
+  content: "█";
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--token-accent);
+  animation: retro-blink 1s step-end infinite;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RGB 色散 / 霓虹发光（暗色下尤其出彩）
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro.dark .retro-glow {
+  text-shadow:
+    -1px 0 0 rgba(255, 0, 0, 0.4),
+    1px 0 0 rgba(0, 255, 255, 0.4),
+    0 0 2px var(--token-accent),
+    0 0 8px var(--token-accent);
+}
+
+.style-retro.dark .retro-glow-cold {
+  text-shadow:
+    -1px 0 0 rgba(255, 0, 0, 0.4),
+    1px 0 0 rgba(0, 255, 255, 0.4),
+    0 0 2px var(--token-accent-cold),
+    0 0 8px var(--token-accent-cold);
+}
+
+/* 亮色模式下发光退化为单层硬投影，保持像素感而不刺眼 */
+.style-retro:not(.dark) .retro-glow {
+  text-shadow:
+    1px 1px 0 color-mix(in srgb, var(--token-accent) 30%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   像素边框工具类（任意风格下可用，但与 retro 最契合）
+   ══════════════════════════════════════════════════════════════ */
+
+.retro-pixel-border {
+  border: 2px solid var(--token-line);
+  box-shadow:
+    2px 2px 0 var(--token-line-strong),
+    inset 2px 2px 0 var(--token-surface-strong),
+    inset -2px -2px 0 var(--token-line-soft);
+}
+
+.retro-pixel-border-accent {
+  border: 2px solid var(--token-accent);
+  box-shadow:
+    2px 2px 0 var(--token-accent-cold),
+    inset 2px 2px 0 color-mix(in srgb, var(--token-accent) 20%, transparent),
+    inset -2px -2px 0 color-mix(in srgb, var(--token-accent) 40%, transparent);
+}
+
+/* 像素按钮：硬投影 + 按下内移 */
+.retro-pixel-button {
+  position: relative;
+  border: 2px solid var(--token-line-strong);
+  box-shadow:
+    inset -2px -2px 0 var(--token-line-soft),
+    inset 2px 2px 0 var(--token-surface-strong),
+    2px 2px 0 var(--token-line);
+  transition: none;
+}
+
+.retro-pixel-button:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    inset -2px -2px 0 var(--token-line-soft),
+    inset 2px 2px 0 var(--token-surface-strong);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   选中文字 / 像素分隔线
+   ══════════════════════════════════════════════════════════════ */
+
+.style-retro ::selection {
+  background: var(--token-accent);
+  color: var(--token-on-accent);
+}
+
+.retro-pixel-rule {
+  height: 0;
+  border: 0;
+  border-top: 2px dashed var(--token-line);
+  image-rendering: pixelated;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   页面切换 / 闪白效果
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes retro-flash {
+  0% { opacity: 0; }
+  10% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+.retro-page-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  background: var(--token-bg);
+  opacity: 0;
+}
+
+.retro-page-flash.active {
+  animation: retro-flash 0.2s steps(3) forwards;
+}

@@ -1,112 +1,261 @@
 /*
  * @icen.ai/ui — Component: segmented（分段控件 / 切换组 / 数字步进器 / OTP）
+ *
  * 规格源自 opengal primitives/input.tsx 的 SegmentedControl 与 advanced-input.tsx
  * 的 ToggleButtonGroup / NumberStepper / OtpInput。
- * segmented 与 toggle-group 是纯 CSS 状态组件（.is-active）；stepper 由使用方接线；
- * otp 单元格交互见 behaviors/input.ts 的 initInput。
+ *
+ * 完整契约：
+ *   1) 分段控件（排他单选）：
+ *      <div class="segmented [segmented--sm|segmented--lg]" role="radiogroup">
+ *        <button class="segmented-item [.is-active]" role="radio" [aria-checked="true"]>…</button>
+ *      </div>
+ *
+ *   2) 切换组（同族变体，更松散）：
+ *      <div class="toggle-group [toggle-group--sm]">
+ *        <button class="toggle-item [.is-active]">…</button>
+ *      </div>
+ *
+ *   3) 数字步进器：
+ *      <div class="stepper">
+ *        <button class="stepper-btn" data-step="-1">−</button>
+ *        <input class="stepper-input" type="number" min="0" max="100" />
+ *        <button class="stepper-btn" data-step="1">+</button>
+ *      </div>
+ *
+ *   4) OTP 验证码单元格：
+ *      <div class="otp otp--sm" role="group" aria-label="一次性验证码">
+ *        <input class="otp-cell" maxlength="1" />
+ *        …
+ *      </div>
+ *
+ * segmented/toggle 是纯 CSS 状态组件（.is-active）；stepper/otp 由 behaviors/input.ts 接线。
  */
 
 /* ── 分段控件（排他单选） ── */
 .segmented {
-  display: inline-flex; align-items: center; gap: 2px; padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
   background: var(--token-panel);
   border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--token-shadow-inset);
 }
 
 .segmented-item {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 12px; font-size: 12px; font-weight: 500;
-  border: none; background: transparent; cursor: pointer;
-  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding: var(--density-space-xs) calc(var(--density-space-sm) + 2px);
+  font-size: var(--density-font-size-sm);
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
   color: var(--token-text-muted);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
 }
-.segmented-item:hover:not(.is-active) {
-  color: var(--token-text); background: var(--token-surface-hover);
+.segmented-item:hover:not(.is-active):not(:disabled) {
+  color: var(--token-text);
+  background: var(--token-surface-hover);
 }
-.segmented-item.is-active {
-  background: var(--token-accent); color: var(--token-on-accent, #fff);
+.segmented-item:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.segmented-item.is-active,
+.segmented-item[aria-checked='true'] {
+  background: var(--token-accent);
+  color: var(--token-on-accent, #fff);
   box-shadow: var(--token-shadow-elevated);
 }
-.segmented-item:disabled { opacity: 0.4; cursor: not-allowed; }
+.segmented-item:disabled,
+.segmented-item[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
+.segmented-item svg { width: 13px; height: 13px; flex-shrink: 0; }
 
-/* 尺寸：容器修饰符驱动 item 内边距 / 字号 */
-.segmented--sm .segmented-item { padding: 4px 10px; font-size: 11px; }
+/* 尺寸 */
+.segmented--sm .segmented-item {
+  padding: 2px var(--density-space-sm);
+  font-size: var(--density-font-size-xs);
+}
+.segmented--lg .segmented-item {
+  padding: var(--density-space-xs) var(--density-space-md);
+  font-size: var(--density-font-size-md);
+}
 
-/* ── 切换组（segmented 同族变体：更松的 padding、item 更小圆角、active 阴影更轻） ── */
+/* ── 切换组（segmented 同族变体） ── */
 .toggle-group {
-  display: inline-flex; align-items: center; gap: 4px; padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding: var(--density-space-xs);
   background: var(--token-panel);
   border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
 }
 
 .toggle-item {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 12px; font-size: 12px; font-weight: 500;
-  border: none; background: transparent; cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding: var(--density-space-xs) var(--density-space-sm);
+  font-size: var(--density-font-size-sm);
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   border-radius: var(--radius-xs);
   color: var(--token-text-muted);
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
 }
-.toggle-item:hover:not(.is-active) {
-  color: var(--token-text); background: var(--token-control-hover);
+.toggle-item:hover:not(.is-active):not(:disabled) {
+  color: var(--token-text);
+  background: var(--token-control-hover);
 }
-.toggle-item.is-active {
-  background: var(--token-accent); color: var(--token-on-accent, #fff);
+.toggle-item:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.toggle-item.is-active,
+.toggle-item[aria-checked='true'] {
+  background: var(--token-accent);
+  color: var(--token-on-accent, #fff);
   box-shadow: var(--token-shadow-card);
 }
-.toggle-item:disabled { opacity: 0.4; cursor: not-allowed; }
-.toggle-group--sm .toggle-item { padding: 4px 10px; font-size: 11px; }
+.toggle-item:disabled,
+.toggle-item[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
+.toggle-group--sm .toggle-item {
+  padding: 2px var(--density-space-sm);
+  font-size: var(--density-font-size-xs);
+}
 
 /* ── 数字步进器 ── */
 .stepper {
-  display: inline-flex; align-items: stretch;
+  display: inline-flex;
+  align-items: stretch;
   background: var(--token-control);
   border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
+}
+.stepper:hover { border-color: var(--icen-hover-border); }
+.stepper:focus-within {
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
 }
 
 .stepper-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 0 10px; border: none; background: transparent; cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--density-space-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
   color: var(--token-text-muted);
-  transition: background-color var(--duration-normal) var(--ease-out),
-    color var(--duration-normal) var(--ease-out);
+  font-size: var(--density-font-size-md);
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
 }
-.stepper-btn:hover { background: var(--token-control-hover); color: var(--token-text); }
-.stepper-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.stepper-btn:hover:not(:disabled) {
+  background: var(--token-control-hover);
+  color: var(--token-text);
+}
+.stepper-btn:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--token-accent) 50%, transparent);
+}
+.stepper-btn:disabled,
+.stepper-btn[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
 
 .stepper-input {
-  width: 56px; padding: 8px 0;
-  text-align: center; font-variant-numeric: tabular-nums;
-  background: transparent; outline: none; border: none;
+  width: 56px;
+  padding: var(--density-space-sm) 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+  outline: none;
+  border: none;
   border-left: 1px solid var(--token-outline-soft);
   border-right: 1px solid var(--token-outline-soft);
-  color: var(--token-text); font: inherit; font-size: 13px;
+  color: var(--token-text);
+  font: inherit;
+  font-size: var(--density-font-size-md);
 }
 /* 隐藏原生 number 箭头（± 交给 .stepper-btn） */
 .stepper-input::-webkit-outer-spin-button,
-.stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.stepper-input[type='number'] { -moz-appearance: textfield; appearance: textfield; }
+.stepper-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.stepper-input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
 
 /* ── OTP 验证码单元格 ── */
-.otp { display: inline-flex; align-items: center; gap: 8px; }
-
+.otp {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+}
 .otp-cell {
-  width: 40px; height: 48px; padding: 0;
-  text-align: center; font-size: 18px; font-weight: 600;
+  width: 40px;
+  height: 48px;
+  padding: 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--font-mono);
   color: var(--token-text);
   background: var(--token-control);
   border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   outline: none;
-  transition: border-color var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
+  transition:
+    border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
+}
+.otp-cell:hover {
+  border-color: var(--icen-hover-border);
 }
 .otp-cell:focus-visible {
-  border-color: var(--token-accent);
-  box-shadow: 0 0 0 2px var(--token-accent-subtle);
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
 }
-.otp-cell:disabled { opacity: 0.4; cursor: not-allowed; }
+.otp-cell.is-filled {
+  border-color: var(--token-accent);
+  background: var(--token-accent-subtle);
+}
+.otp-cell:disabled,
+.otp-cell[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
+.otp--sm .otp-cell { width: 32px; height: 40px; font-size: var(--density-font-size-lg); }
+.otp--lg .otp-cell { width: 48px; height: 56px; font-size: 22px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented-item, .toggle-item, .stepper-btn, .stepper, .otp-cell { transition: none; }
+}

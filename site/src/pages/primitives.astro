@@ -1,0 +1,207 @@
+---
+import Docs from '../layouts/Docs.astro';
+const primitives = [
+  {
+    cls: 'pressable',
+    name: '.pressable',
+    desc: '可按压基元：hover 顶部高光、focus-visible 双层环、active 下陷、aria-busy 减淡、disabled 50% 透明。',
+    demo: `<div class="demo-row">
+  <button class="pressable btn-demo">默认</button>
+  <button class="pressable btn-demo" aria-busy="true">aria-busy</button>
+  <button class="pressable btn-demo" disabled>disabled</button>
+</div>`,
+  },
+  {
+    cls: 'control',
+    name: '.control',
+    desc: '表单控件 wrapper：hover 边框过渡、focus-within 内嵌阴影 + accent 3px 光晕、:invalid 错误态自动接管。',
+    demo: `<div class="demo-row">
+  <span class="control input-demo">
+    <input placeholder="点击聚焦看光晕" />
+  </span>
+  <span class="control input-demo" data-invalid="true">
+    <input value="错误态" />
+  </span>
+</div>`,
+  },
+  {
+    cls: 'field',
+    name: '.field',
+    desc: '字段容器：label / hint / error 三段式纵向布局，配合 .control 使用。',
+    demo: `<label class="field">
+  <span class="field-label">邮箱地址</span>
+  <span class="control field-input"><input type="email" placeholder="you@icen.ai" /></span>
+  <span class="field-hint">用于接收通知</span>
+</label>`,
+  },
+  {
+    cls: 'lift',
+    name: '.lift',
+    desc: '可交互卡片浮起：hover / focus-within 上移 1px + accent 边 + card 阴影。',
+    demo: `<div class="lift card-demo">hover 我浮起</div>`,
+  },
+  {
+    cls: 'surface-elevated',
+    name: '.surface-elevated',
+    desc: '静态提升表面：surface 底 + line-soft 边 + card 阴影 + md 圆角，无需 hover 反馈。',
+    demo: `<div class="surface-elevated card-demo">静态浮起面板</div>`,
+  },
+  {
+    cls: 'focus-ring',
+    name: '.focus-ring',
+    desc: '显式聚焦环工具类：Tab 键聚焦时 ring-2 + offset-1 等价环。',
+    demo: `<button class="focus-ring focus-demo">按 Tab 聚焦我</button>`,
+  },
+];
+const tokens = [
+  { name: '--icen-ring', desc: '聚焦环（focus-visible）', value: '0 0 0 2px bg, 0 0 0 4px accent 50%' },
+  { name: '--icen-ring-soft', desc: '柔和聚焦环（嵌套元素）', value: '0 0 0 3px accent 16%' },
+  { name: '--icen-hover-border', desc: '悬停边框过渡', value: 'accent 30% + line' },
+  { name: '--icen-disabled-opacity', desc: '禁用透明度', value: '0.5' },
+  { name: '--icen-press', desc: '按下形变', value: 'translateY(1px) scale(.985)' },
+  { name: '--icen-control-focus-shadow', desc: '表单控件聚焦阴影', value: 'inset + 3px accent 14%' },
+  { name: '--icen-tx-fast', desc: '快速过渡', value: '150ms ease-out' },
+  { name: '--icen-tx-normal', desc: '标准过渡', value: '200ms ease-out' },
+  { name: '--icen-tx-slow', desc: '慢速过渡', value: '300ms ease-out' },
+];
+---
+<Docs title="原语 · ICEN UI" description="icen 组件契约 — 6 个交互基元 + --icen-* 原语 token 层，所有 31 个组件从此出发。">
+  <nav class="breadcrumb" aria-label="面包屑">
+    <ol>
+      <li><a class="breadcrumb-link" href="/">首页</a><span class="breadcrumb-sep" aria-hidden="true"></span></li>
+      <li><span class="breadcrumb-current" aria-current="page">原语</span></li>
+    </ol>
+  </nav>
+
+  <h1 class="page-title">原语（统一抽象层）</h1>
+  <p class="page-desc">
+    所有 31 个组件共享同一套抽象：(1) <strong>6 个交互基元 class</strong>（HTML 显式组合 API）+
+    (2) <strong><code>--icen-*</code> 原语 token 层</strong>（CSS 自洽消费）。风格 profile 只需覆盖少数变量，
+    全局 31 个组件自动换肤。
+  </p>
+
+  <section class="panel-block">
+    <div class="panel-title"><span>6 个交互基元</span><span>composition API</span></div>
+    <div class="panel-body">
+      <p class="dim">用法（任选其一）：</p>
+      <pre><code>{`<button class="btn pressable focus-ring">  <!-- 类组合，体积最小 -->
+<button class="btn">                  <!-- 自洽，CSS 引用 --icen-* 同一原语 -->`}</code></pre>
+      <p class="dim" style="margin-top:14px">下方演示直接挂原语 class（不带任何组件 class），可见其承载的最小可识别交互：</p>
+
+      {primitives.map((p) => (
+        <div class="primitive-row">
+          <div class="primitive-head">
+            <code class="primitive-name">{p.name}</code>
+            <span class="primitive-desc dim">{p.desc}</span>
+          </div>
+          <div class="preview" set:html={p.demo} />
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="panel-block">
+    <div class="panel-title"><span>--icen-* 原语 token</span><span>变量层</span></div>
+    <div class="panel-body">
+      <p class="dim">所有组件消费这组原语变量；切换风格 profile（如 .style-retro）只覆盖这里的少数变量即可全局生效。</p>
+      <table class="admin-table admin-table--compact">
+        <thead>
+          <tr><th>变量</th><th>说明</th><th>值（modern 风格）</th></tr>
+        </thead>
+        <tbody>
+          {tokens.map((t) => (
+            <tr>
+              <td><code class="mono">{t.name}</code></td>
+              <td>{t.desc}</td>
+              <td class="num"><code class="mono">{t.value}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="dim" style="margin-top:14px">retro profile 覆盖示例：</p>
+      <pre><code>{`.style-retro {
+  --icen-ring: 2px solid var(--token-accent);
+  --icen-press: translate(2px, 2px);
+  --icen-hover-border: var(--token-accent);
+  /* 全部 31 个组件自动获得像素风聚焦环 + 按下位移 */
+}`}</code></pre>
+    </div>
+  </section>
+
+  <section class="panel-block">
+    <div class="panel-title"><span>组件契约</span><span>约定</span></div>
+    <div class="panel-body">
+      <dl class="desc-grid desc--bordered" style="--desc-cols: 1">
+        <div class="desc-item"><dt>状态命名</dt><dd><code>.is-loading</code> / <code>.is-error</code> / <code>.is-disabled</code> / <code>.is-open</code> / <code>.is-selected</code> / <code>.is-focused</code> / <code>.is-active</code></dd></div>
+        <div class="desc-item"><dt>aria 等价</dt><dd><code>[aria-busy=true]</code>↔is-loading、<code>[data-invalid=true]</code>↔is-error、<code>[aria-disabled=true]</code>/<code>[data-disabled]</code>↔is-disabled、<code>[aria-expanded=true]</code>↔is-open、<code>[aria-selected=true]</code>/<code>[aria-current=page]</code>↔is-active</dd></div>
+        <div class="desc-item"><dt>颜色纪律</dt><dd>仅 <code>--token-success</code> / <code>-warning</code> / <code>-error</code> / <code>-info</code> / <code>-accent</code> 五个语义色</dd></div>
+        <div class="desc-item"><dt>间距 / 字号 / 控件高度</dt><dd><code>--density-space-*</code> / <code>--density-font-size-*</code> / <code>--density-input-height-*</code></dd></div>
+        <div class="desc-item"><dt>圆角 / 阴影</dt><dd><code>--radius-*</code> / <code>--token-shadow-*</code></dd></div>
+        <div class="desc-item"><dt>z-index</dt><dd><code>--z-base/raised/sticky/chrome/toast/banner/dialog/popover/tooltip</code></dd></div>
+      </dl>
+    </div>
+  </section>
+</Docs>
+
+<style is:global>
+  .page-title { font-family: var(--font-heading); letter-spacing: 2px; margin: 0 0 8px; }
+  .page-desc { color: var(--token-text-muted); font-size: 13px; line-height: 1.7; margin: 0 0 28px; max-width: 720px; }
+  .page-desc strong { color: var(--token-text); font-weight: 600; }
+  .page-desc code, .primitive-name, .desc-item dd code, td code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    padding: 1px 6px;
+    background: var(--token-bg-soft);
+    border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-xs);
+    color: var(--token-accent);
+  }
+  .primitive-row { padding: 16px 0; border-top: 1px solid var(--token-line-soft); }
+  .primitive-row:first-child { border-top: 0; padding-top: 8px; }
+  .primitive-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .primitive-name { font-size: 14px; font-weight: 600; }
+  .primitive-desc { font-size: 13px; line-height: 1.5; }
+  .primitive-desc.dim { color: var(--token-text-muted); }
+
+  /* 演示元素：直接挂原语 class 即可见效果（无需任何组件类） */
+  .btn-demo {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 36px; padding: 0 16px;
+    background: var(--token-surface); color: var(--token-text);
+    border: 1px solid var(--token-line-soft); border-radius: var(--radius-md);
+    cursor: pointer; font-size: 13px; gap: 6px;
+  }
+  .input-demo {
+    display: inline-flex; align-items: center;
+    height: 36px; padding: 0 12px; min-width: 220px;
+    background: var(--token-control); border: 1px solid var(--token-outline-soft);
+    border-radius: var(--radius-md); box-shadow: var(--token-shadow-inset);
+  }
+  .input-demo input {
+    background: transparent; border: 0; outline: none;
+    color: var(--token-text); font: inherit; width: 100%;
+  }
+  .field-input {
+    display: flex; height: 36px; padding: 0 12px;
+    background: var(--token-control); border: 1px solid var(--token-outline-soft);
+    border-radius: var(--radius-md); box-shadow: var(--token-shadow-inset);
+  }
+  .field-input input {
+    background: transparent; border: 0; outline: none;
+    color: var(--token-text); font: inherit; width: 100%;
+  }
+  .card-demo {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 200px; height: 80px;
+    background: var(--token-card); border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-md); padding: 16px;
+    color: var(--token-text); font-size: 14px;
+  }
+  .focus-demo {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 36px; padding: 0 16px;
+    background: var(--token-surface); color: var(--token-text);
+    border: 1px solid var(--token-line-soft); border-radius: var(--radius-md);
+    cursor: pointer; font-size: 13px;
+  }
+</style>

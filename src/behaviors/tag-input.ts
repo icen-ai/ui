@@ -39,11 +39,22 @@ function setup(wrap: HTMLElement): void {
     wrap.setAttribute('data-tags', tags.join(','));
     wrap.classList.toggle('is-max', tags.length >= max);
     field.placeholder = tags.length === 0 ? placeholder : '';
+    if (!wrap.hasAttribute('aria-label')) {
+      wrap.setAttribute('aria-label', `标签输入，共 ${tags.length} 个`);
+    }
+  }
+
+  function emit(): void {
+    wrap.dispatchEvent(new CustomEvent('icen:tags-change', {
+      bubbles: true,
+      detail: { tags: [...tags] },
+    }));
   }
 
   function remove(index: number): void {
     tags.splice(index, 1);
     render();
+    emit();
   }
 
   function chip(tag: string, index: number): HTMLSpanElement {
@@ -77,6 +88,7 @@ function setup(wrap: HTMLElement): void {
     tags.push(v);
     field.value = '';
     render();
+    emit();
   }
 
   field.addEventListener('keydown', (ev) => {

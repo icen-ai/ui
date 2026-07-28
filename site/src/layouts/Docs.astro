@@ -86,6 +86,7 @@ const isActive = (href: string): boolean =>
         <a class="brand" href="/">ICEN UI · 设计系统</a>
         <nav class="nav-links">
           <a href="/">首页</a>
+          <a href="/primitives/">原语</a>
           <a href="/tokens/">色彩</a>
           <a href="/components/">组件</a>
           <a href="https://github.com/icen-ai/ui" target="_blank" rel="noopener">GitHub</a>
@@ -114,6 +115,7 @@ const isActive = (href: string): boolean =>
           <div class="docs-group">
             <p class="docs-group-name">开始</p>
             <a class:list={['docs-link', { active: path === '/' }]} href="/">介绍</a>
+            <a class:list={['docs-link', { active: isActive('/primitives/') }]} href="/primitives/">原语</a>
             <a class:list={['docs-link', { active: isActive('/tokens/') }]} href="/tokens/">色彩 Tokens</a>
           </div>
           {GROUPS.map((g) => (

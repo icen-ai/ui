@@ -1,10 +1,15 @@
 /*
  * Icen Design System — 色彩 Tokens
  *
- * 5 体系 × 2 模式 = 10 套完整配色
- * 每套: 12 base + 4 glow + 8 derived + 8 semantic + 8 fill + 4 border + 2 shadow + n bridge
+ * 6 预设 × 2 模式 = 12 套完整配色
+ *   clay（默认）/ piano / art / vangogh / ink / retro
  *
- * 用法: import "./colors.css";
+ * 每套包含：
+ *   12 base + 2 glow + 6 derived + 6 semantic + 4 fill + 2 shadow + 3 outline
+ *   + depth 层级（canvas/sidebar/panel/card/control）+ scrollbar + bridge 别名
+ *
+ * 用法: import "./colors.css";  —— 挂在 <html> 的 preset 类决定 base 取值，
+ *                                .dark 类切换明暗，二者正交组合。
  */
 
 /* ══════════════════════════════════════════════════════════════
@@ -1137,6 +1142,16 @@
   --token-shadow-card: 0 1px 2px color-mix(in srgb, var(--token-text) 5%, transparent), 0 6px 18px color-mix(in srgb, var(--token-text) 5%, transparent);
   --token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--token-surface) 42%, transparent), inset 0 -1px 1px color-mix(in srgb, var(--token-text) 4%, transparent);
   --token-top-highlight: color-mix(in srgb, var(--token-surface) 36%, transparent);
+
+  /* ── Scrollbar ──
+     由 base.css 的全局滚动条消费；每个预设可在自己的块里覆盖这 5 个 token，
+     以表达品牌色差（如 piano 用金、ink 用青）。retro/terminal 风格在
+     style-profiles.css 里另有像素化硬覆盖。 */
+  --token-scrollbar-size: 8px;
+  --token-scrollbar-track: transparent;
+  --token-scrollbar-thumb: color-mix(in srgb, var(--token-text) 16%, transparent);
+  --token-scrollbar-thumb-hover: color-mix(in srgb, var(--token-accent) 50%, transparent);
+  --token-scrollbar-button: transparent;
 }
 
 .dark {
@@ -1217,93 +1232,6 @@
   --token-shadow-card: 0 1px 1px rgba(0,0,0,.22), 0 12px 28px rgba(0,0,0,.24);
   --token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--token-text) 6%, transparent), inset 0 -1px 1px rgba(0,0,0,.22);
   --token-top-highlight: color-mix(in srgb, var(--token-surface) 18%, transparent);
-}
-
-/* ── Workbench Chrome Tokens ──
-   Shared spatial hierarchy for Studio and Creation editors. These sit on top
-   of theme depth tokens so light/dark and style profiles keep their own voice
-   while still exposing clear IDE-like regions. */
-:root {
-  --token-workbench-canvas: color-mix(in srgb, var(--token-bg-soft) 78%, var(--token-line-soft) 22%);
-  --token-workbench-sidebar: color-mix(in srgb, var(--token-bg) 76%, var(--token-surface) 24%);
-  --token-workbench-editor: color-mix(in srgb, var(--token-bg) 82%, var(--token-surface) 18%);
-  --token-workbench-panel: color-mix(in srgb, var(--token-card) 82%, var(--token-surface) 18%);
-  --token-workbench-panel-strong: color-mix(in srgb, var(--token-card-strong) 78%, var(--token-surface) 22%);
-  --token-workbench-chrome: color-mix(in srgb, var(--token-workbench-panel) 86%, var(--token-surface) 14%);
-  --token-workbench-rail: color-mix(in srgb, var(--token-sidebar) 84%, var(--token-bg) 16%);
-  --token-workbench-gutter: color-mix(in srgb, var(--token-line-soft) 30%, transparent);
-  --token-workbench-edge: color-mix(in srgb, var(--token-text) 10%, transparent);
-  --token-workbench-edge-soft: color-mix(in srgb, var(--token-text) 7%, transparent);
-  --token-workbench-shadow: 0 1px 1px color-mix(in srgb, var(--token-text) 3%, transparent), 0 8px 22px color-mix(in srgb, var(--token-text) 4%, transparent);
-  --token-workbench-shadow-inset: inset 0 1px 0 color-mix(in srgb, var(--token-surface) 28%, transparent);
-  --token-editor-paper: #f5efe5;
-  --token-editor-paper-soft: color-mix(in srgb, var(--token-editor-paper) 88%, var(--token-bg-soft) 12%);
-  --token-editor-paper-chrome: color-mix(in srgb, var(--token-editor-paper) 92%, var(--token-surface) 8%);
-  --token-editor-paper-edge: color-mix(in srgb, var(--token-text) 7%, transparent);
-}
-
-.dark {
-  --token-workbench-canvas: color-mix(in srgb, var(--token-bg) 72%, black 28%);
-  --token-workbench-sidebar: color-mix(in srgb, var(--token-bg-soft) 72%, black 28%);
-  --token-workbench-editor: color-mix(in srgb, var(--token-bg) 84%, black 16%);
-  --token-workbench-panel: color-mix(in srgb, var(--token-panel) 82%, black 18%);
-  --token-workbench-panel-strong: color-mix(in srgb, var(--token-card-strong) 82%, black 18%);
-  --token-workbench-chrome: color-mix(in srgb, var(--token-workbench-panel) 78%, black 22%);
-  --token-workbench-rail: color-mix(in srgb, var(--token-sidebar) 76%, black 24%);
-  --token-workbench-gutter: color-mix(in srgb, var(--token-line-soft) 44%, transparent);
-  --token-workbench-edge: color-mix(in srgb, var(--token-text) 11%, transparent);
-  --token-workbench-edge-soft: color-mix(in srgb, var(--token-text) 8%, transparent);
-  --token-workbench-shadow: 0 1px 1px rgba(0,0,0,.16), 0 10px 26px rgba(0,0,0,.18);
-  --token-workbench-shadow-inset: inset 0 1px 0 color-mix(in srgb, var(--token-text) 4%, transparent);
-  --token-editor-paper: #26211b;
-  --token-editor-paper-soft: color-mix(in srgb, var(--token-editor-paper) 88%, var(--token-bg-soft) 12%);
-  --token-editor-paper-chrome: color-mix(in srgb, var(--token-editor-paper) 90%, var(--token-surface-strong) 10%);
-  --token-editor-paper-edge: color-mix(in srgb, var(--token-text) 8%, transparent);
-}
-
-.piano {
-  --token-editor-paper: #fbf8ef;
-}
-
-.piano.dark {
-  --token-editor-paper: #1d1b17;
-}
-
-.art {
-  --token-editor-paper: #e9f2ed;
-}
-
-.art.dark {
-  --token-editor-paper: #203a34;
-}
-
-.vangogh {
-  --token-editor-paper: #eee5bf;
-}
-
-.vangogh.dark {
-  --token-editor-paper: #172742;
-}
-
-.ink {
-  --token-editor-paper: #fbf8f1;
-}
-
-.ink.dark {
-  --token-editor-paper: #1b221e;
-}
-
-.retro {
-  --token-editor-paper: #f4f4ea;
-}
-
-.retro.dark {
-  --token-editor-paper: #24243f;
-}
-
-.style-retro {
-  --token-workbench-shadow: var(--token-shadow-card);
-  --token-workbench-shadow-inset: var(--token-shadow-inset);
 }
 
 /* ── 动画 ── */

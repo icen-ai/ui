@@ -2,81 +2,201 @@
  * @icen.ai/ui — Component: input（wrapper 式输入框 / 多行 / 搜索）
  * 规格源自 opengal primitives/input.tsx；与 behaviors/input.ts 配套。
  *
- * 契约：
- *   <div class="input-wrap control [--sm|--lg] [.is-error] [.is-disabled]">
- *     <span class="input-leading">…</span>            可选前缀
+ * 完整契约：
+ *   <div class="input-wrap control [--sm|--lg] [--search] [.is-error] [.is-disabled]">
+ *     <span class="input-leading">…</span>            可选前缀（svg/icon/text）
  *     <input class="input" />
- *     <button class="input-clear">…</button>          可选清除钮（behavior 清空并聚焦）
- *     <button class="input-pw-toggle">…</button>      可选密码可见切换（behavior 驱动）
- *     <span class="input-trailing">…</span>           可选后缀
+ *     <button class="input-clear" aria-label="清除">…</button>     behavior 清空并聚焦
+ *     <button class="input-pw-toggle" aria-label="切换可见性">…</button>
+ *     <span class="input-trailing">…</span>           可选后缀（单位/字符计数等）
  *   </div>
- *   多行：<div class="textarea-wrap control"><textarea class="textarea" data-autosize></textarea></div>
- *   搜索：.input-wrap--search = leading 放大镜 + .input-clear 的结构约定（无额外视觉）
+ *
+ *   多行：<div class="textarea-wrap control" [.is-error|.is-disabled]><textarea class="textarea" data-autosize></textarea></div>
+ *
+ * --search 修饰：仅语义标记（让 behavior 知道这是搜索框，绑定 clear + Esc），
+ *              不额外改样式；视觉上仍用 .input-leading 放大镜。
  */
 
+/* ── 单行 ── */
 .input-wrap {
-  display: flex; align-items: center; gap: 8px; width: 100%;
-  height: 36px; padding: 0 12px; font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  width: 100%;
+  height: var(--density-input-height-md);
+  padding: 0 var(--density-space-sm);
+  font-size: var(--density-font-size-md);
   background: var(--token-control);
   border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--token-shadow-inset);
+  transition: border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
 }
-.input-wrap:focus-within { border-color: var(--token-accent); }
-.input-wrap.is-error, .input-wrap.is-error:focus-within { border-color: var(--token-error); }
-.input-wrap.is-disabled { opacity: 0.4; }
+.input-wrap:hover {
+  border-color: var(--icen-hover-border);
+}
+.input-wrap:focus-within {
+  box-shadow: var(--icen-control-focus-shadow);
+  border-color: var(--icen-control-focus-border);
+}
+.input-wrap.is-error,
+.input-wrap.is-error:focus-within {
+  border-color: var(--token-error);
+}
+.input-wrap.is-error:focus-within {
+  box-shadow: var(--icen-control-error-shadow);
+}
+.input-wrap.is-disabled,
+.input-wrap[aria-disabled='true'],
+.input-wrap[data-disabled] {
+  opacity: var(--icen-disabled-opacity);
+  background: var(--token-bg-soft);
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .input-wrap.is-disabled .input { cursor: not-allowed; }
 
-/* 尺寸三档：高度 / 横向内边距 / 字号 */
-.input-wrap--sm { height: 32px; padding: 0 10px; font-size: 12px; }
-.input-wrap--lg { height: 40px; padding: 0 14px; font-size: 14px; }
+/* 尺寸变体 */
+.input-wrap--sm {
+  height: var(--density-input-height-sm);
+  padding: 0 10px;
+  font-size: var(--density-font-size-sm);
+}
+.input-wrap--lg {
+  height: var(--density-input-height-lg);
+  padding: 0 var(--density-space-md);
+  font-size: var(--density-font-size-lg);
+}
 
 .input {
-  flex: 1; min-width: 0; padding: 0;
-  background: transparent; border: none; outline: none;
-  color: var(--token-text); font: inherit;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--token-text);
+  font: inherit;
 }
-.input::placeholder { color: color-mix(in srgb, var(--token-text-faint) 60%, transparent); }
+.input::placeholder {
+  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+}
+.input:read-only {
+  color: var(--token-text-muted);
+  cursor: default;
+}
+.input::-webkit-search-cancel-button { -webkit-appearance: none; }
 
-.input-leading, .input-trailing {
-  display: inline-flex; align-items: center; flex-shrink: 0;
+.input-leading,
+.input-trailing {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
   color: var(--token-text-faint);
 }
+.input-leading svg, .input-trailing svg { width: 14px; height: 14px; }
 
-.input-clear {
-  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  padding: 2px; border: none; background: transparent; cursor: pointer;
-  border-radius: var(--radius-full); color: var(--token-text-faint);
-  transition: color var(--duration-normal) var(--ease-out),
-    background-color var(--duration-normal) var(--ease-out);
+/* ── 前缀/后缀文字（单位、域名等）── */
+.input-affix {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 var(--density-space-xs);
+  color: var(--token-text-muted);
+  font-size: 0.92em;
+  background: var(--token-fill-1);
+  border-radius: var(--radius-xs);
 }
-.input-clear:hover { color: var(--token-text); background: var(--token-surface-hover); }
 
+.input-clear,
 .input-pw-toggle {
-  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  padding: 2px; border: none; background: transparent; cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-full);
   color: var(--token-text-faint);
-  transition: color var(--duration-normal) var(--ease-out);
+  transition:
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
 }
-.input-pw-toggle:hover { color: var(--token-text); }
+.input-clear:hover,
+.input-pw-toggle:hover {
+  color: var(--token-text);
+  background: var(--token-surface-hover);
+}
+.input-clear:focus-visible,
+.input-pw-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.input-clear svg, .input-pw-toggle svg { width: 12px; height: 12px; }
 
 /* ── 多行：同一 wrapper 视觉，内部 textarea 裸奔 ── */
 .textarea-wrap {
-  display: flex; width: 100%;
+  display: flex;
+  width: 100%;
   background: var(--token-control);
   border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--token-shadow-inset);
+  transition: border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
 }
-.textarea-wrap:focus-within { border-color: var(--token-accent); }
-.textarea-wrap.is-error, .textarea-wrap.is-error:focus-within { border-color: var(--token-error); }
-.textarea-wrap.is-disabled { opacity: 0.4; }
+.textarea-wrap:hover {
+  border-color: var(--icen-hover-border);
+}
+.textarea-wrap:focus-within {
+  box-shadow: var(--icen-control-focus-shadow);
+  border-color: var(--icen-control-focus-border);
+}
+.textarea-wrap.is-error,
+.textarea-wrap.is-error:focus-within {
+  border-color: var(--token-error);
+  box-shadow: var(--icen-control-error-shadow);
+}
+.textarea-wrap.is-disabled,
+.textarea-wrap[aria-disabled='true'],
+.textarea-wrap[data-disabled] {
+  opacity: var(--icen-disabled-opacity);
+  background: var(--token-bg-soft);
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .textarea-wrap.is-disabled .textarea { cursor: not-allowed; }
 
 .textarea {
-  width: 100%; padding: 12px;
-  background: transparent; border: none; outline: none; resize: none;
-  color: var(--token-text); font: inherit; font-size: 13px; line-height: 1.5;
-  min-height: calc(3 * 1.5em + 24px); /* 3 行 + 上下 padding */
+  width: 100%;
+  padding: var(--density-space-sm) var(--density-space-md);
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  color: var(--token-text);
+  font: inherit;
+  font-size: var(--density-font-size-md);
+  line-height: 1.5;
+  min-height: calc(3 * 1.5em + 24px);
 }
-.textarea::placeholder { color: color-mix(in srgb, var(--token-text-faint) 60%, transparent); }
+.textarea::placeholder {
+  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+}
+
+/* 字符计数（behavior 可挂到 .textarea-wrap 内尾部） */
+.input-counter {
+  position: absolute;
+  right: var(--density-space-sm);
+  bottom: var(--density-space-xs);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.textarea-wrap { position: relative; }
+.textarea-wrap .textarea { padding-bottom: 24px; }

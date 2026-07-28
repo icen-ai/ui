@@ -1,20 +1,110 @@
 /*
  * @icen.ai/ui — Component: popover（锚定浮层，与 behaviors/popover 配套）
- * 面板由 JS portal 到 document.body 并按 fixed 定位；data-side 由布局函数写入。
+ *
+ * 完整契约：
+ *   <button class="popover-trigger pressable" data-popover-target="id" aria-haspopup="dialog">…</button>
+ *   <div class="popover [--sm|--lg]" id="id" data-side="top|bottom|left|right" role="dialog" hidden>
+ *     <div class="popover-header">           可选
+ *       <h3 class="popover-title">…</h3>
+ *       <button class="popover-close" aria-label="关闭">…</button>
+ *     </div>
+ *     <div class="popover-body">…</div>
+ *     <div class="popover-footer">           可选
+ *       <button class="btn">取消</button>
+ *     </div>
+ *   </div>
+ *
+ * behavior：面板 portal 到 document.body 按 fixed 定位；data-side 由布局函数写入；
+ *           ESC / 外部点击关闭；焦点 trap 可选。
  */
 
 .popover {
-  position: fixed; z-index: var(--z-popover);
-  padding: 8px;
-  background: var(--token-card-strong); color: var(--token-text);
+  position: fixed;
+  z-index: var(--z-popover);
+  min-width: 200px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: var(--density-space-sm);
+  background: var(--token-card-strong);
+  color: var(--token-text);
   border: 1px solid var(--token-outline);
   box-shadow: var(--token-shadow-overlay);
   border-radius: var(--radius-lg);
-  animation: icen-popover-in 150ms var(--ease-out);
+  animation: icen-popover-in var(--icen-tx-fast);
+  transform-origin: top center;
 }
-.popover[data-side='top'] { animation-name: icen-popover-in-top; }
+.popover[data-side='top'] {
+  animation-name: icen-popover-in-top;
+  transform-origin: bottom center;
+}
+.popover[data-side='left'] {
+  animation-name: icen-popover-in-left;
+  transform-origin: right center;
+}
+.popover[data-side='right'] {
+  animation-name: icen-popover-in-right;
+  transform-origin: left center;
+}
 
-/* 进场动画与 .menu 同参数：fade + scale(.95→1) + 按侧位移 8px */
+.popover--sm { min-width: 160px; max-width: 240px; }
+.popover--lg { min-width: 280px; max-width: min(480px, calc(100vw - 32px)); }
+
+.popover-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-xs) var(--density-space-xs) var(--density-space-sm);
+  border-bottom: 1px solid var(--token-line-soft);
+  margin-bottom: var(--density-space-sm);
+}
+.popover-title {
+  margin: 0;
+  font-size: var(--density-font-size-sm);
+  font-weight: 600;
+  font-family: var(--font-heading);
+  line-height: 1.3;
+}
+.popover-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--token-text-faint);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
+}
+.popover-close:hover {
+  background: var(--token-surface-hover);
+  color: var(--token-text);
+}
+.popover-close:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.popover-body {
+  font-size: var(--density-font-size-sm);
+  line-height: 1.5;
+}
+
+.popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--density-space-xs);
+  margin-top: var(--density-space-sm);
+  padding-top: var(--density-space-sm);
+  border-top: 1px solid var(--token-line-soft);
+}
+
+/* ── 进场动画（按侧别反向位移 8px） ── */
 @keyframes icen-popover-in {
   from { opacity: 0; transform: scale(0.95) translateY(-8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
@@ -22,4 +112,16 @@
 @keyframes icen-popover-in-top {
   from { opacity: 0; transform: scale(0.95) translateY(8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes icen-popover-in-left {
+  from { opacity: 0; transform: scale(0.95) translateX(8px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+}
+@keyframes icen-popover-in-right {
+  from { opacity: 0; transform: scale(0.95) translateX(-8px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover { animation: none; }
 }

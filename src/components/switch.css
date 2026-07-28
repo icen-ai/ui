@@ -1,95 +1,212 @@
 /*
- * @icen.ai/ui — Component: switch（开关 / 勾选框 / 单选行）
- * 纯 CSS 状态组件：状态全走 aria-checked / .is-selected，交互由使用方（或演示页脚本）切换。
+ * @icen.ai/ui — Component: switch / checkbox / radio（开关 / 勾选 / 单选行）
+ * 纯 CSS 状态组件：状态全走 aria-checked / .is-selected；交互由使用方或演示页脚本切换。
  *
- * 开关：<button class="switch [--sm]" role="switch" aria-checked="true"><span class="switch-thumb"></span></button>
- * 勾选：<button class="checkbox focus-ring" role="checkbox" aria-checked="true|false|mixed"></button>
- * 单选：<div class="radio-group" role="radiogroup">
- *         <button class="radio-item motion is-selected"><span class="radio-dot"></span>…</button>
- *       </div>
+ * 完整契约：
+ *   <button class="switch [--sm|--lg]" role="switch" aria-checked="true|false" [disabled]>
+ *     <span class="switch-thumb"></span>
+ *   </button>
+ *
+ *   <button class="checkbox focus-ring [--sm|--lg]" role="checkbox"
+ *           aria-checked="true|false|mixed" [disabled]></button>
+ *
+ *   <div class="radio-group" role="radiogroup">
+ *     <button class="radio-item motion [.is-selected]" role="radio"
+ *             aria-checked="true|false" [disabled]>
+ *       <span class="radio-dot"></span>
+ *       <span>标签</span>
+ *     </button>
+ *   </div>
  */
 
 /* ── 开关 ── */
 .switch {
-  position: relative; display: inline-flex; flex-shrink: 0;
-  width: 44px; height: 24px; padding: 0;
-  border: none; border-radius: var(--radius-full);
-  background: var(--token-control-hover); cursor: pointer;
-  transition: background-color var(--duration-normal) var(--ease-out);
+  --switch-w: 44px;
+  --switch-h: 24px;
+  --switch-thumb: 20px;
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: var(--switch-w);
+  height: var(--switch-h);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--token-control-hover);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--icen-tx-normal);
 }
-.switch[aria-checked='true'] { background: var(--token-accent); }
-.switch:disabled { opacity: 0.4; cursor: not-allowed; }
+.switch[aria-checked='true'] {
+  background: var(--token-accent);
+}
+.switch:disabled,
+.switch[aria-disabled='true'],
+.switch[data-disabled] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
+.switch:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
 
 .switch-thumb {
-  position: absolute; top: 2px; left: 2px;
-  width: 20px; height: 20px; border-radius: var(--radius-full);
+  position: absolute;
+  top: 50%;
+  left: calc((var(--switch-h) - var(--switch-thumb)) / 2);
+  transform: translateY(-50%);
+  width: var(--switch-thumb);
+  height: var(--switch-thumb);
+  border-radius: var(--radius-full);
   background: var(--token-on-accent, #fff);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  transition: transform var(--duration-normal) var(--ease-out);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: transform var(--icen-tx-bounce);
 }
-.switch[aria-checked='true'] .switch-thumb { transform: translateX(20px); }
+.switch[aria-checked='true'] .switch-thumb {
+  transform: translateY(-50%) translateX(calc(var(--switch-w) - var(--switch-h)));
+}
 
-.switch--sm { width: 36px; height: 20px; }
-.switch--sm .switch-thumb { width: 16px; height: 16px; }
-.switch--sm[aria-checked='true'] .switch-thumb { transform: translateX(16px); }
+/* 尺寸变体 */
+.switch--sm { --switch-w: 36px; --switch-h: 20px; --switch-thumb: 16px; }
+.switch--lg { --switch-w: 56px; --switch-h: 28px; --switch-thumb: 24px; }
 
-/* ── 勾选框（✓ 与半选横条均 ::before 自绘，无需内联 svg） ── */
+@media (prefers-reduced-motion: reduce) {
+  .switch-thumb { transition: none; }
+}
+
+/* ── 勾选框（✓ 与半选横条均 ::before 自绘） ── */
 .checkbox {
-  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: 16px; height: 16px; padding: 0;
-  background: var(--token-control); color: transparent;
+  --checkbox-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
+  padding: 0;
+  background: var(--token-control);
+  color: transparent;
   border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-sm); cursor: pointer;
-  transition: background-color var(--duration-normal) var(--ease-out),
-    border-color var(--duration-normal) var(--ease-out),
-    color var(--duration-normal) var(--ease-out);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
 }
-.checkbox:hover:not([aria-checked='true']):not([aria-checked='mixed']) {
+.checkbox:hover:not([aria-checked='true']):not([aria-checked='mixed']):not(:disabled) {
   border-color: color-mix(in srgb, var(--token-accent) 50%, transparent);
 }
-.checkbox[aria-checked='true'], .checkbox[aria-checked='mixed'] {
+.checkbox[aria-checked='true'],
+.checkbox[aria-checked='mixed'] {
   background: var(--token-accent);
   border-color: var(--token-accent);
   color: var(--token-on-accent, #fff);
 }
 .checkbox::before {
-  content: ''; width: 10px; height: 10px;
-  background: currentColor; opacity: 0;
+  content: '';
+  width: 60%;
+  height: 60%;
+  background: currentColor;
+  opacity: 0;
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
 .checkbox[aria-checked='true']::before { opacity: 1; }
 .checkbox[aria-checked='mixed']::before {
-  opacity: 1; width: 8px; height: 2px;
-  clip-path: none; border-radius: var(--radius-full);
+  opacity: 1;
+  width: 60%;
+  height: 2px;
+  clip-path: none;
+  border-radius: var(--radius-full);
 }
-.checkbox:disabled { opacity: 0.4; cursor: not-allowed; }
+.checkbox:disabled,
+.checkbox[aria-disabled='true'],
+.checkbox[data-disabled] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
+.checkbox:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
 
-/* ── 单选行 ── */
-.radio-group { display: flex; flex-direction: column; gap: 4px; }
+.checkbox--sm { --checkbox-size: 14px; }
+.checkbox--lg { --checkbox-size: 20px; }
+
+/* ── 单选行（radio item：整行可点） ── */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+}
 
 .radio-item {
-  display: flex; align-items: center; gap: 8px; width: 100%;
-  padding: 8px 12px; font-size: 13px; text-align: left;
-  border: none; background: transparent; color: var(--token-text);
-  border-radius: var(--radius-sm); cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  width: 100%;
+  padding: var(--density-space-sm) var(--density-space-md);
+  font-size: var(--density-font-size-md);
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--token-text);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast);
 }
-.radio-item.is-selected {
-  background: var(--token-accent-subtle); color: var(--token-accent); font-weight: 500;
+.radio-item:hover:not(.is-disabled) {
+  background: var(--token-fill-1);
 }
-.radio-item:disabled { opacity: 0.4; cursor: not-allowed; }
+.radio-item.is-selected,
+.radio-item[aria-checked='true'] {
+  background: var(--token-accent-subtle);
+  color: var(--token-accent);
+  font-weight: 500;
+  border-color: color-mix(in srgb, var(--token-accent) 25%, transparent);
+}
+.radio-item:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.radio-item:disabled,
+.radio-item.is-disabled,
+.radio-item[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
 
 .radio-dot {
-  position: relative; width: 16px; height: 16px; flex-shrink: 0;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   border: 1px solid var(--token-outline-soft);
   border-radius: var(--radius-full);
-  transition: border-color var(--duration-normal) var(--ease-out);
+  background: var(--token-control);
+  transition: border-color var(--icen-tx-fast);
 }
-.radio-item.is-selected .radio-dot { border-color: var(--token-accent); }
+.radio-item.is-selected .radio-dot,
+.radio-item[aria-checked='true'] .radio-dot { border-color: var(--token-accent); }
 .radio-dot::after {
-  content: ''; position: absolute; top: 50%; left: 50%;
-  width: 8px; height: 8px; border-radius: var(--radius-full);
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
   background: var(--token-accent);
   transform: translate(-50%, -50%) scale(0);
-  transition: transform var(--duration-fast) var(--ease-out);
+  transition: transform var(--icen-tx-bounce);
 }
-.radio-item.is-selected .radio-dot::after { transform: translate(-50%, -50%) scale(1); }
+.radio-item.is-selected .radio-dot::after,
+.radio-item[aria-checked='true'] .radio-dot::after {
+  transform: translate(-50%, -50%) scale(1);
+}

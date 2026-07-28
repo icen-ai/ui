@@ -1,6 +1,17 @@
 /*
- * @icen.ai/ui — Component: panel（白卡片容器 + 标题栏）
- * 用法：<div class="panel-block"><div class="panel-title"><span>标题</span></div> …内容… </div>
+ * @icen.ai/ui — Component: panel（白卡片容器 + 标题栏 + 可选 footer）
+ *
+ * 完整契约：
+ *   <div class="panel-block [panel-block--flush]">
+ *     <div class="panel-title">
+ *       <span>标题</span>
+ *       <div class="panel-title-actions"><button class="btn btn-sm">…</button></div>
+ *     </div>
+ *     <div class="panel-body">…</div>
+ *     <div class="panel-foot">…可选底栏</div>
+ *   </div>
+ *
+ * --flush：body 不留 padding，使用方自行处理内层布局。
  */
 
 .panel-block {
@@ -8,12 +19,56 @@
   border: 1px solid var(--token-line-soft);
   border-radius: var(--radius-lg);
   box-shadow: var(--token-shadow-elevated);
-  margin-bottom: 24px;
+  margin-bottom: var(--density-space-lg);
   overflow: hidden;
 }
 .panel-title {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; border-bottom: 1px solid var(--token-line-soft);
-  font-size: 12px; letter-spacing: 2px; color: var(--token-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm) var(--density-space-md);
+  border-bottom: 1px solid var(--token-line-soft);
+  font-size: var(--density-font-size-xs);
+  letter-spacing: 0.08em;
+  color: var(--token-text-muted);
   text-transform: uppercase;
+  font-weight: 600;
+}
+.panel-title > span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.panel-title-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  flex-shrink: 0;
+}
+
+.panel-body {
+  padding: var(--density-space-md);
+  font-size: var(--density-font-size-md);
+  line-height: 1.6;
+}
+.panel-block--flush .panel-body { padding: 0; }
+
+.panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm) var(--density-space-md);
+  border-top: 1px solid var(--token-line-soft);
+  background: color-mix(in srgb, var(--token-bg-soft) 50%, transparent);
+}
+
+/* 强调变体：accent 色标题边（用于警告/告警面板） */
+.panel-block--accent { border-color: color-mix(in srgb, var(--token-accent) 30%, transparent); }
+.panel-block--accent .panel-title {
+  color: var(--token-accent);
+  background: var(--token-accent-subtle);
 }

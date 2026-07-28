@@ -1,7 +1,26 @@
 /*
  * @icen.ai/ui — Component: card（组合卡片容器）
- * 包含：.card 四变体（默认 / elevated / outlined / glass）+ .card--interactive + .is-selected
- * 子结构：.card-head / .card-title / .card-desc / .card-body / .card-foot / .card-meta / .card-action
+ *
+ * 完整契约：
+ *   <div class="card [.card--elevated|.card--outlined|.card--glass|.card--flat|.card--interactive] [.is-selected]">
+ *     <div class="card-media">                           ← 可选：封面图区
+ *       <img src="…" />
+ *       <span class="card-tag">置顶</span>                ← 可选：图上徽标
+ *     </div>
+ *     <div class="card-head">
+ *       <div>
+ *         <h3 class="card-title">标题</h3>
+ *         <p class="card-desc">副标题（可选）</p>
+ *       </div>
+ *       <div class="card-action"><button>…</button></div>
+ *     </div>
+ *     <div class="card-body">…</div>
+ *     <div class="card-foot">
+ *       <div class="card-meta">…</div>
+ *       <div class="card-action">…</div>
+ *     </div>
+ *   </div>
+ *
  * 规格源自 opengal src/presentation/ui/data/card.tsx。
  */
 
@@ -10,11 +29,22 @@
   border: 1px solid var(--token-outline-soft);
   box-shadow: var(--token-shadow-inset);
   border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 /* ── 变体 ── */
-.card--elevated { box-shadow: var(--token-shadow-card); }
-.card--outlined { border-color: var(--token-outline); box-shadow: none; }
+.card--elevated {
+  box-shadow: var(--token-shadow-card);
+  border-color: transparent;
+}
+.card--outlined {
+  border-color: var(--token-outline);
+  box-shadow: none;
+}
+.card--flat {
+  box-shadow: none;
+  background: var(--token-bg-soft);
+}
 .card--glass {
   background: var(--token-surface-glass);
   backdrop-filter: blur(12px);
@@ -23,34 +53,104 @@
 }
 
 /* ── 修饰 ── */
-/* 可交互：cursor + .lift 基元同款效果（纯 CSS 无法组合类，规则在此复制一份） */
 .card--interactive {
   cursor: pointer;
-  transition: border-color var(--duration-slow) var(--ease-out),
-    box-shadow var(--duration-slow) var(--ease-out),
-    transform var(--duration-slow) var(--ease-out);
+  transition:
+    border-color var(--icen-tx-slow),
+    box-shadow var(--icen-tx-slow),
+    transform var(--icen-tx-slow);
 }
 .card--interactive:hover {
   transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--token-accent) 26%, var(--token-outline-soft));
   box-shadow: var(--token-shadow-card);
 }
+.card--interactive:focus-within {
+  border-color: var(--token-accent);
+}
 .card.is-selected {
-  box-shadow: 0 0 0 2px var(--token-accent), 0 0 0 4px var(--token-bg);
+  box-shadow: var(--icen-ring);
+}
+
+/* ── 媒体封面 ── */
+.card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--token-bg-soft);
+}
+.card-media > img,
+.card-media > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-tag {
+  position: absolute;
+  top: var(--density-space-xs);
+  left: var(--density-space-xs);
+  padding: 2px var(--density-space-xs);
+  font-size: var(--density-font-size-xs);
+  font-weight: 600;
+  color: var(--token-on-accent, #fff);
+  background: color-mix(in srgb, var(--token-text) 70%, transparent);
+  border-radius: var(--radius-xs);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* ── 子结构 ── */
 .card-head {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-md);
 }
-.card-title { font-size: 15px; font-weight: 600; color: var(--token-text); line-height: 1.25; margin: 0; }
-.card-desc { font-size: 12px; color: var(--token-text-muted); margin: 2px 0 0; }
-.card-body { padding: 0 16px 16px; font-size: 13px; color: var(--token-text-muted); }
+.card-title {
+  font-size: var(--density-font-size-lg);
+  font-weight: 600;
+  color: var(--token-text);
+  line-height: 1.3;
+  margin: 0;
+  font-family: var(--font-heading);
+}
+.card-desc {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+.card-body {
+  padding: 0 var(--density-space-md) var(--density-space-md);
+  font-size: var(--density-font-size-md);
+  color: var(--token-text-muted);
+  line-height: 1.6;
+}
+.card-body > p:first-child { margin-top: 0; }
+.card-body > p:last-child { margin-bottom: 0; }
+
 .card-foot {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm) var(--density-space-md);
   border-top: 1px solid var(--token-outline-soft);
+  background: color-mix(in srgb, var(--token-bg-soft) 50%, transparent);
 }
-.card-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--token-text-faint); }
-.card-action { margin-left: auto; }
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+}
+.card-action {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--interactive { transition: none; }
+}

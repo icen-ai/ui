@@ -1,22 +1,137 @@
 /*
- * @icen.ai/ui — Base（元素基线 + 滚动条）
- * 全部消费 --token-*；任何 preset/明暗/style profile 下自洽。
+ * @icen.ai/ui — Base（元素基线 + 交互基元 + 统一抽象层 + 滚动条）
+ *
+ * 全部消费 --token-*；任何 preset / 明暗 / style profile 下自洽。
  * 在 tokens 之后、components 之前引入。
+ *
+ * ════════════════════════════════════════════════════════════════════════
+ * icen 组件契约（统一抽象）
+ * ════════════════════════════════════════════════════════════════════════
+ * 所有 31 个组件遵循同一套抽象，由两层共同支撑：
+ *
+ * ── 层 1：--icen-* 原语 token（所有组件自洽消费）
+ *    --icen-ring / --icen-ring-soft / --icen-ring-error   ← 聚焦环
+ *    --icen-hover-border                                  ← 悬停边框过渡
+ *    --icen-disabled-opacity                              ← 禁用透明度
+ *    --icen-press                                         ← 按下形变
+ *    --icen-control-focus-shadow / -border                ← 表单控件聚焦
+ *    --icen-tx-fast / -normal / -slow                     ← 统一过渡时长+缓动
+ *
+ *    组件直接写：
+ *      .btn:focus-visible { box-shadow: var(--icen-ring); }
+ *      .btn:disabled { opacity: var(--icen-disabled-opacity); }
+ *
+ *    风格 profile 覆盖原语：
+ *      .style-retro { --icen-ring: 2px solid var(--token-accent); --icen-press: translate(2px,2px); }
+ *
+ * ── 层 2：6 个交互基元 class（HTML 显式组合 API）
+ *    .pressable / .control / .field / .lift / .surface-elevated / .focus-ring
+ *
+ *    用法（任选其一）：
+ *      <button class="btn pressable focus-ring">       ← 类组合，体积最小
+ *      <button class="btn">                            ← 自洽，CSS 引用同一原语 token
+ *
+ * ── 命名约定（所有组件统一）
+ *    根类：       .component
+ *    变体：       .component--variant / .component-primary（语义变体可省 --）
+ *    尺寸：       .component--sm / --lg / --xl
+ *    状态：       .is-loading / .is-error / .is-disabled / .is-open / .is-selected /
+ *                 .is-focused / .is-active / .is-empty / .is-filled
+ *    aria 等价：  [aria-busy=true]↔.is-loading、[data-invalid=true]↔.is-error、
+ *                 [aria-disabled=true]/[data-disabled]↔.is-disabled、
+ *                 [aria-expanded=true]↔.is-open、[aria-selected=true]/[aria-current=page]↔.is-active
+ *
+ * ── Token 纪律
+ *    颜色：       仅 --token-success / -warning / -error / -info / -accent（语义）
+ *    间距：       --density-space-*
+ *    字号：       --density-font-size-*
+ *    控件高度：   --density-input-height-*
+ *    圆角：       --radius-*
+ *    阴影：       --token-shadow-*
+ *    时长/缓动：  --duration-* / --ease-*（或直接用 --icen-tx-*）
+ *    z-index：    --z-*
+ *
+ * 暴露的契约：
+ *   - 元素基线：box-sizing / body / a / code / pre / img / ::selection
+ *   - 滚动条：贴 --token-scrollbar-*（retro profile 另有硬覆盖）
+ *   - 工具类：.mono / .dim / .faint / .sr-only / .skip-link
+ *   - z-index 标尺：--z-* （浮层一律 portal 到 body）
+ *   - 交互基元 class：.pressable / .control / .field / .lift / .surface-elevated / .focus-ring / .motion
+ *   - 状态约定：[aria-disabled] / [aria-busy] / [data-loading] / [data-disabled] / [data-invalid]
  */
+
+/* ══════════════════════════════════════════════════════════════
+   icen 统一抽象层（--icen-* 原语 token）
+   ───────────────────────────────────────────────────────────────
+   所有组件消费的"原语级"变量：聚焦环、悬停、按下、禁用、过渡。
+   风格 profile（如 .style-retro）只需覆盖这里的少数变量，
+   即可让 31 个组件整体换肤；组件自身无需感知风格切换。
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  /* ── 聚焦环（focus-visible） ── */
+  --icen-ring: 0 0 0 2px var(--token-bg), 0 0 0 4px color-mix(in srgb, var(--token-accent) 50%, transparent);
+  --icen-ring-soft: 0 0 0 3px color-mix(in srgb, var(--token-accent) 16%, transparent);
+  --icen-ring-error: 0 0 0 2px var(--token-bg), 0 0 0 4px color-mix(in srgb, var(--token-error) 50%, transparent);
+  --icen-ring-success: 0 0 0 2px var(--token-bg), 0 0 0 4px color-mix(in srgb, var(--token-success) 50%, transparent);
+
+  /* ── 悬停 / 按下 / 禁用 ── */
+  --icen-hover-border: color-mix(in srgb, var(--token-accent) 30%, var(--token-line));
+  --icen-hover-border-strong: color-mix(in srgb, var(--token-accent) 55%, var(--token-line));
+  --icen-press: translateY(1px) scale(0.985);
+  --icen-press-soft: translateY(1px);
+  --icen-disabled-opacity: 0.5;
+
+  /* ── 表单控件聚焦（wrapper 视角） ── */
+  --icen-control-focus-shadow: var(--token-shadow-inset), 0 0 0 3px color-mix(in srgb, var(--token-accent) 14%, transparent);
+  --icen-control-focus-border: color-mix(in srgb, var(--token-accent) 55%, var(--token-line));
+  --icen-control-error-shadow: var(--token-shadow-inset), 0 0 0 3px color-mix(in srgb, var(--token-error) 16%, transparent);
+
+  /* ── 统一过渡（时长 + 缓动打包） ── */
+  --icen-tx-fast: var(--duration-fast) var(--ease-out);
+  --icen-tx-normal: var(--duration-normal) var(--ease-out);
+  --icen-tx-slow: var(--duration-slow) var(--ease-out);
+  --icen-tx-bounce: var(--duration-normal) var(--ease-bounce);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   元素基线
+   ══════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body { margin: 0; padding: 0; }
 
+html {
+  /* 触屏Pan-y 禁止水平捏合意外；具体页面可覆盖 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--token-bg);
   color: var(--token-text);
+  font-family: "Numeric Math", var(--font-body);
   font-size: 14px;
+  line-height: var(--line-height-body, 1.6);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
-a { color: var(--token-accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: var(--token-accent);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+a:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
 
 code, pre {
   font-family: var(--font-mono);
@@ -27,101 +142,327 @@ code { padding: 1px 5px; }
 pre { padding: 12px 14px; overflow-x: auto; }
 pre code { padding: 0; background: none; }
 
-button { font: inherit; }
-img { max-width: 100%; }
+button { font: inherit; color: inherit; }
+button:disabled { cursor: not-allowed; }
+img, video, svg { max-width: 100%; height: auto; }
+input, button, textarea, select { font: inherit; color: inherit; }
 
+/* 标题用 heading 栈（typography.css 已声明，这里只兜底防缺字体场景） */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  line-height: var(--line-height-heading, 1.2);
+}
+
+/* 段落兜底（消费项目可以覆盖） */
+p { margin: 0 0 1em; }
+
+/* 选区：亮色 accent 25%，retro 在 retro-effects.css 里硬覆盖 */
 ::selection {
   background: color-mix(in srgb, var(--token-accent) 25%, transparent);
+  color: inherit;
+}
+.dark ::selection {
+  background: color-mix(in srgb, var(--token-accent) 35%, transparent);
 }
 
-/* ── 全局滚动条：细薄、无上下箭头、贴 token ── */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
+/* ══════════════════════════════════════════════════════════════
+   全局滚动条：细薄、无上下箭头、贴 token
+   尺寸/轨道/滑块/按钮全部走 --token-scrollbar-*，
+   每个色彩预设可在自己的块里覆盖以表达品牌色差；
+   .style-retro 在 style-profiles.css 里另有像素化硬覆盖。
+   ══════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar { width: var(--token-scrollbar-size); height: var(--token-scrollbar-size); }
+::-webkit-scrollbar-track { background: var(--token-scrollbar-track); }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--token-text) 16%, transparent);
+  background: var(--token-scrollbar-thumb);
   border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--token-accent) 50%, transparent);
+  background: var(--token-scrollbar-thumb-hover);
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-button,
 ::-webkit-scrollbar-button:single-button { display: none; width: 0; height: 0; }
 ::-webkit-scrollbar-corner { background: transparent; }
-html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--token-text) 16%, transparent) transparent; }
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--token-scrollbar-thumb) var(--token-scrollbar-track);
+}
 
-/* ── 通用工具类 ── */
+/* ══════════════════════════════════════════════════════════════
+   通用工具类
+   ══════════════════════════════════════════════════════════════ */
+
 .mono { font-family: var(--font-mono); }
 .dim { color: var(--token-text-muted); }
 .faint { color: var(--token-text-faint); }
+.serif { font-family: var(--font-heading); }
 
-/* ── z-index 标尺（全组件统一引用，浮层一律 portal 到 body） ── */
+/* 数字密集区：tabular-nums + 数学字体 */
+.numeric {
+  font-family: "Numeric Math", var(--font-mono);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* 无障碍：屏幕阅读器可见、视觉隐藏 */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 跳转链接：默认视觉隐藏，聚焦时显形（无障碍要求） */
+.skip-link {
+  position: fixed;
+  top: var(--density-space-sm, 8px);
+  left: var(--density-space-sm, 8px);
+  z-index: var(--z-tooltip);
+  padding: 8px 14px;
+  background: var(--token-surface);
+  color: var(--token-text);
+  border: 1px solid var(--token-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--token-shadow-elevated);
+  transform: translateY(-150%);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--token-accent);
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   z-index 标尺（全组件统一引用，浮层一律 portal 到 body）
+   约定：
+     base      → 文档流（默认）
+     raised    → 卡片抬起、sticky 表头
+     sticky    → 吸顶导航
+     chrome    → app 外壳（sidebar/topbar）
+     toast     → toast/通知（高于一切文档元素）
+     banner    → 全屏横幅（紧急公告，高于 toast）
+     dialog    → 模态对话框 + backdrop
+     popover   → 弹出层/下拉菜单（高于 dialog 因为常常 portal 出去）
+     tooltip   → 工具提示（永远在最上）
+   ══════════════════════════════════════════════════════════════ */
 :root {
   --z-base: 0;
   --z-raised: 10;
-  --z-toast: 100;
+  --z-sticky: 50;
   --z-chrome: 200;
+  --z-toast: 400;
+  --z-banner: 450;
   --z-dialog: 500;
   --z-popover: 620;
   --z-tooltip: 700;
 }
 
-/* ── 交互基元（全组件地基，规格源自 opengal interaction-classes） ── */
+/* ══════════════════════════════════════════════════════════════
+   交互基元（全组件地基）
+   规格：源 self-contained，命名空间不含 opengal 的 og-/vn- 前缀。
+   style-profiles.css 的 .style-retro 段会按 .pressable/.control/.lift
+   这些类名施加像素化覆盖；改名前请同步修 style-profiles.css。
+   ══════════════════════════════════════════════════════════════ */
 
-/* 可按压：hover 顶部高光 + active 下陷缩放 */
+/* ── .pressable — 可按压（按钮、卡片按钮、tag close 等）
+   hover：顶部高光 ::after 渐入；focus-visible：同样高光 + 描边
+   active：下陷 + 微缩；aria-busy：减淡；disabled / aria-disabled：50% + 禁手势 */
 .pressable {
-  position: relative; overflow: hidden; will-change: transform;
-  transition: background-color var(--duration-normal) var(--ease-out),
-    border-color var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out),
-    color var(--duration-normal) var(--ease-out),
-    opacity var(--duration-normal) var(--ease-out),
-    transform var(--duration-normal) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--icen-tx-normal),
+    border-color var(--icen-tx-normal),
+    box-shadow var(--icen-tx-normal),
+    color var(--icen-tx-normal),
+    opacity var(--icen-tx-normal),
+    transform var(--icen-tx-normal);
 }
 .pressable::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit;
-  opacity: 0; pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--token-surface) 24%, transparent), transparent 46%);
-  transition: opacity var(--duration-normal) var(--ease-out);
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--token-surface) 24%, transparent),
+    transparent 46%);
+  transition: opacity var(--icen-tx-normal);
 }
-.pressable:hover::after, .pressable:focus-visible::after { opacity: 1; }
-.pressable:active { transform: translateY(1px) scale(0.985); }
-.pressable:disabled, .pressable[aria-disabled='true'], .pressable[data-disabled] {
+.pressable:hover::after,
+.pressable:focus-visible::after { opacity: 1; }
+.pressable:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.pressable:active {
+  transform: var(--icen-press);
+}
+.pressable[aria-busy='true'],
+.pressable[data-loading] {
+  cursor: progress;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.pressable:disabled,
+.pressable[aria-disabled='true'],
+.pressable[data-disabled] {
   transform: none;
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
 }
-.pressable:disabled::after, .pressable[aria-disabled='true']::after, .pressable[data-disabled]::after { display: none; }
+.pressable:disabled::after,
+.pressable[aria-disabled='true']::after,
+.pressable[data-disabled]::after { display: none; }
 
-/* 控件聚焦光晕（wrapper 式表单控件用 :focus-within） */
+/* ── .control — 表单控件 wrapper 基元（包裹原生 input/textarea/select）
+   hover：边框稍深；focus-within：内嵌阴影 + accent 3px 光晕
+   :invalid / [data-invalid]：error 色边框 + error 色光晕 */
 .control {
-  transition: background-color var(--duration-normal) var(--ease-out),
-    border-color var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
+  transition: background-color var(--icen-tx-normal),
+    border-color var(--icen-tx-normal),
+    box-shadow var(--icen-tx-normal);
+}
+.control:hover {
+  border-color: var(--icen-hover-border);
 }
 .control:focus-within {
-  box-shadow: var(--token-shadow-inset), 0 0 0 3px color-mix(in srgb, var(--token-accent) 12%, transparent);
+  box-shadow: var(--icen-control-focus-shadow);
+  border-color: var(--icen-control-focus-border);
+}
+.control:where(:has(:invalid), [data-invalid='true']) {
+  border-color: var(--token-error);
+}
+.control:where(:has(:invalid), [data-invalid='true']):focus-within {
+  box-shadow: var(--icen-control-error-shadow);
+  border-color: var(--token-error);
+}
+/* 内部裸 input/textarea/select 不再有自己的边框/阴影，交给 wrapper 表达 */
+.control > input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.control > textarea,
+.control > select {
+  background: transparent;
+  border: 0;
+  outline: none;
+  box-shadow: none;
 }
 
-/* 悬停浮起（可交互卡片） */
-.lift {
-  transition: border-color var(--duration-slow) var(--ease-out),
-    box-shadow var(--duration-slow) var(--ease-out),
-    transform var(--duration-slow) var(--ease-out);
+/* ── .field — 带 label / hint / error 的表单字段容器（取代旧 .vn-editable-field）
+   契约：
+     <label class="field">
+       <span class="field-label">姓名</span>
+       <span class="control"><input /></span>
+       <span class="field-hint">必填</span>
+     </label> */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
 }
-.lift:hover {
+.field-label {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  letter-spacing: 0.02em;
+}
+.field-hint {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+}
+.field-error {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-error);
+}
+.field[data-invalid='true'] .field-label { color: var(--token-error); }
+
+/* ── .lift — 可交互卡片悬停浮起（pressable 的轻量版，无 ::after 高光）
+   hover / focus-within：上移 1px + accent 边 + card 阴影 */
+.lift {
+  transition: border-color var(--icen-tx-slow),
+    box-shadow var(--icen-tx-slow),
+    transform var(--icen-tx-slow);
+}
+.lift:hover,
+.lift:focus-within {
   transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--token-accent) 26%, var(--token-outline-soft));
   box-shadow: var(--token-shadow-card);
 }
 
-/* 聚焦环（ring-2 + offset-1 等价） */
-.focus-ring:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 1px var(--token-bg), 0 0 0 3px color-mix(in srgb, var(--token-accent) 60%, transparent);
+/* ── .surface-elevated — 提升的静态表面（非交互卡片）
+   用于不需要 hover 反馈但需要脱离背景的面板/对话框内嵌区域 */
+.surface-elevated {
+  background: var(--token-surface);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-card);
 }
 
-/* 动效开关（reduced-motion 时全部关闭） */
-@media (prefers-reduced-motion: no-preference) {
-  .motion { transition: all var(--duration-normal) var(--ease-out); }
+/* ── .focus-ring — 显式聚焦环工具类（ring-2 + offset-1 等价） */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
 }
+
+/* ── .motion — 显式动画工具类（仅在 prefers-reduced-motion: no-preference 时生效） */
+@media (prefers-reduced-motion: no-preference) {
+  .motion { transition: all var(--icen-tx-normal); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   动效与无障碍兜底
+   ══════════════════════════════════════════════════════════════ */
+
+/* reduced-motion：所有动画/过渡压缩到 ~0ms（保留可访问性最小可视信号） */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 触屏设备（无精细指针）：关闭 hover 抬升、压低 pressable scale */
+@media (pointer: coarse) {
+  .lift:hover { transform: none; }
+  .pressable:active { transform: translateY(0) scale(0.99); }
+}
+
+/* 高对比度模式（Windows High Contrast / 强制 colors） */
+@media (forced-colors: active) {
+  .pressable, .control, .lift, .surface-elevated, .focus-ring:focus-visible {
+    forced-color-adjust: none;
+  }
+  .focus-ring:focus-visible,
+  .pressable:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+/* 打印：去掉阴影/背景/动效，节约墨水并避免打印截断 */
+@media print {
+  *, *::before, *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  body { font-size: 12pt; line-height: 1.4; }
+  a, a:visited { text-decoration: underline; }
+  a[href]::after { content: ' (' attr(href) ')'; font-size: 90%; }
+  pre, blockquote { border: 1px solid #999; page-break-inside: avoid; }
+  h1, h2, h3 { page-break-after: avoid; }
+  .pressable, .lift, .surface-elevated { box-shadow: none !important; transform: none !important; }
 }

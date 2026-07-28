@@ -14,6 +14,7 @@
     "./tokens.css": "./dist/tokens.css",
     "./ui.css": "./dist/ui.css",
     "./base.css": "./dist/base.css",
+    "./retro-effects.css": "./dist/retro-effects.css",
     "./tokens/*": "./dist/tokens/*",
     "./components/*": "./dist/components/*",
     "./registry.json": "./dist/registry.json"

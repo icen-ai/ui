@@ -1,5 +1,6 @@
 /*
  * @icen.ai/ui — Component: content（内容展示族）
+ *
  * 包含：kbd（按键）/ code-inline（行内代码）/ list（分隔列表）/ accordion（手风琴，behaviors/accordion 配套）/
  *       timeline（时间线）/ desc（描述列表）/ tree（树形，behaviors/tree 配套）
  * 规格源自 opengal src/presentation/ui/data/exhibit.tsx 与 data/display.tsx。
@@ -7,131 +8,231 @@
 
 /* ══════════════ kbd · 按键 ══════════════ */
 .kbd {
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   vertical-align: middle;
-  font-family: var(--font-mono); font-weight: 500;
+  font-family: var(--font-mono);
+  font-weight: 500;
   border-radius: var(--radius-xs);
   border: 1px solid var(--token-outline);
   background: var(--token-control);
   color: var(--token-text-muted);
   box-shadow: var(--token-shadow-inset);
-  height: 20px; min-width: 20px;
-  padding: 0 6px;
-  font-size: 11px;
+  height: 20px;
+  min-width: 20px;
+  padding: 0 var(--density-space-xs);
+  font-size: var(--density-font-size-xs);
 }
-.kbd--sm { height: 16px; min-width: 16px; padding: 0 4px; font-size: 10px; }
+.kbd--sm {
+  height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+}
+.kbd-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-muted);
+}
+.kbd-group .kbd { font-size: inherit; }
 
 /* ══════════════ code-inline · 行内代码 ══════════════ */
 .code-inline {
-  padding: 2px 6px;
+  padding: 2px var(--density-space-xs);
   border-radius: var(--radius-xs);
   background: var(--token-control);
   border: 1px solid var(--token-outline-soft);
-  font-size: 12px;
+  font-size: 0.9em;
   font-family: var(--font-mono);
   color: var(--token-accent);
+  word-break: break-word;
 }
 
-/* ══════════════ list · 分隔列表 ══════════════ */
-.list { list-style: none; margin: 0; padding: 0; }
+/* ══════════════ list · 分隔列表 ══════════════
+ * DOM：<ul class="list [list--hover|list--compact]"><li class="list-item">…</li></ul>
+ * list--hover：每项 hover 浮起（默认有 hover）；
+ * list--compact：缩小 padding。
+ */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 .list-item {
-  padding: 8px;
-  border-radius: var(--radius-md);
-  transition: background-color var(--duration-normal) var(--ease-out);
+  padding: var(--density-space-sm);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--icen-tx-fast);
 }
 .list-item:hover { background: var(--token-control-hover); }
 .list .list-item + .list-item { border-top: 1px solid var(--token-outline-soft); }
+.list--compact .list-item { padding: var(--density-space-xs) var(--density-space-sm); }
 
 /* ══════════════ accordion · 手风琴（behaviors/accordion 配套） ══════════════
- * DOM 契约：
+ * DOM：
  *   <div class="accordion" data-single?>
- *     <div class="accordion-item">
- *       <button class="accordion-trigger">标题 <svg class="accordion-chevron"/></button>
+ *     <div class="accordion-item [.is-open] [.is-disabled]">
+ *       <button class="accordion-trigger" aria-expanded="true">标题 <svg class="accordion-chevron"/></button>
  *       <div class="accordion-panel"><div class="accordion-panel-inner">内容</div></div>
  *     </div>
  *   </div>
  * 展开 = item 挂 .is-open；panel 用 grid-template-rows 0fr→1fr 做过渡。
+ * data-single：展开一项自动收起其余（behavior 实现）。
  */
-.accordion-item { border-bottom: 1px solid var(--token-outline-soft); }
+.accordion-item {
+  border-bottom: 1px solid var(--token-outline-soft);
+}
 .accordion-item:last-child { border-bottom: 0; }
 .accordion-trigger {
   width: 100%;
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 12px 8px;
-  font-size: 14px; font-weight: 500;
-  color: var(--token-text); text-align: left;
-  background: none; border: 0; cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: background-color var(--duration-normal) var(--ease-out);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm);
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  color: var(--token-text);
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--icen-tx-fast);
 }
-.accordion-trigger:hover { background: var(--token-control-hover); }
+.accordion-trigger:hover {
+  background: var(--token-control-hover);
+}
+.accordion-trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.accordion-item.is-disabled .accordion-trigger,
+.accordion-item[aria-disabled='true'] .accordion-trigger {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .accordion-chevron {
-  width: 14px; height: 14px; flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
   color: var(--token-text-faint);
-  transition: transform var(--duration-normal) var(--ease-out);
+  transition: transform var(--icen-tx-normal);
 }
-.accordion-item.is-open .accordion-chevron { transform: rotate(180deg); }
+.accordion-item.is-open .accordion-chevron {
+  transform: rotate(180deg);
+}
 .accordion-panel {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows var(--duration-normal) var(--ease-out);
+  transition: grid-template-rows var(--icen-tx-normal);
 }
 .accordion-item.is-open .accordion-panel { grid-template-rows: 1fr; }
 .accordion-panel-inner {
   overflow: hidden;
-  padding: 0 8px 12px;
-  font-size: 13px;
+  min-height: 0;
+  padding: 0 var(--density-space-sm) var(--density-space-sm);
+  font-size: var(--density-font-size-sm);
   color: var(--token-text-muted);
   line-height: 1.6;
 }
 
+/* 卡片式手风琴：整组包在带边框的卡片里 */
+.accordion--cards {
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.accordion--cards .accordion-item {
+  border-bottom: 0;
+}
+.accordion--cards .accordion-item + .accordion-item {
+  border-top: 1px solid var(--token-outline-soft);
+}
+
 /* ══════════════ timeline · 时间线 ══════════════
- * DOM 契约：.timeline-item > .timeline-dot + .timeline-body
- * 连接线 = item 的 ::after（相对 item 绝对定位，从 dot 下方贯穿到下一项），末项不画。
+ * DOM：.timeline-item > .timeline-dot + .timeline-body
+ * 连接线 = item::after（相对 item 绝对定位，从 dot 下方贯穿到下一项），末项不画。
  */
-.timeline { display: flex; flex-direction: column; }
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
 .timeline-item {
   position: relative;
-  display: flex; gap: 12px;
-  padding-bottom: 24px;
+  display: flex;
+  gap: var(--density-space-sm);
+  padding-bottom: var(--density-space-lg);
 }
 .timeline-item:last-child { padding-bottom: 0; }
 .timeline-item:not(:last-child)::after {
   content: '';
   position: absolute;
-  left: 13.5px;              /* 28px dot 的水平中心 */
-  top: 32px;                 /* 28px dot + 4px 间距 */
+  left: 13.5px;       /* 28px dot 的水平中心 */
+  top: 32px;
   bottom: 0;
   width: 1px;
   background: var(--token-outline-soft);
 }
 .timeline-dot {
-  width: 28px; height: 28px; flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
   border-radius: var(--radius-full);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--token-control);
   border: 1px solid var(--token-outline-soft);
   color: var(--token-text-muted);
   z-index: 1;
 }
 .timeline-dot svg { width: 13px; height: 13px; }
-.timeline-dot--accent  { background: var(--token-accent);  color: var(--token-on-accent); border-color: transparent; }
-.timeline-dot--success { background: var(--token-success); color: var(--token-on-accent); border-color: transparent; }
-.timeline-dot--warning { background: var(--token-warning); color: var(--token-on-accent); border-color: transparent; }
-.timeline-dot--error   { background: var(--token-error);   color: var(--token-on-accent); border-color: transparent; }
-.timeline-dot--info    { background: var(--token-info);    color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--accent  { background: var(--token-accent);  color: var(--token-on-accent, #fff); border-color: transparent; }
+.timeline-dot--success { background: var(--token-success); color: var(--token-on-accent, #fff); border-color: transparent; }
+.timeline-dot--warning { background: var(--token-warning); color: var(--token-on-accent, #fff); border-color: transparent; }
+.timeline-dot--error   { background: var(--token-error);   color: var(--token-on-accent, #fff); border-color: transparent; }
+.timeline-dot--info    { background: var(--token-info);    color: var(--token-on-accent, #fff); border-color: transparent; }
+
 .timeline-body { flex: 1; min-width: 0; }
-.timeline-head { display: flex; align-items: center; gap: 8px; }
-.timeline-title { font-size: 13px; font-weight: 500; color: var(--token-text); }
-.timeline-time { font-size: 11px; color: var(--token-text-faint); margin-left: auto; font-variant-numeric: tabular-nums; }
-.timeline-desc { font-size: 12px; color: var(--token-text-muted); margin: 4px 0 0; }
+.timeline-head {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+}
+.timeline-title {
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  color: var(--token-text);
+}
+.timeline-time {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.timeline-desc {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
 
 /* ══════════════ desc · 描述列表 ══════════════
  * 列数由容器 style="--desc-cols:N" 指定，默认 2；item 可用 style="--desc-span:N" 跨列。
  * --bordered 变体：gap:1px 露出容器底色形成格线。
  */
-.desc { display: flex; flex-direction: column; gap: 8px; }
-.desc-title { font-size: 13px; font-weight: 500; color: var(--token-text); margin: 0; }
+.desc { display: flex; flex-direction: column; gap: var(--density-space-sm); }
+.desc-title {
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  color: var(--token-text);
+  margin: 0;
+}
 .desc-grid {
   display: grid;
   grid-template-columns: repeat(var(--desc-cols, 2), minmax(0, 1fr));
@@ -141,55 +242,136 @@
 .desc--bordered .desc-grid {
   background: var(--token-outline-soft);
   border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 .desc-item { grid-column: span var(--desc-span, 1); }
-.desc--bordered .desc-item { background: var(--token-card); padding: 8px 12px; }
-.desc:not(.desc--bordered) .desc-item { display: flex; flex-direction: column; gap: 2px; }
-.desc-item dt { font-size: 11px; color: var(--token-text-faint); }
-.desc-item dd { font-size: 13px; color: var(--token-text); margin: 0; }
+.desc--bordered .desc-item {
+  background: var(--token-card);
+  padding: var(--density-space-sm) var(--density-space-md);
+}
+.desc:not(.desc--bordered) .desc-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.desc-item dt {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+}
+.desc-item dd {
+  font-size: var(--density-font-size-md);
+  color: var(--token-text);
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .desc-grid { grid-template-columns: 1fr !important; }
+}
 
 /* ══════════════ tree · 树形（behaviors/tree 配套） ══════════════
- * DOM 契约：
+ * DOM：
  *   <ul class="tree"><li>
- *     <div class="tree-node" style="--depth:0">
- *       <button class="tree-toggle"><svg/></button>   <!-- 叶子用空 span.tree-toggle 占 18px -->
+ *     <div class="tree-node [.is-selected] [.is-disabled]" style="--depth:0">
+ *       <button class="tree-toggle [.is-collapsed]"><svg/></button>
  *       <span class="tree-label">节点</span>
  *     </div>
- *     <ul>…子节点…</ul>                                <!-- 可选；behavior 切换 hidden -->
+ *     <ul>…子节点…</ul>
  *   </li></ul>
  * 折叠 = toggle 挂 .is-collapsed（chevron 转 -90°）+ 子 ul hidden；选中 = node 挂 .is-selected。
  */
-.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree, .tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 .tree { user-select: none; }
 .tree-node {
-  display: flex; align-items: center; gap: 6px;
-  padding: 6px 8px 6px calc(4px + var(--depth, 0) * 14px);
-  border-radius: var(--radius-md);
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding: var(--density-space-xs) var(--density-space-sm) var(--density-space-xs) calc(4px + var(--depth, 0) * 14px);
+  border-radius: var(--radius-sm);
+  font-size: var(--density-font-size-md);
   color: var(--token-text);
   cursor: pointer;
-  transition: background-color var(--duration-normal) var(--ease-out);
+  transition: background-color var(--icen-tx-fast);
 }
 .tree-node:hover { background: var(--token-control-hover); }
-.tree-node.is-selected {
+.tree-node:focus-visible,
+.tree-node:focus-within {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.tree-node.is-selected,
+.tree-node[aria-selected='true'] {
   background: var(--token-accent-subtle);
   color: var(--token-accent);
   font-weight: 500;
 }
-.tree-node.is-disabled { opacity: 0.4; pointer-events: none; }
+.tree-node.is-disabled,
+.tree-node[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  pointer-events: none;
+}
 .tree-toggle {
-  width: 18px; height: 18px; flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 0; border: 0; background: none;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--token-text-muted);
   cursor: pointer;
 }
 .tree-toggle:hover { color: var(--token-text); }
+.tree-toggle:focus-visible {
+  outline: none;
+  border-radius: var(--radius-xs);
+  box-shadow: var(--icen-ring);
+}
 .tree-toggle svg {
-  width: 13px; height: 13px;
-  transition: transform var(--duration-normal) var(--ease-out);
+  width: 13px;
+  height: 13px;
+  transition: transform var(--icen-tx-fast);
 }
 .tree-toggle.is-collapsed svg { transform: rotate(-90deg); }
-.tree-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-toggle[aria-hidden='true'] { visibility: hidden; pointer-events: none; }
+.tree-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tree-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--token-text-muted);
+}
+.tree-node.is-selected .tree-icon { color: var(--token-accent); }
+.tree-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--token-on-accent, #fff);
+  background: var(--token-accent);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accordion-panel, .accordion-chevron, .tree-toggle svg, .list-item, .tree-node {
+    transition: none;
+  }
+}

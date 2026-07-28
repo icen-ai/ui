@@ -1,61 +1,135 @@
 /*
  * @icen.ai/ui — Component: steps（步骤条，横向默认 / .steps--vertical 垂直）
- * 用法：<ol class="steps">
- *         <li class="step step--finish">
- *           <span class="step-line"></span>
- *           <span class="step-dot">✓</span>
- *           <div class="step-body">
- *             <div class="step-title">已完成</div>
- *             <div class="step-desc">描述</div>
- *           </div>
- *         </li>
- *       </ol>
- * 三态：.step--finish（accent 实底，内容放 ✓）/ .step--process（accent 描边）/ .step--wait（灰）。
- * 连接线画在「当前步 → 下一步」之间，颜色跟随当前步状态；末步不显示（.step:last-child）。
- * 垂直版同一 DOM：.step-line 改为绝对左侧竖线，穿过 16px 间隙接到下一颗圆点。
+ *
+ * 完整契约：
+ *   <ol class="steps [steps--vertical] [steps--sm|steps--lg]" aria-label="进度">
+ *     <li class="step [step--finish|step--process|step--wait] [.step--error]">
+ *       <span class="step-line"></span>                   ← 横向：右半段连线；末步自动隐藏
+ *       <span class="step-dot">[✓ | ! | 数字]</span>
+ *       <div class="step-body">
+ *         <div class="step-title">已完成</div>
+ *         <div class="step-desc">描述（可选）</div>
+ *       </div>
+ *     </li>
+ *   </ol>
+ *
+ * 四态：finish / process / wait / error（错误用 error 色 dot + 描边）。
+ * 点击 .step[role=button] 由使用方实现跳转。
  */
 
-.steps { display: flex; list-style: none; margin: 0; padding: 0; }
-.step { flex: 1; position: relative; text-align: center; }
+.steps {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.step {
+  flex: 1;
+  position: relative;
+  text-align: center;
+  padding: 0 var(--density-space-xs);
+}
 
 .step-line {
-  position: absolute; top: 16px; left: calc(50% + 20px);
-  width: calc(100% - 40px); height: 1px;
+  position: absolute;
+  top: 16px;
+  left: calc(50% + 20px);
+  width: calc(100% - 40px);
+  height: 1px;
   background: var(--token-outline-soft);
+  transition: background-color var(--icen-tx-normal);
 }
 .step:last-child .step-line { display: none; }
 .step--finish .step-line { background: color-mix(in srgb, var(--token-accent) 40%, transparent); }
 
 .step-dot {
-  width: 32px; height: 32px; border-radius: var(--radius-full);
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 600; position: relative; z-index: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--density-font-size-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  position: relative;
+  z-index: 1;
+  transition:
+    background-color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
 }
-.step--finish .step-dot { background: var(--token-accent); color: var(--token-on-accent); }
+.step--finish .step-dot {
+  background: var(--token-accent);
+  color: var(--token-on-accent, #fff);
+}
 .step--process .step-dot {
-  background: var(--token-accent-subtle); color: var(--token-accent);
+  background: var(--token-accent-subtle);
+  color: var(--token-accent);
   border: 2px solid var(--token-accent);
+  box-shadow: var(--icen-ring-soft);
 }
 .step--wait .step-dot {
-  background: var(--token-control); color: var(--token-text-faint);
+  background: var(--token-control);
+  color: var(--token-text-faint);
   border: 1px solid var(--token-outline-soft);
 }
-
-.step-title { font-size: 13px; font-weight: 500; margin-top: 6px; }
-.step--wait .step-title { color: var(--token-text-muted); }
-.step-desc {
-  font-size: 11px; color: var(--token-text-faint);
-  margin-top: 2px; max-width: 160px; margin-inline: auto;
+.step--error .step-dot {
+  background: var(--token-error-muted);
+  color: var(--token-error);
+  border: 2px solid var(--token-error);
 }
 
+.step-title {
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  margin-top: var(--density-space-xs);
+  color: var(--token-text);
+}
+.step--wait .step-title { color: var(--token-text-muted); }
+.step--error .step-title { color: var(--token-error); }
+.step-desc {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  margin-top: 2px;
+  max-width: 160px;
+  margin-inline: auto;
+  line-height: 1.4;
+}
+
+/* 尺寸变体 */
+.steps--sm .step-dot { width: 24px; height: 24px; font-size: var(--density-font-size-xs); }
+.steps--sm .step-line { top: 12px; }
+.steps--lg .step-dot { width: 40px; height: 40px; font-size: var(--density-font-size-md); }
+.steps--lg .step-line { top: 20px; }
+
 /* ── 垂直变体 ── */
-.steps--vertical { flex-direction: column; gap: 16px; }
-.steps--vertical .step { flex: none; display: flex; gap: 12px; text-align: left; }
+.steps--vertical {
+  flex-direction: column;
+  gap: var(--density-space-md);
+}
+.steps--vertical .step {
+  flex: none;
+  display: flex;
+  gap: var(--density-space-sm);
+  text-align: left;
+  padding: 0;
+}
 .steps--vertical .step-line {
-  top: 36px; bottom: -16px; left: 16px;
-  width: 1px; height: auto;
+  top: 36px;
+  bottom: calc(-1 * var(--density-space-md));
+  left: 16px;
+  width: 1px;
+  height: auto;
 }
 .steps--vertical .step-dot { flex-shrink: 0; }
 .steps--vertical .step-body { padding-top: 4px; }
 .steps--vertical .step-title { margin-top: 0; }
-.steps--vertical .step-desc { max-width: none; margin-inline: 0; }
+.steps--vertical .step-desc {
+  max-width: none;
+  margin-inline: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-dot, .step-line { transition: none; }
+}

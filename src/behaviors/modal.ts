@@ -56,6 +56,22 @@ export function openModal(id: string): void {
   panel.setAttribute('aria-modal', 'true');
   if (!panel.hasAttribute('tabindex')) panel.tabIndex = -1;
 
+  /* 自动 aria-labelledby：若面板内有 .modal-title 且未显式声明，绑定过去 */
+  if (!panel.hasAttribute('aria-labelledby')) {
+    const title = panel.querySelector<HTMLElement>('.modal-title');
+    if (title) {
+      if (!title.id) title.id = `modal-title-${CSS.escape(id)}`;
+      panel.setAttribute('aria-labelledby', title.id);
+    }
+  }
+  if (!panel.hasAttribute('aria-describedby')) {
+    const desc = panel.querySelector<HTMLElement>('.modal-description');
+    if (desc) {
+      if (!desc.id) desc.id = `modal-desc-${CSS.escape(id)}`;
+      panel.setAttribute('aria-describedby', desc.id);
+    }
+  }
+
   const closeOnEscape = backdrop.dataset.closeOnEscape !== 'false';
   keyHandler = (e: KeyboardEvent): void => {
     if (e.key === 'Escape') {

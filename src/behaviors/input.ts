@@ -73,14 +73,28 @@ function setupOtp(group: Element): void {
   el.__icenInputInit = true;
 
   const cells = Array.from(group.querySelectorAll<HTMLInputElement>('.otp-cell'));
+  const syncFilled = (cell: HTMLInputElement): void => {
+    cell.classList.toggle('is-filled', cell.value.length > 0);
+  };
+
   cells.forEach((cell, i) => {
+    /* 角色与无障碍补齐：自动给 cell 标 index */
+    if (!cell.hasAttribute('aria-label')) {
+      cell.setAttribute('aria-label', `第 ${i + 1} 位，共 ${cells.length} 位`);
+    }
+    syncFilled(cell);
+
     cell.addEventListener('input', () => {
       const ch = cell.value.slice(-1);
       cell.value = ch;
+      syncFilled(cell);
       if (ch && i < cells.length - 1) cells[i + 1].focus();
     });
     cell.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Backspace' && !cell.value && i > 0) cells[i - 1].focus();
+      if (ev.key === 'Backspace' && !cell.value && i > 0) {
+        ev.preventDefault();
+        cells[i - 1].focus();
+      }
       if (ev.key === 'ArrowLeft' && i > 0) { ev.preventDefault(); cells[i - 1].focus(); }
       if (ev.key === 'ArrowRight' && i < cells.length - 1) { ev.preventDefault(); cells[i + 1].focus(); }
     });
@@ -92,10 +106,20 @@ function setupOtp(group: Element): void {
       for (let k = 0; k < text.length; k++) {
         const target = cells[i + k];
         target.value = text[k] ?? '';
+        syncFilled(target);
       }
       cells[Math.min(i + text.length, cells.length - 1)].focus();
     });
   });
+
+  /* 集成事件：所有 cell 都填满时派发 complete，便于使用方接业务 */
+  const fireComplete = (): void => {
+    const code = cells.map((c) => c.value).join('');
+    if (code.length === cells.length && cells.every((c) => c.value.length > 0)) {
+      group.dispatchEvent(new CustomEvent('otp:complete', { detail: { code }, bubbles: true }));
+    }
+  };
+  cells.forEach((cell) => cell.addEventListener('input', fireComplete));
 }
 
 /** 为 root 下所有输入类结构初始化（root 自身匹配也算）。幂等。 */

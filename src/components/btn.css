@@ -1,23 +1,183 @@
 /*
  * @icen.ai/ui — Component: btn（按钮）
- * 用法：<button class="btn btn-primary"> / .btn-danger / .btn-sm / .btn-block
+ *
+ * 完整契约：
+ *   <button class="btn [.btn-primary|.btn-danger|.btn-ghost|.btn-link] [.btn-sm|.btn-lg] [.btn-block] [.btn-icon]
+ *           [.is-loading] [.is-error] [disabled]|[aria-disabled=true]|[data-disabled]>
+ *     [<svg class="btn-icon-start">…</svg>]    可选前置图标（与 .btn-icon 不同：.btn-icon 是纯图标钮）
+ *     <span class="btn-text">文本</span>
+ *     [<svg class="btn-icon-end">…</svg>]      可选后置图标
+ *   </button>
+ *
+ * 变体：
+ *   .btn          默认（surface 底 + outline-soft 描边）
+ *   .btn-primary  实心 accent
+ *   .btn-danger   透明底 + error 描边（hover 实心）
+ *   .btn-ghost    全透明，hover 浮起 fill-2
+ *   .btn-link     link 文本按钮（无背景、underline on hover）
+ *
+ * 尺寸：默认 / .btn-sm / .btn-lg / .btn-icon（正方形）
+ * 状态：.is-loading 加 spinner + aria-busy；.is-error error 边；disabled/aria-disabled/data-disabled
  */
 
 .btn {
-  display: inline-block; padding: 10px 22px;
-  background: var(--token-surface); color: var(--token-text);
-  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm);
-  font-family: var(--font-mono); font-size: 13px; letter-spacing: 1px;
-  cursor: pointer; transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+  --btn-bg: var(--token-surface);
+  --btn-fg: var(--token-text);
+  --btn-border: var(--token-line-soft);
+  --btn-bg-hover: var(--token-surface-hover);
+  --btn-border-hover: var(--token-accent);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 var(--density-space-md);
+  height: var(--density-input-height-md);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+  transition:
+    background-color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast),
+    transform var(--icen-tx-fast);
 }
-.btn:hover { border-color: var(--token-accent); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:hover {
+  background: var(--btn-bg-hover);
+  border-color: var(--btn-border-hover);
+}
+.btn:active { transform: var(--icen-press-soft); }
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.btn:disabled,
+.btn[aria-disabled='true'],
+.btn[data-disabled],
+.btn.is-loading {
+  cursor: not-allowed;
+  opacity: var(--icen-disabled-opacity);
+  transform: none;
+  pointer-events: none;
+}
 
-.btn-primary { background: var(--token-accent); border-color: var(--token-accent); color: var(--token-on-accent, #fff); }
-.btn-primary:hover { background: var(--token-accent-deep); border-color: var(--token-accent-deep); }
+/* ── 变体 ── */
+.btn-primary {
+  --btn-bg: var(--token-accent);
+  --btn-fg: var(--token-on-accent, #fff);
+  --btn-border: var(--token-accent);
+  --btn-bg-hover: var(--token-accent-deep, color-mix(in srgb, var(--token-accent) 85%, black));
+  --btn-border-hover: var(--token-accent-deep, var(--token-accent));
+}
+.btn-primary:hover {
+  box-shadow: var(--token-shadow-elevated);
+}
 
-.btn-danger { color: var(--token-error); border-color: color-mix(in srgb, var(--token-error) 35%, transparent); }
-.btn-danger:hover { border-color: var(--token-error); }
+.btn-danger {
+  --btn-fg: var(--token-error);
+  --btn-border: color-mix(in srgb, var(--token-error) 35%, transparent);
+  --btn-bg: transparent;
+  --btn-bg-hover: var(--token-error);
+  --btn-border-hover: var(--token-error);
+}
+.btn-danger:hover { color: var(--token-on-accent, #fff); }
 
-.btn-block { display: block; width: 100%; text-align: center; }
-.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-ghost {
+  --btn-bg: transparent;
+  --btn-border: transparent;
+  --btn-bg-hover: var(--token-fill-2);
+  --btn-border-hover: transparent;
+}
+
+.btn-link {
+  --btn-bg: transparent;
+  --btn-border: transparent;
+  --btn-fg: var(--token-accent);
+  --btn-bg-hover: transparent;
+  --btn-border-hover: transparent;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  text-decoration: none;
+}
+.btn-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: transparent;
+}
+
+/* ── 尺寸 ── */
+.btn-sm {
+  height: var(--density-input-height-sm);
+  padding: 0 var(--density-space-sm);
+  font-size: var(--density-font-size-sm);
+  gap: 4px;
+}
+.btn-lg {
+  height: var(--density-input-height-lg);
+  padding: 0 var(--density-space-lg);
+  font-size: var(--density-font-size-lg);
+  gap: 8px;
+}
+.btn-icon {
+  width: var(--density-input-height-md);
+  padding: 0;
+  gap: 0;
+}
+.btn-icon.btn-sm { width: var(--density-input-height-sm); }
+.btn-icon.btn-lg { width: var(--density-input-height-lg); }
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+/* ── 状态 ── */
+.btn.is-error {
+  --btn-border: var(--token-error);
+  --btn-border-hover: var(--token-error);
+}
+
+/* 加载态：左侧 spinner 占位 + 文本保留（避免重排）。
+   behavior 在挂 .is-loading 时把 [aria-busy=true] 也挂上。 */
+.btn.is-loading { position: relative; color: transparent; }
+.btn.is-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 14px; height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: btn-spin var(--duration-slow) linear infinite;
+  opacity: 1; /* 覆盖 .pressable::after 渐变（若与 .pressable 同用） */
+  background: none;
+  pointer-events: none;
+}
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 图标按钮内部 svg 默认尺寸对齐字号 */
+.btn-icon-start, .btn-icon-end {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-loading::after { animation-duration: 1.2s; }
+}

@@ -34,6 +34,7 @@ function setup(container: Element): void {
     // 嵌套 accordion 时只处理直接属于本容器的 trigger
     const item = trigger.closest('.accordion-item');
     if (!item || trigger.closest('.accordion') !== container) return;
+    if (item.classList.contains('is-disabled')) return;
 
     const open = item.classList.toggle('is-open');
     trigger.setAttribute('aria-expanded', String(open));
@@ -44,6 +45,29 @@ function setup(container: Element): void {
         other.classList.remove('is-open');
         other.querySelector('.accordion-trigger')?.setAttribute('aria-expanded', 'false');
       });
+    }
+  });
+
+  /* 键盘导航：Home/End 跳到首/末项；Space/Enter 在 focus 时 toggle */
+  container.addEventListener('keydown', (ev) => {
+    const kev = ev as KeyboardEvent;
+    const target = kev.target;
+    if (!(target instanceof Element)) return;
+    const trigger = target.closest('.accordion-trigger');
+    if (!trigger || trigger.closest('.accordion') !== container) return;
+
+    const triggers = Array.from(
+      container.querySelectorAll<HTMLElement>('.accordion-item:not(.is-disabled) > .accordion-trigger'),
+    );
+    const idx = triggers.indexOf(trigger as HTMLElement);
+    if (idx === -1) return;
+
+    if (kev.key === 'Home') {
+      kev.preventDefault();
+      triggers[0]?.focus();
+    } else if (kev.key === 'End') {
+      kev.preventDefault();
+      triggers[triggers.length - 1]?.focus();
     }
   });
 }

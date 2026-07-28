@@ -27,6 +27,11 @@ function setup(tree: Element): void {
   if (el.__icenTreeInit) return;
   el.__icenTreeInit = true;
 
+  /* 让 tree-node 可被键盘聚焦（roving tabindex 模式：tabindex=0） */
+  tree.querySelectorAll<HTMLElement>('.tree-node').forEach((node) => {
+    if (!node.hasAttribute('tabindex')) node.tabIndex = 0;
+  });
+
   tree.addEventListener('click', (ev) => {
     const target = ev.target;
     if (!(target instanceof Element)) return;
@@ -59,8 +64,66 @@ function setup(tree: Element): void {
 
     // 2) 点在节点其余位置：仅叶子参与单选
     if (childUl) return;
-    tree.querySelectorAll('.tree-node.is-selected').forEach((n) => n.classList.remove('is-selected'));
+    tree.querySelectorAll('.tree-node.is-selected, .tree-node[aria-selected="true"]')
+      .forEach((n) => {
+        n.classList.remove('is-selected');
+        n.removeAttribute('aria-selected');
+      });
     node.classList.add('is-selected');
+    node.setAttribute('aria-selected', 'true');
+    tree.dispatchEvent(new CustomEvent('icen:tree-select', {
+      bubbles: true,
+      detail: { node },
+    }));
+  });
+
+  /* 键盘 ↑/↓/←/→ 导航（仅叶子节点参与） */
+  tree.addEventListener('keydown', (ev: Event) => {
+    const kev = ev as KeyboardEvent;
+    const target = kev.target;
+    if (!(target instanceof Element)) return;
+    const node = target.closest('.tree-node');
+    if (!node || node.closest('.tree') !== tree) return;
+    if (node.classList.contains('is-disabled')) return;
+
+    const allNodes = Array.from(tree.querySelectorAll<HTMLElement>('.tree-node:not(.is-disabled)'));
+    const idx = allNodes.indexOf(node as HTMLElement);
+    if (idx === -1) return;
+
+    switch (kev.key) {
+      case 'ArrowDown': {
+        kev.preventDefault();
+        allNodes[(idx + 1) % allNodes.length]?.focus();
+        break;
+      }
+      case 'ArrowUp': {
+        kev.preventDefault();
+        allNodes[(idx - 1 + allNodes.length) % allNodes.length]?.focus();
+        break;
+      }
+      case 'ArrowRight': {
+        const li = node.closest('li');
+        const childUl = li?.querySelector(':scope > ul');
+        if (childUl?.hasAttribute('hidden')) {
+          kev.preventDefault();
+          childUl.removeAttribute('hidden');
+          node.querySelector('.tree-toggle')?.setAttribute('aria-expanded', 'true');
+          node.querySelector('.tree-toggle')?.classList.remove('is-collapsed');
+        }
+        break;
+      }
+      case 'ArrowLeft': {
+        const li = node.closest('li');
+        const childUl = li?.querySelector(':scope > ul');
+        if (childUl && !childUl.hasAttribute('hidden')) {
+          kev.preventDefault();
+          childUl.setAttribute('hidden', '');
+          node.querySelector('.tree-toggle')?.setAttribute('aria-expanded', 'false');
+          node.querySelector('.tree-toggle')?.classList.add('is-collapsed');
+        }
+        break;
+      }
+    }
   });
 }
 

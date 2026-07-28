@@ -1,27 +1,100 @@
 /*
  * @icen.ai/ui — Component: toast（轻提示，与 behaviors/toast 配套）
+ *
  * 容器固定在右下角，左缘 3px 语义色条；滑入动画用 motion token。
+ *
+ * 完整契约：
+ *   <div class="toast-container" role="status" aria-live="polite">
+ *     <div class="toast [ok|err|warn]" role="status|alert">
+ *       <span class="toast-msg">文本</span>
+ *       <button class="toast-action">撤销</button>       ← 可选 action
+ *     </div>
+ *   </div>
+ *
+ * behavior 自动维护 role 与 aria-live。
  */
 
 .toast-container {
-  position: fixed; right: 20px; bottom: 20px; z-index: var(--z-toast);
-  display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+  position: fixed;
+  right: var(--density-space-md);
+  bottom: var(--density-space-md);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-sm);
+  align-items: flex-end;
   pointer-events: none;
 }
+
 .toast {
   pointer-events: auto;
-  background: var(--token-surface); color: var(--token-text);
-  border: 1px solid var(--token-line-soft); border-left: 3px solid var(--token-line-strong);
-  border-radius: var(--radius-sm); box-shadow: var(--token-shadow-overlay);
-  padding: 11px 16px; font-size: 13px; max-width: 360px;
-  animation: icen-toast-in var(--duration-slow) var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  background: var(--token-surface);
+  color: var(--token-text);
+  border: 1px solid var(--token-line-soft);
+  border-left: 3px solid var(--token-line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--token-shadow-overlay);
+  padding: var(--density-space-sm) var(--density-space-md);
+  font-size: var(--density-font-size-md);
+  line-height: 1.4;
+  max-width: 380px;
+  animation: icen-toast-in var(--icen-tx-slow);
 }
-.toast.ok { border-left-color: var(--token-success); }
-.toast.err { border-left-color: var(--token-error); }
+
+/* 语义色：左缘 3px 强调 */
+.toast.ok   { border-left-color: var(--token-success); }
+.toast.err  { border-left-color: var(--token-error); }
 .toast.warn { border-left-color: var(--token-warning); }
-.toast.leaving { opacity: 0; transform: translateY(8px); transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out); }
+
+.toast-msg {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.toast-action {
+  flex-shrink: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--token-accent);
+  font: inherit;
+  font-size: var(--density-font-size-sm);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--icen-tx-fast);
+}
+.toast-action:hover { color: var(--token-accent-deep, var(--token-accent)); }
+.toast-action:focus-visible {
+  outline: none;
+  border-radius: var(--radius-xs);
+  box-shadow: var(--icen-ring);
+}
+
+.toast.leaving {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--icen-tx-normal),
+    transform var(--icen-tx-normal);
+}
 
 @keyframes icen-toast-in {
   from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+  .toast-container { right: var(--density-space-sm); bottom: var(--density-space-sm); left: var(--density-space-sm); align-items: stretch; }
+  .toast { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
 }

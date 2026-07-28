@@ -1,18 +1,113 @@
 /*
  * @icen.ai/ui — Component: stat（指标卡）
- * 用法：<div class="stat-grid"><div class="stat-card"><div class="stat-num">0</div><div class="stat-label">用户总数</div></div>…
+ *
+ * 完整契约：
+ *   <div class="stat-grid [stat-grid--2|stat-grid--3|stat-grid--4]">
+ *     <div class="stat-card [.stat-card--interactive]">
+ *       <div class="stat-head">
+ *         <span class="stat-label">用户总数</span>
+ *         <span class="stat-icon">…svg…</span>             ← 可选
+ *       </div>
+ *       <div class="stat-num [.accent|.warn|.bad|.info]">0</div>
+ *       <div class="stat-delta [.up|.down|.flat]">          ← 可选趋势
+ *         <svg>…arrow…</svg> +12.4%
+ *         <span class="stat-period">比上周</span>
+ *       </div>
+ *     </div>
+ *   </div>
  */
 
 .stat-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 14px; margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--density-space-md);
+  margin-bottom: var(--density-space-lg);
 }
+.stat-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.stat-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.stat-grid--4 { grid-template-columns: repeat(4, 1fr); }
+
 .stat-card {
-  background: var(--token-surface); border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-lg); padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  background: var(--token-surface);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--density-space-md);
   box-shadow: var(--token-shadow-elevated);
+  transition:
+    border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast),
+    transform var(--icen-tx-fast);
 }
-.stat-num { font-size: 24px; font-weight: 700; line-height: 1.25; word-break: break-all; }
+.stat-card--interactive {
+  cursor: pointer;
+}
+.stat-card--interactive:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--token-accent) 26%, var(--token-outline-soft));
+  box-shadow: var(--token-shadow-card);
+}
+
+.stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+}
+.stat-label {
+  color: var(--token-text-faint);
+  font-size: var(--density-font-size-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--token-accent-subtle);
+  color: var(--token-accent);
+}
+.stat-icon svg { width: 14px; height: 14px; }
+
+.stat-num {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--token-text);
+  word-break: break-all;
+}
 .stat-num.accent { color: var(--token-accent); }
-.stat-num.warn { color: var(--token-warning); }
-.stat-label { color: var(--token-text-faint); font-size: 11px; letter-spacing: 1px; margin-top: 2px; }
+.stat-num.warn   { color: var(--token-warning); }
+.stat-num.bad    { color: var(--token-error); }
+.stat-num.info   { color: var(--token-info); }
+
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.stat-delta svg { width: 12px; height: 12px; }
+.stat-delta.up   { color: var(--token-success); }
+.stat-delta.down { color: var(--token-error); }
+.stat-delta.flat { color: var(--token-text-faint); }
+.stat-period {
+  color: var(--token-text-faint);
+  margin-left: var(--density-space-xs);
+}
+
+/* 紧凑变体 */
+.stat-card--sm {
+  padding: var(--density-space-sm);
+  gap: 2px;
+}
+.stat-card--sm .stat-num { font-size: var(--density-font-size-lg); }
+.stat-card--sm .stat-label { font-size: 10px; }

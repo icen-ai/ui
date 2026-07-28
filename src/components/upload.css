@@ -2,42 +2,169 @@
  * @icen.ai/ui — Component: upload（拖放上传区）
  * 规格源自 opengal primitives/advanced-input.tsx 的 Upload；与 behaviors/upload.ts 配套。
  *
- * 契约：
- *   <div class="upload control lift focus-ring" role="button" tabindex="0">
- *     <input type="file" multiple />
- *     <div class="upload-icon"><svg …></svg></div>
- *     <p class="upload-title">…</p>
- *     <p class="upload-desc">…</p>
- *     <p class="upload-error" hidden>…</p>
+ * 完整契约：
+ *   <div class="upload control lift focus-ring [--compact] [.is-drag] [.is-disabled] [.is-loading]"
+ *        role="button" tabindex="0" aria-label="拖放或点击上传文件">
+ *     <input type="file" multiple accept="…" />
+ *     <div class="upload-icon">…svg…</div>
+ *     <p class="upload-title">拖放文件到此处，或<span class="upload-link">点击选择</span></p>
+ *     <p class="upload-desc">支持 PDF / PNG / JPG，单个 ≤ 5 MB</p>
+ *     <p class="upload-error" hidden role="alert">文件超过 5 MB</p>
  *   </div>
- * 拖入时 behavior 加 .is-drag。
+ *
+ * behavior 维护：
+ *   - dragenter/dragover 加 .is-drag，dragleave/drop 移除
+ *   - 校验 accept/size，错误写 .upload-error[hidden=false]
+ *   - 文件列表（可选）渲染到 .upload + <ul class="upload-list">，behavior 提供
  */
 
 .upload {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--density-space-lg) var(--density-space-md);
   border: 2px dashed var(--token-outline-soft);
   border-radius: var(--radius-lg);
+  background: var(--token-bg-soft);
   cursor: pointer;
+  transition:
+    border-color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast),
+    transform var(--icen-tx-fast);
 }
-.upload:hover {
+.upload:hover:not(.is-disabled) {
   border-color: color-mix(in srgb, var(--token-accent) 60%, transparent);
   background: var(--token-control-hover);
 }
+.upload:focus-visible {
+  outline: none;
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
 .upload.is-drag {
   border-color: var(--token-accent);
+  border-style: solid;
   background: var(--token-accent-subtle);
+  transform: scale(1.005);
 }
+.upload.is-disabled,
+.upload[aria-disabled='true'],
+.upload[data-disabled] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.upload.is-loading,
+.upload[aria-busy='true'] {
+  cursor: progress;
+  pointer-events: none;
+}
+
+.upload--compact { padding: var(--density-space-sm) var(--density-space-md); }
+.upload--compact .upload-icon { width: 28px; height: 28px; margin-bottom: 4px; }
 
 .upload input[type='file'] { display: none; }
 
 .upload-icon {
-  display: flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: var(--density-space-sm);
   border-radius: var(--radius-lg);
-  background: var(--token-accent-subtle); color: var(--token-accent);
+  background: var(--token-accent-subtle);
+  color: var(--token-accent);
+  transition: transform var(--icen-tx-fast);
+}
+.upload:hover:not(.is-disabled) .upload-icon,
+.upload.is-drag .upload-icon {
+  transform: scale(1.08);
+}
+.upload-icon svg { width: 20px; height: 20px; }
+
+.upload-title {
+  margin: 0;
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  color: var(--token-text);
+}
+.upload-link {
+  color: var(--token-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.upload-desc {
+  margin: 2px 0 0;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+}
+.upload-error {
+  margin: var(--density-space-xs) 0 0;
+  padding: 6px 10px;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-error);
+  background: var(--token-error-muted);
+  border-radius: var(--radius-sm);
 }
 
-.upload-title { margin: 0; font-size: 13px; font-weight: 500; color: var(--token-text); }
-.upload-desc { margin: 2px 0 0; font-size: 11px; color: var(--token-text-faint); }
-.upload-error { margin: 4px 0 0; font-size: 11px; color: var(--token-error); }
+/* 文件列表（behavior 可选渲染） */
+.upload-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--density-space-sm) 0 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+}
+.upload-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-xs) var(--density-space-sm);
+  background: var(--token-surface);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-sm);
+  font-size: var(--density-font-size-sm);
+  animation: upload-item-in var(--icen-tx-fast);
+}
+.upload-list-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upload-list-item-size {
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--density-font-size-xs);
+}
+.upload-list-item-x {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--token-text-faint);
+  padding: 2px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.upload-list-item-x:hover {
+  color: var(--token-text);
+  background: var(--token-fill-2);
+}
+.upload-list-item-x:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+@keyframes upload-item-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .upload-list-item, .upload-icon { animation: none; transition: none; }
+}

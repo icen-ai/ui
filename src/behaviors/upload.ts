@@ -60,10 +60,10 @@ function setup(zone: HTMLElement): void {
     }
     if (assigned) {
       input.dispatchEvent(new Event('change', { bubbles: true }));
-    } else {
-      const list = Array.from(files);
-      zone.dispatchEvent(new CustomEvent('icn:upload', { bubbles: true, detail: { files: list } }));
     }
+    /* 不论是否成功赋给 input.files，都派发 icen:upload 让使用方统一监听 */
+    const list = Array.from(files);
+    zone.dispatchEvent(new CustomEvent('icen:upload', { bubbles: true, detail: { files: list } }));
   });
 }
 

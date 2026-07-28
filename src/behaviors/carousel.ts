@@ -54,7 +54,15 @@ function setup(carousel: Element): void {
     if (!track) return;
     track.style.transform = `translateX(${-index * 100}%)`;
     slides.forEach((s, i) => s.setAttribute('aria-hidden', String(i !== index)));
-    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    dots.forEach((d, i) => {
+      d.classList.toggle('active', i === index);
+      if (i === index) d.setAttribute('aria-current', 'true');
+      else d.removeAttribute('aria-current');
+    });
+    carousel.dispatchEvent(new CustomEvent('icen:carousel-change', {
+      bubbles: true,
+      detail: { index, count },
+    }));
   }
 
   function go(i: number): void {
@@ -66,6 +74,18 @@ function setup(carousel: Element): void {
   prev?.addEventListener('click', () => go(index - 1));
   next?.addEventListener('click', () => go(index + 1));
 
+  /* 键盘 ←/→/Home/End（仅当焦点在 carousel 内） */
+  carousel.addEventListener('keydown', (ev: Event) => {
+    const kev = ev as KeyboardEvent;
+    switch (kev.key) {
+      case 'ArrowLeft':  kev.preventDefault(); go(index - 1); break;
+      case 'ArrowRight': kev.preventDefault(); go(index + 1); break;
+      case 'Home':       kev.preventDefault(); go(0); break;
+      case 'End':        kev.preventDefault(); go(count - 1); break;
+    }
+  });
+
+  /* reduced-motion：取消 transition 防闪烁（CSS 已守，行为层不再二次处理） */
   render();
 }
 

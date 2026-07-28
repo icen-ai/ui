@@ -1,31 +1,148 @@
 /*
- * @icen.ai/ui — Component: form（表单字段/输入/错误与成功提示）
+ * @icen.ai/ui — Component: form（表单结构：字段组 / label / hint / 横幅提示）
+ *
+ * 与 input.css 的 wrapper 基元互补：
+ *   - input.css 处理"单个 input 的视觉外壳"
+ *   - form.css 处理"字段→label→hint 的纵向布局"和"页面级结果横幅"
+ *
+ * 契约：
+ *   <form class="form">
+ *     <fieldset class="form-field">
+ *       <label class="form-label" for="x">姓名</label>
+ *       <span class="control"><input id="x" class="form-input" /></span>
+ *       <span class="form-hint">必填，3-20 个字符</span>     <!-- 可选 -->
+ *       <span class="form-error">姓名长度不足</span>          <!-- 可选，aria-live=polite -->
+ *     </fieldset>
+ *   </form>
+ *
+ *   <div class="banner-ok [.banner-block]">已保存</div>
+ *   <div class="banner-err [.banner-block]">提交失败：网络错误</div>
+ *
+ * form-input 同时支持 :invalid 与 [data-invalid=true]，behavior 二选一驱动。
  */
 
-.form-field { margin-bottom: 18px; }
-.form-label { display: block; font-size: 12px; color: var(--token-text-muted); margin-bottom: 6px; letter-spacing: 1px; }
-.form-input {
-  width: 100%; padding: 11px 14px;
-  background: var(--token-bg); color: var(--token-text);
-  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm);
-  font-family: var(--font-mono); font-size: 14px;
-  outline: none; transition: border-color var(--duration-fast) var(--ease-out);
-}
-.form-input:focus { border-color: var(--token-accent); }
-.form-input::placeholder { color: var(--token-text-faint); }
+.form { display: flex; flex-direction: column; gap: var(--density-space-md); }
 
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form-label {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+.form-label .req { color: var(--token-error); margin-left: 2px; }
+
+/* 裸 input（非 .control wrapper 用法） */
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0 var(--density-space-md);
+  height: var(--density-input-height-md);
+  background: var(--token-control);
+  color: var(--token-text);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--density-font-size-md);
+  outline: none;
+  transition:
+    border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.form-textarea {
+  height: auto;
+  min-height: calc(4 * 1.5em + 24px);
+  padding: var(--density-space-sm) var(--density-space-md);
+  line-height: 1.5;
+  resize: vertical;
+}
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+}
+.form-input:hover,
+.form-textarea:hover {
+  border-color: var(--icen-hover-border);
+}
+.form-input:focus-visible,
+.form-textarea:focus-visible {
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+.form-input:disabled,
+.form-textarea:disabled,
+.form-input[aria-disabled='true'],
+.form-textarea[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+  background: var(--token-bg-soft);
+}
+
+/* 校验态：原生 :invalid 与显式 [data-invalid] 同时支持 */
+.form-input:where(:invalid:not(:placeholder-shown), [data-invalid='true']),
+.form-textarea:where(:invalid:not(:placeholder-shown), [data-invalid='true']) {
+  border-color: var(--token-error);
+}
+.form-input:where(:invalid:not(:placeholder-shown), [data-invalid='true']):focus-visible,
+.form-textarea:where(:invalid:not(:placeholder-shown), [data-invalid='true']):focus-visible {
+  border-color: var(--token-error);
+  box-shadow: var(--icen-control-error-shadow);
+}
+
+/* 尺寸变体 */
+.form-input--sm, .form-textarea--sm { height: var(--density-input-height-sm); font-size: var(--density-font-size-sm); }
+.form-input--lg, .form-textarea--lg { height: var(--density-input-height-lg); font-size: var(--density-font-size-lg); }
+
+.form-hint {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  line-height: 1.4;
+}
 .form-error {
-  background: color-mix(in srgb, var(--token-error) 7%, transparent); color: var(--token-error);
-  border: 1px solid color-mix(in srgb, var(--token-error) 25%, transparent); border-radius: var(--radius-sm);
-  padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px;
-  font-family: var(--font-heading);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-error);
+  line-height: 1.4;
 }
-.form-ok {
-  background: color-mix(in srgb, var(--token-success) 8%, transparent); color: var(--token-success);
-  border: 1px solid color-mix(in srgb, var(--token-success) 25%, transparent); border-radius: var(--radius-sm);
-  padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px;
-  font-family: var(--font-heading);
+.form-field[data-invalid='true'] .form-label { color: var(--token-error); }
+
+/* ── 页面级横幅：操作结果 / 引导提示 ── */
+.banner-ok,
+.banner-err {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm) var(--density-space-md);
+  margin-bottom: var(--density-space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--density-font-size-sm);
+  line-height: 1.5;
+  border: 1px solid transparent;
+}
+.banner-ok {
+  background: var(--token-success-muted);
+  color: var(--token-success);
+  border-color: color-mix(in srgb, var(--token-success) 25%, transparent);
+}
+.banner-err {
+  background: var(--token-error-muted);
+  color: var(--token-error);
+  border-color: color-mix(in srgb, var(--token-error) 25%, transparent);
+}
+/* block 模式：横向占满，带图标位 */
+.banner-block {
+  align-items: center;
+  padding: var(--density-space-md);
 }
 
-/* 页面级横幅（与表单提示同族，用于操作结果/引导提示） */
-.banner-ok, .banner-err { margin-bottom: 20px; }
+@media (prefers-reduced-motion: reduce) {
+  .banner-ok, .banner-err { transition: none; }
+}

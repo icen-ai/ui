@@ -1,19 +1,121 @@
 /*
  * @icen.ai/ui — Component: table（数据表）
- * 用法：<div class="table-wrap"><table class="admin-table">…
- * .table-wrap 负责窄屏横向滚动（滚动条样式见 base.css）；行内操作列用 .ops。
+ *
+ * 完整契约：
+ *   <div class="table-wrap [table-wrap--bordered]">
+ *     <table class="admin-table [admin-table--compact|admin-table--dense]">
+ *       <thead>
+ *         <tr><th [colspan=rowspan]>列名</th>…</tr>
+ *       </thead>
+ *       <tbody>
+ *         <tr class="row-link [.is-selected]">           ← 整行可点
+ *           <td>…</td>
+ *           <td class="ops"><button class="btn btn-sm">…</button></td>
+ *         </tr>
+ *       </tbody>
+ *       <tfoot><tr><td>合计</td>…</tr></tfoot>
+ *     </table>
+ *   </div>
+ *
+ * .table-wrap：窄屏横向滚动（滚动条样式见 base.css）；--bordered 加外边框。
+ * .admin-table--compact：紧凑（cell padding 缩小）；--dense：极紧凑（行高更紧）。
  */
 
-.table-wrap { overflow-x: auto; }
-.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.admin-table th {
-  text-align: left; font-weight: 400; font-size: 11px; letter-spacing: 1px;
-  color: var(--token-text-faint); padding: 10px 14px;
-  border-bottom: 1px solid var(--token-line-soft); white-space: nowrap;
+.table-wrap {
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-lg);
 }
-.admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--token-line-soft); vertical-align: middle; }
+.table-wrap--bordered {
+  border: 1px solid var(--token-line-soft);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--density-font-size-md);
+  font-variant-numeric: tabular-nums;
+}
+.admin-table th,
+.admin-table td {
+  padding: var(--density-space-sm) calc(var(--density-space-md) + 2px);
+  text-align: left;
+}
+.admin-table th {
+  font-weight: 600;
+  font-size: var(--density-font-size-xs);
+  letter-spacing: 0.05em;
+  color: var(--token-text-faint);
+  border-bottom: 1px solid var(--token-line);
+  white-space: nowrap;
+  text-transform: uppercase;
+  background: var(--token-bg-soft);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.admin-table td {
+  border-bottom: 1px solid var(--token-line-soft);
+  vertical-align: middle;
+  color: var(--token-text);
+}
 .admin-table tbody tr:last-child td { border-bottom: 0; }
-.admin-table tbody tr:hover { background: var(--token-surface-strong); }
-.admin-table tbody tr.row-link { cursor: pointer; }
-.admin-table .ops { white-space: nowrap; text-align: right; }
-.admin-table .ops .btn-sm { margin-left: 6px; }
+.admin-table tbody tr {
+  transition: background-color var(--icen-tx-fast);
+}
+.admin-table tbody tr:hover {
+  background: var(--token-surface-strong);
+}
+.admin-table tbody tr.row-link {
+  cursor: pointer;
+}
+.admin-table tbody tr.is-selected {
+  background: var(--token-accent-subtle);
+}
+.admin-table tfoot td {
+  border-top: 1px solid var(--token-line);
+  border-bottom: 0;
+  font-weight: 500;
+  background: var(--token-bg-soft);
+}
+
+/* 紧凑变体 */
+.admin-table--compact th,
+.admin-table--compact td {
+  padding: var(--density-space-xs) var(--density-space-sm);
+}
+.admin-table--dense th,
+.admin-table--dense td {
+  padding: 4px var(--density-space-xs);
+  font-size: var(--density-font-size-sm);
+}
+
+/* 右对齐数字列 */
+.admin-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* 操作列 */
+.admin-table .ops {
+  white-space: nowrap;
+  text-align: right;
+}
+.admin-table .ops .btn,
+.admin-table .ops .btn-sm {
+  margin-left: var(--density-space-xs);
+}
+
+/* 可排序表头（使用方 data-sort 指示） */
+.admin-table th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+}
+.admin-table th[data-sort]::after {
+  content: '↕';
+  margin-left: var(--density-space-xs);
+  color: var(--token-text-faint);
+  opacity: 0.6;
+}
+.admin-table th[data-sort='asc']::after { content: '↑'; opacity: 1; color: var(--token-accent); }
+.admin-table th[data-sort='desc']::after { content: '↓'; opacity: 1; color: var(--token-accent); }

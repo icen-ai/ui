@@ -39,7 +39,19 @@ function setupSingle(slider: Element, native: HTMLInputElement): void {
     if (fill) fill.style.width = `${p}%`;
     if (thumb) thumb.style.left = `calc(${p}% - 8px)`;
   };
-  native.addEventListener('input', sync);
+  native.addEventListener('input', () => {
+    sync();
+    slider.dispatchEvent(new CustomEvent('icen:slider-input', {
+      bubbles: true,
+      detail: { value: Number(native.value) },
+    }));
+  });
+  native.addEventListener('change', () => {
+    slider.dispatchEvent(new CustomEvent('icen:slider-change', {
+      bubbles: true,
+      detail: { value: Number(native.value) },
+    }));
+  });
   sync();
 }
 
@@ -70,8 +82,28 @@ function setupDual(slider: Element, natives: HTMLInputElement[]): void {
     hi.style.clipPath = `inset(0 0 0 ${pHi}%)`;
   };
 
-  lo.addEventListener('input', () => sync(lo));
-  hi.addEventListener('input', () => sync(hi));
+  lo.addEventListener('input', () => {
+    sync(lo);
+    slider.dispatchEvent(new CustomEvent('icen:slider-input', {
+      bubbles: true,
+      detail: { lo: Number(lo.value), hi: Number(hi.value) },
+    }));
+  });
+  hi.addEventListener('input', () => {
+    sync(hi);
+    slider.dispatchEvent(new CustomEvent('icen:slider-input', {
+      bubbles: true,
+      detail: { lo: Number(lo.value), hi: Number(hi.value) },
+    }));
+  });
+  const onChange = (): void => {
+    slider.dispatchEvent(new CustomEvent('icen:slider-change', {
+      bubbles: true,
+      detail: { lo: Number(lo.value), hi: Number(hi.value) },
+    }));
+  };
+  lo.addEventListener('change', onChange);
+  hi.addEventListener('change', onChange);
   sync(null);
 }
 

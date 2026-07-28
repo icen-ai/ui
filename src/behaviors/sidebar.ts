@@ -23,6 +23,16 @@ function setup(sidebar: HTMLElement): void {
   if (el.__icenSidebarInit) return;
   el.__icenSidebarInit = true;
 
+  /* 自动 aria-controls 绑定：title → 对应 panel（同 group） */
+  sidebar.querySelectorAll<HTMLElement>('.sidebar-group-title').forEach((title) => {
+    const group = title.closest('.sidebar-group');
+    const panel = group?.querySelector<HTMLElement>('.sidebar-group-panel');
+    if (panel && !title.hasAttribute('aria-controls')) {
+      if (!panel.id) panel.id = `sb-panel-${Math.random().toString(36).slice(2, 9)}`;
+      title.setAttribute('aria-controls', panel.id);
+    }
+  });
+
   el.addEventListener('click', (ev) => {
     const target = ev.target;
     if (!(target instanceof Element)) return;
@@ -33,6 +43,10 @@ function setup(sidebar: HTMLElement): void {
     if (!group) return;
     const open = group.classList.toggle('is-open');
     title.setAttribute('aria-expanded', String(open));
+    sidebar.dispatchEvent(new CustomEvent('icen:sidebar-toggle', {
+      bubbles: true,
+      detail: { group, open },
+    }));
   });
 }
 

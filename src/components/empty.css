@@ -1,25 +1,65 @@
 /*
- * @icen.ai/ui — Component: empty（空状态）
- * 包含：.empty 容器 + .empty-icon / .empty-title / .empty-desc / .empty-action
+ * @icen.ai/ui — Component: empty（空状态 / 无数据 / 404 占位）
+ *
+ * 完整契约：
+ *   <div class="empty [.empty--sm|.empty--lg]">
+ *     <div class="empty-icon">…svg…</div>            ← 可选，缺省显示默认占位
+ *     <h3 class="empty-title">暂无数据</h3>
+ *     <p class="empty-desc">描述文案（可选）</p>
+ *     <div class="empty-action">                       ← 可选：操作按钮位
+ *       <button class="btn btn-primary">…</button>
+ *     </div>
+ *   </div>
+ *
  * 规格源自 opengal src/presentation/ui/data/display.tsx 的 EmptyState。
  */
 
 .empty {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 48px 16px;
+  padding: var(--density-space-lg) var(--density-space-md);
 }
+.empty--sm { padding: var(--density-space-md); }
+.empty--lg { padding: 64px var(--density-space-md); }
+
 .empty-icon {
-  width: 48px; height: 48px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-lg);
   background: var(--token-card);
   border: 1px solid var(--token-outline-soft);
   box-shadow: var(--token-shadow-inset);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--token-text-faint);
-  margin-bottom: 16px;
+  margin-bottom: var(--density-space-md);
 }
+.empty--lg .empty-icon { width: 64px; height: 64px; }
+.empty--sm .empty-icon { width: 36px; height: 36px; margin-bottom: var(--density-space-sm); }
 .empty-icon svg { width: 24px; height: 24px; }
-.empty-title { font-size: 14px; font-weight: 500; color: var(--token-text); margin: 0; }
-.empty-desc { font-size: 12px; color: var(--token-text-muted); margin: 4px 0 0; max-width: 240px; }
-.empty-action { margin-top: 16px; }
+.empty--lg .empty-icon svg { width: 32px; height: 32px; }
+.empty--sm .empty-icon svg { width: 18px; height: 18px; }
+
+.empty-title {
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  color: var(--token-text);
+  margin: 0;
+  line-height: 1.4;
+}
+.empty-desc {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  margin: 4px 0 0;
+  max-width: 240px;
+  line-height: 1.5;
+}
+.empty-action {
+  margin-top: var(--density-space-md);
+  display: flex;
+  gap: var(--density-space-xs);
+}

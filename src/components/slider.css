@@ -3,67 +3,205 @@
  * 规格源自 opengal primitives/input.tsx 的 Slider 与 advanced-input.tsx 的 DualRangeSlider；
  * 与 behaviors/slider.ts 配套（透明原生 range 覆盖层驱动 fill/thumb 定位）。
  *
- * 契约（单值）：
- *   <div class="slider">
+ * 完整契约：
+ *   <div class="slider [--sm|--lg] [--vertical] [.is-disabled]" data-min=0 data-max=100 data-step=1>
  *     <div class="slider-track"></div>
- *     <div class="slider-fill" style="width:40%"></div>
- *     <div class="slider-thumb" style="left:calc(40% - 8px)"></div>
- *     <input class="slider-native" type="range" />
+ *     <div class="slider-fill" style="width:40%"></div>                 单值：from 0
+ *     OR
+ *     <div class="slider-range" style="left:20%; right:35%"></div>      双值：选中段
+ *     <div class="slider-thumb" style="left:calc(40% - 8px)"></div>     单 thumb
+ *     OR
+ *     <div class="slider-thumb slider-thumb--lo" …>
+ *     <div class="slider-thumb slider-thumb--hi" …>                     双 thumb
+ *     <input class="slider-native" type="range" />                      单：1 个；双：2 个 [data-thumb=lo|hi]
  *   </div>
- * 双滑块：.slider--dual 内 .slider-range（left/right 定位选中段）
- *   + .slider-thumb--lo / .slider-thumb--hi + 两个 .slider-native[data-thumb=lo|hi]
- * label 行：.slider-row（label + 当前值，tabular-nums）
+ *
+ *   带标签行：
+ *   <div class="slider-row">
+ *     <span class="slider-label">音量</span>
+ *     <span class="slider-value">40</span>     ← behavior 同步当前值，tabular-nums
+ *   </div>
+ *
+ * behavior 维护：thumb 位置 % 化、aria-valuenow/min/max、键盘 ←/→ 步进、Shift 十步、双滑块互锁。
  */
 
-.slider { position: relative; height: 20px; width: 100%; }
+.slider {
+  position: relative;
+  height: 20px;
+  width: 100%;
+  --slider-thumb-size: 16px;
+  --slider-track-height: 6px;
+}
+.slider--sm {
+  height: 16px;
+  --slider-thumb-size: 12px;
+  --slider-track-height: 4px;
+}
+.slider--lg {
+  height: 24px;
+  --slider-thumb-size: 20px;
+  --slider-track-height: 8px;
+}
+.slider.is-disabled,
+.slider[aria-disabled='true'],
+.slider[data-disabled] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
+
+/* 垂直方向（orient=vertical），常见于音量/色相 */
+.slider--vertical {
+  width: 20px;
+  height: 100%;
+  min-height: 120px;
+}
+.slider--vertical.slider--sm { width: 16px; }
+.slider--vertical.slider--lg { width: 24px; }
 
 .slider-track {
-  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
-  height: 6px; border-radius: var(--radius-full);
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--slider-track-height);
+  border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--token-line-soft) 50%, transparent);
+}
+.slider--vertical .slider-track {
+  left: 50%; right: auto;
+  top: 0; bottom: 0;
+  transform: translateX(-50%);
+  height: 100%;
+  width: var(--slider-track-height);
 }
 
 .slider-fill {
-  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  height: 6px; border-radius: var(--radius-full);
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--slider-track-height);
+  border-radius: var(--radius-full);
   background: var(--token-accent);
-  transition: width var(--duration-normal) var(--ease-out);
+  transition: width var(--icen-tx-normal);
+}
+.slider--vertical .slider-fill {
+  left: 50%;
+  top: auto; bottom: 0;
+  transform: translateX(-50%);
+  width: var(--slider-track-height);
+  height: auto;
+  transition: height var(--icen-tx-normal);
 }
 
 /* 双滑块选中段：left = lo%、right = (100 - hi)% */
 .slider-range {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  height: 6px; border-radius: var(--radius-full);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--slider-track-height);
+  border-radius: var(--radius-full);
   background: var(--token-accent);
-  transition: left var(--duration-normal) var(--ease-out),
-    right var(--duration-normal) var(--ease-out);
+  transition:
+    left var(--icen-tx-normal),
+    right var(--icen-tx-normal);
+}
+.slider--vertical .slider-range {
+  left: 50%;
+  top: auto;
+  transform: translateX(-50%);
+  width: var(--slider-track-height);
+  height: auto;
+  transition:
+    top var(--icen-tx-normal),
+    bottom var(--icen-tx-normal);
 }
 
 .slider-thumb {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  width: 16px; height: 16px; border-radius: var(--radius-full);
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--slider-thumb-size);
+  height: var(--slider-thumb-size);
+  border-radius: var(--radius-full);
   background: var(--token-card);
   border: 2px solid var(--token-accent);
   box-shadow: var(--token-shadow-card);
   pointer-events: none;
-  transition: transform var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-fast) var(--ease-out);
+  transition:
+    transform var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast),
+    border-color var(--icen-tx-fast);
 }
-/* 原生 input 透明，焦点环镜像到可见 thumb 上 */
+.slider--vertical .slider-thumb {
+  top: auto;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+.slider:hover .slider-thumb {
+  border-color: var(--token-accent-deep, var(--token-accent));
+}
+/* 原生 input 透明，焦点环镜像到可见 thumb 上（消费 --icen-ring-soft） */
 .slider:focus-within .slider-thumb {
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--token-accent) 50%, transparent),
-    0 0 0 3px var(--token-bg);
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: var(--icen-ring-soft), var(--token-shadow-card);
+}
+.slider--vertical:focus-within .slider-thumb {
+  transform: translate(-50%, 50%) scale(1.15);
 }
 
 .slider-native {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  margin: 0; opacity: 0; cursor: pointer; z-index: 1;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
 }
 .slider-native:disabled { cursor: not-allowed; }
+.slider-native:focus { outline: none; }
+
+/* 双滑块需要两个 native input 叠加，--z 错开避免相互拦截 */
+.slider--dual .slider-native[data-thumb='hi'] { z-index: 2; }
+
+/* 当前值标签 */
+.slider-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--token-text);
+}
 
 .slider-row {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 12px; color: var(--token-text-muted);
-  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+}
+.slider-label { color: var(--token-text-muted); }
+
+/* 刻度（behavior 可选渲染） */
+.slider-ticks {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: var(--slider-track-height);
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.slider-tick {
+  width: 1px;
+  height: 100%;
+  background: color-mix(in srgb, var(--token-text) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slider-fill, .slider-range, .slider-thumb { transition: none; }
 }

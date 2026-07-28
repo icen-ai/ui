@@ -1,70 +1,136 @@
 /*
  * @icen.ai/ui — Component: feedback（反馈族）
+ *
  * 包含：alert（四态内联横幅）/ result（终态页）/ progress（线性进度）/ spinner（加载圈）/ skeleton（占位块）
- * 规格源自 opengal src/presentation/ui/feedback/toast.tsx 的 Alert 与 data/exhibit.tsx 的 Result、
- * data/display.tsx 的 Progress / Spinner / Skeleton。
- * base.css 未提供 spin / skeleton-pulse 关键帧，在本文件自带。
+ * 规格源自 opengal feedback/toast.tsx 与 data/exhibit.tsx、data/display.tsx。
  */
 
 /* ══════════════ alert · 内联横幅 ══════════════ */
 .alert {
-  display: flex; align-items: flex-start; gap: 12px;
-  padding: 12px;
-  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm);
+  border-radius: var(--radius-md);
   box-shadow: var(--token-shadow-inset);
   border: 1px solid transparent;
+  font-size: var(--density-font-size-sm);
 }
-.alert--info    { background: var(--token-info-muted);    border-color: color-mix(in srgb, var(--token-info) 15%, transparent); }
-.alert--success { background: var(--token-success-muted); border-color: color-mix(in srgb, var(--token-success) 15%, transparent); }
-.alert--warning { background: var(--token-warning-muted); border-color: color-mix(in srgb, var(--token-warning) 15%, transparent); }
-.alert--error   { background: var(--token-error-muted);   border-color: color-mix(in srgb, var(--token-error) 15%, transparent); }
+.alert--info    { background: var(--token-info-muted);    border-color: color-mix(in srgb, var(--token-info) 18%, transparent); }
+.alert--success { background: var(--token-success-muted); border-color: color-mix(in srgb, var(--token-success) 18%, transparent); }
+.alert--warning { background: var(--token-warning-muted); border-color: color-mix(in srgb, var(--token-warning) 18%, transparent); }
+.alert--error   { background: var(--token-error-muted);   border-color: color-mix(in srgb, var(--token-error) 18%, transparent); }
 
-.alert-icon { flex-shrink: 0; margin-top: 2px; display: flex; }
+.alert-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+}
 .alert-icon svg { width: 16px; height: 16px; }
-.alert--info .alert-icon,       .alert--info .alert-title    { color: var(--token-info); }
-.alert--success .alert-icon,    .alert--success .alert-title { color: var(--token-success); }
-.alert--warning .alert-icon,    .alert--warning .alert-title { color: var(--token-warning); }
-.alert--error .alert-icon,      .alert--error .alert-title   { color: var(--token-error); }
+.alert--info .alert-icon,    .alert--info .alert-title    { color: var(--token-info); }
+.alert--success .alert-icon, .alert--success .alert-title { color: var(--token-success); }
+.alert--warning .alert-icon, .alert--warning .alert-title { color: var(--token-warning); }
+.alert--error .alert-icon,   .alert--error .alert-title   { color: var(--token-error); }
 
 .alert-content { flex: 1; min-width: 0; }
-.alert-title { font-size: 13px; font-weight: 500; margin: 0; }
-.alert-body { font-size: 12px; color: var(--token-text-muted); line-height: 1.6; }
-.alert-close {
-  margin-left: auto; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  padding: 2px; border: 0; border-radius: var(--radius-xs);
-  background: none; color: var(--token-text-faint); cursor: pointer;
+.alert-title {
+  font-size: var(--density-font-size-md);
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.4;
 }
-.alert-close:hover { color: var(--token-text); background: color-mix(in srgb, var(--token-text) 6%, transparent); }
+.alert-body {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.alert-close {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
+}
+.alert-close:hover {
+  color: var(--token-text);
+  background: color-mix(in srgb, var(--token-text) 6%, transparent);
+}
+.alert-close:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
 .alert-close svg { width: 14px; height: 14px; }
 
 /* ══════════════ result · 终态页 ══════════════ */
 .result {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 40px 24px;
+  padding: 40px var(--density-space-md);
 }
 .result-icon {
-  width: 64px; height: 64px;
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-full);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: var(--token-shadow-inset);
   border: 1px solid transparent;
-  margin-bottom: 16px;
+  margin-bottom: var(--density-space-md);
 }
 .result-icon svg { width: 28px; height: 28px; }
-.result--success .result-icon { background: var(--token-success-muted); color: var(--token-success); border-color: color-mix(in srgb, var(--token-success) 10%, transparent); }
-.result--error   .result-icon { background: var(--token-error-muted);   color: var(--token-error);   border-color: color-mix(in srgb, var(--token-error) 10%, transparent); }
-.result--warning .result-icon { background: var(--token-warning-muted); color: var(--token-warning); border-color: color-mix(in srgb, var(--token-warning) 10%, transparent); }
-.result--info    .result-icon { background: var(--token-info-muted);    color: var(--token-info);    border-color: color-mix(in srgb, var(--token-info) 10%, transparent); }
-.result-title { font-size: 17px; font-weight: 600; color: var(--token-text); margin: 0; }
-.result-desc { font-size: 13px; color: var(--token-text-muted); margin: 4px 0 0; max-width: 360px; }
-.result-extra { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+.result--success .result-icon { background: var(--token-success-muted); color: var(--token-success); border-color: color-mix(in srgb, var(--token-success) 12%, transparent); }
+.result--error   .result-icon { background: var(--token-error-muted);   color: var(--token-error);   border-color: color-mix(in srgb, var(--token-error) 12%, transparent); }
+.result--warning .result-icon { background: var(--token-warning-muted); color: var(--token-warning); border-color: color-mix(in srgb, var(--token-warning) 12%, transparent); }
+.result--info    .result-icon { background: var(--token-info-muted);    color: var(--token-info);    border-color: color-mix(in srgb, var(--token-info) 12%, transparent); }
+
+.result-title {
+  font-size: var(--density-font-size-lg);
+  font-weight: 600;
+  color: var(--token-text);
+  margin: 0;
+  font-family: var(--font-heading);
+  line-height: 1.3;
+}
+.result-desc {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  margin: var(--density-space-xs) 0 0;
+  max-width: 360px;
+  line-height: 1.5;
+}
+.result-extra {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  margin-top: var(--density-space-md);
+}
 
 /* ══════════════ progress · 线性进度 ══════════════ */
-.progress { display: flex; align-items: center; gap: 8px; }
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+}
 .progress-track {
-  flex: 1; height: 6px; overflow: hidden;
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--token-line-soft) 40%, transparent);
 }
@@ -72,35 +138,80 @@
   height: 100%;
   border-radius: var(--radius-full);
   background: var(--token-accent);
-  transition: width 500ms var(--ease-out);
+  transition: width var(--icen-tx-slow);
 }
+.progress--success .progress-bar { background: var(--token-success); }
+.progress--warning .progress-bar { background: var(--token-warning); }
+.progress--error   .progress-bar { background: var(--token-error); }
+
+/* 不定进度（spinner 替代品）：bar 来回扫动 */
+.progress--indeterminate .progress-bar {
+  width: 35% !important;
+  animation: progress-sweep 1.4s var(--ease-in-out, var(--ease-out)) infinite;
+}
+@keyframes progress-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
 .progress--sm .progress-track { height: 4px; }
-.progress-label { font-size: 11px; color: var(--token-text-muted); font-variant-numeric: tabular-nums; }
+.progress--lg .progress-track { height: 8px; }
+.progress-label {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
 
 /* ══════════════ spinner · 加载圈 ══════════════ */
 .spinner {
-  width: 20px; height: 20px;
-  border: 2px solid var(--token-accent);
-  border-top-color: transparent;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid color-mix(in srgb, var(--token-accent) 30%, transparent);
+  border-top-color: var(--token-accent);
   border-radius: var(--radius-full);
-  animation: icen-spin 1s linear infinite;
+  animation: icen-spin 0.8s linear infinite;
 }
-.spinner--sm { width: 16px; height: 16px; }
-.spinner--lg { width: 32px; height: 32px; }
+.spinner--sm { width: 14px; height: 14px; border-width: 2px; }
+.spinner--lg { width: 32px; height: 32px; border-width: 3px; }
+.spinner--success { border-color: color-mix(in srgb, var(--token-success) 30%, transparent); border-top-color: var(--token-success); }
+.spinner--error   { border-color: color-mix(in srgb, var(--token-error) 30%, transparent); border-top-color: var(--token-error); }
+.spinner--muted   { border-color: color-mix(in srgb, var(--token-text-faint) 30%, transparent); border-top-color: var(--token-text-faint); }
 
-@keyframes icen-spin {
-  to { transform: rotate(360deg); }
+@keyframes icen-spin { to { transform: rotate(360deg); } }
+
+/* 文字+spinner 组合 */
+.spinner-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
 }
 
 /* ══════════════ skeleton · 占位块 ══════════════ */
 .skeleton {
-  background: var(--token-control-hover);
+  display: block;
+  background: color-mix(in srgb, var(--token-text) 8%, transparent);
   border-radius: var(--radius-sm);
   animation: icen-skeleton-pulse 2s ease-in-out infinite;
 }
 .skeleton--circle { border-radius: var(--radius-full); }
+.skeleton--text {
+  height: 0.85em;
+  margin: 0.25em 0;
+}
+.skeleton--text:last-child { width: 60%; }
 
 @keyframes icen-skeleton-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar { transition: none; }
+  .progress--indeterminate .progress-bar { animation: none; width: 100% !important; }
+  .spinner { animation-duration: 2s; }
+  .skeleton { animation: none; opacity: 0.6; }
 }

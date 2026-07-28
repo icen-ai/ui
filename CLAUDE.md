@@ -19,10 +19,16 @@ icen canonical：`clay` 亮色 + IBM Plex Mono/CJK 宋体（`src/tokens/typograp
 bun install
 bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.mjs）
                   # + bun scripts/build-css.ts（css → dist/：tokens.css/ui.css/base.css/
-                  #   tokens/*/components/*/registry.json）
+                  #   retro-effects.css/tokens/*/components/*/registry.json）
 ```
 
 无测试框架。验证 = `bunx tsc --noEmit` + `bun run build` 通过 + `site/` 文档站目视（`cd site && bun install && bun run build`）。
+
+## 规模
+
+- **31 个组件 CSS**（btn/form/input/select/slider/switch/tag-input/upload/modal/popover/tooltip/menu/tabs/nav/sidebar/breadcrumb/pagination/steps/segmented/accordion/tree/carousel/charts/table/stat/card/panel/pill/empty/feedback/content/media）
+- **19 个 behaviors TS**（theme/tabs/toast/copy/input/select/slider/tag-input/upload/modal/dropdown/popover/context-menu/accordion/tree/carousel/charts/nav/sidebar）
+- **4 个 token 文件**：colors.css（6 预设 × 明暗）、style-profiles.css（modern/retro/terminal）、typography.css、retro-effects.css（可选）
 
 ## 发布（OIDC Trusted Publishing，已配好）
 
@@ -32,10 +38,14 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 
 ## 约定
 
-- **组件只消费 `--token-*`，不写死颜色/圆角/阴影/字体/时长**（radius 用 `--radius-*`、阴影用 `--token-shadow-*`、动效用 `--duration-*`/`--ease-*`）。
-- 语义色纪律：仅绿 `--token-success` / 黄 `--token-warning` / 红 `--token-error` + 品牌 `--token-accent`。
+- **组件只消费 `--token-*`，不写死颜色/圆角/阴影/字体/时长**（radius 用 `--radius-*`、阴影用 `--token-shadow-*`、动效用 `--duration-*`/`--ease-*`、间距用 `--density-*`、字号用 `--density-font-size-*`、控件高度用 `--density-input-height-*`）。
+- 语义色纪律：仅绿 `--token-success` / 黄 `--token-warning` / 红 `--token-error` / 信息 `--token-info` + 品牌 `--token-accent`。
 - 滚动条纪律：全局细薄无上下箭头（`base.css` 统一负责，组件不再写滚动条样式）；tab 条类组件**永不滚动**（`flex-wrap: wrap`）。
-- 新组件 = `src/components/<name>.css` 一个文件 + 文档站 components 页加一节；交互行为放 `src/behaviors/<name>.ts` 并配套 CSS 类契约。
-- behaviors 全部 SSR 守卫（`typeof document === 'undefined'`），文本赋值用 `textContent`（禁 innerHTML）。
-- CSS 产物由 `scripts/build-css.ts` 生成，**不要手改 dist/**。
+- **交互基元**：`base.css` 提供 6 个组件地基 `.pressable` / `.control` / `.field` / `.lift` / `.surface-elevated` / `.focus-ring`。`style-profiles.css` 的 `.style-retro` 段选择器引用这 6 个类名——改名必须同步修 style-profiles.css，否则 retro 风格失效。
+- **z-index 标尺**：浮层一律 portal 到 body，z-index 取 `--z-base/raised/sticky/chrome/toast/banner/dialog/popover/tooltip`。
+- **a11y**：所有可聚焦元素必须有 `:focus-visible` 环；状态变化必须同步 `aria-*`；modal/dialog 必须有 focus trap + ESC 关闭 + 焦点还原。
+- **动效守卫**：所有动画/过渡在 `@media (prefers-reduced-motion: reduce)` 下压缩为 ~0ms；触屏（`pointer: coarse`）关闭 `:hover` 抬升；高对比度模式（`forced-colors: active`）保留焦点环。
+- 新组件 = `src/components/<name>.css` 一个文件 + 文档站 components 页加一节；交互行为放 `src/behaviors/<name>.ts` 并配套 CSS 类契约。每个 CSS 头注释必须列出完整 DOM 契约。
+- behaviors 全部 SSR 守卫（`typeof document === 'undefined'`），文本赋值用 `textContent`（禁 innerHTML），init 函数全部幂等（重复调用安全，通过 WeakSet/MarkedElement.__icen*Init 标记）。
+- CSS 产物由 `scripts/build-css.ts` 生成，**不要手改 dist/**。`tokensExtras`（如 retro-effects.css）单独拷贝、暴露 exports，**不**进 `tokens.css`/`ui.css` 默认拼合。
 - clay 的 12 基值 token 改动属于品牌级变更；新增色彩预设 = 在 colors.css 加 `.<name>` + `.<name>.dark` 两块完整 token 面（仿照现有 6 套），并注册到 `src/behaviors/theme.ts` 的 PRESETS 与文档站。

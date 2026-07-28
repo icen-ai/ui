@@ -97,9 +97,44 @@ export function toggleDark(): ThemeState {
   return setTheme({ dark: !getTheme().dark });
 }
 
-/** 页面加载早期调用：读持久化主题并应用，防闪烁。 */
+/** 页面加载早期调用：读持久化主题并应用，防闪烁。
+ *  无持久化偏好时，自动跟随系统的 prefers-color-scheme 变化（实时）；
+ *  一旦用户显式 setTheme / toggleDark，跟随停止（持久化优先）。 */
 export function initTheme(): ThemeState {
   const t = getTheme();
   applyTheme(t);
+
+  /* 仅在无持久化偏好时跟随系统明暗；用户主动 setTheme 写入 localStorage 后停止跟随。
+     SSR 下 isBrowser() 为 false → no-op。 */
+  if (isBrowser() && typeof window.matchMedia === 'function' && !hasPersistedPreference()) {
+    let lastDark = t.dark;
+    try {
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      const onChange = (ev: MediaQueryListEvent): void => {
+        /* 用户可能在另一个 tab 设置了偏好；这里再次校验 */
+        if (hasPersistedPreference()) return;
+        if (ev.matches === lastDark) return;
+        lastDark = ev.matches;
+        applyTheme({ ...getTheme(), dark: ev.matches });
+      };
+      if (typeof mql.addEventListener === 'function') {
+        mql.addEventListener('change', onChange);
+      } else {
+        // Safari < 14 兜底
+        mql.addListener(onChange);
+      }
+    } catch {
+      /* matchMedia 不可用 → 静默放弃跟随 */
+    }
+  }
   return t;
+}
+
+function hasPersistedPreference(): boolean {
+  if (!isBrowser()) return false;
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
 }
