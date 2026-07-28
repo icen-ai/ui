@@ -13,6 +13,9 @@
  *   renderStack(el, { segments:[{label,value,tone?}] })   堆叠条 + 图例
  *   renderDonut(el, { segments })                         环形（SVG viewBox 120，r42 粗 14，-90° 起笔）+ 图例百分比
  *   renderLine(el,  { labels, values, tone? })            折线（SVG 360×150，面积渐变 + 4 网格线 + ≤7 轴标签）
+ *   renderHeatmap(el, { data | values, weeks?, tone? })   GitHub 贡献图式热力格（7 行 × N 周，5 档色阶 + 图例）
+ *   renderSparkline(el, { values, tone? })                迷你趋势线（SVG 96×28，无轴，末点高亮）
+ *   renderGauge(el, { value, max?, tone?, label? })       进度环（环形单值 + 中心百分比）
  *
  * 空数据（values 为空 / segments 总和 ≤ 0）渲染 .chart-empty（emptyLabel 可覆盖，默认「暂无数据」）。
  */
@@ -297,5 +300,211 @@ export function renderLine(el: HTMLElement, opts: ChartSeriesOptions): void {
   }
 
   wrap.append(svg, labelsRow(labels.slice(-7)));
+  el.appendChild(wrap);
+}
+
+/* ═══════════ 贡献图 / 迷你趋势 / 进度环 ═══════════ */
+
+export interface HeatmapDatum {
+  /** YYYY-MM-DD；仅用于 tooltip 与首周对齐 */
+  date: string;
+  value: number;
+}
+
+export interface ChartHeatmapOptions {
+  /** 精确形态：日期 + 值（旧 → 新）。与 values 二选一，data 优先。 */
+  data?: HeatmapDatum[];
+  /** 便捷形态：最近 N 天的值（旧 → 新），日期从今天回推 */
+  values?: number[];
+  /** 列数（周），默认按数据量推算（向上取整到整周） */
+  weeks?: number;
+  tone?: ChartTone;
+  emptyLabel?: string;
+  formatValue?: (value: number) => string;
+}
+
+function isoDate(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/** GitHub 贡献图式热力格：7 行（周一 → 周日）× N 周列，5 档色阶。 */
+export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void {
+  if (typeof document === 'undefined') return;
+  el.textContent = '';
+
+  let entries: HeatmapDatum[];
+  if (opts.data && opts.data.length > 0) {
+    entries = opts.data;
+  } else if (opts.values && opts.values.length > 0) {
+    const today = new Date();
+    entries = opts.values.map((value, i) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - (opts.values!.length - 1 - i));
+      return { date: isoDate(d), value };
+    });
+  } else {
+    renderEmpty(el, opts.emptyLabel);
+    return;
+  }
+
+  const weeks = opts.weeks ?? Math.ceil(entries.length / 7);
+  // 只保留最后 weeks 周的数据（超出截断，与 GitHub 的窗口语义一致）
+  if (entries.length > weeks * 7) entries = entries.slice(entries.length - weeks * 7);
+
+  const max = Math.max(...entries.map((e) => e.value), 1);
+  const levelOf = (v: number): number => (v <= 0 ? 0 : Math.min(4, Math.ceil((v / max) * 4)));
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-heatmap';
+  if (opts.tone) wrap.style.setProperty('--chart-tone', toneVar(opts.tone));
+
+  const grid = document.createElement('div');
+  grid.className = 'chart-heatmap-grid';
+  grid.setAttribute('role', 'img');
+
+  // 首周对齐：第一个日期是星期几（周一 = 0），前面补占位格
+  const first = new Date(`${entries[0]!.date}T00:00:00`);
+  const pad = (first.getDay() + 6) % 7;
+  for (let i = 0; i < pad; i++) {
+    const blank = document.createElement('span');
+    blank.className = 'chart-heatmap-cell is-blank';
+    grid.appendChild(blank);
+  }
+  for (const entry of entries) {
+    const cell = document.createElement('span');
+    cell.className = 'chart-heatmap-cell';
+    cell.dataset.level = String(levelOf(entry.value));
+    cell.setAttribute('title', `${entry.date}：${fmt(opts, entry.value)}`);
+    grid.appendChild(cell);
+  }
+
+  // 图例：少 → 多（5 档）
+  const legend = document.createElement('div');
+  legend.className = 'chart-heatmap-legend';
+  const less = document.createElement('span');
+  less.textContent = '少';
+  const more = document.createElement('span');
+  more.textContent = '多';
+  legend.appendChild(less);
+  for (let lv = 0; lv <= 4; lv++) {
+    const cell = document.createElement('span');
+    cell.className = 'chart-heatmap-cell';
+    cell.dataset.level = String(lv);
+    legend.appendChild(cell);
+  }
+  legend.appendChild(more);
+
+  wrap.append(grid, legend);
+  el.appendChild(wrap);
+}
+
+/** 迷你趋势线（无轴小图，适合嵌入指标卡）。 */
+export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): void {
+  if (typeof document === 'undefined') return;
+  el.textContent = '';
+  const values = opts.values;
+  if (values.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
+
+  const width = 96;
+  const height = 28;
+  const pad = 3;
+  const max = Math.max(...values, 1);
+  const tone = toneVar(opts.tone);
+
+  const points = values.map((value, i) => ({
+    x: values.length <= 1 ? width / 2 : pad + (i / (values.length - 1)) * (width - pad * 2),
+    y: height - pad - (value / max) * (height - pad * 2),
+    value,
+  }));
+  const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const last = points[points.length - 1]!;
+  const first = points[0]!;
+  const area = `${line} L${last.x.toFixed(1)},${height - pad} L${first.x.toFixed(1)},${height - pad} Z`;
+
+  const gradientId = `icen-chart-line-${++lineGradientSeq}`;
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-sparkline';
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
+
+  const defs = svgEl('defs', {});
+  const gradient = svgEl('linearGradient', { id: gradientId, x1: '0', x2: '0', y1: '0', y2: '1' });
+  gradient.appendChild(svgEl('stop', { offset: '0%', 'stop-color': tone, 'stop-opacity': '0.28' }));
+  gradient.appendChild(svgEl('stop', { offset: '100%', 'stop-color': tone, 'stop-opacity': '0.02' }));
+  defs.appendChild(gradient);
+  svg.appendChild(defs);
+
+  svg.appendChild(svgEl('path', { d: area, fill: `url(#${gradientId})` }));
+  svg.appendChild(svgEl('path', {
+    d: line, fill: 'none', stroke: tone,
+    'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+  }));
+  const dot = svgEl('circle', {
+    cx: last.x.toFixed(1), cy: last.y.toFixed(1), r: '2.4',
+    fill: 'var(--token-card)', stroke: tone, 'stroke-width': '1.6',
+  });
+  const title = svgEl('title', {});
+  title.textContent = fmt(opts, last.value);
+  dot.appendChild(title);
+  svg.appendChild(dot);
+
+  wrap.appendChild(svg);
+  el.appendChild(wrap);
+}
+
+export interface ChartGaugeOptions {
+  value: number;
+  max?: number;
+  tone?: ChartTone;
+  /** 中心百分比下方的小标签 */
+  label?: string;
+  formatValue?: (value: number) => string;
+}
+
+/** 进度环（环形单值 + 中心百分比）。 */
+export function renderGauge(el: HTMLElement, opts: ChartGaugeOptions): void {
+  if (typeof document === 'undefined') return;
+  el.textContent = '';
+  const max = opts.max ?? 100;
+  const ratio = max > 0 ? Math.min(1, Math.max(0, opts.value / max)) : 0;
+
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-gauge';
+  if (opts.tone) wrap.style.setProperty('--chart-tone', toneVar(opts.tone));
+
+  const svg = svgEl('svg', { viewBox: '0 0 120 120', role: 'img' });
+  svg.style.transform = 'rotate(-90deg)';
+  svg.appendChild(svgEl('circle', {
+    cx: '60', cy: '60', r: String(radius),
+    fill: 'none', stroke: 'var(--token-line-soft)', 'stroke-width': '10',
+  }));
+  const dash = ratio * circumference;
+  svg.appendChild(svgEl('circle', {
+    cx: '60', cy: '60', r: String(radius),
+    fill: 'none',
+    stroke: toneVar(opts.tone),
+    'stroke-width': '10',
+    'stroke-dasharray': `${dash} ${circumference - dash}`,
+    'stroke-linecap': 'round',
+  }));
+
+  const center = document.createElement('div');
+  center.className = 'chart-gauge-center';
+  const val = document.createElement('span');
+  val.className = 'chart-gauge-value';
+  val.textContent = opts.formatValue ? opts.formatValue(opts.value) : `${Math.round(ratio * 100)}%`;
+  center.appendChild(val);
+  if (opts.label) {
+    const lab = document.createElement('span');
+    lab.className = 'chart-gauge-label';
+    lab.textContent = opts.label;
+    center.appendChild(lab);
+  }
+
+  wrap.append(svg, center);
   el.appendChild(wrap);
 }

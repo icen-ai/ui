@@ -5,6 +5,8 @@
  * （toast / charts / popover 无 init，靠 script 字段做额外接线）。
  */
 
+import { cssOf } from '../../../scripts/slugs.mjs';
+
 export interface ComponentDoc {
   slug: string;
   name: string;
@@ -16,33 +18,12 @@ export interface ComponentDoc {
   behaviorInit?: Record<string, string>;
   script?: string;
 }
-
 /** 五个组件分组的展示名（顺序即侧栏顺序）。 */
 export const GROUPS: string[] = ['基础', '表单', '浮层', '数据', '导航'];
 
-/** slug → 组件 css 文件名：多数同名，以下为合并文件的例外。 */
-const CSS_FILE: Record<string, string> = {
-  desc: 'content.css',
-  timeline: 'content.css',
-  tree: 'content.css',
-  accordion: 'content.css',
-  list: 'content.css',
-  kbd: 'content.css',
-  alert: 'feedback.css',
-  result: 'feedback.css',
-  progress: 'feedback.css',
-  spinner: 'feedback.css',
-  skeleton: 'feedback.css',
-  avatar: 'media.css',
-  'media-card': 'media.css',
-  rating: 'media.css',
-  carousel: 'media.css',
-  dropdown: 'menu.css',
-  'context-menu': 'menu.css',
-};
-
+/** slug → 组件 css 文件名（单一事实源在 scripts/slugs.mjs，与 kit 入口/CLI 共享）。 */
 export function cssFor(slug: string): string {
-  return CSS_FILE[slug] ?? `${slug}.css`;
+  return cssOf(slug);
 }
 
 /* ── 演示内联 SVG（与原合集页一致） ── */
@@ -1145,7 +1126,7 @@ initCarousel();
     slug: 'charts',
     name: '图表',
     group: '数据',
-    desc: '与 behaviors/charts 配套：vbar / hbar / stack / donut / line 五种，DOM 全部由 behavior 渲染。',
+    desc: '零依赖纯 SVG/DOM 渲染（无 ECharts）：vbar / hbar / stack / donut / line / heatmap 贡献图 / sparkline / gauge 八种。完全按需——不 import 这两行，图表 JS/CSS 一个字节都不进你的包。',
     demo: `<div class="chart-grid">
   <div>
     <p class="chart-cap">垂直柱状 · 每月投稿</p>
@@ -1163,29 +1144,207 @@ initCarousel();
     <p class="chart-cap">环形 · 工时分布</p>
     <div class="chart" id="chart-donut"></div>
   </div>
+  <div>
+    <p class="chart-cap">进度环 · 完成率</p>
+    <div class="chart" id="chart-gauge"></div>
+  </div>
+  <div>
+    <p class="chart-cap">迷你趋势 · 近 14 天</p>
+    <div class="chart" id="chart-spark"></div>
+  </div>
   <div style="grid-column:1/-1">
     <p class="chart-cap">折线 · 一周活跃</p>
     <div class="chart" id="chart-line"></div>
   </div>
+  <div style="grid-column:1/-1">
+    <p class="chart-cap">贡献图 · 近 26 周</p>
+    <div class="chart" id="chart-heatmap"></div>
+  </div>
 </div>`,
-    usage: `import { renderVBar, renderHBar, renderStack, renderDonut, renderLine } from '@icen.ai/ui/behaviors/charts';
-renderVBar(el,  { labels: ['一月','二月','三月','四月','五月','六月'], values: [12,19,8,24,16,28] });
-renderHBar(el,  { labels: ['搜索','推荐','分享','直接访问'], values: [320,240,160,80], tone: 'success' });
-renderStack(el, { segments: [{label:'已完成',value:45,tone:'success'},{label:'进行中',value:30},{label:'待处理',value:25,tone:'warning'}] });
-renderDonut(el, { segments: [{label:'研发',value:48},{label:'设计',value:32,tone:'success'},{label:'测试',value:20,tone:'warning'}] });
-renderLine(el,  { labels: ['周一','周二','周三','周四','周五','周六','周日'], values: [8,14,9,18,22,16,25] });`,
+    usage: `// 按需导入：只有被引用的函数和这份 CSS 会进包，其余组件零成本
+import '@icen.ai/ui/components/charts.css';
+import { renderHeatmap, renderSparkline, renderGauge } from '@icen.ai/ui/behaviors/charts';
+
+renderHeatmap(el, { values: 近180天数值数组, weeks: 26 });       // GitHub 式贡献图
+renderHeatmap(el, { data: [{ date: '2026-07-01', value: 5 }] }); // 或精确日期形态
+renderSparkline(el, { values: [3, 8, 5, 12, 9, 14, 11] });       // 迷你趋势线
+renderGauge(el, { value: 64, label: '完成率' });                  // 进度环
+renderVBar(el,  { labels: ['一月','二月'], values: [12, 19] });  // 另有 vbar/hbar/stack/donut/line`,
     behaviors: ['charts'],
     script: `const renderVBar = chartsMod.renderVBar;
 const renderHBar = chartsMod.renderHBar;
 const renderStack = chartsMod.renderStack;
 const renderDonut = chartsMod.renderDonut;
 const renderLine = chartsMod.renderLine;
+const renderHeatmap = chartsMod.renderHeatmap;
+const renderSparkline = chartsMod.renderSparkline;
+const renderGauge = chartsMod.renderGauge;
 const on = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
 on('chart-vbar', (el) => renderVBar(el, { labels: ['一月', '二月', '三月', '四月', '五月', '六月'], values: [12, 19, 8, 24, 16, 28] }));
 on('chart-hbar', (el) => renderHBar(el, { labels: ['搜索', '推荐', '分享', '直接访问'], values: [320, 240, 160, 80], tone: 'success' }));
 on('chart-stack', (el) => renderStack(el, { segments: [{ label: '已完成', value: 45, tone: 'success' }, { label: '进行中', value: 30 }, { label: '待处理', value: 25, tone: 'warning' }] }));
 on('chart-donut', (el) => renderDonut(el, { segments: [{ label: '研发', value: 48 }, { label: '设计', value: 32, tone: 'success' }, { label: '测试', value: 20, tone: 'warning' }] }));
-on('chart-line', (el) => renderLine(el, { labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], values: [8, 14, 9, 18, 22, 16, 25] }));`,
+on('chart-line', (el) => renderLine(el, { labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], values: [8, 14, 9, 18, 22, 16, 25] }));
+on('chart-gauge', (el) => renderGauge(el, { value: 64, label: '完成率' }));
+on('chart-spark', (el) => renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19] }));
+on('chart-heatmap', (el) => {
+  // 确定性伪随机（sin 模式），近 26 周 × 7 天
+  const values = Array.from({ length: 182 }, (_, i) => {
+    const base = Math.abs(Math.sin(i * 0.61)) * 7;
+    const spike = i % 17 === 0 ? 8 : 0;
+    const rest = i % 11 === 0 ? -99 : 0; // 周期性休息日
+    return Math.max(0, Math.round(base + spike + rest));
+  });
+  renderHeatmap(el, { values, weeks: 26 });
+});`,
+  },
+  {
+    slug: 'datatable',
+    name: '数据表格',
+    group: '数据',
+    desc: 'createTable 函数式 API：内置搜索 / 列排序 / 列筛选 / 多选 / 分页 / 虚拟滚动（万级行）/ 行展开 / 单元格嵌套任意组件 / 行右键菜单（复用 context-menu）。零依赖，数据驱动，handle 可编程控制。',
+    demo: `<div class="demo-col-wide" style="width:100%">
+  <p class="chart-cap">全功能：搜索 / 排序 / 列筛选 / 多选 / 分页 / 行展开 / 右键行</p>
+  <div id="dt-main"></div>
+  <p class="chart-cap" style="margin-top:20px">虚拟滚动：10,000 行（滚动试试）</p>
+  <div id="dt-virtual"></div>
+</div>`,
+    usage: `import { createTable } from '@icen.ai/ui/kit/datatable';
+
+const table = createTable(el, {
+  columns: [
+    { key: 'name', title: '名称', sortable: true, width: '160px' },
+    { key: 'status', title: '状态', filterable: true,
+      render: (v) => pillNode(v) },            // 返回 Node = 嵌套任意组件；string 走 textContent
+    { key: 'updated', title: '更新', sortable: true },
+    { key: 'ops', title: '操作', render: (_v, row) => actionsNode(row) },
+  ],
+  data: rows,
+  rowKey: 'id',                               // 多选/展开跨页保持的依据
+  searchable: true,                           // 内置搜索（160ms 防抖）
+  selectable: true,                           // 多选 + 表头三态
+  pagination: true, pageSize: 10,             // 分页；或 virtual: true 万级行虚拟滚动
+  expandable: (row) => detailNode(row),       // 行展开（虚拟模式外可用）
+  contextMenu: (row) => [                     // 行右键（复用 context-menu，kit 已带 menu.css）
+    { label: '重命名', shortcut: 'F2', onClick: () => toast.ok('重命名') },
+    { type: 'separator' },
+    { label: '停止服务', danger: true, onClick: () => toast.warn('已停止') },
+  ],
+  onSelectionChange: (rows) => console.log(rows.length),
+});
+
+table.setData(next);      // 换数据
+table.getSelected();      // 取选中行
+table.setSearch('网关');   // 编程搜索
+table.setFilter('status', ['运行中']);
+table.setSort('updated', 'desc');
+table.destroy();`,
+    behaviors: ['datatable', 'toast'],
+    script: `const createTable = datatableMod.createTable;
+const toast = toastMod.toast;
+
+const STATUSES = ['运行中', '降级', '已停止'];
+const TONE = { '运行中': 'ok', '降级': 'warn', '已停止': 'bad' };
+const CATS = ['网关', '存储', '计算', '数据'];
+const BASE = ['gateway', 'accounts', 'billing', 'archive', 'search', 'cdn', 'queue', 'cache', 'auth', 'audit', 'notify', 'backup'];
+const OWNERS = ['沈墨', '顾远', '林晚晴', '苏叶', '陆之昂', '韩清'];
+
+const pill = (text) => {
+  const s = document.createElement('span');
+  s.className = 'pill ' + TONE[text];
+  s.textContent = text;
+  return s;
+};
+const ownerNode = (name) => {
+  const wrap = document.createElement('span');
+  wrap.style.cssText = 'display:inline-flex;align-items:center;gap:8px';
+  const av = document.createElement('span');
+  av.className = 'avatar avatar--sm';
+  av.textContent = name[0];
+  const t = document.createElement('span');
+  t.textContent = name;
+  wrap.append(av, t);
+  return wrap;
+};
+const opsNode = (row) => {
+  const wrap = document.createElement('span');
+  wrap.style.cssText = 'display:inline-flex;gap:6px';
+  const view = document.createElement('button');
+  view.className = 'btn btn-sm';
+  view.textContent = '查看';
+  view.addEventListener('click', (ev) => { ev.stopPropagation(); toast.ok('查看 ' + row.name); });
+  const restart = document.createElement('button');
+  restart.className = 'btn btn-sm';
+  restart.textContent = '重启';
+  restart.addEventListener('click', (ev) => { ev.stopPropagation(); toast.warn('已下发重启：' + row.name); });
+  wrap.append(view, restart);
+  return wrap;
+};
+
+const rows = Array.from({ length: 247 }, (_, i) => ({
+  id: 'svc-' + (i + 1),
+  name: BASE[i % BASE.length] + '-' + String(i + 1).padStart(3, '0'),
+  status: STATUSES[i % 9 === 8 ? 2 : i % 5 === 4 ? 1 : 0],
+  cat: CATS[i % CATS.length],
+  owner: OWNERS[i % OWNERS.length],
+  version: 'v' + (1 + (i % 4)) + '.' + (i % 10),
+  updated: '2026-07-' + String(1 + (i % 28)).padStart(2, '0'),
+}));
+
+const mainEl = document.getElementById('dt-main');
+if (mainEl) {
+  createTable(mainEl, {
+    columns: [
+      { key: 'name', title: '名称', sortable: true, width: '150px' },
+      { key: 'status', title: '状态', filterable: true, width: '90px', render: (v) => pill(String(v)) },
+      { key: 'owner', title: '负责人', width: '116px', render: (v) => ownerNode(String(v)) },
+      { key: 'updated', title: '更新时间', sortable: true, width: '106px' },
+      { key: 'ops', title: '操作', width: '122px', render: (_v, row) => opsNode(row) },
+    ],
+    data: rows,
+    rowKey: 'id',
+    searchable: true,
+    searchPlaceholder: '搜索名称 / 负责人…',
+    selectable: true,
+    pagination: true,
+    pageSize: 10,
+    striped: true,
+    expandable: (row) =>
+      row.name + ' · ' + row.cat + ' · ' + row.owner + ' 维护。最近发布 ' + row.version +
+      '（' + row.updated + '），当前状态「' + row.status + '」。这里是行展开区域，可以嵌套任意 Node。',
+    contextMenu: (row) => [
+      { type: 'header', label: row.name, description: row.cat + ' · ' + row.owner },
+      { label: '重命名', shortcut: 'F2', onClick: () => toast.ok('重命名 ' + row.name) },
+      { label: '复制链接', onClick: () => toast.ok('已复制链接') },
+      { type: 'separator' },
+      { label: '停止服务', danger: true, shortcut: '⌫', onClick: () => toast.warn('已停止 ' + row.name) },
+    ],
+    onRowClick: (row) => toast.ok('行点击：' + row.name),
+  });
+}
+
+const bigEl = document.getElementById('dt-virtual');
+if (bigEl) {
+  const big = Array.from({ length: 10000 }, (_, i) => ({
+    id: 'log-' + (i + 1),
+    name: BASE[i % BASE.length] + '-' + String(i + 1).padStart(5, '0'),
+    metric: Math.round(Math.abs(Math.sin(i * 0.37)) * 1000),
+    status: STATUSES[i % 7 === 6 ? 1 : 0],
+  }));
+  createTable(bigEl, {
+    columns: [
+      { key: 'name', title: '实例', sortable: true, width: '220px' },
+      { key: 'metric', title: '请求量', sortable: true, width: '120px', align: 'right' },
+      { key: 'status', title: '状态', filterable: true, render: (v) => pill(String(v)) },
+    ],
+    data: big,
+    rowKey: 'id',
+    searchable: true,
+    virtual: true,
+    height: '360px',
+    striped: true,
+  });
+}`,
   },
 );
 

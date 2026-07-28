@@ -2,7 +2,8 @@
  * @icen.ai/ui — Component: charts（轻量图表，与 behaviors/charts 配套）
  *
  * 包含：.chart 容器 / .chart-empty / .chart-legend（图例行）/ .chart-labels（轴标签行）/
- *       vbar（垂直柱状）/ hbar（水平条形）/ stack（堆叠条）/ donut（环形）/ line（折线）
+ *       vbar（垂直柱状）/ hbar（水平条形）/ stack（堆叠条）/ donut（环形）/ line（折线）/
+ *       heatmap（贡献图热力格）/ sparkline（迷你趋势）/ gauge（进度环）
  *
  * 完整契约：DOM 全部由 behaviors/charts.ts 以 createElement(NS) + textContent 构建；
  * 单色调通过容器或条上的 --chart-tone 自定义属性注入（默认 var(--token-accent)）。
@@ -188,6 +189,89 @@
   width: 100%;
   height: 150px;
   overflow: visible;
+}
+
+/* ── heatmap · 贡献图（GitHub 式 7 行 × N 周） ── */
+.chart-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+}
+.chart-heatmap-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 3px;
+  width: 100%;
+}
+.chart-heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--token-fill-2);
+}
+.chart-heatmap-cell.is-blank { background: transparent; }
+.chart-heatmap-cell[data-level='1'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 28%, var(--token-fill-2)); }
+.chart-heatmap-cell[data-level='2'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 50%, var(--token-fill-2)); }
+.chart-heatmap-cell[data-level='3'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 74%, var(--token-fill-2)); }
+.chart-heatmap-cell[data-level='4'] { background: var(--chart-tone, var(--token-accent)); }
+.chart-heatmap-cell:not(.is-blank):hover {
+  outline: 1px solid var(--chart-tone, var(--token-accent));
+  outline-offset: 0;
+}
+.chart-heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+}
+.chart-heatmap-legend .chart-heatmap-cell {
+  width: 10px;
+  height: 10px;
+  aspect-ratio: auto;
+}
+.chart-heatmap-legend > span:first-child { margin-right: 2px; }
+.chart-heatmap-legend > span:last-child { margin-left: 2px; }
+
+/* ── sparkline · 迷你趋势 ── */
+.chart-sparkline > svg {
+  display: block;
+  width: 96px;
+  height: 28px;
+  overflow: visible;
+}
+
+/* ── gauge · 进度环 ── */
+.chart-gauge {
+  position: relative;
+  width: 132px;
+  flex-shrink: 0;
+}
+.chart-gauge > svg {
+  display: block;
+  width: 132px;
+  height: 132px;
+}
+.chart-gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+.chart-gauge-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--token-text);
+}
+.chart-gauge-label {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
 }
 
 /* ── 调色盘：多系列图（donut/stack/line）由 behavior 选用 ── */
