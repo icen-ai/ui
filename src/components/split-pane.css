@@ -1,0 +1,112 @@
+/*
+ * @icen.ai/ui — Component: split-pane（分栏拖拽容器，与 behaviors/split-pane 配套）
+ *
+ * 契约：
+ *   <div class="split-pane [--vertical]" data-split-pane style="--split: 50%">
+ *     <div class="split-pane-first">左侧（或上侧）内容</div>
+ *     <div class="split-pane-divider" role="separator" aria-orientation="vertical" aria-valuenow="50"></div>
+ *     <div class="split-pane-second">右侧（或下侧）内容</div>
+ *   </div>
+ *
+ * behavior 接管 .split-pane-divider 的 pointer 拖拽，按比例更新 --split 变量
+ * （范围 10% – 90%）；双击分隔条复位到 50%。
+ *
+ * 常用于：编辑器左右分栏 / 后台主从布局 / 邮件列表+详情。
+ */
+
+.split-pane {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  overflow: hidden;
+  background: var(--token-surface);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+}
+
+.split-pane-first {
+  flex: 0 0 var(--split, 50%);
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.split-pane-second {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* ── 分隔条（默认纵向 col-resize） ── */
+.split-pane-divider {
+  flex: 0 0 6px;
+  position: relative;
+  background: var(--token-line-soft);
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  transition: background var(--icen-tx-fast);
+}
+.split-pane-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 28px;
+  border-radius: 1px;
+  background: var(--token-text-faint);
+  opacity: 0.35;
+  transform: translate(-50%, -50%);
+  transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.split-pane-divider:hover::after,
+.split-pane-divider.is-dragging::after {
+  opacity: 1;
+  background: var(--token-accent);
+}
+.split-pane-divider:hover,
+.split-pane-divider.is-dragging {
+  background: color-mix(in srgb, var(--token-accent) 14%, var(--token-line-soft));
+}
+.split-pane-divider:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--token-accent) 18%, var(--token-line-soft));
+}
+
+/* ── 纵向布局（上下分栏） ── */
+.split-pane--vertical {
+  flex-direction: column;
+}
+.split-pane--vertical .split-pane-first {
+  flex: 0 0 var(--split, 50%);
+  flex-basis: var(--split, 50%);
+  min-height: 0;
+}
+.split-pane--vertical .split-pane-second {
+  flex-basis: auto;
+  min-height: 0;
+}
+.split-pane--vertical .split-pane-divider {
+  cursor: row-resize;
+  flex-basis: 6px;
+  height: 6px;
+  width: auto;
+}
+.split-pane--vertical .split-pane-divider::after {
+  width: 28px;
+  height: 2px;
+}
+
+/* ── 嵌套分栏不应再有外边框 ── */
+.split-pane .split-pane {
+  border: 0;
+  border-radius: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .split-pane-divider { transition: none; }
+  .split-pane-divider::after { transition: none; }
+}

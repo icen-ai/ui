@@ -243,6 +243,84 @@ document.getElementById('toast-demo-ok')?.addEventListener('click', () => toast.
 document.getElementById('toast-demo-err')?.addEventListener('click', () => toast.err('保存失败：网络超时'));
 document.getElementById('toast-demo-warn')?.addEventListener('click', () => toast.warn('配额已用 80%'));`,
   },
+  {
+    slug: 'toolbar',
+    name: '工具条',
+    group: '基础',
+    desc: '横向承载按钮 / 控件的容器。与 segmented 区别——toolbar 是宽松容器（可分组、可分隔、可换行），segmented 是紧贴互斥分段选择。',
+    demo: `<div class="toolbar" style="margin-bottom:14px">
+  <div class="toolbar-group">
+    <button class="btn btn-sm" aria-label="加粗"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/></svg></button>
+    <button class="btn btn-sm" aria-label="斜体"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg></button>
+    <button class="btn btn-sm" aria-label="下划线"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg></button>
+  </div>
+  <span class="toolbar-separator"></span>
+  <div class="toolbar-group">
+    <button class="btn btn-sm" aria-label="左对齐"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="15" y1="12" y2="12"/><line x1="3" x2="18" y1="18" y2="18"/></svg></button>
+    <button class="btn btn-sm" aria-label="居中"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="6" x2="18" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+  </div>
+  <span class="toolbar-spacer"></span>
+  <span class="toolbar-label accent">3 项已选</span>
+  <button class="btn btn-sm btn-danger">删除</button>
+</div>
+
+<div class="toolbar toolbar--elevated" style="margin-bottom:14px">
+  <button class="btn btn-sm btn-primary">新建</button>
+  <button class="btn btn-sm">导入</button>
+  <button class="btn btn-sm">导出</button>
+  <span class="toolbar-separator"></span>
+  <input class="form-input" placeholder="搜索…" style="width:160px;height:28px;font-size:12px" />
+</div>
+
+<div class="toolbar toolbar--sm toolbar--wrap">
+  <span class="toolbar-label">小号紧凑</span>
+  <button class="btn btn-sm">刷新</button>
+  <button class="btn btn-sm">设置</button>
+  <span class="toolbar-separator"></span>
+  <button class="btn btn-sm">查看日志</button>
+  <button class="btn btn-sm">监控</button>
+</div>`,
+    usage: `<div class="toolbar [--sm|--lg|--wrap|--elevated|--borderless]">
+  <div class="toolbar-group">
+    <button class="btn btn-sm">…</button>
+    <button class="btn btn-sm">…</button>
+  </div>
+  <span class="toolbar-separator"></span>
+  <span class="toolbar-spacer"></span>
+  <span class="toolbar-label">右侧文字</span>
+</div>
+<!-- 分组 toolbar-group / 分隔符 toolbar-separator / 弹性占位 toolbar-spacer -->`,
+  },
+  {
+    slug: 'split-pane',
+    name: '分栏拖拽',
+    group: '基础',
+    desc: '与 behaviors/split-pane 配套：可拖拽的分栏容器，支持水平 / 垂直方向，双击分隔条复位 50%，键盘 ←→ ↑↓ 调整。',
+    demo: `<p class="chart-cap">水平分栏（拖拽中间分隔条）</p>
+<div class="split-pane" data-split-pane style="height:200px;margin-top:6px">
+  <div class="split-pane-first" style="padding:14px;font-size:var(--density-font-size-sm);color:var(--token-text-muted)">左侧面板：常用于文件树 / 列表 / 导航。拖动中间分隔条调整比例，双击复位到 50%。</div>
+  <div class="split-pane-divider" role="separator" aria-label="拖拽调整"></div>
+  <div class="split-pane-second" style="padding:14px;font-size:var(--density-font-size-sm);color:var(--token-text-muted)">右侧面板：主内容 / 详情区。键盘聚焦分隔条后可用 ← → 调整，Home/End 复位极值。</div>
+</div>
+<p class="chart-cap" style="margin-top:20px">垂直分栏（上下）</p>
+<div class="split-pane split-pane--vertical" data-split-pane style="height:240px;margin-top:6px">
+  <div class="split-pane-first" style="padding:14px;font-size:var(--density-font-size-sm);color:var(--token-text-muted)">上侧面板</div>
+  <div class="split-pane-divider" role="separator" aria-label="拖拽调整"></div>
+  <div class="split-pane-second" style="padding:14px;font-size:var(--density-font-size-sm);color:var(--token-text-muted)">下侧面板</div>
+</div>`,
+    usage: `import { initSplitPane } from '@icen.ai/ui/behaviors/split-pane';
+initSplitPane();
+
+<!-- DOM 契约 -->
+<div class="split-pane [--vertical]" data-split-pane style="--split:50%; height:400px">
+  <div class="split-pane-first">左侧</div>
+  <div class="split-pane-divider" role="separator"></div>
+  <div class="split-pane-second">右侧</div>
+</div>
+<!-- data-split-min/max（默认 10/90）、data-split-step（键盘步长，默认 2） -->`,
+    behaviors: ['split-pane'],
+    behaviorInit: { 'split-pane': 'initSplitPane' },
+  },
 
   /* ══════════ 表单 ══════════ */
   {
@@ -554,6 +632,47 @@ initUpload();`,
   });
 });`,
   },
+  {
+    slug: 'date-picker',
+    name: '日期选择',
+    group: '表单',
+    desc: '与 behaviors/date-picker 配套：点击触发器弹出日历面板，支持月份导航 / 今日 / 清除 / min-max 限制 / 周首日配置。纯 JS 渲染，零依赖。',
+    demo: `<div class="demo-row">
+  <div class="date-picker" data-date-picker data-date-picker-placeholder="选择发布日期">
+    <button class="date-picker-trigger" type="button">
+      <span class="date-picker-value is-empty"></span>
+      <span class="date-picker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
+    </button>
+    <input type="hidden" name="date1" />
+  </div>
+  <div class="date-picker" data-date-picker data-date-picker-placeholder="有范围限制" data-date-picker-min="2026-07-01" data-date-picker-max="2026-12-31">
+    <button class="date-picker-trigger" type="button">
+      <span class="date-picker-value is-empty"></span>
+      <span class="date-picker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
+    </button>
+    <input type="hidden" name="date2" value="2026-07-29" />
+  </div>
+</div>`,
+    usage: `import { initDatePicker } from '@icen.ai/ui/behaviors/date-picker';
+initDatePicker();
+
+<div class="date-picker" data-date-picker>
+  <button class="date-picker-trigger" type="button">
+    <span class="date-picker-value is-empty"></span>
+    <span class="date-picker-icon">…日历 svg…</span>
+  </button>
+  <input type="hidden" name="date" />
+</div>
+<!-- 可选 data-date-picker-format/min/max/week-start/placeholder -->`,
+    behaviors: ['date-picker'],
+    behaviorInit: { 'date-picker': 'initDatePicker' },
+    script: `// hidden input 值变化监听演示
+document.querySelectorAll('.date-picker input[type="hidden"]').forEach((inp) => {
+  inp.addEventListener('change', () => {
+    console.log('date change:', (inp as HTMLInputElement).value);
+  });
+});`,
+  },
 ];
 
 /* ══════════ 浮层 ══════════ */
@@ -771,6 +890,81 @@ document.getElementById('popover-demo-apply')?.addEventListener('click', () => {
     usage: `<!-- 纯 CSS：hover 延迟 400ms 出现，focus-visible 立即出现 -->
 <button class="btn" data-tooltip="文案" data-tooltip-side="top">目标</button>
 <!-- data-tooltip-side 可选 top | bottom | left | right -->`,
+  },
+  {
+    slug: 'command-palette',
+    name: '命令面板',
+    group: '浮层',
+    desc: '与 behaviors/command-palette 配套：⌘K / Ctrl+K 唤起的命令面板，搜索过滤、↑↓ 导航、Enter 执行、ESC 关闭，常用于编辑器 / 后台快速跳转。',
+    demo: `<div class="demo-row">
+  <button class="btn btn-primary" data-command-palette-open="demo-cp">打开命令面板</button>
+  <span class="dim" style="font-size:12px;align-self:center">或按 <kbd class="kbd kbd--sm">Ctrl</kbd> + <kbd class="kbd kbd--sm">K</kbd></span>
+</div>
+
+<div class="command-palette-backdrop" data-command-palette="demo-cp" hidden>
+  <div class="command-palette">
+    <div class="command-palette-search">
+      <span class="command-palette-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+      <input class="command-palette-input" placeholder="输入命令名或关键字…" />
+      <kbd class="command-palette-esc">ESC</kbd>
+    </div>
+    <div class="command-palette-body">
+      <div class="command-palette-group">
+        <p class="command-palette-group-label">操作</p>
+        <button class="command-palette-item" type="button" data-command-palette-keyword="create new">
+          <span class="command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          <span class="command-palette-item-label">新建项目</span>
+          <kbd class="command-palette-item-kbd">⌘N</kbd>
+        </button>
+        <button class="command-palette-item" type="button" data-command-palette-keyword="open file">
+          <span class="command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></span>
+          <span class="command-palette-item-label">打开文件</span>
+          <kbd class="command-palette-item-kbd">⌘O</kbd>
+        </button>
+        <button class="command-palette-item" type="button" data-command-palette-keyword="search find">
+          <span class="command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+          <span class="command-palette-item-label">全局搜索</span>
+        </button>
+      </div>
+      <div class="command-palette-group">
+        <p class="command-palette-group-label">导航</p>
+        <button class="command-palette-item" type="button" data-command-palette-keyword="goto dashboard home">
+          <span class="command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+          <span class="command-palette-item-label">回到首页</span>
+          <span class="command-palette-item-hint">/</span>
+        </button>
+        <button class="command-palette-item" type="button" data-command-palette-keyword="settings preferences config">
+          <span class="command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <span class="command-palette-item-label">打开设置</span>
+        </button>
+        <button class="command-palette-item" type="button" data-command-palette-keyword="theme dark light color">
+          <span class="command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
+          <span class="command-palette-item-label">切换主题</span>
+          <span class="command-palette-item-hint">预设 6 种</span>
+        </button>
+      </div>
+      <div class="command-palette-empty" hidden>无匹配命令</div>
+    </div>
+    <div class="command-palette-foot">
+      <span class="command-palette-foot-hint">
+        <kbd>↑↓</kbd> 导航 <kbd>↵</kbd> 执行 <kbd>esc</kbd> 关闭
+      </span>
+    </div>
+  </div>
+</div>`,
+    usage: `import { initCommandPalette } from '@icen.ai/ui/behaviors/command-palette';
+initCommandPalette(); // 全局 ⌘K / Ctrl+K 自动触发
+
+// 命令项可加 data-command-palette-keyword 补充关键字
+// 加 data-command-palette-keep-open 执行后不关闭面板`,
+    behaviors: ['command-palette', 'toast'],
+    script: `const toast = toastMod.toast;
+document.querySelectorAll('#demo-cp, .command-palette-backdrop[data-command-palette="demo-cp"] .command-palette-item').forEach((item) => {
+  item.addEventListener('click', () => {
+    const label = item.querySelector('.command-palette-item-label')?.textContent ?? '';
+    if (label) toast.ok('已执行：' + label);
+  });
+});`,
   },
 );
 

@@ -1,0 +1,244 @@
+/*
+ * @icen.ai/ui — Component: date-picker（日期选择，与 behaviors/date-picker 配套）
+ *
+ * 契约：
+ *   <div class="date-picker" data-date-picker data-date-picker-input="id">
+ *     <button class="date-picker-trigger" type="button" aria-haspopup="dialog">
+ *       <span class="date-picker-value">2026-07-29</span>
+ *       <svg class="date-picker-icon">…日历 svg…</svg>
+ *     </button>
+ *     <input type="hidden" id="id" name="date" value="2026-07-29" />
+ *   </div>
+ *
+ *   或直接挂到普通 input（behavior 自动包裹触发器外观）：
+ *   <input class="date-picker-input" data-date-picker value="2026-07-29" />
+ *
+ * behavior 渲染面板（portal 到 body）：
+ *   <div class="date-picker-panel" role="dialog">
+ *     <div class="date-picker-head">
+ *       <button class="date-picker-nav" data-prev>‹</button>
+ *       <span class="date-picker-title">2026 年 7 月</span>
+ *       <button class="date-picker-nav" data-next>›</button>
+ *     </div>
+ *     <div class="date-picker-weekdays">
+ *       <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+ *     </div>
+ *     <div class="date-picker-grid">
+ *       <button class="date-picker-cell [.is-outside] [.is-today] [.is-selected] [.is-disabled]">15</button>
+ *       …
+ *     </div>
+ *     <div class="date-picker-foot">
+ *       <button class="date-picker-today">今天</button>
+ *       <button class="date-picker-clear">清除</button>
+ *     </div>
+ *   </div>
+ *
+ * 可选 data-*：
+ *   data-date-picker-format="yyyy-mm-dd"  显示格式
+ *   data-date-picker-min="2026-01-01"     最小可选日期
+ *   data-date-picker-max="2026-12-31"     最大可选日期
+ *   data-date-picker-week-start="0"       周首日（0=周日，1=周一，默认 1）
+ */
+
+.date-picker {
+  display: inline-block;
+  position: relative;
+}
+
+.date-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  width: 100%;
+  height: var(--density-input-height-md);
+  padding: 0 var(--density-space-sm);
+  background: var(--token-control);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-inset);
+  color: var(--token-text);
+  font: inherit;
+  font-size: var(--density-font-size-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
+}
+.date-picker-trigger:hover { border-color: var(--icen-hover-border); }
+.date-picker-trigger.is-open {
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+.date-picker-trigger:focus-visible {
+  outline: none;
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+.date-picker-value {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.date-picker-value.is-empty { color: color-mix(in srgb, var(--token-text-faint) 60%, transparent); }
+.date-picker-icon { display: inline-flex; color: var(--token-text-faint); flex-shrink: 0; }
+.date-picker-icon svg { width: 14px; height: 14px; }
+
+/* 尺寸 */
+.date-picker-trigger.date-picker-trigger--sm { height: var(--density-input-height-sm); font-size: var(--density-font-size-sm); }
+.date-picker-trigger.date-picker-trigger--lg { height: var(--density-input-height-lg); font-size: var(--density-font-size-lg); }
+
+/* ── 面板 ── */
+.date-picker-panel {
+  position: fixed;
+  z-index: var(--z-popover);
+  width: 280px;
+  padding: var(--density-space-sm);
+  background: var(--token-card-strong);
+  border: 1px solid var(--token-outline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-overlay);
+  font-size: var(--density-font-size-sm);
+  animation: icen-dp-in var(--icen-tx-fast);
+}
+@keyframes icen-dp-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.date-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--density-space-sm);
+}
+.date-picker-title {
+  font-weight: 600;
+  color: var(--token-text);
+  font-variant-numeric: tabular-nums;
+  flex: 1;
+  text-align: center;
+}
+.date-picker-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-muted);
+  font-size: var(--density-font-size-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.date-picker-nav:hover { color: var(--token-text); background: var(--token-fill-1); }
+.date-picker-nav:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.date-picker-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.date-picker-weekdays > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-weight: 500;
+}
+
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.date-picker-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--token-text);
+  font: inherit;
+  font-size: var(--density-font-size-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--icen-tx-fast), color var(--icen-tx-fast);
+}
+.date-picker-cell:hover { background: var(--token-fill-1); }
+.date-picker-cell.is-today {
+  border: 1px solid var(--token-accent);
+  color: var(--token-accent);
+  font-weight: 600;
+}
+.date-picker-cell.is-selected {
+  background: var(--token-accent);
+  color: var(--token-on-accent, #fff);
+  font-weight: 600;
+}
+.date-picker-cell.is-selected.is-today { border-color: var(--token-on-accent, #fff); }
+.date-picker-cell.is-outside {
+  color: var(--token-text-faint);
+  opacity: 0.55;
+}
+.date-picker-cell.is-disabled {
+  color: var(--token-text-faint);
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.date-picker-cell:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.date-picker-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--density-space-xs);
+  margin-top: var(--density-space-sm);
+  padding-top: var(--density-space-sm);
+  border-top: 1px solid var(--token-line-soft);
+}
+.date-picker-today,
+.date-picker-clear {
+  padding: 4px var(--density-space-sm);
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-accent);
+  font: inherit;
+  font-size: var(--density-font-size-xs);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--icen-tx-fast);
+}
+.date-picker-today:hover,
+.date-picker-clear:hover { background: var(--token-fill-1); }
+.date-picker-today:focus-visible,
+.date-picker-clear:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.date-picker-clear { color: var(--token-text-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .date-picker-panel { animation: none; }
+  .date-picker-cell { transition: none; }
+}

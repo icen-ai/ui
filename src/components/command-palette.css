@@ -1,0 +1,246 @@
+/*
+ * @icen.ai/ui — Component: command-palette（命令面板 ⌘K，与 behaviors/command-palette 配套）
+ *
+ * 契约：
+ *   <div class="command-palette-backdrop" data-command-palette="id" hidden>
+ *     <div class="command-palette">
+ *       <div class="command-palette-search">
+ *         <span class="command-palette-search-icon">…放大镜 svg…</span>
+ *         <input class="command-palette-input" placeholder="搜索命令…" />
+ *         <kbd class="command-palette-esc">ESC</kbd>
+ *       </div>
+ *       <div class="command-palette-body">
+ *         <div class="command-palette-group">
+ *           <p class="command-palette-group-label">分组名</p>
+ *           <button class="command-palette-item [.is-active]" type="button">
+ *             <span class="command-palette-item-icon">…svg…</span>
+ *             <span class="command-palette-item-label">命令名</span>
+ *             <span class="command-palette-item-hint">副标题</span>
+ *             <kbd class="command-palette-item-kbd">⌘S</kbd>
+ *           </button>
+ *         </div>
+ *         <div class="command-palette-empty" hidden>无匹配命令</div>
+ *       </div>
+ *       <div class="command-palette-foot">
+ *         <span class="command-palette-foot-hint">
+ *           <kbd>↑↓</kbd> 导航 <kbd>↵</kbd> 执行 <kbd>esc</kbd> 关闭
+ *         </span>
+ *       </div>
+ *     </div>
+ *   </div>
+ *
+ * behavior 接管：搜索过滤、↑↓ 导航、Enter 执行、ESC / 外点 / backdrop 关闭、
+ * 焦点陷阱、按 ⌘K / Ctrl+K 全局打开（可选 data-command-palette-key）。
+ */
+
+.command-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  padding-left: var(--density-space-md);
+  padding-right: var(--density-space-md);
+  background: color-mix(in srgb, var(--token-text) 40%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: icen-cp-fade-in var(--icen-tx-normal);
+}
+.command-palette-backdrop[hidden] { display: none; }
+
+.command-palette {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 560px;
+  max-height: 70vh;
+  overflow: hidden;
+  background: var(--token-card-strong);
+  border: 1px solid var(--token-outline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--token-shadow-overlay);
+  animation: icen-cp-scale-in var(--icen-tx-slow);
+}
+.command-palette:focus { outline: none; }
+
+/* ── 搜索栏 ── */
+.command-palette-search {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-md);
+  border-bottom: 1px solid var(--token-line-soft);
+}
+.command-palette-search-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--token-text-faint);
+  flex-shrink: 0;
+}
+.command-palette-search-icon svg { width: 16px; height: 16px; }
+.command-palette-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--token-text);
+  font: inherit;
+  font-size: var(--density-font-size-md);
+}
+.command-palette-input::placeholder {
+  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+}
+.command-palette-esc {
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  padding: 2px 6px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+}
+
+/* ── 列表区 ── */
+.command-palette-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--density-space-xs);
+}
+
+.command-palette-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: var(--density-space-sm);
+}
+.command-palette-group:last-child { margin-bottom: 0; }
+.command-palette-group-label {
+  margin: var(--density-space-sm) var(--density-space-sm) var(--density-space-xs);
+  font-size: var(--density-font-size-xs);
+  font-weight: 600;
+  color: var(--token-text-faint);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.command-palette-group:first-child .command-palette-group-label { margin-top: 0; }
+
+.command-palette-item {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  width: 100%;
+  padding: 8px var(--density-space-sm);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--token-text);
+  font: inherit;
+  font-size: var(--density-font-size-md);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--icen-tx-fast);
+}
+.command-palette-item:hover { background: var(--token-fill-1); }
+.command-palette-item.is-active {
+  background: var(--token-accent-subtle);
+  color: var(--token-accent-deep, var(--token-accent));
+}
+.command-palette-item:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.command-palette-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--token-text-faint);
+}
+.command-palette-item.is-active .command-palette-item-icon { color: var(--token-accent); }
+.command-palette-item-icon svg { width: 16px; height: 16px; }
+
+.command-palette-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command-palette-item-hint {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  margin-left: var(--density-space-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command-palette-item.is-active .command-palette-item-hint { color: color-mix(in srgb, var(--token-accent) 70%, var(--token-text-faint)); }
+
+.command-palette-item-kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--token-text-faint);
+  padding: 1px 5px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+}
+
+/* ── 空态 ── */
+.command-palette-empty {
+  padding: 32px var(--density-space-md);
+  text-align: center;
+  color: var(--token-text-faint);
+  font-size: var(--density-font-size-sm);
+}
+
+/* ── 底栏 ── */
+.command-palette-foot {
+  padding: var(--density-space-xs) var(--density-space-md);
+  border-top: 1px solid var(--token-line-soft);
+  background: var(--token-bg-soft);
+}
+.command-palette-foot-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+}
+.command-palette-foot-hint kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 4px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-xs);
+  background: var(--token-surface);
+}
+
+@keyframes icen-cp-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes icen-cp-scale-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 480px) {
+  .command-palette-backdrop { padding-top: 6vh; }
+  .command-palette { max-height: 80vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .command-palette-backdrop { animation: none; }
+  .command-palette { animation: none; }
+}
