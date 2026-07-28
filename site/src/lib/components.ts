@@ -18,8 +18,8 @@ export interface ComponentDoc {
   behaviorInit?: Record<string, string>;
   script?: string;
 }
-/** 五个组件分组的展示名（顺序即侧栏顺序）。 */
-export const GROUPS: string[] = ['基础', '表单', '浮层', '数据', '导航'];
+/** 组件分组的展示名（顺序即侧栏顺序）。数据原拆为四组：展示 / 表格 / 图表 / 反馈。 */
+export const GROUPS: string[] = ['基础', '表单', '浮层', '数据展示', '表格', '图表', '反馈', '导航'];
 
 /** slug → 组件 css 文件名（单一事实源在 scripts/slugs.mjs，与 kit 入口/CLI 共享）。 */
 export function cssFor(slug: string): string {
@@ -150,7 +150,7 @@ initTabs();`,
   {
     slug: 'table',
     name: '表格',
-    group: '基础',
+    group: '表格',
     desc: 'table-wrap 负责窄屏横向滚动；行 hover 高亮，ops 列右对齐放 btn-sm。',
     demo: `<div class="table-wrap">
   <table class="admin-table">
@@ -692,7 +692,7 @@ COMPONENTS.push(
   {
     slug: 'card',
     name: '卡片',
-    group: '数据',
+    group: '数据展示',
     desc: '四变体（默认 / elevated / outlined / glass）+ interactive 浮起 + is-selected 双圈选中。',
     demo: `<div class="demo-row">
   <div class="card" style="width:230px">
@@ -741,7 +741,7 @@ COMPONENTS.push(
   {
     slug: 'empty',
     name: '空状态',
-    group: '数据',
+    group: '数据展示',
     desc: '图标 + 标题 + 描述 + 可选动作按钮。',
     demo: `<div class="empty">
   <div class="empty-icon">${inboxSvg}</div>
@@ -759,7 +759,7 @@ COMPONENTS.push(
   {
     slug: 'alert',
     name: '警示',
-    group: '数据',
+    group: '反馈',
     desc: 'info / success / warning / error 四态警示条，带关闭按钮（演示 JS 点击移除）。',
     demo: `<div class="demo-col-wide">
   <div class="alert alert--info">
@@ -811,7 +811,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'result',
     name: '结果页',
-    group: '数据',
+    group: '反馈',
     desc: '终态展示（success 一例；另有 error / warning / info 变体）。',
     demo: `<div class="result result--success">
   <div class="result-icon">${checkSvg}</div>
@@ -832,7 +832,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'progress',
     name: '进度条',
-    group: '数据',
+    group: '反馈',
     desc: '默认 6px 轨道 / progress--sm 4px，右侧 tabular-nums 百分比标签。',
     demo: `<div class="progress">
   <div class="progress-track"><div class="progress-bar" style="width:64%"></div></div>
@@ -850,7 +850,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'spinner',
     name: '加载指示',
-    group: '数据',
+    group: '反馈',
     desc: 'sm 16px / 默认 20px / lg 32px，1s 线性旋转。',
     demo: `<div class="demo-row">
   <div class="spinner spinner--sm"></div>
@@ -864,7 +864,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'skeleton',
     name: '骨架屏',
-    group: '数据',
+    group: '反馈',
     desc: '呼吸脉冲占位块；skeleton--circle 为圆形。',
     demo: `<div style="display:flex;align-items:center;gap:12px">
   <div class="skeleton skeleton--circle" style="width:40px;height:40px"></div>
@@ -881,7 +881,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'avatar',
     name: '头像',
-    group: '数据',
+    group: '数据展示',
     desc: 'xs 20 / sm 28 / 默认 36 / lg 48；文字兜底或 img 填充（object-fit: cover）。',
     demo: `<div class="demo-row">
   <span class="avatar avatar--xs">沈</span>
@@ -895,7 +895,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'media-card',
     name: '媒体卡',
-    group: '数据',
+    group: '数据展示',
     desc: '2/3 封面（此处用色块代替图片）；hover 上浮 6px + accent 辉光，底部信息条滑出（延迟 80ms）。',
     demo: `<div class="demo-row">
   <div class="media-card" style="width:148px">
@@ -924,7 +924,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'rating',
     name: '评分',
-    group: '数据',
+    group: '数据展示',
     desc: 'is-filled 实星 / is-half 半星（warning 色）；另有 rating--sm / rating--lg 尺寸。',
     demo: `<div class="demo-row">
   <div class="rating" role="group" aria-label="评分 3.5 星，满分 5 星">
@@ -945,7 +945,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'kbd',
     name: '键盘键',
-    group: '数据',
+    group: '数据展示',
     desc: '按键帽（含 kbd--sm）与行内代码片 code-inline。',
     demo: `<p style="margin:0">按 <kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">K</kbd> 打开命令面板，输入 <code class="code-inline">preset piano dark</code> 切换预设，<kbd class="kbd kbd--sm">Esc</kbd> 关闭。</p>`,
     usage: `<kbd class="kbd">Ctrl</kbd> + <kbd class="kbd kbd--sm">K</kbd>
@@ -954,7 +954,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'list',
     name: '列表',
-    group: '数据',
+    group: '数据展示',
     desc: '行间 1px 分隔线 + hover 底色的分隔列表。',
     demo: `<ul class="list">
   <li class="list-item" style="display:flex;align-items:center;gap:8px"><span>账号安全</span><span class="faint" style="margin-left:auto;font-size:11px">已开启二次验证</span></li>
@@ -969,7 +969,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
   {
     slug: 'accordion',
     name: '折叠面板',
-    group: '数据',
+    group: '数据展示',
     desc: '与 behaviors/accordion 配套；本例容器带 data-single（展开一项自动收起其余）。',
     demo: `<div class="accordion" data-single>
   <div class="accordion-item is-open">
@@ -994,7 +994,7 @@ initAccordion();
   {
     slug: 'timeline',
     name: '时间线',
-    group: '数据',
+    group: '数据展示',
     desc: '五档语义色圆点 + 连接线，时间右对齐 tabular-nums。',
     demo: `<div class="timeline">
   <div class="timeline-item">
@@ -1039,7 +1039,7 @@ initAccordion();
   {
     slug: 'desc',
     name: '描述列表',
-    group: '数据',
+    group: '数据展示',
     desc: 'desc--bordered 格线列表（--desc-cols 控制列数，--desc-span 跨列）。',
     demo: `<div class="desc desc--bordered">
   <p class="desc-title">发布信息</p>
@@ -1061,7 +1061,7 @@ initAccordion();
   {
     slug: 'tree',
     name: '树形',
-    group: '数据',
+    group: '数据展示',
     desc: '与 behaviors/tree 配套：三层可折叠 + 叶子单选 + 禁用节点。',
     demo: `<ul class="tree">
   <li>
@@ -1104,7 +1104,7 @@ initTree();
   {
     slug: 'carousel',
     name: '轮播',
-    group: '数据',
+    group: '数据展示',
     desc: '与 behaviors/carousel 配套：箭头 / 自动圆点 / 循环切换（三张色块幻灯）。',
     demo: `<div class="carousel">
   <div class="carousel-track">
@@ -1125,7 +1125,7 @@ initCarousel();
   {
     slug: 'charts',
     name: '图表',
-    group: '数据',
+    group: '图表',
     desc: '零依赖纯 SVG/DOM 渲染（无 ECharts）：vbar / hbar / stack / donut / line / heatmap 贡献图 / sparkline / gauge 八种。完全按需——不 import 这两行，图表 JS/CSS 一个字节都不进你的包。',
     demo: `<div class="chart-grid">
   <div>
@@ -1201,7 +1201,7 @@ on('chart-heatmap', (el) => {
   {
     slug: 'datatable',
     name: '数据表格',
-    group: '数据',
+    group: '表格',
     desc: 'createTable 函数式 API：内置搜索 / 列排序 / 列筛选 / 多选 / 分页 / 虚拟滚动（万级行）/ 行展开 / 单元格嵌套任意组件 / 行右键菜单（复用 context-menu）。零依赖，数据驱动，handle 可编程控制。',
     demo: `<div class="demo-col-wide" style="width:100%">
   <p class="chart-cap">全功能：搜索 / 排序 / 列筛选 / 多选 / 分页 / 行展开 / 右键行</p>

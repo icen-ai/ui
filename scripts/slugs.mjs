@@ -6,15 +6,20 @@
 /** 全部组件 slug（顺序即文档站侧栏顺序，仅供 CLI list 展示）。 */
 export const SLUGS = [
   // 基础
-  'btn', 'panel', 'pill', 'tabs', 'stat', 'table', 'toast',
+  'btn', 'panel', 'pill', 'tabs', 'stat', 'toast',
   // 表单
   'input', 'select', 'slider', 'tag-input', 'switch', 'segmented', 'upload',
   // 浮层
   'modal', 'dropdown', 'context-menu', 'popover', 'tooltip',
-  // 数据
-  'card', 'empty', 'alert', 'result', 'progress', 'spinner', 'skeleton',
-  'avatar', 'media-card', 'rating', 'kbd', 'list', 'accordion',
-  'timeline', 'desc', 'tree', 'carousel', 'charts', 'datatable',
+  // 数据展示
+  'card', 'empty', 'avatar', 'media-card', 'rating', 'kbd', 'list', 'accordion',
+  'timeline', 'desc', 'tree', 'carousel',
+  // 表格
+  'table', 'datatable',
+  // 图表
+  'charts',
+  // 反馈
+  'alert', 'result', 'progress', 'spinner', 'skeleton',
   // 导航
   'nav', 'sidebar', 'breadcrumb', 'pagination', 'steps', 'layout',
 ];
