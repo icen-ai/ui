@@ -1,0 +1,112 @@
+/*
+ * @icen.ai/ui — Component: scroll-area（自定义滚动容器）
+ *
+ * 全局 base.css 已经提供细薄滚动条（所有元素默认生效）。
+ * 本组件提供"显式带视觉边界的滚动区"——常用于：
+ *   - 侧边栏长列表
+ *   - 下拉面板内的滚动区
+ *   - 需要限定高度并强调"这里可以滚"的容器
+ *
+ * 完整契约：
+ *   <div class="scroll-area [--sm|--lg] [--both]">
+ *     任意超长内容…
+ *   </div>
+ *
+ *   横向专用：<div class="scroll-area scroll-area--x">…</div>
+ *   垂直专用：<div class="scroll-area scroll-area--y">…</div>
+ *
+ * 变体：
+ *   --x  仅横向滚动（纵向裁剪）
+ *   --y  仅纵向滚动（横向裁剪）
+ *   --both 双向滚动
+ *   --sm  窄滚动条（6px 宽）
+ *   --lg  正常滚动条（10px 宽，默认 8px）
+ *   --inset  内嵌阴影式（类似 code 编辑器）
+ */
+
+.scroll-area {
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.scroll-area--x { overflow-x: auto; overflow-y: hidden; }
+.scroll-area--y { overflow-x: hidden; overflow-y: auto; }
+.scroll-area--both { overflow: auto; }
+
+/* ── 尺寸变体：覆盖全局滚动条宽度 ── */
+.scroll-area--sm {
+  scrollbar-width: thin;
+}
+.scroll-area--sm::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scroll-area--sm::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--token-text-faint) 28%, transparent);
+  border-radius: 3px;
+  border: 0;
+}
+
+.scroll-area--lg {
+  scrollbar-width: auto;
+}
+.scroll-area--lg::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.scroll-area--lg::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--token-text-faint) 35%, transparent);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.scroll-area--lg::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--token-text-faint) 50%, transparent);
+  background-clip: padding-box;
+}
+
+/* ── 内嵌变体：带视觉边界 ── */
+.scroll-area--inset {
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-inset);
+  padding: var(--density-space-sm);
+}
+.scroll-area--inset:focus-visible {
+  outline: none;
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+
+/* ── 渐隐遮罩（可选）：上下边缘渐隐，暗示可滚动 ── */
+.scroll-area--fade {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 0,
+    #000 var(--density-space-sm),
+    #000 calc(100% - var(--density-space-sm)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--density-space-sm),
+    #000 calc(100% - var(--density-space-sm)),
+    transparent 100%
+  );
+}
+
+/* ── 可被键盘聚焦的滚动容器 ── */
+.scroll-area[tabindex='0']:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring-soft);
+  border-radius: var(--radius-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-area { scroll-behavior: auto; }
+}

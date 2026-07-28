@@ -1,0 +1,193 @@
+/*
+ * @icen.ai/ui — Component: notification（通知栈，与 behaviors/notification 配套）
+ *
+ * 与 toast / alert 的差异（三件正交）：
+ *   - toast     = 瞬时轻提示（2.6s 自动消失），右下角
+ *   - alert     = 内嵌警示条（页面流内，非浮层）
+ *   - notification = 持久通知栈（右上角，需手动关闭或定时关闭），适合后台异步消息
+ *
+ * 完整契约（由 behavior 渲染，无手写 DOM）：
+ *   <div class="notification-container" role="region" aria-label="通知">
+ *     <div class="notification [notif--success|notif--warning|notif--error|notif--info]">
+ *       <span class="notification-icon">…svg…</span>
+ *       <div class="notification-content">
+ *         <p class="notification-title">标题</p>
+ *         <p class="notification-message">正文</p>
+ *         <div class="notification-actions">
+ *           <button class="notification-action">查看</button>
+ *         </div>
+ *       </div>
+ *       <button class="notification-close" aria-label="关闭">×</button>
+ *     </div>
+ *   </div>
+ *
+ * behavior API：
+ *   notify('标题')                                   默认 info，不自动关闭
+ *   notify.success('已发布', { description: '5 分钟后生效' })
+ *   notify.warn('配额将尽', { duration: 8000 })
+ *   notify.error('发布失败', { description: '…' })
+ *   notify.dismiss(id?)                              关闭单条（id 缺省=全部）
+ *   notify.config({ position: 'top-right', maxStack: 4 })
+ */
+
+.notification-container {
+  position: fixed;
+  top: var(--density-space-md);
+  right: var(--density-space-md);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-sm);
+  width: 360px;
+  max-width: calc(100vw - var(--density-space-lg));
+  pointer-events: none;
+}
+.notification-container[data-position='top-left'] {
+  right: auto;
+  left: var(--density-space-md);
+}
+.notification-container[data-position='bottom-left'] {
+  top: auto;
+  bottom: var(--density-space-md);
+  right: auto;
+  left: var(--density-space-md);
+}
+.notification-container[data-position='bottom-right'] {
+  top: auto;
+  bottom: var(--density-space-md);
+}
+
+.notification {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--density-space-sm);
+  background: var(--token-card-strong);
+  color: var(--token-text);
+  border: 1px solid var(--token-outline-soft);
+  border-left: 3px solid var(--token-info);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-overlay);
+  padding: var(--density-space-md) var(--density-space-md) var(--density-space-md) var(--density-space-sm);
+  animation: icen-notif-in var(--icen-tx-normal);
+}
+.notification.notif--success { border-left-color: var(--token-success); }
+.notification.notif--warning { border-left-color: var(--token-warning); }
+.notification.notif--error   { border-left-color: var(--token-error); }
+.notification.notif--info    { border-left-color: var(--token-info); }
+
+.notification-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: var(--radius-full);
+  color: var(--token-text-faint);
+}
+.notification-icon svg { width: 16px; height: 16px; }
+.notif--success .notification-icon { color: var(--token-success); }
+.notif--warning .notification-icon { color: var(--token-warning); }
+.notif--error   .notification-icon { color: var(--token-error); }
+.notif--info    .notification-icon { color: var(--token-info); }
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.notification-title {
+  margin: 0;
+  font-size: var(--density-font-size-md);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.notification-message {
+  margin: 0;
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-muted);
+  line-height: 1.5;
+  word-break: break-word;
+}
+.notification-actions {
+  display: flex;
+  gap: var(--density-space-sm);
+  margin-top: var(--density-space-xs);
+}
+.notification-action {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--token-accent);
+  font: inherit;
+  font-size: var(--density-font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--icen-tx-fast);
+}
+.notification-action:hover { color: var(--token-accent-deep, var(--token-accent)); }
+.notification-action:focus-visible {
+  outline: none;
+  border-radius: var(--radius-xs);
+  box-shadow: var(--icen-ring);
+}
+
+.notification-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.notification-close:hover {
+  color: var(--token-text);
+  background: var(--token-fill-1);
+}
+.notification-close:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.notification-close svg { width: 12px; height: 12px; }
+
+/* 退场动画 */
+.notification.leaving {
+  opacity: 0;
+  transform: translateX(20px);
+  transition:
+    opacity var(--icen-tx-normal),
+    transform var(--icen-tx-normal);
+}
+
+@keyframes icen-notif-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 480px) {
+  .notification-container {
+    width: auto;
+    left: var(--density-space-sm);
+    right: var(--density-space-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification { animation: none; }
+  .notification.leaving { transform: none; }
+}

@@ -6,14 +6,14 @@
 /** 全部组件 slug（顺序即文档站侧栏顺序，仅供 CLI list 展示）。 */
 export const SLUGS = [
   // 基础
-  'btn', 'panel', 'pill', 'tabs', 'stat', 'toast',
+  'btn', 'panel', 'pill', 'tag', 'tabs', 'stat', 'toast', 'toolbar', 'split-pane',
   // 表单
-  'input', 'select', 'slider', 'tag-input', 'switch', 'segmented', 'upload',
+  'form', 'input', 'select', 'slider', 'tag-input', 'switch', 'segmented', 'upload', 'date-picker',
   // 浮层
-  'modal', 'dropdown', 'context-menu', 'popover', 'tooltip',
+  'modal', 'dropdown', 'context-menu', 'popover', 'tooltip', 'command-palette',
   // 数据展示
   'card', 'empty', 'avatar', 'media-card', 'rating', 'kbd', 'list', 'accordion',
-  'timeline', 'desc', 'tree', 'carousel',
+  'timeline', 'desc', 'tree', 'carousel', 'badge', 'scroll-area',
   // 表格
   'table', 'datatable',
   // 图表（umbrella + 细分类型，按需安装）
@@ -21,9 +21,9 @@ export const SLUGS = [
   'chart-line', 'chart-bar', 'chart-pie', 'chart-radar', 'chart-heatmap',
   'chart-area', 'chart-stack', 'chart-gauge', 'chart-sparkline',
   // 反馈
-  'alert', 'result', 'progress', 'spinner', 'skeleton',
+  'alert', 'result', 'progress', 'spinner', 'skeleton', 'copy', 'notification',
   // 导航
-  'nav', 'sidebar', 'breadcrumb', 'pagination', 'steps', 'layout',
+  'nav', 'sidebar', 'breadcrumb', 'pagination', 'steps', 'back-top', 'layout',
 ];
 
 /** slug → css 文件名：多数同名，以下为合并文件的例外。 */
@@ -52,13 +52,19 @@ export const SLUG_INIT = {
   accordion: 'initAccordion',
   carousel: 'initCarousel',
   'context-menu': 'initContextMenu',
+  copy: 'initCopy',
+  'command-palette': 'initCommandPalette',
+  'date-picker': 'initDatePicker',
   dropdown: 'initDropdown',
   input: 'initInput',
   modal: 'initModal',
   nav: 'initNav',
+  notification: 'initNotification',
   select: 'initSelect',
   sidebar: 'initSidebar',
   slider: 'initSlider',
+  'split-pane': 'initSplitPane',
+  'back-top': 'initBackTop',
   tabs: 'initTabs',
   'tag-input': 'initTagInput',
   tree: 'initTree',
@@ -67,6 +73,7 @@ export const SLUG_INIT = {
 
 /** 有 behavior 但无 init（函数式 API）的 slug → 导出函数提示（CLI 输出用）。 */
 export const SLUG_EXPORTS = {
+  notification: ['notify'],
   toast: ['toast'],
   popover: ['openPopover', 'closePopover', 'computePopoverLayout'],
   charts: [

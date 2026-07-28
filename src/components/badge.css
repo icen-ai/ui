@@ -1,0 +1,131 @@
+/*
+ * @icen.ai/ui — Component: badge（数字徽标 / 小红点）
+ *
+ * 与 pill 的差异：
+ *   - pill = 行内状态徽章，有文字内容
+ *   - badge = 角标式徽章，挂在外层元素的右上角，强调"数量/新动态"
+ *
+ * 完整契约（外层必须 position: relative 或 inline-flex）：
+ *   <span class="badge-host">
+ *     <button class="btn">…</button>
+ *     <span class="badge">9</span>                   <!-- 数字徽标 -->
+ *   </span>
+ *
+ *   <span class="badge-host">
+ *     <button class="btn">…</button>
+ *     <span class="badge badge--dot"></span>          <!-- 纯圆点（无数字） -->
+ *   </span>
+ *
+ *   <span class="badge-host">
+ *     <span class="avatar">…</span>
+ *     <span class="badge badge--bottom badge--success badge--dot"></span>  <!-- 头像右下角在线点 -->
+ *   </span>
+ *
+ * 变体：--dot 纯圆点 / --sm 小号 / --lg 大号 / --bottom 底部角
+ * 语义色：--success（在线）/ --warning / --error / --accent
+ */
+
+.badge-host {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  z-index: var(--z-raised);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--token-on-accent, #fff);
+  background: var(--token-error);
+  border: 2px solid var(--token-surface);
+  border-radius: var(--radius-full);
+  box-shadow: var(--token-shadow-inset);
+  pointer-events: none;
+  white-space: nowrap;
+  transform-origin: center;
+}
+
+/* 纯圆点（无数字） */
+.badge--dot {
+  width: 8px;
+  height: 8px;
+  min-width: 0;
+  padding: 0;
+  font-size: 0;
+}
+
+/* 尺寸 */
+.badge--sm {
+  min-width: 14px;
+  height: 14px;
+  font-size: 9px;
+  padding: 0 3px;
+}
+.badge--sm.badge--dot {
+  width: 6px;
+  height: 6px;
+}
+.badge--lg {
+  min-width: 20px;
+  height: 20px;
+  font-size: var(--density-font-size-xs);
+  padding: 0 5px;
+}
+.badge--lg.badge--dot {
+  width: 10px;
+  height: 10px;
+}
+
+/* 底部角（头像在线指示等） */
+.badge--bottom {
+  top: auto;
+  bottom: 0;
+  transform: translate(50%, 50%);
+}
+
+/* 语义色变体 */
+.badge--accent {
+  background: var(--token-accent);
+}
+.badge--success {
+  background: var(--token-success);
+}
+.badge--warning {
+  background: var(--token-warning);
+}
+.badge--error {
+  background: var(--token-error);
+}
+.badge--info {
+  background: var(--token-info);
+}
+
+/* 挂在实底色按钮上时用更浅的边框 */
+.btn-primary .badge,
+.btn-danger .badge {
+  border-color: var(--token-on-accent, #fff);
+}
+
+/* 数字超过 99 显示 99+（消费方决定是否使用，这里只保证宽度容纳） */
+.badge[data-overflow] {
+  min-width: 20px;
+  padding: 0 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge { transition: none; }
+}

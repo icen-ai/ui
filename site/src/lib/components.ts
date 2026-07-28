@@ -96,6 +96,55 @@ export const COMPONENTS: ComponentDoc[] = [
 <span class="pill bad">已停止</span>`,
   },
   {
+    slug: 'tag',
+    name: '标签',
+    group: '基础',
+    desc: '中性展示标签（区别于 pill 的状态语义）：可选关闭按钮、选中态、图标、五档语义色与三档尺寸。',
+    demo: `<div class="demo-row">
+  <span class="tag">默认</span>
+  <span class="tag is-selected">已选中</span>
+  <span class="tag tag--accent">品牌色</span>
+  <span class="tag tag--success">成功</span>
+  <span class="tag tag--warning">警告</span>
+  <span class="tag tag--error">错误</span>
+  <span class="tag tag--info">信息</span>
+</div>
+<div class="demo-row" style="margin-top:14px">
+  <span class="tag tag--sm">小号</span>
+  <span class="tag">默认</span>
+  <span class="tag tag--lg">大号</span>
+</div>
+<div class="demo-row" style="margin-top:14px">
+  <span class="tag">
+    <span class="tag-label">前端</span>
+    <button class="tag-close" type="button" aria-label="移除">${svgX}</button>
+  </span>
+  <span class="tag">
+    <span class="tag-label">设计</span>
+    <button class="tag-close" type="button" aria-label="移除">${svgX}</button>
+  </span>
+  <span class="tag tag--accent">
+    <span class="tag-label">VIP</span>
+    <button class="tag-close" type="button" aria-label="移除">${svgX}</button>
+  </span>
+</div>`,
+    usage: `<span class="tag">默认标签</span>
+<span class="tag is-selected">筛选条件</span>
+<span class="tag tag--accent">品牌色</span>
+<span class="tag">
+  <span class="tag-label">可移除</span>
+  <button class="tag-close" type="button" aria-label="移除">×</button>
+</span>
+<!-- 语义色：tag--accent/success/warning/error/info；尺寸：tag--sm/lg -->`,
+    script: `// 关闭按钮的演示接线（实际由消费方决定是否从 DOM 移除）
+document.querySelectorAll('.tag-close').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const tag = btn.closest('.tag');
+    tag?.remove();
+  });
+});`,
+  },
+  {
     slug: 'tabs',
     name: '标签页',
     group: '基础',
@@ -196,6 +245,44 @@ document.getElementById('toast-demo-warn')?.addEventListener('click', () => toas
   },
 
   /* ══════════ 表单 ══════════ */
+  {
+    slug: 'form',
+    name: '表单布局',
+    group: '表单',
+    desc: '字段结构（form / form-field / form-label / form-hint / form-error）+ 裸 form-input / form-textarea + 页面级 banner-ok / banner-err 横幅。与 input.css 的 wrapper 互补：input 处理"单控件外壳"，form 处理"字段→label→hint 的纵向布局"。',
+    demo: `<form class="form" style="max-width:420px">
+  <fieldset class="form-field">
+    <label class="form-label" for="demo-form-name">作品名称<span class="req">*</span></label>
+    <input class="form-input" id="demo-form-name" placeholder="3-30 个字符" value="星野之下" />
+    <span class="form-hint">必填，3–30 个字符，可含中英文与数字</span>
+  </fieldset>
+  <fieldset class="form-field">
+    <label class="form-label" for="demo-form-desc">简介</label>
+    <textarea class="form-textarea" id="demo-form-desc" placeholder="一句话介绍"></textarea>
+    <span class="form-hint">选填，最多 200 字</span>
+  </fieldset>
+  <fieldset class="form-field" data-invalid="true">
+    <label class="form-label" for="demo-form-slug">Slug<span class="req">*</span></label>
+    <input class="form-input" id="demo-form-slug" data-invalid="true" value="ab" />
+    <span class="form-error">Slug 至少 3 个字符</span>
+  </fieldset>
+  <fieldset class="form-field">
+    <label class="form-label" for="demo-form-disabled">禁用示例</label>
+    <input class="form-input" id="demo-form-disabled" value="只读内容" disabled />
+  </fieldset>
+</form>
+<div class="banner-ok banner-block" style="margin-top:20px">✓ 已保存：表单校验通过</div>
+<div class="banner-err banner-block">✗ 提交失败：网络错误，请稍后重试</div>`,
+    usage: `<form class="form">
+  <fieldset class="form-field">
+    <label class="form-label" for="x">姓名<span class="req">*</span></label>
+    <input class="form-input" id="x" />
+    <span class="form-hint">辅助提示</span>
+    <span class="form-error">错误信息</span>
+  </fieldset>
+</form>
+<!-- form-input 同时支持原生 :invalid 与 [data-invalid=true] 驱动错误态 -->`,
+  },
   {
     slug: 'input',
     name: '输入框',
@@ -879,6 +966,63 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
 <div class="skeleton skeleton--circle" style="width:40px;height:40px"></div>`,
   },
   {
+    slug: 'copy',
+    name: '复制按钮',
+    group: '反馈',
+    desc: '与 behaviors/copy 配套：命中 .copy-btn[data-copy] 写入剪贴板，成功后文本变「已复制」1.4s 还原；图标变体加 data-copy-icon 仅切 .done 类。与 toast 的区别——copy 是原地反馈，toast 是全局通知。',
+    demo: `<div class="demo-row">
+  <button class="copy-btn" data-copy="npm i @icen.ai/ui">复制安装命令</button>
+  <button class="copy-btn copy-btn--ghost" data-copy="https://ui.icen.ai">复制链接</button>
+  <button class="copy-btn copy-btn--icon" data-copy="ABCD-1234-EFGH-5678" data-copy-icon aria-label="复制密钥">
+    <svg class="copy-icon-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    <svg class="copy-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+  </button>
+</div>`,
+    usage: `import { initCopy } from '@icen.ai/ui/behaviors/copy';
+initCopy(); // 委托监听，自动处理所有 .copy-btn[data-copy]`,
+    behaviors: ['copy'],
+    behaviorInit: { copy: 'initCopy' },
+  },
+  {
+    slug: 'notification',
+    name: '通知栈',
+    group: '反馈',
+    desc: '与 behaviors/notification 配套：持久通知栈（右上角），与 toast（瞬时）/ alert（内嵌）正交。支持 title / description / 动作按钮 / 自动延时关闭 / 手动关闭，默认 4 条堆叠。',
+    demo: `<div class="demo-row">
+  <button class="btn" id="notif-demo-info">信息通知</button>
+  <button class="btn btn-primary" id="notif-demo-success">成功通知</button>
+  <button class="btn" id="notif-demo-warn">警告通知</button>
+  <button class="btn btn-danger" id="notif-demo-err">错误通知</button>
+  <button class="btn" id="notif-demo-action">带动作</button>
+  <button class="btn" id="notif-demo-clear">清空</button>
+</div>`,
+    usage: `import { notify } from '@icen.ai/ui/behaviors/notification';
+
+notify.success('已发布', { description: '5 分钟后全量生效' });
+notify.warn('配额将尽', { description: '已用 80%，超出将排队', duration: 8000 });
+notify.error('发布失败', { description: '封面图尺寸不足' });
+notify.info('版本更新', { description: 'v0.5.0 已发布' });
+const id = notify.success('已保存', {
+  actionLabel: '查看',
+  onAction: () => { window.open('/drafts'); },
+});
+notify.dismiss(id);        // 关闭单条
+notify.dismiss();          // 关闭全部
+notify.config({ position: 'top-right', maxStack: 4 });`,
+    behaviors: ['notification'],
+    script: `const notify = notificationMod.notify;
+document.getElementById('notif-demo-info')?.addEventListener('click', () => notify.info('版本更新', { description: 'v0.5.0 已发布，新增通知栈组件' }));
+document.getElementById('notif-demo-success')?.addEventListener('click', () => notify.success('已发布', { description: '5 分钟后全量生效', duration: 6000 }));
+document.getElementById('notif-demo-warn')?.addEventListener('click', () => notify.warn('配额将尽', { description: '本月构建时长已用 80%' }));
+document.getElementById('notif-demo-err')?.addEventListener('click', () => notify.error('发布失败', { description: '封面图尺寸不足 640×960' }));
+document.getElementById('notif-demo-action')?.addEventListener('click', () => notify.success('草稿已保存', {
+  description: '可随时回到编辑器继续',
+  actionLabel: '查看草稿',
+  onAction: () => notify.info('已跳转（演示）'),
+}));
+document.getElementById('notif-demo-clear')?.addEventListener('click', () => notify.dismiss());`,
+  },
+  {
     slug: 'avatar',
     name: '头像',
     group: '数据展示',
@@ -1121,6 +1265,91 @@ initCarousel();
 // dots 自动生成；首尾循环；当前 dot 挂 .active`,
     behaviors: ['carousel'],
     behaviorInit: { carousel: 'initCarousel' },
+  },
+  {
+    slug: 'badge',
+    name: '徽标',
+    group: '数据展示',
+    desc: '角标式徽标：数字计数 / 纯圆点，挂在外层元素的角上（外层需 position: relative）。区别于 pill（行内状态徽章）。',
+    demo: `<div class="demo-row">
+  <span class="badge-host">
+    <button class="btn" type="button">消息</button>
+    <span class="badge">9</span>
+  </span>
+  <span class="badge-host">
+    <button class="btn" type="button">通知</button>
+    <span class="badge">99+</span>
+  </span>
+  <span class="badge-host">
+    <button class="btn btn-primary" type="button">收件箱</button>
+    <span class="badge badge--accent">3</span>
+  </span>
+  <span class="badge-host">
+    <button class="btn" type="button">待办</button>
+    <span class="badge badge--dot badge--error"></span>
+  </span>
+</div>
+<div class="demo-row" style="margin-top:14px">
+  <span class="badge-host">
+    <span class="avatar">沈</span>
+    <span class="badge badge--bottom badge--dot badge--success"></span>
+  </span>
+  <span class="badge-host">
+    <span class="avatar"><img src="${avatarImg}" alt="头像" /></span>
+    <span class="badge badge--bottom badge--dot badge--warning"></span>
+  </span>
+  <span class="badge-host">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--token-text-muted)"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    <span class="badge badge--sm badge--error">5</span>
+  </span>
+</div>`,
+    usage: `<span class="badge-host">
+  <button class="btn">消息</button>
+  <span class="badge">9</span>
+</span>
+<!-- 纯圆点：badge--dot；语义色：--success/--warning/--error/--accent/--info -->
+<!-- 底部角（头像在线点）：badge--bottom；尺寸：badge--sm/lg -->`,
+  },
+  {
+    slug: 'scroll-area',
+    name: '滚动容器',
+    group: '数据展示',
+    desc: '显式带视觉边界的滚动区。全局已有细薄滚动条（base.css），本组件用于强调"可滚动"或限定方向的场景。',
+    demo: `<div class="demo-row" style="align-items:flex-start">
+  <div class="scroll-area scroll-area--inset" style="width:240px;height:140px;font-size:var(--density-font-size-sm);color:var(--token-text-muted)">
+    <p>inset 变体：内嵌阴影 + 背景色 + 圆角边框，<strong>强烈暗示可滚动</strong>。</p>
+    <p>这里是一段超长内容，必须超出 140px 高度才能看到滚动条效果。</p>
+    <p>第二条：overscroll-behavior: contain 已开启，不会把滚动传到外层。</p>
+    <p>第三条：触屏使用惯性滚动（-webkit-overflow-scrolling: touch）。</p>
+    <p>第四条：prefers-reduced-motion: reduce 时自动关闭平滑滚动。</p>
+    <p>第五条：滚动条宽度随变体调整（sm 6px / 默认 8px / lg 12px）。</p>
+    <p>第六条：可通过 tabindex="0" 让本容器可被键盘聚焦。</p>
+  </div>
+  <div class="scroll-area scroll-area--y scroll-area--sm" style="width:160px;height:140px;padding:8px;background:var(--token-bg-soft);border-radius:var(--radius-md);font-size:var(--density-font-size-sm)">
+    <div style="height:280px;display:flex;flex-direction:column;gap:6px">
+      <div class="demo-box">条 1</div>
+      <div class="demo-box">条 2</div>
+      <div class="demo-box">条 3</div>
+      <div class="demo-box">条 4</div>
+      <div class="demo-box">条 5</div>
+      <div class="demo-box">条 6</div>
+      <div class="demo-box">条 7</div>
+    </div>
+  </div>
+  <div class="scroll-area scroll-area--x scroll-area--lg" style="max-width:240px;padding-bottom:8px">
+    <div style="display:flex;gap:8px;width:520px">
+      <div class="demo-box" style="flex-shrink:0">横向 A</div>
+      <div class="demo-box" style="flex-shrink:0">横向 B</div>
+      <div class="demo-box" style="flex-shrink:0">横向 C</div>
+      <div class="demo-box" style="flex-shrink:0">横向 D</div>
+      <div class="demo-box" style="flex-shrink:0">横向 E</div>
+    </div>
+  </div>
+</div>`,
+    usage: `<div class="scroll-area scroll-area--inset" style="height:200px">
+  超长内容…
+</div>
+<!-- 变体：--sm/--lg（滚动条宽度）/--x/--y/--both（轴向）/--inset（带边界）/--fade（渐隐遮罩）-->`,
   },
   {
     slug: 'charts',
@@ -1778,6 +2007,31 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
   <li class="step step--process">…</li>
   <li class="step step--wait">…</li>
 </ol>`,
+  },
+  {
+    slug: 'back-top',
+    name: '回到顶部',
+    group: '导航',
+    desc: '与 behaviors/back-top 配套：滚动超过阈值（默认 320px）出现的悬浮按钮，点击平滑滚回顶部。支持手写按钮或 autoCreate 全自动。',
+    demo: `<div class="demo-row">
+  <button class="btn" id="back-top-demo">向下滚动本页测试 →</button>
+</div>
+<p class="dim" style="margin:8px 0 0;font-size:12px">点击按钮平滑滚到页面底部，右下角会浮出回到顶部按钮（autoCreate 模式）。</p>`,
+    usage: `import { initBackTop } from '@icen.ai/ui/behaviors/back-top';
+
+// 全自动：portal 一个默认按钮到 body，滚到顶
+initBackTop({ autoCreate: true });
+
+// 或手写：
+// <button class="back-top" data-back-top type="button" aria-label="回到顶部">…svg…</button>
+// initBackTop();
+// 可选 data-* 或 opts：threshold（默认 320）/ target（滚动容器）/ offset（滚到多少 px）`,
+    behaviors: ['back-top'],
+    script: `const initBackTop = backTopMod.initBackTop;
+initBackTop({ autoCreate: true });
+document.getElementById('back-top-demo')?.addEventListener('click', () => {
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+});`,
   },
   {
     slug: 'layout',

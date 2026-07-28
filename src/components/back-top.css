@@ -1,0 +1,88 @@
+/*
+ * @icen.ai/ui — Component: back-top（回到顶部按钮，与 behaviors/back-top 配套）
+ *
+ * 契约（两种用法）：
+ *   1. 手写 + init：behavior 给 .back-top[data-back-top] 加 .is-shown 类
+ *      <button class="back-top" data-back-top type="button" aria-label="回到顶部">…svg…</button>
+ *
+ *   2. 全自动：initBackTop() 后任何 [data-back-top-auto] 会被自动 portal 到 body
+ *      并接管滚到顶部逻辑，无需手写按钮
+ *      initBackTop({ autoCreate: true })   // 自动创建一个默认样式的按钮
+ *
+ * 默认滚动超过 320px 后出现；点击后 window.scrollTo({ top: 0, behavior: 'smooth' })。
+ */
+
+.back-top {
+  position: fixed;
+  right: var(--density-space-lg);
+  bottom: var(--density-space-lg);
+  z-index: var(--z-sticky);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: var(--token-card-strong);
+  color: var(--token-text-muted);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-full);
+  box-shadow: var(--token-shadow-overlay);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  pointer-events: none;
+  transition:
+    opacity var(--icen-tx-normal),
+    transform var(--icen-tx-normal),
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast);
+}
+.back-top.is-shown {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.back-top:hover {
+  color: var(--token-accent);
+  border-color: var(--token-accent);
+}
+.back-top:focus-visible {
+  outline: none;
+  box-shadow: var(--token-shadow-overlay), var(--icen-ring);
+}
+.back-top svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* 尺寸变体 */
+.back-top--sm {
+  width: 32px;
+  height: 32px;
+}
+.back-top--sm svg { width: 14px; height: 14px; }
+.back-top--lg {
+  width: 48px;
+  height: 48px;
+}
+.back-top--lg svg { width: 22px; height: 22px; }
+
+/* 方向变体：箭头方向（默认上） */
+.back-top[data-dir='left'] svg { transform: rotate(90deg); }
+.back-top[data-dir='right'] svg { transform: rotate(-90deg); }
+.back-top[data-dir='down'] svg { transform: rotate(180deg); }
+
+@media (max-width: 480px) {
+  .back-top {
+    right: var(--density-space-sm);
+    bottom: var(--density-space-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-top { transition: opacity var(--icen-tx-fast); transform: none !important; }
+  .back-top.is-shown { transform: none !important; }
+}

@@ -26,3 +26,8 @@ export * from './behaviors/carousel';
 export * from './behaviors/charts';
 export * from './behaviors/nav';
 export * from './behaviors/sidebar';
+export * from './behaviors/notification';
+export * from './behaviors/back-top';
+export * from './behaviors/command-palette';
+export * from './behaviors/date-picker';
+export * from './behaviors/split-pane';

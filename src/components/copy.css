@@ -1,0 +1,93 @@
+/*
+ * @icen.ai/ui — Component: copy（复制按钮，与 behaviors/copy 配套）
+ *
+ * 完整契约：
+ *   文本变体（成功后文本 1.4s 内变「已复制」再还原）：
+ *   <button class="copy-btn" data-copy="复制的文本">复制</button>
+ *   <button class="copy-btn copy-btn--ghost" data-copy="…">复制链接</button>
+ *
+ *   图标变体（带 data-copy-icon，仅加 .done 类；由 CSS 显隐子 svg）：
+ *   <button class="copy-btn copy-btn--icon" data-copy="…" data-copy-icon aria-label="复制">
+ *     <svg class="copy-icon-clipboard">…</svg>
+ *     <svg class="copy-icon-check" hidden>…</svg>
+ *   </button>
+ *
+ * behavior 自动处理：
+ *   - 文本变体：成功后 textContent = '已复制' + 加 .done 类，1.4s 后还原
+ *   - 图标变体（带 data-copy-icon）：仅加 .done 类（不改文本），由 CSS 切换 svg 显隐
+ *
+ * 与 toast.ok 区别：copy 是"原地反馈"（按钮自身闪烁），toast 是"全局通知"。
+ */
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--density-space-xs);
+  height: var(--density-input-height-sm);
+  padding: 0 var(--density-space-sm);
+  background: var(--token-control);
+  color: var(--token-text-muted);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--density-font-size-sm);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.copy-btn:hover {
+  color: var(--token-text);
+  border-color: var(--icen-hover-border);
+}
+.copy-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.copy-btn:disabled,
+.copy-btn[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ghost 变体：透明底，纯描边 / hover 才显底 */
+.copy-btn--ghost {
+  background: transparent;
+  border-color: var(--token-line-soft);
+}
+.copy-btn--ghost:hover {
+  background: var(--token-fill-1);
+  border-color: var(--token-accent);
+}
+
+/* ── 成功闪烁态（behavior 1.4s 后移除）── */
+.copy-btn.done {
+  color: var(--token-success);
+  border-color: color-mix(in srgb, var(--token-success) 40%, transparent);
+  background: color-mix(in srgb, var(--token-success) 10%, transparent);
+}
+
+/* ── 图标变体：方形按钮，仅放 svg ── */
+.copy-btn--icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+}
+.copy-btn--icon svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* .done 时显隐切换：剪贴板 → 对勾 */
+.copy-btn[data-copy-icon] .copy-icon-check { display: none; }
+.copy-btn[data-copy-icon].done .copy-icon-clipboard { display: none; }
+.copy-btn[data-copy-icon].done .copy-icon-check { display: inline-block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-btn { transition: none; }
+}
