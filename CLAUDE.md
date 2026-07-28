@@ -26,8 +26,8 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 
 ## 规模
 
-- **41 个组件 CSS**（含 charts 基座 + 9 个细分图表 CSS：chart-line/bar/pie/radar/heatmap/area/stack/gauge/sparkline）
-- **20 个 behaviors TS**（theme/tabs/toast/copy/input/select/slider/tag-input/upload/modal/dropdown/popover/context-menu/accordion/tree/carousel/charts[10 种图]/nav/sidebar/datatable）
+- **51 个组件 CSS**（含 charts 基座 + 9 个细分图表 CSS：chart-line/bar/pie/radar/heatmap/area/stack/gauge/sparkline + 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane）
+- **25 个 behaviors TS**（theme/tabs/toast/copy/input/select/slider/tag-input/upload/modal/dropdown/popover/context-menu/accordion/tree/carousel/charts[10 种图]/nav/sidebar/datatable/notification/back-top/command-palette/date-picker/split-pane）
 - **4 个 token 文件**：colors.css（6 预设 × 明暗）、style-profiles.css（modern/retro/terminal）、typography.css、retro-effects.css（可选）
 
 ## 发布（OIDC Trusted Publishing，已配好）
@@ -48,6 +48,8 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 - 新组件 = `src/components/<name>.css` 一个文件 + 文档站 components 页加一节；交互行为放 `src/behaviors/<name>.ts` 并配套 CSS 类契约。每个 CSS 头注释必须列出完整 DOM 契约。
 - **图表按需安装**：charts 细分为 9 个独立 kit 入口（chart-line/bar/pie/radar/heatmap/area/stack/gauge/sparkline）+ umbrella `charts`。共享基座 `charts.css`，各类型专属样式 `chart-<type>.css`；渲染函数全在 `behaviors/charts.ts`。子类型 slug→charts 模块映射走 slugs.mjs 的 `SLUG_BEHAVIOR`，`slugs.d.mts` 是其类型声明（两处同步改）。
 - 函数式组件族（charts / datatable）：不写类契约，导出 `createX(el, opts) → handle`（charts 是 renderX）；datatable 依赖的额外 CSS（如 menu.css）走 slugs.mjs 的 EXTRA_CSS。
+- **反馈三件正交**：`toast`（瞬时 2.6s 右下角）/ `alert`（内嵌页面流）/ `notification`（持久右上角栈，需手动或定时关闭）——三者各司其职不互相替代；`copy` 是原地按钮反馈（区别于 toast 的全局通知）。
+- **徽章三件正交**：`pill`（行内状态徽章，语义色）/ `tag`（中性展示标签，可选关闭按钮与选中态）/ `badge`（角标式数字/圆点，挂外层元素角上，外层需 `position: relative`）。
 - behaviors 全部 SSR 守卫（`typeof document === 'undefined'`），文本赋值用 `textContent`（禁 innerHTML），init 函数全部幂等（重复调用安全，通过 WeakSet/MarkedElement.__icen*Init 标记）。
 - CSS 产物由 `scripts/build-css.ts` 生成，**不要手改 dist/**。`tokensExtras`（如 retro-effects.css）单独拷贝、暴露 exports，**不**进 `tokens.css`/`ui.css` 默认拼合。
 - clay 的 12 基值 token 改动属于品牌级变更；新增色彩预设 = 在 colors.css 加 `.<name>` + `.<name>.dark` 两块完整 token 面（仿照现有 6 套），并注册到 `src/behaviors/theme.ts` 的 PRESETS 与文档站。

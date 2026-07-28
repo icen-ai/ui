@@ -46,3 +46,6 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 - CSS 产物由 `scripts/build-css.ts` 生成，**不要手改 dist/**。
 - clay 的 12 基值 token 改动属于品牌级变更；新增色彩预设 = 在 colors.css 加 `.<name>` + `.<name>.dark` 两块完整 token 面（仿照现有 6 套），并注册到 `src/behaviors/theme.ts` 的 PRESETS 与文档站。
 - 文档分组（`site/src/lib/components.ts` 的 `GROUPS`）= 侧栏顺序 = 索引页分组顺序：基础 / 表单 / 浮层 / 数据展示 / 表格 / 图表 / 反馈 / 导航。原「数据」已按职能拆为数据展示 + 表格 + 图表 + 反馈四组。
+- **反馈三件正交**：`toast`（瞬时 2.6s 右下角）/ `alert`（内嵌页面流）/ `notification`（持久右上角栈，需手动或定时关闭）——三者各司其职不互相替代；`copy` 是原地按钮反馈（区别于 toast 的全局通知）。
+- **徽章三件正交**：`pill`（行内状态徽章，语义色）/ `tag`（中性展示标签，可选关闭按钮与选中态）/ `badge`（角标式数字/圆点，挂外层元素角上，外层需 `position: relative`）。
+- **浮层 portal 模式**：command-palette / date-picker 的面板 portal 到 body，定位由 behavior 计算 trigger rect；与 popover 共用模式。
