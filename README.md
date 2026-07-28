@@ -30,6 +30,17 @@ initCopy();    // .copy-btn[data-copy] 委托
 toast.ok('已保存');
 ```
 
+## 文档站（已上线 <https://ui.icen.ai>）
+
+`site/` 是公开文档站（首页 / 色彩预设色板 / 组件演示，导航栏实时换肤换明暗）。部署：
+
+```bash
+cd site && bun install && bun run build
+bunx wrangler pages deploy dist --project-name=icen-ui   # 需 CLOUDFLARE_ACCOUNT_ID
+```
+
+Pages 项目 `icen-ui`（aidoll 账号），自定义域 `ui.icen.ai` → CNAME `icen-ui.pages.dev`（已在 dashboard 激活）。
+
 ## 构建
 
 ```bash

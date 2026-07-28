@@ -14,15 +14,25 @@ import '../../../src/components/toast.css';
 
 interface Props {
   title?: string;
+  description?: string;
 }
-const { title = 'ICEN UI · 设计系统' } = Astro.props;
+const {
+  title = 'ICEN UI · 设计系统',
+  description = 'ICEN UI（@icen.ai/ui）—— icen.ai 生态的统一设计系统：6 套色彩预设 × 明暗双模 × 无框架组件与行为 JS',
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, 'https://ui.icen.ai').toString();
 ---
 <!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
     <title>{title}</title>
     <script is:inline>
       // 防主题闪烁：首帧渲染前同步恢复 localStorage 中的 preset/style/dark 类。
@@ -49,6 +59,7 @@ const { title = 'ICEN UI · 设计系统' } = Astro.props;
         <a class="brand" href="/">ICEN UI · 设计系统</a>
         <nav class="nav-links">
           <a href="/">首页</a>
+          <a href="/tokens/">色彩</a>
           <a href="/components/">组件</a>
           <a href="https://github.com/icen-ai/ui" target="_blank" rel="noopener">GitHub</a>
         </nav>

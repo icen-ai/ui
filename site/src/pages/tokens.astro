@@ -1,0 +1,96 @@
+---
+import Base from '../layouts/Base.astro';
+
+// 每个预设展示：亮/暗两个色板条 + 在该预设上下文里的组件小样
+const presets = [
+  { id: 'clay',    name: 'clay · 陶土（icen 品牌）' },
+  { id: 'piano',   name: 'piano · 钢琴' },
+  { id: 'art',     name: 'art · 艺术' },
+  { id: 'vangogh', name: 'vangogh · 梵高' },
+  { id: 'ink',     name: 'ink · 墨' },
+  { id: 'retro',   name: 'retro · 复古' },
+];
+
+const swatches = [
+  'bg', 'bg-soft', 'surface', 'surface-strong',
+  'line', 'line-strong', 'text', 'text-muted', 'text-faint',
+  'accent', 'accent-cold', 'success', 'warning', 'error',
+];
+---
+
+<Base title="色彩预设 · ICEN UI">
+  <h1 class="page-title">色彩预设</h1>
+  <p class="page-sub">6 套预设 × 明暗双模。每套都定义完整的 <code>--token-*</code> 色彩面，组件全部消费 token，换肤零改动。导航栏可实时切换全站预设与明暗。</p>
+
+  {presets.map((p) => (
+    <section class="panel-block">
+      <div class="panel-title"><span>{p.name}</span><code>.{p.id}</code></div>
+      <div class="panel-body">
+        <div class="palette-pair">
+          <div class={p.id}>
+            <div class="palette-label">亮色</div>
+            <div class="swatch-grid">
+              {swatches.map((s) => (
+                <div class="swatch">
+                  <span class="swatch-color" style={`background: var(--token-${s})`} data-token={`--token-${s}`}></span>
+                  <span class="swatch-name mono">{s}</span>
+                  <span class="swatch-val mono" data-val></span>
+                </div>
+              ))}
+            </div>
+            <div class="demo-row" style="margin-top:14px">
+              <button class="btn btn-primary btn-sm" type="button">主要按钮</button>
+              <button class="btn btn-sm" type="button">次要按钮</button>
+              <span class="pill ok">成功</span>
+              <span class="pill warn">警告</span>
+              <span class="pill bad">错误</span>
+            </div>
+          </div>
+          <div class={`${p.id} dark`}>
+            <div class="palette-label">暗色</div>
+            <div class="swatch-grid">
+              {swatches.map((s) => (
+                <div class="swatch">
+                  <span class="swatch-color" style={`background: var(--token-${s})`} data-token={`--token-${s}`}></span>
+                  <span class="swatch-name mono">{s}</span>
+                  <span class="swatch-val mono" data-val></span>
+                </div>
+              ))}
+            </div>
+            <div class="demo-row" style="margin-top:14px">
+              <button class="btn btn-primary btn-sm" type="button">主要按钮</button>
+              <button class="btn btn-sm" type="button">次要按钮</button>
+              <span class="pill ok">成功</span>
+              <span class="pill warn">警告</span>
+              <span class="pill bad">错误</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <script>
+    // 计算并展示每个色块的实际颜色值（getComputedStyle 读解析后的 token）
+    document.querySelectorAll<HTMLElement>('.swatch-color').forEach((el) => {
+      const v = getComputedStyle(el).getPropertyValue(el.dataset.token || '').trim();
+      const out = el.parentElement?.querySelector('[data-val]');
+      if (out) out.textContent = v;
+    });
+  </script>
+</Base>
+
+<style is:global>
+  .page-title { font-family: var(--font-heading); font-size: 26px; margin: 0 0 8px; }
+  .page-sub { color: var(--token-text-muted); font-size: 13px; margin: 0 0 24px; font-family: var(--font-heading); }
+  .palette-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  /* 亮/暗两块都直接消费各自上下文（class=preset / preset+dark）里的 token，无需硬编码 */
+  .palette-pair > div { border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm); padding: 14px; background: var(--token-bg); }
+  .palette-label { font-size: 11px; letter-spacing: 2px; color: var(--token-text-faint); margin-bottom: 10px; }
+  .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
+  .swatch { display: flex; flex-direction: column; gap: 3px; }
+  .swatch-color { height: 34px; border-radius: var(--radius-xs); border: 1px solid var(--token-line-soft); }
+  .swatch-name { font-size: 11px; color: var(--token-text-muted); }
+  .swatch-val { font-size: 10px; color: var(--token-text-faint); word-break: break-all; }
+  @media (max-width: 860px) { .palette-pair { grid-template-columns: 1fr; } }
+</style>
