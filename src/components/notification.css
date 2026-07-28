@@ -1,33 +1,38 @@
 /*
- * @icen.ai/ui — Component: notification（通知栈，与 behaviors/notification 配套）
+ * @icen.ai/ui — Component: notification（通知栈 v2，与 behaviors/notification 配套）
  *
  * 与 toast / alert 的差异（三件正交）：
  *   - toast     = 瞬时轻提示（2.6s 自动消失），右下角
  *   - alert     = 内嵌警示条（页面流内，非浮层）
- *   - notification = 持久通知栈（右上角，需手动关闭或定时关闭），适合后台异步消息
+ *   - notification = 持久通知栈（右上角），工程级：
+ *       进度条 / 倒计时 / 头像 / 多按钮 / 已读未读 / 优先级 / hover 暂停 / 详情链接 / 折叠堆叠
  *
- * 完整契约（由 behavior 渲染，无手写 DOM）：
- *   <div class="notification-container" role="region" aria-label="通知">
- *     <div class="notification [notif--success|notif--warning|notif--error|notif--info]">
- *       <span class="notification-icon">…svg…</span>
+ * 完整契约（由 behavior 渲染）：
+ *   <div class="notification-container" role="region" aria-label="通知" data-position="top-right">
+ *     <div class="notification [notif--success|warning|error|info]
+ *          [.is-priority] [.is-unread] [.is-progress] [.is-clickable] [.is-paused]
+ *          [.has-avatar]" role="alert|button">
+ *       <span class="notification-icon">…svg 或 img.notification-avatar…</span>
  *       <div class="notification-content">
  *         <p class="notification-title">标题</p>
- *         <p class="notification-message">正文</p>
+ *         <p class="notification-message">正文（支持换行）</p>
  *         <div class="notification-actions">
- *           <button class="notification-action">查看</button>
+ *           <button class="notification-action [--primary|--danger]">按钮</button>
+ *         </div>
+ *         <div class="notification-link-wrap">
+ *           <a class="notification-link" href="…">查看详情</a>
+ *         </div>
+ *         <div class="notification-progress">
+ *           <div class="notification-progress-bar" style="width:64%"></div>
+ *           <span class="notification-progress-label">64%</span>
  *         </div>
  *       </div>
  *       <button class="notification-close" aria-label="关闭">×</button>
+ *       <div class="notification-countdown">
+ *         <div class="notification-countdown-fill" style="animation-duration:5000ms"></div>
+ *       </div>
  *     </div>
  *   </div>
- *
- * behavior API：
- *   notify('标题')                                   默认 info，不自动关闭
- *   notify.success('已发布', { description: '5 分钟后生效' })
- *   notify.warn('配额将尽', { duration: 8000 })
- *   notify.error('发布失败', { description: '…' })
- *   notify.dismiss(id?)                              关闭单条（id 缺省=全部）
- *   notify.config({ position: 'top-right', maxStack: 4 })
  */
 
 .notification-container {
@@ -59,6 +64,7 @@
 
 .notification {
   pointer-events: auto;
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--density-space-sm);
@@ -69,6 +75,7 @@
   border-radius: var(--radius-md);
   box-shadow: var(--token-shadow-overlay);
   padding: var(--density-space-md) var(--density-space-md) var(--density-space-md) var(--density-space-sm);
+  overflow: hidden; /* 倒计时进度条贴底 */
   animation: icen-notif-in var(--icen-tx-normal);
 }
 .notification.notif--success { border-left-color: var(--token-success); }
@@ -76,13 +83,53 @@
 .notification.notif--error   { border-left-color: var(--token-error); }
 .notification.notif--info    { border-left-color: var(--token-info); }
 
+/* ── 优先级：高优先级强调（左侧加粗 + 更强阴影）── */
+.notification.is-priority {
+  border-left-width: 4px;
+  box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-accent) 24%, transparent);
+}
+.notification.is-priority.notif--success { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-success) 28%, transparent); }
+.notification.is-priority.notif--warning { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-warning) 28%, transparent); }
+.notification.is-priority.notif--error   { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-error) 28%, transparent); }
+
+/* ── 未读：标题左侧 4px 强调点 + 加粗 ── */
+.notification.is-unread .notification-title::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  margin-bottom: 1px;
+  vertical-align: middle;
+  border-radius: var(--radius-full);
+  background: var(--token-accent);
+  flex-shrink: 0;
+}
+.notification.is-unread.notif--success .notification-title::before { background: var(--token-success); }
+.notification.is-unread.notif--warning .notification-title::before { background: var(--token-warning); }
+.notification.is-unread.notif--error   .notification-title::before { background: var(--token-error); }
+
+/* ── 可点击：整条 hover 抬升 ── */
+.notification.is-clickable {
+  cursor: pointer;
+  transition:
+    transform var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
+}
+.notification.is-clickable:hover {
+  transform: translateY(-1px);
+  border-color: var(--token-accent);
+}
+
+/* ── 图标 ── */
 .notification-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   margin-top: 1px;
   border-radius: var(--radius-full);
   color: var(--token-text-faint);
@@ -93,6 +140,26 @@
 .notif--error   .notification-icon { color: var(--token-error); }
 .notif--info    .notification-icon { color: var(--token-info); }
 
+/* 头像（圆形图） */
+.notification-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  display: block;
+}
+.notification.has-avatar .notification-icon {
+  width: 28px;
+  height: 28px;
+  margin-top: 0;
+}
+
+/* 进度通知的图标默认走品牌色 */
+.notification.is-progress:not(.notif--success):not(.notif--warning):not(.notif--error) .notification-icon {
+  color: var(--token-accent);
+}
+
+/* ── 内容区 ── */
 .notification-content {
   flex: 1;
   min-width: 0;
@@ -105,6 +172,11 @@
   font-size: var(--density-font-size-md);
   font-weight: 600;
   line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.notification.is-unread .notification-title {
+  font-weight: 700;
 }
 .notification-message {
   margin: 0;
@@ -113,32 +185,114 @@
   line-height: 1.5;
   word-break: break-word;
 }
+
+/* ── 多动作按钮 ── */
 .notification-actions {
   display: flex;
-  gap: var(--density-space-sm);
-  margin-top: var(--density-space-xs);
+  flex-wrap: wrap;
+  gap: var(--density-space-xs);
+  margin-top: var(--density-space-sm);
 }
 .notification-action {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--token-accent);
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--density-space-sm);
+  border: 1px solid var(--token-outline-soft);
+  border-radius: var(--radius-sm);
+  background: var(--token-fill-1);
+  color: var(--token-text-muted);
   font: inherit;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--density-font-size-xs);
   font-weight: 500;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
   -webkit-tap-highlight-color: transparent;
-  transition: color var(--icen-tx-fast);
+  transition: background-color var(--icen-tx-fast), color var(--icen-tx-fast), border-color var(--icen-tx-fast);
 }
-.notification-action:hover { color: var(--token-accent-deep, var(--token-accent)); }
+.notification-action:hover {
+  background: var(--token-fill-2);
+  color: var(--token-text);
+  border-color: var(--token-accent);
+}
 .notification-action:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+/* primary：实底 accent */
+.notification-action--primary {
+  background: var(--token-accent);
+  color: var(--token-on-accent, #fff);
+  border-color: var(--token-accent);
+}
+.notification-action--primary:hover {
+  background: var(--token-accent-deep, var(--token-accent));
+  color: var(--token-on-accent, #fff);
+  border-color: var(--token-accent-deep, var(--token-accent));
+}
+/* danger：实底 error */
+.notification-action--danger {
+  background: var(--token-error);
+  color: var(--token-on-accent, #fff);
+  border-color: var(--token-error);
+}
+.notification-action--danger:hover {
+  filter: brightness(0.92);
+  color: var(--token-on-accent, #fff);
+  border-color: var(--token-error);
+}
+
+/* ── 详情链接 ── */
+.notification-link-wrap {
+  margin-top: var(--density-space-xs);
+}
+.notification-link {
+  font-size: var(--density-font-size-sm);
+  color: var(--token-accent);
+  text-decoration: none;
+  border-bottom: 1px dashed color-mix(in srgb, var(--token-accent) 40%, transparent);
+  transition: color var(--icen-tx-fast), border-color var(--icen-tx-fast);
+}
+.notification-link:hover {
+  color: var(--token-accent-deep, var(--token-accent));
+  border-bottom-style: solid;
+}
+.notification-link:focus-visible {
   outline: none;
   border-radius: var(--radius-xs);
   box-shadow: var(--icen-ring);
 }
 
+/* ── 进度条 ── */
+.notification-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  margin-top: var(--density-space-sm);
+}
+.notification-progress-track {
+  flex: 1 1 auto;
+  height: 4px;
+  background: var(--token-fill-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.notification-progress-bar {
+  height: 100%;
+  background: var(--token-accent);
+  border-radius: var(--radius-full);
+  transition: width var(--icen-tx-normal) var(--ease-out);
+}
+.notification.notif--success .notification-progress-bar { background: var(--token-success); }
+.notification.notif--warning .notification-progress-bar { background: var(--token-warning); }
+.notification.notif--error   .notification-progress-bar { background: var(--token-error); }
+.notification-progress-label {
+  flex: 0 0 auto;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 关闭按钮 ── */
 .notification-close {
   display: inline-flex;
   align-items: center;
@@ -165,7 +319,44 @@
 }
 .notification-close svg { width: 12px; height: 12px; }
 
-/* 退场动画 */
+/* ── 倒计时进度条（底部贴边） ── */
+.notification-countdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: transparent;
+  overflow: hidden;
+}
+.notification-countdown-fill {
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  background: var(--token-text-faint);
+  opacity: 0.35;
+  animation-name: icen-notif-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-play-state: running;
+}
+.notification.notif--success .notification-countdown-fill { background: var(--token-success); opacity: 0.6; }
+.notification.notif--warning .notification-countdown-fill { background: var(--token-warning); opacity: 0.6; }
+.notification.notif--error   .notification-countdown-fill { background: var(--token-error); opacity: 0.6; }
+.notification.is-paused .notification-countdown-fill {
+  animation-play-state: paused;
+}
+@keyframes icen-notif-countdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* ── 暂停态（hover 时） ── */
+.notification.is-paused {
+  box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-accent) 14%, transparent);
+}
+
+/* ── 退场动画 ── */
 .notification.leaving {
   opacity: 0;
   transform: translateX(20px);
@@ -185,9 +376,12 @@
     left: var(--density-space-sm);
     right: var(--density-space-sm);
   }
+  .notification { padding: var(--density-space-sm) var(--density-space-sm) var(--density-space-sm) 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .notification { animation: none; }
   .notification.leaving { transform: none; }
+  .notification-countdown-fill { animation: none; transform-origin: left; }
+  .notification-progress-bar { transition: none; }
 }

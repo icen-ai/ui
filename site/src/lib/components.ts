@@ -1181,40 +1181,263 @@ initCopy(); // 委托监听，自动处理所有 .copy-btn[data-copy]`,
     slug: 'notification',
     name: '通知栈',
     group: '反馈',
-    desc: '与 behaviors/notification 配套：持久通知栈（右上角），与 toast（瞬时）/ alert（内嵌）正交。支持 title / description / 动作按钮 / 自动延时关闭 / 手动关闭，默认 4 条堆叠。',
-    demo: `<div class="demo-row">
-  <button class="btn" id="notif-demo-info">信息通知</button>
-  <button class="btn btn-primary" id="notif-demo-success">成功通知</button>
-  <button class="btn" id="notif-demo-warn">警告通知</button>
-  <button class="btn btn-danger" id="notif-demo-err">错误通知</button>
-  <button class="btn" id="notif-demo-action">带动作</button>
-  <button class="btn" id="notif-demo-clear">清空</button>
+    desc: '与 behaviors/notification 配套：工程级持久通知栈——进度通知、Promise confirm、多按钮、hover 暂停+倒计时进度、优先级置顶、已读未读、自定义图标/头像、详情链接、localStorage 持久化、多容器。与 toast（瞬时）/ alert（内嵌）正交。',
+    demo: `<div class="toolbar" style="margin-bottom:10px">
+  <span class="toolbar-label">语义</span>
+  <button class="btn btn-sm" id="notif-info">info</button>
+  <button class="btn btn-sm btn-primary" id="notif-success">success</button>
+  <button class="btn btn-sm" id="notif-warn">warn</button>
+  <button class="btn btn-sm btn-danger" id="notif-error">error</button>
+</div>
+<div class="toolbar" style="margin-bottom:10px">
+  <span class="toolbar-label">特性</span>
+  <button class="btn btn-sm" id="notif-progress">进度通知</button>
+  <button class="btn btn-sm" id="notif-confirm">Promise 确认</button>
+  <button class="btn btn-sm" id="notif-multi">多按钮</button>
+  <button class="btn btn-sm" id="notif-countdown">倒计时(8s)</button>
+  <button class="btn btn-sm" id="notif-priority">高优先级</button>
+</div>
+<div class="toolbar" style="margin-bottom:10px">
+  <span class="toolbar-label">丰富</span>
+  <button class="btn btn-sm" id="notif-avatar">带头像</button>
+  <button class="btn btn-sm" id="notif-link">带链接</button>
+  <button class="btn btn-sm" id="notif-unread">未读标记</button>
+  <button class="btn btn-sm" id="notif-actions">actions 回调</button>
+  <button class="btn btn-sm" id="notif-update">动态更新</button>
+</div>
+<div class="toolbar">
+  <span class="toolbar-spacer"></span>
+  <span class="toolbar-label" id="notif-count">0 条</span>
+  <button class="btn btn-sm" id="notif-read">全部已读</button>
+  <button class="btn btn-sm" id="notif-clear">清空</button>
 </div>`,
-    usage: `import { notify } from '@icen.ai/ui/behaviors/notification';
+    usage: `import { notify, createNotificationCenter } from '@icen.ai/ui/behaviors/notification';
 
+// ── 便捷 API ──
 notify.success('已发布', { description: '5 分钟后全量生效' });
-notify.warn('配额将尽', { description: '已用 80%，超出将排队', duration: 8000 });
+notify.warn('配额将尽', { description: '已用 80%', duration: 8000 });  // 8s 自动关闭
 notify.error('发布失败', { description: '封面图尺寸不足' });
-notify.info('版本更新', { description: 'v0.5.0 已发布' });
-const id = notify.success('已保存', {
-  actionLabel: '查看',
-  onAction: () => { window.open('/drafts'); },
+
+// ── 进度通知（返回 handle，可动态 setProgress）──
+const h = notify.progress('正在导出', { progressLabel: '准备中…' });
+let p = 0;
+const timer = setInterval(() => {
+  p += 0.08;
+  if (p >= 1) {
+    h.setProgress(1, '完成');
+    clearInterval(timer);
+    setTimeout(() => h.dismiss(), 1500);
+  } else {
+    h.setProgress(p, '导出中 ' + Math.round(p * 100) + '%');
+  }
+}, 300);
+
+// ── Promise confirm（阻塞式确认）──
+const ok = await notify.confirm('确认删除该作品？', {
+  description: '此操作不可撤销，相关数据将被清除。',
+  confirmLabel: '删除',
+  cancelLabel: '取消',
 });
-notify.dismiss(id);        // 关闭单条
-notify.dismiss();          // 关闭全部
-notify.config({ position: 'top-right', maxStack: 4 });`,
-    behaviors: ['notification'],
+if (ok) { /* 执行删除 */ }
+
+// ── 多按钮 ──
+notify.info('评论了你的作品', {
+  description: '「很喜欢这段配乐」—— 沈墨',
+  avatar: 'https://example.com/u.jpg',
+  actions: [
+    { label: '回复', type: 'primary', onClick: () => openReply() },
+    { label: '忽略', onClick: () => {} },
+  ],
+  link: '/works/123',
+  linkLabel: '查看作品',
+});
+
+// ── 高优先级置顶 + 未读 ──
+notify.error('服务中断', {
+  description: 'gateway-001 不可达，已自动切换备用节点',
+  priority: 'high',
+  unread: true,
+});
+
+// ── Handle 方法 ──
+h.update({ title: '新标题', description: '更新后' });
+h.markRead();
+h.pause(); h.resume();
+h.dismiss();
+notify.markRead();        // 全部已读
+notify.clear();           // 全清
+notify.get(id);           // 读取
+notify.getAll();          // 全部
+
+// ── 多容器（独立位置与配置）──
+const center = createNotificationCenter(document.body, {
+  position: 'bottom-right',
+  maxStack: 3,
+  persist: 'app:messages',
+});
+center.push({ title: '新消息', kind: 'info', options: { description: '…' } });
+center.markAllRead();
+center.clear();
+
+// ── 全局配置 ──
+notify.config({ position: 'top-right', maxStack: 5, pauseOnHover: true });`,
+    behaviors: ['notification', 'toast'],
     script: `const notify = notificationMod.notify;
-document.getElementById('notif-demo-info')?.addEventListener('click', () => notify.info('版本更新', { description: 'v0.5.0 已发布，新增通知栈组件' }));
-document.getElementById('notif-demo-success')?.addEventListener('click', () => notify.success('已发布', { description: '5 分钟后全量生效', duration: 6000 }));
-document.getElementById('notif-demo-warn')?.addEventListener('click', () => notify.warn('配额将尽', { description: '本月构建时长已用 80%' }));
-document.getElementById('notif-demo-err')?.addEventListener('click', () => notify.error('发布失败', { description: '封面图尺寸不足 640×960' }));
-document.getElementById('notif-demo-action')?.addEventListener('click', () => notify.success('草稿已保存', {
-  description: '可随时回到编辑器继续',
-  actionLabel: '查看草稿',
-  onAction: () => notify.info('已跳转（演示）'),
-}));
-document.getElementById('notif-demo-clear')?.addEventListener('click', () => notify.dismiss());`,
+const toast = toastMod.toast;
+const countEl = document.getElementById('notif-count');
+function refreshCount() {
+  const all = notify.getAll();
+  if (countEl) countEl.textContent = all.length + ' 条 · ' + all.filter(r => r.opts.unread).length + ' 未读';
+}
+setInterval(refreshCount, 500);
+
+// ── 语义 ──
+document.getElementById('notif-info')?.addEventListener('click', () => {
+  notify.info('版本更新', { description: 'v0.5.0 已发布，新增通知栈组件', unread: true });
+  refreshCount();
+});
+document.getElementById('notif-success')?.addEventListener('click', () => {
+  notify.success('已发布', { description: '「星野之下」5 分钟后全量生效', duration: 6000, unread: true });
+  refreshCount();
+});
+document.getElementById('notif-warn')?.addEventListener('click', () => {
+  notify.warn('配额将尽', { description: '本月构建时长已用 80%，超出将排队执行', unread: true });
+  refreshCount();
+});
+document.getElementById('notif-error')?.addEventListener('click', () => {
+  notify.error('发布失败', { description: '封面图尺寸不足 640×960，请更换后重试', priority: 'high', unread: true });
+  refreshCount();
+});
+
+// ── 进度通知 ──
+document.getElementById('notif-progress')?.addEventListener('click', () => {
+  const h = notify.progress('正在导出 PDF', { progressLabel: '准备中…', duration: 0 });
+  let p = 0;
+  const t = setInterval(() => {
+    p += 0.07 + Math.random() * 0.06;
+    if (p >= 1) {
+      h.setProgress(1, '导出完成');
+      clearInterval(t);
+      setTimeout(() => { h.update({ title: '导出完成', description: '文件已下载' }); }, 400);
+      setTimeout(() => h.dismiss(), 2200);
+    } else {
+      h.setProgress(p, '导出中 ' + Math.round(p * 100) + '%');
+    }
+  }, 280);
+  refreshCount();
+});
+
+// ── Promise confirm ──
+document.getElementById('notif-confirm')?.addEventListener('click', async () => {
+  const ok = await notify.confirm('确认删除该作品？', {
+    description: '此操作不可撤销，相关数据将被清除。',
+    confirmLabel: '删除',
+    cancelLabel: '取消',
+  });
+  if (ok) toast.ok('已删除（演示）');
+  else toast.warn('已取消');
+});
+
+// ── 多按钮 ──
+document.getElementById('notif-multi')?.addEventListener('click', () => {
+  notify.info('构建失败', {
+    description: 'tsup 报错：src/index.ts 第 12 行类型不匹配',
+    actions: [
+      { label: '查看日志', type: 'primary', onClick: () => toast.ok('打开日志') },
+      { label: '重试', onClick: () => toast.ok('已重新触发构建') },
+      { label: '忽略' },
+    ],
+  });
+  refreshCount();
+});
+
+// ── 倒计时 ──
+document.getElementById('notif-countdown')?.addEventListener('click', () => {
+  notify.info('会话即将过期', {
+    description: '5 分钟内无操作将自动退出，请及时保存。hover 通知可暂停倒计时',
+    duration: 8000,
+  });
+});
+
+// ── 高优先级 ──
+document.getElementById('notif-priority')?.addEventListener('click', () => {
+  notify.error('磁盘空间不足', {
+    description: '剩余 128 MB，构建任务可能失败',
+    priority: 'high',
+    unread: true,
+    actions: [{ label: '清理缓存', type: 'primary', onClick: () => toast.ok('已清理 256 MB') }],
+  });
+  refreshCount();
+});
+
+// ── 头像 ──
+document.getElementById('notif-avatar')?.addEventListener('click', () => {
+  notify.success('沈墨 回复了你', {
+    description: '「这段配乐很棒，用在了第 3 章」',
+                avatar: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect width=%2248%22 height=%2248%22 fill=%22%233d8a5a%22/><text x=%2224%22 y=%2230%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22>沈</text></svg>',
+    link: '#',
+    linkLabel: '查看对话',
+    unread: true,
+  });
+  refreshCount();
+});
+
+// ── 链接 ──
+document.getElementById('notif-link')?.addEventListener('click', () => {
+  notify.info('新版本 v0.5.0', {
+    description: '新增通知栈、日期选择、命令面板等 11 个组件',
+    link: '#',
+    linkLabel: '查看更新日志 →',
+  });
+  refreshCount();
+});
+
+// ── 未读标记 ──
+document.getElementById('notif-unread')?.addEventListener('click', () => {
+  notify.info('你有 3 条新评论', {
+    description: '来自「星野之下」、「雨停之前」',
+    unread: true,
+    onClick: (h) => { h.markRead(); toast.ok('已标记为已读'); },
+  });
+  refreshCount();
+});
+
+// ── actions 回调（演示 onShow / onClick / onClose 全回调）──
+document.getElementById('notif-actions')?.addEventListener('click', () => {
+  notify.success('作品已保存', {
+    description: '可随时回到编辑器继续',
+    onShow: () => console.log('[notif] onShow'),
+    onClick: (h) => { toast.info('点击了通知体'); h.markRead(); },
+    onClose: () => console.log('[notif] onClose'),
+    actions: [
+      { label: '继续编辑', type: 'primary', onClick: () => toast.ok('打开编辑器') },
+      { label: '查看', keepOpen: true, onClick: () => toast.info('保持打开') },
+    ],
+  });
+  refreshCount();
+});
+
+// ── 动态更新 ──
+document.getElementById('notif-update')?.addEventListener('click', () => {
+  const h = notify.info('准备就绪', { description: '即将开始下载…', duration: 0 });
+  setTimeout(() => h.update({ title: '下载中', description: '正在获取资源 (1/3)' }), 600);
+  setTimeout(() => h.update({ description: '正在解压文件 (2/3)' }), 1500);
+  setTimeout(() => h.update({ title: '完成', description: '所有资源已就绪' }), 2400);
+  setTimeout(() => h.dismiss(), 4000);
+  refreshCount();
+});
+
+// ── 全局操作 ──
+document.getElementById('notif-read')?.addEventListener('click', () => {
+  notify.markRead();
+  toast.ok('已全部标记为已读');
+  refreshCount();
+});
+document.getElementById('notif-clear')?.addEventListener('click', () => {
+  notify.clear();
+  toast.ok('已清空');
+  refreshCount();
+});`,
   },
   {
     slug: 'avatar',
