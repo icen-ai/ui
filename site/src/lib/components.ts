@@ -1418,10 +1418,12 @@ if (el) renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17,
     slug: 'datatable',
     name: '数据表格',
     group: '表格',
-    desc: 'createTable 函数式 API：内置搜索 / 列排序 / 列筛选 / 多选 / 分页 / 虚拟滚动（万级行）/ 行展开 / 单元格嵌套任意组件 / 行右键菜单（复用 context-menu）。零依赖，数据驱动，handle 可编程控制。',
+    desc: 'createTable 函数式 API：搜索 / 排序 / 筛选 / 多选（Shift 范围选）/ 分页 / 虚拟滚动（万级行）/ 行展开 / 列宽拖拽 / 列显隐 / 冻结列 / CSV 导出 / 行右键。管线缓存，零依赖。',
     demo: `<div class="demo-col-wide" style="width:100%">
-  <p class="chart-cap">全功能：搜索 / 排序 / 列筛选 / 多选 / 分页 / 行展开 / 右键行</p>
+  <p class="chart-cap">全功能：搜索 / 排序 / 列筛选 / 多选 / 分页 / 行展开 / 列宽拖拽 / 列显隐 / 导出 / 冻结列 / 右键行</p>
   <div id="dt-main"></div>
+  <p class="chart-cap" style="margin-top:20px">紧凑密度 + 行着色（rowClassName）</p>
+  <div id="dt-compact"></div>
   <p class="chart-cap" style="margin-top:20px">虚拟滚动：10,000 行（滚动试试）</p>
   <div id="dt-virtual"></div>
 </div>`,
@@ -1429,17 +1431,22 @@ if (el) renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17,
 
 const table = createTable(el, {
   columns: [
-    { key: 'name', title: '名称', sortable: true, width: '160px' },
+    { key: 'name', title: '名称', sortable: true, width: '160px', frozen: true },
     { key: 'status', title: '状态', filterable: true,
-      render: (v) => pillNode(v) },            // 返回 Node = 嵌套任意组件；string 走 textContent
+      render: (v) => pillNode(v) },            // 返回 Node = 嵌套任意组件
     { key: 'updated', title: '更新', sortable: true },
     { key: 'ops', title: '操作', render: (_v, row) => actionsNode(row) },
   ],
   data: rows,
   rowKey: 'id',                               // 多选/展开跨页保持的依据
   searchable: true,                           // 内置搜索（160ms 防抖）
-  selectable: true,                           // 多选 + 表头三态
+  selectable: true,                           // 多选 + 表头三态 + Shift 范围选
   pagination: true, pageSize: 10,             // 分页；或 virtual: true 万级行虚拟滚动
+  resizable: true,                            // 列宽拖拽（默认开）
+  columnVisibility: true,                     // 工具栏列显隐开关
+  exportable: true,                           // 工具栏 CSV 导出按钮
+  density: 'compact',                         // 紧凑密度（可选）
+  rowClassName: (row) => row.status === '已停止' ? 'row-offline' : '',
   expandable: (row) => detailNode(row),       // 行展开（虚拟模式外可用）
   contextMenu: (row) => [                     // 行右键（复用 context-menu，kit 已带 menu.css）
     { label: '重命名', shortcut: 'F2', onClick: () => toast.ok('重命名') },
@@ -1447,13 +1454,14 @@ const table = createTable(el, {
     { label: '停止服务', danger: true, onClick: () => toast.warn('已停止') },
   ],
   onSelectionChange: (rows) => console.log(rows.length),
+  onSortChange: (key, dir) => console.log(key, dir),
 });
 
 table.setData(next);      // 换数据
-table.getSelected();      // 取选中行
-table.setSearch('网关');   // 编程搜索
-table.setFilter('status', ['运行中']);
-table.setSort('updated', 'desc');
+table.getData();          // 取当前管线数据（搜索→筛选→排序后）
+table.exportCSV('服务列表.csv'); // 导出
+table.showColumn('updated');    // 显示列
+table.hideColumn('ops');        // 隐藏列
 table.destroy();`,
     behaviors: ['datatable', 'toast'],
     script: `const createTable = datatableMod.createTable;
@@ -1511,9 +1519,11 @@ const mainEl = document.getElementById('dt-main');
 if (mainEl) {
   createTable(mainEl, {
     columns: [
-      { key: 'name', title: '名称', sortable: true, width: '150px' },
+      { key: 'name', title: '名称', sortable: true, width: '150px', frozen: true },
       { key: 'status', title: '状态', filterable: true, width: '90px', render: (v) => pill(String(v)) },
       { key: 'owner', title: '负责人', width: '116px', render: (v) => ownerNode(String(v)) },
+      { key: 'cat', title: '分类', filterable: true, width: '80px' },
+      { key: 'version', title: '版本', width: '70px' },
       { key: 'updated', title: '更新时间', sortable: true, width: '106px' },
       { key: 'ops', title: '操作', width: '122px', render: (_v, row) => opsNode(row) },
     ],
@@ -1525,6 +1535,9 @@ if (mainEl) {
     pagination: true,
     pageSize: 10,
     striped: true,
+    resizable: true,
+    columnVisibility: true,
+    exportable: true,
     expandable: (row) =>
       row.name + ' · ' + row.cat + ' · ' + row.owner + ' 维护。最近发布 ' + row.version +
       '（' + row.updated + '），当前状态「' + row.status + '」。这里是行展开区域，可以嵌套任意 Node。',
@@ -1536,6 +1549,25 @@ if (mainEl) {
       { label: '停止服务', danger: true, shortcut: '⌫', onClick: () => toast.warn('已停止 ' + row.name) },
     ],
     onRowClick: (row) => toast.ok('行点击：' + row.name),
+  });
+}
+
+const compactEl = document.getElementById('dt-compact');
+if (compactEl) {
+  createTable(compactEl, {
+    columns: [
+      { key: 'name', title: '实例', sortable: true, width: '180px' },
+      { key: 'status', title: '状态', filterable: true, width: '80px', render: (v) => pill(String(v)) },
+      { key: 'version', title: '版本', width: '60px' },
+      { key: 'updated', title: '更新', sortable: true, width: '90px' },
+    ],
+    data: rows.slice(0, 80),
+    rowKey: 'id',
+    density: 'compact',
+    searchable: true,
+    pagination: true,
+    pageSize: 15,
+    rowClassName: (row) => row.status === '已停止' ? 'dt-row--danger' : '',
   });
 }
 

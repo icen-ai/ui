@@ -341,3 +341,89 @@
 @media (prefers-reduced-motion: reduce) {
   .dt-filter-panel { animation: none; }
 }
+
+/* ── 紧凑密度（32px 行高） ── */
+.datatable--compact .dt-cell { min-height: 32px; padding: 0 10px; }
+.datatable--compact .dt-cell--head { min-height: 32px; font-size: var(--density-font-size-xs); }
+
+/* ── 工具栏右侧操作按钮组 ── */
+.dt-toolbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.dt-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), border-color var(--icen-tx-fast), background var(--icen-tx-fast);
+}
+.dt-tool-btn:hover {
+  color: var(--token-text);
+  border-color: var(--token-accent);
+  background: var(--token-fill-1);
+}
+
+/* ── 列宽拖拽手柄 ── */
+.dt-resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  z-index: 1;
+}
+.dt-resize::after {
+  content: '';
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  right: 2px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background var(--icen-tx-fast);
+}
+.dt-resize:hover::after,
+.dt-resize:active::after {
+  background: var(--token-accent);
+}
+.dt-cell--head { /* 确保相对定位供 resize 绝对定位 */ }
+
+/* ── 冻结列（左固定 sticky） ── */
+.datatable--frozen .dt-cell--frozen {
+  position: sticky;
+  z-index: var(--z-raised);
+  background: var(--token-surface);
+}
+.datatable--frozen .dt-row--head .dt-cell--frozen {
+  z-index: calc(var(--z-raised) + 1);
+  background: var(--token-bg-soft);
+}
+.datatable--frozen .dt-row.is-selected .dt-cell--frozen {
+  background: var(--token-accent-subtle);
+}
+.datatable--frozen .dt-body .dt-row:hover .dt-cell--frozen {
+  background: var(--token-fill-1);
+}
+.datatable--frozen .dt-row.is-selected:hover .dt-cell--frozen {
+  background: color-mix(in srgb, var(--token-accent-subtle) 82%, var(--token-fill-1));
+}
+
+/* ── 行状态类（rowClassName 产出） ── */
+.dt-row--danger { background: color-mix(in srgb, var(--token-error) 6%, transparent) !important; }
+.dt-row--danger:hover { background: color-mix(in srgb, var(--token-error) 10%, transparent) !important; }
+.dt-row--warning { background: color-mix(in srgb, var(--token-warning) 6%, transparent) !important; }
+.dt-row--success { background: color-mix(in srgb, var(--token-success) 6%, transparent) !important; }
