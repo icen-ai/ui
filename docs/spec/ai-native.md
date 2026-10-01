@@ -1,0 +1,323 @@
+# AI 原生组件族 · 设计规格（v0.6.x 新增）
+
+> 唯一事实源。施工代理按此文件执行，不得偏离契约（类名 / 导出签名 / 事件名）。
+> 设计调研依据：AG-UI 协议、Vercel AI SDK UIMessage parts、OpenAI/Anthropic wire 格式、
+> MCP tools schema、A2A Task 状态；产品侧 Claude Code / Kimi Code / Cursor / Copilot / Codex 的已标准化模式。
+
+## 0. 设计原则
+
+1. **继承用 CSS 变量级联实现**：`.ai-item` 基元定义 `--ai-item-*` 局部变量，kind/变体只覆盖变量不改结构（btn.css 的 `--btn-*` 模式的推广）。
+2. **多态用 kind 注册表**：MCP、skill 不是独立组件，是 tool-call 的 kind。`registerAiKind()` 开放第三方扩展。
+3. **组件只消费归一化模型**：业界格式（OpenAI / Anthropic / AI SDK / 素朴）由适配层统一翻译，组件不认识任何 provider。
+4. **状态机是唯一语言**：所有 AI 条目共享 7 态，语义色与动画全库一致。
+5. 遵守库全部既有纪律：token 消费 / `.is-*` 状态 / aria 等价 / SSR 守卫 / 幂等 init / 禁 innerHTML（SVG 走 `svgIcon()` 消毒解析）/ 事件 `icen:ai-*` 前缀 / 浮层 z 标尺。
+
+## 1. 状态机（一切 AI 条目共享）
+
+```
+pending → running → streaming → done
+   │          │          │
+   └→ approval（待人确认，HITL）   ├→ error
+   └→ cancelled ←──────────┘
+```
+
+| 状态 | 类 | 视觉 |
+|---|---|---|
+| 等待 | `.is-pending` | faint 空心点 |
+| 执行中 | `.is-running` | accent 脉冲点 |
+| 流式中 | `.is-streaming` | 流式光标（▍闪烁，`animate-blink` 复用） |
+| 待人确认 | `.is-approval` | warning 色 + 内联 允许/拒绝 按钮 |
+| 完成 | `.is-done` | success 对勾 |
+| 失败 | `.is-error` | error 色，失败条目**自动展开**（Copilot 模式） |
+| 已取消 | `.is-cancelled` | faint + 删除线标题 |
+
+协议映射：AI SDK `input-streaming/input-available`→pending、`approval-requested`→approval、`output-available`→done、`output-error`→error；AG-UI `TOOL_CALL_RESULT`→done、`outcome.interrupt`→approval；A2A `INPUT_REQUIRED/AUTH_REQUIRED`→approval、`WORKING`→running、终态→done/error/cancelled。
+
+## 2. 条目基元 `.ai-item`（CSS 骨架，所有行式条目的"基类"）
+
+```html
+<div class="ai-item is-running" style="--ai-item-tint: var(--token-accent)">
+  <span class="ai-item-icon"><!-- svg --></span>
+  <div class="ai-item-main">
+    <div class="ai-item-title">一行摘要</div>
+    <div class="ai-item-sub">次要信息（路径/参数）</div>
+  </div>
+  <div class="ai-item-side">
+    <span class="ai-item-status"></span>   <!-- 状态点，纯 CSS 由 .is-* 驱动 -->
+    <span class="ai-item-meta">1.2s</span>
+  </div>
+  <div class="ai-item-detail" hidden>展开详情</div>
+</div>
+```
+
+局部变量：`--ai-item-tint`（图标/状态点着色槽，默认 accent）。状态点 `.ai-item-status` 是纯 CSS 圆点，由 `.is-*` 决定颜色与动效（running 脉冲用 `--pill-pulse-duration` 同款变量化时长）。
+
+## 3. 文件与 slug 组织
+
+### CSS（4 个文件，MERGED_CSS 登记）
+
+| 文件 | 服务 slug |
+|---|---|
+| `src/components/ai-chat.css` | `ai-chat` `ai-message` `ai-reasoning` `ai-composer` |
+| `src/components/ai-tool.css` | `ai-tool-call` `ai-subagent` |
+| `src/components/ai-diff.css` | `ai-diff` `ai-files` |
+| `src/components/ai-panel.css` | `ai-todo` `ai-context` `ai-usage` |
+
+### Behaviors（6 个文件，index.ts 全部 `export *`）
+
+| 文件 | 导出 |
+|---|---|
+| `src/behaviors/ai-core.ts` | 状态机 / 注册表 / 适配器 / 格式化 / svgIcon（见 §6） |
+| `src/behaviors/ai-chat.ts` | `initAiChat` `createAiStream` |
+| `src/behaviors/ai-composer.ts` | `initAiComposer` |
+| `src/behaviors/ai-tool.ts` | `initAiTool` `initAiSubagent` `renderAiToolCall` `renderAiSubagent` |
+| `src/behaviors/ai-diff.ts` | `initAiDiff` `renderAiDiff` `parseUnifiedDiff` |
+| `src/behaviors/ai-panel.ts` | `initAiTodo` `renderAiTodo` `initAiContext` `renderAiContext` `renderAiUsage` |
+
+### slugs.mjs 登记（S4 执行）
+
+- SLUGS 追加 11 个（新分组「AI」）：`ai-chat, ai-message, ai-reasoning, ai-composer, ai-tool-call, ai-subagent, ai-diff, ai-files, ai-todo, ai-context, ai-usage`
+- MERGED_CSS：ai-message/ai-reasoning/ai-composer→`ai-chat.css`；ai-subagent→`ai-tool.css`；ai-files→`ai-diff.css`；ai-todo/ai-context/ai-usage→`ai-panel.css`
+- SLUG_INIT：ai-chat→initAiChat, ai-composer→initAiComposer, ai-tool-call→initAiTool, ai-subagent→initAiSubagent, ai-diff→initAiDiff, ai-todo→initAiTodo, ai-context→initAiContext
+- SLUG_BEHAVIOR：ai-message→ai-chat, ai-reasoning→ai-chat, ai-files→ai-diff, ai-usage→ai-panel（纯渲染/函数式的挂对应模块）
+- SLUG_EXPORTS：ai-message/ai-reasoning→['createAiStream'] 等按实际补；函数式 slug 给渲染函数提示
+
+## 4. 组件契约（类名固定，施工中不得改名）
+
+### 4.1 ai-chat（ai-chat.css + ai-chat.ts）
+
+```html
+<div class="ai-chat" data-density="normal">   <!-- verbose|normal|summary 透明度三档 -->
+  <div class="ai-chat-scroll">
+    <div class="ai-msg ai-msg--user | ai-msg--assistant | ai-msg--system | ai-msg--tool">
+      <span class="ai-msg-avatar"></span>
+      <div class="ai-msg-body">…内容（消费方可自行渲染 markdown）…</div>
+      <div class="ai-msg-actions"><button data-ai-msg-action="copy">…<button data-ai-msg-action="retry">…</div>
+      <div class="ai-msg-meta">12:04 · 1.2k tok</div>
+    </div>
+  </div>
+  <button class="ai-chat-jump" hidden>回到底部 · 3 条新消息</button>
+</div>
+```
+
+- `initAiChat(root?)`：幂等（`__icenAiChatInit`）。滚动钉底：scroll 监听，贴底时自动跟随新内容（监听 scroll 容器尺寸变化用 ResizeObserver）；用户上滚暂停跟随并显示 `.ai-chat-jump`（带未读计数），点击回底恢复。消息动作委托：copy→复制正文+派 `icen:ai-copy`；retry→派 `icen:ai-retry`（detail 含消息元素）。reasoning 折叠委托也在这里（`.ai-reasoning-head` 点击切换）。
+- `createAiStream(el)` → `{ append(text), done(), cancel() }`：textContent 级追加（不解析 HTML），追加期间宿主挂 `.is-streaming`，done/cancel 移除。Markdown 重渲染是消费方职责（文档里写明）。
+
+### 4.2 ai-message / ai-reasoning（ai-chat.css 一族）
+
+```html
+<div class="ai-reasoning is-done">
+  <button class="ai-reasoning-head" aria-expanded="false">
+    <span class="ai-reasoning-label">思考过程</span><span class="ai-reasoning-time">3s</span>
+  </button>
+  <div class="ai-reasoning-body" hidden>…</div>
+</div>
+```
+
+流式中 `.is-streaming`：head 显示 shimmer「正在思考…」（动画时长走 `--ai-shimmer-duration` 局部变量）；完成自动折叠并显示耗时。**新 behavior 复用 ai-chat 的委托，不独立 init。**
+
+### 4.3 ai-composer（ai-chat.css + ai-composer.ts）
+
+```html
+<div class="ai-composer" data-ai-composer>
+  <div class="ai-composer-queue" hidden><!-- 排队消息 chips，可逐个 × --></div>
+  <div class="ai-composer-attach" hidden><!-- 附件 chips --></div>
+  <div class="ai-composer-box control">
+    <textarea class="ai-composer-input" rows="1" placeholder="…"></textarea>
+    <div class="ai-composer-actions">
+      <button class="ai-composer-btn" data-ai-attach aria-label="附件"></button>
+      <button class="ai-composer-send" data-ai-send></button>  <!-- 运行态变 .is-stop 停止钮 -->
+    </div>
+  </div>
+</div>
+```
+
+- `initAiComposer(root?)`：autosize（上限 ~8 行后内滚）；Enter 发送 / Shift+Enter 换行 / IME 组合态安全（复用 input.ts 模式）；发送派 `icen:ai-send {text}` 并清空。
+- **运行/停止态**：`setComposerRunning(el, bool)` 导出——运行中发送钮变停止钮（点击派 `icen:ai-stop`），此时输入不丢：回车转为入队（queue chip）并派 `icen:ai-queue {text}`；chip × 移除派 `icen:ai-dequeue {index}`。（queue / steer / stop 三动词分化，对齐 Cursor/Copilot 2026 模式）
+- 附件钮打开 file input，选中文件生成 chip，派 `icen:ai-attach {files}`。
+
+### 4.4 ai-tool-call（ai-tool.css + ai-tool.ts）
+
+```html
+<div class="ai-tool ai-tool--shell is-done">   <!-- kind 修饰类：--shell/--read/--edit/… -->
+  <button class="ai-tool-head" aria-expanded="false">
+    <span class="ai-item-icon"></span>
+    <span class="ai-item-main"><span class="ai-item-title">Read</span>
+      <span class="ai-item-sub">src/foo.ts:1-50</span></span>
+    <span class="ai-item-status"></span>
+    <span class="ai-item-meta">0.4s</span>
+  </button>
+  <div class="ai-tool-body" hidden>
+    <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">…</pre></div>
+    <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">…</pre></div>
+    <div class="ai-tool-approval">   <!-- 仅 .is-approval 显示 -->
+      <button class="btn btn-sm btn-primary" data-ai-approve>允许</button>
+      <button class="btn btn-sm" data-ai-reject>拒绝</button>
+    </div>
+  </div>
+</div>
+```
+
+- `initAiTool(root?)`：委托展开/折叠（head click + 键盘）；`.is-error` 条目首次渲染自动展开；approval 按钮派 `icen:ai-approve` / `icen:ai-reject`（detail `{id, kind}`）。
+- `renderAiToolCall(el, model: AiToolCallModel)`：DOM API 构建整卡（流式场景用），返回 `{ el, update(patch) }`。
+- kind 视觉：`ai-tool--<kind>` 覆盖 `--ai-item-tint` 与图标（注册表驱动）。内置 kinds：`shell read edit write rm grep glob browser search fetch mcp skill todo plan subagent note`。
+- 展开动画：grid-template-rows 0fr→1fr 或 max-height 之外，用 `hidden` + 入场 `icen-pop-in`（简单可靠）。
+
+### 4.5 ai-subagent（ai-tool.css + ai-tool.ts）
+
+```html
+<div class="ai-subagent is-running">
+  <button class="ai-subagent-head" aria-expanded="false">
+    <span class="ai-item-icon"></span>
+    <span class="ai-item-main"><span class="ai-item-title">explore</span>
+      <span class="ai-item-sub">搜索 auth 模块的所有入口</span></span>
+    <span class="ai-item-status"></span>
+    <span class="ai-item-meta">12.3s · 4 步</span>
+  </button>
+  <div class="ai-subagent-body" hidden>
+    <div class="ai-subagent-stream"><!-- 嵌套 .ai-item / .ai-tool / .ai-reasoning 活动流 --></div>
+    <div class="ai-subagent-result">完成回执摘要</div>
+  </div>
+</div>
+```
+
+- 嵌套流用**缩进 + 左侧引导线**表达层级（CSS 伪元素），可再嵌套子代理（递归）。
+- `renderAiSubagent(el, model)`：model 含 `activities: AiToolCallModel[]`（复用 renderAiToolCall 渲染嵌套项——递归复用即"继承"）。
+- 交互：点击 head 展开看细节（**用户明确要求比 kimi/codex 更优雅**——展开时活动项逐条 `icen-pop-in` 渐入）。
+
+### 4.6 ai-diff（ai-diff.css + ai-diff.ts）
+
+```html
+<div class="ai-diff">
+  <div class="ai-diff-file is-modified">   <!-- is-added/is-modified/is-deleted/is-renamed -->
+    <div class="ai-diff-head">
+      <span class="ai-diff-path">src/foo.ts</span>
+      <span class="ai-diff-stat"><b class="ai-diff-add">+12</b> <b class="ai-diff-del">−4</b></span>
+      <span class="ai-diff-actions">
+        <button data-ai-diff-accept>接受</button><button data-ai-diff-reject>拒绝</button>
+      </span>
+    </div>
+    <div class="ai-diff-body" hidden>
+      <table class="ai-diff-table">
+        <tr class="ai-diff-line--hunk"><td colspan="3">@@ -10,6 +10,8 @@</td></tr>
+        <tr class="ai-diff-line--ctx"><td class="ai-diff-ln">10</td><td class="ai-diff-ln">10</td><td class="ai-diff-code">…</td></tr>
+        <tr class="ai-diff-line--add">…</tr>
+        <tr class="ai-diff-line--del">…</tr>
+      </table>
+    </div>
+  </div>
+</div>
+```
+
+- `parseUnifiedDiff(text)` → 结构化 hunks（纯函数，SSR 安全）；`renderAiDiff(el, {files})` DOM API 渲染（文本全 textContent）。
+- `initAiDiff(root?)`：文件展开/折叠委托；accept/reject 派 `icen:ai-diff-accept` / `icen:ai-diff-reject`（detail `{path}`），点击后该文件标记 `.is-accepted` / `.is-rejected`。
+- 长 diff 默认折叠只露 head；`.ai-diff--inline` 变体支持内联并排？——不做并排，保持 unified 单栏（范围控制）。
+
+### 4.7 ai-files（ai-diff.css 一族，纯 CSS）
+
+```html
+<div class="ai-files">
+  <span class="ai-file-chip is-added"><span class="ai-file-icon"></span>src/foo.ts</span>
+</div>
+```
+
+chip 态：`is-added/is-modified/is-deleted` + hover 操作（可选）。无 behavior（文档说明）。
+
+### 4.8 ai-todo（ai-panel.css + ai-panel.ts）
+
+```html
+<div class="ai-todo">
+  <div class="ai-todo-head"><span class="ai-todo-progress">2/5</span><div class="ai-todo-bar"><i style="width:40%"></i></div></div>
+  <div class="ai-todo-item is-running">
+    <span class="ai-item-status"></span>
+    <span class="ai-todo-text">实现登录页</span>
+    <span class="ai-todo-active">正在实现登录页…</span>  <!-- activeForm：运行中替换文案（Claude Code 模式） -->
+  </div>
+</div>
+```
+
+- `renderAiTodo(el, items)`：`items: {content, status: AiStatus, activeForm?}[]`；`initAiTodo(root?)`：`data-ai-todo-interactive` 时可点击循环状态并派 `icen:ai-todo-toggle {index, status}`；默认只读。
+- 进度条用 feedback 的 progress 视觉（token 消费）。
+
+### 4.9 ai-usage（ai-panel.css + ai-panel.ts）
+
+```html
+<div class="ai-usage">
+  <div class="ai-usage-bar">
+    <i class="ai-usage-seg ai-usage-seg--input" style="width:35%"></i>
+    <i class="ai-usage-seg ai-usage-seg--cache-read" style="width:20%"></i>
+    <i class="ai-usage-seg ai-usage-seg--cache-write" style="width:5%"></i>
+    <i class="ai-usage-seg ai-usage-seg--reasoning" style="width:10%"></i>
+    <i class="ai-usage-seg ai-usage-seg--output" style="width:12%"></i>
+  </div>
+  <div class="ai-usage-legend"><!-- 各段色点+数值；缓存分列（计费诚实） --></div>
+  <div class="ai-usage-total">82k / 200k · 41%</div>
+</div>
+```
+
+- `renderAiUsage(el, usage: AiUsage, opts?: { total?: number; cost?: number })`：分段条 + 图例 + 占比；`normalizeUsage` 在 ai-core。
+- 配色：input=accent、output=success、cacheRead=info、cacheWrite=warning、reasoning=faint——语义 token。
+
+### 4.10 ai-context（ai-panel.css + ai-panel.ts）—— 右上角资源抽屉
+
+```html
+<aside class="ai-context" hidden>
+  <div class="ai-context-head"><span>上下文</span><button data-ai-context-close>×</button></div>
+  <section class="ai-context-section"><h3>用量</h3><!-- ai-usage --></section>
+  <section class="ai-context-section"><h3>文件 (3)</h3><!-- ai-files chips --></section>
+  <section class="ai-context-section"><h3>MCP (2)</h3><!-- server 行：名称+状态点+工具数 --></section>
+  <section class="ai-context-section"><h3>Skills</h3><!-- skill chip 列表 --></section>
+</aside>
+```
+
+- `initAiContext(root?)`：触发器 `[data-ai-context-open]` 全局委托开合；抽屉 fixed 右侧滑入（`--z-chrome`），Esc/外点关闭；`.ai-context--inline` 变体为页面流内嵌（不做 fixed）。
+- `renderAiContext(el, { usage?, files?, mcpServers?, skills? })`：组合渲染（内部复用 renderAiUsage / ai-files chip / ai-item 行）。
+- MCP server 行：`.ai-item` 基元 + `is-done`（已连接）/`is-error`（断开）。
+
+## 5. 事件汇总（全部 bubbles）
+
+| 事件 | detail | 来源 |
+|---|---|---|
+| `icen:ai-send` | `{text}` | composer 发送 |
+| `icen:ai-stop` | `{}` | composer 停止 |
+| `icen:ai-queue` / `icen:ai-dequeue` | `{text}` / `{index}` | 排队消息 |
+| `icen:ai-attach` | `{files}` | 附件 |
+| `icen:ai-copy` / `icen:ai-retry` | `{el}` | 消息操作 |
+| `icen:ai-approve` / `icen:ai-reject` | `{id, kind}` | 工具审批 |
+| `icen:ai-diff-accept` / `icen:ai-diff-reject` | `{path}` | diff 审阅 |
+| `icen:ai-todo-toggle` | `{index, status}` | 交互 todo |
+| `icen:ai-toggle` | `{el, open}` | 通用条目展开/折叠 |
+
+## 6. ai-core.ts 契约（S1 实现，其余 slice 消费）
+
+```ts
+export type AiStatus = 'pending'|'running'|'streaming'|'approval'|'done'|'error'|'cancelled';
+export interface AiUsage { input?; output?; cacheRead?; cacheWrite?; reasoning?; total?; }
+export interface AiKindDef { label: string; icon: string; tint?: 'accent'|'success'|'warning'|'error'|'info'|'muted'; summarize?: (input: unknown) => string; }
+export interface AiToolCallModel {
+  id: string; name: string; kind: string; status: AiStatus;
+  input?: unknown; output?: unknown; errorText?: string;
+  approval?: { reason?: string }; durationMs?: number; usage?: AiUsage;
+  activities?: AiToolCallModel[];   // subagent 嵌套
+}
+export function aiStatusLabel(s: AiStatus): string;   // 中文：等待/执行中/流式中/待确认/完成/失败/已取消
+export function registerAiKind(name: string, def: AiKindDef): void;
+export function getAiKind(name: string): AiKindDef;   // 未注册回退 'note'
+export function inferKind(toolName: string): string;  // Bash/Shell→shell, Read→read, mcp__*→mcp, 等
+export function normalizeToolCall(raw: unknown): AiToolCallModel;  // OpenAI tool_calls 项 / Anthropic tool_use|tool_result block / AI SDK tool-* part / 素朴
+export function normalizeUsage(raw: unknown): AiUsage;             // OpenAI usage / Anthropic usage / Gemini usageMetadata / 素朴
+export function formatTokens(n: number): string;    // 1234 → "1.2k"
+export function formatDuration(ms: number): string; // 1234 → "1.2s"
+export function svgIcon(svg: string): SVGElement | null;  // DOMParser 消毒（剥 on* 属性与 script/foreignObject），SSR 返回 null
+```
+
+内置 kind 图标：内联 SVG 字符串常量（lucide 风格 24×24 stroke 图标，手写最简路径；terminal/file/file-pen/file-plus/file-trash/search/folder-search/globe/brain/list/bot 等）。
+
+## 7. 施工分工（文件互斥，严禁越界改别的文件）
+
+- **S1**：`src/behaviors/ai-core.ts` `src/behaviors/ai-chat.ts` `src/behaviors/ai-composer.ts` `src/components/ai-chat.css` `src/index.ts`（追加 6 个 ai 行为导出）
+- **S2**：`src/behaviors/ai-tool.ts` `src/components/ai-tool.css`
+- **S3**：`src/behaviors/ai-diff.ts` `src/behaviors/ai-panel.ts` `src/components/ai-diff.css` `src/components/ai-panel.css`
+- **S4**（S1-S3 完成后）：`scripts/slugs.mjs` `site/src/lib/components.ts`（新分组「AI」+ 11 个交互 demo 条目）`AGENTS.md`（追加 AI 组件族约定）`README.md`（组件统计更新）
+
+验证：各自 `bunx tsc --noEmit`（ui/ 根目录；node 需 `export PATH="/e/Env/Node/fnm/node-versions/v22.22.3/installation:$PATH"`）；不跑 `bun run build`（dist 冲突），统一由主代理构建。

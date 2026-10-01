@@ -1,0 +1,439 @@
+/*
+ * @icen.ai/ui — Component: ai-panel（AI 任务面板族：todo / context / usage，与 behaviors/ai-panel.ts 配套）
+ *
+ * 完整 DOM 契约（类名与规格 §4.8/§4.9/§4.10 一致）：
+ *   <div class="ai-todo" [.is-complete] [data-ai-todo-interactive]>
+ *     <div class="ai-todo-head">
+ *       <span class="ai-todo-progress">2/5</span>
+ *       <div class="ai-todo-bar" role="progressbar" …><i style="width:40%"></i></div>
+ *     </div>
+ *     <div class="ai-todo-item is-pending|running|streaming|approval|done|error|cancelled
+ *          [role="button" tabindex="0"]" data-index="0">
+ *       <span class="ai-item-status"></span>                     <!-- 状态点，纯 CSS 由 .is-* 驱动 -->
+ *       <span class="ai-todo-text">实现登录页</span>
+ *       <span class="ai-todo-active">正在实现登录页…</span>     <!-- is-running 时替换 text（CSS 驱动） -->
+ *     </div>
+ *   </div>
+ *
+ *   <div class="ai-usage">
+ *     <div class="ai-usage-bar" role="img" aria-label="…">
+ *       <i class="ai-usage-seg ai-usage-seg--input|output|cache-read|cache-write|reasoning" style="width:35%"></i>…
+ *     </div>
+ *     <div class="ai-usage-legend">
+ *       <span class="ai-usage-legend-item">
+ *         <i class="ai-usage-dot ai-usage-seg--input"></i>
+ *         <span class="ai-usage-legend-label">输入</span> <span class="ai-usage-legend-value">35k</span>
+ *       </span>…
+ *     </div>
+ *     <div class="ai-usage-total">82k / 200k · 41%</div>
+ *   </div>
+ *
+ *   <aside class="ai-context [.ai-context--inline]" hidden role="dialog" aria-label="上下文">
+ *     <div class="ai-context-head"><span>上下文</span>
+ *       <button type="button" data-ai-context-close aria-label="关闭">×</button></div>
+ *     <section class="ai-context-section"><h3>…</h3>
+ *       <div class="ai-context-section-body">…renderAiContext 产物…</div>   <!-- 可选包裹，亦可直接放内容 -->
+ *     </section>…
+ *   </aside>
+ *
+ *   .ai-item 行（MCP / Skills，规格 §2 基元）：
+ *   <div class="ai-item is-done|is-error" style="--ai-item-tint: var(--token-accent)">
+ *     <span class="ai-item-icon">…svg…</span>
+ *     <span class="ai-item-main">
+ *       <span class="ai-item-title">github</span><span class="ai-item-sub">…</span>
+ *     </span>
+ *     <span class="ai-item-side"><span class="ai-item-status"></span><span class="ai-item-meta">12 工具</span></span>
+ *   </div>
+ *
+ * 依赖说明：
+ *   - .ai-item 完整版在 ai-tool.css（S2）。此处按任务约定重新声明最小骨架（含 --ai-item-tint
+ *     局部变量与状态点），保证 ai-panel.css 单独引入时 todo/context 可用；两边类名/语义一致，
+ *     同页面共存时后加载者覆盖同款属性，视觉不冲突。
+ *   - keyframes ai-status-pulse 为组件局部定义（等同 pill.css 的 pill-pulse），
+ *     时长走 var(--pill-pulse-duration, 1.5s)：pill.css 在场时与其同步，否则自洽。
+ *   - blink keyframes 来自 tokens/colors.css（.animate-blink 同款，共享复用）。
+ *   - base.css：--z-chrome / --icen-tx-* / --icen-ring。只消费 --token-* / --density-* / --radius-*。
+ */
+
+/* ══════════════ .ai-item 最小基元（自包含，兼容 ai-tool.css 完整版） ══════════════ */
+
+.ai-item {
+  --ai-item-tint: var(--token-accent);
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-xs) var(--density-space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--density-font-size-sm);
+  min-width: 0;
+}
+
+.ai-item-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: var(--ai-item-tint);
+}
+.ai-item-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.ai-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ai-item-title {
+  color: var(--token-text);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-item-sub {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-item-side {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+}
+.ai-item-meta {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 状态点 .ai-item-status：纯 CSS 圆点，由 .is-* 驱动（ai-item 与 ai-todo-item 共用） ── */
+
+.ai-item-status {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--token-text-faint);
+  background: transparent;
+}
+
+/* pending：faint 空心点（默认态即空心） */
+.ai-item.is-pending > .ai-item-status,
+.ai-todo-item.is-pending > .ai-item-status { }
+
+/* running / streaming：accent 脉冲点 */
+.ai-item.is-running > .ai-item-status,
+.ai-todo-item.is-running > .ai-item-status,
+.ai-item.is-streaming > .ai-item-status,
+.ai-todo-item.is-streaming > .ai-item-status {
+  border-color: var(--token-accent);
+  background: var(--token-accent);
+  animation: ai-status-pulse var(--pill-pulse-duration, 1.5s) ease-in-out infinite;
+}
+
+/* approval：warning 点 */
+.ai-item.is-approval > .ai-item-status,
+.ai-todo-item.is-approval > .ai-item-status {
+  border-color: var(--token-warning);
+  background: var(--token-warning);
+}
+
+/* done：success 点 */
+.ai-item.is-done > .ai-item-status,
+.ai-todo-item.is-done > .ai-item-status {
+  border-color: var(--token-success);
+  background: var(--token-success);
+}
+
+/* error：error 点 */
+.ai-item.is-error > .ai-item-status,
+.ai-todo-item.is-error > .ai-item-status {
+  border-color: var(--token-error);
+  background: var(--token-error);
+}
+
+/* cancelled：faint 实心点 + 标题删除线（规格 §1） */
+.ai-item.is-cancelled > .ai-item-status,
+.ai-todo-item.is-cancelled > .ai-item-status {
+  border-color: var(--token-text-faint);
+  background: var(--token-text-faint);
+}
+.ai-item.is-cancelled .ai-item-title,
+.ai-todo-item.is-cancelled .ai-todo-text {
+  text-decoration: line-through;
+}
+
+/* 组件局部 keyframes（等同 pill-pulse，避免硬依赖 pill.css） */
+@keyframes ai-status-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* ══════════════ ai-todo · 任务清单（§4.8） ══════════════ */
+
+.ai-todo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  font-size: var(--density-font-size-sm);
+  min-width: 0;
+}
+
+.ai-todo-head {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  min-width: 0;
+}
+
+.ai-todo-progress {
+  flex-shrink: 0;
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 进度条：feedback progress 视觉（token 消费） */
+.ai-todo-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--token-line-soft) 40%, transparent);
+}
+.ai-todo-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--token-accent);
+  transition: width var(--icen-tx-slow);
+}
+.ai-todo.is-complete .ai-todo-bar > i {
+  background: var(--token-success);
+}
+
+.ai-todo-item {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  padding: 3px var(--density-space-xs);
+  border-radius: var(--radius-xs);
+  min-width: 0;
+}
+
+/* 交互模式（initAiTodo 升级 role=button） */
+.ai-todo-item[role='button'] {
+  cursor: pointer;
+  transition: background-color var(--icen-tx-fast);
+}
+.ai-todo-item[role='button']:hover {
+  background: var(--token-fill-1);
+}
+.ai-todo-item:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.ai-todo-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* activeForm：运行中替换式强调（Claude Code 模式） */
+.ai-todo-active {
+  display: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--token-accent-deep);
+}
+.ai-todo-item.is-running .ai-todo-text { display: none; }
+.ai-todo-item.is-running .ai-todo-active { display: inline; }
+
+/* done/cancelled：淡化 + 删除线 */
+.ai-todo-item.is-done .ai-todo-text,
+.ai-todo-item.is-cancelled .ai-todo-text {
+  color: var(--token-text-faint);
+  text-decoration: line-through;
+}
+
+/* ══════════════ ai-usage · 用量条（§4.9） ══════════════ */
+
+.ai-usage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-muted);
+  min-width: 0;
+}
+
+.ai-usage-bar {
+  display: flex;
+  height: 6px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--token-line-soft) 40%, transparent);
+}
+
+.ai-usage-seg {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  transition: width var(--icen-tx-slow);
+}
+
+/* 配色契约：input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint */
+.ai-usage-seg--input       { background: var(--token-accent); }
+.ai-usage-seg--output      { background: var(--token-success); }
+.ai-usage-seg--cache-read  { background: var(--token-info); }
+.ai-usage-seg--cache-write { background: var(--token-warning); }
+.ai-usage-seg--reasoning   { background: var(--token-text-faint); }
+
+/* 图例：色点 + 标签 + 数值（缓存分列，计费诚实） */
+.ai-usage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--density-space-xs) var(--density-space-sm);
+}
+.ai-usage-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.ai-usage-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+.ai-usage-legend-label { color: var(--token-text-muted); }
+.ai-usage-legend-value { color: var(--token-text); font-weight: 500; }
+
+.ai-usage-total {
+  font-variant-numeric: tabular-nums;
+  color: var(--token-text-muted);
+}
+
+/* ══════════════ ai-context · 上下文抽屉（§4.10） ══════════════ */
+
+.ai-context {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(360px, 92vw);
+  z-index: var(--z-chrome);
+  display: flex;
+  flex-direction: column;
+  background: var(--token-surface);
+  border-left: 1px solid var(--token-line-soft);
+  box-shadow: var(--token-shadow-overlay);
+  transform: translateX(100%);
+  transition: transform var(--ai-context-duration, var(--duration-normal)) var(--ease-out);
+  overflow-y: auto;
+}
+.ai-context[hidden] {
+  display: none;
+}
+.ai-context.is-open {
+  transform: translateX(0);
+}
+
+/* 页面流内嵌变体：不做 fixed、不滑入 */
+.ai-context--inline {
+  position: static;
+  inset: auto;
+  width: auto;
+  z-index: auto;
+  transform: none;
+  transition: none;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-elevated);
+  overflow-y: visible;
+}
+
+.ai-context-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm) var(--density-space-md);
+  background: var(--token-surface);
+  border-bottom: 1px solid var(--token-line-soft);
+  font-size: var(--density-font-size-sm);
+  font-weight: 600;
+  color: var(--token-text);
+}
+
+.ai-context-head [data-ai-context-close] {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--token-text-faint);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
+}
+.ai-context-head [data-ai-context-close]:hover {
+  color: var(--token-text);
+  background: var(--token-fill-1);
+}
+.ai-context-head [data-ai-context-close]:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.ai-context-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  padding: var(--density-space-sm) var(--density-space-md);
+  min-width: 0;
+}
+.ai-context-section ~ .ai-context-section {
+  border-top: 1px solid var(--token-line-soft);
+}
+.ai-context-section h3 {
+  margin: 0;
+  font-size: var(--density-font-size-xs);
+  font-weight: 600;
+  color: var(--token-text-muted);
+}
+.ai-context-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  min-width: 0;
+}
+
+/* ── 动效守卫 ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-todo-bar > i,
+  .ai-usage-seg { transition: none; }
+  .ai-context { transition: none; }
+  .ai-item-status { animation: none; }
+}

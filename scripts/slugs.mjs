@@ -24,6 +24,8 @@ export const SLUGS = [
   'alert', 'result', 'progress', 'spinner', 'skeleton', 'copy', 'notification',
   // 导航
   'nav', 'sidebar', 'breadcrumb', 'pagination', 'steps', 'back-top', 'layout',
+  // AI 原生组件族（ai-*；CSS 合并为 4 文件，见 MERGED_CSS）
+  'ai-chat', 'ai-message', 'ai-reasoning', 'ai-composer', 'ai-tool-call', 'ai-subagent', 'ai-diff', 'ai-files', 'ai-todo', 'ai-context', 'ai-usage',
 ];
 
 /** slug → css 文件名：多数同名，以下为合并文件的例外。 */
@@ -45,11 +47,27 @@ export const MERGED_CSS = {
   carousel: 'media.css',
   dropdown: 'menu.css',
   'context-menu': 'menu.css',
+  // AI 族合并文件：ai-chat.css / ai-tool.css / ai-diff.css / ai-panel.css
+  'ai-message': 'ai-chat.css',
+  'ai-reasoning': 'ai-chat.css',
+  'ai-composer': 'ai-chat.css',
+  'ai-subagent': 'ai-tool.css',
+  'ai-files': 'ai-diff.css',
+  'ai-todo': 'ai-panel.css',
+  'ai-context': 'ai-panel.css',
+  'ai-usage': 'ai-panel.css',
 };
 
 /** slug → behavior 的 init 函数名（有 init 契约的组件）。 */
 export const SLUG_INIT = {
   accordion: 'initAccordion',
+  'ai-chat': 'initAiChat',
+  'ai-composer': 'initAiComposer',
+  'ai-context': 'initAiContext',
+  'ai-diff': 'initAiDiff',
+  'ai-subagent': 'initAiSubagent',
+  'ai-todo': 'initAiTodo',
+  'ai-tool-call': 'initAiTool',
   carousel: 'initCarousel',
   'context-menu': 'initContextMenu',
   copy: 'initCopy',
@@ -93,6 +111,11 @@ export const SLUG_EXPORTS = {
   'chart-stack': ['renderStack'],
   'chart-gauge': ['renderGauge'],
   'chart-sparkline': ['renderSparkline'],
+  // ── AI 族：behavior 挂到别模块的 slug，kit 入口按此 re-export ──
+  'ai-message': ['createAiStream', 'initAiChat'],
+  'ai-reasoning': ['createAiStream', 'initAiChat'],
+  'ai-files': ['renderAiDiff'],
+  'ai-usage': ['renderAiUsage'],
 };
 
 /** slug → 对应组件 CSS 文件名。 */
@@ -107,6 +130,11 @@ export function cssOf(slug) {
 export const SLUG_BEHAVIOR = {
   // segmented 无独立 behavior 文件：OTP 等行为在 input.ts
   segmented: 'input',
+  // AI 族：message/reasoning 复用 ai-chat、files 复用 ai-diff、usage 复用 ai-panel
+  'ai-message': 'ai-chat',
+  'ai-reasoning': 'ai-chat',
+  'ai-files': 'ai-diff',
+  'ai-usage': 'ai-panel',
   'chart-line': 'charts',
   'chart-bar': 'charts',
   'chart-pie': 'charts',

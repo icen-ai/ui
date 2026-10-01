@@ -1,0 +1,430 @@
+/*
+ * @icen.ai/ui — Component: ai-tool（AI 工具调用卡 + 子智能体卡；含 .ai-item 条目基元完整定义）
+ *
+ * 完整契约：
+ *   ── 条目基元 .ai-item（规格 §2 骨架：所有行式 AI 条目的"基类"，todo/panel 亦复用）──
+ *   <div class="ai-item is-running" style="--ai-item-tint: var(--token-accent)">
+ *     <span class="ai-item-icon"><!-- svg --></span>
+ *     <div class="ai-item-main">
+ *       <div class="ai-item-title">一行摘要</div>
+ *       <div class="ai-item-sub">次要信息（路径/参数）</div>
+ *     </div>
+ *     <div class="ai-item-side">
+ *       <span class="ai-item-status"></span>   ← 状态点，纯 CSS 由 .is-* 驱动
+ *       <span class="ai-item-meta">1.2s</span>
+ *     </div>
+ *     <div class="ai-item-detail" hidden>展开详情</div>
+ *   </div>
+ *
+ *   ── 工具调用卡（.ai-tool-head 复用 .ai-item-* 零件，不带 .ai-item 壳）──
+ *   <div class="ai-tool ai-tool--shell is-done" data-ai-id="…" data-ai-kind="shell">
+ *     <button class="ai-tool-head" type="button" aria-expanded="false">
+ *       <span class="ai-item-icon" aria-hidden="true">…svg…</span>
+ *       <span class="ai-item-main">
+ *         <span class="ai-item-title">Read</span>
+ *         <span class="ai-item-sub">src/foo.ts:1-50</span>
+ *       </span>
+ *       <span class="ai-item-status" role="img" aria-label="完成"></span>
+ *       <span class="ai-item-meta">0.4s</span>
+ *     </button>
+ *     <div class="ai-tool-body" hidden>
+ *       <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">…</pre></div>
+ *       <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">…</pre></div>
+ *       <div class="ai-tool-approval">            ← 仅 .is-approval 显示（纯 CSS 驱动）
+ *         <div class="ai-tool-approval-reason" hidden>审批原因</div>  ← 可选（model.approval.reason）
+ *         <button class="btn btn-sm btn-primary" data-ai-approve type="button">允许</button>
+ *         <button class="btn btn-sm" data-ai-reject type="button">拒绝</button>
+ *       </div>
+ *     </div>
+ *   </div>
+ *
+ *   ── 子智能体卡 ──
+ *   <div class="ai-subagent is-running" data-ai-id="…" data-ai-kind="subagent">
+ *     <button class="ai-subagent-head" type="button" aria-expanded="false">…head 结构同上…</button>
+ *     <div class="ai-subagent-body" hidden>
+ *       <div class="ai-subagent-stream">          ← 嵌套 .ai-tool / .ai-subagent；
+ *         …                                    行间 style="--ai-activity-index:i" 驱动渐入 stagger
+ *       </div>
+ *       <div class="ai-subagent-result">完成回执摘要</div>
+ *     </div>
+ *   </div>
+ *
+ * 状态机 7 态（全条目共享，规格 §1）：
+ *   .is-pending   faint 空心点
+ *   .is-running   tint 脉冲点（--ai-item-pulse-duration 变量化时长）
+ *   .is-streaming ▍流式光标（colors.css blink keyframes，--ai-item-blink-duration 变量化）
+ *   .is-approval  warning 点 + 外环；卡片边框 warning；显示审批按钮
+ *   .is-done      success 纯 CSS 对勾
+ *   .is-error     error 点 + 外环；失败条目由 behavior 首次渲染自动展开
+ *   .is-cancelled faint 点 + 标题删除线
+ *
+ * kind 修饰类 ai-tool--<kind> 只覆盖 --ai-item-tint（继承 = 变量级联，不改结构）：
+ *   read/search/grep/glob=info · edit/write=accent · rm=error · shell=muted · mcp/skill=success
+ *   browser/fetch/todo/plan/subagent/note = 默认 accent（不写规则）
+ * 第三方 registerAiKind 的 tint 由 behavior 内联 --ai-item-tint 兜底。
+ */
+
+/* ══════════════════════════════════════════════════════════════
+   条目基元 .ai-item（行式条目"基类"）
+   ══════════════════════════════════════════════════════════════ */
+
+.ai-item {
+  /* 局部变量槽：kind/变体只覆盖这些变量（--btn-* 同款继承模式） */
+  --ai-item-tint: var(--token-accent);
+  --ai-item-pulse-duration: 1.5s;  /* running 脉冲（pill --pill-pulse-duration 同款变量化） */
+  --ai-item-blink-duration: 1s;    /* streaming 光标闪烁 */
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--density-space-sm);
+  min-width: 0;
+}
+
+.ai-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--ai-item-tint);
+  transition: color var(--icen-tx-fast);
+}
+.ai-item-icon > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ai-item-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ai-item-title {
+  font-size: var(--density-font-size-md);
+  line-height: 1.4;
+  color: var(--token-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-item-sub {
+  font-size: var(--density-font-size-xs);
+  line-height: 1.4;
+  color: var(--token-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-item-side {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+/* head 直排结构（无 .ai-item-side 包裹）时，状态点顶到右侧 */
+.ai-tool-head > .ai-item-status,
+.ai-subagent-head > .ai-item-status {
+  margin-left: auto;
+}
+
+.ai-item-meta {
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.ai-item-detail {
+  flex-basis: 100%;
+  min-width: 100%;
+}
+
+/* ── 状态点 .ai-item-status（纯 CSS 圆点，由 .is-* 决定颜色与动效） ── */
+.ai-item-status {
+  position: relative;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* 等待：faint 空心点（.ai-subagent 与 .ai-item 共享同一状态语言） */
+:is(.ai-item, .ai-tool, .ai-subagent).is-pending .ai-item-status {
+  border: 1.5px solid var(--token-text-faint);
+}
+
+/* 执行中：tint 脉冲点 */
+:is(.ai-item, .ai-tool, .ai-subagent).is-running .ai-item-status {
+  background: var(--ai-item-tint);
+  animation: ai-item-pulse var(--ai-item-pulse-duration) ease-in-out infinite;
+}
+@keyframes ai-item-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* 流式中：▍光标闪烁（复用 colors.css 的 blink keyframes，animate-blink 同款） */
+:is(.ai-item, .ai-tool, .ai-subagent).is-streaming .ai-item-status {
+  width: 3px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--ai-item-tint);
+  animation: blink var(--ai-item-blink-duration) step-end infinite;
+}
+
+/* 待人确认：warning 点 + 外环 */
+:is(.ai-item, .ai-tool, .ai-subagent).is-approval .ai-item-status {
+  background: var(--token-warning);
+  box-shadow: 0 0 0 3px var(--token-warning-muted);
+}
+
+/* 完成：success 对勾（纯 CSS，无 SVG） */
+:is(.ai-item, .ai-tool, .ai-subagent).is-done .ai-item-status::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: -1px;
+  width: 5px;
+  height: 9px;
+  border-right: 1.5px solid var(--token-success);
+  border-bottom: 1.5px solid var(--token-success);
+  transform: rotate(45deg);
+}
+
+/* 失败：error 点 + 外环 */
+:is(.ai-item, .ai-tool, .ai-subagent).is-error .ai-item-status {
+  background: var(--token-error);
+  box-shadow: 0 0 0 3px var(--token-error-muted);
+}
+
+/* 已取消：faint 点 + 标题删除线 */
+:is(.ai-item, .ai-tool, .ai-subagent).is-cancelled .ai-item-status {
+  background: var(--token-text-faint);
+  opacity: 0.6;
+}
+:is(.ai-item, .ai-tool, .ai-subagent).is-cancelled .ai-item-title {
+  color: var(--token-text-faint);
+  text-decoration: line-through;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   工具调用卡 .ai-tool
+   ══════════════════════════════════════════════════════════════ */
+
+.ai-tool {
+  --ai-item-tint: var(--token-accent);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  background: var(--token-surface);
+}
+
+/* ── kind 修饰类：只覆盖 --ai-item-tint ──
+   browser/fetch/todo/plan/subagent/note 用默认 accent，不写规则 */
+.ai-tool--read,
+.ai-tool--search,
+.ai-tool--grep,
+.ai-tool--glob {
+  --ai-item-tint: var(--token-info);
+}
+.ai-tool--edit,
+.ai-tool--write {
+  --ai-item-tint: var(--token-accent);
+}
+.ai-tool--rm {
+  --ai-item-tint: var(--token-error);
+}
+.ai-tool--shell {
+  --ai-item-tint: var(--token-text-muted);
+}
+.ai-tool--mcp,
+.ai-tool--skill {
+  --ai-item-tint: var(--token-success);
+}
+
+/* ── head ── */
+.ai-tool-head,
+.ai-subagent-head {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  width: 100%;
+  padding: var(--density-space-xs) var(--density-space-sm);
+  border: none;
+  border-radius: inherit; /* hover 底色不戳破卡片圆角 */
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--icen-tx-fast);
+}
+.ai-tool-head:hover,
+.ai-subagent-head:hover {
+  background: var(--token-fill-1);
+}
+.ai-tool-head:focus-visible,
+.ai-subagent-head:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+/* ── body ── */
+.ai-tool-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm);
+  border-top: 1px solid var(--token-line-soft);
+  animation: icen-pop-in var(--icen-tx-fast);
+}
+.ai-tool-body[hidden],
+.ai-subagent-body[hidden],
+.ai-tool-io[hidden],
+.ai-subagent-result[hidden] {
+  display: none;
+}
+
+/* ── 输入/输出区块（pre 等宽、可滚、max-height 收敛） ── */
+.ai-tool-io {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ai-tool-io-label {
+  font-size: var(--density-font-size-2xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--token-text-faint);
+}
+.ai-tool-io-content {
+  --ai-tool-io-max: 12rem; /* 收敛上限（组件局部变量） */
+  margin: 0;
+  padding: var(--density-space-xs) var(--density-space-sm);
+  max-height: var(--ai-tool-io-max);
+  overflow: auto;
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-sm);
+  line-height: 1.5;
+  color: var(--token-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── 审批区（仅 .is-approval 显示，纯 CSS 驱动） ── */
+.ai-tool-approval {
+  display: none;
+  align-items: center;
+  gap: var(--density-space-sm);
+  padding-top: var(--density-space-xs);
+  border-top: 1px dashed var(--token-line-soft);
+}
+.ai-tool.is-approval .ai-tool-approval {
+  display: flex;
+}
+.ai-tool-approval-reason {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--density-font-size-xs);
+  line-height: 1.5;
+  color: var(--token-text-muted);
+}
+.ai-tool.is-approval {
+  border-color: color-mix(in srgb, var(--token-warning) 40%, transparent);
+}
+.ai-tool.is-error {
+  border-color: color-mix(in srgb, var(--token-error) 40%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   子智能体卡 .ai-subagent（嵌套活动流 = 缩进 + 左侧引导线，可递归）
+   ══════════════════════════════════════════════════════════════ */
+
+.ai-subagent {
+  --ai-item-tint: var(--token-accent);
+  border: 1px solid var(--token-line-soft);
+  border-left: 3px solid var(--ai-item-tint); /* 代理卡身份：tint 左边条 */
+  border-radius: var(--radius-md);
+  background: var(--token-surface);
+}
+.ai-subagent.is-error {
+  border-left-color: var(--token-error);
+}
+.ai-subagent.is-done {
+  border-left-color: var(--token-success);
+}
+
+.ai-subagent-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm);
+  border-top: 1px solid var(--token-line-soft);
+}
+
+/* 嵌套流：缩进 + 引导线；行间渐入 stagger 由 --ai-activity-index（render 写入）驱动 */
+.ai-subagent-stream {
+  --ai-stagger-step: 40ms; /* 活动项渐入步长（组件局部变量） */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  padding-left: var(--density-space-md);
+}
+.ai-subagent-stream::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: var(--density-space-xs);
+  bottom: var(--density-space-xs);
+  width: 1px;
+  background: var(--token-line-soft);
+}
+/* 展开（body 从 hidden 解除）时，活动项逐条 icen-pop-in 渐入 */
+.ai-subagent-stream > * {
+  animation: icen-pop-in var(--icen-tx-fast) backwards;
+  animation-delay: calc(var(--ai-activity-index, 0) * var(--ai-stagger-step));
+}
+
+/* 完成回执 */
+.ai-subagent-result {
+  padding: var(--density-space-xs) var(--density-space-sm);
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm);
+  font-size: var(--density-font-size-sm);
+  line-height: 1.5;
+  color: var(--token-text-muted);
+}
+.ai-subagent.is-done .ai-subagent-result {
+  color: var(--token-text);
+  border-color: color-mix(in srgb, var(--token-success) 30%, transparent);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   动效守卫
+   ══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  :is(.ai-item, .ai-tool, .ai-subagent).is-running .ai-item-status,
+  :is(.ai-item, .ai-tool, .ai-subagent).is-streaming .ai-item-status {
+    animation: none;
+  }
+  .ai-tool-body,
+  .ai-subagent-stream > * {
+    animation: none;
+  }
+  .ai-tool-head,
+  .ai-subagent-head {
+    transition: none;
+  }
+}

@@ -19,7 +19,7 @@ export interface ComponentDoc {
   script?: string;
 }
 /** 组件分组的展示名（顺序即侧栏顺序）。原「数据」已拆为四组：数据展示 / 表格 / 图表 / 反馈。 */
-export const GROUPS: string[] = ['基础', '表单', '浮层', '数据展示', '表格', '图表', '反馈', '导航'];
+export const GROUPS: string[] = ['基础', '表单', '浮层', '数据展示', '表格', '图表', '反馈', '导航', 'AI'];
 
 /** slug → 组件 css 文件名（单一事实源在 scripts/slugs.mjs，与 kit 入口/CLI 共享）。 */
 export function cssFor(slug: string): string {
@@ -2769,5 +2769,762 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
 <div class="surface surface--elevated">浮起表面</div>
 <span class="text--sm text--muted">辅助文字</span>
 <div class="divider"></div>`,
+  },
+
+  /* ══════════ AI（AI 原生组件族，规格 docs/spec/ai-native.md）══════════ */
+  {
+    slug: 'ai-chat',
+    name: 'AI 会话',
+    group: 'AI',
+    desc: 'AI 会话容器（AI 族门面条目）：滚动钉底跟随、上滚暂停跟随并浮出「回到底部 · N 条」浮动钮（缺失自动补建）；消息 copy / retry 操作委托（icen:ai-copy / icen:ai-retry）；reasoning 折叠委托。配套 createAiStream 做 textContent 级流式追加；data-density 三档（verbose / normal / summary）控制信息密度。',
+    demo: `<div class="toolbar" style="margin-bottom:10px">
+  <span class="toolbar-label">密度</span>
+  <button class="btn btn-sm" type="button" data-ai-density="verbose">verbose</button>
+  <button class="btn btn-sm btn-primary" type="button" data-ai-density="normal">normal</button>
+  <button class="btn btn-sm" type="button" data-ai-density="summary">summary</button>
+  <span class="toolbar-spacer"></span>
+  <button class="btn btn-sm" type="button" id="ai-chat-replay">重放流式回复</button>
+</div>
+<div class="ai-chat" id="ai-chat-demo" data-density="normal" style="height:400px;border:1px solid var(--token-line-soft);border-radius:var(--radius-md);padding:10px">
+  <div class="ai-chat-scroll">
+    <div class="ai-msg ai-msg--user">
+      <span class="ai-msg-avatar">我</span>
+      <div style="min-width:0">
+        <div class="ai-msg-body">帮我梳理这次发布前的检查清单，重点是构建验证和回滚路径。</div>
+        <div class="ai-msg-meta">12:04 · 28 tok</div>
+      </div>
+    </div>
+    <div class="ai-msg ai-msg--assistant">
+      <span class="ai-msg-avatar">AI</span>
+      <div style="min-width:0">
+        <div class="ai-msg-body">好，先跑一下构建确认基线。</div>
+      </div>
+    </div>
+    <div class="ai-reasoning is-done">
+      <button class="ai-reasoning-head" type="button" aria-expanded="false">
+        <span class="ai-reasoning-label">思考过程</span><span class="ai-reasoning-time">2.1s</span>
+      </button>
+      <div class="ai-reasoning-body" hidden>用户关注发布风险，清单需要覆盖：构建是否全绿、类型检查、关键页面冒烟、回滚路径。本次发布有 tag，回滚安全，可以先给结论。</div>
+    </div>
+    <div class="ai-tool ai-tool--shell is-done" data-ai-id="demo-chat-shell" data-ai-kind="shell">
+      <button class="ai-tool-head" type="button" aria-expanded="false">
+        <span class="ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></span>
+        <span class="ai-item-main">
+          <span class="ai-item-title">Shell</span>
+          <span class="ai-item-sub">bun run build</span>
+        </span>
+        <span class="ai-item-status" role="img" aria-label="完成"></span>
+        <span class="ai-item-meta">3.2s</span>
+      </button>
+      <div class="ai-tool-body" hidden>
+        <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">bun run build</pre></div>
+        <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">tsup ✓ · build-css: 55 components + 75 kit 入口 → dist/</pre></div>
+      </div>
+    </div>
+    <div class="ai-msg ai-msg--assistant">
+      <span class="ai-msg-avatar">AI</span>
+      <div style="min-width:0">
+        <div class="ai-msg-body" id="ai-chat-stream"></div>
+        <div class="ai-msg-meta" id="ai-chat-meta" hidden>12:05 · 1.2k tok</div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="demo-label" id="ai-chat-log" style="margin-top:8px">悬停消息看 copy / retry · 上滚出现「回到底部」· 点「重放」重新播流式回复</p>`,
+    usage: `import { initAiChat, createAiStream } from '@icen.ai/ui/kit/ai-chat';
+initAiChat();   // 钉底跟随 / 上滚暂停 / .ai-chat-jump 缺失自动补建 / copy·retry / reasoning 折叠
+
+<!-- DOM 契约 -->
+<div class="ai-chat" data-density="normal">
+  <div class="ai-chat-scroll">
+    <div class="ai-msg ai-msg--user">
+      <span class="ai-msg-avatar">我</span>
+      <div>
+        <div class="ai-msg-body">…消费方自行渲染 markdown…</div>
+        <div class="ai-msg-meta">12:04 · 1.2k tok</div>
+      </div>
+    </div>
+  </div>
+  <button class="ai-chat-jump" hidden>回到底部 · 3 条新消息</button>
+</div>
+
+// 流式回复：textContent 级追加（不解析 HTML；markdown 重渲染是消费方职责）
+const s = createAiStream(document.querySelector('.ai-msg-body'));
+s.append('…');
+s.done();   // 或 s.cancel()`,
+    behaviors: ['ai-chat', 'ai-tool'],
+    behaviorInit: { 'ai-chat': 'initAiChat', 'ai-tool': 'initAiTool' },
+    script: `const chatEl = document.getElementById('ai-chat-demo');
+const target = document.getElementById('ai-chat-stream');
+const metaEl = document.getElementById('ai-chat-meta');
+const logEl = document.getElementById('ai-chat-log');
+const REPLY = '构建已验证通过（3.2s，55 组件 + 75 kit 入口）。发布检查清单：\\n1. 构建 · bun run build 全绿\\n2. 类型 · tsc --noEmit 零错误\\n3. 冒烟 · accounts / skill 两站各跑一遍登录流程\\n4. 回滚 · revert tag v0.6.1 即可，本次无数据库变更\\n任何一步失败都先停发布，叫我一起看。';
+let timer = null;
+function play() {
+  if (!target) return;
+  if (timer) { clearInterval(timer); timer = null; }
+  target.textContent = '';
+  if (metaEl) metaEl.hidden = true;
+  const stream = aiChatMod.createAiStream(target);
+  let pos = 0;
+  timer = setInterval(function () {
+    const next = Math.min(REPLY.length, pos + 2 + Math.floor(Math.random() * 3));
+    stream.append(REPLY.slice(pos, next));
+    pos = next;
+    if (pos >= REPLY.length) {
+      stream.done();
+      clearInterval(timer);
+      timer = null;
+      if (metaEl) metaEl.hidden = false;
+    }
+  }, 60);
+}
+play();
+document.getElementById('ai-chat-replay')?.addEventListener('click', play);
+/* 密度三档切换 */
+document.querySelectorAll('[data-ai-density]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    chatEl?.setAttribute('data-density', btn.getAttribute('data-ai-density') || 'normal');
+    document.querySelectorAll('[data-ai-density]').forEach(function (b) {
+      b.classList.toggle('btn-primary', b === btn);
+    });
+  });
+});
+/* copy / retry 委托事件回显 */
+const logDefault = logEl ? logEl.textContent : '';
+function flash(msg) {
+  if (!logEl) return;
+  logEl.textContent = msg;
+  setTimeout(function () { logEl.textContent = logDefault; }, 1600);
+}
+chatEl?.addEventListener('icen:ai-copy', function () { flash('icen:ai-copy · 已复制消息正文'); });
+chatEl?.addEventListener('icen:ai-retry', function () { flash('icen:ai-retry · 演示环境未真正重发'); });`,
+  },
+  {
+    slug: 'ai-message',
+    name: 'AI 消息',
+    group: 'AI',
+    desc: '消息行基元 .ai-msg：user / assistant / system / tool 四角色（avatar 语义色）+ meta 时间 · token（summary 档隐藏）+ hover / focus-within 浮出 copy · retry 操作钮。无独立 init——操作委托由 initAiChat 提供（消息须挂在 .ai-chat 容器内）。',
+    demo: `<div class="ai-chat" style="height:auto">
+  <div class="ai-msg ai-msg--user" style="margin-bottom:10px">
+    <span class="ai-msg-avatar">我</span>
+    <div style="min-width:0">
+      <div class="ai-msg-body">把这句话翻译成英文：「潮水褪去，才知道谁在裸泳。」</div>
+      <div class="ai-msg-meta">12:04 · 21 tok</div>
+    </div>
+  </div>
+  <div class="ai-msg ai-msg--assistant" style="margin-bottom:10px">
+    <span class="ai-msg-avatar">AI</span>
+    <div style="min-width:0">
+      <div class="ai-msg-body">"Only when the tide goes out do you discover who's been swimming naked."</div>
+      <div class="ai-msg-meta">12:04 · 34 tok</div>
+    </div>
+    <div class="ai-msg-actions">
+      <button type="button" data-ai-msg-action="copy" aria-label="复制"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></button>
+      <button type="button" data-ai-msg-action="retry" aria-label="重试"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+    </div>
+  </div>
+  <div class="ai-msg ai-msg--system" style="margin-bottom:10px">
+    <span class="ai-msg-avatar">SYS</span>
+    <div style="min-width:0">
+      <div class="ai-msg-body">上下文已压缩：38k → 21k tokens</div>
+      <div class="ai-msg-meta">12:06</div>
+    </div>
+  </div>
+  <div class="ai-msg ai-msg--tool">
+    <span class="ai-msg-avatar">TL</span>
+    <div style="min-width:0">
+      <div class="ai-msg-body">grep「formatDate」命中 6 处（src/utils/date.ts 等）</div>
+      <div class="ai-msg-meta">12:06 · 0.4s</div>
+    </div>
+  </div>
+</div>
+<p class="demo-label" id="ai-msg-log" style="margin-top:8px">悬停 assistant 消息看 copy / retry 操作钮</p>`,
+    usage: `<!-- 四角色：ai-msg--user / --assistant / --system / --tool；消息须挂在 .ai-chat 容器内 -->
+<div class="ai-chat">
+  <div class="ai-msg ai-msg--assistant">
+    <span class="ai-msg-avatar">AI</span>
+    <div>
+      <div class="ai-msg-body">…消费方自行渲染 markdown…</div>
+      <div class="ai-msg-actions">
+        <button type="button" data-ai-msg-action="copy" aria-label="复制">…</button>
+        <button type="button" data-ai-msg-action="retry" aria-label="重试">…</button>
+      </div>
+      <div class="ai-msg-meta">12:04 · 1.2k tok</div>
+    </div>
+  </div>
+</div>
+
+<!-- copy / retry 委托（与 ai-chat 同一个 init，事件 icen:ai-copy / icen:ai-retry，detail {el}） -->
+import { initAiChat } from '@icen.ai/ui/kit/ai-message';
+initAiChat();`,
+    behaviors: ['ai-chat'],
+    behaviorInit: { 'ai-chat': 'initAiChat' },
+    script: `const logEl = document.getElementById('ai-msg-log');
+const logDefault = logEl ? logEl.textContent : '';
+function flash(msg) {
+  if (!logEl) return;
+  logEl.textContent = msg;
+  setTimeout(function () { logEl.textContent = logDefault; }, 1600);
+}
+document.querySelectorAll('.ai-msg').forEach(function (m) {
+  m.addEventListener('icen:ai-copy', function () { flash('icen:ai-copy · 已复制该消息正文'); });
+  m.addEventListener('icen:ai-retry', function () { flash('icen:ai-retry · 演示环境未真正重发'); });
+});`,
+  },
+  {
+    slug: 'ai-reasoning',
+    name: 'AI 推理',
+    group: 'AI',
+    desc: '推理块 .ai-reasoning：流式中 head 显示 shimmer「正在思考…」（--ai-shimmer-duration 变量化时长）；createAiStream 的 done() 自动折叠并回填耗时；head 点击展开 / 折叠（initAiChat 委托）。summary 密度档默认折叠。',
+    demo: `<div class="ai-chat" style="height:auto">
+  <div class="ai-reasoning is-streaming" id="ai-reasoning-live">
+    <button class="ai-reasoning-head" type="button" aria-expanded="true">
+      <span class="ai-reasoning-label">思考过程</span><span class="ai-reasoning-time"></span>
+    </button>
+    <div class="ai-reasoning-body" id="ai-reasoning-stream"></div>
+  </div>
+  <div class="ai-reasoning is-done" style="margin-top:12px">
+    <button class="ai-reasoning-head" type="button" aria-expanded="false">
+      <span class="ai-reasoning-label">思考过程</span><span class="ai-reasoning-time">3.4s</span>
+    </button>
+    <div class="ai-reasoning-body" hidden>1. 目标函数是凸的，先证存在唯一极小值。2. 对约束求拉格朗日乘子，得到闭式解。3. 回代验证边界条件成立，结论可靠。</div>
+  </div>
+</div>
+<p class="demo-label" style="margin-top:8px">上面一块流式结束后自动折叠并回填耗时；下面一块点击 head 展开 / 折叠</p>`,
+    usage: `<div class="ai-reasoning is-done">
+  <button class="ai-reasoning-head" aria-expanded="false">
+    <span class="ai-reasoning-label">思考过程</span><span class="ai-reasoning-time">3s</span>
+  </button>
+  <div class="ai-reasoning-body" hidden>…</div>
+</div>
+
+<!-- 流式推理：宿主在 .ai-reasoning 内时 done() 自动折叠 + 回填耗时 -->
+import { createAiStream, initAiChat } from '@icen.ai/ui/kit/ai-reasoning';
+initAiChat();   // head 展开/折叠委托
+const s = createAiStream(document.querySelector('.ai-reasoning-body'));
+s.append('…');
+s.done();   // 或 s.cancel()（取消不折叠、不计耗时）`,
+    behaviors: ['ai-chat'],
+    behaviorInit: { 'ai-chat': 'initAiChat' },
+    script: `const target = document.getElementById('ai-reasoning-stream');
+const THINK = '用户要的是发布检查清单。先确认构建状态——这是最容易翻车的一步，本次构建 3.2s 已通过。然后按风险排序：类型检查、冒烟、回滚路径。回滚依赖 tag，本次有 v0.6.1，安全。';
+if (target) {
+  const stream = aiChatMod.createAiStream(target);
+  let pos = 0;
+  const timer = setInterval(function () {
+    const next = Math.min(THINK.length, pos + 3 + Math.floor(Math.random() * 4));
+    stream.append(THINK.slice(pos, next));
+    pos = next;
+    if (pos >= THINK.length) {
+      stream.done();
+      clearInterval(timer);
+    }
+  }, 70);
+}`,
+  },
+  {
+    slug: 'ai-composer',
+    name: 'AI 输入台',
+    group: 'AI',
+    desc: 'AI 输入台：autosize（默认 8 行上限后内滚）、Enter 发送 / Shift+Enter 换行、IME 组合态安全、附件 chips；setComposerRunning 切换运行态——发送钮变停止钮（icen:ai-stop），运行中回车转为排队 chip（icen:ai-queue / icen:ai-dequeue，可单个 × 移除）。事件 icen:ai-send {text} / icen:ai-attach {files}。',
+    demo: `<div class="ai-composer" data-ai-composer id="ai-composer-demo">
+  <div class="ai-composer-queue" hidden></div>
+  <div class="ai-composer-attach" hidden></div>
+  <div class="ai-composer-box control">
+    <textarea class="ai-composer-input" rows="1" placeholder="输入消息，Enter 发送 · Shift+Enter 换行 · 运行中 Enter 排队"></textarea>
+    <div class="ai-composer-actions">
+      <button class="ai-composer-btn" data-ai-attach type="button" aria-label="附件"></button>
+      <button class="ai-composer-send" data-ai-send type="button" aria-label="发送"></button>
+    </div>
+  </div>
+</div>
+<div class="toolbar" style="margin-top:10px">
+  <button class="btn btn-sm btn-primary" type="button" id="ai-composer-run">模拟运行 / 解除</button>
+  <span class="toolbar-label" id="ai-composer-log">发送、排队、停止、附件事件会显示在这里</span>
+</div>
+<div id="ai-composer-out" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>`,
+    usage: `import { initAiComposer, setComposerRunning } from '@icen.ai/ui/kit/ai-composer';
+initAiComposer();
+
+<div class="ai-composer" data-ai-composer>
+  <div class="ai-composer-queue" hidden></div>
+  <div class="ai-composer-attach" hidden></div>
+  <div class="ai-composer-box control">
+    <textarea class="ai-composer-input" rows="1" placeholder="…"></textarea>
+    <div class="ai-composer-actions">
+      <button class="ai-composer-btn" data-ai-attach aria-label="附件"></button>
+      <button class="ai-composer-send" data-ai-send aria-label="发送"></button>
+    </div>
+  </div>
+</div>
+
+// 运行态：发送钮 → 停止钮（icen:ai-stop）；运行中回车转排队 chip（icen:ai-queue / icen:ai-dequeue）
+setComposerRunning(document.querySelector('[data-ai-composer]'), true);
+// 事件：icen:ai-send {text} · icen:ai-attach {files} · icen:ai-stop {}`,
+    behaviors: ['ai-composer'],
+    behaviorInit: { 'ai-composer': 'initAiComposer' },
+    script: `const composer = document.getElementById('ai-composer-demo');
+const out = document.getElementById('ai-composer-out');
+const logEl = document.getElementById('ai-composer-log');
+function log(msg) { if (logEl) logEl.textContent = msg; }
+function addMsg(text) {
+  if (!out || !text) return;
+  const row = document.createElement('div');
+  row.className = 'ai-msg ai-msg--user';
+  row.style.marginBottom = '0';
+  const avatar = document.createElement('span');
+  avatar.className = 'ai-msg-avatar';
+  avatar.textContent = '我';
+  const wrap = document.createElement('div');
+  const body = document.createElement('div');
+  body.className = 'ai-msg-body';
+  body.textContent = text;
+  wrap.appendChild(body);
+  row.append(avatar, wrap);
+  out.appendChild(row);
+}
+composer?.addEventListener('icen:ai-send', function (e) {
+  addMsg(e.detail.text);
+  log('icen:ai-send · ' + e.detail.text);
+});
+composer?.addEventListener('icen:ai-queue', function (e) { log('icen:ai-queue · 已排队：' + e.detail.text); });
+composer?.addEventListener('icen:ai-dequeue', function (e) { log('icen:ai-dequeue · 移除第 ' + (e.detail.index + 1) + ' 条排队消息'); });
+composer?.addEventListener('icen:ai-stop', function () {
+  aiComposerMod.setComposerRunning(composer, false);
+  log('icen:ai-stop · 已停止（运行态解除）');
+});
+composer?.addEventListener('icen:ai-attach', function (e) { log('icen:ai-attach · ' + e.detail.files.length + ' 个文件'); });
+document.getElementById('ai-composer-run')?.addEventListener('click', function () {
+  const running = composer?.classList.contains('is-running') ?? false;
+  aiComposerMod.setComposerRunning(composer, !running);
+  log(!running ? '已进入运行态：发送钮变停止钮，此时回车进入排队' : '已解除运行态');
+});`,
+  },
+  {
+    slug: 'ai-tool-call',
+    name: 'AI 工具调用',
+    group: 'AI',
+    desc: '工具调用卡 .ai-tool：kind 修饰类（--shell/--read/--edit/--mcp/--rm…，kind 注册表驱动 --ai-item-tint 与图标）+ 7 态状态机（失败条目自动展开）+ 审批内联按钮（icen:ai-approve / icen:ai-reject，detail {id, kind}）。renderAiToolCall(el, model) 动态建卡，返回 { el, update(patch) } 做流式状态流转；输入/输出走注册表 summarize 或压缩 JSON。',
+    demo: `<div style="display:flex;flex-direction:column;gap:8px">
+  <div class="ai-tool ai-tool--shell is-done" data-ai-id="demo-t1" data-ai-kind="shell">
+    <button class="ai-tool-head" type="button" aria-expanded="false">
+      <span class="ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></span>
+      <span class="ai-item-main"><span class="ai-item-title">Shell</span><span class="ai-item-sub">bun run build</span></span>
+      <span class="ai-item-status" role="img" aria-label="完成"></span>
+      <span class="ai-item-meta">3.2s</span>
+    </button>
+    <div class="ai-tool-body" hidden>
+      <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">bun run build</pre></div>
+      <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">tsup ✓ · build-css ✓（3.2s）</pre></div>
+    </div>
+  </div>
+  <div class="ai-tool ai-tool--read is-done" data-ai-id="demo-t2" data-ai-kind="read">
+    <button class="ai-tool-head" type="button" aria-expanded="false">
+      <span class="ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+      <span class="ai-item-main"><span class="ai-item-title">Read</span><span class="ai-item-sub">src/utils/date.ts:1-50</span></span>
+      <span class="ai-item-status" role="img" aria-label="完成"></span>
+      <span class="ai-item-meta">0.4s</span>
+    </button>
+    <div class="ai-tool-body" hidden>
+      <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">{ "file": "src/utils/date.ts", "range": [1, 50] }</pre></div>
+      <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">export function formatDate(…)</pre></div>
+    </div>
+  </div>
+  <div class="ai-tool ai-tool--mcp is-running" data-ai-id="demo-t3" data-ai-kind="mcp">
+    <button class="ai-tool-head" type="button" aria-expanded="false">
+      <span class="ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 6h.01"/><path d="M6 18h.01"/></svg></span>
+      <span class="ai-item-main"><span class="ai-item-title">MCP</span><span class="ai-item-sub">github · create_issue</span></span>
+      <span class="ai-item-status" role="img" aria-label="执行中"></span>
+      <span class="ai-item-meta">2.8s</span>
+    </button>
+    <div class="ai-tool-body" hidden>
+      <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">{ "repo": "icen/ui", "title": "ai-chat 上滚后 jump 钮计数不对" }</pre></div>
+    </div>
+  </div>
+  <div class="ai-tool ai-tool--edit is-approval" data-ai-id="demo-t4" data-ai-kind="edit">
+    <button class="ai-tool-head" type="button" aria-expanded="false">
+      <span class="ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>
+      <span class="ai-item-main"><span class="ai-item-title">Edit</span><span class="ai-item-sub">src/config.ts:12</span></span>
+      <span class="ai-item-status" role="img" aria-label="待人确认"></span>
+      <span class="ai-item-meta"></span>
+    </button>
+    <div class="ai-tool-body" hidden>
+      <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">{ "file": "src/config.ts", "old": "timeout: 3000", "new": "timeout: 8000" }</pre></div>
+      <div class="ai-tool-approval">
+        <div class="ai-tool-approval-reason">修改运行配置需要人工确认：超时时间 3s → 8s</div>
+        <button class="btn btn-sm btn-primary" data-ai-approve type="button">允许</button>
+        <button class="btn btn-sm" data-ai-reject type="button">拒绝</button>
+      </div>
+    </div>
+  </div>
+  <div class="ai-tool ai-tool--rm is-error" data-ai-id="demo-t5" data-ai-kind="rm">
+    <button class="ai-tool-head" type="button" aria-expanded="false">
+      <span class="ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+      <span class="ai-item-main"><span class="ai-item-title">Rm</span><span class="ai-item-sub">dist/cache.json</span></span>
+      <span class="ai-item-status" role="img" aria-label="失败"></span>
+      <span class="ai-item-meta">0.1s</span>
+    </button>
+    <div class="ai-tool-body" hidden>
+      <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">rm dist/cache.json</pre></div>
+      <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">rm: dist/cache.json: No such file or directory</pre></div>
+    </div>
+  </div>
+</div>
+<div class="toolbar" style="margin-top:12px">
+  <button class="btn btn-sm btn-primary" type="button" id="ai-tool-run">模拟执行（pending → running → done）</button>
+  <span class="toolbar-label" id="ai-tool-log">rm 失败卡自动展开 · 审批卡展开后允许 / 拒绝</span>
+</div>
+<div id="ai-tool-live" style="margin-top:8px"></div>`,
+    usage: `import { initAiTool, renderAiToolCall } from '@icen.ai/ui/kit/ai-tool-call';
+initAiTool();   // 展开/折叠 + 审批按钮委托（icen:ai-approve / icen:ai-reject，detail {id, kind}）
+
+<!-- 静态卡：kind 修饰类 + 7 态；失败 is-error 首次渲染自动展开 -->
+<div class="ai-tool ai-tool--edit is-approval" data-ai-id="t-1" data-ai-kind="edit">
+  <button class="ai-tool-head" aria-expanded="false">…</button>
+  <div class="ai-tool-body" hidden>
+    <div class="ai-tool-approval">
+      <button class="btn btn-sm btn-primary" data-ai-approve>允许</button>
+      <button class="btn btn-sm" data-ai-reject>拒绝</button>
+    </div>
+  </div>
+</div>
+
+// 动态建卡（流式场景），update(patch) 做状态流转
+const h = renderAiToolCall(el, {
+  id: 't-2', name: 'Shell', kind: 'shell', status: 'pending',
+  input: { cmd: 'bun run build' },   // 摘要行：注册表 summarize 或压缩 JSON
+});
+h.update({ status: 'running' });
+h.update({ status: 'done', output: '…', durationMs: 3200 });`,
+    behaviors: ['ai-tool'],
+    behaviorInit: { 'ai-tool': 'initAiTool' },
+    script: `const host = document.getElementById('ai-tool-live');
+const logEl = document.getElementById('ai-tool-log');
+let handle = null;
+const timers = [];
+document.getElementById('ai-tool-run')?.addEventListener('click', function () {
+  if (!host) return;
+  while (timers.length) clearTimeout(timers.pop());
+  const btn = document.getElementById('ai-tool-run');
+  if (btn) btn.disabled = true;
+  handle = aiToolMod.renderAiToolCall(host, {
+    id: 'live-1', name: 'Shell', kind: 'shell', status: 'pending',
+    input: { cmd: 'bun run test:ui' },
+  });
+  aiToolMod.initAiTool();   // 给动态建卡补挂展开委托（幂等）
+  timers.push(setTimeout(function () { handle?.update({ status: 'running' }); }, 800));
+  timers.push(setTimeout(function () {
+    handle?.update({ status: 'done', output: '127 passed · 0 failed', durationMs: 8400 });
+    if (btn) btn.disabled = false;
+  }, 2800));
+});
+/* 审批事件回显 */
+document.querySelectorAll('.ai-tool').forEach(function (card) {
+  card.addEventListener('icen:ai-approve', function (e) {
+    if (logEl) logEl.textContent = 'icen:ai-approve · id=' + e.detail.id + ' kind=' + e.detail.kind;
+  });
+  card.addEventListener('icen:ai-reject', function (e) {
+    if (logEl) logEl.textContent = 'icen:ai-reject · id=' + e.detail.id + ' kind=' + e.detail.kind;
+  });
+});`,
+  },
+  {
+    slug: 'ai-subagent',
+    name: 'AI 子智能体',
+    group: 'AI',
+    desc: '子智能体卡 .ai-subagent：activities（AiToolCallModel[]）递归渲染工具卡 / 推理块 / 再嵌套子代理（缩进 + 左侧引导线表达层级）；展开时活动项按 --ai-activity-index 逐条 icen-pop-in 渐入；底部完成回执区。renderAiSubagent(el, model) 返回 update(patch)；第三方 kind 走 ai-core 的 registerAiKind 扩展（demo 里注册了一个 deploy kind）。',
+    demo: `<div style="display:flex;flex-direction:column;gap:12px">
+  <div id="ai-sub-live"></div>
+  <div id="ai-sub-done"></div>
+</div>
+<p class="demo-label" style="margin-top:8px">上面：运行中，活动流实时更新 · 下面：已完成，点头展开看逐条渐入的嵌套活动（含一层子代理）</p>`,
+    usage: `import { initAiSubagent, renderAiSubagent } from '@icen.ai/ui/kit/ai-subagent';
+initAiSubagent();   // head 展开/折叠委托（嵌套卡各自独立监听）
+
+// activities 是 AiToolCallModel[]，kind: 'subagent' 的项递归渲染子卡
+const h = renderAiSubagent(el, {
+  id: 'sa-1', name: 'explore', kind: 'subagent', status: 'running',
+  input: { task: '搜索 auth 模块的所有入口' },
+  activities: [
+    { id: 'a1', name: 'Grep', kind: 'grep', status: 'done', input: { pattern: 'auth' }, output: '6 处命中', durationMs: 900 },
+  ],
+});
+// 活动流按 id 增量 diff：已有的 update、新增的 append（渐入）、消失的移除
+h.update({ status: 'done', durationMs: 12400, output: 'auth 模块共 3 个入口' });
+// 第三方 kind：registerAiKind('deploy', { label, icon, tint, summarize })`,
+    behaviors: ['ai-tool', 'ai-core'],
+    behaviorInit: { 'ai-tool': 'initAiSubagent' },
+    script: `/* 第三方 kind 扩展：注册表开放（ai-core） */
+aiCoreMod.registerAiKind('deploy', {
+  label: 'Deploy',
+  tint: 'warning',
+  icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
+  summarize: function (input) { return '部署到 ' + ((input && input.target) || '?'); },
+});
+/* 运行中的子代理：活动流随时间推进 */
+const liveHost = document.getElementById('ai-sub-live');
+let liveHandle = null;
+if (liveHost) {
+  liveHandle = aiToolMod.renderAiSubagent(liveHost, {
+    id: 'sa-1', name: 'explore', kind: 'subagent', status: 'running',
+    input: { task: '梳理 auth 模块的所有入口' },
+    activities: [
+      { id: 'a1', name: 'Grep', kind: 'grep', status: 'done', input: { pattern: 'auth', path: 'src' }, output: '6 处命中', durationMs: 900 },
+      { id: 'a2', name: 'Read', kind: 'read', status: 'running', input: { file: 'src/auth/index.ts' } },
+    ],
+  });
+  setTimeout(function () {
+    liveHandle?.update({
+      durationMs: 4200,
+      activities: [
+        { id: 'a1', name: 'Grep', kind: 'grep', status: 'done', input: { pattern: 'auth', path: 'src' }, output: '6 处命中', durationMs: 900 },
+        { id: 'a2', name: 'Read', kind: 'read', status: 'done', input: { file: 'src/auth/index.ts' }, output: '导出 session / login / guard 三个入口', durationMs: 1600 },
+        { id: 'a3', name: 'Grep', kind: 'grep', status: 'running', input: { pattern: 'middleware' } },
+      ],
+    });
+  }, 2200);
+  setTimeout(function () {
+    liveHandle?.update({
+      status: 'done',
+      durationMs: 12400,
+      output: 'auth 模块共 3 个入口：session / login / guard，均在 src/auth/ 下导出，可安全重构。',
+      activities: [
+        { id: 'a1', name: 'Grep', kind: 'grep', status: 'done', input: { pattern: 'auth', path: 'src' }, output: '6 处命中', durationMs: 900 },
+        { id: 'a2', name: 'Read', kind: 'read', status: 'done', input: { file: 'src/auth/index.ts' }, output: '导出 session / login / guard 三个入口', durationMs: 1600 },
+        { id: 'a3', name: 'Grep', kind: 'grep', status: 'done', input: { pattern: 'middleware' }, output: '注册点在 src/app.ts:44', durationMs: 1100 },
+      ],
+    });
+  }, 4600);
+}
+/* 已完成的子代理：嵌套一层子代理 + 第三方 deploy kind */
+const doneHost = document.getElementById('ai-sub-done');
+if (doneHost) {
+  aiToolMod.renderAiSubagent(doneHost, {
+    id: 'sa-2', name: 'reviewer', kind: 'subagent', status: 'done', durationMs: 18300,
+    input: { task: '审查发布清单 diff' },
+    output: '3 个文件审查完毕：2 处建议修改，1 处 LGTM，回滚路径安全。',
+    activities: [
+      { id: 'b1', name: 'Read', kind: 'read', status: 'done', input: { file: 'src/release.ts' }, durationMs: 700 },
+      { id: 'b2', name: 'Shell', kind: 'shell', status: 'done', input: { cmd: 'git diff --stat' }, output: '3 files changed, +48 −12', durationMs: 1200 },
+      { id: 'b3', name: 'audit', kind: 'subagent', status: 'done', durationMs: 9600,
+        input: { task: '检查回滚路径' },
+        output: '回滚脚本存在且 tag v0.6.0 可用',
+        activities: [
+          { id: 'b3a', name: 'Read', kind: 'read', status: 'done', input: { file: 'scripts/rollback.sh' }, durationMs: 800 },
+          { id: 'b3b', name: 'Shell', kind: 'shell', status: 'done', input: { cmd: 'git tag -l v0.6.*' }, output: 'v0.6.0  v0.6.1', durationMs: 600 },
+        ] },
+      { id: 'b4', name: 'deploy', kind: 'deploy', status: 'done', input: { target: 'staging' }, output: '✓ 已部署，健康检查通过', durationMs: 5200 },
+    ],
+  });
+}
+/* 动态建卡后补挂委托（幂等；静态场景由 initAiSubagent 统一处理） */
+aiToolMod.initAiSubagent();
+aiToolMod.initAiTool();`,
+  },
+  {
+    slug: 'ai-diff',
+    name: 'AI 差异审阅',
+    group: 'AI',
+    desc: '差异审阅卡 .ai-diff：parseUnifiedDiff(text) 解析 unified diff（git / 传统头、add/del/rename/binary 均可）→ renderAiDiff(el, {files}) DOM 渲染（行号 + add/del 着色 + hunk 头，全 textContent）；initAiDiff 委托展开 / 接受 / 拒绝——icen:ai-diff-accept / icen:ai-diff-reject（detail {path}），决策后盖状态章并淡化。',
+    demo: `<div id="ai-diff-demo"></div>
+<p class="demo-label" id="ai-diff-log" style="margin-top:8px">点头展开行号与着色 · 「接受 / 拒绝」后盖状态章（icen:ai-diff-accept / icen:ai-diff-reject）</p>`,
+    usage: `import { initAiDiff, renderAiDiff, parseUnifiedDiff } from '@icen.ai/ui/kit/ai-diff';
+
+// 真实 unified diff → 结构化 files → DOM 渲染（重复调用替换内容）
+renderAiDiff(el, { files: parseUnifiedDiff(diffText) });
+initAiDiff();   // 展开/折叠 + 接受/拒绝（icen:ai-diff-accept / icen:ai-diff-reject，detail {path}）
+
+// AiDiffFile：{ path, oldPath?, status: added|modified|deleted|renamed, addCount, delCount, hunks }
+// hunk：{ oldStart, oldCount, newStart, newCount, header, lines: [{ type: ctx|add|del, oldNo, newNo, text }] }`,
+    behaviors: ['ai-diff'],
+    script: `const diffText = [
+  'diff --git a/src/utils/date.ts b/src/utils/date.ts',
+  'index 3f2a1c9..8e7d4f2 100644',
+  '--- a/src/utils/date.ts',
+  '+++ b/src/utils/date.ts',
+  '@@ -10,7 +10,9 @@ export function formatDate(input: string): string',
+  '   const pad = (n: number) => String(n).padStart(2, "0");',
+  '   return y + "-" + pad(m) + "-" + pad(d);',
+  ' }',
+  '-export const DATE_FMT = "YYYY-MM-DD";',
+  '+export const DATE_FORMATS = ["YYYY-MM-DD", "DD/MM/YYYY", "MMM D"] as const;',
+  '+export type DateFormat = (typeof DATE_FORMATS)[number];',
+  ' ',
+  ' export function parseDate(input: string): Date | null {',
+  '   const m = /^(\\\\d{4})-(\\\\d{2})-(\\\\d{2})$/.exec(input);',
+  'diff --git a/src/utils/format.ts b/src/utils/format.ts',
+  'new file mode 100644',
+  'index 0000000..5b3e9a1',
+  '--- /dev/null',
+  '+++ b/src/utils/format.ts',
+  '@@ -0,0 +1,4 @@',
+  '+/** 千分位格式化 */',
+  '+export function formatNumber(n: number): string {',
+  '+  return n.toLocaleString("en-US");',
+  '+}',
+].join('\\n');
+const host = document.getElementById('ai-diff-demo');
+if (host) {
+  aiDiffMod.renderAiDiff(host, { files: aiDiffMod.parseUnifiedDiff(diffText) });
+  aiDiffMod.initAiDiff();   // 动态渲染后挂展开 / 接受 / 拒绝委托（幂等）
+}
+const logEl = document.getElementById('ai-diff-log');
+const logDefault = logEl ? logEl.textContent : '';
+host?.addEventListener('icen:ai-diff-accept', function (e) {
+  if (!logEl) return;
+  logEl.textContent = 'icen:ai-diff-accept · ' + e.detail.path;
+  setTimeout(function () { logEl.textContent = logDefault; }, 2000);
+});
+host?.addEventListener('icen:ai-diff-reject', function (e) {
+  if (!logEl) return;
+  logEl.textContent = 'icen:ai-diff-reject · ' + e.detail.path;
+  setTimeout(function () { logEl.textContent = logDefault; }, 2000);
+});`,
+  },
+  {
+    slug: 'ai-files',
+    name: 'AI 文件标签',
+    group: 'AI',
+    desc: '文件 chips .ai-file-chip（纯 CSS 族，无 behavior）：is-added / is-modified / is-deleted 三态 × 类型修饰类（--ts/--js/--css/--json/--md/--img/--other，图标由消费方注入 svg）；renderAiContext 的文件区复用同款 chips。',
+    demo: `<div class="ai-files">
+  <span class="ai-file-chip is-added ai-file-chip--ts"><span class="ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/></svg></span>src/utils/format.ts</span>
+  <span class="ai-file-chip is-modified ai-file-chip--css"><span class="ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/><path d="M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/></svg></span>src/components/ai-chat.css</span>
+  <span class="ai-file-chip is-modified ai-file-chip--json"><span class="ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/><path d="M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/></svg></span>package.json</span>
+  <span class="ai-file-chip is-modified ai-file-chip--md"><span class="ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span>README.md</span>
+  <span class="ai-file-chip is-deleted ai-file-chip--js"><span class="ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/></svg></span>scripts/old-build.js</span>
+  <span class="ai-file-chip is-added ai-file-chip--img"><span class="ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span>assets/cover.png</span>
+</div>
+<p class="demo-label" style="margin-top:8px">纯 CSS 族：is-added（绿）/ is-modified（accent）/ is-deleted（红，删除线）× 文件类型图标 · renderAiContext 文件区同款</p>`,
+    usage: `<!-- 纯 CSS 组件，无 behavior；文件图标由消费方注入 svg -->
+<div class="ai-files">
+  <span class="ai-file-chip is-added ai-file-chip--ts">
+    <span class="ai-file-icon">…svg…</span>src/foo.ts
+  </span>
+</div>
+<!-- 类型修饰类：--ts / --js / --css / --json / --md / --img / --other -->`,
+  },
+  {
+    slug: 'ai-todo',
+    name: 'AI 任务清单',
+    group: 'AI',
+    desc: '任务清单 .ai-todo：进度条（feedback progress 视觉）+ N/M 计数 + 7 态条目；running 条目用 activeForm 替换文案（Claude Code 模式）。renderAiTodo(el, items) 渲染；data-ai-todo-interactive 容器可点击循环状态 pending → running → done（icen:ai-todo-toggle {index, status}），默认只读。',
+    demo: `<div id="ai-todo-demo" data-ai-todo-interactive></div>
+<p class="demo-label" id="ai-todo-log" style="margin-top:8px">点击任意任务循环状态 pending → running → done（running 时文案切 activeForm）</p>`,
+    usage: `import { renderAiTodo, initAiTodo } from '@icen.ai/ui/kit/ai-todo';
+
+renderAiTodo(el, [
+  { content: '搭建 tokens 合并构建', status: 'done' },
+  { content: '联调接口', status: 'running', activeForm: '正在联调接口…' },  // Claude Code 模式运行文案
+  { content: '写测试', status: 'pending' },
+]);
+initAiTodo();   // data-ai-todo-interactive 容器可点击循环状态（icen:ai-todo-toggle {index, status}）
+
+<!-- 静态手写等价契约 -->
+<div class="ai-todo" data-ai-todo-interactive>
+  <div class="ai-todo-head"><span class="ai-todo-progress">2/5</span>
+    <div class="ai-todo-bar" role="progressbar"><i style="width:40%"></i></div></div>
+  <div class="ai-todo-item is-running">
+    <span class="ai-item-status"></span>
+    <span class="ai-todo-text">实现登录页</span>
+    <span class="ai-todo-active">正在实现登录页…</span>
+  </div>
+</div>`,
+    behaviors: ['ai-panel'],
+    script: `const host = document.getElementById('ai-todo-demo');
+const logEl = document.getElementById('ai-todo-log');
+const logDefault = logEl ? logEl.textContent : '';
+if (host) {
+  aiPanelMod.renderAiTodo(host, [
+    { content: '搭建 tokens 合并构建', status: 'done' },
+    { content: '实现 ai-item 基元与 7 态状态机', status: 'done' },
+    { content: '编写组件文档与交互 demo', status: 'running', activeForm: '正在编写组件文档与交互 demo…' },
+    { content: '跑通 tsc 与文档站构建', status: 'pending' },
+    { content: '发布 v0.7.0', status: 'pending' },
+  ]);
+  aiPanelMod.initAiTodo();   // 动态渲染后挂交互委托（幂等）
+  host.addEventListener('icen:ai-todo-toggle', function (e) {
+    if (!logEl) return;
+    logEl.textContent = 'icen:ai-todo-toggle · 第 ' + (e.detail.index + 1) + ' 项 → ' + e.detail.status;
+    setTimeout(function () { logEl.textContent = logDefault; }, 1800);
+  });
+}`,
+  },
+  {
+    slug: 'ai-usage',
+    name: 'AI 用量条',
+    group: 'AI',
+    desc: '上下文用量条 .ai-usage：分段条 + 图例 + 占比行；配色契约 input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint。缓存分列计费诚实：cacheRead ≈ 0.1× 输入价、cacheWrite ≈ 1.25× 输入价（行业惯例，展示与算账口径一致）。renderAiUsage(el, usage, { total?, cost? })。',
+    demo: `<div id="ai-usage-demo"></div>
+<p class="demo-label" style="margin-top:8px">缓存读 ≈ 0.1× 输入价、缓存写 ≈ 1.25× 输入价——分列展示，计费口径诚实</p>`,
+    usage: `import { renderAiUsage } from '@icen.ai/ui/kit/ai-usage';
+
+// usage：{ input?, output?, cacheRead?, cacheWrite?, reasoning?, total? }
+// opts.total 给上下文上限（显示 82k / 200k · 41%）；opts.cost 追加 $ 成本
+renderAiUsage(el, {
+  input: 42000, output: 18000, cacheRead: 96000, cacheWrite: 12000, reasoning: 8000,
+}, { total: 200000, cost: 0.3124 });
+
+// 缓存分列的计费语义：cacheRead ≈ 0.1× 输入价，cacheWrite ≈ 1.25× 输入价`,
+    behaviors: ['ai-panel'],
+    script: `const host = document.getElementById('ai-usage-demo');
+if (host) {
+  aiPanelMod.renderAiUsage(host, {
+    input: 42000, output: 18000, cacheRead: 96000, cacheWrite: 12000, reasoning: 8000,
+  }, { total: 200000, cost: 0.3124 });
+}`,
+  },
+  {
+    slug: 'ai-context',
+    name: 'AI 上下文面板',
+    group: 'AI',
+    desc: '上下文抽屉 .ai-context：触发器 [data-ai-context-open] 全局委托开合（属性值可为 #id 选择器），fixed 右侧滑入（--z-chrome），Esc / 外点关闭、Tab 焦点圈禁；renderAiContext 组合渲染用量（renderAiUsage）+ 文件 chips + MCP server 行（.ai-item：connected→is-done / disconnected→is-error）+ Skills 列表；.ai-context--inline 为页面流内嵌变体（不参与开合）。',
+    demo: `<div class="toolbar">
+  <button class="btn btn-sm btn-primary" type="button" data-ai-context-open>打开上下文面板</button>
+  <span class="toolbar-label">Esc / 外点关闭 · Tab 焦点圈禁 · 滑入动画走 --z-chrome 标尺</span>
+</div>
+<div id="ai-context-demo"></div>`,
+    usage: `import { initAiContext, renderAiContext } from '@icen.ai/ui/kit/ai-context';
+
+renderAiContext(document.getElementById('ctx'), {
+  usage: { input: 42000, cacheRead: 96000, cacheWrite: 12000, output: 18000, reasoning: 8000 },
+  usageTotal: 200000,          // 传给 renderAiUsage 的 opts.total
+  usageCost: 0.3124,           // 追加 $ 成本行
+  files: [{ path: 'src/foo.ts', status: 'modified' }],
+  mcpServers: [{ name: 'github', tools: 24 }],          // connected（默认）→ is-done
+  skills: [{ name: 'webbridge', description: '浏览器自动化' }],
+});
+initAiContext();   // 触发器 [data-ai-context-open] 全局委托；Esc / 外点关闭；焦点圈禁
+
+<!-- 触发器（任意元素；属性值可为 #id 选择器定位指定抽屉） -->
+<button data-ai-context-open>上下文</button>
+<div id="ctx"></div>
+<!-- .ai-context--inline 为页面流内嵌变体：不做 fixed、不参与开合 -->`,
+    behaviors: ['ai-panel'],
+    behaviorInit: { 'ai-panel': 'initAiContext' },
+    script: `const host = document.getElementById('ai-context-demo');
+if (host) {
+  aiPanelMod.renderAiContext(host, {
+    usage: { input: 42000, output: 18000, cacheRead: 96000, cacheWrite: 12000, reasoning: 8000 },
+    usageTotal: 200000,
+    usageCost: 0.3124,
+    files: [
+      { path: 'src/behaviors/ai-core.ts', status: 'modified' },
+      { path: 'src/components/ai-chat.css', status: 'modified' },
+      { path: 'docs/spec/ai-native.md', status: 'added' },
+      { path: 'scripts/slugs.mjs', status: 'modified' },
+    ],
+    mcpServers: [
+      { name: 'github', tools: 24, status: 'connected' },
+      { name: 'filesystem', tools: 12, status: 'connected' },
+      { name: 'browser', status: 'disconnected' },
+    ],
+    skills: [
+      { name: 'kimi-webbridge', description: '浏览器自动化' },
+      { name: 'update-config', description: '配置诊断与修改' },
+      { name: 'write-goal', description: '目标合约编写' },
+    ],
+  });
+}`,
   },
 );

@@ -26,8 +26,9 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 
 ## 规模
 
-- **51 个组件 CSS**（含 charts 基座 + 9 个细分图表 CSS：chart-line/bar/pie/radar/heatmap/area/stack/gauge/sparkline + 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane）
-- **25 个 behaviors TS**（theme/tabs/toast/copy/input/select/slider/tag-input/upload/modal/dropdown/popover/context-menu/accordion/tree/carousel/charts[10 种图]/nav/sidebar/datatable/notification/back-top/command-palette/date-picker/split-pane）
+- **55 个组件 CSS**（含 charts 基座 + 9 个细分图表 CSS + 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel）
+- **31 个 behaviors TS**（theme/tabs/toast/copy/input/select/slider/tag-input/upload/modal/dropdown/popover/context-menu/accordion/tree/carousel/charts[10 种图]/nav/sidebar/datatable/notification/back-top/command-palette/date-picker/split-pane + 6 个 AI 族：ai-core/ai-chat/ai-composer/ai-tool/ai-diff/ai-panel）
+- **75 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单）
 - **4 个 token 文件**：colors.css（6 预设 × 明暗）、style-profiles.css（modern/retro/terminal）、typography.css、retro-effects.css（可选）
 
 ## 发布（OIDC Trusted Publishing，已配好）
@@ -86,3 +87,15 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
   - **pill**：可关闭（`.pill-close`）、图标、实时脉冲（`--live`）、纯数字（`--count`）、渐变（`--gradient`）。
   - **form**：水平字段布局（`--horizontal`）、表单区块（`.form-section`）、操作区（`.form-actions`）、行内表单（`--inline`）、字段网格（`.form-grid`）、加载遮罩（`.form-loading`）、label 帮助图标 / 可选标记。
 - layout.css 已 token 化（0.6.0）：stack / divider / surface / grid 等布局工具类的间距全部消费 `--density-space-*`，无写死 px。
+
+## AI 组件族（v0.7 新增）
+
+规格唯一事实源：`docs/spec/ai-native.md`（类名 / 导出签名 / 事件名以它为准）。11 个 slug 在文档站侧栏单列「AI」分组，排在导航之后：
+
+- **清单与 CSS 合并**：ai-chat / ai-message / ai-reasoning / ai-composer → `ai-chat.css`；ai-tool-call / ai-subagent → `ai-tool.css`；ai-diff / ai-files → `ai-diff.css`；ai-todo / ai-context / ai-usage → `ai-panel.css`。6 个 behavior：ai-core（状态机 / 注册表 / 适配器 / 格式化 / svgIcon）、ai-chat、ai-composer、ai-tool、ai-diff、ai-panel，全部经 `src/index.ts` `export *`。
+- **`.ai-item` 基元**：行式 AI 条目的"基类"（icon / main / side 状态点+meta / detail），kind 与变体只覆盖局部变量 `--ai-item-tint` 等槽位、不改结构（`--btn-*` 继承模式的推广）；第三方 kind 的 tint 由 behavior 内联 `--ai-item-tint: var(--token-<tint>)` 兜底。
+- **7 态状态机**（一切 AI 条目共享，语义色与动画全库一致）：`.is-pending / running / streaming / approval / done / error / cancelled`；状态点 `.ai-item-status` 纯 CSS 由 `.is-*` 驱动；失败条目首次渲染自动展开（Copilot 模式）。
+- **kind 注册表与 normalize 适配层**：组件只消费归一化 `AiToolCallModel` / `AiUsage`，业界格式（OpenAI / Anthropic / AI SDK / 素朴）由 `normalizeToolCall` / `normalizeUsage` 翻译；内置 kinds（shell/read/edit/write/rm/grep/glob/browser/search/fetch/mcp/skill/todo/plan/subagent/note），第三方 `registerAiKind()` 扩展；`inferKind` 从工具名推断。
+- **事件族 `icen:ai-*`**（全部 bubbles）：send / stop / queue / dequeue / attach / copy / retry / approve / reject / diff-accept / diff-reject / todo-toggle / toggle；detail 见规格 §5。
+- **`data-density` 三档**：verbose / normal / summary（summary 隐藏 meta、默认折叠 reasoning、压淡 tool/system 消息，纯 CSS）。
+- **ai-core 不绑定任何 slug**：demo/消费方要用 `normalizeToolCall` 等时，在该页 behaviors 数组里显式加 `'ai-core'`（boot 的 glob 会加载并注入 `aiCoreMod` 参数）。

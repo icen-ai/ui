@@ -130,6 +130,8 @@ const bootData = JSON.stringify({
             console.error(`[docs] 加载 behavior 模块失败: ${b}`, err);
             throw err;
           }
+        } else {
+          console.error(`[docs] behavior 未登记到 glob：${b}（新增 behavior 文件后需重启 dev server 触发重转译）`);
         }
       }
       // 按注册表给出的 init 函数名初始化（accordion→initAccordion 等）

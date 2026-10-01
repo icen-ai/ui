@@ -1,0 +1,574 @@
+/*
+ * @icen.ai/ui — Component: ai-chat（AI 原生组件族：ai-chat / ai-message / ai-reasoning / ai-composer）
+ *
+ * 完整契约：
+ *   <div class="ai-chat" data-density="normal">                  ← verbose|normal|summary 三档
+ *     <div class="ai-chat-scroll">
+ *       <div class="ai-msg ai-msg--user|ai-msg--assistant|ai-msg--system|ai-msg--tool">
+ *         <span class="ai-msg-avatar"></span>
+ *         <div class="ai-msg-body">…消费方自行渲染 markdown…</div>
+ *         <div class="ai-msg-actions"><button data-ai-msg-action="copy|retry">…</button></div>
+ *         <div class="ai-msg-meta">12:04 · 1.2k tok</div>
+ *       </div>
+ *     </div>
+ *     <button class="ai-chat-jump" hidden>回到底部 · N 条新消息</button>
+ *   </div>
+ *
+ *   <div class="ai-reasoning [.is-streaming|.is-done]">
+ *     <button class="ai-reasoning-head" aria-expanded="false">
+ *       <span class="ai-reasoning-label">思考过程</span><span class="ai-reasoning-time">3s</span>
+ *     </button>
+ *     <div class="ai-reasoning-body" hidden>…</div>
+ *   </div>
+ *
+ *   <div class="ai-composer" data-ai-composer [.is-running]>
+ *     <div class="ai-composer-queue" hidden><span class="ai-composer-chip">
+ *       <span class="ai-composer-chip-text">…</span>
+ *       <button class="ai-composer-chip-remove" aria-label="移除">×</button>
+ *     </span></div>
+ *     <div class="ai-composer-attach" hidden><!-- 附件 chips，结构同上 --></div>
+ *     <div class="ai-composer-box control">
+ *       <textarea class="ai-composer-input" rows="1" placeholder="…"></textarea>
+ *       <div class="ai-composer-actions">
+ *         <button class="ai-composer-btn" data-ai-attach aria-label="附件"></button>
+ *         <button class="ai-composer-send" data-ai-send aria-label="发送"></button>  ← 运行态 .is-stop
+ *       </div>
+ *     </div>
+ *   </div>
+ *
+ * 配套 behaviors：behaviors/ai-chat.ts（initAiChat / createAiStream）
+ *               + behaviors/ai-composer.ts（initAiComposer / setComposerRunning）。
+ * 状态机 7 态 .is-* 中的 streaming/done 在本文件消费；running 脉冲点等条目态见 ai-tool.css（.ai-item 基元）。
+ * data-density：summary 档隐藏 meta、默认折叠 reasoning（纯 CSS）；
+ *               tool/system 类次要消息在 summary 档压淡。verbose 与 normal 目前同视觉（透明度两档生效）。
+ * 流式光标复用 tokens 的 blink keyframes（.animate-blink 同款）；reasoning shimmer 时长走
+ * --ai-shimmer-duration 局部变量（默认值 1.6s）。
+ */
+
+/* ══════════════ ai-chat（滚动容器 + 钉底） ══════════════ */
+
+.ai-chat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: var(--density-space-sm);
+}
+
+.ai-chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-md);
+  padding: var(--density-space-xs) var(--density-space-2xs, 2px);
+  scroll-behavior: smooth;
+}
+
+/* 「回到底部 · N 条新消息」浮动钮（用户上滚暂停跟随时出现，initAiChat 驱动） */
+.ai-chat-jump {
+  position: absolute;
+  left: 50%;
+  bottom: var(--density-space-md);
+  transform: translateX(-50%);
+  z-index: var(--z-raised);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding: var(--density-space-xs) var(--density-space-md);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-full);
+  background: var(--token-surface);
+  box-shadow: var(--token-shadow-card);
+  color: var(--token-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-xs);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  animation: icen-pop-in var(--ai-jump-enter-duration, var(--duration-normal)) var(--ease-out);
+  transition:
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
+}
+.ai-chat-jump:hover {
+  color: var(--token-accent);
+  border-color: var(--icen-hover-border);
+}
+.ai-chat-jump:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-chat-jump[hidden] {
+  display: none;
+}
+
+/* ══════════════ ai-message ══════════════ */
+
+.ai-msg {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-sm) var(--density-space-md);
+  border-radius: var(--radius-md);
+  animation: icen-pop-in var(--ai-msg-enter-duration, var(--duration-normal)) var(--ease-out);
+}
+
+.ai-msg-avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--token-fill-2);
+  color: var(--token-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+.ai-msg--user .ai-msg-avatar {
+  background: color-mix(in srgb, var(--token-accent) 14%, transparent);
+  color: var(--token-accent);
+}
+.ai-msg--assistant .ai-msg-avatar {
+  background: color-mix(in srgb, var(--token-success) 12%, transparent);
+  color: var(--token-success);
+}
+.ai-msg--system .ai-msg-avatar {
+  background: color-mix(in srgb, var(--token-warning) 12%, transparent);
+  color: var(--token-warning);
+}
+.ai-msg--tool .ai-msg-avatar {
+  background: color-mix(in srgb, var(--token-info) 12%, transparent);
+  color: var(--token-info);
+}
+
+.ai-msg-body {
+  min-width: 0;
+  font-size: var(--density-font-size-md);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 流式光标（▍闪烁，复用 tokens 的 blink keyframes，同 .animate-blink） */
+.ai-msg-body.is-streaming::after,
+.ai-reasoning-body.is-streaming::after {
+  content: '▍';
+  margin-left: 1px;
+  color: var(--token-accent);
+  animation: blink 1s step-end infinite;
+}
+
+/* 消息操作：hover / focus-within 才出现（键盘可达等价） */
+.ai-msg-actions {
+  position: absolute;
+  top: var(--density-space-xs);
+  right: var(--density-space-xs);
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--token-surface);
+  border: 1px solid var(--token-line-soft);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-2px);
+  transition:
+    opacity var(--icen-tx-fast),
+    transform var(--icen-tx-fast),
+    visibility var(--icen-tx-fast);
+}
+.ai-msg:hover .ai-msg-actions,
+.ai-msg:focus-within .ai-msg-actions {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.ai-msg-actions [data-ai-msg-action] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-msg-actions [data-ai-msg-action]:hover {
+  color: var(--token-accent);
+  background: var(--token-fill-2);
+}
+.ai-msg-actions [data-ai-msg-action]:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-msg-actions [data-ai-msg-action] svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* meta：时间 · token 数（summary 档隐藏） */
+.ai-msg-meta {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ══════════════ ai-reasoning ══════════════ */
+
+.ai-reasoning {
+  margin: var(--density-space-xs) 0;
+  padding-left: var(--density-space-md);
+  border-left: 2px solid var(--token-line-soft);
+}
+
+.ai-reasoning-head {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  width: 100%;
+  padding: var(--density-space-xs) 0;
+  border: 0;
+  background: none;
+  color: var(--token-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-sm);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: left;
+}
+.ai-reasoning-head:hover {
+  color: var(--token-text);
+}
+.ai-reasoning-head:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+  border-radius: var(--radius-xs);
+}
+
+/* 折叠指示 chevron（CSS 三角，展开时旋转） */
+.ai-reasoning-head::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--icen-tx-fast);
+}
+.ai-reasoning:has(.ai-reasoning-head[aria-expanded='true']) .ai-reasoning-head::before {
+  transform: rotate(45deg);
+}
+
+.ai-reasoning-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-reasoning-time {
+  margin-left: auto;
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 流式中：耗时位换成 shimmer「正在思考…」（时长走局部变量） */
+.ai-reasoning.is-streaming .ai-reasoning-time {
+  display: none;
+}
+.ai-reasoning.is-streaming .ai-reasoning-head::after {
+  content: '正在思考…';
+  margin-left: auto;
+  font-size: var(--density-font-size-2xs);
+  background: linear-gradient(
+    90deg,
+    var(--token-text-faint) 25%,
+    var(--token-text) 50%,
+    var(--token-text-faint) 75%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: ai-shimmer var(--ai-shimmer-duration, 1.6s) linear infinite;
+}
+
+.ai-reasoning-body {
+  padding: var(--density-space-xs) 0 var(--density-space-sm);
+  color: var(--token-text-muted);
+  font-size: var(--density-font-size-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ai-reasoning-body[hidden] {
+  display: none;
+}
+
+/* ══════════════ ai-composer ══════════════ */
+
+.ai-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  padding: var(--density-space-sm);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--token-surface);
+  box-shadow: var(--token-shadow-card);
+}
+.ai-composer:focus-within {
+  border-color: var(--icen-hover-border);
+}
+
+/* 排队 / 附件 chips 行 */
+.ai-composer-queue,
+.ai-composer-attach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--density-space-xs);
+}
+.ai-composer-queue[hidden],
+.ai-composer-attach[hidden] {
+  display: none;
+}
+
+.ai-composer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 240px;
+  padding: 2px var(--density-space-xs);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-full);
+  background: var(--token-surface-strong);
+  color: var(--token-text-muted);
+  font-size: var(--density-font-size-xs);
+  line-height: 1.4;
+}
+.ai-composer-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-composer-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--token-text-faint);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-composer-chip-remove:hover {
+  color: var(--token-error);
+  background: var(--token-error-muted);
+}
+.ai-composer-chip-remove:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+/* 输入框（.control 基元提供 hover/focus 边框与光晕） */
+.ai-composer-box {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-xs) var(--density-space-sm);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  background: var(--token-panel);
+  box-shadow: var(--token-shadow-inset);
+}
+
+.ai-composer-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--density-space-xs) 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  resize: none;
+  font-family: inherit;
+  font-size: var(--density-font-size-md);
+  line-height: 1.5;
+  max-height: 12em;
+  overflow-y: auto;
+}
+
+.ai-composer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  flex-shrink: 0;
+}
+
+.ai-composer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--density-input-height-sm);
+  height: var(--density-input-height-sm);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-composer-btn:hover {
+  color: var(--token-text);
+  background: var(--token-fill-2);
+}
+.ai-composer-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-composer-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 发送钮：accent 实底；运行态 .is-stop 变停止钮（中性底 + error 色方标，停语气但不整钮铺红） */
+.ai-composer-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--density-input-height-sm);
+  height: var(--density-input-height-sm);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--token-accent);
+  color: var(--token-on-accent);
+  cursor: pointer;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast);
+}
+.ai-composer-send:hover {
+  background: var(--token-accent-deep, var(--token-accent));
+}
+.ai-composer-send:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-composer-send svg {
+  width: 16px;
+  height: 16px;
+}
+.ai-composer-send .ai-composer-send-icon[hidden] {
+  display: none;
+}
+.ai-composer-send.is-stop {
+  background: var(--token-surface-strong);
+  color: var(--token-error);
+  border-color: color-mix(in srgb, var(--token-error) 35%, transparent);
+}
+.ai-composer-send.is-stop:hover {
+  background: var(--token-error-muted);
+}
+
+/* 运行态：输入台整体 busy 标记（aria-busy 等价，状态机语言） */
+.ai-composer.is-running .ai-composer-box {
+  border-color: color-mix(in srgb, var(--token-accent) 30%, var(--token-line-soft));
+}
+
+/* ══════════════ data-density 三档（summary 纯 CSS 降噪） ══════════════ */
+
+/* summary：隐藏 meta、默认折叠 reasoning（head 展开仍可看）、次要消息压淡 */
+.ai-chat[data-density='summary'] .ai-msg-meta {
+  display: none;
+}
+.ai-chat[data-density='summary'] .ai-reasoning-body {
+  display: none;
+}
+.ai-chat[data-density='summary'] .ai-reasoning:has(.ai-reasoning-head[aria-expanded='true']) .ai-reasoning-body {
+  display: block;
+}
+.ai-chat[data-density='summary'] .ai-msg--tool,
+.ai-chat[data-density='summary'] .ai-msg--system {
+  opacity: 0.72;
+}
+
+/* verbose：当前与 normal 同视觉（透明度三档中两档生效；verbose 预留全显档位） */
+
+/* ══════════════ keyframes（本文件局部） ══════════════ */
+
+@keyframes ai-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ══════════════ 动效守卫 ══════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-msg,
+  .ai-chat-jump {
+    animation: none;
+  }
+  .ai-chat-jump,
+  .ai-msg-actions,
+  .ai-composer-chip-remove,
+  .ai-composer-btn,
+  .ai-composer-send,
+  .ai-reasoning-head,
+  .ai-reasoning-head::before {
+    transition: none;
+  }
+  .ai-reasoning.is-streaming .ai-reasoning-head::after {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--token-text-faint);
+  }
+  .ai-msg-body.is-streaming::after,
+  .ai-reasoning-body.is-streaming::after {
+    animation: none;
+  }
+}
+
+/* 触屏无 hover：消息操作常显（否则不可达） */
+@media (pointer: coarse) {
+  .ai-msg-actions {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+}
