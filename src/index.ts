@@ -38,3 +38,4 @@ export * from './behaviors/ai-composer';
 export * from './behaviors/ai-tool';
 export * from './behaviors/ai-diff';
 export * from './behaviors/ai-panel';
+export * from './behaviors/ai-provider';

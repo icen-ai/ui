@@ -322,3 +322,124 @@ export function svgIcon(svg: string): SVGElement | null;  // DOMParser 消毒（
 - **S4**（S1-S3 完成后）：`scripts/slugs.mjs` `site/src/lib/components.ts`（新分组「AI」+ 11 个交互 demo 条目）`AGENTS.md`（追加 AI 组件族约定）`README.md`（组件统计更新）
 
 验证：各自 `bunx tsc --noEmit`（ui/ 根目录；node 需 `export PATH="/e/Env/Node/fnm/node-versions/v22.22.3/installation:$PATH"`）；不跑 `bun run build`（dist 冲突），统一由主代理构建。
+
+---
+
+## 8. ai-composer v2（输入台重做，2026 业界集大成）
+
+结构（自底向上工具条，业界主流形态）：
+
+```html
+<div class="ai-composer" data-ai-composer>
+  <div class="ai-composer-queue" hidden></div>   <!-- 排队 chips（v1 已有） -->
+  <div class="ai-composer-refs" hidden></div>    <!-- @ 引用 chips（分离渲染：textarea 不嵌 chip） -->
+  <div class="ai-composer-attach" hidden></div>  <!-- 附件 chips（v1 已有） -->
+  <div class="ai-composer-box control">
+    <textarea class="ai-composer-input" rows="1"></textarea>
+    <div class="ai-composer-toolbar">
+      <button class="ai-composer-model" data-ai-model-open>  <!-- 模型切换：provider 图标 + 模型名 + chevron -->
+      <span class="ai-composer-spacer"></span>
+      <span class="ai-composer-usage" data-ai-usage></span>   <!-- 上下文环挂载点 -->
+      <button class="ai-composer-btn" data-ai-attach></button>
+      <button class="ai-composer-send" data-ai-send></button>
+    </div>
+  </div>
+</div>
+```
+
+新 API（全部可选配置，向后兼容 v1 契约）：
+
+- `setComposerModels(el, providers: AiProviderOption[], current?: {provider, model})`：
+  `AiProviderOption = { id, label, icon?, models: { id, label, context? }[] }`。
+  工具条出现模型钮；点击开 `.ai-composer-popup`（portal body，`computePopoverLayout` side:top）——
+  按 provider 分组（图标+名）+ 模型行（label + 上下文窗口如 `1M`）+ 搜索过滤 + 当前勾选。
+  选择派 `icen:ai-model-change { provider, model, label, context }`；
+  **切换时若 cacheRead 占比高则弹层内提示"换模型会使 prompt 缓存失效"**（Kimi Code 细节）。
+  选中模型的 `context` 自动作为 `setComposerUsage` 的 total 默认值（闭环）。
+- `setComposerCommands(el, commands: { name, description?, argsHint? }[])`：
+  输入开头为 `/` 时弹层过滤；↑↓ 导航、Enter/Tab 选中、Esc 关；选中派 `icen:ai-command { name, args }`
+  并清空输入（命令被拦截执行、不进消息流——业界共识）。
+- `setComposerRefs(el, sources: { kind: 'file'|'folder'|'doc'|'agent', id, label, sub? }[])`：
+  任意位置输入 `@` 触发弹层（分组按 kind + 图标）；选中后文本插入 `@label ` 且 refs chip 行 +1，
+  派 `icen:ai-ref { action: 'add', ref }`；chip × 移除（同时删文本里首个 `@label`）派 `{ action: 'remove' }`。
+- `setComposerUsage(el, usage, opts)`：工具条右侧挂 `renderAiUsageRing`。
+- 历史：输入为空时按 `↑` 取回上一条已发送文本（会话内历史数组，每 composer 独立）。
+- 运行态（v1 已有 queue/stop）补充：运行中按 `↑` 把最后一条排队消息取回输入框重新编辑（Claude Code 模式）。
+- 弹层接管时键盘事件 preventDefault；IME 组合态安全（沿用 v1）。
+- 图标对齐修复：工具条按钮统一 28px 方形、svg 14px 居中、gap 走 density token。
+
+事件新增：`icen:ai-model-change` / `icen:ai-command` / `icen:ai-ref`（全 bubbles）。
+
+## 9. ai-provider（provider 适配层：填入 key 即工作）
+
+新文件 `src/behaviors/ai-provider.ts`（index.ts export）。调研依据：五家官方文档 + Vercel AI SDK openai-compatible 架构 + LiteLLM 映射思路。
+
+### 9.1 注册表
+
+```ts
+export interface AiProviderModel { id: string; label: string; context?: number; outputLimit?: number; }
+export interface AiProviderDef {
+  id: string; label: string; icon: string;       // icon: 单色 svg 字母章（svgIcon 消毒）
+  baseURL: string;                                // 默认，可覆盖（自定义 BaseURL 是一等公民）
+  chatPath: string;                               // /chat/completions | /messages
+  wire: 'openai' | 'anthropic';
+  auth: 'bearer' | 'x-api-key';
+  extraHeaders?: Record<string, string>;          // 如 anthropic-version / dangerous-direct-browser-access
+  models: AiProviderModel[];
+  /** 浏览器直连 CORS：'yes'（Anthropic 官方支持）/ 'no'（OpenAI 官方禁止）/ 'unknown'（DeepSeek/GLM/Kimi 无承诺，建议代理） */
+  browserDirect: 'yes' | 'no' | 'unknown';
+}
+export function registerAiProvider(def: AiProviderDef): void;   // 第三方/自建网关注册入口
+export function getAiProvider(id: string): AiProviderDef | undefined;
+export function listAiProviders(): AiProviderDef[];
+```
+
+内置五家（2026-10 调研值）：
+- openai：`https://api.openai.com/v1`，wire openai，browserDirect 'no'；模型 gpt-5 / gpt-5-mini / gpt-5.1 / gpt-5.5 等
+- claude：`https://api.anthropic.com/v1`，wire anthropic，browserDirect 'yes'（自动带 anthropic-version + anthropic-dangerous-direct-browser-access）；claude-opus-5-5 / claude-sonnet-5-5 / claude-fable-5-1 / claude-haiku-4-5
+- deepseek：`https://api.deepseek.com/v1`，wire openai，'unknown'；deepseek-flash / deepseek-v4-pro（1M ctx）
+- glm：`https://open.bigmodel.cn/api/paas/v4`，wire openai，'unknown'（API key 直接当 Bearer；JWT 可选不做）；glm-5.3 / glm-5.3-flash / glm-5.2 / glm-4.6
+- kimi：`https://api.moonshot.cn/v1`，wire openai，'unknown'；kimi-k3（1M）/ kimi-k2.7-code / kimi-k2.6
+
+### 9.2 客户端
+
+```ts
+createAiClient({
+  provider: string,          // 注册表 id
+  apiKey: string,
+  baseURL?: string,          // 覆盖默认（自定义网关/代理）
+  model?: string,            // 默认取 provider.models[0]
+  onAudit?: (entry: AiAuditEntry) => void,
+}) → {
+  chat(req: AiChatRequest): Promise<AiChatResult>;
+  stream(req: AiChatRequest): AiStreamSession;   // AsyncIterable<AiStreamChunk> + cancel()
+  config: 只读当前配置（provider/baseURL/model）
+}
+
+AiChatRequest = { messages: { role, content }[], model?, temperature?, maxTokens?, signal? }
+AiChatResult  = { text, usage: AiUsage（normalizeUsage 归一）, finishReason?, raw? }
+AiStreamChunk = { type:'text', delta } | { type:'done' } | { type:'error', message }
+```
+
+- **两族线协议**：openai 族 POST chat/completions（bearer；`stream_options.include_usage` 自动注入——AI SDK 同款）；anthropic 族 POST /messages（x-api-key + 版本头 + 浏览器直连头；`max_tokens` 必填——缺省 4096；system 顶层参数转换）。
+- **SSE 解析器两套**：openai 族按空行分隔的 `data:` 帧 + `[DONE]`；anthropic 族 `event:` 分派（text_delta 出文本；usage 取 message_start 的 input + message_delta 的 output，**不 += 累加**）。缓冲按空行切，不按 read 边界。
+- **usage 归一**：走 ai-core `normalizeUsage`（已含 OpenAI/Anthropic/GLM details 路径）；本次给 ai-core 补 DeepSeek 顶层 `prompt_cache_hit_tokens`→cacheRead、Kimi 顶层 `cached_tokens`→cacheRead 与 `prompt_tokens_details.cache_write_tokens`→cacheWrite。
+- **错误归一**：OpenAI/DeepSeek 同构 `error.{message,type}`；Kimi 无 param/code 自有枚举；GLM 业务码信封；Anthropic 多一层 `type:"error"` 包装——统一抛 `AiProviderError { provider, status, type, message, raw }`。
+- **CORS 诚实**：browserDirect 'no'/'unknown' 的 provider 在浏览器直连失败时，错误信息里建议走代理（文档写明，不静默）。
+
+### 9.3 审计（"完美进入 AI 体系"的闭环）
+
+```ts
+createAiAuditor({ persist?: string（localStorage key）, max?: number（默认 100，环形） }) → {
+  log(entry): void; list(): AiAuditEntry[]; clear(): void;
+  summary(): AiUsage;        // 全量聚合 → 直接喂 renderAiUsage / renderAiUsageRing
+  byModel(): Record<string, AiUsage>;
+}
+AiAuditEntry = { id, ts, provider, model, baseURL, stream, status: 'ok'|'error', durationMs, usage?, error? }
+```
+
+client 每次请求自动产审计记录（onAudit 回调 + 若传了 auditor 实例则自动 log）。usage 增量事件派 `icen:ai-usage`（detail AiUsage，bubbles，挂 document）——上下文环/用量面板监听即实时更新。
+
+### 9.4 可测试性（补）
+
+`createAiClient` 接受 `fetch?: typeof fetch` 注入（AI SDK 同款）——单测与文档站 demo 用 mock fetch 返回预制 SSE 流，离线可演示全链路（流式文本 + usage + 审计）。

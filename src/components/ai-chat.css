@@ -26,18 +26,31 @@
  *       <span class="ai-composer-chip-text">…</span>
  *       <button class="ai-composer-chip-remove" aria-label="移除">×</button>
  *     </span></div>
+ *     <div class="ai-composer-refs" hidden><!-- @ 引用 chips，结构同上（v2 setComposerRefs） --></div>
  *     <div class="ai-composer-attach" hidden><!-- 附件 chips，结构同上 --></div>
  *     <div class="ai-composer-box control">
  *       <textarea class="ai-composer-input" rows="1" placeholder="…"></textarea>
- *       <div class="ai-composer-actions">
+ *       <div class="ai-composer-actions"><!-- v1 旧结构（无 toolbar 配置时保留）： -->
  *         <button class="ai-composer-btn" data-ai-attach aria-label="附件"></button>
  *         <button class="ai-composer-send" data-ai-send aria-label="发送"></button>  ← 运行态 .is-stop
  *       </div>
+ *       <div class="ai-composer-toolbar"><!-- v2 工具条（setComposerModels/Usage 配置时 JS 装配）：
+ *         <button class="ai-composer-model" data-ai-model-open>provider 图标/首字母章 + 模型名 + chevron</button>
+ *         <span class="ai-composer-spacer"></span>
+ *         <span class="ai-composer-usage" data-ai-usage></span>   ← 用量环挂载点（renderAiUsageRing）
+ *         <button class="ai-composer-btn" data-ai-attach></button>
+ *         <button class="ai-composer-send" data-ai-send></button>  ← 运行态 .is-stop
+ *       </div>
  *     </div>
  *   </div>
+ *   弹层 .ai-composer-popup（portal body，JS 动态创建）：模型切换 / 斜杠命令 / @ 引用
+ *     三模式共用基座——.ai-composer-popup-search 搜索框、.ai-composer-popup-list(listbox)
+ *     > .ai-composer-popup-group > .ai-composer-popup-group-label + .ai-composer-popup-option(role=option)，
+ *     .ai-composer-popup-empty 空态、.ai-composer-popup-foot 底部提示。
  *
  * 配套 behaviors：behaviors/ai-chat.ts（initAiChat / createAiStream）
- *               + behaviors/ai-composer.ts（initAiComposer / setComposerRunning）。
+ *               + behaviors/ai-composer.ts（initAiComposer / setComposerRunning
+ *                 + v2：setComposerModels / setComposerCommands / setComposerRefs / setComposerUsage）。
  * 状态机 7 态 .is-* 中的 streaming/done 在本文件消费；running 脉冲点等条目态见 ai-tool.css（.ai-item 基元）。
  * data-density：summary 档隐藏 meta、默认折叠 reasoning（纯 CSS）；
  *               tool/system 类次要消息在 summary 档压淡。verbose 与 normal 目前同视觉（透明度两档生效）。
@@ -350,14 +363,16 @@
   border-color: var(--icen-hover-border);
 }
 
-/* 排队 / 附件 chips 行 */
+/* 排队 / 引用 / 附件 chips 行 */
 .ai-composer-queue,
+.ai-composer-refs,
 .ai-composer-attach {
   display: flex;
   flex-wrap: wrap;
   gap: var(--density-space-xs);
 }
 .ai-composer-queue[hidden],
+.ai-composer-refs[hidden],
 .ai-composer-attach[hidden] {
   display: none;
 }
@@ -407,9 +422,10 @@
   box-shadow: var(--icen-ring);
 }
 
-/* 输入框（.control 基元提供 hover/focus 边框与光晕） */
+/* 输入框（.control 基元提供 hover/focus 边框与光晕）；flex-wrap 让工具条独占下一行 */
 .ai-composer-box {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--density-space-sm);
   padding: var(--density-space-xs) var(--density-space-sm);
@@ -434,6 +450,7 @@
   overflow-y: auto;
 }
 
+/* v1 旧结构按钮行（无 toolbar 配置时保留）；v2 中按钮被移入工具条后此容器由 JS 移除 */
 .ai-composer-actions {
   display: flex;
   align-items: center;
@@ -441,12 +458,331 @@
   flex-shrink: 0;
 }
 
+/* ── v2 工具条（composer-box 内底部，业界主流形态）── */
+
+.ai-composer-toolbar {
+  flex: 0 0 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  padding-top: var(--density-space-xs);
+  border-top: 1px solid var(--token-line-soft);
+}
+.ai-composer-toolbar[hidden] {
+  display: none;
+}
+
+.ai-composer-spacer {
+  flex: 1;
+}
+
+/* 模型切换钮：provider 图标/首字母章 + 模型名 + chevron */
+.ai-composer-model {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 180px;
+  height: 28px;
+  padding: 0 var(--density-space-xs);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--token-text-muted);
+  font-size: var(--density-font-size-xs);
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-composer-model:hover {
+  color: var(--token-text);
+  background: var(--token-fill-2);
+}
+.ai-composer-model:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-composer-model-icon,
+.ai-composer-model-provider-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ai-composer-model-provider-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.ai-composer-model-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-composer-model-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--token-text-faint);
+  transition: transform var(--icen-tx-fast);
+}
+.ai-composer-model-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+.ai-composer-model[aria-expanded='true'] .ai-composer-model-chevron {
+  transform: rotate(180deg);
+}
+
+/* provider 图标缺失时的首字母圆形章（token 色） */
+.ai-composer-model-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--token-accent) 15%, transparent);
+  color: var(--token-accent);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+.ai-composer-model-icon .ai-composer-model-badge {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+}
+
+/* 用量环挂载点（环本体 .ai-usage-ring 在 ai-panel.css） */
+.ai-composer-usage {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.ai-composer-usage:empty {
+  display: none;
+}
+
+/* ── v2 弹层（portal body，模型/命令/引用三模式共用基座；定位 inline 由 behavior 写入）── */
+
+.ai-composer-popup {
+  position: fixed;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  padding: var(--density-space-2xs);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  background: var(--token-card-strong);
+  box-shadow: var(--token-shadow-popover, var(--token-shadow-card));
+  overflow: hidden;
+  animation: icen-pop-in var(--ai-composer-popup-enter-duration, var(--duration-normal)) var(--ease-out);
+}
+
+/* 搜索框（模型/引用过滤） */
+.ai-composer-popup-search {
+  flex-shrink: 0;
+  padding: var(--density-space-2xs);
+  border-bottom: 1px solid var(--token-line-soft);
+}
+.ai-composer-popup-search-input {
+  width: 100%;
+  padding: var(--density-space-2xs) var(--density-space-xs);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--token-panel);
+  color: var(--token-text);
+  font-size: var(--density-font-size-sm);
+  outline: none;
+  transition: border-color var(--icen-tx-fast);
+}
+.ai-composer-popup-search-input:focus {
+  border-color: var(--token-accent);
+}
+.ai-composer-popup-search-input::placeholder {
+  color: var(--token-text-faint);
+}
+
+/* 列表（max-height inline 由 behavior 按 computePopoverLayout 写入） */
+.ai-composer-popup-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--density-space-2xs);
+}
+
+/* 分组（provider / ref kind） */
+.ai-composer-popup-group[hidden] {
+  display: none;
+}
+.ai-composer-popup-group-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--density-space-xs) var(--density-space-xs) var(--density-space-2xs);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+  letter-spacing: 0.02em;
+}
+.ai-composer-popup-group-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--token-text-muted);
+}
+.ai-composer-popup-group-icon svg {
+  width: 12px;
+  height: 12px;
+}
+.ai-composer-popup-group-icon .ai-composer-model-badge {
+  width: 12px;
+  height: 12px;
+  font-size: 8px;
+}
+
+/* 选项行（label + meta + check） */
+.ai-composer-popup-option {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  width: 100%;
+  padding: var(--density-space-xs);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--token-text);
+  font-size: var(--density-font-size-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--icen-tx-fast);
+}
+.ai-composer-popup-option:hover {
+  background: var(--token-fill-2);
+}
+.ai-composer-popup-option.is-focused {
+  background: var(--token-fill-2);
+}
+.ai-composer-popup-option:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-composer-popup-option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--token-text-muted);
+}
+.ai-composer-popup-option-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.ai-composer-popup-option-icon .ai-composer-model-badge {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+}
+.ai-composer-popup-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-composer-popup-option-sub {
+  margin-left: 6px;
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+}
+.ai-composer-popup-option-meta {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.ai-composer-popup-option-check {
+  display: none;
+  flex-shrink: 0;
+  color: var(--token-accent);
+}
+.ai-composer-popup-option-check svg {
+  width: 12px;
+  height: 12px;
+}
+.ai-composer-popup-option[aria-selected='true'] .ai-composer-popup-option-check {
+  display: inline-flex;
+}
+
+/* 命令行：/name <argsHint> + 描述 */
+.ai-composer-popup-cmd {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+.ai-composer-popup-cmd-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+}
+.ai-composer-popup-cmd-name {
+  font-family: var(--font-mono);
+  color: var(--token-accent);
+}
+.ai-composer-popup-cmd-args {
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+}
+.ai-composer-popup-cmd-desc {
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-muted);
+}
+
+/* 空态 */
+.ai-composer-popup-empty {
+  flex-shrink: 0;
+  padding: var(--density-space-md);
+  text-align: center;
+  font-size: var(--density-font-size-sm);
+  color: var(--token-text-faint);
+}
+.ai-composer-popup-empty[hidden] {
+  display: none;
+}
+
+/* 底部提示（模型弹层：切换模型会使 prompt 缓存失效；cacheRead 占比高时 warning 色） */
+.ai-composer-popup-foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--density-space-xs);
+  border-top: 1px solid var(--token-line-soft);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+}
+.ai-composer-popup-foot svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.ai-composer-popup-foot.is-warn {
+  color: var(--token-warning);
+}
+
+/* ── 工具条按钮统一 28px 方形、svg 14px 居中（v1 旧结构按钮同样收敛）── */
+
 .ai-composer-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--density-input-height-sm);
-  height: var(--density-input-height-sm);
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -466,8 +802,8 @@
   box-shadow: var(--icen-ring);
 }
 .ai-composer-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 /* 发送钮：accent 实底；运行态 .is-stop 变停止钮（中性底 + error 色方标，停语气但不整钮铺红） */
@@ -475,8 +811,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--density-input-height-sm);
-  height: var(--density-input-height-sm);
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -496,8 +832,8 @@
   box-shadow: var(--icen-ring);
 }
 .ai-composer-send svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 .ai-composer-send .ai-composer-send-icon[hidden] {
   display: none;
@@ -550,7 +886,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ai-msg,
-  .ai-chat-jump {
+  .ai-chat-jump,
+  .ai-composer-popup {
     animation: none;
   }
   .ai-chat-jump,
@@ -558,6 +895,10 @@
   .ai-composer-chip-remove,
   .ai-composer-btn,
   .ai-composer-send,
+  .ai-composer-model,
+  .ai-composer-model-chevron,
+  .ai-composer-popup-option,
+  .ai-composer-popup-search-input,
   .ai-reasoning-head,
   .ai-reasoning-head::before {
     transition: none;

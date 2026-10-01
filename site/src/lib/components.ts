@@ -2776,16 +2776,16 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
     slug: 'ai-chat',
     name: 'AI 会话',
     group: 'AI',
-    desc: 'AI 会话容器（AI 族门面条目）：滚动钉底跟随、上滚暂停跟随并浮出「回到底部 · N 条」浮动钮（缺失自动补建）；消息 copy / retry 操作委托（icen:ai-copy / icen:ai-retry）；reasoning 折叠委托。配套 createAiStream 做 textContent 级流式追加；data-density 三档（verbose / normal / summary）控制信息密度。',
+    desc: 'AI 会话容器（AI 族门面条目）：滚动钉底跟随、上滚暂停跟随并浮出「回到底部 · N 条」浮动钮（缺失自动补建）；消息 copy / retry 操作委托（icen:ai-copy / icen:ai-retry）；reasoning 折叠委托。配套 createAiStream 做 textContent 级流式追加；data-density 三档（verbose / normal / summary）控制信息密度。下方 demo 是全链路实况：composer v2（模型切换//命令/@引用/上下文环）→ createAiClient（mock provider，SSE 流式）→ createAiStream 渲染 → 审计聚合 → 用量环累计。',
     demo: `<div class="toolbar" style="margin-bottom:10px">
   <span class="toolbar-label">密度</span>
   <button class="btn btn-sm" type="button" data-ai-density="verbose">verbose</button>
   <button class="btn btn-sm btn-primary" type="button" data-ai-density="normal">normal</button>
   <button class="btn btn-sm" type="button" data-ai-density="summary">summary</button>
   <span class="toolbar-spacer"></span>
-  <button class="btn btn-sm" type="button" id="ai-chat-replay">重放流式回复</button>
+  <span class="toolbar-label">发消息试试：全链路 demo（mock provider 流式回包 + 用量环累计）</span>
 </div>
-<div class="ai-chat" id="ai-chat-demo" data-density="normal" style="height:400px;border:1px solid var(--token-line-soft);border-radius:var(--radius-md);padding:10px">
+<div class="ai-chat" id="ai-chat-demo" data-density="normal" style="height:380px;border:1px solid var(--token-line-soft);border-radius:var(--radius-md);padding:10px">
   <div class="ai-chat-scroll">
     <div class="ai-msg ai-msg--user">
       <span class="ai-msg-avatar">我</span>
@@ -2821,16 +2821,26 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
         <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">tsup ✓ · build-css: 55 components + 75 kit 入口 → dist/</pre></div>
       </div>
     </div>
-    <div class="ai-msg ai-msg--assistant">
+    <div class="ai-msg ai-msg--assistant" id="ai-chat-last" hidden>
       <span class="ai-msg-avatar">AI</span>
       <div style="min-width:0">
         <div class="ai-msg-body" id="ai-chat-stream"></div>
-        <div class="ai-msg-meta" id="ai-chat-meta" hidden>12:05 · 1.2k tok</div>
+        <div class="ai-msg-meta" id="ai-chat-meta" hidden></div>
       </div>
     </div>
   </div>
 </div>
-<p class="demo-label" id="ai-chat-log" style="margin-top:8px">悬停消息看 copy / retry · 上滚出现「回到底部」· 点「重放」重新播流式回复</p>`,
+<div class="ai-composer" data-ai-composer id="ai-chat-composer" style="margin-top:10px">
+  <div class="ai-composer-queue" hidden></div>
+  <div class="ai-composer-attach" hidden></div>
+  <div class="ai-composer-box control">
+    <textarea class="ai-composer-input" rows="1" placeholder="输入消息，/ 命令 · @ 引用 · Enter 发送"></textarea>
+    <div class="ai-composer-actions">
+      <button class="ai-composer-btn" data-ai-attach type="button" aria-label="附件"></button>
+      <button class="ai-composer-send" data-ai-send type="button" aria-label="发送"></button>
+    </div>
+  </div>
+</div>`,
     usage: `import { initAiChat, createAiStream } from '@icen.ai/ui/kit/ai-chat';
 initAiChat();   // 钉底跟随 / 上滚暂停 / .ai-chat-jump 缺失自动补建 / copy·retry / reasoning 折叠
 
@@ -2852,35 +2862,105 @@ initAiChat();   // 钉底跟随 / 上滚暂停 / .ai-chat-jump 缺失自动补�
 const s = createAiStream(document.querySelector('.ai-msg-body'));
 s.append('…');
 s.done();   // 或 s.cancel()`,
-    behaviors: ['ai-chat', 'ai-tool'],
-    behaviorInit: { 'ai-chat': 'initAiChat', 'ai-tool': 'initAiTool' },
+    behaviors: ['ai-chat', 'ai-tool', 'ai-composer', 'ai-provider'],
+    behaviorInit: { 'ai-chat': 'initAiChat', 'ai-tool': 'initAiTool', 'ai-composer': 'initAiComposer' },
     script: `const chatEl = document.getElementById('ai-chat-demo');
+const composer = document.getElementById('ai-chat-composer');
+const lastMsg = document.getElementById('ai-chat-last');
 const target = document.getElementById('ai-chat-stream');
 const metaEl = document.getElementById('ai-chat-meta');
-const logEl = document.getElementById('ai-chat-log');
-const REPLY = '构建已验证通过（3.2s，55 组件 + 75 kit 入口）。发布检查清单：\\n1. 构建 · bun run build 全绿\\n2. 类型 · tsc --noEmit 零错误\\n3. 冒烟 · accounts / skill 两站各跑一遍登录流程\\n4. 回滚 · revert tag v0.6.1 即可，本次无数据库变更\\n任何一步失败都先停发布，叫我一起看。';
-let timer = null;
-function play() {
-  if (!target) return;
-  if (timer) { clearInterval(timer); timer = null; }
-  target.textContent = '';
-  if (metaEl) metaEl.hidden = true;
-  const stream = aiChatMod.createAiStream(target);
-  let pos = 0;
-  timer = setInterval(function () {
-    const next = Math.min(REPLY.length, pos + 2 + Math.floor(Math.random() * 3));
-    stream.append(REPLY.slice(pos, next));
-    pos = next;
-    if (pos >= REPLY.length) {
-      stream.done();
-      clearInterval(timer);
-      timer = null;
-      if (metaEl) metaEl.hidden = false;
-    }
-  }, 60);
+
+/* 模拟 provider：mock fetch 返回 OpenAI 族 SSE 流（离线演示全链路） */
+const REPLIES = [
+  '构建已验证通过（3.2s，55 组件 + 75 kit 入口）。发布检查清单：\\n1. 构建 · bun run build 全绿\\n2. 类型 · tsc --noEmit 零错误\\n3. 回滚 · revert tag 即可，本次无数据库变更',
+  '收到，已计入会话上下文。注意看右下角用量环——每轮回复后累计上升，点环可看缓存分列。',
+];
+let turn = 0;
+function mockFetch() {
+  const text = REPLIES[turn % REPLIES.length];
+  const frames = [];
+  for (let i = 0; i < text.length; i += 3) {
+    frames.push('data: ' + JSON.stringify({ choices: [{ delta: { content: text.slice(i, i + 3) } }] }) + '\\n\\n');
+  }
+  frames.push('data: ' + JSON.stringify({ choices: [], usage: { prompt_tokens: 138000 + turn * 42000, completion_tokens: 180 + turn * 60, prompt_tokens_details: { cached_tokens: 96000 } } }) + '\\n\\n');
+  frames.push('data: [DONE]\\n\\n');
+  return Promise.resolve(new Response(new ReadableStream({
+    start(c) {
+      (function push() {
+        const f = frames.shift();
+        if (f == null) return c.close();
+        c.enqueue(new TextEncoder().encode(f));
+        setTimeout(push, 24);
+      })();
+    },
+  }), { status: 200, headers: { 'content-type': 'text/event-stream' } }));
 }
-play();
-document.getElementById('ai-chat-replay')?.addEventListener('click', play);
+
+/* 客户端 + 审计器（用量进 AI 体系的入口） */
+const auditor = aiProviderMod.createAiAuditor();
+const client = aiProviderMod.createAiClient({ provider: 'kimi', apiKey: 'demo-key', auditor: auditor, fetch: mockFetch });
+
+/* 输入台 v2：模型切换（真实注册表）+ /命令 + @引用 + 上下文环（kimi-k3 = 1M 窗口） */
+aiComposerMod.setComposerModels(composer, aiProviderMod.listAiProviders(), { provider: 'kimi', model: 'kimi-k3' });
+aiComposerMod.setComposerCommands(composer, [
+  { name: 'plan', description: '进入计划模式', argsHint: '[任务]' },
+  { name: 'clear', description: '清空上下文' },
+  { name: 'compact', description: '压缩对话历史' },
+]);
+aiComposerMod.setComposerRefs(composer, [
+  { kind: 'file', id: 'f1', label: 'src/app.ts', sub: '2.1k tok' },
+  { kind: 'folder', id: 'f2', label: 'src/auth/', sub: '12 文件' },
+  { kind: 'agent', id: 'a1', label: 'explore', sub: '搜索型子代理' },
+]);
+aiComposerMod.setComposerUsage(composer, { input: 0 }, { total: 1000000 });
+
+let session = null;
+composer?.addEventListener('icen:ai-stop', function () {
+  if (session) session.cancel();
+});
+composer?.addEventListener('icen:ai-send', function (e) {
+  const text = e.detail.text;
+  if (!text || !chatEl) return;
+  const scrollEl = chatEl.querySelector('.ai-chat-scroll');
+  const row = document.createElement('div');
+  row.className = 'ai-msg ai-msg--user';
+  const av = document.createElement('span');
+  av.className = 'ai-msg-avatar';
+  av.textContent = '我';
+  const wrap = document.createElement('div');
+  wrap.style.minWidth = '0';
+  const body = document.createElement('div');
+  body.className = 'ai-msg-body';
+  body.textContent = text;
+  wrap.appendChild(body);
+  row.append(av, wrap);
+  scrollEl?.appendChild(row);
+
+  aiComposerMod.setComposerRunning(composer, true);
+  if (lastMsg) lastMsg.hidden = false;
+  if (metaEl) metaEl.hidden = true;
+  if (target) target.textContent = '';
+  const stream = target ? aiChatMod.createAiStream(target) : null;
+  session = client.stream({ messages: [{ role: 'user', content: text }] });
+  (async function () {
+    for await (const chunk of session) {
+      if (chunk.type === 'text') stream?.append(chunk.delta);
+    }
+    const result = await session.done;
+    stream?.done();
+    session = null;
+    aiComposerMod.setComposerRunning(composer, false);
+    turn++;
+    if (metaEl) {
+      const t = result.usage.total ?? 0;
+      metaEl.textContent = '刚刚 · ' + (t >= 1000 ? (Math.round(t / 100) / 10) + 'k' : String(t)) + ' tok';
+      metaEl.hidden = false;
+    }
+    /* 审计聚合计数 → 环实时更新 */
+    aiComposerMod.setComposerUsage(composer, auditor.summary(), { total: 1000000, cost: auditor.list().length * 0.0042 });
+  })();
+});
+
 /* 密度三档切换 */
 document.querySelectorAll('[data-ai-density]').forEach(function (btn) {
   btn.addEventListener('click', function () {
@@ -2889,16 +2969,7 @@ document.querySelectorAll('[data-ai-density]').forEach(function (btn) {
       b.classList.toggle('btn-primary', b === btn);
     });
   });
-});
-/* copy / retry 委托事件回显 */
-const logDefault = logEl ? logEl.textContent : '';
-function flash(msg) {
-  if (!logEl) return;
-  logEl.textContent = msg;
-  setTimeout(function () { logEl.textContent = logDefault; }, 1600);
-}
-chatEl?.addEventListener('icen:ai-copy', function () { flash('icen:ai-copy · 已复制消息正文'); });
-chatEl?.addEventListener('icen:ai-retry', function () { flash('icen:ai-retry · 演示环境未真正重发'); });`,
+});`,
   },
   {
     slug: 'ai-message',
@@ -3032,7 +3103,7 @@ if (target) {
   <div class="ai-composer-queue" hidden></div>
   <div class="ai-composer-attach" hidden></div>
   <div class="ai-composer-box control">
-    <textarea class="ai-composer-input" rows="1" placeholder="输入消息，Enter 发送 · Shift+Enter 换行 · 运行中 Enter 排队"></textarea>
+    <textarea class="ai-composer-input" rows="1" placeholder="输入消息，/ 命令 · @ 引用 · Enter 发送"></textarea>
     <div class="ai-composer-actions">
       <button class="ai-composer-btn" data-ai-attach type="button" aria-label="附件"></button>
       <button class="ai-composer-send" data-ai-send type="button" aria-label="发送"></button>
@@ -3041,17 +3112,17 @@ if (target) {
 </div>
 <div class="toolbar" style="margin-top:10px">
   <button class="btn btn-sm btn-primary" type="button" id="ai-composer-run">模拟运行 / 解除</button>
-  <span class="toolbar-label" id="ai-composer-log">发送、排队、停止、附件事件会显示在这里</span>
+  <span class="toolbar-label" id="ai-composer-log">模型切换 / /命令 / @引用 / 发送事件回显在这里</span>
 </div>
 <div id="ai-composer-out" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>`,
-    usage: `import { initAiComposer, setComposerRunning } from '@icen.ai/ui/kit/ai-composer';
+    usage: `import { initAiComposer, setComposerRunning, setComposerModels, setComposerCommands, setComposerRefs, setComposerUsage } from '@icen.ai/ui/kit/ai-composer';
 initAiComposer();
 
 <div class="ai-composer" data-ai-composer>
   <div class="ai-composer-queue" hidden></div>
   <div class="ai-composer-attach" hidden></div>
   <div class="ai-composer-box control">
-    <textarea class="ai-composer-input" rows="1" placeholder="…"></textarea>
+    <textarea class="ai-composer-input" rows="1" placeholder="输入消息，/ 命令 · @ 引用 · Enter 发送"></textarea>
     <div class="ai-composer-actions">
       <button class="ai-composer-btn" data-ai-attach aria-label="附件"></button>
       <button class="ai-composer-send" data-ai-send aria-label="发送"></button>
@@ -3059,20 +3130,43 @@ initAiComposer();
   </div>
 </div>
 
-// 运行态：发送钮 → 停止钮（icen:ai-stop）；运行中回车转排队 chip（icen:ai-queue / icen:ai-dequeue）
-setComposerRunning(document.querySelector('[data-ai-composer]'), true);
-// 事件：icen:ai-send {text} · icen:ai-attach {files} · icen:ai-stop {}`,
-    behaviors: ['ai-composer'],
+// v2：模型切换（多源 × 多模型，弹层分组+搜索+缓存失效提示）
+setComposerModels(el, providers, { provider: 'kimi', model: 'kimi-k3' });
+// / 斜杠命令（拦截执行不进消息流，icen:ai-command {name, args}）
+setComposerCommands(el, [{ name: 'plan', description: '进入计划模式', argsHint: '[任务]' }]);
+// @ 引用（file/folder/doc/agent 分组，chip 分离渲染，icen:ai-ref）
+setComposerRefs(el, [{ kind: 'file', id: 'f1', label: 'src/app.ts', sub: '2.1k tok' }]);
+// 上下文环（模型 context 自动作 total；icen:ai-usage 事件可驱动实时更新）
+setComposerUsage(el, usage, { cost: 0.3124 });
+
+// 运行态：发送钮 → 停止钮（icen:ai-stop）；运行中回车排队（icen:ai-queue/dequeue）；
+// 空输入 ↑ 取回历史；运行中 ↑ 取回排队消息重新编辑`,
+    behaviors: ['ai-composer', 'ai-provider'],
     behaviorInit: { 'ai-composer': 'initAiComposer' },
     script: `const composer = document.getElementById('ai-composer-demo');
 const out = document.getElementById('ai-composer-out');
 const logEl = document.getElementById('ai-composer-log');
 function log(msg) { if (logEl) logEl.textContent = msg; }
+/* v2 配置：模型切换（真实 provider 注册表）+ 斜杠命令 + @ 引用 + 上下文环 */
+aiComposerMod.setComposerModels(composer, aiProviderMod.listAiProviders(), { provider: 'kimi', model: 'kimi-k3' });
+aiComposerMod.setComposerCommands(composer, [
+  { name: 'plan', description: '先出计划再执行', argsHint: '[任务]' },
+  { name: 'clear', description: '清空上下文' },
+  { name: 'compact', description: '压缩对话历史' },
+  { name: 'review', description: '审查代码', argsHint: '[路径]' },
+]);
+aiComposerMod.setComposerRefs(composer, [
+  { kind: 'file', id: 'f1', label: 'src/app.ts', sub: '2.1k tok' },
+  { kind: 'file', id: 'f2', label: 'src/auth/index.ts', sub: '860 tok' },
+  { kind: 'folder', id: 'f3', label: 'src/components/', sub: '55 文件' },
+  { kind: 'doc', id: 'd1', label: '发布手册', sub: 'docs/' },
+  { kind: 'agent', id: 'a1', label: 'explore', sub: '搜索型子代理' },
+]);
+aiComposerMod.setComposerUsage(composer, { input: 138000, output: 12000, cacheRead: 96000 }, { cost: 0.3124 });
 function addMsg(text) {
   if (!out || !text) return;
   const row = document.createElement('div');
   row.className = 'ai-msg ai-msg--user';
-  row.style.marginBottom = '0';
   const avatar = document.createElement('span');
   avatar.className = 'ai-msg-avatar';
   avatar.textContent = '我';
@@ -3088,6 +3182,15 @@ composer?.addEventListener('icen:ai-send', function (e) {
   addMsg(e.detail.text);
   log('icen:ai-send · ' + e.detail.text);
 });
+composer?.addEventListener('icen:ai-model-change', function (e) {
+  log('icen:ai-model-change · ' + e.detail.provider + ' / ' + e.detail.model + (e.detail.context ? '（' + Math.round(e.detail.context / 1000) + 'k 上下文）' : ''));
+});
+composer?.addEventListener('icen:ai-command', function (e) {
+  log('icen:ai-command · /' + e.detail.name + (e.detail.args ? ' ' + e.detail.args : '') + '（已被拦截，未进消息流）');
+});
+composer?.addEventListener('icen:ai-ref', function (e) {
+  log('icen:ai-ref · ' + (e.detail.action === 'add' ? '引用' : '移除') + ' ' + e.detail.ref.label);
+});
 composer?.addEventListener('icen:ai-queue', function (e) { log('icen:ai-queue · 已排队：' + e.detail.text); });
 composer?.addEventListener('icen:ai-dequeue', function (e) { log('icen:ai-dequeue · 移除第 ' + (e.detail.index + 1) + ' 条排队消息'); });
 composer?.addEventListener('icen:ai-stop', function () {
@@ -3098,7 +3201,7 @@ composer?.addEventListener('icen:ai-attach', function (e) { log('icen:ai-attach 
 document.getElementById('ai-composer-run')?.addEventListener('click', function () {
   const running = composer?.classList.contains('is-running') ?? false;
   aiComposerMod.setComposerRunning(composer, !running);
-  log(!running ? '已进入运行态：发送钮变停止钮，此时回车进入排队' : '已解除运行态');
+  log(!running ? '已进入运行态：发送钮变停止钮，此时回车进入排队，↑ 可取回' : '已解除运行态');
 });`,
   },
   {

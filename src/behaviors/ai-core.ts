@@ -374,6 +374,8 @@ export function normalizeToolCall(raw: unknown): AiToolCallModel {
  *   completion_tokens_details.reasoning_tokens / total_tokens）
  *   Anthropic usage（input_tokens / output_tokens / cache_read_input_tokens /
  *   cache_creation_input_tokens）
+ *   DeepSeek usage（顶层 prompt_cache_hit_tokens → cacheRead）
+ *   Kimi usage（顶层 cached_tokens → cacheRead；prompt_tokens_details.cache_write_tokens → cacheWrite）
  *   Gemini usageMetadata（promptTokenCount / candidatesTokenCount /
  *   cachedContentTokenCount / thoughtsTokenCount / totalTokenCount）
  *   素朴对象（input / output / cacheRead / cacheWrite / reasoning / total）
@@ -395,12 +397,17 @@ export function normalizeUsage(raw: unknown): AiUsage {
   const cacheRead =
     pickNum(raw, ['cacheRead', 'cache_read']) ??
     pickNum(raw, ['cache_read_input_tokens']) ??
+    pickNum(raw, ['prompt_cache_hit_tokens']) ??
+    pickNum(raw, ['cached_tokens']) ??
     pickNum(raw, ['cachedContentTokenCount']) ??
     (isObj(raw.prompt_tokens_details) ? pickNum(raw.prompt_tokens_details, ['cached_tokens']) : undefined);
   const cacheWrite =
     pickNum(raw, ['cacheWrite', 'cache_write']) ??
     pickNum(raw, ['cache_creation_input_tokens']) ??
-    pickNum(raw, ['cacheCreationTokenCount']);
+    pickNum(raw, ['cacheCreationTokenCount']) ??
+    (isObj(raw.prompt_tokens_details)
+      ? pickNum(raw.prompt_tokens_details, ['cache_write_tokens'])
+      : undefined);
   const reasoning =
     pickNum(raw, ['reasoning']) ??
     pickNum(raw, ['thoughtsTokenCount']) ??
