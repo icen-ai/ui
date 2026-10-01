@@ -79,6 +79,7 @@
   align-items: center;
   gap: var(--density-space-sm);
   min-width: 0;
+  align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap（width:100% 会塌成 min-content，禁用） */
 }
 
 .ai-item-icon {
@@ -218,6 +219,7 @@
 
 .ai-tool {
   --ai-item-tint: var(--token-accent);
+  align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
   border: 1px solid var(--token-line-soft);
   border-radius: var(--radius-md);
   background: var(--token-surface);
@@ -352,6 +354,7 @@
 
 .ai-subagent {
   --ai-item-tint: var(--token-accent);
+  align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
   border: 1px solid var(--token-line-soft);
   border-left: 3px solid var(--ai-item-tint); /* 代理卡身份：tint 左边条 */
   border-radius: var(--radius-md);

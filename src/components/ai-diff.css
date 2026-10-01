@@ -52,6 +52,7 @@
   gap: var(--density-space-sm);
   font-size: var(--density-font-size-sm);
   min-width: 0;
+  align-self: stretch;  /* 输出容器宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
 }
 
 .ai-diff-file {
@@ -237,6 +238,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--density-space-xs);
+  align-self: stretch;  /* 容器自稳定；chip 自身保持内容宽 */
 }
 
 .ai-file-chip {

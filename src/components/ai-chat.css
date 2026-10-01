@@ -47,6 +47,15 @@
 
 /* ══════════════ ai-chat（滚动容器 + 钉底） ══════════════ */
 
+/* 输出容器宽度自稳定契约：即使宿主是 flex/grid 居中上下文（shrink-wrap 陷阱），
+   也不随内容多少改变宽度——流式内容只允许纵向生长。
+   （用 align-self 而非 width:100%——width 在 shrink-wrap 父级下会塌成 min-content） */
+.ai-chat,
+.ai-reasoning,
+.ai-composer {
+  align-self: stretch;
+}
+
 .ai-chat {
   position: relative;
   display: flex;
@@ -152,6 +161,7 @@
 
 .ai-msg-body {
   min-width: 0;
+  min-height: 1.6em; /* 流式从空开始时占住一行高度，不塌 */
   font-size: var(--density-font-size-md);
   line-height: 1.6;
   white-space: pre-wrap;

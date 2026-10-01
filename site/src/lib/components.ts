@@ -3106,7 +3106,7 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
     name: 'AI 工具调用',
     group: 'AI',
     desc: '工具调用卡 .ai-tool：kind 修饰类（--shell/--read/--edit/--mcp/--rm…，kind 注册表驱动 --ai-item-tint 与图标）+ 7 态状态机（失败条目自动展开）+ 审批内联按钮（icen:ai-approve / icen:ai-reject，detail {id, kind}）。renderAiToolCall(el, model) 动态建卡，返回 { el, update(patch) } 做流式状态流转；输入/输出走注册表 summarize 或压缩 JSON。',
-    demo: `<div style="display:flex;flex-direction:column;gap:8px">
+    demo: `<div style="display:flex;flex-direction:column;gap:8px;width:100%">
   <div class="ai-tool ai-tool--shell is-done" data-ai-id="demo-t1" data-ai-kind="shell">
     <button class="ai-tool-head" type="button" aria-expanded="false">
       <span class="ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></span>
@@ -3234,7 +3234,7 @@ document.querySelectorAll('.ai-tool').forEach(function (card) {
     name: 'AI 子智能体',
     group: 'AI',
     desc: '子智能体卡 .ai-subagent：activities（AiToolCallModel[]）递归渲染工具卡 / 推理块 / 再嵌套子代理（缩进 + 左侧引导线表达层级）；展开时活动项按 --ai-activity-index 逐条 icen-pop-in 渐入；底部完成回执区。renderAiSubagent(el, model) 返回 update(patch)；第三方 kind 走 ai-core 的 registerAiKind 扩展（demo 里注册了一个 deploy kind）。',
-    demo: `<div style="display:flex;flex-direction:column;gap:12px">
+    demo: `<div style="display:flex;flex-direction:column;gap:12px;width:100%">
   <div id="ai-sub-live"></div>
   <div id="ai-sub-done"></div>
 </div>
@@ -3327,7 +3327,7 @@ aiToolMod.initAiTool();`,
     name: 'AI 差异审阅',
     group: 'AI',
     desc: '差异审阅卡 .ai-diff：parseUnifiedDiff(text) 解析 unified diff（git / 传统头、add/del/rename/binary 均可）→ renderAiDiff(el, {files}) DOM 渲染（行号 + add/del 着色 + hunk 头，全 textContent）；initAiDiff 委托展开 / 接受 / 拒绝——icen:ai-diff-accept / icen:ai-diff-reject（detail {path}），决策后盖状态章并淡化。',
-    demo: `<div id="ai-diff-demo"></div>
+    demo: `<div id="ai-diff-demo" style="width:100%"></div>
 <p class="demo-label" id="ai-diff-log" style="margin-top:8px">点头展开行号与着色 · 「接受 / 拒绝」后盖状态章（icen:ai-diff-accept / icen:ai-diff-reject）</p>`,
     usage: `import { initAiDiff, renderAiDiff, parseUnifiedDiff } from '@icen.ai/ui/kit/ai-diff';
 
@@ -3409,7 +3409,7 @@ host?.addEventListener('icen:ai-diff-reject', function (e) {
     name: 'AI 任务清单',
     group: 'AI',
     desc: '任务清单 .ai-todo：进度条（feedback progress 视觉）+ N/M 计数 + 7 态条目；running 条目用 activeForm 替换文案（Claude Code 模式）。renderAiTodo(el, items) 渲染；data-ai-todo-interactive 容器可点击循环状态 pending → running → done（icen:ai-todo-toggle {index, status}），默认只读。',
-    demo: `<div id="ai-todo-demo" data-ai-todo-interactive></div>
+    demo: `<div id="ai-todo-demo" data-ai-todo-interactive style="width:100%"></div>
 <p class="demo-label" id="ai-todo-log" style="margin-top:8px">点击任意任务循环状态 pending → running → done（running 时文案切 activeForm）</p>`,
     usage: `import { renderAiTodo, initAiTodo } from '@icen.ai/ui/kit/ai-todo';
 
@@ -3455,7 +3455,7 @@ if (host) {
     name: 'AI 用量条',
     group: 'AI',
     desc: '上下文用量条 .ai-usage：分段条 + 图例 + 占比行；配色契约 input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint。缓存分列计费诚实：cacheRead ≈ 0.1× 输入价、cacheWrite ≈ 1.25× 输入价（行业惯例，展示与算账口径一致）。renderAiUsage(el, usage, { total?, cost? })。',
-    demo: `<div id="ai-usage-demo"></div>
+    demo: `<div id="ai-usage-demo" style="width:100%"></div>
 <p class="demo-label" style="margin-top:8px">缓存读 ≈ 0.1× 输入价、缓存写 ≈ 1.25× 输入价——分列展示，计费口径诚实</p>`,
     usage: `import { renderAiUsage } from '@icen.ai/ui/kit/ai-usage';
 
