@@ -7,11 +7,12 @@
  *   </div>
  *   <button data-modal-open="id">打开</button>
  *
- * 功能：hidden 切换 + body 滚动锁（恢复旧值）+ 焦点陷阱（Tab 循环）+
- * 打开聚焦第一个可聚焦元素 + 关闭焦点还原 + Esc/backdrop 点击关闭
- * （data-close-on-escape="false" / data-close-on-overlay="false" 可禁用）。
- * 同时只开一个；打开时 backdrop 被 portal 到 document.body。
- * SSR 下为 no-op。
+ * 功能：hidden 切换 + body 滚动锁（恢复旧值）+ 焦点陷阱（Tab 循环，
+ * 跳过不可见元素）+ 打开聚焦第一个可聚焦元素 + 关闭焦点还原 +
+ * Esc/backdrop 点击关闭（data-close-on-escape="false" /
+ * data-close-on-overlay="false" 可禁用）。同时只开一个；打开时 backdrop
+ * 被 portal 到 document.body。backdrop 被外部移除时关闭路径仍复位
+ * 滚动锁/监听/焦点。SSR 下为 no-op。
  */
 
 const FOCUSABLE =
@@ -39,7 +40,10 @@ export function openModal(id: string): void {
   if (openId) closeModal(openId);
 
   const backdrop = findBackdrop(id);
-  if (!backdrop) return;
+  if (!backdrop) {
+    console.warn(`[@icen.ai/ui] modal: 未找到 data-modal="${id}" 的 .modal-backdrop，已跳过打开`);
+    return;
+  }
   const panel = backdrop.querySelector<HTMLElement>('.modal');
   if (!panel) return;
 
@@ -82,7 +86,10 @@ export function openModal(id: string): void {
       return;
     }
     if (e.key !== 'Tab') return;
-    const els = panel.querySelectorAll<HTMLElement>(FOCUSABLE);
+    // 过滤不可见元素（与 command-palette 的 Tab 陷阱实现保持一致）
+    const els = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+      (el) => !el.hidden && el.offsetParent !== null,
+    );
     if (els.length === 0) {
       e.preventDefault();
       panel.focus();
@@ -106,12 +113,11 @@ export function openModal(id: string): void {
   (focusable ?? panel).focus();
 }
 
-/** 关闭指定 id 的 modal（未打开的调用为 no-op 之外的纯 hidden 复位）。 */
+/** 关闭指定 id 的 modal（backdrop 已被外部移除时也照常复位状态/监听/滚动锁）。 */
 export function closeModal(id: string): void {
   if (typeof document === 'undefined') return;
   const backdrop = findBackdrop(id);
-  if (!backdrop) return;
-  backdrop.hidden = true;
+  if (backdrop) backdrop.hidden = true;
   if (openId !== id) return;
 
   openId = null;
@@ -128,10 +134,11 @@ export function closeModal(id: string): void {
  * 绑定触发器/关闭钮/backdrop 点击（document 级事件委托，重复调用安全）。
  * root 用于扫描 [data-modal-open] 补 aria-haspopup=dialog。
  */
-export function initModal(root: ParentNode = document): void {
+export function initModal(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
 
-  root
+  scope
     .querySelectorAll<HTMLElement>('[data-modal-open]')
     .forEach((el) => el.setAttribute('aria-haspopup', 'dialog'));
 

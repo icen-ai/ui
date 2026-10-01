@@ -7,7 +7,7 @@
  *   无障碍：键盘 :focus-visible 立即出现（无延迟），鼠标 hover 延迟 400ms。
  */
 
-[data-tooltip] { position: relative; }
+[data-tooltip] { position: relative; --tooltip-delay: 400ms; }
 
 [data-tooltip]::after {
   content: attr(data-tooltip);
@@ -32,7 +32,7 @@
   transition:
     opacity var(--icen-tx-fast),
     transform var(--icen-tx-fast);
-  transition-delay: 400ms;
+  transition-delay: var(--tooltip-delay);
 
   /* 默认：上方、水平居中 */
   bottom: calc(100% + 6px);

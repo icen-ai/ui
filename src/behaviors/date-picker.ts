@@ -17,7 +17,9 @@
  *   data-date-picker-week-start="0"       周首日（0=周日，1=周一，默认 1）
  *   data-date-picker-placeholder="选择日期" 空值占位文本
  *
- * behavior 渲染日历面板（portal 到 body），点选后更新 hidden input + 触发 change 事件。
+ * behavior 渲染日历面板（portal 到 body，DOM API 构建，禁 innerHTML），
+ * 点选后更新 hidden input + 触发 change 事件。外点 / Esc 关闭；
+ * 滚动 / resize 重定位监听随面板关闭一并移除。
  */
 
 interface MarkedPicker extends HTMLElement {
@@ -28,6 +30,7 @@ let openPicker: HTMLElement | null = null;
 let panelEl: HTMLElement | null = null;
 let outsideHandler: ((e: Event) => void) | null = null;
 let escHandler: ((e: KeyboardEvent) => void) | null = null;
+let repositionHandler: (() => void) | null = null;
 
 function pad(n: number): string {
   return n < 10 ? '0' + n : String(n);
@@ -81,8 +84,40 @@ function positionPanel(panel: HTMLElement, trigger: HTMLElement): void {
   panel.style.top = top + 'px';
 }
 
-const CAL_ICON =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>';
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** trigger 的日历图标（DOM API 构建，替代原 innerHTML SVG 字符串）。 */
+function buildCalIcon(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  const rect = document.createElementNS(SVG_NS, 'rect');
+  rect.setAttribute('x', '3');
+  rect.setAttribute('y', '4');
+  rect.setAttribute('width', '18');
+  rect.setAttribute('height', '18');
+  rect.setAttribute('rx', '2');
+  rect.setAttribute('ry', '2');
+  svg.appendChild(rect);
+  const lines: Array<[string, string, string, string]> = [
+    ['16', '16', '2', '6'],
+    ['8', '8', '2', '6'],
+    ['3', '21', '10', '10'],
+  ];
+  for (const [x1, x2, y1, y2] of lines) {
+    const line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y1', y1);
+    line.setAttribute('y2', y2);
+    svg.appendChild(line);
+  }
+  return svg;
+}
 
 const WEEK_LABELS_ZH = ['一', '二', '三', '四', '五', '六', '日'];
 const WEEK_LABELS_SUN = ['日', '一', '二', '三', '四', '五', '六'];
@@ -117,57 +152,81 @@ function renderCalendar(
     cells.push(new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i));
   }
 
-  let html = `<div class="date-picker-head">
-    <button class="date-picker-nav" data-dp-nav="-1" type="button" aria-label="上一月">‹</button>
-    <span class="date-picker-title">${year} 年 ${month + 1} 月</span>
-    <button class="date-picker-nav" data-dp-nav="1" type="button" aria-label="下一月">›</button>
-  </div><div class="date-picker-weekdays">${labels
-    .map((l) => `<span>${l}</span>`)
-    .join('')}</div><div class="date-picker-grid">`;
+  panel.textContent = '';
 
+  const head = document.createElement('div');
+  head.className = 'date-picker-head';
+  const prevBtn = document.createElement('button');
+  prevBtn.type = 'button';
+  prevBtn.className = 'date-picker-nav';
+  prevBtn.setAttribute('aria-label', '上一月');
+  prevBtn.textContent = '‹';
+  const title = document.createElement('span');
+  title.className = 'date-picker-title';
+  title.textContent = `${year} 年 ${month + 1} 月`;
+  const nextBtn = document.createElement('button');
+  nextBtn.type = 'button';
+  nextBtn.className = 'date-picker-nav';
+  nextBtn.setAttribute('aria-label', '下一月');
+  nextBtn.textContent = '›';
+  head.append(prevBtn, title, nextBtn);
+
+  const weekdays = document.createElement('div');
+  weekdays.className = 'date-picker-weekdays';
+  for (const label of labels) {
+    const s = document.createElement('span');
+    s.textContent = label;
+    weekdays.appendChild(s);
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'date-picker-grid';
   for (const d of cells) {
     const isOutside = d.getMonth() !== month;
-    const ds = toDateStr(d);
     const isToday = d.getTime() === today.getTime();
-    const isSelected = selected && ds === toDateStr(selected);
-    const disabled = (min && d < min) || (max && d > max);
+    const isSelected = selected !== null && toDateStr(d) === toDateStr(selected);
+    const disabled = (min !== null && d < min) || (max !== null && d > max);
     const classes = ['date-picker-cell'];
     if (isOutside) classes.push('is-outside');
     if (isToday) classes.push('is-today');
     if (isSelected) classes.push('is-selected');
     if (disabled) classes.push('is-disabled');
-    html += `<button type="button" class="${classes.join(' ')}" data-dp-date="${ds}"${
-      disabled ? ' disabled' : ''
-    }>${d.getDate()}</button>`;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = classes.join(' ');
+    btn.textContent = String(d.getDate());
+    if (disabled) btn.disabled = true;
+    btn.addEventListener('click', () => onPick(d));
+    grid.appendChild(btn);
   }
-  html += `</div><div class="date-picker-foot">
-    <button type="button" class="date-picker-today" data-dp-today>今天</button>
-    <button type="button" class="date-picker-clear" data-dp-clear>清除</button>
-  </div>`;
 
-  panel.innerHTML = html;
+  const foot = document.createElement('div');
+  foot.className = 'date-picker-foot';
+  const todayBtn = document.createElement('button');
+  todayBtn.type = 'button';
+  todayBtn.className = 'date-picker-today';
+  todayBtn.textContent = '今天';
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.className = 'date-picker-clear';
+  clearBtn.textContent = '清除';
+  foot.append(todayBtn, clearBtn);
+
+  panel.append(head, weekdays, grid, foot);
 
   // 事件
-  panel.querySelector('[data-dp-nav="-1"]')?.addEventListener('click', () => {
+  prevBtn.addEventListener('click', () => {
     ctx.view = new Date(year, month - 1, 15);
     renderCalendar(panel, { ...ctx, view: ctx.view });
   });
-  panel.querySelector('[data-dp-nav="1"]')?.addEventListener('click', () => {
+  nextBtn.addEventListener('click', () => {
     ctx.view = new Date(year, month + 1, 15);
     renderCalendar(panel, { ...ctx, view: ctx.view });
   });
-  panel.querySelectorAll<HTMLButtonElement>('[data-dp-date]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const ds = btn.dataset.dpDate;
-      if (!ds) return;
-      const d = parseDateStr(ds);
-      if (d) onPick(d);
-    });
-  });
-  panel.querySelector('[data-dp-today]')?.addEventListener('click', () => {
+  todayBtn.addEventListener('click', () => {
     onPick(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   });
-  panel.querySelector('[data-dp-clear]')?.addEventListener('click', () => {
+  clearBtn.addEventListener('click', () => {
     onPick(null as unknown as Date);
   });
 }
@@ -184,6 +243,11 @@ function closePanel(): void {
   if (escHandler) {
     window.removeEventListener('keydown', escHandler);
     escHandler = null;
+  }
+  if (repositionHandler) {
+    window.removeEventListener('scroll', repositionHandler);
+    window.removeEventListener('resize', repositionHandler);
+    repositionHandler = null;
   }
 }
 
@@ -211,7 +275,12 @@ function setupPicker(container: HTMLElement): void {
     trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'date-picker-trigger';
-    trigger.innerHTML = `<span class="date-picker-value${initialDate ? '' : ' is-empty'}"></span><span class="date-picker-icon">${CAL_ICON}</span>`;
+    const value = document.createElement('span');
+    value.className = initialDate ? 'date-picker-value' : 'date-picker-value is-empty';
+    const icon = document.createElement('span');
+    icon.className = 'date-picker-icon';
+    icon.appendChild(buildCalIcon());
+    trigger.append(value, icon);
     el.prepend(trigger);
   }
   trigger.setAttribute('aria-haspopup', 'dialog');
@@ -246,7 +315,8 @@ function setupPicker(container: HTMLElement): void {
     panel.hidden = false;
 
     const selected = hidden?.value ? parseDateStr(hidden.value) : null;
-    const view = selected ?? new Date();
+    // clone 再改"日"：直接 setDate 会原地改 selected，重开时已选高亮错位成 15 号
+    const view = selected ? new Date(selected.getTime()) : new Date();
     view.setDate(15);
 
     positionPanel(panel, trigger);
@@ -290,21 +360,22 @@ function setupPicker(container: HTMLElement): void {
     };
     window.addEventListener('keydown', escHandler);
 
-    // 窗口滚动 / resize 重定位
-    const reposition = (): void => {
-      if (openPicker === el && panel && !panel.hidden) positionPanel(panel, trigger);
+    // 窗口滚动 / resize 重定位（closePanel 统一移除）
+    repositionHandler = () => {
+      if (openPicker === el && !panel.hidden) positionPanel(panel, trigger);
     };
-    window.addEventListener('scroll', reposition, { passive: true, once: false });
-    window.addEventListener('resize', reposition, { passive: true });
+    window.addEventListener('scroll', repositionHandler, { passive: true });
+    window.addEventListener('resize', repositionHandler, { passive: true });
   });
 }
 
 /** 初始化：扫描 root 下的 .date-picker[data-date-picker]。 */
-export function initDatePicker(root: ParentNode = document): void {
+export function initDatePicker(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
   if (typeof window === 'undefined') return;
+  const scope = root ?? document;
   const pickers: Element[] = [];
-  if (root instanceof Element && root.matches('.date-picker[data-date-picker]')) pickers.push(root);
-  pickers.push(...Array.from(root.querySelectorAll('.date-picker[data-date-picker]')));
+  if (scope instanceof Element && scope.matches('.date-picker[data-date-picker]')) pickers.push(scope);
+  pickers.push(...Array.from(scope.querySelectorAll('.date-picker[data-date-picker]')));
   for (const p of pickers) setupPicker(p as HTMLElement);
 }

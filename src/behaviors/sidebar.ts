@@ -51,10 +51,11 @@ function setup(sidebar: HTMLElement): void {
 }
 
 /** 为 root 下每个 .sidebar 初始化（root 自身是 .sidebar 也算）。 */
-export function initSidebar(root: ParentNode = document): void {
+export function initSidebar(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
   const sidebars: Element[] = [];
-  if (root instanceof Element && root.matches('.sidebar')) sidebars.push(root);
-  sidebars.push(...Array.from(root.querySelectorAll('.sidebar')));
+  if (scope instanceof Element && scope.matches('.sidebar')) sidebars.push(scope);
+  sidebars.push(...Array.from(scope.querySelectorAll('.sidebar')));
   for (const s of sidebars) setup(s as HTMLElement);
 }

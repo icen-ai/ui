@@ -6,10 +6,10 @@
  *     <div class="stat-card [.stat-card--interactive] [.stat-card--horizontal]">
  *       <div class="stat-head">
  *         <span class="stat-label">用户总数</span>
- *         <span class="stat-icon [.icon--ok|.icon--warn|.icon--bad|.icon--info]>…svg…</span>
+ *         <span class="stat-icon [.icon--success|.icon--warning|.icon--error|.icon--info]>…svg…</span>
  *       </div>
  *       <div class="stat-body">
- *         <div class="stat-num [.accent|.warn|.bad|.info]">0</div>
+ *         <div class="stat-num [--accent|--warning|--error|--info]">0</div>
  *         <div class="stat-delta [.up|.down|.flat]">          ← 可选趋势
  *           <svg>…arrow…</svg> +12.4%
  *           <span class="stat-period">比上周</span>
@@ -85,10 +85,10 @@
   background: var(--token-accent-subtle);
   color: var(--token-accent);
 }
-.stat-icon.icon--ok   { background: color-mix(in srgb, var(--token-success) 14%, transparent); color: var(--token-success); }
-.stat-icon.icon--warn { background: color-mix(in srgb, var(--token-warning) 14%, transparent); color: var(--token-warning); }
-.stat-icon.icon--bad  { background: color-mix(in srgb, var(--token-error) 14%, transparent); color: var(--token-error); }
-.stat-icon.icon--info { background: color-mix(in srgb, var(--token-info) 14%, transparent); color: var(--token-info); }
+.stat-icon.icon--success { background: color-mix(in srgb, var(--token-success) 14%, transparent); color: var(--token-success); }
+.stat-icon.icon--warning { background: color-mix(in srgb, var(--token-warning) 14%, transparent); color: var(--token-warning); }
+.stat-icon.icon--error   { background: color-mix(in srgb, var(--token-error) 14%, transparent); color: var(--token-error); }
+.stat-icon.icon--info    { background: color-mix(in srgb, var(--token-info) 14%, transparent); color: var(--token-info); }
 .stat-icon svg { width: 14px; height: 14px; }
 
 /* ── 内容体（数字 + 趋势） ── */
@@ -99,17 +99,17 @@
 }
 
 .stat-num {
-  font-size: 24px;
+  font-size: var(--density-font-size-2xl);
   font-weight: 700;
   line-height: 1.2;
   font-variant-numeric: tabular-nums lining-nums;
   color: var(--token-text);
   word-break: break-all;
 }
-.stat-num.accent { color: var(--token-accent); }
-.stat-num.warn   { color: var(--token-warning); }
-.stat-num.bad    { color: var(--token-error); }
-.stat-num.info   { color: var(--token-info); }
+.stat-num--accent  { color: var(--token-accent); }
+.stat-num--warning { color: var(--token-warning); }
+.stat-num--error   { color: var(--token-error); }
+.stat-num--info    { color: var(--token-info); }
 
 .stat-delta {
   display: inline-flex;
@@ -134,7 +134,7 @@
   gap: 2px;
 }
 .stat-card--sm .stat-num { font-size: var(--density-font-size-lg); }
-.stat-card--sm .stat-label { font-size: 10px; }
+.stat-card--sm .stat-label { font-size: var(--density-font-size-2xs); }
 
 /* ── 横向布局（dashboard 顶栏：标签左 + 数字右） ── */
 .stat-card--horizontal {
@@ -215,20 +215,16 @@
   margin: 0 1px;
 }
 
-/* ── 加载态骨架 ── */
+/* ── 加载态骨架（脉冲 keyframes 见 base.css 的 icen-skeleton-pulse） ── */
 .stat-card.is-loading .stat-num,
 .stat-card.is-loading .stat-delta {
   color: transparent;
   background: var(--token-fill-2);
   border-radius: var(--radius-xs);
-  animation: stat-skeleton 1.5s ease-in-out infinite;
+  animation: icen-skeleton-pulse var(--stat-skeleton-duration, 1.5s) ease-in-out infinite;
 }
 .stat-card.is-loading .stat-num { height: 28px; }
 .stat-card.is-loading .stat-delta { height: 14px; width: 60%; }
-@keyframes stat-skeleton {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
 @media (prefers-reduced-motion: reduce) {
   .stat-card.is-loading .stat-num,
   .stat-card.is-loading .stat-delta { animation: none; }

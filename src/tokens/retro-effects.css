@@ -11,6 +11,11 @@
  *   - 像素边框 / 像素按钮 / 像素分隔线工具类
  *   - 开机自检 / 打字机光标 / 页面闪白动画
  *
+ * 作用域约定：效果类（扫描线/噪点/光标/开机行/闪白）均收在 .style-retro 下；
+ * 像素工具类（.retro-pixel-border / .retro-pixel-button / .retro-pixel-rule）
+ * 有意保持全局可用——它们是纯几何装饰，任何风格都可取用。
+ * z-index 统一走 base.css 的 --z-fx 标尺（效果层，tooltip 之上）。
+ *
  * 所有动画尊重 prefers-reduced-motion：在 reduce 下由 base.css 的全局兜底降为 0.01ms。
  */
 
@@ -24,7 +29,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9999;
+  z-index: calc(var(--z-fx) - 1);
   opacity: 0.14;
   background:
     repeating-linear-gradient(
@@ -48,7 +53,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9998;
+  z-index: calc(var(--z-fx) - 2);
   background:
     radial-gradient(
       ellipse at center,
@@ -90,7 +95,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9997;
+  z-index: calc(var(--z-fx) - 3);
   opacity: 0.06;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   animation: retro-grain 0.5s steps(10) infinite;
@@ -110,9 +115,8 @@
   100% { transform: translateY(100vh); }
 }
 
-/* 游走的扫描线（偶尔闪过）—— 挂到 .style-retro 下的显式节点 */
-.style-retro .retro-scanline-beam,
-.retro-scanline-beam {
+/* 游走的扫描线（偶尔闪过）—— 仅 .style-retro 下生效 */
+.style-retro .retro-scanline-beam {
   position: fixed;
   left: 0;
   right: 0;
@@ -124,7 +128,7 @@
     transparent
   );
   pointer-events: none;
-  z-index: 9996;
+  z-index: calc(var(--z-fx) - 4);
   opacity: 0.4;
   animation: retro-scanline-slide 4s linear infinite;
 }
@@ -140,19 +144,19 @@
   100% { opacity: 0; transform: translateY(-4px); }
 }
 
-.retro-boot-line {
+.style-retro .retro-boot-line {
   opacity: 0;
   animation: retro-boot-text 0.3s steps(1) forwards;
 }
 
-.retro-boot-line:nth-child(1) { animation-delay: 0.1s; }
-.retro-boot-line:nth-child(2) { animation-delay: 0.25s; }
-.retro-boot-line:nth-child(3) { animation-delay: 0.4s; }
-.retro-boot-line:nth-child(4) { animation-delay: 0.55s; }
-.retro-boot-line:nth-child(5) { animation-delay: 0.7s; }
+.style-retro .retro-boot-line:nth-child(1) { animation-delay: 0.1s; }
+.style-retro .retro-boot-line:nth-child(2) { animation-delay: 0.25s; }
+.style-retro .retro-boot-line:nth-child(3) { animation-delay: 0.4s; }
+.style-retro .retro-boot-line:nth-child(4) { animation-delay: 0.55s; }
+.style-retro .retro-boot-line:nth-child(5) { animation-delay: 0.7s; }
 
 /* 打字机光标 */
-.retro-cursor::after {
+.style-retro .retro-cursor::after {
   content: "█";
   display: inline-block;
   margin-left: 2px;
@@ -250,15 +254,15 @@
   100% { opacity: 0; }
 }
 
-.retro-page-flash {
+.style-retro .retro-page-flash {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 10000;
+  z-index: var(--z-fx);
   background: var(--token-bg);
   opacity: 0;
 }
 
-.retro-page-flash.active {
+.style-retro .retro-page-flash.active {
   animation: retro-flash 0.2s steps(3) forwards;
 }

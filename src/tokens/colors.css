@@ -504,6 +504,8 @@
   --token-accent-glow:    color-mix(in srgb, var(--token-accent) 8%, transparent);
   --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 60%, transparent);
   --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 92%, transparent);
+  /* 睡莲粉 accent 上的文字色：深绿灰（白字在 #d59ab1 上对比度不达标） */
+  --token-on-accent:      #26302b;
 
   --token-shadow-elevated: 0 1px 2px rgba(0,0,0,.18), 0 8px 22px rgba(0,0,0,.24);
   --token-shadow-overlay:  0 2px 5px rgba(0,0,0,.24), 0 14px 36px rgba(0,0,0,.32);
@@ -841,7 +843,8 @@
   --token-accent-glow:    color-mix(in srgb, var(--token-accent) 6%, transparent);
   --token-line-dashed:    color-mix(in srgb, var(--token-line-soft) 60%, transparent);
   --token-overlay-bg:     color-mix(in srgb, var(--token-bg) 94%, transparent);
-  --token-on-accent:      #ffffff;
+  /* 松烟绿 accent 上的文字色：深墨（白字在 #7AA87E 上对比度不达标） */
+  --token-on-accent:      #1a2018;
 
   --token-shadow-elevated: 0 1px 2px rgba(0,0,0,.2), 0 4px 14px rgba(0,0,0,.22);
   --token-shadow-overlay:  0 2px 4px rgba(0,0,0,.28), 0 10px 30px rgba(0,0,0,.34);

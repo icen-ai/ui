@@ -60,13 +60,20 @@
   --density-space-sm: 0.5rem;
   --density-space-md: 0.75rem;
   --density-space-lg: 1rem;
+  --density-space-xl: 1.5rem;
+  --density-space-2xl: 2rem;
+  --density-space-3xl: 3rem;
+  --density-space-4xl: 4rem;
   --density-input-height-sm: 28px;
   --density-input-height-md: 36px;
   --density-input-height-lg: 44px;
+  --density-font-size-2xs: 10px;
   --density-font-size-xs: 11px;
   --density-font-size-sm: 12px;
   --density-font-size-md: 13px;
   --density-font-size-lg: 14px;
+  --density-font-size-xl: 18px;
+  --density-font-size-2xl: 22px;
 
   /* ── Motion 动效 ── */
   --duration-instant: 0ms;
@@ -98,13 +105,20 @@
   --density-space-sm: 0.5rem;
   --density-space-md: 0.75rem;
   --density-space-lg: 1rem;
+  --density-space-xl: 1.5rem;
+  --density-space-2xl: 2rem;
+  --density-space-3xl: 3rem;
+  --density-space-4xl: 4rem;
   --density-input-height-sm: 28px;
   --density-input-height-md: 36px;
   --density-input-height-lg: 44px;
+  --density-font-size-2xs: 10px;
   --density-font-size-xs: 11px;
   --density-font-size-sm: 12px;
   --density-font-size-md: 13px;
   --density-font-size-lg: 14px;
+  --density-font-size-xl: 18px;
+  --density-font-size-2xl: 22px;
 
   /* ── Motion ── */
   --duration-fast: 150ms;
@@ -133,13 +147,20 @@
   --density-space-sm: 0.25rem;
   --density-space-md: 0.5rem;
   --density-space-lg: 0.75rem;
+  --density-space-xl: 1rem;
+  --density-space-2xl: 1.5rem;
+  --density-space-3xl: 2rem;
+  --density-space-4xl: 3rem;
   --density-input-height-sm: 24px;
   --density-input-height-md: 32px;
   --density-input-height-lg: 40px;
+  --density-font-size-2xs: 9px;
   --density-font-size-xs: 9px;
   --density-font-size-sm: 10px;
   --density-font-size-md: 11px;
   --density-font-size-lg: 12px;
+  --density-font-size-xl: 14px;
+  --density-font-size-2xl: 16px;
 
   /* ── Motion：像素风瞬间切换 ── */
   --duration-fast: 0ms;

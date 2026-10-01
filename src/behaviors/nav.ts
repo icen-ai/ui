@@ -11,8 +11,9 @@
  *   data-nav-hide-on-scroll  → 滚动方向感知（向下滚隐藏、向上/静止恢复）
  *   data-nav-threshold="40"  → 自定义触发阈值（默认 12px）
  *
- * 同一元素重复 init 幂等；元素从 DOM 移除后监听器随 element 一起回收（
- * 直接 addEventListener 不易泄漏，因为目标元素持有引用）。SSR 下为 no-op。
+ * 同一元素重复 init 幂等。监听器挂在 window 上，元素从 DOM 移除后**不会**自动回收
+ * （window 持有 listener 引用，元素无法随之 GC）——initNav 返回销毁函数，
+ * 元素卸载/页面析构时应调用它移除 window scroll/resize 监听。SSR 下为 no-op。
  * prefers-reduced-motion: reduce 时仍同步状态但不依赖动画过渡（视觉上瞬切）。
  */
 
@@ -25,12 +26,14 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function setup(nav: HTMLElement): void {
+function setup(nav: HTMLElement): (() => void) | undefined {
   const el = nav as MarkedNav;
-  if (el.__icenNavInit) return;
+  if (el.__icenNavInit) return undefined;
   el.__icenNavInit = true;
 
-  const threshold = Number(nav.dataset.navThreshold ?? '12') || 12;
+  const rawThreshold = nav.dataset.navThreshold;
+  const parsedThreshold = rawThreshold === undefined || rawThreshold === '' ? NaN : Number(rawThreshold);
+  const threshold = Number.isFinite(parsedThreshold) ? parsedThreshold : 12;
   const hideOnScroll = nav.hasAttribute('data-nav-hide-on-scroll');
 
   let ticking = false;
@@ -73,14 +76,33 @@ function setup(nav: HTMLElement): void {
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onResize, { passive: true });
   apply();
+
+  /* 销毁：移除 window 级监听并复位幂等标记（可重新 init） */
+  return () => {
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onResize);
+    el.__icenNavInit = false;
+  };
 }
 
-/** 为 root 下每个 .nav[data-scroll-reactive] 初始化（root 自身匹配也算）。 */
-export function initNav(root: ParentNode = document): void {
-  if (typeof document === 'undefined') return;
-  if (typeof window === 'undefined') return;
-  const navs: Element[] = [];
-  if (root instanceof Element && root.matches('.nav[data-scroll-reactive]')) navs.push(root);
-  navs.push(...Array.from(root.querySelectorAll('.nav[data-scroll-reactive]')));
-  for (const n of navs) setup(n as HTMLElement);
+/**
+ * 为 root 下每个 .nav[data-scroll-reactive] 初始化（root 自身匹配也算）。
+ * 返回销毁函数：移除本次初始化挂上的全部 window scroll/resize 监听。
+ */
+export function initNav(root?: ParentNode): () => void {
+  const cleanups: Array<() => void> = [];
+  if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+    const scope = root ?? document;
+    const navs: Element[] = [];
+    if (scope instanceof Element && scope.matches('.nav[data-scroll-reactive]')) navs.push(scope);
+    navs.push(...Array.from(scope.querySelectorAll('.nav[data-scroll-reactive]')));
+    for (const n of navs) {
+      const cleanup = setup(n as HTMLElement);
+      if (cleanup) cleanups.push(cleanup);
+    }
+  }
+  return () => {
+    for (const fn of cleanups) fn();
+    cleanups.length = 0;
+  };
 }

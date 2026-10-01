@@ -59,8 +59,8 @@
   width: var(--switch-thumb);
   height: var(--switch-thumb);
   border-radius: var(--radius-full);
-  background: var(--token-on-accent, #fff);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  background: var(--token-on-accent);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--token-text) 15%, transparent);
   transition: transform var(--icen-tx-bounce);
 }
 .switch[aria-checked='true'] .switch-thumb {
@@ -70,10 +70,6 @@
 /* 尺寸变体 */
 .switch--sm { --switch-w: 36px; --switch-h: 20px; --switch-thumb: 16px; }
 .switch--lg { --switch-w: 56px; --switch-h: 28px; --switch-thumb: 24px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .switch-thumb { transition: none; }
-}
 
 /* ── 勾选框（✓ 与半选横条均 ::before 自绘） ── */
 .checkbox {
@@ -104,7 +100,7 @@
 .checkbox[aria-checked='mixed'] {
   background: var(--token-accent);
   border-color: var(--token-accent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
 }
 .checkbox::before {
   content: '';
@@ -224,7 +220,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 700;
   color: transparent;
 }
@@ -234,9 +230,9 @@
   left: 6px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 9px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 700;
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
 }
 .switch--text[aria-checked='false']::before {
   content: 'OFF';
@@ -244,7 +240,7 @@
   right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 9px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 700;
   color: var(--token-text-faint);
 }
@@ -304,7 +300,7 @@
     background-color var(--icen-tx-fast);
 }
 .radio-card:hover {
-  border-color: var(--token-hover-border, color-mix(in srgb, var(--token-accent) 30%, transparent));
+  border-color: var(--icen-hover-border);
 }
 .radio-card-head {
   display: flex;

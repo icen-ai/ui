@@ -24,12 +24,16 @@
  *
  *   触发器（任选其一）：
  *   <button data-command-palette-open="id">打开</button>
- *   全局快捷键 ⌘K / Ctrl+K → 打开页面第一个面板（可在容器上加 data-command-palette-key 覆盖）
+ *   全局快捷键 ⌘K / Ctrl+K → 打开键位匹配的面板（按文档序取第一个匹配者）。
+ *   backdrop 上加 data-command-palette-key="p" 可覆盖默认键 k（修饰键仍为
+ *   ⌘/Ctrl），多个面板各自注册、互不冲突。
  *
- * 功能：搜索过滤 + ↑↓ 导航 + Enter 执行（点击或回调 data-command-palette-action id）
+ * 功能：搜索过滤 + ↑↓ 导航（跳过 disabled / aria-disabled / hidden 项）
+ * + Enter 执行（点击或回调 data-command-palette-action id）
  * + ESC 关闭 + 外点关闭 + 焦点陷阱。同时只开一个。
  * 命令项支持：data-command-palette-keyword 额外关键字、disabled / hidden 状态。
  * 点击 item 默认关闭面板，除非加 data-command-palette-keep-open。
+ * backdrop 被外部移除时关闭路径仍复位状态/监听/滚动锁。SSR 下为 no-op。
  */
 
 const FOCUSABLE =
@@ -50,7 +54,9 @@ function findBackdrop(id: string): HTMLElement | null {
 
 function getVisibleItems(panel: HTMLElement): HTMLElement[] {
   return Array.from(
-    panel.querySelectorAll<HTMLElement>('.command-palette-item:not([hidden]):not([disabled])'),
+    panel.querySelectorAll<HTMLElement>(
+      '.command-palette-item:not([hidden]):not([disabled]):not([aria-disabled="true"])',
+    ),
   ).filter((el) => el.offsetParent !== null || el.getClientRects().length > 0);
 }
 
@@ -102,7 +108,10 @@ export function openCommandPalette(id: string): void {
   if (openId) closeCommandPalette(openId);
 
   const backdrop = findBackdrop(id);
-  if (!backdrop) return;
+  if (!backdrop) {
+    console.warn(`[@icen.ai/ui] command-palette: 未找到 data-command-palette="${id}" 的 .command-palette-backdrop，已跳过打开`);
+    return;
+  }
   const panel = backdrop.querySelector<HTMLElement>('.command-palette');
   if (!panel) return;
 
@@ -144,6 +153,7 @@ export function openCommandPalette(id: string): void {
     }
     if (e.key === 'Enter') {
       const active = panel.querySelector<HTMLElement>('.command-palette-item.is-active');
+      // isDisabledItem 兜底拦截（getVisibleItems 已排除 disabled / aria-disabled）
       if (active && !isDisabledItem(active)) {
         e.preventDefault();
         active.click();
@@ -166,12 +176,11 @@ export function openCommandPalette(id: string): void {
   window.addEventListener('keydown', keyHandler);
 }
 
-/** 关闭指定 id 的命令面板。 */
+/** 关闭指定 id 的命令面板（backdrop 已被外部移除时也照常复位状态/监听/滚动锁）。 */
 export function closeCommandPalette(id: string): void {
   if (typeof document === 'undefined') return;
   const backdrop = findBackdrop(id);
-  if (!backdrop) return;
-  backdrop.hidden = true;
+  if (backdrop) backdrop.hidden = true;
   if (openId !== id) return;
   openId = null;
   if (keyHandler) {
@@ -184,11 +193,12 @@ export function closeCommandPalette(id: string): void {
 }
 
 /** 初始化：委托监听触发器 / 搜索 / 外点 / 全局快捷键。 */
-export function initCommandPalette(root: ParentNode = document): void {
+export function initCommandPalette(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
   if (typeof window === 'undefined') return;
+  const scope = root ?? document;
 
-  root
+  scope
     .querySelectorAll<HTMLElement>('[data-command-palette-open]')
     .forEach((el) => el.setAttribute('aria-haspopup', 'dialog'));
 
@@ -236,16 +246,22 @@ export function initCommandPalette(root: ParentNode = document): void {
     if (panel) filterPanel(panel, (e.target as HTMLInputElement).value);
   });
 
-  // 全局快捷键 ⌘K / Ctrl+K
+  // 全局快捷键：默认 ⌘K / Ctrl+K；backdrop 的 data-command-palette-key 覆盖键位
   globalKeyHandler = (e: KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+    if (!(e.metaKey || e.ctrlKey)) return;
+    const key = e.key.toLowerCase();
+    const palettes = document.querySelectorAll<HTMLElement>(
+      '.command-palette-backdrop[data-command-palette]',
+    );
+    for (const backdrop of Array.from(palettes)) {
+      const paletteKey = (backdrop.dataset.commandPaletteKey ?? 'k').toLowerCase();
+      if (paletteKey !== key) continue;
+      const id = backdrop.dataset.commandPalette;
+      if (!id) continue;
       e.preventDefault();
-      // 优先打开显式触发的面板；否则打开第一个
-      const first = document.querySelector<HTMLElement>('.command-palette-backdrop[data-command-palette]');
-      if (first?.dataset.commandPalette) {
-        if (openId === first.dataset.commandPalette) closeCommandPalette(openId);
-        else openCommandPalette(first.dataset.commandPalette);
-      }
+      if (openId === id) closeCommandPalette(id);
+      else openCommandPalette(id);
+      return;
     }
   };
   window.addEventListener('keydown', globalKeyHandler);

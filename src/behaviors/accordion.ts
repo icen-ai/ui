@@ -73,10 +73,11 @@ function setup(container: Element): void {
 }
 
 /** 为 root 下每个 .accordion 容器初始化（root 自身是 .accordion 也算）。 */
-export function initAccordion(root: ParentNode = document): void {
+export function initAccordion(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
   const containers: Element[] = [];
-  if (root instanceof Element && root.matches('.accordion')) containers.push(root);
-  containers.push(...Array.from(root.querySelectorAll('.accordion')));
+  if (scope instanceof Element && scope.matches('.accordion')) containers.push(scope);
+  containers.push(...Array.from(scope.querySelectorAll('.accordion')));
   for (const c of containers) setup(c);
 }

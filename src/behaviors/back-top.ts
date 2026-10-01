@@ -17,11 +17,19 @@
  *   data-back-top-target="selector" 滚动容器（默认 window）
  *   data-back-top-offset="0"        滚动到多少 px（默认 0）
  *
- * 同一元素重复 init 幂等；SSR 下为 no-op。
+ * 同一元素重复 init 幂等；initBackTop 返回销毁函数（移除 scroll/resize/click 监听）。
+ * SSR 下为 no-op。
  */
 
 interface MarkedBtn extends HTMLElement {
   __icenBackTopInit?: boolean;
+}
+
+/* 数字配置解析：undefined / 空串 / 非有限数回退默认值（0 是合法配置，不能用 || 兜底） */
+function numOr(value: string | number | undefined, fallback: number): number {
+  if (value === undefined || value === '') return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 interface BackTopOptions {
@@ -68,14 +76,14 @@ function scrollToTop(target?: string, offset = 0): void {
   if (el) el.scrollTo({ top: offset, behavior });
 }
 
-function setup(btn: HTMLElement, opts: BackTopOptions = {}): void {
+function setup(btn: HTMLElement, opts: BackTopOptions = {}): (() => void) | undefined {
   const el = btn as MarkedBtn;
-  if (el.__icenBackTopInit) return;
+  if (el.__icenBackTopInit) return undefined;
   el.__icenBackTopInit = true;
 
-  const threshold = Number(btn.dataset.backTopThreshold ?? opts.threshold ?? 320) || 320;
+  const threshold = numOr(btn.dataset.backTopThreshold ?? opts.threshold, 320);
   const target = btn.dataset.backTopTarget ?? opts.target;
-  const offset = Number(btn.dataset.backTopOffset ?? opts.offset ?? 0) || 0;
+  const offset = numOr(btn.dataset.backTopOffset ?? opts.offset, 0);
 
   let ticking = false;
 
@@ -92,49 +100,65 @@ function setup(btn: HTMLElement, opts: BackTopOptions = {}): void {
   };
 
   const { el: targetEl, isWindow } = getScrollTarget(target);
-  if (isWindow) {
-    window.addEventListener('scroll', onScroll, { passive: true });
-  } else if (targetEl) {
-    targetEl.addEventListener('scroll', onScroll, { passive: true });
-  }
+  /* target 选择器未命中时回退为监听 window（否则按钮永远不会显示） */
+  const scrollHost: HTMLElement | Window = !isWindow && targetEl ? targetEl : window;
+  scrollHost.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
 
-  btn.addEventListener('click', () => scrollToTop(target, offset));
+  const onClick = (): void => scrollToTop(target, offset);
+  btn.addEventListener('click', onClick);
 
   apply();
+
+  /* 销毁：移除本次挂上的监听并复位幂等标记（可重新 init） */
+  return () => {
+    scrollHost.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+    btn.removeEventListener('click', onClick);
+    el.__icenBackTopInit = false;
+  };
 }
 
 /**
  * 初始化：扫描 root 下的 .back-top[data-back-top] 与 [data-back-top-auto]。
  * 传 autoCreate 时自动创建一个默认按钮。
+ * 返回销毁函数：移除本次初始化挂上的全部 scroll/resize/click 监听。
  */
-export function initBackTop(opts: BackTopOptions = {}): void {
-  if (typeof document === 'undefined') return;
-  if (typeof window === 'undefined') return;
+export function initBackTop(opts: BackTopOptions = {}): () => void {
+  const cleanups: Array<() => void> = [];
+  if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+    const root = opts.root ?? document;
 
-  const root = opts.root ?? document;
-
-  if (opts.autoCreate) {
-    let btn = document.body.querySelector<HTMLButtonElement>('.back-top[data-back-top-auto]');
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'back-top';
-      btn.setAttribute('data-back-top', '');
-      btn.setAttribute('data-back-top-auto', '');
-      btn.setAttribute('aria-label', '回到顶部');
-      btn.innerHTML = AUTO_BTN_SVG;
-      document.body.appendChild(btn);
+    if (opts.autoCreate) {
+      let btn = document.body.querySelector<HTMLButtonElement>('.back-top[data-back-top-auto]');
+      if (!btn) {
+        btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'back-top';
+        btn.setAttribute('data-back-top', '');
+        btn.setAttribute('data-back-top-auto', '');
+        btn.setAttribute('aria-label', '回到顶部');
+        /* AUTO_BTN_SVG 是库内静态常量（非外部输入），DOMParser 构建以守「禁 innerHTML」约定 */
+        const svg = new DOMParser().parseFromString(AUTO_BTN_SVG, 'image/svg+xml').documentElement;
+        btn.appendChild(document.importNode(svg, true));
+        document.body.appendChild(btn);
+      }
+      const cleanup = setup(btn, opts);
+      if (cleanup) cleanups.push(cleanup);
     }
-    setup(btn, opts);
-  }
 
-  const candidates: Element[] = [];
-  if (root instanceof Element && root.matches('.back-top[data-back-top]')) candidates.push(root);
-  candidates.push(...Array.from(root.querySelectorAll('.back-top[data-back-top]')));
-  for (const c of candidates) {
-    const el = c as HTMLElement;
-    if (el.hasAttribute('data-back-top-auto') && opts.autoCreate) continue;
-    setup(el, opts);
+    const candidates: Element[] = [];
+    if (root instanceof Element && root.matches('.back-top[data-back-top]')) candidates.push(root);
+    candidates.push(...Array.from(root.querySelectorAll('.back-top[data-back-top]')));
+    for (const c of candidates) {
+      const el = c as HTMLElement;
+      if (el.hasAttribute('data-back-top-auto') && opts.autoCreate) continue;
+      const cleanup = setup(el, opts);
+      if (cleanup) cleanups.push(cleanup);
+    }
   }
+  return () => {
+    for (const fn of cleanups) fn();
+    cleanups.length = 0;
+  };
 }

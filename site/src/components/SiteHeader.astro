@@ -1,6 +1,20 @@
 ---
+import { COMPONENTS, GROUPS } from '../lib/components';
+
 const path = Astro.url.pathname;
 const isActive = (href: string): boolean => path.startsWith(href);
+
+// ⌘K 命令面板条目：顶层页面 + 全部组件（按分组）
+const pages = [
+  { name: '首页 · 介绍', slug: '', href: '/', kw: 'home intro 首页' },
+  { name: '组件总览', slug: 'components', href: '/components/', kw: 'components 组件' },
+  { name: '原语 · 交互基元', slug: 'primitives', href: '/primitives/', kw: 'primitives 原语' },
+  { name: '色彩预设', slug: 'tokens', href: '/tokens/', kw: 'tokens colors 色彩 预设' },
+] as const;
+const paletteGroups = GROUPS.map((g) => ({
+  name: g,
+  items: COMPONENTS.filter((c) => c.group === g),
+})).filter((g) => g.items.length > 0);
 
 const presets = [
   ['clay', 'clay 陶土'],
@@ -36,11 +50,11 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
       <a class:list={[{ active: isActive('/tokens/') }]} href="/tokens/">色彩</a>
     </nav>
     <div class="nav-controls">
-      <a class="nav-search" href="/components/" title="浏览全部组件">
+      <button class="nav-search" type="button" data-command-palette-open="site-nav" title="搜索组件（⌘K）">
         <Fragment set:html={searchSvg} />
         <span class="nav-search-text">搜索组件…</span>
         <kbd class="nav-kbd">⌘K</kbd>
-      </a>
+      </button>
       <span class="nav-sep" aria-hidden="true"></span>
       <div class="select nav-select" id="preset-select" data-select data-value="clay">
         <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="色彩预设">
@@ -76,9 +90,49 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
   </div>
 </header>
 
+<!-- ⌘K 全站搜索：命令面板（自家组件直出，条目 = 顶层页面 + 全部组件） -->
+<div class="command-palette-backdrop" data-command-palette="site-nav" hidden>
+  <div class="command-palette">
+    <div class="command-palette-search">
+      <span class="command-palette-search-icon"><Fragment set:html={searchSvg} /></span>
+      <input class="command-palette-input" placeholder="搜索组件或页面…" />
+      <kbd class="command-palette-esc">ESC</kbd>
+    </div>
+    <div class="command-palette-body">
+      <div class="command-palette-group">
+        <p class="command-palette-group-label">页面</p>
+        {pages.map((p) => (
+          <a class="command-palette-item" href={p.href} data-command-palette-keyword={p.kw}>
+            <span class="command-palette-item-label">{p.name}</span>
+            <span class="command-palette-item-hint">{p.href}</span>
+          </a>
+        ))}
+      </div>
+      {paletteGroups.map((g) => (
+        <div class="command-palette-group">
+          <p class="command-palette-group-label">{g.name}</p>
+          {g.items.map((c) => (
+            <a class="command-palette-item" href={`/components/${c.slug}/`} data-command-palette-keyword={`${c.slug} ${c.name}`}>
+              <span class="command-palette-item-label">{c.name}</span>
+              <span class="command-palette-item-hint">{c.slug}</span>
+            </a>
+          ))}
+        </div>
+      ))}
+      <div class="command-palette-empty" hidden>无匹配结果</div>
+    </div>
+    <div class="command-palette-foot">
+      <span class="command-palette-foot-hint">
+        <kbd>↑↓</kbd> 导航 <kbd>↵</kbd> 打开 <kbd>esc</kbd> 关闭
+      </span>
+    </div>
+  </div>
+</div>
+
 <script>
   import { initTheme, setTheme, toggleDark, type ThemeState } from '../../../src/behaviors/theme.ts';
   import { initSelect } from '../../../src/behaviors/select.ts';
+  import { initCommandPalette } from '../../../src/behaviors/command-palette.ts';
 
   const presetBox = document.getElementById('preset-select');
   const styleBox = document.getElementById('style-select');
@@ -115,6 +169,7 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
   }
 
   initSelect();
+  initCommandPalette(); // ⌘K / Ctrl+K 全局唤起站搜索（behavior 自带快捷键）
   reflect(initTheme());
 
   presetBox?.querySelector('input[data-select-value]')?.addEventListener('change', (ev) => {

@@ -129,7 +129,3 @@
 @media (max-width: 480px) {
   .empty--404 .empty-title { font-size: 56px; }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .empty { animation: none; }
-}

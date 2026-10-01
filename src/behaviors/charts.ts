@@ -61,6 +61,23 @@ function fmt(opts: { formatValue?: (value: number) => string }, value: number): 
   return opts.formatValue ? opts.formatValue(value) : String(value);
 }
 
+/** 求最大值（下限 1，防除零）。循环实现，避免超大数组 Math.max(...values) 栈溢出 */
+function maxOf(values: number[]): number {
+  let max = 1;
+  for (const v of values) if (v > max) max = v;
+  return max;
+}
+
+/** 轴标签抽样：数据点多于 max 时均匀抽取 max 个（含首尾），与点位的全宽坐标系对齐 */
+function sampleLabels(labels: string[], max = 7): string[] {
+  if (labels.length <= max) return labels;
+  const out: string[] = [];
+  for (let i = 0; i < max; i++) {
+    out.push(labels[Math.round((i * (labels.length - 1)) / (max - 1))] ?? '');
+  }
+  return out;
+}
+
 function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string>): SVGElementTagNameMap[K] {
   const el = document.createElementNS(SVG_NS, tag);
   for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
@@ -112,7 +129,7 @@ export function renderVBar(el: HTMLElement, opts: ChartSeriesOptions): void {
 
   const labels = opts.labels.slice(0, n);
   const values = opts.values.slice(0, n);
-  const max = Math.max(...values, 1);
+  const max = maxOf(values);
 
   const wrap = document.createElement('div');
   wrap.className = 'chart-vbar';
@@ -122,7 +139,8 @@ export function renderVBar(el: HTMLElement, opts: ChartSeriesOptions): void {
     track.className = 'chart-vbar-track';
     const bar = document.createElement('div');
     bar.className = 'chart-vbar-bar';
-    bar.style.height = `${Math.max(6, (value / max) * 100)}%`;
+    /* 0 值不画最小高度（画 0）；>0 的极小值保留 6% 可视最小高度 */
+    bar.style.height = value > 0 ? `${Math.max(6, (value / max) * 100)}%` : '0%';
     bar.setAttribute('title', `${labels[i]}: ${fmt(opts, value)}`);
     track.appendChild(bar);
     wrap.appendChild(track);
@@ -139,7 +157,7 @@ export function renderHBar(el: HTMLElement, opts: ChartSeriesOptions): void {
 
   const labels = opts.labels.slice(0, n);
   const values = opts.values.slice(0, n);
-  const max = Math.max(...values, 1);
+  const max = maxOf(values);
 
   const wrap = document.createElement('div');
   wrap.className = 'chart-hbar';
@@ -154,7 +172,8 @@ export function renderHBar(el: HTMLElement, opts: ChartSeriesOptions): void {
     track.className = 'chart-hbar-track';
     const bar = document.createElement('div');
     bar.className = 'chart-hbar-bar';
-    bar.style.width = `${Math.max(2, (value / max) * 100)}%`;
+    /* 0 值不画最小宽度（画 0）；>0 的极小值保留 2% 可视最小宽度 */
+    bar.style.width = value > 0 ? `${Math.max(2, (value / max) * 100)}%` : '0%';
     const val = document.createElement('span');
     val.className = 'chart-hbar-value';
     val.textContent = fmt(opts, value);
@@ -250,7 +269,7 @@ export function renderLine(el: HTMLElement, opts: ChartSeriesOptions): void {
   const width = 360;
   const height = 150;
   const pad = 14;
-  const max = Math.max(...values, 1);
+  const max = maxOf(values);
   const tone = toneVar(opts.tone);
 
   const points = values.map((value, i) => ({
@@ -301,7 +320,7 @@ export function renderLine(el: HTMLElement, opts: ChartSeriesOptions): void {
     svg.appendChild(dot);
   }
 
-  wrap.append(svg, labelsRow(labels.slice(-7)));
+  wrap.append(svg, labelsRow(sampleLabels(labels)));
   el.appendChild(wrap);
 }
 
@@ -318,7 +337,7 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): void {
   const width = 360;
   const height = 150;
   const pad = 14;
-  const max = Math.max(...values, 1);
+  const max = maxOf(values);
   const tone = toneVar(opts.tone);
 
   const points = values.map((value, i) => ({
@@ -369,7 +388,7 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): void {
     svg.appendChild(inv);
   }
 
-  wrap.append(svg, labelsRow(labels.slice(-7)));
+  wrap.append(svg, labelsRow(sampleLabels(labels)));
   el.appendChild(wrap);
 }
 
@@ -566,7 +585,7 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void 
   // 只保留最后 weeks 周的数据（超出截断，与 GitHub 的窗口语义一致）
   if (entries.length > weeks * 7) entries = entries.slice(entries.length - weeks * 7);
 
-  const max = Math.max(...entries.map((e) => e.value), 1);
+  const max = maxOf(entries.map((e) => e.value));
   const levelOf = (v: number): number => (v <= 0 ? 0 : Math.min(4, Math.ceil((v / max) * 4)));
 
   const wrap = document.createElement('div');
@@ -623,7 +642,7 @@ export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): void
   const width = 96;
   const height = 28;
   const pad = 3;
-  const max = Math.max(...values, 1);
+  const max = maxOf(values);
   const tone = toneVar(opts.tone);
 
   const points = values.map((value, i) => ({

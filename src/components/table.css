@@ -3,7 +3,7 @@
  *
  * 完整契约：
  *   <div class="table-wrap [table-wrap--bordered]">
- *     <table class="admin-table [--zebra|--compact|--dense] [--sticky-col]">
+ *     <table class="table [--zebra|--compact|--dense] [--sticky-col]">
  *       <caption class="table-caption">标题说明</caption>     ← 可选
  *       <thead>
  *         <tr><th [colspan=rowspan] [data-sort]>列名</th>…</tr>
@@ -23,9 +23,9 @@
  *   </div>
  *
  * .table-wrap：窄屏横向滚动（滚动条样式见 base.css）；--bordered 加外边框。
- * .admin-table--zebra：斑马纹（奇数行底色）。
- * .admin-table--compact：紧凑（cell padding 缩小）；--dense：极紧凑（行高更紧）。
- * .admin-table--sticky-col：首列水平粘滞（配合 td/th .col-fixed，长表横向滚动时保持可见）。
+ * .table--zebra：斑马纹（奇数行底色）。
+ * .table--compact：紧凑（cell padding 缩小）；--dense：极紧凑（行高更紧）。
+ * .table--sticky-col：首列水平粘滞（配合 td/th .col-fixed，长表横向滚动时保持可见）。
  * .row-expand[hidden]：配合 .row-link.is-expanded 控制展开行显隐。
  */
 
@@ -38,18 +38,18 @@
   border: 1px solid var(--token-line-soft);
 }
 
-.admin-table {
+.table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--density-font-size-md);
   font-variant-numeric: tabular-nums;
 }
-.admin-table th,
-.admin-table td {
+.table th,
+.table td {
   padding: var(--density-space-sm) calc(var(--density-space-md) + 2px);
   text-align: left;
 }
-.admin-table th {
+.table th {
   font-weight: 600;
   font-size: var(--density-font-size-xs);
   letter-spacing: 0.05em;
@@ -60,27 +60,27 @@
   background: var(--token-bg-soft);
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: var(--z-raised);
 }
-.admin-table td {
+.table td {
   border-bottom: 1px solid var(--token-line-soft);
   vertical-align: middle;
   color: var(--token-text);
 }
-.admin-table tbody tr:last-child td { border-bottom: 0; }
-.admin-table tbody tr {
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr {
   transition: background-color var(--icen-tx-fast);
 }
-.admin-table tbody tr:hover {
+.table tbody tr:hover {
   background: var(--token-surface-strong);
 }
-.admin-table tbody tr.row-link {
+.table tbody tr.row-link {
   cursor: pointer;
 }
-.admin-table tbody tr.is-selected {
+.table tbody tr.is-selected {
   background: var(--token-accent-subtle);
 }
-.admin-table tfoot td {
+.table tfoot td {
   border-top: 1px solid var(--token-line);
   border-bottom: 0;
   font-weight: 500;
@@ -88,51 +88,50 @@
 }
 
 /* 紧凑变体 */
-.admin-table--compact th,
-.admin-table--compact td {
+.table--compact th,
+.table--compact td {
   padding: var(--density-space-xs) var(--density-space-sm);
 }
-.admin-table--dense th,
-.admin-table--dense td {
+.table--dense th,
+.table--dense td {
   padding: 4px var(--density-space-xs);
   font-size: var(--density-font-size-sm);
 }
 
 /* 右对齐数字列 */
-.admin-table td.num {
+.table td.num {
   text-align: right;
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* 操作列 */
-.admin-table .ops {
+/* 操作列（.btn-sm 必伴 .btn，无需单独列） */
+.table .ops {
   white-space: nowrap;
   text-align: right;
 }
-.admin-table .ops .btn,
-.admin-table .ops .btn-sm {
+.table .ops .btn {
   margin-left: var(--density-space-xs);
 }
 
 /* 可排序表头（使用方 data-sort 指示） */
-.admin-table th[data-sort] {
+.table th[data-sort] {
   cursor: pointer;
   user-select: none;
 }
-.admin-table th[data-sort]::after {
+.table th[data-sort]::after {
   content: '↕';
   margin-left: var(--density-space-xs);
   color: var(--token-text-faint);
   opacity: 0.6;
 }
-.admin-table th[data-sort='asc']::after { content: '↑'; opacity: 1; color: var(--token-accent); }
-.admin-table th[data-sort='desc']::after { content: '↓'; opacity: 1; color: var(--token-accent); }
+.table th[data-sort='asc']::after { content: '↑'; opacity: 1; color: var(--token-accent); }
+.table th[data-sort='desc']::after { content: '↓'; opacity: 1; color: var(--token-accent); }
 
 /* ── 斑马纹 ── */
-.admin-table--zebra tbody tr:nth-child(odd) {
+.table--zebra tbody tr:nth-child(odd) {
   background: color-mix(in srgb, var(--token-bg-soft) 50%, transparent);
 }
-.admin-table--zebra tbody tr:hover {
+.table--zebra tbody tr:hover {
   background: var(--token-surface-strong);
 }
 
@@ -147,30 +146,30 @@
 }
 
 /* ── 首列粘滞（长表横向滚动时保持可见） ── */
-.admin-table--sticky-col th:first-child,
-.admin-table--sticky-col .col-fixed {
+.table--sticky-col th:first-child,
+.table--sticky-col .col-fixed {
   position: sticky;
   left: 0;
-  z-index: 2;
+  z-index: calc(var(--z-raised) + 1);
   background: var(--token-bg-soft);
-  box-shadow: 2px 0 4px color-mix(in srgb, var(--token-shadow-card-base, rgba(0,0,0,0.06)) 40%, transparent);
+  box-shadow: 2px 0 4px color-mix(in srgb, var(--token-text) 5%, transparent);
 }
-.admin-table--sticky-col tbody td.col-fixed {
+.table--sticky-col tbody td.col-fixed {
   background: var(--token-surface);
 }
-.admin-table--sticky-col tbody tr:hover td.col-fixed {
+.table--sticky-col tbody tr:hover td.col-fixed {
   background: var(--token-surface-strong);
 }
 
 /* ── 展开行 ── */
-.admin-table .row-expand > td {
+.table .row-expand > td {
   padding: 0 var(--density-space-md);
   background: var(--token-bg-soft);
   border-bottom: 1px solid var(--token-line-soft);
   font-size: var(--density-font-size-sm);
   color: var(--token-text-muted);
 }
-.admin-table .row-expand[hidden] { display: none; }
+.table .row-expand[hidden] { display: none; }
 /* 展开行的内容容器（使用方可加 padding/动画） */
 .row-expand-content {
   padding: var(--density-space-sm) 0;
@@ -182,22 +181,22 @@
 }
 
 /* ── 列宽工具类 ── */
-.admin-table .col-narrow { width: 80px; }
-.admin-table .col-wide { width: 240px; }
-.admin-table .col-action { width: 1%; white-space: nowrap; }
+.table .col-narrow { width: 80px; }
+.table .col-wide { width: 240px; }
+.table .col-action { width: 1%; white-space: nowrap; }
 
 /* ── 行状态色 ── */
-.admin-table tbody tr.row-success { background: color-mix(in srgb, var(--token-success) 6%, transparent); }
-.admin-table tbody tr.row-warning { background: color-mix(in srgb, var(--token-warning) 6%, transparent); }
-.admin-table tbody tr.row-error   { background: color-mix(in srgb, var(--token-error) 6%, transparent); }
+.table tbody tr.row-success { background: color-mix(in srgb, var(--token-success) 6%, transparent); }
+.table tbody tr.row-warning { background: color-mix(in srgb, var(--token-warning) 6%, transparent); }
+.table tbody tr.row-error   { background: color-mix(in srgb, var(--token-error) 6%, transparent); }
 
 /* ── 粘滞表头阴影提示 ── */
-.admin-table thead th {
+.table thead th {
   box-shadow: 0 1px 0 var(--token-line);
 }
 
 /* ── 表头分组（rowspan/colspan 样式） ── */
-.admin-table th[rowspan] { vertical-align: bottom; }
+.table th[rowspan] { vertical-align: bottom; }
 
 @media (prefers-reduced-motion: reduce) {
   .row-expand-content { animation: none; }

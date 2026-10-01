@@ -31,3 +31,4 @@ export * from './behaviors/back-top';
 export * from './behaviors/command-palette';
 export * from './behaviors/date-picker';
 export * from './behaviors/split-pane';
+export * from './behaviors/datatable';

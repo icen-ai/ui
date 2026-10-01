@@ -170,7 +170,7 @@
   padding: 0 5px;
   font-size: var(--density-font-size-xs);
   font-weight: 600;
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   background: var(--token-accent);
   border-radius: var(--radius-full);
   font-variant-numeric: tabular-nums;

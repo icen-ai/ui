@@ -97,16 +97,26 @@ export function toggleDark(): ThemeState {
   return setTheme({ dark: !getTheme().dark });
 }
 
+/* 模块级幂等守卫：mql change 监听只挂一次 */
+let systemListenerAttached = false;
+
 /** 页面加载早期调用：读持久化主题并应用，防闪烁。
  *  无持久化偏好时，自动跟随系统的 prefers-color-scheme 变化（实时）；
- *  一旦用户显式 setTheme / toggleDark，跟随停止（持久化优先）。 */
+ *  一旦用户显式 setTheme / toggleDark，跟随停止（持久化优先）。
+ *  重复调用幂等（系统监听不会重复挂）。 */
 export function initTheme(): ThemeState {
   const t = getTheme();
   applyTheme(t);
 
   /* 仅在无持久化偏好时跟随系统明暗；用户主动 setTheme 写入 localStorage 后停止跟随。
      SSR 下 isBrowser() 为 false → no-op。 */
-  if (isBrowser() && typeof window.matchMedia === 'function' && !hasPersistedPreference()) {
+  if (
+    isBrowser() &&
+    typeof window.matchMedia === 'function' &&
+    !systemListenerAttached &&
+    !hasPersistedPreference()
+  ) {
+    systemListenerAttached = true;
     let lastDark = t.dark;
     try {
       const mql = window.matchMedia('(prefers-color-scheme: dark)');

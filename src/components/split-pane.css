@@ -82,7 +82,6 @@
 }
 .split-pane--vertical .split-pane-first {
   flex: 0 0 var(--split, 50%);
-  flex-basis: var(--split, 50%);
   min-height: 0;
 }
 .split-pane--vertical .split-pane-second {

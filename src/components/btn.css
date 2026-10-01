@@ -75,7 +75,7 @@
 /* ── 变体 ── */
 .btn-primary {
   --btn-bg: var(--token-accent);
-  --btn-fg: var(--token-on-accent, #fff);
+  --btn-fg: var(--token-on-accent);
   --btn-border: var(--token-accent);
   --btn-bg-hover: var(--token-accent-deep, color-mix(in srgb, var(--token-accent) 85%, black));
   --btn-border-hover: var(--token-accent-deep, var(--token-accent));
@@ -91,7 +91,7 @@
   --btn-bg-hover: var(--token-error);
   --btn-border-hover: var(--token-error);
 }
-.btn-danger:hover { color: var(--token-on-accent, #fff); }
+.btn-danger:hover { color: var(--token-on-accent); }
 
 .btn-ghost {
   --btn-bg: transparent;
@@ -162,13 +162,10 @@
   border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
   border-top-color: currentColor;
   border-radius: 50%;
-  animation: btn-spin var(--duration-slow) linear infinite;
+  animation: icen-spin var(--btn-spin-duration, var(--duration-slow)) linear infinite;
   opacity: 1; /* 覆盖 .pressable::after 渐变（若与 .pressable 同用） */
   background: none;
   pointer-events: none;
-}
-@keyframes btn-spin {
-  to { transform: rotate(360deg); }
 }
 
 /* 图标按钮内部 svg 默认尺寸对齐字号 */
@@ -179,5 +176,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn.is-loading::after { animation-duration: 1.2s; }
+  .btn.is-loading::after { --btn-spin-duration: 1.2s; }
 }

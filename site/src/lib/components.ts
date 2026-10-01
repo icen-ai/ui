@@ -18,7 +18,7 @@ export interface ComponentDoc {
   behaviorInit?: Record<string, string>;
   script?: string;
 }
-/** 组件分组的展示名（顺序即侧栏顺序）。数据原拆为四组：展示 / 表格 / 图表 / 反馈。 */
+/** 组件分组的展示名（顺序即侧栏顺序）。原「数据」已拆为四组：数据展示 / 表格 / 图表 / 反馈。 */
 export const GROUPS: string[] = ['基础', '表单', '浮层', '数据展示', '表格', '图表', '反馈', '导航'];
 
 /** slug → 组件 css 文件名（单一事实源在 scripts/slugs.mjs，与 kit 入口/CLI 共享）。 */
@@ -95,8 +95,8 @@ export const COMPONENTS: ComponentDoc[] = [
     slug: 'panel',
     name: '面板',
     group: '基础',
-    desc: '白卡片容器（panel-block）+ 标题栏（panel-title），用于承载一组相关内容。增强：副标题（panel-subtitle）、可折叠（--collapsible + .is-collapsed）、强调变体（--accent）、平面变体（--flat）。',
-    demo: `<div class="panel-block">
+    desc: '白卡片容器（panel）+ 标题栏（panel-title），用于承载一组相关内容。增强：副标题（panel-subtitle）、可折叠（--collapsible + .is-collapsed）、强调变体（--accent）、平面变体（--flat）。',
+    demo: `<div class="panel">
   <div class="panel-title">
     <div class="panel-title-text">
       <span>面板标题</span>
@@ -112,7 +112,7 @@ export const COMPONENTS: ComponentDoc[] = [
     <button class="btn btn-sm btn-primary">保存</button>
   </div>
 </div>
-<div class="panel-block panel-block--collapsible" id="demo-panel-collapse" style="margin-top:16px">
+<div class="panel panel--collapsible" id="demo-panel-collapse" style="margin-top:16px">
   <div class="panel-title">
     <div class="panel-title-text">
       <span>可折叠面板</span>
@@ -124,7 +124,7 @@ export const COMPONENTS: ComponentDoc[] = [
   </div>
   <div class="panel-body">点击右上角箭头可折叠/展开此面板内容。</div>
 </div>`,
-    usage: `<div class="panel-block [--flush] [--accent] [--flat] [--collapsible] [.is-collapsed]">
+    usage: `<div class="panel [--flush] [--accent] [--flat] [--collapsible] [.is-collapsed]">
   <div class="panel-title">
     <div class="panel-title-text">
       <span>标题</span>
@@ -136,7 +136,7 @@ export const COMPONENTS: ComponentDoc[] = [
   <div class="panel-foot">…底栏…</div>
 </div>`,
     script: `// 可折叠面板的演示接线
-document.querySelectorAll('.panel-block--collapsible').forEach((panel) => {
+document.querySelectorAll('.panel--collapsible').forEach((panel) => {
   const toggle = panel.querySelector('.panel-toggle');
   const title = panel.querySelector('.panel-title');
   const handler = () => {
@@ -155,14 +155,14 @@ document.querySelectorAll('.panel-block--collapsible').forEach((panel) => {
     desc: '语义色状态徽章，纪律：仅绿 / 黄 / 红 + 品牌 accent。',
     demo: `<div class="demo-row">
   <span class="pill">默认</span>
-  <span class="pill ok">正常</span>
-  <span class="pill warn">警告</span>
-  <span class="pill bad">异常</span>
-  <span class="pill accent">强调</span>
+  <span class="pill pill--success">正常</span>
+  <span class="pill pill--warning">警告</span>
+  <span class="pill pill--error">异常</span>
+  <span class="pill pill--accent">强调</span>
 </div>`,
-    usage: `<span class="pill ok">运行中</span>
-<span class="pill warn">降级</span>
-<span class="pill bad">已停止</span>`,
+    usage: `<span class="pill pill--success">运行中</span>
+<span class="pill pill--warning">降级</span>
+<span class="pill pill--error">已停止</span>`,
   },
   {
     slug: 'tag',
@@ -219,13 +219,13 @@ document.querySelectorAll('.tag-close').forEach((btn) => {
     group: '基础',
     desc: '与 behaviors/tabs 配套的 data 契约分区导航——下面是可点击切换的 live demo。',
     demo: `<div data-tabs>
-  <nav class="page-tabs">
-    <button class="page-tab active" data-tab="overview">概览</button>
+  <nav class="tabs">
+    <button class="page-tab is-active" data-tab="overview">概览</button>
     <button class="page-tab" data-tab="usage">用法</button>
     <button class="page-tab" data-tab="api">契约</button>
   </nav>
   <section data-tab-panel="overview">
-    <p>三分区可点击切换。激活态 = .active 类，未激活面板挂 hidden。</p>
+    <p>三分区可点击切换。激活态 = .is-active 类，未激活面板挂 hidden。</p>
   </section>
   <section data-tab-panel="usage" hidden>
     <p>引入 behaviors/tabs 后调用 initTabs()，事件委托在 [data-tabs] 容器上。</p>
@@ -235,7 +235,7 @@ document.querySelectorAll('.tag-close').forEach((btn) => {
   </section>
 </div>`,
     usage: `import { initTabs } from '@icen.ai/ui/behaviors/tabs';
-initTabs();`,
+initTabs(); // 激活态挂 .is-active；切换时容器派发 icen:tab-change（detail { tab, panel, index }）`,
     behaviors: ['tabs'],
     behaviorInit: { tabs: 'initTabs' },
   },
@@ -261,10 +261,10 @@ initTabs();`,
   <div class="stat-card stat-card--interactive">
     <div class="stat-head">
       <span class="stat-label">可用性</span>
-      <span class="stat-icon icon--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></span>
+      <span class="stat-icon icon--success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></span>
     </div>
     <div class="stat-body">
-      <div class="stat-num accent">96.2%</div>
+      <div class="stat-num stat-num--accent">96.2%</div>
       <div class="stat-delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 15 6-6 6 6"/></svg> +2.1%</div>
     </div>
     <div class="stat-progress">
@@ -277,10 +277,10 @@ initTabs();`,
   <div class="stat-card stat-card--interactive">
     <div class="stat-head">
       <span class="stat-label">待处理告警</span>
-      <span class="stat-icon icon--bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+      <span class="stat-icon icon--error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
     </div>
     <div class="stat-body">
-      <div class="stat-num warn">12</div>
+      <div class="stat-num stat-num--warning">12</div>
       <div class="stat-delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 9-6 6-6-6"/></svg> -3 <span class="stat-period">比昨日</span></div>
     </div>
   </div>
@@ -299,51 +299,14 @@ initTabs();`,
   <div class="stat-card [--interactive] [--horizontal] [--sm] [.is-loading]">
     <div class="stat-head">
       <span class="stat-label">标签</span>
-      <span class="stat-icon [.icon--ok|.icon--warn|.icon--bad|.icon--info]">…svg…</span>
+      <span class="stat-icon [.icon--success|.icon--warning|.icon--error|.icon--info]">…svg…</span>
     </div>
     <div class="stat-body">
-      <div class="stat-num [.accent|.warn|.bad|.info]">数字</div>
+      <div class="stat-num [.stat-num--accent|.stat-num--warning|.stat-num--error|.stat-num--info]">数字</div>
       <div class="stat-delta [.up|.down|.flat]">趋势</div>
     </div>
     <div class="stat-progress">…SVG ring…</div>
   </div>
-</div>`,
-  },
-  {
-    slug: 'table',
-    name: '表格',
-    group: '表格',
-    desc: 'table-wrap 负责窄屏横向滚动；行 hover 高亮，ops 列右对齐放 btn-sm。增强：--zebra 斑马纹、caption 标题、--sticky-col 首列粘滞、行状态色（row-success/warning/error）、展开行（row-expand）。',
-    demo: `<div class="table-wrap table-wrap--bordered">
-  <table class="admin-table admin-table--zebra">
-    <caption class="table-caption">服务实例清单 · 2026 年 7 月</caption>
-    <thead>
-      <tr><th>名称</th><th>区域</th><th>状态</th><th class="num">实例数</th><th class="ops">操作</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>gateway</td><td>us-east-1</td><td><span class="pill ok">运行中</span></td><td class="num">4</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-      <tr><td>accounts</td><td>us-west-2</td><td><span class="pill ok">运行中</span></td><td class="num">2</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-      <tr class="row-warning"><td>billing</td><td>eu-west-1</td><td><span class="pill warn">降级</span></td><td class="num">2</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-      <tr class="row-error"><td>archive</td><td>ap-northeast-1</td><td><span class="pill bad">已停止</span></td><td class="num">0</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">启用</button></td></tr>
-      <tr><td>search</td><td>us-east-1</td><td><span class="pill ok">运行中</span></td><td class="num">6</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-    </tbody>
-    <tfoot>
-      <tr><td colspan="3">合计</td><td class="num">14</td><td></td></tr>
-    </tfoot>
-  </table>
-</div>`,
-    usage: `<div class="table-wrap [--bordered]">
-  <table class="admin-table [--zebra] [--compact|--dense] [--sticky-col]">
-    <caption class="table-caption">标题</caption>
-    <thead><tr><th>名称</th><th class="ops">操作</th></tr></thead>
-    <tbody>
-      <tr class="row-link [.is-selected] [.row-success|.row-warning|.row-error]">
-        <td>gateway</td>
-        <td class="ops"><button class="btn btn-sm">编辑</button></td>
-      </tr>
-    </tbody>
-    <tfoot><tr><td>合计</td></tr></tfoot>
-  </table>
 </div>`,
   },
   {
@@ -1401,7 +1364,7 @@ document.querySelectorAll('.alert-close').forEach((btn) => {
     slug: 'copy',
     name: '复制按钮',
     group: '反馈',
-    desc: '与 behaviors/copy 配套：命中 .copy-btn[data-copy] 写入剪贴板，成功后文本变「已复制」1.4s 还原；图标变体加 data-copy-icon 仅切 .done 类。与 toast 的区别——copy 是原地反馈，toast 是全局通知。',
+    desc: '与 behaviors/copy 配套：命中 .copy-btn[data-copy] 写入剪贴板，成功后文本变「已复制」1.4s 还原；图标变体加 data-copy-icon 仅切 .is-done 类。与 toast 的区别——copy 是原地反馈，toast 是全局通知。',
     demo: `<div class="demo-row">
   <button class="copy-btn" data-copy="npm i @icen.ai/ui">复制安装命令</button>
   <button class="copy-btn copy-btn--ghost" data-copy="https://ui.icen.ai">复制链接</button>
@@ -1531,7 +1494,7 @@ setInterval(refreshCount, 500);
 
 // ── 语义 ──
 document.getElementById('notif-info')?.addEventListener('click', () => {
-  notify.info('版本更新', { description: 'v0.5.0 已发布，新增通知栈组件', unread: true });
+  notify.info('版本更新', { description: 'v0.6.0 已发布，语义类名全面收敛', unread: true });
   refreshCount();
 });
 document.getElementById('notif-success')?.addEventListener('click', () => {
@@ -1622,8 +1585,8 @@ document.getElementById('notif-avatar')?.addEventListener('click', () => {
 
 // ── 链接 ──
 document.getElementById('notif-link')?.addEventListener('click', () => {
-  notify.info('新版本 v0.5.0', {
-    description: '新增通知栈、日期选择、命令面板等 11 个组件',
+  notify.info('新版本 v0.6.0', {
+    description: '类名收敛：pill/toast/stat 语义修饰符统一为 --success/--warning/--error/--info',
     link: '#',
     linkLabel: '查看更新日志 →',
   });
@@ -1917,7 +1880,7 @@ initTree();
 </div>`,
     usage: `import { initCarousel } from '@icen.ai/ui/behaviors/carousel';
 initCarousel();
-// dots 自动生成；首尾循环；当前 dot 挂 .active`,
+// dots 自动生成；首尾循环；当前 dot 挂 .is-active`,
     behaviors: ['carousel'],
     behaviorInit: { carousel: 'initCarousel' },
   },
@@ -2297,6 +2260,43 @@ renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15] });`,
     script: `const renderSparkline = chartsMod.renderSparkline;
 const el = document.getElementById('spark-demo');
 if (el) renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19] });`,
+  },
+  {
+    slug: 'table',
+    name: '表格',
+    group: '表格',
+    desc: 'table-wrap 负责窄屏横向滚动；行 hover 高亮，ops 列右对齐放 btn-sm。增强：--zebra 斑马纹、caption 标题、--sticky-col 首列粘滞、行状态色（row-success/warning/error）、展开行（row-expand）。',
+    demo: `<div class="table-wrap table-wrap--bordered">
+  <table class="table table--zebra">
+    <caption class="table-caption">服务实例清单 · 2026 年 7 月</caption>
+    <thead>
+      <tr><th>名称</th><th>区域</th><th>状态</th><th class="num">实例数</th><th class="ops">操作</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>gateway</td><td>us-east-1</td><td><span class="pill pill--success">运行中</span></td><td class="num">4</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+      <tr><td>accounts</td><td>us-west-2</td><td><span class="pill pill--success">运行中</span></td><td class="num">2</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+      <tr class="row-warning"><td>billing</td><td>eu-west-1</td><td><span class="pill pill--warning">降级</span></td><td class="num">2</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+      <tr class="row-error"><td>archive</td><td>ap-northeast-1</td><td><span class="pill pill--error">已停止</span></td><td class="num">0</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">启用</button></td></tr>
+      <tr><td>search</td><td>us-east-1</td><td><span class="pill pill--success">运行中</span></td><td class="num">6</td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td colspan="3">合计</td><td class="num">14</td><td></td></tr>
+    </tfoot>
+  </table>
+</div>`,
+    usage: `<div class="table-wrap [--bordered]">
+  <table class="table [--zebra] [--compact|--dense] [--sticky-col]">
+    <caption class="table-caption">标题</caption>
+    <thead><tr><th>名称</th><th class="ops">操作</th></tr></thead>
+    <tbody>
+      <tr class="row-link [.is-selected] [.row-success|.row-warning|.row-error]">
+        <td>gateway</td>
+        <td class="ops"><button class="btn btn-sm">编辑</button></td>
+      </tr>
+    </tbody>
+    <tfoot><tr><td>合计</td></tr></tfoot>
+  </table>
+</div>`,
   },
   {
     slug: 'datatable',

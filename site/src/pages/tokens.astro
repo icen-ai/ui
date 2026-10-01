@@ -23,7 +23,7 @@ const swatches = [
   <p class="page-sub">6 套预设 × 明暗双模。每套都定义完整的 <code>--token-*</code> 色彩面，组件全部消费 token，换肤零改动。导航栏可实时切换全站预设与明暗。</p>
 
   {presets.map((p) => (
-    <section class="panel-block">
+    <section class="panel">
       <div class="panel-title"><span>{p.name}</span><code>.{p.id}</code></div>
       <div class="panel-body">
         <div class="palette-pair">
@@ -41,9 +41,9 @@ const swatches = [
             <div class="demo-row" style="margin-top:14px">
               <button class="btn btn-primary btn-sm" type="button">主要按钮</button>
               <button class="btn btn-sm" type="button">次要按钮</button>
-              <span class="pill ok">成功</span>
-              <span class="pill warn">警告</span>
-              <span class="pill bad">错误</span>
+              <span class="pill pill--success">成功</span>
+              <span class="pill pill--warning">警告</span>
+              <span class="pill pill--error">错误</span>
             </div>
           </div>
           <div class={`${p.id} dark`}>
@@ -60,9 +60,9 @@ const swatches = [
             <div class="demo-row" style="margin-top:14px">
               <button class="btn btn-primary btn-sm" type="button">主要按钮</button>
               <button class="btn btn-sm" type="button">次要按钮</button>
-              <span class="pill ok">成功</span>
-              <span class="pill warn">警告</span>
-              <span class="pill bad">错误</span>
+              <span class="pill pill--success">成功</span>
+              <span class="pill pill--warning">警告</span>
+              <span class="pill pill--error">错误</span>
             </div>
           </div>
         </div>

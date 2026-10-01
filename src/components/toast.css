@@ -5,7 +5,7 @@
  *
  * 完整契约：
  *   <div class="toast-container" role="status" aria-live="polite">
- *     <div class="toast [ok|err|warn]" role="status|alert">
+ *     <div class="toast [toast--success|toast--error|toast--warning|toast--info]" role="status|alert">
  *       <span class="toast-msg">文本</span>
  *       <button class="toast-action">撤销</button>       ← 可选 action
  *     </div>
@@ -28,6 +28,8 @@
 
 .toast {
   pointer-events: auto;
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: var(--density-space-sm);
@@ -45,9 +47,10 @@
 }
 
 /* 语义色：左缘 3px 强调 */
-.toast.ok   { border-left-color: var(--token-success); }
-.toast.err  { border-left-color: var(--token-error); }
-.toast.warn { border-left-color: var(--token-warning); }
+.toast--success { border-left-color: var(--token-success); }
+.toast--error   { border-left-color: var(--token-error); }
+.toast--warning { border-left-color: var(--token-warning); }
+.toast--info    { border-left-color: var(--token-info); }
 
 .toast-msg {
   flex: 1;
@@ -88,9 +91,10 @@
   color: var(--token-text-faint);
 }
 .toast-icon svg { width: 16px; height: 16px; }
-.toast.ok .toast-icon { color: var(--token-success); }
-.toast.err .toast-icon { color: var(--token-error); }
-.toast.warn .toast-icon { color: var(--token-warning); }
+.toast--success .toast-icon { color: var(--token-success); }
+.toast--error   .toast-icon { color: var(--token-error); }
+.toast--warning .toast-icon { color: var(--token-warning); }
+.toast--info    .toast-icon { color: var(--token-info); }
 
 /* 关闭按钮 */
 .toast-close {
@@ -149,15 +153,14 @@
   transform-origin: left;
   animation: toast-countdown linear forwards;
 }
-.toast.ok .toast-progress-fill { background: var(--token-success); }
-.toast.err .toast-progress-fill { background: var(--token-error); }
-.toast.warn .toast-progress-fill { background: var(--token-warning); }
+.toast--success .toast-progress-fill { background: var(--token-success); }
+.toast--error   .toast-progress-fill { background: var(--token-error); }
+.toast--warning .toast-progress-fill { background: var(--token-warning); }
+.toast--info    .toast-progress-fill { background: var(--token-info); }
 @keyframes toast-countdown {
   from { transform: scaleX(1); }
   to   { transform: scaleX(0); }
 }
-
-.toast { position: relative; overflow: hidden; }
 
 /* 容器定位变体 */
 .toast-container[data-position='top-left'] {
@@ -191,7 +194,7 @@
   align-items: center;
 }
 
-.toast.leaving {
+.toast.is-leaving {
   opacity: 0;
   transform: translateY(8px);
   transition:

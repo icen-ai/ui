@@ -41,7 +41,7 @@
   border: 1px solid var(--token-outline);
   box-shadow: var(--token-shadow-overlay);
   border-radius: var(--radius-lg);
-  animation: icen-menu-in var(--icen-tx-fast);
+  animation: icen-menu-in var(--menu-in-duration, var(--icen-tx-fast));
 }
 .menu[data-side='top'] { animation-name: icen-menu-in-top; }
 .menu[data-side='left'] { animation-name: icen-menu-in-left; }
@@ -52,7 +52,7 @@
   min-width: 218px;
   max-width: 286px;
   z-index: var(--z-tooltip); /* 上下文菜单高于普通 popover，与 tooltip 平齐 */
-  animation-duration: 100ms;
+  --menu-in-duration: 100ms;
 }
 
 /* ── 分组标签 / 头（context-menu 的 header 项） ── */

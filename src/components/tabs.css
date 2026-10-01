@@ -2,20 +2,19 @@
  * @icen.ai/ui — Component: tabs（分区导航 / 子导航）
  *
  * 完整契约：
- *   <div class="page-tabs" role="tablist">                       ← 页面内分区
- *     <button class="page-tab [.active]" role="tab" [aria-selected="true"]>…</button>
+ *   <div class="tabs" role="tablist">                            ← 页面内分区
+ *     <button class="page-tab [.is-active]" role="tab" [aria-selected="true"]>…</button>
  *   </div>
  *
- *   <nav class="admin-tabs" role="navigation">                   ← 顶部子导航（a 链接）
- *     <a class="[.active]" [aria-current="page"] href="…">…</a>
+ *   <nav class="tabs" role="navigation">                         ← 顶部子导航（a 链接）
+ *     <a class="[.is-active]" [aria-current="page"] href="…">…</a>
  *   </nav>
  *
  * 与 behaviors/tabs 配套：[data-tabs] > [data-tab] + [data-tab-panel]，行为层维护 aria。
- * 窄屏换行不滚动（CLAUDE.md 纪律：tab 条永不出现滚动条）。
+ * 窄屏换行不滚动（纪律：tab 条永不出现滚动条，一律 flex-wrap: wrap）。
  */
 
-.page-tabs,
-.admin-tabs {
+.tabs {
   display: flex;
   gap: 2px;
   flex-wrap: wrap;
@@ -47,14 +46,14 @@
   border-radius: var(--radius-sm);
   box-shadow: var(--icen-ring);
 }
-.page-tab.active,
+.page-tab.is-active,
 .page-tab[aria-selected='true'] {
   color: var(--token-accent);
   border-bottom-color: var(--token-accent);
   font-weight: 700;
 }
 
-.admin-tabs a {
+.tabs a {
   padding: var(--density-space-sm) var(--density-space-md);
   font-size: var(--density-font-size-md);
   color: var(--token-text-muted);
@@ -66,44 +65,44 @@
     color var(--icen-tx-fast),
     border-color var(--icen-tx-fast);
 }
-.admin-tabs a:hover {
+.tabs a:hover {
   color: var(--token-accent);
   text-decoration: none;
 }
-.admin-tabs a:focus-visible {
+.tabs a:focus-visible {
   outline: none;
   border-radius: var(--radius-sm);
   box-shadow: var(--icen-ring);
 }
-.admin-tabs a.active,
-.admin-tabs a[aria-current='page'] {
+.tabs a.is-active,
+.tabs a[aria-current='page'] {
   color: var(--token-accent);
   border-bottom-color: var(--token-accent);
 }
 
-/* 卡片变体（可选 .page-tabs--cards）：tab 变成 pill，没有底边线 */
-.page-tabs--cards {
+/* 卡片变体（可选 .tabs--cards）：tab 变成 pill，没有底边线 */
+.tabs--cards {
   border-bottom: 0;
   gap: var(--density-space-xs);
   margin-bottom: var(--density-space-md);
 }
-.page-tabs--cards .page-tab {
+.tabs--cards .page-tab {
   padding: var(--density-space-xs) var(--density-space-md);
   border: 1px solid var(--token-outline-soft);
   border-radius: var(--radius-full);
   margin-bottom: 0;
 }
-.page-tabs--cards .page-tab.active,
-.page-tabs--cards .page-tab[aria-selected='true'] {
+.tabs--cards .page-tab.is-active,
+.tabs--cards .page-tab[aria-selected='true'] {
   background: var(--token-accent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   border-color: var(--token-accent);
   font-weight: 500;
 }
 
 /* 等宽变体：tab 平均占满容器 */
-.page-tabs--equal .page-tab,
-.admin-tabs--equal a {
+.tabs--equal .page-tab,
+.tabs--equal a {
   flex: 1;
   text-align: center;
 }
@@ -111,11 +110,11 @@
 /* ── 增强 ── */
 
 /* 尺寸变体 */
-.page-tabs--sm .page-tab {
+.tabs--sm .page-tab {
   padding: var(--density-space-xs) var(--density-space-sm);
   font-size: var(--density-font-size-sm);
 }
-.page-tabs--lg .page-tab {
+.tabs--lg .page-tab {
   padding: var(--density-space-md) calc(var(--density-space-md) + 4px);
   font-size: var(--density-font-size-lg);
 }
@@ -137,7 +136,7 @@
   height: 18px;
   padding: 0 5px;
   margin-left: var(--density-space-xs);
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 600;
   color: var(--token-text-faint);
   background: var(--token-fill-2);
@@ -145,10 +144,10 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
-.page-tab.active .page-tab-badge,
+.page-tab.is-active .page-tab-badge,
 .page-tab[aria-selected='true'] .page-tab-badge {
   background: var(--token-accent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
 }
 
 /* 可关闭 tab */
@@ -175,7 +174,7 @@
 .page-tab-close svg { width: 10px; height: 10px; }
 
 /* 分段式 tab（替代底边线，用 segmented 视觉） */
-.page-tabs--segment {
+.tabs--segment {
   display: inline-flex;
   border-bottom: none;
   gap: 2px;
@@ -185,50 +184,40 @@
   border-radius: var(--radius-md);
   box-shadow: var(--token-shadow-inset);
 }
-.page-tabs--segment .page-tab {
+.tabs--segment .page-tab {
   border-bottom: none;
   margin-bottom: 0;
   padding: var(--density-space-xs) var(--density-space-md);
   border-radius: var(--radius-sm);
 }
-.page-tabs--segment .page-tab.active,
-.page-tabs--segment .page-tab[aria-selected='true'] {
+.tabs--segment .page-tab.is-active,
+.tabs--segment .page-tab[aria-selected='true'] {
   background: var(--token-accent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   border-bottom-color: transparent;
   font-weight: 500;
 }
 
 /* 垂直 tab（侧栏式） */
-.page-tabs--vertical {
+.tabs--vertical {
   flex-direction: column;
   border-bottom: none;
   border-right: 1px solid var(--token-line-soft);
   margin-bottom: 0;
   min-width: 160px;
 }
-.page-tabs--vertical .page-tab {
+.tabs--vertical .page-tab {
   border-bottom: none;
   border-right: 2px solid transparent;
   margin-bottom: 0;
   margin-right: -1px;
 }
-.page-tabs--vertical .page-tab.active,
-.page-tabs--vertical .page-tab[aria-selected='true'] {
+.tabs--vertical .page-tab.is-active,
+.tabs--vertical .page-tab[aria-selected='true'] {
   border-right-color: var(--token-accent);
   border-bottom-color: transparent;
 }
 
-/* tab 溢出渐变提示（窄屏溢出时右侧渐变遮罩——纯视觉提示，不违反"不滚动"纪律，仍 flex-wrap） */
-.page-tabs--scroll {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.page-tabs--scroll::-webkit-scrollbar { display: none; }
-
 @media (prefers-reduced-motion: reduce) {
-  .page-tab, .admin-tabs a, .page-tab-close { transition: none; }
+  .page-tab, .tabs a, .page-tab-close { transition: none; }
 }

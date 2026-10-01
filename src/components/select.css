@@ -26,7 +26,8 @@
  *   </div>
  *
  * behavior 维护：
- *   - .select.is-open ↔ aria-expanded；panel [hidden] 切换；ESC/外部点击关闭
+ *   - .select.is-open ↔ aria-expanded；panel portal 到 body（inline left/top/width/max-height，
+ *     带 data-side="top|bottom"；多选时带 data-select-multiple）；ESC/外部点击关闭
  *   - 选项 .is-focused 跟随键盘箭头；Enter 选中 → 写回 .select-value / .is-selected
  *   - data-select-search：面板顶部自动插入搜索框，实时过滤（含 data-keywords），空分组自动隐藏
  *   - data-select-multiple：点击切选不关面板，trigger 显示计数，hidden input 同步逗号分隔值
@@ -35,7 +36,6 @@
 .select {
   position: relative;
   width: 100%;
-  isolation: isolate; /* panel 不被后面兄弟节点的层叠遮挡 */
 }
 
 .select-trigger {
@@ -105,12 +105,11 @@
 }
 .select.is-open .select-chevron { transform: rotate(180deg); }
 
+/* 面板由 behavior portal 到 body：left/top/width/max-height 由 JS 按 trigger rect inline 写入；
+   data-side="top|bottom" 标记翻侧方向；多选时 panel 带 data-select-multiple 属性。 */
 .select-panel {
   position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  min-width: 100%;
-  max-height: 240px;
+  z-index: var(--z-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 4px;
@@ -118,17 +117,10 @@
   border: 1px solid var(--token-outline);
   border-radius: var(--radius-md);
   box-shadow: var(--token-shadow-overlay);
-  z-index: var(--z-popover);
   transform-origin: top center;
-  animation: select-panel-in var(--icen-tx-fast);
+  animation: icen-pop-in var(--icen-tx-fast);
 }
-@keyframes select-panel-in {
-  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .select-panel { animation: none; }
-}
+.select-panel[data-side='top'] { transform-origin: bottom center; }
 
 /* 选项 */
 .select-option {
@@ -230,7 +222,7 @@
   border-radius: var(--radius-xs);
   background: transparent;
   color: var(--token-text-faint);
-  font-size: 15px;
+  font-size: var(--density-font-size-lg);
   line-height: 1;
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
@@ -249,8 +241,8 @@
   flex-wrap: wrap;
 }
 
-/* 多选项 checkbox 指示器（选项左侧） */
-.select[data-select-multiple] .select-option::before {
+/* 多选项 checkbox 指示器（选项左侧；panel portal 到 body，属性在 panel 上） */
+.select-panel[data-select-multiple] .select-option::before {
   content: '';
   width: 14px;
   height: 14px;
@@ -259,11 +251,11 @@
   border-radius: var(--radius-xs);
   transition: background-color var(--icen-tx-fast), border-color var(--icen-tx-fast);
 }
-.select[data-select-multiple] .select-option.is-selected::before {
+.select-panel[data-select-multiple] .select-option.is-selected::before {
   background: var(--token-accent);
   border-color: var(--token-accent);
 }
-.select[data-select-multiple] .select-option.is-selected::after {
+.select-panel[data-select-multiple] .select-option.is-selected::after {
   content: '✓';
   margin-left: auto;
 }

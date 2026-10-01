@@ -1,6 +1,8 @@
 ---
 import Docs from '../layouts/Docs.astro';
 import CodeBlock from '../components/CodeBlock.astro';
+import { COMPONENTS } from '../lib/components';
+const componentCount = COMPONENTS.length;
 const primitives = [
   {
     cls: 'pressable',
@@ -66,7 +68,7 @@ const tokens = [
   { name: '--icen-tx-slow', desc: '慢速过渡', value: '300ms ease-out' },
 ];
 ---
-<Docs title="原语 · ICEN UI" description="icen 组件契约 — 6 个交互基元 + --icen-* 原语 token 层，所有 31 个组件从此出发。">
+<Docs title="原语 · ICEN UI" description={`icen 组件契约 — 6 个交互基元 + --icen-* 原语 token 层，所有 ${componentCount} 个组件从此出发。`}>
   <nav class="breadcrumb" aria-label="面包屑">
     <ol>
       <li><a class="breadcrumb-link" href="/">首页</a><span class="breadcrumb-sep" aria-hidden="true"></span></li>
@@ -76,12 +78,12 @@ const tokens = [
 
   <h1 class="page-title">原语（统一抽象层）</h1>
   <p class="page-desc">
-    所有 31 个组件共享同一套抽象：(1) <strong>6 个交互基元 class</strong>（HTML 显式组合 API）+
+    所有 {componentCount} 个组件共享同一套抽象：(1) <strong>6 个交互基元 class</strong>（HTML 显式组合 API）+
     (2) <strong><code>--icen-*</code> 原语 token 层</strong>（CSS 自洽消费）。风格 profile 只需覆盖少数变量，
-    全局 31 个组件自动换肤。
+    全局 {componentCount} 个组件自动换肤。
   </p>
 
-  <section class="panel-block">
+  <section class="panel">
     <div class="panel-title"><span>6 个交互基元</span><span>composition API</span></div>
     <div class="panel-body">
       <p class="dim">用法（任选其一）：</p>
@@ -101,11 +103,11 @@ const tokens = [
     </div>
   </section>
 
-  <section class="panel-block">
+  <section class="panel">
     <div class="panel-title"><span>--icen-* 原语 token</span><span>变量层</span></div>
     <div class="panel-body">
       <p class="dim">所有组件消费这组原语变量；切换风格 profile（如 .style-retro）只覆盖这里的少数变量即可全局生效。</p>
-      <table class="admin-table admin-table--compact">
+      <table class="table table--compact">
         <thead>
           <tr><th>变量</th><th>说明</th><th>值（modern 风格）</th></tr>
         </thead>
@@ -124,12 +126,12 @@ const tokens = [
   --icen-ring: 2px solid var(--token-accent);
   --icen-press: translate(2px, 2px);
   --icen-hover-border: var(--token-accent);
-  /* 全部 31 个组件自动获得像素风聚焦环 + 按下位移 */
+  /* 全部组件自动获得像素风聚焦环 + 按下位移 */
 }`} lang="css" />
     </div>
   </section>
 
-  <section class="panel-block">
+  <section class="panel">
     <div class="panel-title"><span>组件契约</span><span>约定</span></div>
     <div class="panel-body">
       <dl class="desc-grid desc--bordered" style="--desc-cols: 1">

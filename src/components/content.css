@@ -28,7 +28,7 @@
   height: 16px;
   min-width: 16px;
   padding: 0 4px;
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
 }
 .kbd-group {
   display: inline-flex;
@@ -192,11 +192,11 @@
   z-index: 1;
 }
 .timeline-dot svg { width: 13px; height: 13px; }
-.timeline-dot--accent  { background: var(--token-accent);  color: var(--token-on-accent, #fff); border-color: transparent; }
-.timeline-dot--success { background: var(--token-success); color: var(--token-on-accent, #fff); border-color: transparent; }
-.timeline-dot--warning { background: var(--token-warning); color: var(--token-on-accent, #fff); border-color: transparent; }
-.timeline-dot--error   { background: var(--token-error);   color: var(--token-on-accent, #fff); border-color: transparent; }
-.timeline-dot--info    { background: var(--token-info);    color: var(--token-on-accent, #fff); border-color: transparent; }
+.timeline-dot--accent  { background: var(--token-accent);  color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--success { background: var(--token-success); color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--warning { background: var(--token-warning); color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--error   { background: var(--token-error);   color: var(--token-on-accent); border-color: transparent; }
+.timeline-dot--info    { background: var(--token-info);    color: var(--token-on-accent); border-color: transparent; }
 
 .timeline-body { flex: 1; min-width: 0; }
 .timeline-head {
@@ -362,9 +362,9 @@
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 600;
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   background: var(--token-accent);
   border-radius: var(--radius-full);
   flex-shrink: 0;
@@ -454,7 +454,6 @@
 /* 自定义 dot 尺寸 */
 .timeline-dot--sm { width: 20px; height: 20px; }
 .timeline-dot--sm svg { width: 10px; height: 10px; }
-.timeline-dot--sm ~ .timeline-item:not(:last-child)::after,
 .timeline--sm .timeline-item:not(:last-child)::after { left: 10px; top: 24px; }
 
 /* 时间线自定义内容槽（放标签、卡片等） */

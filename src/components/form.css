@@ -148,7 +148,7 @@
 
 /* label 带可选标记 */
 .form-label-optional {
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 400;
   color: var(--token-text-faint);
   margin-left: 4px;
@@ -229,11 +229,11 @@
   border: 2px solid color-mix(in srgb, var(--token-accent) 30%, transparent);
   border-top-color: var(--token-accent);
   border-radius: 50%;
-  animation: form-loading-spin 0.8s linear infinite;
+  animation: icen-spin var(--form-loading-duration, 0.8s) linear infinite;
 }
-@keyframes form-loading-spin { to { transform: rotate(360deg); } }
 
-/* ── 页面级横幅：操作结果 / 引导提示 ── */
+/* ── 页面级横幅：操作结果 / 引导提示 ──
+   与 feedback.css 的 alert 共享同一套视觉 token（--banner-* 仅在底色/文字/描边上分流） */
 .banner-ok,
 .banner-err {
   display: flex;
@@ -245,23 +245,22 @@
   font-size: var(--density-font-size-sm);
   line-height: 1.5;
   border: 1px solid transparent;
+  background: var(--banner-bg);
+  color: var(--banner-fg);
+  border-color: var(--banner-border);
 }
 .banner-ok {
-  background: var(--token-success-muted);
-  color: var(--token-success);
-  border-color: color-mix(in srgb, var(--token-success) 25%, transparent);
+  --banner-bg: var(--token-success-muted);
+  --banner-fg: var(--token-success);
+  --banner-border: color-mix(in srgb, var(--token-success) 25%, transparent);
 }
 .banner-err {
-  background: var(--token-error-muted);
-  color: var(--token-error);
-  border-color: color-mix(in srgb, var(--token-error) 25%, transparent);
+  --banner-bg: var(--token-error-muted);
+  --banner-fg: var(--token-error);
+  --banner-border: color-mix(in srgb, var(--token-error) 25%, transparent);
 }
 /* block 模式：横向占满，带图标位 */
 .banner-block {
   align-items: center;
   padding: var(--density-space-md);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .banner-ok, .banner-err { transition: none; }
 }

@@ -107,7 +107,9 @@
   border-radius: var(--radius-md);
   background: var(--token-bg-soft);
   color: var(--token-text-faint);
+  font: inherit;
   font-size: 12px;
+  cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
 .nav-search:hover { border-color: var(--token-accent); color: var(--token-text-muted); text-decoration: none; }
@@ -260,10 +262,10 @@
   transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
 .doc-copy-page:hover { color: var(--token-text); border-color: var(--token-accent); }
-.doc-copy-page.done { color: var(--token-success); border-color: var(--token-success); }
+.doc-copy-page.is-done { color: var(--token-success); border-color: var(--token-success); }
 .doc-copy-page .ic-check { display: none; }
-.doc-copy-page.done .ic-copy { display: none; }
-.doc-copy-page.done .ic-check { display: inline; }
+.doc-copy-page.is-done .ic-copy { display: none; }
+.doc-copy-page.is-done .ic-check { display: inline; }
 
 .doc-arrow {
   display: inline-flex;
@@ -368,9 +370,9 @@
 }
 .copy-btn--icon:hover { color: var(--token-accent); border-color: var(--token-accent); }
 .copy-btn--icon .ic-check { display: none; }
-.copy-btn--icon.done { color: var(--token-success); border-color: var(--token-success); }
-.copy-btn--icon.done .ic-copy { display: none; }
-.copy-btn--icon.done .ic-check { display: inline; }
+.copy-btn--icon.is-done { color: var(--token-success); border-color: var(--token-success); }
+.copy-btn--icon.is-done .ic-copy { display: none; }
+.copy-btn--icon.is-done .ic-check { display: inline; }
 
 /* View Code 折叠：固定高度 + 底部渐隐遮罩 */
 .code-collapse { position: relative; }
@@ -447,7 +449,7 @@
   transition: color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
 }
 .pm-tab:hover { color: var(--token-text); }
-.pm-tab.active { color: var(--token-text); background: var(--token-surface); font-weight: 600; }
+.pm-tab.is-active { color: var(--token-text); background: var(--token-surface); font-weight: 600; }
 .pm-panel { position: relative; }
 .pm-panel pre {
   margin: 0;
@@ -460,7 +462,7 @@
 .pm-copy { top: 50%; transform: translateY(-50%); }
 
 /* ═══════════ 演示辅助类（demo markup 契约） ═══════════ */
-.panel-body { padding: 18px 20px 22px; }
+.panel-body { padding: var(--density-space-lg) calc(var(--density-space-lg) + var(--density-space-xs)) var(--density-space-xl); }
 .preview {
   border: 1px dashed var(--token-line-dashed);
   border-radius: var(--radius-sm);

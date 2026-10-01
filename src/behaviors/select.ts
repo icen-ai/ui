@@ -25,10 +25,81 @@
  * 交互：trigger 点击开关面板；选项点击 → .is-selected、.select-value 文本更新（单选）
  *   或切选（多选）；Esc / 外点关闭；↑↓ 移动 .is-focused（跳过 disabled / hidden）；
  *   Enter/Space 选中；搜索框输入实时过滤选项。同一容器重复 init 幂等。
+ *
+ * 浮层：面板首次打开时 portal 到 document.body（跳出祖先 overflow 裁切与
+ *   stacking context），由 behavior 按 trigger rect 用 computePopoverLayout 计算
+ *   定位（prefer 下方、空间不足翻上），inline 写入 left/top/min-width/width/max-height
+ *   并同步 data-side；window scroll（capture）/ resize 时跟随重定位（trigger 离场则
+ *   关闭）；关闭仅隐藏，不移回原位。外点 / Esc 用 document 级单例委托（参照
+ *   dropdown.ts），同时只开一个 panel。
  */
+
+import { computePopoverLayout } from './popover';
 
 interface MarkedSelect extends Element {
   __icenSelectInit?: boolean;
+}
+
+/** 当前打开的 select（模块级单例，同时只开一个）。 */
+interface OpenSelect {
+  container: Element;
+  trigger: HTMLButtonElement;
+  panel: HTMLElement;
+  close: () => void;
+  reposition: () => void;
+}
+
+let openSelect: OpenSelect | null = null;
+let globalBound = false;
+
+/** 面板与 trigger 的垂直间距、面板最大高度上限（与 select.css 的 max-height 对齐）。 */
+const PANEL_OFFSET = 4;
+const PANEL_MAX_HEIGHT = 240;
+
+function onGlobalPointerDown(ev: Event): void {
+  const cur = openSelect;
+  if (!cur) return;
+  const t = ev.target;
+  if (!(t instanceof Node)) return;
+  // panel 已 portal 到 body，不再是 container 的后代，需单独判断
+  if (cur.container.contains(t) || cur.panel.contains(t)) return;
+  cur.close();
+}
+
+function onGlobalKeyDown(ev: KeyboardEvent): void {
+  if (ev.key !== 'Escape') return;
+  const cur = openSelect;
+  if (!cur) return;
+  cur.close();
+  cur.trigger.focus();
+}
+
+/** scroll（capture，含内层滚动容器）/ resize 时跟随 trigger 重定位；trigger 离场则关闭。 */
+function onWindowChange(): void {
+  const cur = openSelect;
+  if (!cur) return;
+  if (!cur.trigger.isConnected) {
+    cur.close();
+    return;
+  }
+  cur.reposition();
+}
+
+function bindGlobalListeners(): void {
+  if (globalBound) return;
+  globalBound = true;
+  document.addEventListener('pointerdown', onGlobalPointerDown);
+  document.addEventListener('keydown', onGlobalKeyDown);
+}
+
+function bindOpenListeners(): void {
+  window.addEventListener('scroll', onWindowChange, true);
+  window.addEventListener('resize', onWindowChange);
+}
+
+function unbindOpenListeners(): void {
+  window.removeEventListener('scroll', onWindowChange, true);
+  window.removeEventListener('resize', onWindowChange);
 }
 
 function setup(container: Element): void {
@@ -51,6 +122,9 @@ function setup(container: Element): void {
   const placeholder =
     container.getAttribute('data-select-placeholder') ??
     (valueEl?.classList.contains('is-empty') ? (valueEl?.textContent ?? '') : '');
+
+  // panel portal 到 body 后不再是 .select 的后代，把多选标记复制到 panel 上供 CSS 挂钩
+  if (isMultiple) panel.setAttribute('data-select-multiple', '');
 
   let searchInput: HTMLInputElement | null = null;
   let focusIdx = -1;
@@ -137,7 +211,7 @@ function setup(container: Element): void {
 
   if (searchInput) {
     searchInput.addEventListener('input', () => filterOptions(searchInput!.value));
-    // 阻止搜索框的按键冒泡到 trigger 的 keydown 处理
+    // 阻止搜索框的按键冒泡到 document 级处理
     searchInput.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') {
         ev.stopPropagation();
@@ -148,11 +222,40 @@ function setup(container: Element): void {
     });
   }
 
+  /** 按 trigger rect 计算面板定位（panel 在 body 下，left/top 换算为文档坐标）。 */
+  function positionPanel(): void {
+    const rect = trigger.getBoundingClientRect();
+    const layout = computePopoverLayout(
+      rect,
+      { width: window.innerWidth, height: window.innerHeight },
+      {
+        side: 'bottom',
+        align: 'stretch',
+        offset: PANEL_OFFSET,
+        minWidth: rect.width,
+        maxWidth: rect.width,
+        maxHeight: PANEL_MAX_HEIGHT,
+      },
+    );
+    panel.style.left = `${layout.left + window.scrollX}px`;
+    panel.style.top = `${layout.top + window.scrollY}px`;
+    panel.style.minWidth = `${layout.width}px`;
+    panel.style.width = `${layout.width}px`;
+    panel.style.maxHeight = `${layout.maxHeight}px`;
+    panel.dataset.side = layout.side;
+  }
+
   function openPanel(): void {
     if (isOpen()) return;
+    openSelect?.close();
+    // portal：跳出祖先 overflow 裁切与 stacking context；只移一次，关闭不移回
+    if (panel.parentElement !== document.body) document.body.appendChild(panel);
     panel.hidden = false;
     container.classList.add('is-open');
     trigger.setAttribute('aria-expanded', 'true');
+    positionPanel();
+    openSelect = { container, trigger, panel, close: closePanel, reposition: positionPanel };
+    bindOpenListeners();
     if (searchInput) {
       searchInput.value = '';
       filterOptions('');
@@ -170,6 +273,8 @@ function setup(container: Element): void {
     container.classList.remove('is-open');
     trigger.setAttribute('aria-expanded', 'false');
     setFocus(-1);
+    if (openSelect?.panel === panel) openSelect = null;
+    unbindOpenListeners();
   }
 
   /** 获取当前选中的值数组。 */
@@ -264,17 +369,6 @@ function setup(container: Element): void {
       }
       return;
     }
-    // 面板打开时，若搜索框存在则箭头键由搜索框接管
-    if (searchInput && document.activeElement === searchInput) {
-      if (ev.key === 'ArrowDown') { ev.preventDefault(); moveFocus(1); }
-      else if (ev.key === 'ArrowUp') { ev.preventDefault(); moveFocus(-1); }
-      else if (ev.key === 'Enter') {
-        ev.preventDefault();
-        const opt = visibleOptions()[focusIdx];
-        if (opt) choose(opt);
-      }
-      return;
-    }
     switch (ev.key) {
       case 'ArrowDown': ev.preventDefault(); moveFocus(1); break;
       case 'ArrowUp': ev.preventDefault(); moveFocus(-1); break;
@@ -306,25 +400,18 @@ function setup(container: Element): void {
     if (idx >= 0 && !opt.classList.contains('is-disabled')) setFocus(idx);
   });
 
-  document.addEventListener('pointerdown', (ev) => {
-    if (isOpen() && ev.target instanceof Node && !container.contains(ev.target)) closePanel();
-  });
-  document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && isOpen()) {
-      closePanel();
-      trigger.focus();
-    }
-  });
-
   // 初始化：多选 trigger 回填
   if (isMultiple) updateMultiTrigger();
 }
 
 /** 为 root 下每个 [data-select] 容器初始化（root 自身是 [data-select] 也算）。 */
-export function initSelect(root: ParentNode = document): void {
+export function initSelect(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
+  // 外点 / Esc 的 document 级单例委托，全库只挂一次
+  bindGlobalListeners();
   const containers: Element[] = [];
-  if (root instanceof Element && root.matches('[data-select]')) containers.push(root);
-  containers.push(...Array.from(root.querySelectorAll('[data-select]')));
+  if (scope instanceof Element && scope.matches('[data-select]')) containers.push(scope);
+  containers.push(...Array.from(scope.querySelectorAll('[data-select]')));
   for (const c of containers) setup(c);
 }

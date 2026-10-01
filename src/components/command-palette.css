@@ -188,7 +188,7 @@
 
 .command-palette-item-kbd {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   color: var(--token-text-faint);
   padding: 1px 5px;
   border: 1px solid var(--token-line-soft);
@@ -219,7 +219,7 @@
 }
 .command-palette-foot-hint kbd {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   padding: 1px 4px;
   border: 1px solid var(--token-line-soft);
   border-radius: var(--radius-xs);

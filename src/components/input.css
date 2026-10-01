@@ -19,6 +19,7 @@
 
 /* ── 单行 ── */
 .input-wrap {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--density-space-xs);
@@ -140,6 +141,7 @@
 
 /* ── 多行：同一 wrapper 视觉，内部 textarea 裸奔 ── */
 .textarea-wrap {
+  position: relative;
   display: flex;
   width: 100%;
   background: var(--token-control);
@@ -189,7 +191,6 @@
 }
 
 /* 字符计数（behavior 可挂到 .input-wrap 或 .textarea-wrap 内尾部） */
-.input-wrap { position: relative; }
 .input-wrap--has-counter { padding-right: calc(var(--density-space-sm) + 48px); }
 .input-wrap--has-counter .input-counter {
   position: absolute;
@@ -214,7 +215,6 @@
 .input-counter.is-warn { color: var(--token-warning); }
 .input-counter.is-error { color: var(--token-error); font-weight: 600; }
 
-.textarea-wrap { position: relative; }
 .textarea-wrap .textarea { padding-bottom: 24px; }
 
 /* 有计数器时的 textarea 底部留空 */

@@ -187,7 +187,7 @@ export function openContextMenu(x: number, y: number, items: ContextMenuItem[]):
   });
 
   document.addEventListener('pointerdown', onOutsidePointerDown, true);
-  document.addEventListener('scroll', onCloseSignal, true);
+  document.addEventListener('scroll', onScrollSignal, true);
   window.addEventListener('resize', onCloseSignal);
   window.addEventListener('keydown', onKeyDown);
 }
@@ -200,7 +200,7 @@ export function closeMenu(): void {
   focusableItems = [];
   focusedIndex = -1;
   document.removeEventListener('pointerdown', onOutsidePointerDown, true);
-  document.removeEventListener('scroll', onCloseSignal, true);
+  document.removeEventListener('scroll', onScrollSignal, true);
   window.removeEventListener('resize', onCloseSignal);
   window.removeEventListener('keydown', onKeyDown);
 }
@@ -215,6 +215,12 @@ function onOutsidePointerDown(e: Event): void {
   if (!panel) return;
   const target = e.target;
   if (!(target instanceof Node) || !panel.contains(target)) closeMenu();
+}
+
+function onScrollSignal(e: Event): void {
+  /* 滚动发生在面板内部（菜单自身滚动）时不关闭 */
+  if (panel && e.target instanceof Node && panel.contains(e.target)) return;
+  closeMenu();
 }
 
 function onCloseSignal(): void {

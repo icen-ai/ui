@@ -26,7 +26,12 @@ interface MarkedPane extends HTMLElement {
   __icenSplitPaneInit?: boolean;
 }
 
-const initialized = new WeakSet<HTMLElement>();
+/* 数字配置解析：undefined / 空串 / 非有限数回退默认值（0 是合法配置，不能用 || 兜底） */
+function numOr(value: string | number | undefined, fallback: number): number {
+  if (value === undefined || value === '') return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
 
 function pct(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -41,9 +46,9 @@ function setup(container: HTMLElement): void {
   if (!dividerQuery) return;
   const divider: HTMLElement = dividerQuery;
 
-  const min = Number(el.dataset.splitMin ?? '10') || 10;
-  const max = Number(el.dataset.splitMax ?? '90') || 90;
-  const step = Number(el.dataset.splitStep ?? '2') || 2;
+  const min = numOr(el.dataset.splitMin, 10);
+  const max = numOr(el.dataset.splitMax, 90);
+  const step = numOr(el.dataset.splitStep, 2);
   const vertical = el.classList.contains('split-pane--vertical');
 
   const orientation = vertical ? 'vertical' : 'horizontal';
@@ -125,15 +130,11 @@ function setup(container: HTMLElement): void {
 }
 
 /** 为 root 下每个 .split-pane[data-split-pane] 初始化（root 自身匹配也算）。 */
-export function initSplitPane(root: ParentNode = document): void {
+export function initSplitPane(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
   const panes: Element[] = [];
-  if (root instanceof Element && root.matches('.split-pane[data-split-pane]')) panes.push(root);
-  panes.push(...Array.from(root.querySelectorAll('.split-pane[data-split-pane]')));
-  for (const p of panes) {
-    const el = p as HTMLElement;
-    if (initialized.has(el)) continue;
-    initialized.add(el);
-    setup(el);
-  }
+  if (scope instanceof Element && scope.matches('.split-pane[data-split-pane]')) panes.push(scope);
+  panes.push(...Array.from(scope.querySelectorAll('.split-pane[data-split-pane]')));
+  for (const p of panes) setup(p as HTMLElement);
 }

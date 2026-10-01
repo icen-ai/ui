@@ -17,8 +17,8 @@
  *   - 校验失败派发 icen:upload-error（detail: { file, reason }）
  *
  * 事件：
- *   icen:upload       { files: File[] }       选择/拖放成功
- *   icen:upload-error { file: File, reason }  校验失败
+ *   icen:upload       { files: File[] }            选择/拖放成功（仅含本次新追加的文件）
+ *   icen:upload-error { file: File | null, reason } 校验失败（maxFiles 超限等无单文件语境时 file 为 null）
  *   icen:upload-remove { file: File }         单个文件移除
  *
  * 同一容器重复 init 幂等。SSR 下为 no-op。
@@ -59,6 +59,23 @@ const fileIconSvg =
 const xIconSvg =
   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
+/** 惰性解析受控 SVG 常量为 DOM 节点（避免 innerHTML；仅在浏览器内调用）。 */
+function parseSvg(source: string): Element | null {
+  try {
+    const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
+    const svg = doc.documentElement;
+    if (!svg || svg.tagName.toLowerCase() !== 'svg') return null;
+    return document.importNode(svg, true);
+  } catch {
+    return null;
+  }
+}
+
+/** 判断两个 File 是否指向同一文件（重复选择/拖放去重用）。 */
+function sameFile(a: File, b: File): boolean {
+  return a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+}
+
 function setup(zone: HTMLElement): void {
   const el = zone as MarkedUpload;
   if (el.__icenUploadInit) return;
@@ -72,10 +89,12 @@ function setup(zone: HTMLElement): void {
   const maxFiles = Number(zone.getAttribute('data-max-files')) || 0;
   const accept = input.getAttribute('accept') ?? '';
 
-  /** 当前文件列表（用于 data-upload-list 模式下的累积管理）。 */
+  /** 当前文件列表（列表模式的唯一事实源）。 */
   let currentFiles: File[] = [];
-  /** 对象 URL 映射，用于销毁时回收。 */
+  /** 对象 URL 映射，移除/重渲染时回收。 */
   const urlMap = new Map<File, string>();
+  /** 同步守卫：syncInputFiles 程序化回写期间忽略 input 的 change，防止重入 handleFiles。 */
+  let syncing = false;
 
   /** 查找或创建文件列表容器。 */
   function getListEl(): HTMLUListElement | null {
@@ -94,9 +113,13 @@ function setup(zone: HTMLElement): void {
     const list = getListEl();
     if (!list) return;
 
-    // 回收旧 URL
-    urlMap.forEach((url) => URL.revokeObjectURL(url));
-    urlMap.clear();
+    // 回收已移出列表的文件 URL（仍在列表中的复用，不重复创建、不重复 revoke）
+    urlMap.forEach((url, f) => {
+      if (!currentFiles.includes(f)) {
+        URL.revokeObjectURL(url);
+        urlMap.delete(f);
+      }
+    });
     list.textContent = '';
 
     if (currentFiles.length === 0) {
@@ -111,25 +134,29 @@ function setup(zone: HTMLElement): void {
 
       // 缩略图或图标
       const isImage = file.type.startsWith('image/');
+      let thumbUrl: string | undefined;
       if (isImage) {
-        try {
-          const url = URL.createObjectURL(file);
-          urlMap.set(file, url);
-          const img = document.createElement('img');
-          img.className = 'upload-list-item-thumb';
-          img.src = url;
-          img.alt = file.name;
-          li.appendChild(img);
-        } catch {
-          const icon = document.createElement('span');
-          icon.className = 'upload-list-item-icon';
-          icon.innerHTML = fileIconSvg;
-          li.appendChild(icon);
+        thumbUrl = urlMap.get(file);
+        if (!thumbUrl) {
+          try {
+            thumbUrl = URL.createObjectURL(file);
+            urlMap.set(file, thumbUrl);
+          } catch {
+            thumbUrl = undefined; // createObjectURL 不可用 → 回退占位图标
+          }
         }
+      }
+      if (thumbUrl) {
+        const img = document.createElement('img');
+        img.className = 'upload-list-item-thumb';
+        img.src = thumbUrl;
+        img.alt = file.name;
+        li.appendChild(img);
       } else {
         const icon = document.createElement('span');
         icon.className = 'upload-list-item-icon';
-        icon.innerHTML = fileIconSvg;
+        const svg = parseSvg(fileIconSvg);
+        if (svg) icon.appendChild(svg);
         li.appendChild(icon);
       }
 
@@ -151,7 +178,8 @@ function setup(zone: HTMLElement): void {
       removeBtn.className = 'upload-list-item-x';
       removeBtn.type = 'button';
       removeBtn.setAttribute('aria-label', `移除 ${file.name}`);
-      removeBtn.innerHTML = xIconSvg;
+      const xSvg = parseSvg(xIconSvg);
+      if (xSvg) removeBtn.appendChild(xSvg);
       removeBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         currentFiles = currentFiles.filter((f) => f !== file);
@@ -165,15 +193,18 @@ function setup(zone: HTMLElement): void {
     }
   }
 
-  /** 将 currentFiles 同步回 input.files（DataTransfer）。 */
+  /** 将 currentFiles 回写 input.files（DataTransfer）；守卫期内派发的 change 不会重入 handleFiles。 */
   function syncInputFiles(): void {
     try {
       const dt = new DataTransfer();
       for (const f of currentFiles) dt.items.add(f);
+      syncing = true;
       input!.files = dt.files;
       input!.dispatchEvent(new Event('change', { bubbles: true }));
     } catch {
       /* DataTransfer 不支持时静默——使用方可监听 icen:upload 事件 */
+    } finally {
+      syncing = false;
     }
   }
 
@@ -184,7 +215,7 @@ function setup(zone: HTMLElement): void {
     return null;
   }
 
-  /** 处理新文件：校验 → 累积/替换 → 渲染列表 → 派发事件。 */
+  /** 处理新文件：校验 → 去重 → 累积/替换 → 渲染列表 → 派发事件。 */
   function handleFiles(files: File[]): void {
     const valid: File[] = [];
     for (const file of files) {
@@ -198,21 +229,29 @@ function setup(zone: HTMLElement): void {
     if (valid.length === 0) return;
 
     if (hasList) {
-      // 累积模式：追加（受 maxFiles 约束）
+      // 累积模式：只追加新文件（按 name+size+lastModified 对已有列表与本批去重）
+      const fresh: File[] = [];
+      for (const f of valid) {
+        if (currentFiles.some((c) => sameFile(c, f)) || fresh.some((c) => sameFile(c, f))) continue;
+        fresh.push(f);
+      }
+      if (fresh.length === 0) return;
       if (maxFiles > 0) {
         const remaining = maxFiles - currentFiles.length;
         if (remaining <= 0) {
           zone.dispatchEvent(new CustomEvent('icen:upload-error', {
             bubbles: true,
-            detail: { reason: `最多 ${maxFiles} 个文件` },
+            detail: { file: null, reason: `最多 ${maxFiles} 个文件` },
           }));
           return;
         }
-        valid.splice(remaining);
+        if (fresh.length > remaining) fresh.length = remaining;
       }
-      currentFiles.push(...valid);
+      currentFiles.push(...fresh);
       renderList();
       syncInputFiles();
+      zone.dispatchEvent(new CustomEvent('icen:upload', { bubbles: true, detail: { files: fresh } }));
+      return;
     }
 
     zone.dispatchEvent(new CustomEvent('icen:upload', { bubbles: true, detail: { files: valid } }));
@@ -236,16 +275,14 @@ function setup(zone: HTMLElement): void {
 
   // input change（用户通过选择器选了文件）
   input.addEventListener('change', () => {
+    if (syncing) return; // syncInputFiles 的程序化回写，忽略
     if (!input.files) return;
     const files = Array.from(input.files);
     if (hasList) {
-      // 列表模式下，change 的文件直接处理（已含累积逻辑）
-      handleFiles(files);
-      // 清空 input.value 避免重复选择同名文件不触发 change
+      // 先清空再处理：currentFiles 才是事实源；清空避免重复选择同名文件不触发 change
       input.value = '';
-    } else {
-      handleFiles(files);
     }
+    handleFiles(files);
   });
 
   zone.addEventListener('dragover', (ev) => {
@@ -263,25 +300,29 @@ function setup(zone: HTMLElement): void {
     if (!files || files.length === 0) return;
     handleFiles(Array.from(files));
 
-    // 非 list 模式下尝试赋给 input.files
+    // 非 list 模式下尝试赋给 input.files（守卫期内派发 change，避免 icen:upload 重复触发）
     if (!hasList) {
       try {
         const dt = new DataTransfer();
         for (const f of Array.from(files)) dt.items.add(f);
+        syncing = true;
         input.files = dt.files;
         input.dispatchEvent(new Event('change', { bubbles: true }));
       } catch {
         /* noop */
+      } finally {
+        syncing = false;
       }
     }
   });
 }
 
 /** 为 root 下每个 .upload 容器初始化（root 自身是 .upload 也算）。 */
-export function initUpload(root: ParentNode = document): void {
+export function initUpload(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope: ParentNode = root ?? document;
   const zones: HTMLElement[] = [];
-  if (root instanceof HTMLElement && root.matches('.upload')) zones.push(root);
-  zones.push(...Array.from(root.querySelectorAll<HTMLElement>('.upload')));
+  if (scope instanceof HTMLElement && scope.matches('.upload')) zones.push(scope);
+  zones.push(...Array.from(scope.querySelectorAll<HTMLElement>('.upload')));
   for (const z of zones) setup(z);
 }

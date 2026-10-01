@@ -128,10 +128,11 @@ function setup(tree: Element): void {
 }
 
 /** 为 root 下每棵 .tree 初始化（root 自身是 .tree 也算）。 */
-export function initTree(root: ParentNode = document): void {
+export function initTree(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
   const trees: Element[] = [];
-  if (root instanceof Element && root.matches('.tree')) trees.push(root);
-  trees.push(...Array.from(root.querySelectorAll('.tree')));
+  if (scope instanceof Element && scope.matches('.tree')) trees.push(scope);
+  trees.push(...Array.from(scope.querySelectorAll('.tree')));
   for (const t of trees) setup(t);
 }

@@ -48,7 +48,7 @@
 .page-btn.is-active,
 .page-btn[aria-current='page'] {
   background: var(--token-accent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   font-weight: 500;
   box-shadow: var(--token-shadow-elevated);
 }

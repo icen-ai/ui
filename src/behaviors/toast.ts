@@ -2,7 +2,7 @@
  * @icen.ai/ui — Behavior: toast（轻提示，与 components/toast.css 配套）
  *
  * 容器固定在右下角（.toast-container，body 末尾唯一，自动 aria-live=polite）；
- * info 不挂语义类，ok/err/warn 分别挂同名类（CSS 三条语义色规则）。
+ * 语义类：.toast--success / .toast--error / .toast--warning / .toast--info；退场类 .is-leaving。
  * 文本一律 textContent 赋值，禁 innerHTML。SSR 下为 no-op。
  *
  * 完整 API：
@@ -63,6 +63,27 @@ function ensureContainer(): HTMLElement {
   return el;
 }
 
+/** kind → 语义类名（公开方法名 ok/err/warn/info 不变，仅内部 CSS 类收敛）。 */
+const KIND_CLASS: Record<ToastKind, string> = {
+  ok: 'toast--success',
+  err: 'toast--error',
+  warn: 'toast--warning',
+  info: 'toast--info',
+};
+
+/** 加退场类并调度移除（transitionend 或 400ms 兜底，只生效一次）。 */
+function scheduleRemove(el: HTMLElement): void {
+  el.classList.add('is-leaving');
+  let done = false;
+  const finish = (): void => {
+    if (done) return;
+    done = true;
+    el.remove();
+  };
+  el.addEventListener('transitionend', finish, { once: true });
+  window.setTimeout(finish, 400);
+}
+
 function trimStack(container: HTMLElement): void {
   /* 重读真实 DOM 直到堆栈内不超 maxStack；NodeList 不可写，用循环重读 */
   for (;;) {
@@ -70,16 +91,14 @@ function trimStack(container: HTMLElement): void {
     if (items.length <= maxStack) return;
     const oldest = items[0];
     if (!oldest) return;
-    oldest.classList.add('leaving');
-    /* 退场动画后移除；fallback 400ms 兜底 */
-    let done = false;
-    const finish = (): void => {
-      if (done) return;
-      done = true;
+    if (oldest.classList.contains('is-leaving')) {
+      // 已在退场中（动画尚未结束）：立即移除，保证循环必定推进
       oldest.remove();
-    };
-    oldest.addEventListener('transitionend', finish, { once: true });
-    window.setTimeout(finish, 400);
+      continue;
+    }
+    scheduleRemove(oldest);
+    // 已调度退场，退出循环（动画期间允许短暂超限）
+    return;
   }
 }
 
@@ -90,7 +109,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   const container = ensureContainer();
 
   const el = document.createElement('div');
-  el.className = kind === 'info' ? 'toast' : `toast ${kind}`;
+  el.className = `toast ${KIND_CLASS[kind]}`;
   el.setAttribute('role', kind === 'err' ? 'alert' : 'status');
 
   /* 文本节点（必须用 textContent） */
@@ -116,15 +135,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   const remove = (): void => {
     if (removed) return;
     removed = true;
-    el.classList.add('leaving');
-    let done = false;
-    const finish = (): void => {
-      if (done) return;
-      done = true;
-      el.remove();
-    };
-    el.addEventListener('transitionend', finish, { once: true });
-    window.setTimeout(finish, 400);
+    scheduleRemove(el);
   };
 
   const duration = ms ?? (actionLabel ? ACTION_MS : DEFAULT_MS);

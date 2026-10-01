@@ -75,6 +75,8 @@ export const SLUG_INIT = {
 export const SLUG_EXPORTS = {
   notification: ['notify'],
   toast: ['toast'],
+  // segmented 的 OTP 行为由 input.ts 的 initInput 提供，kit 入口需 re-export
+  segmented: ['initInput'],
   popover: ['openPopover', 'closePopover', 'computePopoverLayout'],
   charts: [
     'renderVBar', 'renderHBar', 'renderStack', 'renderDonut', 'renderLine',
@@ -103,6 +105,8 @@ export function cssOf(slug) {
  * charts 细分类型的 behavior 统一在 charts.ts，slug 与文件名不同。
  */
 export const SLUG_BEHAVIOR = {
+  // segmented 无独立 behavior 文件：OTP 等行为在 input.ts
+  segmented: 'input',
   'chart-line': 'charts',
   'chart-bar': 'charts',
   'chart-pie': 'charts',

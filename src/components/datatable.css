@@ -125,11 +125,11 @@
 .dt-cell--head.is-sortable:hover { color: var(--token-text); }
 .dt-cell--head:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--token-accent) 50%, transparent);
+  box-shadow: var(--icen-ring-inset);
 }
 .dt-head-title { overflow: hidden; text-overflow: ellipsis; }
 .dt-sort {
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   color: var(--token-text-faint);
   flex-shrink: 0;
 }
@@ -165,11 +165,7 @@
   border-radius: var(--radius-md);
   box-shadow: var(--token-shadow-overlay);
   font-weight: 400;
-  animation: dt-panel-in var(--icen-tx-fast);
-}
-@keyframes dt-panel-in {
-  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  animation: icen-pop-in var(--icen-tx-fast);
 }
 .dt-filter-list {
   max-height: 220px;
@@ -400,7 +396,7 @@
 .dt-resize:active::after {
   background: var(--token-accent);
 }
-.dt-cell--head { /* 确保相对定位供 resize 绝对定位 */ }
+/* .dt-cell--head 已在主规则 position: relative，供 resize 手柄绝对定位 */
 
 /* ── 冻结列（左固定 sticky） ── */
 .datatable--frozen .dt-cell--frozen {

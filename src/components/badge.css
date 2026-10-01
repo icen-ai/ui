@@ -45,11 +45,11 @@
   height: 16px;
   padding: 0 4px;
   font: inherit;
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   background: var(--token-error);
   border: 2px solid var(--token-surface);
   border-radius: var(--radius-full);
@@ -72,7 +72,7 @@
 .badge--sm {
   min-width: 14px;
   height: 14px;
-  font-size: 9px;
+  font-size: var(--density-font-size-2xs);
   padding: 0 3px;
 }
 .badge--sm.badge--dot {
@@ -117,15 +117,11 @@
 /* 挂在实底色按钮上时用更浅的边框 */
 .btn-primary .badge,
 .btn-danger .badge {
-  border-color: var(--token-on-accent, #fff);
+  border-color: var(--token-on-accent);
 }
 
 /* 数字超过 99 显示 99+（消费方决定是否使用，这里只保证宽度容纳） */
 .badge[data-overflow] {
   min-width: 20px;
   padding: 0 5px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .badge { transition: none; }
 }

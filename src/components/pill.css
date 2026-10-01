@@ -2,7 +2,7 @@
  * @icen.ai/ui — Component: pill（状态徽章 / tag）
  *
  * 完整契约：
- *   <span class="pill [ok|warn|bad|accent|info] [.pill--dot|pill--outline|pill--sm]">文本</span>
+ *   <span class="pill [pill--success|pill--warning|pill--error|pill--info|pill--accent] [.pill--dot|pill--outline|pill--sm]">文本</span>
  *
  * 语义色纪律：仅绿/黄/红/信息 + 品牌 accent。
  * --dot：左侧加状态色圆点；--outline：透明底、纯描边；--sm：紧凑尺寸。
@@ -24,27 +24,27 @@
   vertical-align: middle;
 }
 
-.pill.ok {
+.pill--success {
   color: var(--token-success);
   border-color: color-mix(in srgb, var(--token-success) 35%, transparent);
   background: color-mix(in srgb, var(--token-success) 9%, transparent);
 }
-.pill.warn {
+.pill--warning {
   color: var(--token-warning);
   border-color: color-mix(in srgb, var(--token-warning) 35%, transparent);
   background: color-mix(in srgb, var(--token-warning) 9%, transparent);
 }
-.pill.bad {
+.pill--error {
   color: var(--token-error);
   border-color: color-mix(in srgb, var(--token-error) 35%, transparent);
   background: color-mix(in srgb, var(--token-error) 9%, transparent);
 }
-.pill.accent {
+.pill--accent {
   color: var(--token-accent-deep, var(--token-accent));
   border-color: color-mix(in srgb, var(--token-accent) 40%, transparent);
   background: color-mix(in srgb, var(--token-accent) 9%, transparent);
 }
-.pill.info {
+.pill--info {
   color: var(--token-info);
   border-color: color-mix(in srgb, var(--token-info) 35%, transparent);
   background: color-mix(in srgb, var(--token-info) 9%, transparent);
@@ -69,7 +69,7 @@
 /* 尺寸变体 */
 .pill--sm {
   padding: 1px var(--density-space-xs);
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
 }
 .pill--lg {
   padding: 4px calc(var(--density-space-sm) + 2px);
@@ -79,13 +79,13 @@
 /* 实色变体：accent 实底（用于 count、活跃状态等强调场景） */
 .pill--solid {
   background: var(--token-accent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   border-color: var(--token-accent);
 }
-.pill--solid.ok   { background: var(--token-success); border-color: var(--token-success); color: var(--token-on-accent, #fff); }
-.pill--solid.warn { background: var(--token-warning); border-color: var(--token-warning); color: var(--token-on-accent, #fff); }
-.pill--solid.bad  { background: var(--token-error);   border-color: var(--token-error);   color: var(--token-on-accent, #fff); }
-.pill--solid.info { background: var(--token-info);    border-color: var(--token-info);    color: var(--token-on-accent, #fff); }
+.pill--solid.pill--success { background: var(--token-success); border-color: var(--token-success); }
+.pill--solid.pill--warning { background: var(--token-warning); border-color: var(--token-warning); }
+.pill--solid.pill--error   { background: var(--token-error);   border-color: var(--token-error); }
+.pill--solid.pill--info    { background: var(--token-info);    border-color: var(--token-info); }
 
 /* ── 增强 ── */
 
@@ -126,7 +126,7 @@
   border-radius: var(--radius-full);
   background: currentColor;
   margin-right: 2px;
-  animation: pill-pulse 1.5s ease-in-out infinite;
+  animation: pill-pulse var(--pill-pulse-duration, 1.5s) ease-in-out infinite;
 }
 @keyframes pill-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -139,7 +139,7 @@
   height: 18px;
   padding: 0 5px;
   justify-content: center;
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -148,7 +148,7 @@
 /* 渐变变体 */
 .pill--gradient {
   background: linear-gradient(135deg, var(--token-accent), var(--token-accent-deep, var(--token-accent)));
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   border-color: transparent;
 }
 

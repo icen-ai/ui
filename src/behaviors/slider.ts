@@ -119,10 +119,11 @@ function setup(slider: Element): void {
 }
 
 /** 为 root 下每个 .slider 容器初始化（root 自身是 .slider 也算）。 */
-export function initSlider(root: ParentNode = document): void {
+export function initSlider(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
   const containers: Element[] = [];
-  if (root instanceof Element && root.matches('.slider')) containers.push(root);
-  containers.push(...Array.from(root.querySelectorAll('.slider')));
+  if (scope instanceof Element && scope.matches('.slider')) containers.push(scope);
+  containers.push(...Array.from(scope.querySelectorAll('.slider')));
   for (const c of containers) setup(c);
 }

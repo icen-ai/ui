@@ -7,10 +7,11 @@
  * ════════════════════════════════════════════════════════════════════════
  * icen 组件契约（统一抽象）
  * ════════════════════════════════════════════════════════════════════════
- * 所有 31 个组件遵循同一套抽象，由两层共同支撑：
+ * 所有 51 个组件遵循同一套抽象，由两层共同支撑：
  *
  * ── 层 1：--icen-* 原语 token（所有组件自洽消费）
- *    --icen-ring / --icen-ring-soft / --icen-ring-error   ← 聚焦环
+ *    --icen-ring / --icen-ring-soft / --icen-ring-error /
+ *    --icen-ring-warning / --icen-ring-inset          ← 聚焦环
  *    --icen-hover-border                                  ← 悬停边框过渡
  *    --icen-disabled-opacity                              ← 禁用透明度
  *    --icen-press                                         ← 按下形变
@@ -56,6 +57,7 @@
  *   - 滚动条：贴 --token-scrollbar-*（retro profile 另有硬覆盖）
  *   - 工具类：.mono / .dim / .faint / .sr-only / .skip-link
  *   - z-index 标尺：--z-* （浮层一律 portal 到 body）
+ *   - 共享 keyframes：icen-pop-in（弹层进场）/ icen-spin（旋转）/ icen-skeleton-pulse（骨架脉冲）
  *   - 交互基元 class：.pressable / .control / .field / .lift / .surface-elevated / .focus-ring / .motion
  *   - 状态约定：[aria-disabled] / [aria-busy] / [data-loading] / [data-disabled] / [data-invalid]
  */
@@ -65,7 +67,7 @@
    ───────────────────────────────────────────────────────────────
    所有组件消费的"原语级"变量：聚焦环、悬停、按下、禁用、过渡。
    风格 profile（如 .style-retro）只需覆盖这里的少数变量，
-   即可让 31 个组件整体换肤；组件自身无需感知风格切换。
+   即可让 51 个组件整体换肤；组件自身无需感知风格切换。
    ══════════════════════════════════════════════════════════════ */
 :root {
   /* ── 聚焦环（focus-visible） ── */
@@ -73,6 +75,9 @@
   --icen-ring-soft: 0 0 0 3px color-mix(in srgb, var(--token-accent) 16%, transparent);
   --icen-ring-error: 0 0 0 2px var(--token-bg), 0 0 0 4px color-mix(in srgb, var(--token-error) 50%, transparent);
   --icen-ring-success: 0 0 0 2px var(--token-bg), 0 0 0 4px color-mix(in srgb, var(--token-success) 50%, transparent);
+  --icen-ring-warning: 0 0 0 2px var(--token-bg), 0 0 0 4px color-mix(in srgb, var(--token-warning) 50%, transparent);
+  /* inset 聚焦环：空间受限的网格/表头单元格用内阴影聚焦（2px 内描边 + 3px 内光晕） */
+  --icen-ring-inset: inset 0 0 0 2px color-mix(in srgb, var(--token-accent) 50%, transparent), inset 0 0 0 5px color-mix(in srgb, var(--token-accent) 14%, transparent);
 
   /* ── 悬停 / 按下 / 禁用 ── */
   --icen-hover-border: color-mix(in srgb, var(--token-accent) 30%, var(--token-line));
@@ -251,7 +256,8 @@ html {
      banner    → 全屏横幅（紧急公告，高于 toast）
      dialog    → 模态对话框 + backdrop
      popover   → 弹出层/下拉菜单（高于 dialog 因为常常 portal 出去）
-     tooltip   → 工具提示（永远在最上）
+     tooltip   → 工具提示
+     fx        → 效果层（retro 扫描线/噪点等，永远在最上）
    ══════════════════════════════════════════════════════════════ */
 :root {
   --z-base: 0;
@@ -263,6 +269,27 @@ html {
   --z-dialog: 500;
   --z-popover: 620;
   --z-tooltip: 700;
+  --z-fx: 1000;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   共享 keyframes（组件统一引用，不再各自重复定义）
+     icen-pop-in         → 弹层进场（scale .96 + translateY -4px）
+     icen-spin           → 旋转（spinner / 加载态）
+     icen-skeleton-pulse → 骨架脉冲
+   注：menu.css / popover.css 保留自己的 scale(.95)±8px 四方向版
+       （方向语义不同：按 data-side 反向位移），不并入 icen-pop-in。
+   ══════════════════════════════════════════════════════════════ */
+@keyframes icen-pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes icen-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes icen-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* ══════════════════════════════════════════════════════════════

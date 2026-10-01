@@ -2,16 +2,16 @@
 import Docs from '../../layouts/Docs.astro';
 import { COMPONENTS, GROUPS } from '../../lib/components';
 ---
-<Docs title="组件 · ICEN UI" description="ICEN UI 组件总览：基础 / 表单 / 浮层 / 数据 / 导航五分组，每个组件一页文档。">
+<Docs title="组件 · ICEN UI" description={`ICEN UI 组件总览：${GROUPS.join(' / ')}共 ${GROUPS.length} 个分组，每个组件一页文档。`}>
   <h1 class="page-title">组件</h1>
   <p class="page-desc">
-    {COMPONENTS.length} 个无框架组件，全部消费 <code>--token-*</code> 设计变量——切换右上角预设 / 明暗 / 风格可实时预览效果。点任意卡片进入该组件的文档页。
+    {COMPONENTS.length} 个无框架组件，按 {GROUPS.join(' / ')} 分为 {GROUPS.length} 组，全部消费 <code>--token-*</code> 设计变量——切换右上角预设 / 明暗 / 风格可实时预览效果。点任意卡片进入该组件的文档页。
   </p>
 
   {GROUPS.map((g) => {
     const items = COMPONENTS.filter((c) => c.group === g);
     return (
-      <section class="panel-block">
+      <section class="panel">
         <div class="panel-title"><span>{g}</span><span>{items.length} 个</span></div>
         <div class="panel-body">
           <div class="comp-grid">

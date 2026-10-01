@@ -124,7 +124,12 @@ const bootData = JSON.stringify({
       for (const b of data.behaviors ?? []) {
         const load = mods[`../../../../src/behaviors/${b}.ts`];
         if (typeof load === 'function') {
-          loaded[b] = (await load()) as Record<string, unknown>;
+          try {
+            loaded[b] = (await load()) as Record<string, unknown>;
+          } catch (err) {
+            console.error(`[docs] 加载 behavior 模块失败: ${b}`, err);
+            throw err;
+          }
         }
       }
       // 按注册表给出的 init 函数名初始化（accordion→initAccordion 等）
@@ -140,8 +145,13 @@ const bootData = JSON.stringify({
         const names = keys.map(
           (b) => b.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase()) + 'Mod',
         );
-        const fn = new Function(...names, data.script) as (...args: unknown[]) => void;
-        fn(...keys.map((k) => loaded[k]));
+        try {
+          const fn = new Function(...names, data.script) as (...args: unknown[]) => void;
+          fn(...keys.map((k) => loaded[k]));
+        } catch (err) {
+          console.error('[docs] 演示接线脚本执行失败', err);
+          throw err;
+        }
       }
     }
     void boot();

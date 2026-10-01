@@ -11,7 +11,7 @@
  *   - 列排序（sortable，点表头 升→降→取消，数字感知；sortFn 可自定义）
  *   - 列筛选（filterable，表头漏斗面板，去重值多选，即时生效）
  *   - 多选（selectable，rowKey 跨页保持，表头三态，Shift+点击范围选，onSelectionChange）
- *   - 分页（pagination，页大小切换 + 页码窗口 ±2 + 总数/已选统计）
+ *   - 分页（pagination 默认开启、10 条/页；pagination: false 关闭——页大小切换 + 页码窗口 ±2 + 总数/已选统计）
  *   - 虚拟滚动（virtual: true，固定行高窗口化渲染，万级行流畅；与分页二选一）
  *   - 行展开（expandable，chevron 展开嵌套任意 Node；虚拟模式下不可用）
  *   - 行右键（contextMenu(row) → ContextMenuItem[]，复用 context-menu 浮层）
@@ -31,7 +31,7 @@
  *         render: (v) => pillNode(String(v)) },   // 返回 Node = 嵌套组件
  *     ],
  *     data: rows, rowKey: 'id',
- *     searchable: true, selectable: true, pagination: true,
+ *     searchable: true, selectable: true,   // pagination 默认开启（10 条/页），false 关闭
  *     contextMenu: (row) => [{ label: '重命名', onClick: () => … }],
  *   });
  *   table.setData(next); table.getSelected(); table.destroy();
@@ -64,6 +64,7 @@ export interface TableOptions<Row = Record<string, unknown>> {
   searchable?: boolean;
   searchPlaceholder?: string;
   selectable?: boolean;
+  /** 分页（默认开启，pageSize 默认 10 条/页；传 false 关闭；virtual 时忽略） */
   pagination?: boolean;
   pageSize?: number;
   pageSizes?: number[];
@@ -430,7 +431,7 @@ export function createTable<Row = Record<string, unknown>>(
         else allKeys.forEach((k) => selected.delete(k));
         emitSelection();
         renderBody();
-        renderHead();
+        syncHeadState();
       });
       cell.appendChild(box);
       headRow.appendChild(cell);
@@ -485,6 +486,7 @@ export function createTable<Row = Record<string, unknown>>(
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'dt-filter-btn';
+        btn.dataset.colKey = col.key;
         if (hasFilter) btn.classList.add('is-active');
         btn.setAttribute('aria-label', `筛选「${col.title}」`);
         btn.appendChild(svgIcon(ICON_FUNNEL, 12));
@@ -514,6 +516,40 @@ export function createTable<Row = Record<string, unknown>>(
     }
   }
 
+  /* 只同步表头状态（全选三态 / 筛选钮激活徽标），不重建表头——
+     筛选/列显隐面板在勾选变更期间必须存活，重建表头会 closeFilterPanel() */
+  function syncHeadState(): void {
+    const headBox = headRow.querySelector<HTMLInputElement>('.dt-cell--check .dt-check');
+    if (headBox) {
+      const allKeys = pipeline().map((r) => keyOfRow(r));
+      const selCount = allKeys.filter((k) => selected.has(k)).length;
+      headBox.checked = selCount > 0 && selCount === allKeys.length;
+      headBox.indeterminate = selCount > 0 && selCount < allKeys.length;
+    }
+    headRow.querySelectorAll<HTMLElement>('.dt-filter-btn').forEach((b) => {
+      const key = b.dataset.colKey;
+      if (key) b.classList.toggle('is-active', filters.has(key));
+    });
+  }
+
+  /* 重建表头但保住当前打开的面板：列显隐变化必须重建表头（增删列），
+     直接 renderAll 会经 renderHead 内的 closeFilterPanel 把面板关掉 */
+  function renderHeadKeepPanel(): void {
+    const keep = openPanel;
+    renderHead();
+    if (!keep) return;
+    openPanel = keep;
+    document.body.appendChild(keep.el);
+    window.addEventListener('scroll', onPanelScroll, true);
+    window.addEventListener('resize', onPanelScroll);
+    /* 筛选面板的触发钮在重建后的表头里，补回 is-open（列显隐面板的钮在工具栏，不受影响） */
+    if (keep.key !== '__cols') {
+      headRow.querySelectorAll<HTMLElement>('.dt-filter-btn').forEach((b) => {
+        if (b.dataset.colKey === keep.key) b.classList.add('is-open');
+      });
+    }
+  }
+
   /* ── 列宽拖拽：pointer capture + 写入 colWidths → 重算模板 ── */
   function attachResize(handle: HTMLElement, col: TableColumn<Row>): void {
     handle.addEventListener('pointerdown', (ev) => {
@@ -532,12 +568,14 @@ export function createTable<Row = Record<string, unknown>>(
         });
       };
       const onUp = (e: PointerEvent): void => {
-        handle.releasePointerCapture(e.pointerId);
+        try { handle.releasePointerCapture(e.pointerId); } catch { /* capture 可能已被浏览器释放 */ }
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
+        handle.removeEventListener('pointercancel', onUp);
       };
       handle.addEventListener('pointermove', onMove);
       handle.addEventListener('pointerup', onUp);
+      handle.addEventListener('pointercancel', onUp);
     });
   }
 
@@ -560,7 +598,9 @@ export function createTable<Row = Record<string, unknown>>(
         if (box.checked) colHidden.delete(col.key);
         else colHidden.set(col.key, true);
         invalidate();
-        renderAll();
+        /* 列增删要重建表头，但面板保持打开（与筛选面板同纪律） */
+        renderBody();
+        renderHeadKeepPanel();
       });
       const text = document.createElement('span');
       text.textContent = col.title;
@@ -599,7 +639,8 @@ export function createTable<Row = Record<string, unknown>>(
     a.href = url;
     a.download = filename ?? 'export.csv';
     a.click();
-    URL.revokeObjectURL(url);
+    /* 同步 revoke 会截断尚未开始的下载，延迟到下载启动后回收 */
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   function csvEscape(s: string): string {
     if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
@@ -631,7 +672,9 @@ export function createTable<Row = Record<string, unknown>>(
         else filters.set(col.key, cur);
         invalidate();
         page = 1;
-        renderAll();
+        /* 只重渲表体/底部 + 同步表头徽标，不重建表头（renderHead 会关掉本面板） */
+        renderBody();
+        syncHeadState();
       });
       const text = document.createElement('span');
       text.textContent = v === '' ? '（空）' : v;
@@ -649,8 +692,10 @@ export function createTable<Row = Record<string, unknown>>(
       filters.delete(col.key);
       invalidate();
       page = 1;
-      closeFilterPanel();
-      renderAll();
+      /* 重置后所有去重值恢复勾选，面板保持打开 */
+      list.querySelectorAll<HTMLInputElement>('.dt-check').forEach((b) => { b.checked = true; });
+      renderBody();
+      syncHeadState();
     });
     footRow.appendChild(reset);
     panel.append(list, footRow);
@@ -705,7 +750,7 @@ export function createTable<Row = Record<string, unknown>>(
         }
         lastClickedIndex = rowIndex;
         emitSelection();
-        renderHead();
+        syncHeadState();
         renderFoot(pipeline().length);
       });
       cell.appendChild(box);
@@ -856,7 +901,8 @@ export function createTable<Row = Record<string, unknown>>(
       clear.addEventListener('click', () => {
         selected.clear();
         emitSelection();
-        renderAll();
+        renderBody();
+        syncHeadState();
       });
       sel.appendChild(clear);
       foot.appendChild(sel);

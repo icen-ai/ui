@@ -4,6 +4,10 @@
  * 包含：avatar（头像）/ media-card（封面卡，滑出 overlay）/ rating（星级评分）/ carousel（轮播，与 behaviors/carousel 配套）
  * 规格源自 opengal data/display.tsx 的 Avatar、data/cartridge-card.tsx 的 hover overlay、
  * data/exhibit.tsx 的 Carousel 与 Rating。
+ *
+ * 例外声明（deliberate exception）：carousel-thumbs 隐藏滚动条是有意设计
+ * （缩略图条视觉纯净，滚动仍可用）。违反「组件不写滚动条样式」纪律仅此处，
+ * 先例参照 scroll-area.css 的尺寸变体。
  */
 
 /* ══════════════ avatar · 头像 ══════════════ */
@@ -23,8 +27,8 @@
   flex-shrink: 0;
   user-select: none;
 }
-.avatar--xs { width: 20px; height: 20px; font-size: 9px; }
-.avatar--sm { width: 28px; height: 28px; font-size: 10px; }
+.avatar--xs { width: 20px; height: 20px; font-size: var(--density-font-size-2xs); }
+.avatar--sm { width: 28px; height: 28px; font-size: var(--density-font-size-2xs); }
 .avatar--lg { width: 48px; height: 48px; font-size: var(--density-font-size-md); }
 .avatar--xl { width: 80px; height: 80px; font-size: var(--density-font-size-lg); }
 .avatar img {
@@ -68,7 +72,7 @@
 /* 渐变底头像 */
 .avatar--gradient {
   background: linear-gradient(135deg, var(--token-accent), var(--token-accent-deep, var(--token-accent)));
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
 }
 
 /* 方形头像 */
@@ -86,7 +90,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  font-size: 10px;
+  font-size: var(--density-font-size-2xs);
   font-weight: 600;
   color: var(--token-text-muted);
   background: var(--token-fill-2);
@@ -108,7 +112,7 @@
 .media-card:hover {
   transform: translateY(-6px);
   box-shadow:
-    0 8px 32px color-mix(in srgb, var(--token-text) 18%, transparent),
+    var(--token-shadow-overlay),
     0 0 20px var(--token-accent-glow);
 }
 .media-card-cover {
@@ -136,7 +140,7 @@
 }
 .media-card:hover .media-card-overlay {
   transform: translateY(0);
-  transition-delay: 80ms;
+  transition-delay: var(--media-overlay-delay, 80ms);
 }
 .media-card-overlay-title {
   font-size: var(--density-font-size-md);
@@ -341,7 +345,7 @@
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.carousel-dot.active,
+.carousel-dot.is-active,
 .carousel-dot[aria-current='true'] {
   width: 20px;
   background: var(--token-accent);
@@ -357,7 +361,7 @@
   transition: width var(--icen-tx-slow);
 }
 
-/* 缩略图导航条 */
+/* 缩略图导航条（deliberate exception：隐藏滚动条是设计意图，见文件头注释） */
 .carousel-thumbs {
   display: flex;
   gap: var(--density-space-xs);

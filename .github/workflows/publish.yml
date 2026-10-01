@@ -1,10 +1,9 @@
 name: publish
 
 on:
+  # 只挂 tag push：release published 与 tag 同发会起两次 run 抢 publish
   push:
     tags: ['v*']          # 推 tag 即发版
-  release:
-    types: [published]    # 或发 GitHub Release，等价
 
 permissions:
   id-token: write         # OIDC，必需

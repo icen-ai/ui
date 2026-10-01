@@ -70,7 +70,7 @@
   flex: 1;
   min-width: 0;
   text-align: center;
-  font-size: 9px;
+  font-size: var(--density-font-size-2xs);
   color: var(--token-text-faint);
   overflow: hidden;
   text-overflow: ellipsis;

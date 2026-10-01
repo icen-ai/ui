@@ -6,17 +6,17 @@
  *   <button class="copy-btn" data-copy="复制的文本">复制</button>
  *   <button class="copy-btn copy-btn--ghost" data-copy="…">复制链接</button>
  *
- *   图标变体（带 data-copy-icon，仅加 .done 类；由 CSS 显隐子 svg）：
+ *   图标变体（带 data-copy-icon，仅加 .is-done 类；由 CSS 显隐子 svg）：
  *   <button class="copy-btn copy-btn--icon" data-copy="…" data-copy-icon aria-label="复制">
  *     <svg class="copy-icon-clipboard">…</svg>
  *     <svg class="copy-icon-check" hidden>…</svg>
  *   </button>
  *
  * behavior 自动处理：
- *   - 文本变体：成功后 textContent = '已复制' + 加 .done 类，1.4s 后还原
- *   - 图标变体（带 data-copy-icon）：仅加 .done 类（不改文本），由 CSS 切换 svg 显隐
+ *   - 文本变体：成功后 textContent = '已复制' + 加 .is-done 类，1.4s 后还原
+ *   - 图标变体（带 data-copy-icon）：仅加 .is-done 类（不改文本），由 CSS 切换 svg 显隐
  *
- * 与 toast.ok 区别：copy 是"原地反馈"（按钮自身闪烁），toast 是"全局通知"。
+ * 与 toast.toast--success 区别：copy 是"原地反馈"（按钮自身闪烁），toast 是"全局通知"。
  */
 
 .copy-btn {
@@ -65,7 +65,7 @@
 }
 
 /* ── 成功闪烁态（behavior 1.4s 后移除）── */
-.copy-btn.done {
+.copy-btn.is-done {
   color: var(--token-success);
   border-color: color-mix(in srgb, var(--token-success) 40%, transparent);
   background: color-mix(in srgb, var(--token-success) 10%, transparent);
@@ -83,10 +83,10 @@
   flex-shrink: 0;
 }
 
-/* .done 时显隐切换：剪贴板 → 对勾 */
+/* .is-done 时显隐切换：剪贴板 → 对勾 */
 .copy-btn[data-copy-icon] .copy-icon-check { display: none; }
-.copy-btn[data-copy-icon].done .copy-icon-clipboard { display: none; }
-.copy-btn[data-copy-icon].done .copy-icon-check { display: inline-block; }
+.copy-btn[data-copy-icon].is-done .copy-icon-clipboard { display: none; }
+.copy-btn[data-copy-icon].is-done .copy-icon-check { display: inline-block; }
 
 @media (prefers-reduced-motion: reduce) {
   .copy-btn { transition: none; }

@@ -25,6 +25,9 @@
 
 interface MarkedElement extends Element {
   __icenInputInit?: boolean;
+  __icenCounterInit?: boolean;
+  __icenMaskInit?: boolean;
+  __icenTrimInit?: boolean;
 }
 
 /* ── IME 组合态追踪（全局，跨所有 input）── */
@@ -87,10 +90,13 @@ function setupAutosize(ta: HTMLTextAreaElement): void {
 
 /* ── 字符计数器 ── */
 function setupCounter(field: HTMLInputElement | HTMLTextAreaElement): void {
+  const el = field as MarkedElement;
+  if (el.__icenCounterInit) return;
   const maxAttr = field.getAttribute('maxlength');
   const dataCount = field.getAttribute('data-count');
   // 有 maxlength 或显式 data-count 都启用
   if (!maxAttr && dataCount === null) return;
+  el.__icenCounterInit = true;
 
   const max = maxAttr ? Number(maxAttr) : 0;
 
@@ -131,8 +137,11 @@ function setupCounter(field: HTMLInputElement | HTMLTextAreaElement): void {
 
 /* ── 输入掩码 ── */
 function setupMask(field: HTMLInputElement): void {
+  const el = field as MarkedElement;
+  if (el.__icenMaskInit) return;
   const mask = field.getAttribute('data-mask');
   if (!mask) return;
+  el.__icenMaskInit = true;
 
   const maskChars: string[] = [];
   for (const ch of mask) maskChars.push(ch);
@@ -226,10 +235,6 @@ function setupMask(field: HTMLInputElement): void {
     if (['Backspace', 'Delete', 'Tab', 'Escape', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'].includes(ev.key)) return;
     // 检查下一个需要填充的 slot
     const currentRaw = extractRaw(field.value);
-    const nextSlotIdx = maskChars.findIndex((ch, i) => {
-      if (!isInputSlot(ch)) return false;
-      return i >= field.value.length || !isInputSlot(maskChars[Math.min(field.value.length, maskChars.length - 1)]);
-    });
     const nextSlot = maskChars.find((ch, i) => {
       const filledSlots = maskChars.slice(0, i).filter(isInputSlot).length;
       return isInputSlot(ch) && filledSlots >= currentRaw.length;
@@ -243,6 +248,9 @@ function setupMask(field: HTMLInputElement): void {
 /* ── blur 自动 trim ── */
 function setupTrim(field: HTMLInputElement | HTMLTextAreaElement): void {
   if (!field.hasAttribute('data-trim')) return;
+  const el = field as MarkedElement;
+  if (el.__icenTrimInit) return;
+  el.__icenTrimInit = true;
   field.addEventListener('blur', () => {
     const trimmed = field.value.trim();
     if (trimmed !== field.value) {
@@ -303,6 +311,8 @@ function setupOtp(group: Element): void {
   const fireComplete = (): void => {
     const code = cells.map((c) => c.value).join('');
     if (code.length === cells.length && cells.every((c) => c.value.length > 0)) {
+      group.dispatchEvent(new CustomEvent('icen:otp-complete', { detail: { code }, bubbles: true }));
+      /** @deprecated 旧事件名（无 icen: 前缀），仅为兼容保留，请迁移到 icen:otp-complete */
       group.dispatchEvent(new CustomEvent('otp:complete', { detail: { code }, bubbles: true }));
     }
   };
@@ -310,12 +320,13 @@ function setupOtp(group: Element): void {
 }
 
 /** 为 root 下所有输入类结构初始化（root 自身匹配也算）。幂等。 */
-export function initInput(root: ParentNode = document): void {
+export function initInput(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
 
   const wraps: Element[] = [];
-  if (root instanceof Element && root.matches('.input-wrap')) wraps.push(root);
-  wraps.push(...Array.from(root.querySelectorAll('.input-wrap')));
+  if (scope instanceof Element && scope.matches('.input-wrap')) wraps.push(scope);
+  wraps.push(...Array.from(scope.querySelectorAll('.input-wrap')));
   for (const w of wraps) {
     const el = w as MarkedElement;
     if (el.__icenInputInit) continue;
@@ -326,44 +337,44 @@ export function initInput(root: ParentNode = document): void {
 
   // textarea 自适应
   const textareas: HTMLTextAreaElement[] = [];
-  if (root instanceof HTMLTextAreaElement && root.matches('[data-autosize]')) textareas.push(root);
-  textareas.push(...Array.from(root.querySelectorAll<HTMLTextAreaElement>('textarea[data-autosize]')));
+  if (scope instanceof HTMLTextAreaElement && scope.matches('[data-autosize]')) textareas.push(scope);
+  textareas.push(...Array.from(scope.querySelectorAll<HTMLTextAreaElement>('textarea[data-autosize]')));
   for (const ta of textareas) setupAutosize(ta);
 
   // 字符计数器：所有有 maxlength / data-count 的 input/textarea
   const countedFields: (HTMLInputElement | HTMLTextAreaElement)[] = [];
-  if (root instanceof Element) {
-    const fields = Array.from(root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+  if (scope instanceof Element) {
+    const fields = Array.from(scope.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
       'input[maxlength], input[data-count], textarea[maxlength], textarea[data-count]',
     ));
     countedFields.push(...fields);
-    if (root instanceof HTMLInputElement || root instanceof HTMLTextAreaElement) {
-      if (root.hasAttribute('maxlength') || root.hasAttribute('data-count')) countedFields.push(root);
+    if (scope instanceof HTMLInputElement || scope instanceof HTMLTextAreaElement) {
+      if (scope.hasAttribute('maxlength') || scope.hasAttribute('data-count')) countedFields.push(scope);
     }
   }
   for (const f of countedFields) setupCounter(f);
 
   // 输入掩码：有 data-mask 的 input
   const maskedInputs: HTMLInputElement[] = [];
-  if (root instanceof Element) {
-    maskedInputs.push(...Array.from(root.querySelectorAll<HTMLInputElement>('input[data-mask]')));
-    if (root instanceof HTMLInputElement && root.hasAttribute('data-mask')) maskedInputs.push(root);
+  if (scope instanceof Element) {
+    maskedInputs.push(...Array.from(scope.querySelectorAll<HTMLInputElement>('input[data-mask]')));
+    if (scope instanceof HTMLInputElement && scope.hasAttribute('data-mask')) maskedInputs.push(scope);
   }
   for (const inp of maskedInputs) setupMask(inp);
 
   // 自动 trim
   const trimFields: (HTMLInputElement | HTMLTextAreaElement)[] = [];
-  if (root instanceof Element) {
-    trimFields.push(...Array.from(root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-trim]')));
-    if ((root instanceof HTMLInputElement || root instanceof HTMLTextAreaElement) && root.hasAttribute('data-trim')) {
-      trimFields.push(root);
+  if (scope instanceof Element) {
+    trimFields.push(...Array.from(scope.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-trim]')));
+    if ((scope instanceof HTMLInputElement || scope instanceof HTMLTextAreaElement) && scope.hasAttribute('data-trim')) {
+      trimFields.push(scope);
     }
   }
   for (const f of trimFields) setupTrim(f);
 
   // OTP
   const otps: Element[] = [];
-  if (root instanceof Element && root.matches('.otp')) otps.push(root);
-  otps.push(...Array.from(root.querySelectorAll('.otp')));
+  if (scope instanceof Element && scope.matches('.otp')) otps.push(scope);
+  otps.push(...Array.from(scope.querySelectorAll('.otp')));
   for (const g of otps) setupOtp(g);
 }

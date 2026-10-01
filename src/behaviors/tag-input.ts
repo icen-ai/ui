@@ -30,6 +30,12 @@ function setup(wrap: HTMLElement): void {
   const max = maxAttr ? Number(maxAttr) || Infinity : Infinity;
   const placeholder = field.placeholder;
 
+  /* IME 组合态跟踪：compositionend 在部分浏览器里晚于 Enter 的 keydown，
+     仅看 ev.isComposing 会漏判，本地跟踪兜底 */
+  let isComposing = false;
+  field.addEventListener('compositionstart', () => { isComposing = true; });
+  field.addEventListener('compositionend', () => { isComposing = false; });
+
   let tags: string[] = (wrap.getAttribute('data-tags') ?? '')
     .split(',')
     .map((s) => s.trim())
@@ -92,6 +98,8 @@ function setup(wrap: HTMLElement): void {
   }
 
   field.addEventListener('keydown', (ev) => {
+    // IME 组合中（中文/日文输入法选词）Enter 是确认候选，不提交
+    if (isComposing || ev.isComposing) return;
     if (ev.key === 'Enter' || ev.key === ',') {
       ev.preventDefault();
       commit();
@@ -104,11 +112,12 @@ function setup(wrap: HTMLElement): void {
   render();
 }
 
-/** 为 root 下每个 .tag-input[data-tags] 容器初始化（root 自身匹配也算）。 */
-export function initTagInput(root: ParentNode = document): void {
+/** 为 root 下每个 .tag-input 容器初始化（root 自身匹配也算；data-tags 为可选初始值配置）。 */
+export function initTagInput(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
   const containers: HTMLElement[] = [];
-  if (root instanceof HTMLElement && root.matches('.tag-input[data-tags]')) containers.push(root);
-  containers.push(...Array.from(root.querySelectorAll<HTMLElement>('.tag-input[data-tags]')));
+  if (scope instanceof HTMLElement && scope.matches('.tag-input')) containers.push(scope);
+  containers.push(...Array.from(scope.querySelectorAll<HTMLElement>('.tag-input')));
   for (const c of containers) setup(c);
 }

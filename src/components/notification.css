@@ -9,7 +9,7 @@
  *
  * 完整契约（由 behavior 渲染）：
  *   <div class="notification-container" role="region" aria-label="通知" data-position="top-right">
- *     <div class="notification [notif--success|warning|error|info]
+ *     <div class="notification [notification--success|warning|error|info]
  *          [.is-priority] [.is-unread] [.is-progress] [.is-clickable] [.is-paused]
  *          [.has-avatar]" role="alert|button">
  *       <span class="notification-icon">…svg 或 img.notification-avatar…</span>
@@ -78,19 +78,19 @@
   overflow: hidden; /* 倒计时进度条贴底 */
   animation: icen-notif-in var(--icen-tx-normal);
 }
-.notification.notif--success { border-left-color: var(--token-success); }
-.notification.notif--warning { border-left-color: var(--token-warning); }
-.notification.notif--error   { border-left-color: var(--token-error); }
-.notification.notif--info    { border-left-color: var(--token-info); }
+.notification.notification--success { border-left-color: var(--token-success); }
+.notification.notification--warning { border-left-color: var(--token-warning); }
+.notification.notification--error   { border-left-color: var(--token-error); }
+.notification.notification--info    { border-left-color: var(--token-info); }
 
 /* ── 优先级：高优先级强调（左侧加粗 + 更强阴影）── */
 .notification.is-priority {
   border-left-width: 4px;
   box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-accent) 24%, transparent);
 }
-.notification.is-priority.notif--success { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-success) 28%, transparent); }
-.notification.is-priority.notif--warning { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-warning) 28%, transparent); }
-.notification.is-priority.notif--error   { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-error) 28%, transparent); }
+.notification.is-priority.notification--success { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-success) 28%, transparent); }
+.notification.is-priority.notification--warning { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-warning) 28%, transparent); }
+.notification.is-priority.notification--error   { box-shadow: var(--token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--token-error) 28%, transparent); }
 
 /* ── 未读：标题左侧 4px 强调点 + 加粗 ── */
 .notification.is-unread .notification-title::before {
@@ -105,9 +105,9 @@
   background: var(--token-accent);
   flex-shrink: 0;
 }
-.notification.is-unread.notif--success .notification-title::before { background: var(--token-success); }
-.notification.is-unread.notif--warning .notification-title::before { background: var(--token-warning); }
-.notification.is-unread.notif--error   .notification-title::before { background: var(--token-error); }
+.notification.is-unread.notification--success .notification-title::before { background: var(--token-success); }
+.notification.is-unread.notification--warning .notification-title::before { background: var(--token-warning); }
+.notification.is-unread.notification--error   .notification-title::before { background: var(--token-error); }
 
 /* ── 可点击：整条 hover 抬升 ── */
 .notification.is-clickable {
@@ -135,10 +135,10 @@
   color: var(--token-text-faint);
 }
 .notification-icon svg { width: 16px; height: 16px; }
-.notif--success .notification-icon { color: var(--token-success); }
-.notif--warning .notification-icon { color: var(--token-warning); }
-.notif--error   .notification-icon { color: var(--token-error); }
-.notif--info    .notification-icon { color: var(--token-info); }
+.notification--success .notification-icon { color: var(--token-success); }
+.notification--warning .notification-icon { color: var(--token-warning); }
+.notification--error   .notification-icon { color: var(--token-error); }
+.notification--info    .notification-icon { color: var(--token-info); }
 
 /* 头像（圆形图） */
 .notification-avatar {
@@ -155,7 +155,7 @@
 }
 
 /* 进度通知的图标默认走品牌色 */
-.notification.is-progress:not(.notif--success):not(.notif--warning):not(.notif--error) .notification-icon {
+.notification.is-progress:not(.notification--success):not(.notification--warning):not(.notification--error) .notification-icon {
   color: var(--token-accent);
 }
 
@@ -221,23 +221,23 @@
 /* primary：实底 accent */
 .notification-action--primary {
   background: var(--token-accent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   border-color: var(--token-accent);
 }
 .notification-action--primary:hover {
   background: var(--token-accent-deep, var(--token-accent));
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   border-color: var(--token-accent-deep, var(--token-accent));
 }
 /* danger：实底 error */
 .notification-action--danger {
   background: var(--token-error);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   border-color: var(--token-error);
 }
 .notification-action--danger:hover {
   filter: brightness(0.92);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
   border-color: var(--token-error);
 }
 
@@ -282,9 +282,9 @@
   border-radius: var(--radius-full);
   transition: width var(--icen-tx-normal) var(--ease-out);
 }
-.notification.notif--success .notification-progress-bar { background: var(--token-success); }
-.notification.notif--warning .notification-progress-bar { background: var(--token-warning); }
-.notification.notif--error   .notification-progress-bar { background: var(--token-error); }
+.notification.notification--success .notification-progress-bar { background: var(--token-success); }
+.notification.notification--warning .notification-progress-bar { background: var(--token-warning); }
+.notification.notification--error   .notification-progress-bar { background: var(--token-error); }
 .notification-progress-label {
   flex: 0 0 auto;
   font-size: var(--density-font-size-xs);
@@ -340,9 +340,9 @@
   animation-fill-mode: forwards;
   animation-play-state: running;
 }
-.notification.notif--success .notification-countdown-fill { background: var(--token-success); opacity: 0.6; }
-.notification.notif--warning .notification-countdown-fill { background: var(--token-warning); opacity: 0.6; }
-.notification.notif--error   .notification-countdown-fill { background: var(--token-error); opacity: 0.6; }
+.notification.notification--success .notification-countdown-fill { background: var(--token-success); opacity: 0.6; }
+.notification.notification--warning .notification-countdown-fill { background: var(--token-warning); opacity: 0.6; }
+.notification.notification--error   .notification-countdown-fill { background: var(--token-error); opacity: 0.6; }
 .notification.is-paused .notification-countdown-fill {
   animation-play-state: paused;
 }
@@ -357,7 +357,7 @@
 }
 
 /* ── 退场动画 ── */
-.notification.leaving {
+.notification.is-leaving {
   opacity: 0;
   transform: translateX(20px);
   transition:
@@ -381,7 +381,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .notification { animation: none; }
-  .notification.leaving { transform: none; }
+  .notification.is-leaving { transform: none; }
   .notification-countdown-fill { animation: none; transform-origin: left; }
   .notification-progress-bar { transition: none; }
 }

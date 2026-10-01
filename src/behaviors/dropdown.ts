@@ -120,7 +120,11 @@ function onOutsidePointerDown(e: Event): void {
   closeDropdown();
 }
 
-function onScroll(): void {
+function onScroll(e: Event): void {
+  if (!active) return;
+  /* 滚动发生在面板内部（长菜单自身滚动）时不关闭 */
+  const target = e.target;
+  if (target instanceof Node && active.panel.contains(target)) return;
   closeDropdown();
 }
 
@@ -154,10 +158,11 @@ function onKeyDown(e: KeyboardEvent): void {
 }
 
 /** 绑定全部 [data-dropdown-trigger]（document 级委托，重复调用安全）。 */
-export function initDropdown(root: ParentNode = document): void {
+export function initDropdown(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
+  const scope = root ?? document;
 
-  root
+  scope
     .querySelectorAll<HTMLElement>('[data-dropdown-trigger]')
     .forEach((el) => el.setAttribute('aria-expanded', 'false'));
 

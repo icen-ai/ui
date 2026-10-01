@@ -40,7 +40,7 @@
 .tag-input.is-max,
 .tag-input.is-max:focus-within {
   border-color: color-mix(in srgb, var(--token-warning) 60%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--token-warning) 14%, transparent);
+  box-shadow: var(--icen-ring-warning);
 }
 .tag-input.is-disabled,
 .tag-input[aria-disabled='true'],
@@ -98,7 +98,7 @@
   cursor: pointer;
   border-radius: var(--radius-full);
   color: inherit;
-  font-size: 11px;
+  font-size: var(--density-font-size-xs);
   line-height: 1;
   opacity: 0.7;
   transition:
@@ -109,7 +109,7 @@
 .tag-chip-x:hover {
   opacity: 1;
   background: color-mix(in srgb, currentColor 18%, transparent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
 }
 .tag-chip-x:focus-visible {
   outline: none;
@@ -135,7 +135,7 @@
 
 /* 重复值抖动反馈（behavior 短暂挂 is-shake） */
 .tag-input.is-shake {
-  animation: tag-shake 0.32s var(--ease-out);
+  animation: tag-shake var(--tag-shake-duration, 0.32s) var(--ease-out);
 }
 @keyframes tag-shake {
   0%, 100% { transform: translateX(0); }

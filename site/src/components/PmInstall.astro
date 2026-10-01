@@ -22,7 +22,7 @@ const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
     <nav class="pm-tabs" aria-label="包管理器">
       {managers.map((m, i) => (
         <button
-          class:list={['pm-tab', { active: i === 0 }]}
+          class:list={['pm-tab', { 'is-active': i === 0 }]}
           type="button"
           data-tab={m.id}
         >{m.id}</button>

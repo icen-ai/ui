@@ -2,6 +2,10 @@
 import Base from '../layouts/Base.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import PmInstall from '../components/PmInstall.astro';
+import { COMPONENTS } from '../lib/components';
+import pkg from '../../../package.json';
+
+const componentCount = COMPONENTS.length;
 
 import '../../../src/components/input.css';
 import '../../../src/components/form.css';
@@ -32,7 +36,7 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
   <!-- ═══ Hero ═══ -->
   <section class="hero">
     <a class="hero-pill" href="/primitives/">
-      <span class="hero-pill-badge">v0.3</span>
+      <span class="hero-pill-badge">v{pkg.version}</span>
       <span>统一抽象层：6 个交互基元 + --icen-* 原语 token</span>
       <span class="hero-pill-arrow" aria-hidden="true">→</span>
     </a>
@@ -51,7 +55,7 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
   <section class="showcase" data-tabs>
     <div class="showcase-bar">
       <nav class="showcase-tabs" aria-label="组件分组">
-        <button class="showcase-tab active" type="button" data-tab="featured">精选</button>
+        <button class="showcase-tab is-active" type="button" data-tab="featured">精选</button>
         <button class="showcase-tab" type="button" data-tab="form">表单</button>
         <button class="showcase-tab" type="button" data-tab="data">数据</button>
         <button class="showcase-tab" type="button" data-tab="overlay">浮层</button>
@@ -127,11 +131,11 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
               <div class="stat-label">用户总数</div>
             </div>
             <div class="stat-card">
-              <div class="stat-num accent">96.2%</div>
+              <div class="stat-num stat-num--accent">96.2%</div>
               <div class="stat-label">本周可用性</div>
             </div>
             <div class="stat-card">
-              <div class="stat-num warn">12</div>
+              <div class="stat-num stat-num--warning">12</div>
               <div class="stat-label">待处理告警</div>
             </div>
           </div>
@@ -141,7 +145,7 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
           <span class="show-card-cap">构建状态</span>
           <div class="build">
             <div class="build-row">
-              <span class="pill ok">运行中</span>
+              <span class="pill pill--success">运行中</span>
               <span class="build-text">gateway · 3 分钟前</span>
               <span class="spinner spinner--sm"></span>
             </div>
@@ -150,7 +154,7 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
               <span class="progress-label">64%</span>
             </div>
             <div class="build-row">
-              <span class="pill warn">排队</span>
+              <span class="pill pill--warning">排队</span>
               <span class="build-text">docs · 等待中</span>
             </div>
           </div>
@@ -253,15 +257,15 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
         <div class="show-card show-card--wide">
           <span class="show-card-cap">表格</span>
           <div class="table-wrap" style="width:100%">
-            <table class="admin-table">
+            <table class="table">
               <thead>
                 <tr><th>名称</th><th>状态</th><th class="ops">操作</th></tr>
               </thead>
               <tbody>
-                <tr><td>gateway</td><td><span class="pill ok">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-                <tr><td>accounts</td><td><span class="pill ok">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-                <tr><td>billing</td><td><span class="pill warn">降级</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-                <tr><td>archive</td><td><span class="pill bad">已停止</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">启用</button></td></tr>
+                <tr><td>gateway</td><td><span class="pill pill--success">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+                <tr><td>accounts</td><td><span class="pill pill--success">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+                <tr><td>billing</td><td><span class="pill pill--warning">降级</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
+                <tr><td>archive</td><td><span class="pill pill--error">已停止</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">启用</button></td></tr>
               </tbody>
             </table>
           </div>
@@ -381,7 +385,7 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
     </div>
     <div class="feature">
       <h3 class="feature-title">统一抽象层</h3>
-      <p class="feature-desc">6 个交互基元 class + <code>--icen-*</code> 原语 token，31 个组件共享同一套状态语义。</p>
+      <p class="feature-desc">6 个交互基元 class + <code>--icen-*</code> 原语 token，{componentCount} 个组件共享同一套状态语义。</p>
     </div>
     <div class="feature">
       <h3 class="feature-title">SSR 友好</h3>
@@ -521,7 +525,7 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
     transition: color var(--duration-fast) var(--ease-out);
   }
   .showcase-tab:hover { color: var(--token-text); }
-  .showcase-tab.active {
+  .showcase-tab.is-active {
     color: var(--token-text);
     font-weight: 600;
     border-bottom-color: var(--token-accent);

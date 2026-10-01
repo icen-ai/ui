@@ -131,7 +131,8 @@ interface OpenState {
   opts: PopoverLayoutOptions;
   onClose?: () => void;
   placeholder: Comment;
-  wasHidden: boolean;
+  /* 新版 lib.dom 中 hidden 为 string | boolean（'until-found' 等字符串值） */
+  wasHidden: string | boolean;
   prevVisibility: string;
 }
 
@@ -240,7 +241,9 @@ export function closePopover(panel: HTMLElement): void {
   openPanels.delete(panel);
 
   panel.style.visibility = state.prevVisibility;
-  panel.hidden = state.wasHidden;
+  /* hidden 还原：字符串值（如 until-found）走 setAttribute，布尔走属性赋值 */
+  if (typeof state.wasHidden === 'string') panel.setAttribute('hidden', state.wasHidden);
+  else panel.hidden = state.wasHidden;
   panel.style.left = '';
   panel.style.top = '';
   panel.style.width = '';

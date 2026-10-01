@@ -34,9 +34,10 @@
  *   const center = createNotificationCenter(document.body, { position: 'bottom-right' });
  *   const h = center.push({ title, kind: 'success', description });
  *   h.setProgress(0.8); h.update({ title: '新标题' }); h.dismiss();
- *   center.markAllRead(); center.clear();
+ *   center.markAllRead(); center.clear(); center.destroy();
  *
- * SSR 下为 no-op。文本赋值一律 textContent；图标 SVG 字符串为受控常量。
+ * SSR 下为 no-op。文本赋值一律 textContent；用户传入的 SVG 图标字符串经 DOMParser
+ * 消毒（仅接纳 <svg> 根元素，剔除 on* 属性与 script/foreignObject 后代）。
  */
 
 export type NotificationKind = 'success' | 'warning' | 'error' | 'info';
@@ -158,6 +159,16 @@ interface NotificationRecord {
   remaining: number;
   paused: boolean;
   timer: number;
+  /** 本次计时的起始时间戳（pause 时据此扣减 remaining） */
+  startedAt: number;
+  /** 所属 NotificationCenter 的局部配置（全局单例通知为 undefined） */
+  cfgRef?: Required<NotificationConfig>;
+  /** 所属 center 的 localStore（全局通知为 undefined）；dismiss 时同步清理，避免残留僵尸记录 */
+  ownerStore?: Map<string, NotificationRecord>;
+  /** attachTimer 注入的重启入口（update duration 时按新时长重启计时） */
+  restartTimer?: () => void;
+  /** hover 暂停监听是否已绑定（attachTimer 幂等保护） */
+  hoverBound?: boolean;
 }
 
 interface NotifyFn {
@@ -255,19 +266,52 @@ function syncContainerPosition(el: HTMLElement): void {
 
 const DEFAULT_PERSIST_KEY = 'icen.ui.notifications';
 
-function persistKey(): string | null {
-  if (cfg.persist === true) return DEFAULT_PERSIST_KEY;
-  if (typeof cfg.persist === 'string') return cfg.persist;
+/** 出现过的持久化 key（persistSave 据此把已清空的 key 覆写为 []）。 */
+const knownPersistKeys = new Set<string>();
+
+function persistKeyFor(p: boolean | string): string | null {
+  if (p === true) return DEFAULT_PERSIST_KEY;
+  if (typeof p === 'string' && p.length > 0) return p;
   return null;
 }
 
+/** 记录所属的持久化配置：center 通知读 local，全局通知读 cfg。 */
+function recordPersist(record: NotificationRecord): boolean | string {
+  return record.cfgRef ? record.cfgRef.persist : cfg.persist;
+}
+
+interface PersistedItem {
+  id: string;
+  title: string;
+  kind: NotificationKind;
+  description?: string;
+  tag?: string;
+  unread?: boolean;
+  priority?: 'normal' | 'high';
+  progress?: number;
+  progressLabel?: string;
+  link?: string;
+  linkLabel?: string;
+  data?: unknown;
+  createdAt?: number;
+}
+
 function persistSave(): void {
-  const key = persistKey();
-  if (!key) return;
   try {
-    const items = Array.from(store.values())
-      .filter((r) => !r.opts.duration || r.opts.duration === 0)
-      .map((r) => ({
+    // 按记录所属 persist 配置分组写 key；已知 key 即使没有记录也要覆写为 []
+    const groups = new Map<string, PersistedItem[]>();
+    for (const key of knownPersistKeys) groups.set(key, []);
+    for (const r of store.values()) {
+      const key = persistKeyFor(recordPersist(r));
+      if (!key) continue;
+      knownPersistKeys.add(key);
+      let bucket = groups.get(key);
+      if (!bucket) {
+        bucket = [];
+        groups.set(key, bucket);
+      }
+      if (r.opts.duration) continue; // 有时效的通知不持久化
+      bucket.push({
         id: r.id,
         title: r.title,
         kind: r.kind,
@@ -281,16 +325,17 @@ function persistSave(): void {
         linkLabel: r.opts.linkLabel,
         data: r.opts.data,
         createdAt: r.createdAt,
-      }));
-    localStorage.setItem(key, JSON.stringify(items));
+      });
+    }
+    for (const [key, items] of groups) {
+      localStorage.setItem(key, JSON.stringify(items));
+    }
   } catch {
     /* quota / privacy mode → 静默放弃 */
   }
 }
 
-function persistLoad(): Array<{ id: string; title: string; kind: NotificationKind; description?: string; tag?: string; unread?: boolean; priority?: 'normal' | 'high'; progress?: number; progressLabel?: string; link?: string; linkLabel?: string; data?: unknown; createdAt?: number }> {
-  const key = persistKey();
-  if (!key) return [];
+function persistLoad(key: string): PersistedItem[] {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return [];
@@ -301,16 +346,59 @@ function persistLoad(): Array<{ id: string; title: string; kind: NotificationKin
   }
 }
 
+/** 从持久化 key 恢复通知到指定容器（不入任何 store，由调用方登记）。 */
+function restorePersisted(
+  container: HTMLElement,
+  key: string,
+  cfgRef?: Required<NotificationConfig>,
+): NotificationRecord[] {
+  const records: NotificationRecord[] = [];
+  for (const item of persistLoad(key)) {
+    const record: NotificationRecord = {
+      id: item.id,
+      title: item.title,
+      kind: item.kind,
+      opts: {
+        id: item.id,
+        description: item.description,
+        tag: item.tag,
+        unread: item.unread,
+        priority: item.priority,
+        progress: item.progress,
+        progressLabel: item.progressLabel,
+        link: item.link,
+        linkLabel: item.linkLabel,
+        data: item.data,
+      },
+      el: null,
+      createdAt: item.createdAt ?? Date.now(),
+      duration: 0,
+      remaining: 0,
+      paused: false,
+      timer: 0,
+      startedAt: 0,
+      cfgRef,
+    };
+    const handle = makeHandle(record);
+    const el = renderNotification(record, container, () => handle);
+    record.el = el;
+    handle.el = el;
+    pushToContainer(container, el, record.opts.priority ?? 'normal');
+    records.push(record);
+  }
+  return records;
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // 声音
 
 let audioCtx: AudioContext | null = null;
 
-function playSound(): void {
-  if (!cfg.sound) return;
+function playSound(sound: boolean | string): void {
+  if (!sound) return;
   try {
-    if (typeof cfg.sound === 'string') {
-      const audio = new Audio(cfg.sound);
+    if (typeof sound === 'string') {
+      const audio = new Audio(sound);
       void audio.play();
       return;
     }
@@ -344,6 +432,32 @@ function playSound(): void {
 // ──────────────────────────────────────────────────────────────────────────
 // DOM 渲染
 
+/** 递归剔除 SVG 子树中的 on* 属性与 script/foreignObject 节点。 */
+function stripUnsafeSvg(el: Element): void {
+  for (const attr of Array.from(el.attributes)) {
+    if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
+  }
+  for (const child of Array.from(el.children)) {
+    const tag = child.tagName.toLowerCase();
+    if (tag === 'script' || tag === 'foreignobject') child.remove();
+    else stripUnsafeSvg(child);
+  }
+}
+
+/** 解析 SVG 字符串图标：仅接纳 <svg> 根元素，消毒后导入当前文档。非 <svg 开头返回 null。 */
+function sanitizeSvgIcon(source: string): Element | null {
+  if (!source.trimStart().startsWith('<svg')) return null;
+  try {
+    const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
+    const svg = doc.documentElement;
+    if (!svg || svg.tagName.toLowerCase() !== 'svg') return null;
+    stripUnsafeSvg(svg);
+    return document.importNode(svg, true);
+  } catch {
+    return null;
+  }
+}
+
 function buildIcon(record: NotificationRecord): HTMLElement {
   const wrap = document.createElement('span');
   wrap.className = 'notification-icon';
@@ -363,7 +477,7 @@ function buildIcon(record: NotificationRecord): HTMLElement {
     return wrap;
   }
   if (typeof icon === 'string' && icon.length > 0) {
-    // SVG 字符串或图片 URL
+    // SVG 字符串或图片 URL；其余按纯文本展示
     if (/^https?:\/\/|^data:image\//.test(icon) || icon.endsWith('.png') || icon.endsWith('.jpg') || icon.endsWith('.svg') || icon.endsWith('.webp')) {
       const img = document.createElement('img');
       img.className = 'notification-avatar';
@@ -371,16 +485,17 @@ function buildIcon(record: NotificationRecord): HTMLElement {
       img.alt = '';
       wrap.appendChild(img);
     } else {
-      wrap.innerHTML = icon;
+      const svg = sanitizeSvgIcon(icon);
+      if (svg) wrap.appendChild(svg);
+      else wrap.textContent = icon;
     }
     return wrap;
   }
-  // 默认按 kind
-  if (record.opts.progress !== undefined && record.opts.progress >= 0) {
-    wrap.innerHTML = PROGRESS_ICON;
-  } else {
-    wrap.innerHTML = KIND_ICON[record.kind];
-  }
+  // 默认按 kind（受控常量，走同一解析入口）
+  const fallback = sanitizeSvgIcon(
+    record.opts.progress !== undefined && record.opts.progress >= 0 ? PROGRESS_ICON : KIND_ICON[record.kind],
+  );
+  if (fallback) wrap.appendChild(fallback);
   return wrap;
 }
 
@@ -490,13 +605,42 @@ function buildCountdownBar(record: NotificationRecord): HTMLElement | null {
   return bar;
 }
 
+/** 按 record.duration 同步底部倒计时条（update duration 时调用；不存在则补建，归零则移除）。 */
+function syncCountdownBar(record: NotificationRecord): void {
+  const el = record.el;
+  if (!el) return;
+  const existing = el.querySelector('.notification-countdown');
+  if (record.duration <= 0 || record.opts.showCountdown === false) {
+    existing?.remove();
+    return;
+  }
+  let fill: HTMLElement | null;
+  if (existing) {
+    fill = existing.querySelector<HTMLElement>('.notification-countdown-fill');
+  } else {
+    const bar = buildCountdownBar(record);
+    if (!bar) return;
+    el.appendChild(bar);
+    fill = bar.querySelector<HTMLElement>('.notification-countdown-fill');
+  }
+  if (fill) {
+    // 重置动画以匹配新时长（清内联 animation 触发 reflow 后重放）
+    fill.style.animation = 'none';
+    void fill.offsetWidth;
+    fill.style.animation = '';
+    fill.style.animationDuration = record.duration + 'ms';
+    fill.style.animationPlayState = 'running';
+  }
+}
+
 function buildClose(record: NotificationRecord): HTMLElement | null {
   if (record.opts.closable === false) return null;
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'notification-close';
   btn.setAttribute('aria-label', '关闭');
-  btn.innerHTML = CLOSE_SVG;
+  const svg = sanitizeSvgIcon(CLOSE_SVG);
+  if (svg) btn.appendChild(svg);
   btn.addEventListener('click', (ev) => {
     ev.stopPropagation();
     dismissRecord(record.id);
@@ -510,7 +654,7 @@ function renderNotification(
   getHandle: () => NotificationHandle,
 ): HTMLElement {
   const el = document.createElement('div');
-  let cls = record.kind === 'info' ? 'notification' : `notification notif--${record.kind}`;
+  let cls = record.kind === 'info' ? 'notification' : `notification notification--${record.kind}`;
   if (record.opts.priority === 'high') cls += ' is-priority';
   if (record.opts.unread) cls += ' is-unread';
   if (record.opts.progress !== undefined && record.opts.progress >= 0) cls += ' is-progress';
@@ -584,8 +728,8 @@ function pushToContainer(container: HTMLElement, el: HTMLElement, priority: 'nor
 }
 
 function removeOne(el: HTMLElement, onClose?: () => void): void {
-  if (el.classList.contains('leaving')) return;
-  el.classList.add('leaving');
+  if (el.classList.contains('is-leaving')) return;
+  el.classList.add('is-leaving');
   let done = false;
   const finish = (): void => {
     if (done) return;
@@ -604,7 +748,18 @@ function trimStack(container: HTMLElement): void {
     // 优先折叠最早的、已读的、normal 优先级的
     const target = items.find((it) => !it.classList.contains('is-priority')) ?? items[0];
     if (!target) return;
+    const rec = target.id ? store.get(target.id) : undefined;
+    if (rec?.timer) window.clearTimeout(rec.timer);
+    if (target.classList.contains('is-leaving')) {
+      // 已在退场动画中：立即真正移除，保证循环必定推进
+      target.remove();
+      if (target.id) store.delete(target.id);
+      continue;
+    }
     removeOne(target);
+    if (target.id) store.delete(target.id);
+    // 已调度退场，退出循环（动画期间允许短暂超限）
+    return;
   }
 }
 
@@ -612,22 +767,24 @@ function trimStack(container: HTMLElement): void {
 // 倒计时 + hover 暂停
 
 function attachTimer(record: NotificationRecord, handle: NotificationHandle): void {
-  if (!record.duration || record.duration <= 0) return;
-
   const el = record.el;
   if (!el) return;
 
   const start = (): void => {
     if (record.timer) window.clearTimeout(record.timer);
+    record.timer = 0;
+    if (record.remaining <= 0) return;
+    record.startedAt = Date.now();
     record.timer = window.setTimeout(() => dismissRecord(record.id), record.remaining);
     record.paused = false;
   };
   const pause = (): void => {
     if (record.paused) return;
-    if (record.timer) {
-      window.clearTimeout(record.timer);
-      record.timer = 0;
-    }
+    if (!record.timer) return; // 无运行中的倒计时（持久通知）→ 无需暂停
+    window.clearTimeout(record.timer);
+    record.timer = 0;
+    // 扣减已消耗的时间，resume 时按剩余时长重启（与原地暂停的 CSS 倒计时动画保持一致）
+    record.remaining = Math.max(0, record.remaining - (Date.now() - record.startedAt));
     record.paused = true;
     el.classList.add('is-paused');
     const fill = el.querySelector<HTMLElement>('.notification-countdown-fill');
@@ -635,14 +792,28 @@ function attachTimer(record: NotificationRecord, handle: NotificationHandle): vo
   };
   const resume = (): void => {
     if (!record.paused) return;
+    record.paused = false;
     el.classList.remove('is-paused');
     const fill = el.querySelector<HTMLElement>('.notification-countdown-fill');
     if (fill) fill.style.animationPlayState = 'running';
+    if (record.remaining <= 0) {
+      dismissRecord(record.id);
+      return;
+    }
     start();
   };
 
-  const pauseOnHover = record.opts.pauseOnHover ?? cfg.pauseOnHover;
-  if (pauseOnHover) {
+  // update duration 后按新时长重启（remaining 已由调用方重置为新 duration）
+  record.restartTimer = () => {
+    record.paused = false;
+    el.classList.remove('is-paused');
+    start();
+  };
+
+  // per-通知 opts 优先，其次所属 center 的 local 配置，最后全局 cfg
+  const pauseOnHover = record.opts.pauseOnHover ?? record.cfgRef?.pauseOnHover ?? cfg.pauseOnHover;
+  if (pauseOnHover && !record.hoverBound) {
+    record.hoverBound = true;
     el.addEventListener('mouseenter', () => handle.pause());
     el.addEventListener('mouseleave', () => handle.resume());
   }
@@ -651,7 +822,10 @@ function attachTimer(record: NotificationRecord, handle: NotificationHandle): vo
   handle.pause = pause;
   handle.resume = resume;
 
-  start();
+  if (record.duration > 0) {
+    record.remaining = record.duration;
+    start();
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -701,6 +875,7 @@ function showRecord(
     remaining: duration,
     paused: false,
     timer: 0,
+    startedAt: 0,
   };
 
   const handle = makeHandle(record);
@@ -714,7 +889,7 @@ function showRecord(
   attachTimer(record, handle);
   trimStack(container);
   persistSave();
-  playSound();
+  playSound(record.cfgRef?.sound ?? cfg.sound);
 
   opts.onShow?.(handle);
 
@@ -733,6 +908,7 @@ function dismissRecord(id: string): void {
   const handle = makeHandle(record);
   const onClose = record.opts.onClose;
   store.delete(id);
+  record.ownerStore?.delete(id);
   if (record.el) removeOne(record.el, () => onClose?.(handle));
   else onClose?.(handle);
   persistSave();
@@ -762,6 +938,12 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
   const el = record.el;
   if (!el) return;
 
+  if (patch.duration !== undefined && el.isConnected) {
+    // 通知在显示中：按新 duration 重启运行中的计时，并同步倒计时条
+    syncCountdownBar(record);
+    if (record.restartTimer) record.restartTimer();
+    else if (patch.duration > 0) attachTimer(record, makeHandle(record));
+  }
   if (patch.title !== undefined) {
     const t = el.querySelector<HTMLElement>('.notification-title');
     if (t) t.textContent = patch.title;
@@ -868,6 +1050,8 @@ export interface NotificationCenterHandle {
   dismiss(id?: string): void;
   clear(): void;
   markAllRead(): void;
+  /** 销毁容器：移除 DOM、清掉其所有 timer 与监听器；之后 push 返回 null */
+  destroy(): void;
   get(id: string): NotificationRecord | null;
   getAll(): NotificationRecord[];
   config(opts: NotificationConfig): void;
@@ -885,7 +1069,7 @@ export interface NotificationPushInput {
  * 注意：默认全局 notify.* 走单例容器，与本函数创建的额外容器并存。
  */
 export function createNotificationCenter(
-  parent: ParentNode = document.body,
+  parent?: ParentNode,
   opts: NotificationConfig = {},
 ): NotificationCenterHandle {
   if (!isBrowser()) {
@@ -894,12 +1078,14 @@ export function createNotificationCenter(
       dismiss() { /* noop */ },
       clear() { /* noop */ },
       markAllRead() { /* noop */ },
+      destroy() { /* noop */ },
       get: () => null,
       getAll: () => [],
       config() { /* noop */ },
       el: {} as HTMLElement,
     };
   }
+  const mount: ParentNode = parent ?? document.body;
 
   const local: Required<NotificationConfig> = {
     position: opts.position ?? 'top-right',
@@ -914,11 +1100,24 @@ export function createNotificationCenter(
   container.setAttribute('role', 'region');
   container.setAttribute('aria-label', '通知');
   container.dataset.position = local.position;
-  parent.appendChild(container);
+  mount.appendChild(container);
 
   const localStore = new Map<string, NotificationRecord>();
+  let destroyed = false;
+
+  // 恢复本 center 持久化的通知
+  const pKey = persistKeyFor(local.persist);
+  if (pKey) {
+    knownPersistKeys.add(pKey);
+    for (const r of restorePersisted(container, pKey, local)) {
+      r.ownerStore = localStore;
+      localStore.set(r.id, r);
+      store.set(r.id, r);
+    }
+  }
 
   function push(input: NotificationPushInput): NotificationHandle | null {
+    if (destroyed) return null;
     const kind = input.kind ?? 'info';
     const opts = input.options ?? {};
     const id = opts.id ?? genId();
@@ -929,6 +1128,9 @@ export function createNotificationCenter(
       el: null,
       createdAt: Date.now(),
       duration, remaining: duration, paused: false, timer: 0,
+      startedAt: 0,
+      cfgRef: local,
+      ownerStore: localStore,
     };
     const handle = makeHandle(record);
     const el = renderNotification(record, container, () => handle);
@@ -945,13 +1147,27 @@ export function createNotificationCenter(
       const target = items.find((it) => !it.classList.contains('is-priority')) ?? items[0];
       if (!target) break;
       const tid = target.id;
+      const rec = tid ? localStore.get(tid) : undefined;
+      if (rec?.timer) window.clearTimeout(rec.timer);
+      if (target.classList.contains('is-leaving')) {
+        // 已在退场动画中：立即真正移除，保证循环必定推进
+        target.remove();
+        if (tid) {
+          localStore.delete(tid);
+          store.delete(tid);
+        }
+        continue;
+      }
       removeOne(target);
-      const rec = tid ? localStore.get(tid) : null;
-      if (rec) {
+      if (tid) {
         localStore.delete(tid);
         store.delete(tid);
       }
+      // 已调度退场，退出循环（动画期间允许短暂超限）
+      break;
     }
+    persistSave();
+    playSound(local.sound);
     opts.onShow?.(handle);
     return handle;
   }
@@ -965,6 +1181,7 @@ export function createNotificationCenter(
       localStore.delete(id);
       store.delete(id);
       if (rec.el) removeOne(rec.el, () => rec.opts.onClose?.(handle));
+      persistSave();
       return;
     }
     Array.from(localStore.keys()).forEach((k) => dismiss(k));
@@ -981,18 +1198,35 @@ export function createNotificationCenter(
     });
   }
 
+  function destroy(): void {
+    if (destroyed) return;
+    destroyed = true;
+    // 清掉所有计时器与记录（元素上的监听器随容器 DOM 一并移除）
+    localStore.forEach((rec) => {
+      if (rec.timer) window.clearTimeout(rec.timer);
+      store.delete(rec.id);
+    });
+    localStore.clear();
+    container.remove();
+  }
+
   return {
     push,
     dismiss,
     clear,
     markAllRead,
+    destroy,
     get: (id) => localStore.get(id) ?? null,
     getAll: () => Array.from(localStore.values()),
     config: (next) => {
       if (next.position) { local.position = next.position; container.dataset.position = next.position; }
       if (typeof next.maxStack === 'number' && next.maxStack > 0) local.maxStack = next.maxStack;
       if (typeof next.pauseOnHover === 'boolean') local.pauseOnHover = next.pauseOnHover;
-      if (next.persist !== undefined) local.persist = next.persist;
+      if (next.persist !== undefined) {
+        local.persist = next.persist;
+        const k = persistKeyFor(next.persist);
+        if (k) knownPersistKeys.add(k);
+      }
       if (next.sound !== undefined) local.sound = next.sound;
     },
     el: container,
@@ -1036,7 +1270,11 @@ export const notify: NotifyFn = Object.assign(
       }
       if (typeof opts.maxStack === 'number' && opts.maxStack > 0) cfg.maxStack = opts.maxStack;
       if (typeof opts.pauseOnHover === 'boolean') cfg.pauseOnHover = opts.pauseOnHover;
-      if (opts.persist !== undefined) cfg.persist = opts.persist;
+      if (opts.persist !== undefined) {
+        cfg.persist = opts.persist;
+        const k = persistKeyFor(opts.persist);
+        if (k) knownPersistKeys.add(k);
+      }
       if (opts.sound !== undefined) cfg.sound = opts.sound;
     },
   },
@@ -1047,41 +1285,13 @@ export function initNotification(): void {
   if (!isBrowser()) return;
   if (globalInit.done) return;
   globalInit.done = true;
-  ensureContainer();
+  const container = ensureContainer();
   // 恢复持久化通知
-  if (cfg.persist) {
-    const items = persistLoad();
-    const container = ensureContainer();
-    for (const item of items) {
-      const record: NotificationRecord = {
-        id: item.id,
-        title: item.title,
-        kind: item.kind,
-        opts: {
-          id: item.id,
-          description: item.description,
-          tag: item.tag,
-          unread: item.unread,
-          priority: item.priority,
-          progress: item.progress,
-          progressLabel: item.progressLabel,
-          link: item.link,
-          linkLabel: item.linkLabel,
-          data: item.data,
-        },
-        el: null,
-        createdAt: item.createdAt ?? Date.now(),
-        duration: 0,
-        remaining: 0,
-        paused: false,
-        timer: 0,
-      };
-      const handle = makeHandle(record);
-      const el = renderNotification(record, container, () => handle);
-      record.el = el;
-      handle.el = el;
-      pushToContainer(container, el, record.opts.priority ?? 'normal');
-      store.set(record.id, record);
+  const key = persistKeyFor(cfg.persist);
+  if (key) {
+    knownPersistKeys.add(key);
+    for (const r of restorePersisted(container, key)) {
+      store.set(r.id, r);
     }
   }
 }

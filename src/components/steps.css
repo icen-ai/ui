@@ -61,7 +61,7 @@
 }
 .step--finish .step-dot {
   background: var(--token-accent);
-  color: var(--token-on-accent, #fff);
+  color: var(--token-on-accent);
 }
 .step--process .step-dot {
   background: var(--token-accent-subtle);
@@ -152,7 +152,7 @@
   width: 16px;
   height: 16px;
 }
-.step--finish .step-dot-icon { color: var(--token-on-accent, #fff); }
+.step--finish .step-dot-icon { color: var(--token-on-accent); }
 .step--process .step-dot-icon { color: var(--token-accent); }
 .step--wait .step-dot-icon { color: var(--token-text-faint); }
 .step--error .step-dot-icon { color: var(--token-error); }

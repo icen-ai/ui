@@ -1,12 +1,12 @@
 # @icen.ai/ui — Icen Design System
 
-icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明暗双模 × 3 风格 profile）+ 无框架组件 CSS（31 组件）+ 行为 JS（19 behaviors）**。工程形态与 `@icen.ai/cli` 一致（Bun + TS + tsup + ESM + MIT）。
+icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明暗双模 × 3 风格 profile）+ 无框架组件 CSS（51 组件）+ 行为 JS（25 behaviors）**。工程形态与 `@icen.ai/cli` 一致（Bun + TS + tsup + ESM + MIT）。
 
 - 色彩预设：`clay`（默认，陶土橙 × 纸白 = icen 品牌）/ `piano` / `art` / `vangogh` / `ink` / `retro`，各含 `.dark` 变体
 - 风格配置：`.style-modern` / `.style-retro` / `.style-terminal`（几何 / 密度 / 动效 / 字体 token，与色彩正交）
 - 可选效果层：`retro-effects.css`（CRT 扫描线 / 颗粒 / 像素边框 / 打字机光标 —— 仅 `.style-retro` 激活时生效，按需 import）
-- 组件：btn / form / input / select / slider / switch / tag-input / upload / modal / popover / tooltip / menu（含 dropdown + context-menu）/ tabs / nav / sidebar / breadcrumb / pagination / steps / segmented / accordion / tree / carousel / charts / table / stat / card / panel / pill / empty / feedback / content / media（31 个）
-- 行为：theme / tabs / toast / copy / input / select / slider / tag-input / upload / modal / dropdown / popover / context-menu / accordion / tree / carousel / charts / nav / sidebar（19 个，全部 SSR 守卫 + 幂等 init + textContent-only）
+- 组件：btn / form / input / select / slider / switch / tag-input / upload / modal / popover / tooltip / menu（含 dropdown + context-menu）/ tabs / nav / sidebar / breadcrumb / pagination / steps / segmented / accordion / tree / carousel / charts / table / stat / card / panel / pill / tag / badge / empty / feedback / content / media / toolbar / split-pane / date-picker / command-palette / notification / copy / scroll-area / back-top / datatable / layout（51 个组件 CSS，含 charts 基座 + 9 个细分图表）
+- 行为：theme / tabs / toast / copy / input / select / slider / tag-input / upload / modal / dropdown / popover / context-menu / accordion / tree / carousel / charts / nav / sidebar / datatable / notification / back-top / command-palette / date-picker / split-pane（25 个，全部 SSR 守卫 + 幂等 init + textContent-only）
 
 ## 使用
 
@@ -29,15 +29,18 @@ bun add @icen.ai/ui
 import {
   initTheme, toggleDark, setTheme,
   initTabs, initCopy, initInput, initSelect, initSlider, initTagInput,
-  initUpload, initModal, initDropdown, initPopover, initContextMenu,
-  initAccordion, initTree, initCarousel, initCharts, initNav, initSidebar,
+  initUpload, initModal, initDropdown, initContextMenu,
+  initAccordion, initTree, initCarousel, initNav, initSidebar,
+  openPopover, closePopover,
+  renderLine, renderVBar,
   toast,
 } from '@icen.ai/ui';
 
 initTheme();                       // 尽早调用（或内联同步脚本防闪烁，见 accounts Base.astro）
-initTabs();                        // [data-tabs] > [data-tab] + [data-tab-panel] 契约
+initTabs();                        // [data-tabs] > [data-tab] + [data-tab-panel] 契约；切换派发 icen:tab-change
 initCopy();                        // .copy-btn[data-copy] 委托
-toast.ok('已保存');                // 或 toast.action('已删除', '撤销', undo)
+toast.ok('已保存');                // 或 toast.action('已删除', '撤销', undo)；类名 .toast--success 等
+renderLine(el, { labels, series }); // 函数式组件（charts / datatable）：无 init，直接渲染
 ```
 
 ## 文档站（已上线 <https://ui.icen.ai>）
@@ -71,12 +74,15 @@ src/tokens/retro-effects.css   # 可选效果层：CRT/扫描线/像素工具类
 src/base.css                   # 元素基线 + 滚动条 + z-index 标尺 + 6 个交互基元
                                #   .pressable / .control / .field / .lift / .surface-elevated / .focus-ring
                                #   + a11y 工具类 .sr-only / .skip-link + 工具类 .mono/.dim/.faint/.numeric
-src/components/*.css           # 31 个无框架组件
-src/behaviors/*.ts             # 19 个 behaviors
+src/components/*.css           # 51 个无框架组件 CSS
+src/behaviors/*.ts             # 25 个 behaviors
 scripts/build-css.ts           # CSS 产物构建（拼合 + registry.json）
 site/                          # 文档站骨架（ui.icen.ai，独立 Astro 应用）
 ```
 
-## 消费方接入（accounts 模式）
+## 消费方接入
 
-accounts 目前以 **vendor** 方式消费：`bun run sync:ui`（accounts 仓库内）把本仓库 `dist/` 复制到 `src/styles/vendor/icen/`，布局里 import 对应 CSS/JS。npm 发布后可改为包引入。
+`@icen.ai/ui` 已发布 npm（OIDC trusted publishing，打 `v*` tag 即自动发版）。两种消费方式均可：
+
+- **包引入（推荐）**：`bun add @icen.ai/ui`，按 `./tokens.css` / `./ui.css` / `./kit/<slug>` 引入。
+- **vendor 复制**：accounts 目前走这条路——`bun run sync:ui`（accounts 仓库内）把本仓库 `dist/` 复制到 `src/styles/vendor/icen/`，布局里 import 对应 CSS/JS。适合需要锁定版本或离线构建的场景。
