@@ -131,6 +131,26 @@ const isActive = (href: string): boolean =>
           ))}
         </nav>
       </aside>
+      <script is:inline>
+        /* 侧栏滚动位置跨页保持（MPA 整页跳转不丢滚动位）：
+           滚动时 rAF 节流写 sessionStorage；本脚本在 </aside> 后同步执行，
+           首帧绘制前恢复 scrollTop，无闪烁。 */
+        (() => {
+          const KEY = 'icen.docs.nav-scroll';
+          const scroller = document.querySelector('.docs-side');
+          if (!scroller) return;
+          const saved = sessionStorage.getItem(KEY);
+          if (saved !== null) scroller.scrollTop = Number(saved) || 0;
+          let raf = 0;
+          scroller.addEventListener('scroll', () => {
+            if (raf) return;
+            raf = requestAnimationFrame(() => {
+              raf = 0;
+              sessionStorage.setItem(KEY, String(scroller.scrollTop));
+            });
+          }, { passive: true });
+        })();
+      </script>
       <main class="docs-main">
         <slot />
       </main>
