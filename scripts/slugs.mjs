@@ -115,7 +115,7 @@ export const SLUG_EXPORTS = {
   'ai-message': ['createAiStream', 'initAiChat'],
   'ai-reasoning': ['createAiStream', 'initAiChat'],
   'ai-files': ['renderAiDiff'],
-  'ai-usage': ['renderAiUsage'],
+  'ai-usage': ['renderAiUsage', 'renderAiUsageRing'],
 };
 
 /** slug → 对应组件 CSS 文件名。 */

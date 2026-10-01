@@ -98,5 +98,6 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 - **kind 注册表与 normalize 适配层**：组件只消费归一化 `AiToolCallModel` / `AiUsage`，业界格式（OpenAI / Anthropic / AI SDK / 素朴）由 `normalizeToolCall` / `normalizeUsage` 翻译；内置 kinds（shell/read/edit/write/rm/grep/glob/browser/search/fetch/mcp/skill/todo/plan/subagent/note），第三方 `registerAiKind()` 扩展；`inferKind` 从工具名推断。
 - **事件族 `icen:ai-*`**（全部 bubbles）：send / stop / queue / dequeue / attach / copy / retry / approve / reject / diff-accept / diff-reject / todo-toggle / toggle；detail 见规格 §5。
 - **`data-density` 三档**：verbose / normal / summary（summary 隐藏 meta、默认折叠 reasoning、压淡 tool/system 消息，纯 CSS）。
+- **ai-usage 双形态**：分段条 `renderAiUsage` + 上下文窗口环形指示器 `renderAiUsageRing`（点击弹出完整分解，弹层复用 popover；状态档 <60% accent / 60–85% warning / >85% error+脉冲）。
 - **ai-core 不绑定任何 slug**：demo/消费方要用 `normalizeToolCall` 等时，在该页 behaviors 数组里显式加 `'ai-core'`（boot 的 glob 会加载并注入 `aiCoreMod` 参数）。
 - **宽度自稳定契约**：所有 AI 输出容器根（`.ai-chat/.ai-reasoning/.ai-composer/.ai-item/.ai-tool/.ai-subagent/.ai-diff/.ai-files/.ai-todo/.ai-usage`）声明 `align-self: stretch`——在 flex/grid 居中宿主（shrink-wrap 上下文，如文档站 `.demo-stage`）里不随内容多少改变宽度，流式内容只允许纵向生长。**禁用 `width: 100%`** 做这件事（在 shrink-wrap 父级下会塌成 min-content）。消费方给组件包一层自己的布局 wrapper 时，wrapper 的宽度由消费方负责（demo 里直接 `style="width:100%"`）。

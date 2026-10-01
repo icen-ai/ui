@@ -328,6 +328,102 @@
   color: var(--token-text-muted);
 }
 
+/* ══════════════ ai-usage-ring · 上下文窗口环形指示器（点击弹出完整分解） ══════════════ */
+
+.ai-usage-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-full);
+  color: var(--token-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-usage-ring:hover {
+  background: var(--token-fill-1);
+  color: var(--token-text);
+}
+.ai-usage-ring:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.ai-usage-ring > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* 12 点起笔 */
+}
+.ai-usage-ring-track {
+  fill: none;
+  stroke: var(--token-fill-2);
+  stroke-width: 3;
+}
+.ai-usage-ring-fill {
+  fill: none;
+  stroke: var(--token-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition:
+    stroke-dasharray var(--icen-tx-slow),
+    stroke var(--icen-tx-fast);
+}
+/* 状态档：<60% ok（accent）/ 60–85% warn / >85% hot */
+.ai-usage-ring.is-warn .ai-usage-ring-fill { stroke: var(--token-warning); }
+.ai-usage-ring.is-hot .ai-usage-ring-fill { stroke: var(--token-error); }
+.ai-usage-ring.is-hot {
+  animation: ai-usage-ring-pulse var(--ai-usage-ring-pulse-duration, 1.6s) ease-in-out infinite;
+}
+@keyframes ai-usage-ring-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.ai-usage-ring-pct {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+/* 大号变体（常驻工具栏/头部用） */
+.ai-usage-ring--lg {
+  width: 44px;
+  height: 44px;
+}
+.ai-usage-ring--lg .ai-usage-ring-pct { font-size: 10px; }
+
+/* 弹层（复用 .popover 基座，内容区只补间距） */
+.ai-usage-popover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-md);
+}
+.ai-usage-popover-title {
+  font-size: var(--density-font-size-sm);
+  font-weight: 600;
+  color: var(--token-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-usage-ring.is-hot { animation: none; }
+  .ai-usage-ring-fill { transition: none; }
+}
+
 /* ══════════════ ai-context · 上下文抽屉（§4.10） ══════════════ */
 
 .ai-context {

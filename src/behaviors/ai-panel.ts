@@ -64,6 +64,7 @@ import {
   type AiStatus,
   type AiUsage,
 } from './ai-core';
+import { closePopover, openPopover } from './popover';
 
 /* ── 小工具 ── */
 
@@ -335,6 +336,98 @@ export function renderAiUsage(
   root.appendChild(el('div', 'ai-usage-total', totalParts.join('')));
 
   elm.appendChild(root);
+}
+
+/* ══════════════ ai-usage-ring（上下文窗口环形指示器，§4.9 变体） ══════════════ */
+
+export interface AiUsageRingOpts extends AiUsageRenderOpts {
+  /** 弹层标题（默认「上下文窗口」） */
+  title?: string;
+}
+
+/**
+ * 上下文窗口环形指示器（Claude Desktop 模式）：紧凑圆环显示占用比，
+ * 点击弹出完整分段分解（复用 popover 浮层 + renderAiUsage）。
+ * opts.total 给上下文窗口上限（如 200000）——环填充比 = 已用 / total；
+ * 缺省 total 时环不填充、中心显示已用量。
+ * 状态档：<60% is-ok（accent）/ 60–85% is-warn / >85% is-hot（error）。
+ * 重复调用重渲染；打开中的弹层会被关闭重建。
+ */
+export function renderAiUsageRing(
+  elm: HTMLElement,
+  usage: AiUsage,
+  opts: AiUsageRingOpts = {},
+): void {
+  if (typeof document === 'undefined') return;
+  const u = normalizeUsage(usage);
+  const used =
+    u.total ??
+    (u.input ?? 0) + (u.output ?? 0) + (u.cacheRead ?? 0) + (u.cacheWrite ?? 0) + (u.reasoning ?? 0);
+  const hasLimit = typeof opts.total === 'number' && opts.total > 0;
+  const pct = hasLimit ? Math.min(100, Math.max(0, Math.round((used / (opts.total as number)) * 100))) : 0;
+
+  elm.textContent = '';
+  const btn = el('button', 'ai-usage-ring');
+  btn.type = 'button';
+  btn.classList.add(pct >= 85 ? 'is-hot' : pct >= 60 ? 'is-warn' : 'is-ok');
+  btn.setAttribute('aria-haspopup', 'true');
+  btn.setAttribute(
+    'aria-label',
+    hasLimit ? `上下文窗口占用 ${pct}%，点击查看详情` : `已用 ${formatTokens(used)}，点击查看详情`,
+  );
+
+  /* 圆环：viewBox 36、r=15.9155 → 周长恰为 100，dasharray 直接写百分比 */
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 36 36');
+  svg.setAttribute('aria-hidden', 'true');
+  const track = document.createElementNS(NS, 'circle');
+  track.setAttribute('class', 'ai-usage-ring-track');
+  const fill = document.createElementNS(NS, 'circle');
+  fill.setAttribute('class', 'ai-usage-ring-fill');
+  fill.setAttribute('stroke-dasharray', `${pct} 100`);
+  for (const c of [track, fill]) {
+    c.setAttribute('cx', '18');
+    c.setAttribute('cy', '18');
+    c.setAttribute('r', '15.9155');
+    svg.appendChild(c);
+  }
+  btn.appendChild(svg);
+  btn.appendChild(el('span', 'ai-usage-ring-pct', hasLimit ? `${pct}%` : formatTokens(used)));
+
+  /* 点击开/关弹层（弹层为一次性动态面板，关闭即移除） */
+  let panel: HTMLElement | null = null;
+  const closePanel = (): void => {
+    if (!panel) return;
+    const p = panel;
+    panel = null;
+    closePopover(p);
+    p.remove();
+  };
+  btn.addEventListener('click', () => {
+    if (panel) {
+      closePanel();
+      return;
+    }
+    const p = el('div', 'popover ai-usage-popover');
+    p.hidden = true;
+    p.appendChild(el('div', 'ai-usage-popover-title', opts.title ?? '上下文窗口'));
+    const body = el('div', 'ai-usage-popover-body');
+    renderAiUsage(body, usage, opts);
+    p.appendChild(body);
+    openPopover(p, {
+      anchor: btn,
+      side: 'bottom',
+      align: 'end',
+      onClose: () => {
+        p.remove();
+        if (panel === p) panel = null;
+      },
+    });
+    panel = p;
+  });
+
+  elm.appendChild(btn);
 }
 
 /* ══════════════ ai-context（§4.10） ══════════════ */

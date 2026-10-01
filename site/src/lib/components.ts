@@ -3454,22 +3454,35 @@ if (host) {
     slug: 'ai-usage',
     name: 'AI 用量条',
     group: 'AI',
-    desc: '上下文用量条 .ai-usage：分段条 + 图例 + 占比行；配色契约 input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint。缓存分列计费诚实：cacheRead ≈ 0.1× 输入价、cacheWrite ≈ 1.25× 输入价（行业惯例，展示与算账口径一致）。renderAiUsage(el, usage, { total?, cost? })。',
-    demo: `<div id="ai-usage-demo" style="width:100%"></div>
+    desc: '上下文用量 .ai-usage 双形态：分段条（renderAiUsage）+ 上下文窗口环形指示器（renderAiUsageRing，Claude Desktop 式常驻小环，点击弹出完整分解，弹层复用 popover）。分段条 = 分段条 + 图例 + 占比行；配色契约 input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint。缓存分列计费诚实：cacheRead ≈ 0.1× 输入价、cacheWrite ≈ 1.25× 输入价（行业惯例，展示与算账口径一致）。',
+    demo: `<div style="display:flex;align-items:center;gap:12px;width:100%;margin-bottom:14px">
+  <div id="ai-usage-ring-demo"></div>
+  <span class="demo-label">上下文窗口环（Claude Desktop 式）：点击弹出完整分解</span>
+</div>
+<div id="ai-usage-demo" style="width:100%"></div>
 <p class="demo-label" style="margin-top:8px">缓存读 ≈ 0.1× 输入价、缓存写 ≈ 1.25× 输入价——分列展示，计费口径诚实</p>`,
-    usage: `import { renderAiUsage } from '@icen.ai/ui/kit/ai-usage';
+    usage: `import { renderAiUsage, renderAiUsageRing } from '@icen.ai/ui/kit/ai-usage';
 
-// usage：{ input?, output?, cacheRead?, cacheWrite?, reasoning?, total? }
-// opts.total 给上下文上限（显示 82k / 200k · 41%）；opts.cost 追加 $ 成本
+// 分段条形态
 renderAiUsage(el, {
   input: 42000, output: 18000, cacheRead: 96000, cacheWrite: 12000, reasoning: 8000,
 }, { total: 200000, cost: 0.3124 });
+
+// 上下文窗口环形指示器（点击弹出完整分解，复用 popover）
+renderAiUsageRing(el, { input: 42000, /* … */ }, { total: 200000 });
+// 状态档：<60% accent / 60–85% warning / >85% error + 脉冲
 
 // 缓存分列的计费语义：cacheRead ≈ 0.1× 输入价，cacheWrite ≈ 1.25× 输入价`,
     behaviors: ['ai-panel'],
     script: `const host = document.getElementById('ai-usage-demo');
 if (host) {
   aiPanelMod.renderAiUsage(host, {
+    input: 42000, output: 18000, cacheRead: 96000, cacheWrite: 12000, reasoning: 8000,
+  }, { total: 200000, cost: 0.3124 });
+}
+const ringHost = document.getElementById('ai-usage-ring-demo');
+if (ringHost) {
+  aiPanelMod.renderAiUsageRing(ringHost, {
     input: 42000, output: 18000, cacheRead: 96000, cacheWrite: 12000, reasoning: 8000,
   }, { total: 200000, cost: 0.3124 });
 }`,

@@ -407,11 +407,16 @@ export function normalizeUsage(raw: unknown): AiUsage {
     (isObj(raw.completion_tokens_details)
       ? pickNum(raw.completion_tokens_details, ['reasoning_tokens'])
       : undefined);
+  /* total 缺省时回退为全段求和（归一化模型里 input 不含缓存——
+     OpenAI 的 prompt_tokens 含 cached、Anthropic 的 input_tokens 不含 cache_read，
+     归一后缓存已分列，总量必须加回，否则占比失真） */
   const total =
     pickNum(raw, ['total']) ??
     pickNum(raw, ['total_tokens']) ??
     pickNum(raw, ['totalTokenCount']) ??
-    (input != null && output != null ? input + output : undefined);
+    (input != null || output != null || cacheRead != null || cacheWrite != null || reasoning != null
+      ? (input ?? 0) + (output ?? 0) + (cacheRead ?? 0) + (cacheWrite ?? 0) + (reasoning ?? 0)
+      : undefined);
 
   if (input != null) usage.input = input;
   if (output != null) usage.output = output;

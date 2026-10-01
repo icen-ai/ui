@@ -257,6 +257,7 @@ chip 态：`is-added/is-modified/is-deleted` + hover 操作（可选）。无 be
 
 - `renderAiUsage(el, usage: AiUsage, opts?: { total?: number; cost?: number })`：分段条 + 图例 + 占比；`normalizeUsage` 在 ai-core。
 - 配色：input=accent、output=success、cacheRead=info、cacheWrite=warning、reasoning=faint——语义 token。
+- **环形形态 `renderAiUsageRing`**（Claude Desktop 式上下文窗口指示器）：紧凑圆环（SVG dasharray，`viewBox 36 / r 15.9155` → 周长恰为 100），中心百分比；点击弹出完整分段分解（弹层为一次性动态 `.popover.ai-usage-popover`，复用 `openPopover`/`closePopover`，anchor 豁免外点关闭，Esc/外点/再点关闭即移除）。状态档：<60% is-ok（accent）/ 60–85% is-warn / >85% is-hot（error + 脉冲）。`--lg` 大号变体。
 
 ### 4.10 ai-context（ai-panel.css + ai-panel.ts）—— 右上角资源抽屉
 
