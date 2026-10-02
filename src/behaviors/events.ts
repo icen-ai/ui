@@ -7,6 +7,8 @@
  *      任意容器挂 data-gestures="click dblclick contextmenu longpress select"（空格分隔）
  *      即开通对应 icen: 事件；组件内建领域事件（icen:chart-* / icen:ai-* / icen:tab-change…）
  *      不变，两者互补。click 与 dblclick 同开时单击延迟 220ms 派发（双击到达即取消单击）。
+ *      位移守卫：按下→松开位移 >5px 视为拖拽/划词，不派 click/dblclick；longpress 派发后
+ *      尾随的松开单击也抑制。
  *      拖拽不在此层：文件拖放走 upload，排序/分割走各自组件，原生 HTML5 DnD 自行接线。
  *
  *   2. 协议层 Protocol —— 全部 CustomEvent：bubbles + composed + cancelable，
@@ -93,6 +95,7 @@ export function onIcen(
 const LONGPRESS_MS = 520;
 const LONGPRESS_MOVE = 12;
 const CLICK_DELAY = 220;
+const CLICK_DRAG_TOLERANCE = 5;
 
 function gestureHost(e: Event, name: string): HTMLElement | null {
   const t = e.target;
@@ -129,17 +132,30 @@ export function initGestures(): void {
   if (gesturesInit || typeof document === 'undefined') return;
   gesturesInit = true;
 
-  /* click / dblclick：同开时单击延迟派发，双击到达即取消单击 */
+  /* click / dblclick：同开时单击延迟派发，双击到达即取消单击。
+     位移守卫：按下→松开的位移超阈值视为拖拽/划词，不派单击/双击；
+     长按已派 icen:longpress 时，尾随的单击也抑制（意图是长按）。 */
   let clickTimer: ReturnType<typeof setTimeout> | null = null;
   let pending: { host: HTMLElement; e: MouseEvent } | null = null;
+  let downPos: { x: number; y: number } | null = null;
+  let suppressTrailingClick = false;
   const cancelPendingClick = (): void => {
     if (clickTimer) clearTimeout(clickTimer);
     clickTimer = null;
     pending = null;
   };
+  document.addEventListener('pointerdown', (e) => {
+    downPos = { x: e.clientX, y: e.clientY };
+    suppressTrailingClick = false;
+  });
+  /** 拖拽/划词判定：true = 这次松开不构成单击 */
+  const isDragRelease = (e: MouseEvent): boolean =>
+    downPos != null && Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > CLICK_DRAG_TOLERANCE;
   document.addEventListener('click', (e) => {
     const host = gestureHost(e, 'click');
     if (!host) return;
+    if (suppressTrailingClick) { suppressTrailingClick = false; return; }
+    if (isDragRelease(e)) return;
     if (host.matches('[data-gestures~="dblclick"]')) {
       if (clickTimer) clearTimeout(clickTimer);
       pending = { host, e };
@@ -157,6 +173,7 @@ export function initGestures(): void {
     const host = gestureHost(e, 'dblclick');
     if (!host) return;
     cancelPendingClick();
+    if (isDragRelease(e)) return;
     emit(host, 'icen:dblclick', e);
   });
 
@@ -187,7 +204,10 @@ export function initGestures(): void {
       timer: setTimeout(() => {
         const cur = lp;
         lp = null;
-        if (cur) emit(cur.host, 'icen:longpress', cur.e);
+        if (cur) {
+          suppressTrailingClick = true;   /* 长按已派发，松开的尾随单击不算 */
+          emit(cur.host, 'icen:longpress', cur.e);
+        }
       }, LONGPRESS_MS),
     };
   });
