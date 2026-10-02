@@ -1,5 +1,6 @@
 ---
 import { COMPONENTS, GROUPS } from '../lib/components';
+import pkg from '../../../package.json';
 
 const path = Astro.url.pathname;
 const isActive = (href: string): boolean => path.startsWith(href);
@@ -42,24 +43,23 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
     <a class="brand" href="/" aria-label="ICEN UI 首页">
       <Fragment set:html={logoSvg} />
       <span class="brand-name">ICEN UI</span>
-      <span class="brand-tag">设计系统</span>
+      <span class="brand-ver">v{pkg.version}</span>
     </a>
     <nav class="nav-links" aria-label="主导航">
       <a class:list={[{ active: isActive('/components/') }]} href="/components/">组件</a>
       <a class:list={[{ active: isActive('/primitives/') }]} href="/primitives/">原语</a>
       <a class:list={[{ active: isActive('/tokens/') }]} href="/tokens/">色彩</a>
+      <span class="nav-ink" aria-hidden="true"></span>
     </nav>
     <div class="nav-controls">
       <button class="nav-search" type="button" data-command-palette-open="site-nav" title="搜索组件（⌘K）">
         <Fragment set:html={searchSvg} />
-        <span class="nav-search-text">搜索组件…</span>
         <kbd class="nav-kbd">⌘K</kbd>
       </button>
       <span class="nav-sep" aria-hidden="true"></span>
       <div class="select nav-select" id="preset-select" data-select data-value="clay" data-panel-width="204">
         <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="色彩预设">
-          <span class="nav-trigger-dots" aria-hidden="true"><i></i><i></i></span>
-          <span class="select-value">clay 陶土</span>
+          <span class="nav-trigger-dots" aria-hidden="true"><i></i><i></i><i></i></span>
           <Fragment set:html={chevronSvg} />
         </button>
         <div class="select-panel nav-panel--preset" hidden role="listbox" aria-label="色彩预设">
@@ -144,15 +144,15 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
   const styleBox = document.getElementById('style-select');
   const darkBtn = document.getElementById('dark-toggle');
 
-  /* 触发器色点用的身份色（accent + cold，预设识别色；注意：frontmatter 变量
+  /* 触发器三色点用的身份色（底色/主色/冷色，与面板选项同构；注意：frontmatter 变量
      在客户端 <script> 里不可用，此表必须在本脚本内定义） */
-  const PRESET_DOT_COLORS: Record<string, [string, string]> = {
-    clay: ['#d97757', '#7a9cb0'],
-    piano: ['#b89145', '#566370'],
-    art: ['#d66f4f', '#4f8f90'],
-    vangogh: ['#1f527c', '#476f45'],
-    ink: ['#5b7a5e', '#6b7e8a'],
-    retro: ['#d03030', '#3030a0'],
+  const PRESET_DOT_COLORS: Record<string, [string, string, string]> = {
+    clay: ['#faf9f5', '#d97757', '#7a9cb0'],
+    piano: ['#f1eee6', '#b89145', '#566370'],
+    art: ['#dce8e3', '#d66f4f', '#4f8f90'],
+    vangogh: ['#e8ddb2', '#1f527c', '#476f45'],
+    ink: ['#f5f2ed', '#5b7a5e', '#6b7e8a'],
+    retro: ['#f0f0e8', '#d03030', '#3030a0'],
   };
 
   // 程序化同步 select 组件的展示态（choose() 之外的第二写入口：主题恢复/跨控件联动）
@@ -206,4 +206,31 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
 
   /* 页脚色尺等任意入口切主题时同步头部控件（icen:theme-change 自 documentElement 冒泡） */
   document.addEventListener('icen:theme-change', (ev) => reflect((ev as CustomEvent<ThemeState>).detail));
+
+  /* 导航墨条：hover 预览滑到悬停链接，离开回落到当前页；无 active（首页）时隐没。
+     字体加载完成后重校一次，防 font-swap 移位。 */
+  const navLinks = document.querySelector<HTMLElement>('.nav-links');
+  const navInk = navLinks?.querySelector<HTMLElement>('.nav-ink');
+  const placeInk = (target?: Element | null): void => {
+    if (!navLinks || !navInk) return;
+    const el = (target instanceof HTMLElement ? target : null) ?? navLinks.querySelector('a.active');
+    if (!el || navLinks.offsetParent === null) {
+      navInk.style.opacity = '0';
+      return;
+    }
+    navInk.style.left = `${el.offsetLeft}px`;
+    navInk.style.width = `${el.offsetWidth}px`;
+    navInk.style.opacity = '1';
+  };
+  placeInk();
+  document.fonts?.ready.then(() => placeInk()).catch(() => {});
+  window.addEventListener('resize', () => placeInk(), { passive: true });
+  navLinks?.querySelectorAll('a').forEach((a) => a.addEventListener('mouseenter', () => placeInk(a)));
+  navLinks?.addEventListener('mouseleave', () => placeInk());
+
+  /* 滚动感应 hairline：页面顶端无界悬浮，滚过 8px 才显形分隔线并加深底色 */
+  const siteNav = document.querySelector('.site-nav');
+  const onScroll = (): void => siteNav?.classList.toggle('is-scrolled', window.scrollY > 8);
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
 </script>
