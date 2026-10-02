@@ -24,10 +24,6 @@ const presets = [
   ['ink', 'ink 墨', '#f5f2ed', '#5b7a5e', '#6b7e8a'],
   ['retro', 'retro 复古', '#f0f0e8', '#d03030', '#3030a0'],
 ] as const;
-/** 触发器色点用的身份色（accent + cold，预设的识别色，属内容数据非 UI 样式） */
-const PRESET_DOT_COLORS: Record<string, [string, string]> = Object.fromEntries(
-  presets.map(([id, , , accent, cold]) => [id, [accent, cold]]),
-);
 const styles = [
   ['modern', 'modern 现代'],
   ['retro', 'retro 像素'],
@@ -147,6 +143,17 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
   const presetBox = document.getElementById('preset-select');
   const styleBox = document.getElementById('style-select');
   const darkBtn = document.getElementById('dark-toggle');
+
+  /* 触发器色点用的身份色（accent + cold，预设识别色；注意：frontmatter 变量
+     在客户端 <script> 里不可用，此表必须在本脚本内定义） */
+  const PRESET_DOT_COLORS: Record<string, [string, string]> = {
+    clay: ['#d97757', '#7a9cb0'],
+    piano: ['#b89145', '#566370'],
+    art: ['#d66f4f', '#4f8f90'],
+    vangogh: ['#1f527c', '#476f45'],
+    ink: ['#5b7a5e', '#6b7e8a'],
+    retro: ['#d03030', '#3030a0'],
+  };
 
   // 程序化同步 select 组件的展示态（choose() 之外的第二写入口：主题恢复/跨控件联动）
   function syncSelect(box: HTMLElement, value: string): void {
