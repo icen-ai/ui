@@ -3070,7 +3070,7 @@ const U = function (n) { return { prompt_tokens: n, completion_tokens: Math.roun
 
 async function play() {
   if (!scroll) return;
-  if (playBtn && playBtn.disabled) return;
+  if (playBtn && playBtn.disabled) { stage('演示进行中 · 点 ↺ 重置后可重放'); return; }
   cancelled = false; if (playBtn) playBtn.disabled = true;
   M.comp.setComposerRunning(composer, true);
   stage('① 用户提问');
@@ -3116,6 +3116,14 @@ async function play() {
 
   stage('⑦ 正文流式（createAiStream）');
   await bodyStream('一年多的迭代可以概括为四幕：v0.1 确立「单一事实源」的设计系统底座；v0.5 把 51 个组件全部拉到工程级深度；v0.7 引入 AI 原生组件族（11 个 slug + 7 态状态机）；v0.8 收口为工具体系——图表通用层 + AI 挂载区。下面用数据说话：', 2000);
+  /* 叙事成稿 = 提炼完成；待办 chip 与对话内 TodoWrite 卡三处同源推进 */
+  todo([
+    { content: '搜集公开迭代资料', status: 'done' },
+    { content: '拉取内部发布记录', status: 'done' },
+    { content: '提炼阶段叙事与数据', status: 'done' },
+    { content: '渲染能力增长可视化', status: 'running', activeForm: '正在渲染能力增长可视化' },
+    { content: '写入 docs/history.md', status: 'pending' },
+  ]);
 
   stage('⑧ render_chart（默认展开）');
   const s3 = card('render_chart', 'chart', {
@@ -3124,12 +3132,28 @@ async function play() {
   });
   s3.update({ status: 'done', durationMs: 240 });
   await sleep(1200);
+  /* 图表落成 = 渲染完成，写入开始（下一幕审批的对象） */
+  todo([
+    { content: '搜集公开迭代资料', status: 'done' },
+    { content: '拉取内部发布记录', status: 'done' },
+    { content: '提炼阶段叙事与数据', status: 'done' },
+    { content: '渲染能力增长可视化', status: 'done' },
+    { content: '写入 docs/history.md', status: 'running', activeForm: '正在写入 docs/history.md' },
+  ]);
 
-  stage('⑨ 待人审批（点「允许」继续）');
+  stage('⑨ 待人审批（点「允许」继续，12 秒后自动允许）');
   const ap = card('Edit', 'edit', { input: { file_path: 'docs/history.md' }, status: 'approval', approval: { reason: '写入 docs/history.md（新增 1 文件，+46 行）' } });
+  let wait = 12;
   const ok = await new Promise(function (res) {
-    ap.el.addEventListener('icen:ai-approve', function once() { ap.el.removeEventListener('icen:ai-approve', once); res(true); });
-    timers.push(setTimeout(function () { res(false); }, 60000));
+    let cd = 0;
+    const settle = function (v) { if (cd) clearInterval(cd); res(v); };
+    ap.el.addEventListener('icen:ai-approve', function once() { ap.el.removeEventListener('icen:ai-approve', once); settle(true); });
+    cd = setInterval(function () {
+      wait--;
+      if (wait > 0) stage('⑨ 待人审批（' + wait + ' 秒后自动允许，或点「允许」）');
+      else settle(false);
+    }, 1000);
+    timers.push(cd);
   });
   ap.update({ status: 'done', output: '46 行已写入 docs/history.md', durationMs: 400 });
   stage(ok ? '⑩ 已批准' : '⑩ 超时自动批准（演示）');
@@ -3228,7 +3252,7 @@ function reset() {
   todoCard = null;
   M.comp.setComposerTodo(composer, null);
   M.comp.setComposerRunning(composer, false);
-  stage('场景：分析 AI 迭代历史 · 全组件走一遍（约 30 秒，中途有一处需要你点「允许」）');
+  stage('场景：分析 AI 迭代历史 · 全组件走一遍（约 30 秒；中途有一处审批，可点「允许」或等 12 秒自动允许）');
   if (playBtn) playBtn.disabled = false;
 }
 
