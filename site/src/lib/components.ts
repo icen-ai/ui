@@ -19,7 +19,7 @@ export interface ComponentDoc {
   script?: string;
 }
 /** 组件分组的展示名（顺序即侧栏顺序）。原「数据」已拆为四组：数据展示 / 表格 / 图表 / 反馈。 */
-export const GROUPS: string[] = ['基础', '表单', '浮层', '数据展示', '表格', '图表', '反馈', '导航', 'AI'];
+export const GROUPS: string[] = ['基础', 'AI 原生', '表单', '数据展示', '图表', '浮层', '反馈', '导航'];
 
 /** slug → 组件 css 文件名（单一事实源在 scripts/slugs.mjs，与 kit 入口/CLI 共享）。 */
 export function cssFor(slug: string): string {
@@ -2449,7 +2449,7 @@ if (el && chartsMod.renderCalendar) {
   {
     slug: 'table',
     name: '表格',
-    group: '表格',
+    group: '数据展示',
     desc: 'table-wrap 负责窄屏横向滚动；行 hover 高亮，ops 列右对齐放 btn-sm。增强：--zebra 斑马纹、caption 标题、--sticky-col 首列粘滞、行状态色（row-success/warning/error）、展开行（row-expand）。',
     demo: `<div class="table-wrap table-wrap--bordered">
   <table class="table table--zebra">
@@ -2486,7 +2486,7 @@ if (el && chartsMod.renderCalendar) {
   {
     slug: 'datatable',
     name: '数据表格',
-    group: '表格',
+    group: '数据展示',
     desc: 'createTable 函数式 API：搜索 / 排序 / 筛选 / 多选（Shift 范围选）/ 分页 / 虚拟滚动（万级行）/ 行展开 / 列宽拖拽 / 列显隐 / 冻结列 / CSV 导出 / 行右键。管线缓存，零依赖。',
     demo: `<div class="demo-col-wide" style="width:100%">
   <p class="chart-cap">全功能：搜索 / 排序 / 列筛选 / 多选 / 分页 / 行展开 / 列宽拖拽 / 列显隐 / 导出 / 冻结列 / 右键行</p>
@@ -2960,7 +2960,7 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
   {
     slug: 'ai-overview',
     name: 'AI 总览',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '一段可播放的完整对话《分析 AI 迭代历史》——把 AI 族全部能力按真实工作流串起来：思考（reasoning 流式+自动折叠）→ 规划（todo activeForm 推进）→ 网络搜索 / 接口调用（工具卡）→ 二次思考 → 正文流式 → render_chart 可视化（默认展开）→ 人工审批（点「允许」继续）→ history.md 差异审阅（accept/reject）→ 文件标签 → 子智能体（嵌套活动流）→ 失败重试（自动展开）→ 多模态回执（架构图）→ 收尾（token/成本、上下文抽屉、审计面板）。输入台 v2（模型切换/命令/@引用/上下文环）全程参与。',
     demo: `<div class="toolbar" style="margin-bottom:10px">
   <button class="btn btn-sm btn-primary" type="button" id="ai-ov-play">▶ 播放全流程</button>
@@ -3278,7 +3278,7 @@ refreshAudit();`,
   {
     slug: 'ai-chat',
     name: 'AI 会话',
-    group: 'AI',
+    group: 'AI 原生',
     desc: 'AI 会话容器（AI 族门面条目）：滚动钉底跟随、上滚暂停跟随并浮出「回到底部 · N 条」浮动钮（缺失自动补建）；消息 copy / retry 操作委托（icen:ai-copy / icen:ai-retry）；reasoning 折叠委托。配套 createAiStream 流式追加（含 fail() 错误路径）与 renderAiMessage 消息渲染原语（多模态部件 + 错误变体）；data-density 三档控制信息密度。下方 demo 是零接线全链路：bindComposer 一行把 composer ↔ 消息区 ↔ createAiClient（mock provider SSE 流式）↔ 上下文环（contextEstimate 正确口径）接成闭环，排队消息自动续发，审计自动累计成本。',
     demo: `<div class="toolbar" style="margin-bottom:10px">
   <span class="toolbar-label">密度</span>
@@ -3429,7 +3429,7 @@ document.querySelectorAll('[data-ai-density]').forEach(function (btn) {
   {
     slug: 'ai-message',
     name: 'AI 消息',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '消息行基元 .ai-msg：user / assistant / system / tool 四角色（avatar 语义色）+ meta 时间 · token（summary 档隐藏）+ hover / focus-within 浮出 copy · retry 操作钮。renderAiMessage 渲染原语消费标准化内容（spec §10）：字符串或部件数组——文字 / 图片 / 音频 / 视频 / 文件 / 资源链接（MCP ResourceLink）任意组合，另支持错误变体（.ai-msg--error）与流式节点。操作委托由 initAiChat 提供（消息须挂在 .ai-chat 容器内）。',
     demo: `<div class="ai-chat" style="height:auto">
   <div class="ai-msg ai-msg--user" style="margin-bottom:10px">
@@ -3563,7 +3563,7 @@ document.getElementById('ai-msg-add-err')?.addEventListener('click', function ()
   {
     slug: 'ai-reasoning',
     name: 'AI 推理',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '推理块 .ai-reasoning：流式中 head 显示 shimmer「正在思考…」（--ai-shimmer-duration 变量化时长）；createAiStream 的 done() 自动折叠并回填耗时；head 点击展开 / 折叠（initAiChat 委托）。summary 密度档默认折叠。',
     demo: `<div class="ai-chat" style="height:auto">
   <div class="ai-reasoning is-streaming" id="ai-reasoning-live">
@@ -3614,7 +3614,7 @@ if (target) {
   {
     slug: 'ai-composer',
     name: 'AI 输入台',
-    group: 'AI',
+    group: 'AI 原生',
     desc: 'AI 输入台：autosize（默认 8 行上限后内滚）、Enter 发送 / Shift+Enter 换行、IME 组合态安全、附件 chips（钮选 / 粘贴文件 / 拖放文件三入口共用 icen:ai-attach，拖放时输入框高亮）；setComposerRunning 切换运行态——发送钮变停止钮（icen:ai-stop），运行中回车转为排队 chip（icen:ai-queue / icen:ai-dequeue，可单个 × 移除）。事件 icen:ai-send {text} / icen:ai-attach {files}。bindComposer 绑定层可一行接通全链路（见 ai-chat 页 demo）。',
     demo: `<div class="ai-composer" data-ai-composer id="ai-composer-demo">
   <div class="ai-composer-queue" hidden></div>
@@ -3734,7 +3734,7 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
   {
     slug: 'ai-tool-call',
     name: 'AI 工具调用',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '工具调用卡 .ai-tool：kind 修饰类（--shell/--read/--edit/--mcp/--rm…，kind 注册表驱动 --ai-item-tint 与图标）+ 7 态状态机（失败条目自动展开）+ 审批内联按钮（icen:ai-approve / icen:ai-reject，detail {id, kind}）。renderAiToolCall(el, model) 动态建卡，返回 { el, update(patch) } 做流式状态流转；输入/输出走注册表 summarize 或压缩 JSON。',
     demo: `<div style="display:flex;flex-direction:column;gap:8px;width:100%">
   <div class="ai-tool ai-tool--shell is-done" data-ai-id="demo-t1" data-ai-kind="shell">
@@ -3929,7 +3929,7 @@ document.getElementById('ai-tools-chart-receipt')?.addEventListener('click', fun
   {
     slug: 'ai-subagent',
     name: 'AI 子智能体',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '子智能体卡 .ai-subagent：activities（AiToolCallModel[]）递归渲染工具卡 / 推理块 / 再嵌套子代理（缩进 + 左侧引导线表达层级）；展开时活动项按 --ai-activity-index 逐条 icen-pop-in 渐入；底部完成回执区。renderAiSubagent(el, model) 返回 update(patch)；第三方 kind 走 ai-core 的 registerAiKind 扩展（demo 里注册了一个 deploy kind）。',
     demo: `<div style="display:flex;flex-direction:column;gap:12px;width:100%">
   <div id="ai-sub-live"></div>
@@ -4022,7 +4022,7 @@ aiToolMod.initAiTool();`,
   {
     slug: 'ai-diff',
     name: 'AI 差异审阅',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '差异审阅卡 .ai-diff：parseUnifiedDiff(text) 解析 unified diff（git / 传统头、add/del/rename/binary 均可）→ renderAiDiff(el, {files}) DOM 渲染（行号 + add/del 着色 + hunk 头，全 textContent）；initAiDiff 委托展开 / 接受 / 拒绝——icen:ai-diff-accept / icen:ai-diff-reject（detail {path}），决策后盖状态章并淡化。',
     demo: `<div id="ai-diff-demo" style="width:100%"></div>
 <p class="demo-label" id="ai-diff-log" style="margin-top:8px">点头展开行号与着色 · 「接受 / 拒绝」后盖状态章（icen:ai-diff-accept / icen:ai-diff-reject）</p>`,
@@ -4082,7 +4082,7 @@ host?.addEventListener('icen:ai-diff-reject', function (e) {
   {
     slug: 'ai-files',
     name: 'AI 文件标签',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '文件 chips .ai-file-chip（纯 CSS 族，无 behavior）：is-added / is-modified / is-deleted 三态 × 类型修饰类（--ts/--js/--css/--json/--md/--img/--other，图标由消费方注入 svg）；renderAiContext 的文件区复用同款 chips。',
     demo: `<div class="ai-files">
   <span class="ai-file-chip is-added ai-file-chip--ts"><span class="ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/></svg></span>src/utils/format.ts</span>
@@ -4104,7 +4104,7 @@ host?.addEventListener('icen:ai-diff-reject', function (e) {
   {
     slug: 'ai-todo',
     name: 'AI 任务清单',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '任务清单 .ai-todo：进度条（feedback progress 视觉）+ N/M 计数 + 7 态条目；running 条目用 activeForm 替换文案（Claude Code 模式）。renderAiTodo(el, items) 渲染；data-ai-todo-interactive 容器可点击循环状态 pending → running → done（icen:ai-todo-toggle {index, status}），默认只读。',
     demo: `<div id="ai-todo-demo" data-ai-todo-interactive style="width:100%"></div>
 <p class="demo-label" id="ai-todo-log" style="margin-top:8px">点击任意任务循环状态 pending → running → done（running 时文案切 activeForm）</p>`,
@@ -4150,7 +4150,7 @@ if (host) {
   {
     slug: 'ai-usage',
     name: 'AI 用量条',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '上下文用量 .ai-usage 双形态：分段条（renderAiUsage）+ 上下文窗口环形指示器（renderAiUsageRing，Claude Desktop 式常驻小环，点击弹出完整分解，弹层复用 popover）。分段条 = 分段条 + 图例 + 占比行；配色契约 input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint。缓存分列计费诚实：cacheRead ≈ 0.1× 输入价、cacheWrite ≈ 1.25× 输入价（行业惯例，展示与算账口径一致）。配套 renderAiAudit 审计面板：totals（请求数/失败/累计 tokens/累计成本/平均 TTFT）+ byModel 分组 + 最近条目，与 createAiAuditor 的条目（含 cost 定价估算与 ttftMs）闭环。',
     demo: `<div style="display:flex;align-items:center;gap:12px;width:100%;margin-bottom:14px">
   <div id="ai-usage-ring-demo"></div>
@@ -4239,7 +4239,7 @@ document.getElementById('ai-audit-seed')?.addEventListener('click', function () 
   {
     slug: 'ai-context',
     name: 'AI 上下文面板',
-    group: 'AI',
+    group: 'AI 原生',
     desc: '上下文抽屉 .ai-context：触发器 [data-ai-context-open] 全局委托开合（属性值可为 #id 选择器），fixed 右侧滑入（--z-chrome），Esc / 外点关闭、Tab 焦点圈禁；renderAiContext 组合渲染用量（renderAiUsage）+ 审计节（audit 传 auditor 或条目数组，紧凑形态）+ 文件 chips + MCP server 行（.ai-item：connected→is-done / disconnected→is-error）+ Skills 列表；.ai-context--inline 为页面流内嵌变体（不参与开合）。',
     demo: `<div class="toolbar">
   <button class="btn btn-sm btn-primary" type="button" data-ai-context-open>打开上下文面板</button>

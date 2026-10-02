@@ -118,19 +118,57 @@ const isActive = (href: string): boolean =>
             <a class:list={['docs-link', { active: isActive('/primitives/') }]} href="/primitives/">原语</a>
             <a class:list={['docs-link', { active: isActive('/tokens/') }]} href="/tokens/">色彩 Tokens</a>
           </div>
-          {GROUPS.map((g) => (
-            <div class="docs-group">
-              <p class="docs-group-name">{g}</p>
-              {COMPONENTS.filter((c) => c.group === g).map((c) => (
-                <a
-                  class:list={['docs-link', { active: isActive(`/components/${c.slug}/`) }]}
-                  href={`/components/${c.slug}/`}
-                >{c.name}</a>
-              ))}
-            </div>
-          ))}
+          {GROUPS.map((g) => {
+            const items = COMPONENTS.filter((c) => c.group === g);
+            return (
+              <details class="docs-group" data-group={g} open>
+                <summary class="docs-group-name">
+                  <span class="docs-group-title">{g}</span>
+                  <span class="docs-group-count">{items.length}</span>
+                </summary>
+                <div class="docs-group-links">
+                  {items.map((c) => (
+                    <a
+                      class:list={['docs-link', { active: isActive(`/components/${c.slug}/`) }]}
+                      href={`/components/${c.slug}/`}
+                    >{c.name}</a>
+                  ))}
+                </div>
+              </details>
+            );
+          })}
         </nav>
       </aside>
+      <script is:inline>
+        /* 分组折叠状态：details 天然多开；首访（无存储）全开；之后按记忆恢复；
+           深链兜底——当前页所在组永远展开（toggle 自愈会把记忆里误存的折叠清掉）。
+           本脚本在 </aside> 后同步执行，首帧绘制前完成，无闪烁。 */
+        (() => {
+          const KEY = 'icen.docs.nav.groups';
+          const groups = Array.from(document.querySelectorAll('.docs-group[data-group]'));
+          if (!groups.length) return;
+          let collapsed = null;
+          try { collapsed = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { collapsed = null; }
+          if (!Array.isArray(collapsed)) { localStorage.setItem(KEY, '[]'); return; }
+          const activeLink = document.querySelector('.docs-group[data-group] .docs-link.active');
+          const activeGroup = activeLink ? activeLink.closest('.docs-group[data-group]') : null;
+          groups.forEach(function (d) {
+            d.open = collapsed.indexOf(d.getAttribute('data-group')) === -1;
+          });
+          if (activeGroup) activeGroup.open = true;
+          groups.forEach(function (d) {
+            d.addEventListener('toggle', function () {
+              const name = d.getAttribute('data-group');
+              if (!name) return;
+              let cur = [];
+              try { cur = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { cur = []; }
+              const next = d.open ? cur.filter(function (x) { return x !== name; })
+                                  : cur.concat([name]).filter(function (v, i, a) { return a.indexOf(v) === i; });
+              localStorage.setItem(KEY, JSON.stringify(next));
+            });
+          });
+        })();
+      </script>
       <script is:inline>
         /* 侧栏滚动位置跨页保持（MPA 整页跳转不丢滚动位）：
            滚动时 rAF 节流写 sessionStorage；本脚本在 </aside> 后同步执行，
