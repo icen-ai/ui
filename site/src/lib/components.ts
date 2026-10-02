@@ -3055,8 +3055,10 @@ let todoCard = null;
 function todo(list) {
   /* 业界模式：待办是对话里的工具调用（折叠卡，摘要 x/y 完成），实时状态挂输入框 chip */
   const input = { items: list };
+  const doneN = list.filter(function (t) { return t.status === 'done'; }).length;
   if (!todoCard) todoCard = card('TodoWrite', 'todo', { input: input });
-  else todoCard.update({ input: input });
+  /* 每次工具调用即时结算：done 态 + 耗时，摘要行 x/y 与 chip/弹层三处同源 */
+  todoCard.update({ input: input, status: 'done', durationMs: 120 + doneN * 60, output: doneN + '/' + list.length + ' 完成' });
   M.comp.setComposerTodo(composer, list);
 }
 function card(name, kind, model) {
@@ -3118,7 +3120,7 @@ async function play() {
   stage('⑧ render_chart（默认展开）');
   const s3 = card('render_chart', 'chart', {
     input: { type: 'line', labels: ['v0.1', 'v0.2', 'v0.3', 'v0.4', 'v0.5', 'v0.6', 'v0.7', 'v0.8'] },
-    output: { type: 'chart', spec: { title: '各版本能力数（多系列折线）', labels: ['v0.1', 'v0.2', 'v0.3', 'v0.4', 'v0.5', 'v0.6', 'v0.7', 'v0.8'], series: [{ name: '组件', values: [31, 41, 43, 47, 51, 55, 66, 67] }, { name: 'AI 专属', values: [0, 0, 0, 0, 0, 0, 11, 13] }, { name: '图表类型', values: [1, 5, 10, 10, 10, 10, 10, 12] }] } },
+    output: { type: 'chart', spec: { type: 'line', title: '各版本能力数（多系列折线）', labels: ['v0.1', 'v0.2', 'v0.3', 'v0.4', 'v0.5', 'v0.6', 'v0.7', 'v0.8'], series: [{ name: '组件', values: [31, 41, 43, 47, 51, 55, 66, 67] }, { name: 'AI 专属', values: [0, 0, 0, 0, 0, 0, 11, 13] }, { name: '图表类型', values: [1, 5, 10, 10, 10, 10, 10, 12] }] } },
   });
   s3.update({ status: 'done', durationMs: 240 });
   await sleep(1200);

@@ -1572,6 +1572,8 @@ function looksTemporal(labels: string[]): boolean {
     else if (/^[Qq][1-4]$/.test(l)) hits++;
     else if (/^(周一|周二|周三|周四|周五|周六|周日|Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i.test(l)) hits++;
     else if (/^第?\d+[日时周月]/.test(l)) hits++;
+    else if (/^(v|ver\.?|version[ .]?)?\d+(\.\d+)+$/i.test(l)) hits++; /* v0.8 / 1.2.3 版本序列 */
+    else if (/^\d{4}$/.test(l)) hits++; /* 纯年份 */
   }
   return hits / labels.length >= 0.6;
 }
