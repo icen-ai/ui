@@ -142,6 +142,7 @@ parseAiToolArgs('render_chart', raw);   // 模型回包解析（容错 JSON 字�
 | 上述类型面 + JSDoc 的纯文本快照 | <https://ui.icen.ai/llms-full.txt>（「API 类型面」节，构建期自动内嵌） |
 | 设计动机 / 状态机语义 / 口径取舍 | `docs/spec/ai-native.md`（包内随发） |
 | DOM 契约 / CSS 类名 | 各组件文档页 <https://ui.icen.ai/components/<slug>/，kit 入口同款 CSS 头注释 |
+| 场景配方（选图决策树 / 聊天五步 / 主题切换） | skill `icen-ui`（skill.icen.ai，`curl -sL https://skill.icen.ai/install/ui.sh \| bash`）——按需触发的流程层，与本手册（事实层）互补 |
 
 ---
 
