@@ -364,8 +364,8 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
     --float-shadow-hover: 0 2px 4px rgba(0,0,0,.45), 0 30px 68px -18px rgba(0,0,0,.7);
   }
   @media (hover: hover) and (pointer: fine) {
+    /* hover 只加深投影与层级，不抢 transform —— 呼吸漂浮不因指针打断 */
     .float-card:hover {
-      transform: translateY(-8px);
       box-shadow: var(--float-shadow-hover);
       border-color: var(--token-line);
       z-index: 3;
@@ -400,20 +400,31 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
   .float-body--split > #home-todo { flex: 1; min-width: 0; }
   .float-ring { flex: none; }
 
-  /* 进场：交错上浮（动效守卫下关闭） */
+  /* 进场 + 持续呼吸漂浮：入场（一次性）之后接无限 levitate（每卡不同时长/相位，有机错落）。
+     levitate 用正延迟等入场结束再接管 transform，两段动画不冲突；动效守卫下全部关闭。 */
   @media (prefers-reduced-motion: no-preference) {
-    .float-card { animation: float-in .55s var(--ease-out) backwards; }
-    .float-card:nth-child(1) { animation-delay: .02s; }
-    .float-card:nth-child(2) { animation-delay: .08s; }
-    .float-card:nth-child(3) { animation-delay: .14s; }
-    .float-card:nth-child(4) { animation-delay: .20s; }
-    .float-card:nth-child(5) { animation-delay: .26s; }
-    .float-card:nth-child(6) { animation-delay: .30s; }
-    .float-card:nth-child(7) { animation-delay: .34s; }
-    .float-card:nth-child(8) { animation-delay: .38s; }
+    .float-card {
+      --lev-duration: 6.5s;
+      --lev-delay: 1s;
+      animation:
+        float-in .55s var(--ease-out) backwards,
+        levitate var(--lev-duration) ease-in-out var(--lev-delay) infinite;
+    }
+    .float-card:nth-child(1) { --lev-duration: 6.4s; --lev-delay: .75s; }
+    .float-card:nth-child(2) { --lev-duration: 7.6s; --lev-delay: 1.0s; }
+    .float-card:nth-child(3) { --lev-duration: 5.9s; --lev-delay: 1.25s; }
+    .float-card:nth-child(4) { --lev-duration: 7.0s; --lev-delay: .9s; }
+    .float-card:nth-child(5) { --lev-duration: 6.1s; --lev-delay: 1.15s; }
+    .float-card:nth-child(6) { --lev-duration: 8.0s; --lev-delay: 1.4s; }
+    .float-card:nth-child(7) { --lev-duration: 6.8s; --lev-delay: 1.05s; }
+    .float-card:nth-child(8) { --lev-duration: 7.3s; --lev-delay: 1.3s; }
     @keyframes float-in {
       from { opacity: 0; transform: translateY(22px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes levitate {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
     }
   }
 
