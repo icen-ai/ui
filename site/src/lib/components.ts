@@ -2958,6 +2958,294 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
 
   /* ══════════ AI（AI 原生组件族，规格 docs/spec/ai-native.md）══════════ */
   {
+    slug: 'ai-overview',
+    name: 'AI 总览',
+    group: 'AI',
+    desc: '一段可播放的完整对话《分析 AI 迭代历史》——把 AI 族全部能力按真实工作流串起来：思考（reasoning 流式+自动折叠）→ 规划（todo activeForm 推进）→ 网络搜索 / 接口调用（工具卡）→ 二次思考 → 正文流式 → render_chart 可视化（默认展开）→ 人工审批（点「允许」继续）→ history.md 差异审阅（accept/reject）→ 文件标签 → 子智能体（嵌套活动流）→ 失败重试（自动展开）→ 多模态回执（架构图）→ 收尾（token/成本、上下文抽屉、审计面板）。输入台 v2（模型切换/命令/@引用/上下文环）全程参与。',
+    demo: `<div class="toolbar" style="margin-bottom:10px">
+  <button class="btn btn-sm btn-primary" type="button" id="ai-ov-play">▶ 播放全流程</button>
+  <button class="btn btn-sm" type="button" id="ai-ov-reset">↺ 重置</button>
+  <span class="toolbar-spacer"></span>
+  <button class="btn btn-sm" type="button" data-ai-context-open="#ai-ov-ctx-host">上下文</button>
+</div>
+<p class="demo-label" id="ai-ov-stage" style="margin:0 0 10px">场景：分析 AI 迭代历史 · 全组件走一遍（约 30 秒，中途有一处需要你点「允许」）</p>
+<div class="ai-chat" id="ai-ov-chat" style="height:520px;border:1px solid var(--token-line-soft);border-radius:var(--radius-md);padding:10px">
+  <div class="ai-chat-scroll" id="ai-ov-scroll"></div>
+</div>
+<div class="ai-composer" data-ai-composer id="ai-ov-composer" style="margin-top:10px">
+  <div class="ai-composer-queue" hidden></div>
+  <div class="ai-composer-attach" hidden></div>
+  <div class="ai-composer-box control">
+    <textarea class="ai-composer-input" rows="1" placeholder="播放中回车会排队（icen:ai-queue）· / 命令 · @ 引用"></textarea>
+    <div class="ai-composer-actions">
+      <button class="ai-composer-btn" data-ai-attach type="button" aria-label="附件"></button>
+      <button class="ai-composer-send" data-ai-send type="button" aria-label="发送"></button>
+    </div>
+  </div>
+</div>
+<div id="ai-ov-ctx-host"></div>
+<div class="toolbar" style="margin-top:14px">
+  <span class="toolbar-label">审计</span>
+  <span class="toolbar-spacer"></span>
+  <span class="toolbar-label" id="ai-ov-audit-meta">随流程累计</span>
+</div>
+<div id="ai-ov-audit" style="margin-top:8px"></div>`,
+    usage: `<!-- 本页是「活文档」：全部子组件的独立文档见侧栏 AI 分组各页 -->`,
+    behaviors: ['ai-chat', 'ai-composer', 'ai-tool', 'ai-diff', 'ai-panel', 'ai-core', 'ai-provider'],
+    behaviorInit: { 'ai-chat': 'initAiChat', 'ai-composer': 'initAiComposer', 'ai-panel': 'initAiContext', 'ai-diff': 'initAiDiff' },
+    script: `/* AI 总览：可播放的全组件工作流（分析 AI 迭代历史） */
+const M = { chat: aiChatMod, comp: aiComposerMod, tool: aiToolMod, diff: aiDiffMod, panel: aiPanelMod, core: aiCoreMod, prov: aiProviderMod };
+const scroll = document.getElementById('ai-ov-scroll');
+const composer = document.getElementById('ai-ov-composer');
+const stageEl = document.getElementById('ai-ov-stage');
+const playBtn = document.getElementById('ai-ov-play');
+const resetBtn = document.getElementById('ai-ov-reset');
+const auditor = M.prov.createAiAuditor();
+let cancelled = false; let timers = [];
+const sleep = function (ms) { return new Promise(function (res) { timers.push(setTimeout(res, ms)); }); };
+function stage(t) { if (stageEl) stageEl.textContent = t; }
+function logAudit(p, m, ok, usage, ttft) {
+  auditor.log({ id: 'ov-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5), ts: Date.now(), provider: p, model: m, baseURL: '', stream: true, status: ok ? 'ok' : 'error', durationMs: 900 + Math.round(Math.random() * 2400), ttftMs: ttft, cost: M.prov.estimateCost(usage || {}, p, m), usage: usage, error: ok ? undefined : '网络请求失败：连接被对端重置（type=network）' });
+}
+function tCost() { const t = auditor.totals(); return t.cost > 0 ? t.cost : undefined; }
+function refreshAudit() {
+  const host = document.getElementById('ai-ov-audit');
+  if (host) M.panel.renderAiAudit(host, auditor, { limit: 8, onClear: function () { auditor.clear(); refreshAudit(); } });
+  const meta = document.getElementById('ai-ov-audit-meta');
+  if (meta) { const t = auditor.totals(); meta.textContent = t.requests + ' 次请求 · ' + (t.cost > 0 ? '$' + t.cost.toFixed(4) : '—'); }
+}
+function user(text) { M.chat.renderAiMessage(scroll, { role: 'user', content: text, meta: '刚刚' }); }
+function bodyStream(text, ms) {
+  const msg = M.chat.renderAiMessage(scroll, { role: 'assistant', content: '', model: 'kimi-k3', streaming: true });
+  const s = msg.stream();
+  return new Promise(function (res) {
+    let i = 0;
+    const t = setInterval(function () {
+      if (cancelled) { clearInterval(t); s.done(); res(); return; }
+      const next = Math.min(text.length, i + 3 + Math.floor(Math.random() * 4));
+      s.append(text.slice(i, next));
+      i = next;
+      if (i >= text.length) { clearInterval(t); s.done(); msg.setMeta('刚刚 · 1.8k tok'); res(); }
+    }, Math.max(18, (ms || 1800) / (text.length / 5)));
+    timers.push(t);
+  });
+}
+function reasoning(text, ms) {
+  const r = document.createElement('div'); r.className = 'ai-reasoning is-streaming';
+  const head = document.createElement('button'); head.type = 'button'; head.className = 'ai-reasoning-head'; head.setAttribute('aria-expanded', 'true');
+  const label = document.createElement('span'); label.className = 'ai-reasoning-label'; label.textContent = '思考过程';
+  const time = document.createElement('span'); time.className = 'ai-reasoning-time';
+  head.append(label, time);
+  const bodyEl = document.createElement('div'); bodyEl.className = 'ai-reasoning-body';
+  r.append(head, bodyEl); scroll.appendChild(r);
+  const s = M.chat.createAiStream(bodyEl);
+  return new Promise(function (res) {
+    let i = 0;
+    const t = setInterval(function () {
+      if (cancelled) { clearInterval(t); s.cancel(); res(); return; }
+      const next = Math.min(text.length, i + 5);
+      s.append(text.slice(i, next));
+      i = next;
+      if (i >= text.length) { clearInterval(t); s.done(); res(); }
+    }, Math.max(16, (ms || 1500) / (text.length / 5)));
+    timers.push(t);
+  });
+}
+let todoHost = null;
+function todo(list) {
+  if (!todoHost) { todoHost = document.createElement('div'); scroll.appendChild(todoHost); }
+  M.panel.renderAiTodo(todoHost, list);
+}
+function card(name, kind, model) {
+  const holder = document.createElement('div');
+  scroll.appendChild(holder);
+  return M.tool.renderAiToolCall(holder, Object.assign({ id: 'ov-' + name + '-' + Date.now(), name: name, kind: kind, status: 'pending' }, model));
+}
+const U = function (n) { return { prompt_tokens: n, completion_tokens: Math.round(n / 8), prompt_tokens_details: { cached_tokens: Math.round(n * 0.6) } }; };
+
+async function play() {
+  if (!scroll) return;
+  if (playBtn && playBtn.disabled) return;
+  cancelled = false; if (playBtn) playBtn.disabled = true;
+  M.comp.setComposerRunning(composer, true);
+  stage('① 用户提问');
+  user('分析我们产品这一年多的 AI 迭代历史，给我一份完整的演进报告');
+  await sleep(500);
+
+  stage('② 思考：拆解任务');
+  await reasoning('用户要迭代历史的完整分析。先明确数据源：git log、发布记录、changelog。计划：搜索公开资料，调内部接口拿发布数据，提炼阶段叙事，做能力增长可视化，最后落一份 history.md。风险：数据口径要统一，按版本对齐。', 1600);
+  logAudit('kimi', 'kimi-k3', true, M.core.normalizeUsage(U(14200)), 210);
+
+  stage('③ 规划（todo activeForm 推进）');
+  todo([
+    { content: '搜集公开迭代资料', status: 'running', activeForm: '正在搜索公开迭代资料' },
+    { content: '拉取内部发布记录', status: 'pending' },
+    { content: '提炼阶段叙事与数据', status: 'pending' },
+    { content: '渲染能力增长可视化', status: 'pending' },
+    { content: '写入 docs/history.md', status: 'pending' },
+  ]);
+  await sleep(900);
+
+  stage('④ 网络搜索（工具卡）');
+  const s1 = card('WebSearch', 'browser', { input: { query: 'icen ui AI 组件 迭代 发布' } });
+  await sleep(700); s1.update({ status: 'running' });
+  await sleep(1100); s1.update({ status: 'done', output: '命中 24 条 · 相关 6 条（v0.1 单一事实源 → v0.5 工程级 → v0.7 AI 族 → v0.8 工具体系）', durationMs: 1800 });
+
+  stage('⑤ 接口调用（fetch 工具卡）');
+  const s2 = card('ApiFetch', 'fetch', { input: { url: '/api/releases?product=ui' } });
+  await sleep(600); s2.update({ status: 'running' });
+  await sleep(1000); s2.update({ status: 'done', output: { ok: true, releases: 9, tags: ['v0.1.1', 'v0.2.0', 'v0.3.0', 'v0.4.0', 'v0.5.0', 'v0.6.0', 'v0.7.0', 'v0.7.1', 'v0.8.0'] }, durationMs: 1400 });
+  logAudit('kimi', 'kimi-k3', true, M.core.normalizeUsage(U(18600)), 240);
+  todo([
+    { content: '搜集公开迭代资料', status: 'done' },
+    { content: '拉取内部发布记录', status: 'done' },
+    { content: '提炼阶段叙事与数据', status: 'running', activeForm: '正在提炼阶段叙事与数据' },
+    { content: '渲染能力增长可视化', status: 'pending' },
+    { content: '写入 docs/history.md', status: 'pending' },
+  ]);
+  await sleep(400);
+
+  stage('⑥ 二次思考');
+  await reasoning('数据齐了：9 个 tag、四个大阶段。叙事按设计系统、工程级、AI 原生、工具体系四幕展开；配一张各版本能力数折线。', 900);
+  logAudit('kimi', 'kimi-k3', true, M.core.normalizeUsage(U(22400)), 180);
+
+  stage('⑦ 正文流式（createAiStream）');
+  await bodyStream('一年多的迭代可以概括为四幕：v0.1 确立「单一事实源」的设计系统底座；v0.5 把 51 个组件全部拉到工程级深度；v0.7 引入 AI 原生组件族（11 个 slug + 7 态状态机）；v0.8 收口为工具体系——图表通用层 + AI 挂载区。下面用数据说话：', 2000);
+
+  stage('⑧ render_chart（默认展开）');
+  const s3 = card('render_chart', 'chart', {
+    input: { type: 'line', labels: ['v0.1', 'v0.2', 'v0.3', 'v0.4', 'v0.5', 'v0.6', 'v0.7', 'v0.8'] },
+    output: { type: 'chart', spec: { title: '各版本能力数（多系列折线）', labels: ['v0.1', 'v0.2', 'v0.3', 'v0.4', 'v0.5', 'v0.6', 'v0.7', 'v0.8'], series: [{ name: '组件', values: [31, 41, 43, 47, 51, 55, 66, 67] }, { name: 'AI 专属', values: [0, 0, 0, 0, 0, 0, 11, 13] }, { name: '图表类型', values: [1, 5, 10, 10, 10, 10, 10, 12] }] } },
+  });
+  s3.update({ status: 'done', durationMs: 240 });
+  await sleep(1200);
+
+  stage('⑨ 待人审批（点「允许」继续）');
+  const ap = card('Edit', 'edit', { input: { file_path: 'docs/history.md' }, status: 'approval', approval: { reason: '写入 docs/history.md（新增 1 文件，+46 行）' } });
+  const ok = await new Promise(function (res) {
+    ap.el.addEventListener('icen:ai-approve', function once() { ap.el.removeEventListener('icen:ai-approve', once); res(true); });
+    timers.push(setTimeout(function () { res(false); }, 60000));
+  });
+  ap.update({ status: 'done', output: '46 行已写入 docs/history.md', durationMs: 400 });
+  stage(ok ? '⑩ 已批准' : '⑩ 超时自动批准（演示）');
+
+  stage('⑩ history.md 差异审阅（accept/reject 可点）');
+  const diffHost = document.createElement('div'); scroll.appendChild(diffHost);
+  M.diff.renderAiDiff(diffHost, { files: M.diff.parseUnifiedDiff([
+    'diff --git a/docs/history.md b/docs/history.md',
+    'new file mode 100644',
+    '--- /dev/null',
+    '+++ b/docs/history.md',
+    '@@ -0,0 +1,5 @@',
+    '+# UI 迭代历史',
+    '+',
+    '+## 四幕',
+    '+1. v0.1 设计系统单一事实源（31 组件 / 19 behaviors）',
+    '+2. v0.5 工程级强化（51 组件 / 25 behaviors）',
+  ].join('\\n')) });
+  await sleep(1000);
+
+  stage('⑪ 文件标签（ai-files）');
+  const filesRow = document.createElement('div'); filesRow.className = 'ai-files'; filesRow.style.margin = '6px 0';
+  [['docs/history.md', 'is-added'], ['docs/spec/ai-native.md', 'is-modified'], ['src/behaviors/ai-tools.ts', 'is-added']].forEach(function (f) {
+    const chip = document.createElement('span'); chip.className = 'ai-file-chip ' + f[1];
+    const ic = document.createElement('span'); ic.className = 'ai-file-icon';
+    const sv = M.core.svgIcon('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>');
+    if (sv) ic.appendChild(sv);
+    chip.append(ic, document.createTextNode(f[0]));
+    filesRow.appendChild(chip);
+  });
+  scroll.appendChild(filesRow);
+  await sleep(700);
+
+  stage('⑫ 子智能体（嵌套活动流）');
+  const saHost = document.createElement('div'); scroll.appendChild(saHost);
+  const sa = M.tool.renderAiSubagent(saHost, { id: 'ov-sub', name: 'verify', kind: 'subagent', status: 'running', input: { task: '交叉核验版本号与日期' }, activities: [
+    { id: 'a1', name: 'Read', kind: 'read', status: 'done', input: { file_path: 'CHANGELOG.md' }, output: '9 个版本条目', durationMs: 300 },
+    { id: 'a2', name: 'Grep', kind: 'grep', status: 'running', input: { pattern: 'v0' } },
+  ] });
+  await sleep(1200);
+  sa.update({ status: 'done', durationMs: 2400, output: '版本号与日期全部对上，无出入', activities: [
+    { id: 'a1', name: 'Read', kind: 'read', status: 'done', input: { file_path: 'CHANGELOG.md' }, output: '9 个版本条目', durationMs: 300 },
+    { id: 'a2', name: 'Grep', kind: 'grep', status: 'done', input: { pattern: 'v0' }, output: '37 处命中', durationMs: 900 },
+  ] });
+  await sleep(500);
+
+  stage('⑬ 失败重试（自动展开，Copilot 模式）');
+  const er = card('Shell', 'shell', { input: { command: 'git log --oneline' }, status: 'running' });
+  await sleep(900);
+  er.update({ status: 'error', errorText: '网络请求失败：连接被对端重置（type=network），已自动重试', durationMs: 1600 });
+  logAudit('kimi', 'kimi-k3', false, undefined);
+  await sleep(900);
+  er.update({ status: 'done', output: '214 commits · 峰值在 v0.5 与 v0.8 两个窗口', durationMs: 900 });
+
+  stage('⑭ 多模态回执（架构图 image 部件）');
+  const arch = "<svg xmlns='http://www.w3.org/2000/svg' width='320' height='120'><rect width='320' height='120' rx='8' fill='#f5f2ea' stroke='#c9c4b8'/><rect x='14' y='42' width='74' height='36' rx='6' fill='#d97757' opacity='0.85'/><rect x='100' y='42' width='74' height='36' rx='6' fill='#c9c4b8'/><rect x='186' y='42' width='74' height='36' rx='6' fill='#c9c4b8'/><rect x='272' y='42' width='34' height='36' rx='6' fill='#3d8a5a' opacity='0.8'/><line x1='88' y1='60' x2='100' y2='60' stroke='#8a857a'/><line x1='174' y1='60' x2='186' y2='60' stroke='#8a857a'/><line x1='260' y1='60' x2='272' y2='60' stroke='#8a857a'/><text x='51' y='64' font-size='10' text-anchor='middle' fill='#fff'>tokens</text><text x='137' y='64' font-size='10' text-anchor='middle' fill='#5a564d'>CSS</text><text x='223' y='64' font-size='10' text-anchor='middle' fill='#5a564d'>AI 族</text><text x='289' y='64' font-size='9' text-anchor='middle' fill='#fff'>工具</text><text x='160' y='24' font-size='11' text-anchor='middle' fill='#5a564d'>生态分层（v0.8）</text></svg>";
+  M.chat.renderAiMessage(scroll, {
+    role: 'assistant', model: 'kimi-k3',
+    content: [
+      { type: 'text', text: '最终架构分层如右（image 部件 + file 部件同屏）：' },
+      { type: 'image', url: 'data:image/svg+xml;utf8,' + encodeURIComponent(arch), alt: '生态分层架构图' },
+      { type: 'file', mimeType: 'application/pdf', filename: '迭代报告.pdf' },
+    ],
+    meta: '刚刚 · 1.1k tok',
+  });
+  await sleep(600);
+
+  stage('⑮ 收尾');
+  todo([
+    { content: '搜集公开迭代资料', status: 'done' },
+    { content: '拉取内部发布记录', status: 'done' },
+    { content: '提炼阶段叙事与数据', status: 'done' },
+    { content: '渲染能力增长可视化', status: 'done' },
+    { content: '写入 docs/history.md', status: 'done' },
+  ]);
+  await bodyStream('报告完成：四幕叙事 + 能力曲线 + history.md 已落盘。上下文抽屉（右上「上下文」按钮）里有用量、文件、MCP、Skills 与本次全量审计。', 1200);
+  logAudit('kimi', 'kimi-k3', true, M.core.normalizeUsage(U(26800)), 200);
+  M.comp.setComposerRunning(composer, false);
+  refreshAudit();
+  const ctxHost = document.getElementById('ai-ov-ctx-host');
+  if (ctxHost) M.panel.renderAiContext(ctxHost, {
+    usage: M.core.normalizeUsage(U(26800)), usageTotal: 1000000, usageCost: tCost(),
+    audit: auditor,
+    files: [{ path: 'docs/history.md', status: 'added' }, { path: 'src/behaviors/ai-tools.ts', status: 'added' }, { path: 'docs/spec/ai-native.md', status: 'modified' }],
+    mcpServers: [{ name: 'github', tools: 24 }, { name: 'filesystem', tools: 12 }, { name: 'browser', status: 'disconnected' }],
+    skills: [{ name: 'release-skills', description: '发版流程' }, { name: 'icen-cn-doc', description: '中文文体' }],
+  });
+  stage('完成 · ' + auditor.list().length + ' 次请求 · ' + (tCost() ? '$' + tCost().toFixed(4) : '—') + ' · 点 ↺ 可重放');
+  if (playBtn) playBtn.disabled = false;
+}
+
+function reset() {
+  cancelled = true;
+  timers.forEach(function (t) { clearTimeout(t); clearInterval(t); }); timers = [];
+  if (scroll) scroll.textContent = '';
+  todoHost = null;
+  M.comp.setComposerRunning(composer, false);
+  stage('场景：分析 AI 迭代历史 · 全组件走一遍（约 30 秒，中途有一处需要你点「允许」）');
+  if (playBtn) playBtn.disabled = false;
+}
+
+M.tool.initAiTool();
+M.tool.initAiSubagent();
+M.comp.setComposerModels(composer, M.prov.listAiProviders(), { provider: 'kimi', model: 'kimi-k3' });
+M.comp.setComposerCommands(composer, [
+  { name: 'report', description: '生成迭代报告', argsHint: '[产品]' },
+  { name: 'compact', description: '压缩上下文' },
+]);
+M.comp.setComposerRefs(composer, [
+  { kind: 'file', id: 'f1', label: 'CHANGELOG.md', sub: '4.2k tok' },
+  { kind: 'folder', id: 'f2', label: 'docs/spec/', sub: '3 个规格' },
+  { kind: 'agent', id: 'a1', label: 'verify', sub: '核验型子代理' },
+]);
+M.comp.setComposerUsage(composer, { input: 0 }, { total: 1000000 });
+composer?.addEventListener('icen:ai-model-change', function (e) { stage('模型切换 → ' + e.detail.label); });
+composer?.addEventListener('icen:ai-queue', function (e) { stage('已排队（运行中回车）：' + e.detail.text.slice(0, 24)); });
+playBtn?.addEventListener('click', play);
+resetBtn?.addEventListener('click', reset);
+refreshAudit();`,
+  },
+  {
     slug: 'ai-chat',
     name: 'AI 会话',
     group: 'AI',
