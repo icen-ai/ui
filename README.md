@@ -7,6 +7,9 @@ icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明
 - 可选效果层：`retro-effects.css`（CRT 扫描线 / 颗粒 / 像素边框 / 打字机光标 —— 仅 `.style-retro` 激活时生效，按需 import）
 - 组件：btn / form / input / select / slider / switch / tag-input / upload / modal / popover / tooltip / menu（含 dropdown + context-menu）/ tabs / nav / sidebar / breadcrumb / pagination / steps / segmented / accordion / tree / carousel / charts / table / stat / card / panel / pill / tag / badge / empty / feedback / content / media / toolbar / split-pane / date-picker / command-palette / notification / copy / scroll-area / back-top / datatable / layout（55 个组件 CSS，含 charts 基座 + 9 个细分图表）
 - AI 原生组件族（v0.7，11 个 slug）：ai-chat（会话容器）/ ai-message（消息行）/ ai-reasoning（推理块）/ ai-composer（输入台）/ ai-tool-call（工具调用卡）/ ai-subagent（子智能体卡）/ ai-diff（差异审阅）/ ai-files（文件标签）/ ai-todo（任务清单）/ ai-context（上下文抽屉）/ ai-usage（用量条）——共享 7 态状态机与 kind 注册表，事件统一 `icen:ai-*` 前缀
+- 标准化内容模型 `AiContent`（v0.7.1，对标 AI SDK v5 parts / MCP / OpenAI / Anthropic，2026-10 调研）：一套 `AiContentPart[]`（text / image / audio / video / file / resource-link）表达任意输入——消息渲染（renderAiMessage 多模态 + 错误变体）、工具回执（MCP content 数组零改动进卡片）、传输层（parts → 两族 wire，含 anthropic `cache_control` 与 tool_result 回灌）全部只认这一套；`normalizeContentParts` 一函数归一四族来源，`estimateTokens` / `contextEstimate` 提供粗估与上下文口径
+- ai-provider 适配层（v0.7.1 增强）：五家厂商注册表（含定价表，`estimateCost` 未命中不猜价）、chat + stream 双族线协议多模态传输、审计闭环（`createAiAuditor` 条目含 cost 定价估算与 ttftMs 首 token 延迟，`renderAiAudit` 面板 + `ai-context` 抽屉审计节）、请求收尾派 `icen:ai-done`（status/usage/cost/error/durationMs/ttftMs）
+- 绑定层 `bindComposer`（v0.7.1，「零接线全链路」）：一行把 composer ↔ 消息区（renderAiMessage）↔ client（stream + 停止 + 排队续发 + 错误路径）↔ 上下文环（`usage.from: 'context'` 正确口径 / `'billing'` 计费口径 / auditor）接成闭环；不传 client 为纯状态绑定（渐进采用）；附件三入口（钮选 / 粘贴 / 拖放）
 - 行为：theme / tabs / toast / copy / input / select / slider / tag-input / upload / modal / dropdown / popover / context-menu / accordion / tree / carousel / charts / nav / sidebar / datatable / notification / back-top / command-palette / date-picker / split-pane / ai-core / ai-chat / ai-composer / ai-tool / ai-diff / ai-panel（31 个，全部 SSR 守卫 + 幂等 init + textContent-only）
 
 ## 使用
@@ -42,6 +45,26 @@ initTabs();                        // [data-tabs] > [data-tab] + [data-tab-panel
 initCopy();                        // .copy-btn[data-copy] 委托
 toast.ok('已保存');                // 或 toast.action('已删除', '撤销', undo)；类名 .toast--success 等
 renderLine(el, { labels, series }); // 函数式组件（charts / datatable）：无 init，直接渲染
+```
+
+AI 全链路（零接线）：
+
+```ts
+import { initAiChat } from '@icen.ai/ui/kit/ai-chat';
+import { initAiComposer, bindComposer } from '@icen.ai/ui/kit/ai-composer';
+import { createAiClient, createAiAuditor } from '@icen.ai/ui';
+
+initAiChat();
+initAiComposer();
+const auditor = createAiAuditor({ persist: 'my-audit' });
+const client = createAiClient({ provider: 'kimi', apiKey, auditor });
+
+// 一行接通：发送 → 消息渲染 → 流式追加 → 停止/排队续发/错误路径 → 上下文环（正确口径）
+const binding = bindComposer(composer, {
+  client,
+  messages: chatEl.querySelector('.ai-chat-scroll'),
+  usage: { from: 'context' },   // 或 'billing' / auditor
+});
 ```
 
 ## 文档站（已上线 <https://ui.icen.ai>）

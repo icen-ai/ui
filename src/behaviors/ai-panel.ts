@@ -49,15 +49,21 @@
  *     派 icen:ai-todo-toggle {index, status}（bubbles）；默认只读。返回销毁函数
  *   - renderAiUsage(el, usage, opts?)：normalizeUsage 归一后分段条 + 图例 + 占比；
  *     input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint
- *   - renderAiContext(el, model)：组合渲染，内部复用 renderAiUsage 与 ai-file-chip
+ *   - renderAiContext(el, model)：组合渲染，内部复用 renderAiUsage 与 ai-file-chip；
+ *     model.audit（auditor 实例或条目数组）给定时自动出现「审计」节（紧凑形态）
  *   - initAiContext(root?)：幂等（__icenAiContextInit）；[data-ai-context-open] 委托开合
  *     （属性值可作 #id / 类选择器，空值取默认抽屉），抽屉 fixed 右侧滑入（--z-chrome），
  *     Esc / 外点 / [data-ai-context-close] 关闭并还原焦点；Tab 焦点圈禁；
  *     .ai-context--inline 为页面流内嵌变体（不参与开合）。返回销毁函数
+ *   - renderAiAudit(el, source, opts?)（§12.2）：审计面板——totals（请求数/失败/累计
+ *     tokens/累计成本/平均 TTFT）+ byModel 分组 + 最近条目（默认 10，最新在前）；
+ *     清除钮派 icen:ai-audit-clear {}（或 opts.onClear）。source 为 AiAuditor 或条目数组，
+ *     快照渲染，数据更新后重调。
  */
 
 import {
   aiStatusLabel,
+  formatDuration,
   formatTokens,
   normalizeUsage,
   svgIcon,
@@ -65,6 +71,7 @@ import {
   type AiUsage,
 } from './ai-core';
 import { closePopover, openPopover } from './popover';
+import type { AiAuditEntry, AiAuditor } from './ai-provider';
 
 /* ── 小工具 ── */
 
@@ -457,6 +464,8 @@ export interface AiContextModel {
   files?: AiContextFile[];
   mcpServers?: AiContextMcpServer[];
   skills?: AiContextSkill[];
+  /** 审计源（auditor 实例或条目数组）：抽屉自动出现「审计」节（§12.2，紧凑形态无清除钮） */
+  audit?: AiAuditor | AiAuditEntry[];
 }
 
 /* ── 文件类型图标（lucide 风格最简路径，经 ai-core svgIcon 消毒解析） ── */
@@ -551,6 +560,14 @@ export function renderAiContext(elm: HTMLElement, model: AiContextModel): void {
   if (m.usage) {
     const { section, body } = renderSection('用量');
     renderAiUsage(body, m.usage, { total: m.usageTotal, cost: m.usageCost });
+    aside.appendChild(section);
+  }
+
+  /* 审计（§12.2：紧凑形态，无清除钮） */
+  const auditEntries = auditEntriesOf(m.audit);
+  if (auditEntries.length > 0) {
+    const { section, body } = renderSection('审计');
+    buildAuditBody(body, auditEntries, { limit: 5, compact: true });
     aside.appendChild(section);
   }
 
@@ -790,4 +807,140 @@ export function initAiContext(root?: ParentNode): () => void {
     target.removeEventListener('keydown', onKeydown);
     marked.__icenAiContextInit = false;
   };
+}
+
+/* ══════════════ ai-audit（§12.2：审计面板渲染） ══════════════ */
+
+export interface AiAuditRenderOpts {
+  /** 最近请求条数（默认 10；抽屉紧凑形态 5） */
+  limit?: number;
+  /** 显示清除钮（默认 true）；点击派 icen:ai-audit-clear（bubbles） */
+  clearButton?: boolean;
+  /** 替代事件回调（与 clearButton 二选一，都给时回调优先） */
+  onClear?: () => void;
+}
+
+function auditEntriesOf(source: AiAuditor | AiAuditEntry[] | undefined): AiAuditEntry[] {
+  if (!source) return [];
+  return Array.isArray(source) ? source.slice() : source.list();
+}
+
+function timeOf(ts: number): string {
+  try {
+    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return '';
+  }
+}
+
+interface AuditModelGroup {
+  key: string;
+  tokens: number;
+  cost: number;
+  requests: number;
+}
+
+/** totals + byModel + 最近条目（renderAiAudit 与 ai-context 审计节共用） */
+function buildAuditBody(body: HTMLElement, entries: AiAuditEntry[], opts: { limit?: number; compact?: boolean } = {}): void {
+  const limit = opts.limit ?? 10;
+  let tokens = 0;
+  let cost = 0;
+  let errors = 0;
+  let ttftSum = 0;
+  let ttftN = 0;
+  const groups = new Map<string, AuditModelGroup>();
+  for (const e of entries) {
+    const t = e.usage?.total ?? 0;
+    tokens += t;
+    if (typeof e.cost === 'number') cost += e.cost;
+    if (e.status === 'error') errors++;
+    if (typeof e.ttftMs === 'number') {
+      ttftSum += e.ttftMs;
+      ttftN++;
+    }
+    const key = `${e.provider}/${e.model}`;
+    const g = groups.get(key) ?? { key, tokens: 0, cost: 0, requests: 0 };
+    g.tokens += t;
+    if (typeof e.cost === 'number') g.cost += e.cost;
+    g.requests++;
+    groups.set(key, g);
+  }
+
+  /* totals 行 */
+  const totals = el('div', 'ai-audit-totals');
+  const bits = [`${entries.length} 次请求`];
+  if (errors > 0) bits.push(`${errors} 失败`);
+  bits.push(`${formatTokens(tokens)} tok`);
+  if (cost > 0) bits.push(`$${(Math.round(cost * 1e6) / 1e6).toFixed(4)}`);
+  if (ttftN > 0) bits.push(`TTFT ${formatDuration(Math.round(ttftSum / ttftN))}`);
+  totals.appendChild(el('span', 'ai-audit-totals-text', bits.join(' · ')));
+  body.appendChild(totals);
+
+  /* byModel 分组行（tokens 降序） */
+  const sorted = Array.from(groups.values()).sort((a, b) => b.tokens - a.tokens);
+  if (sorted.length > 0) {
+    const list = el('div', 'ai-audit-models');
+    for (const g of sorted) {
+      const row = el('div', 'ai-audit-model-row');
+      row.appendChild(el('span', 'ai-audit-model-name', g.key));
+      row.appendChild(el('span', 'ai-audit-model-meta', `${g.requests} 次 · ${formatTokens(g.tokens)} tok${g.cost > 0 ? ` · $${g.cost.toFixed(4)}` : ''}`));
+      list.appendChild(row);
+    }
+    body.appendChild(list);
+  }
+
+  /* 最近条目（最新在前） */
+  const recent = entries.slice(-limit).reverse();
+  const list = el('div', 'ai-audit-list');
+  for (const e of recent) {
+    const item = el('div', `ai-audit-item is-${e.status === 'ok' ? 'done' : 'error'}`);
+    item.appendChild(el('span', 'ai-audit-dot'));
+    const main = el('span', 'ai-audit-item-main');
+    main.appendChild(el('span', 'ai-audit-item-model', `${e.provider} · ${e.model}`));
+    const metaBits = [timeOf(e.ts), formatDuration(e.durationMs)];
+    if (typeof e.ttftMs === 'number') metaBits.push(`TTFT ${formatDuration(e.ttftMs)}`);
+    if ((e.usage?.total ?? 0) > 0) metaBits.push(`${formatTokens(e.usage?.total ?? 0)} tok`);
+    main.appendChild(el('span', 'ai-audit-item-meta', metaBits.filter(Boolean).join(' · ')));
+    item.appendChild(main);
+    if (e.error) item.appendChild(el('span', 'ai-audit-item-error', e.error));
+    list.appendChild(item);
+  }
+  body.appendChild(list);
+}
+
+/**
+ * 渲染审计面板：totals（请求数/失败/累计 tokens/累计成本/平均 TTFT）+ byModel 分组 +
+ * 最近请求条目（默认 10 条，最新在前）。source 为 auditor 实例或条目数组（快照渲染，
+ * 数据更新后重调）。清除钮派 icen:ai-audit-clear { }（消费方调 auditor.clear() 后重渲染），
+ * opts.onClear 给了则走回调。
+ */
+export function renderAiAudit(
+  elm: HTMLElement,
+  source: AiAuditor | AiAuditEntry[],
+  opts: AiAuditRenderOpts = {},
+): void {
+  if (typeof document === 'undefined') return;
+  elm.textContent = '';
+  const root = el('div', 'ai-audit');
+  const entries = auditEntriesOf(source);
+
+  if (entries.length === 0) {
+    root.appendChild(el('div', 'ai-audit-empty', '暂无审计记录'));
+    elm.appendChild(root);
+    return;
+  }
+
+  buildAuditBody(root, entries, { limit: opts.limit });
+
+  if (opts.clearButton !== false) {
+    const clear = el('button', 'btn btn-sm ai-audit-clear', '清除审计');
+    clear.type = 'button';
+    clear.addEventListener('click', () => {
+      if (opts.onClear) opts.onClear();
+      else dispatch(root, 'icen:ai-audit-clear', {});
+    });
+    root.appendChild(clear);
+  }
+
+  elm.appendChild(root);
 }

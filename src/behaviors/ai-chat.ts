@@ -23,15 +23,27 @@
  *                       reasoning 折叠委托：.ai-reasoning-head 点击切换（aria-expanded），
  *                       同时派 icen:ai-toggle {el, open}。
  *                       返回销毁函数（复刻 initBackTop 约定）。
- *   createAiStream(el)  → { append(text), done(), cancel() }：textContent 级追加（不解析
+ *   createAiStream(el)  → { append(text), done(), cancel(), fail() }：textContent 级追加（不解析
  *                       HTML），追加期间宿主挂 .is-streaming + aria-busy，done/cancel 移除；
+ *                       fail() 终止追加并挂 .is-error（错误路径）。
  *                       若宿主在 .ai-reasoning 内，完成时自动折叠并回填 .ai-reasoning-time 耗时。
  *                       Markdown 重渲染是消费方职责，本模块不碰。
+ *   renderAiMessage(scrollEl, model) → { el, body, setMeta, setError, stream() }：
+ *                       DOM API 渲染一条消息（多角色变体 + 多模态部件（spec §10：
+ *                       文字/图片/音频/视频/文件/资源链接）+ copy/retry 动作钮（委托归
+ *                       initAiChat）+ meta/model 标签 + .ai-msg--error 错误变体）。
+ *                       stream() 在正文末开流式文本节点返回 createAiStream 句柄。
  *
  * SSR 下为 no-op；文本一律 textContent，禁 innerHTML。
  */
 
-import { formatDuration } from './ai-core';
+import { formatDuration, aiContentUrl, svgIcon, type AiContent, type AiContentPart, type AiTextPart } from './ai-core';
+
+/* 消息操作图标（lucide 风格 24×24，与静态 DOM 契约同款；svgIcon 消毒解析） */
+const ICON_COPY =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>';
+const ICON_RETRY =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
 
 interface MarkedElement extends HTMLElement {
   __icenAiChatInit?: boolean;
@@ -280,6 +292,8 @@ export interface AiStreamHandle {
   done(): void;
   /** 流被取消：同 done，但不折叠 reasoning、不计耗时 */
   cancel(): void;
+  /** 流失败：终止追加并给宿主挂 .is-error（错误文本展示由消费方/renderAiMessage.setError 负责） */
+  fail(): void;
 }
 
 /**
@@ -290,7 +304,7 @@ export interface AiStreamHandle {
 export function createAiStream(el: HTMLElement): AiStreamHandle {
   const reasoning = el.closest<HTMLElement>('.ai-reasoning');
   const startedAt = Date.now();
-  let state: 'streaming' | 'done' | 'cancelled' = 'streaming';
+  let state: 'streaming' | 'done' | 'cancelled' | 'error' = 'streaming';
 
   el.classList.add('is-streaming');
   el.setAttribute('aria-busy', 'true');
@@ -314,7 +328,7 @@ export function createAiStream(el: HTMLElement): AiStreamHandle {
   };
 
   return {
-    append(text: string) {
+    append(text) {
       if (state !== 'streaming' || !text) return;
       el.textContent += text;
     },
@@ -324,5 +338,197 @@ export function createAiStream(el: HTMLElement): AiStreamHandle {
     cancel() {
       settle(false);
     },
+    fail() {
+      if (state !== 'streaming') return;
+      state = 'error';
+      el.classList.remove('is-streaming');
+      el.removeAttribute('aria-busy');
+      el.classList.add('is-error');
+      reasoning?.classList.remove('is-streaming');
+    },
   };
+}
+
+/* ── renderAiMessage：消息渲染原语（spec §4.1；多模态部件见 §10）── */
+
+export interface AiMessageModel {
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  /** 标准化内容：字符串（纯文本）或部件数组（文字/图片/音频/视频/文件/资源链接） */
+  content: AiContent;
+  /** 元信息行（"12:04 · 1.2k tok"） */
+  meta?: string;
+  /** assistant 消息的模型名标签 */
+  model?: string;
+  /** 错误态：消息挂 .ai-msg--error + 错误文本行 */
+  error?: string;
+  /** 初始即流式态（正文末文本 span 挂 .is-streaming） */
+  streaming?: boolean;
+}
+
+export interface AiMessageHandle {
+  /** 消息行元素（.ai-msg） */
+  el: HTMLElement;
+  /** 正文容器（.ai-msg-body）：消费方追加自定义内容的挂载点 */
+  body: HTMLElement;
+  setMeta(meta: string): void;
+  setError(message: string): void;
+  /** 在正文末开一个流式文本节点，返回 createAiStream 句柄 */
+  stream(): AiStreamHandle;
+}
+
+const ROLE_AVATAR: Record<AiMessageModel['role'], string> = {
+  user: '我',
+  assistant: 'AI',
+  system: '系',
+  tool: '工',
+};
+
+/** 链接 href 白名单式守卫：放行常规 scheme，拦 javascript: / data:text/html */
+function safeHref(uri: string): string | undefined {
+  const s = uri.trim().toLowerCase();
+  if (s.startsWith('javascript:') || s.startsWith('data:text/html')) return undefined;
+  return uri;
+}
+
+function el(tag: string, className: string, text?: string): HTMLElement {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+/** 单个内容部件 → DOM 节点（文本一律 textContent；媒体 src 走 aiContentUrl 归一）。
+ *  导出供 ai-tool 的 IO 区复用（MCP 多模态回执；类名 .ai-msg-* 语义即「消息部件」，全局生效）。 */
+export function renderAiContentPart(part: AiContentPart): HTMLElement | undefined {
+  if (part.type === 'text') {
+    const span = el('span', 'ai-msg-text');
+    span.textContent = part.text;
+    if (part.state === 'streaming') span.classList.add('is-streaming');
+    return span;
+  }
+  if (part.type === 'image') {
+    const src = aiContentUrl(part);
+    if (!src) return undefined;
+    const img = document.createElement('img');
+    img.className = 'ai-msg-media ai-msg-media--image';
+    img.alt = part.alt ?? '';
+    img.setAttribute('loading', 'lazy');
+    img.setAttribute('src', src);
+    return img;
+  }
+  if (part.type === 'audio') {
+    const src = aiContentUrl(part);
+    if (!src) return undefined;
+    const audio = document.createElement('audio');
+    audio.className = 'ai-msg-media ai-msg-media--audio';
+    audio.controls = true;
+    audio.setAttribute('src', src);
+    return audio;
+  }
+  if (part.type === 'video') {
+    const src = aiContentUrl(part);
+    if (!src) return undefined;
+    const video = document.createElement('video');
+    video.className = 'ai-msg-media ai-msg-media--video';
+    video.controls = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('src', src);
+    return video;
+  }
+  if (part.type === 'file') {
+    const chip = el('span', 'ai-msg-file');
+    chip.appendChild(el('span', 'ai-msg-file-name', part.filename ?? '文件'));
+    /* url 槽可能是 http(s)/data 地址（可下载）或 Files API file_id（不可链） */
+    const href = part.url ? safeHref(part.url) : undefined;
+    if (href && /^(https?:|data:)/i.test(href)) {
+      const a = document.createElement('a');
+      a.className = 'ai-msg-file-link';
+      a.href = href;
+      a.download = part.filename ?? '';
+      a.textContent = '下载';
+      chip.appendChild(a);
+    }
+    return chip;
+  }
+  /* resource-link */
+  const a = document.createElement('a');
+  a.className = 'ai-msg-link';
+  const href = safeHref(part.uri);
+  if (href) a.href = href;
+  a.textContent = part.name ?? part.uri;
+  a.title = part.uri;
+  return a;
+}
+
+/**
+ * DOM API 渲染一条消息（append 到容器末尾）：多角色变体 + 多模态部件 + copy/retry
+ * 动作钮（委托归 initAiChat）+ meta/model 标签 + 错误变体。返回句柄可继续
+ * setMeta / setError / stream()。滚动跟随由 initAiChat 的钉底机制自动处理。
+ */
+export function renderAiMessage(scrollEl: HTMLElement, model: AiMessageModel): AiMessageHandle {
+  const row = el('div', `ai-msg ai-msg--${model.role}`);
+  const avatar = el('span', 'ai-msg-avatar', ROLE_AVATAR[model.role] ?? '');
+  const body = el('div', 'ai-msg-body');
+  row.appendChild(avatar);
+  row.appendChild(body);
+
+  /* 正文：字符串捷径 / 部件数组 */
+  const parts: AiContentPart[] =
+    typeof model.content === 'string'
+      ? [{ type: 'text', text: model.content } satisfies AiTextPart]
+      : model.content;
+  for (const part of parts) {
+    const node = renderAiContentPart(part);
+    if (node) body.appendChild(node);
+  }
+
+  /* 模型名标签（assistant）与元信息行 */
+  if (model.model) body.appendChild(el('span', 'ai-msg-model', model.model));
+  const metaEl = el('div', 'ai-msg-meta');
+  if (model.meta != null) metaEl.textContent = model.meta;
+  row.appendChild(metaEl);
+
+  /* 动作钮（copy/retry 事件由 initAiChat 委托；CSS 为 22px 方形图标钮——放图标不放文字） */
+  const actions = el('div', 'ai-msg-actions');
+  const copyBtn = el('button', 'ai-msg-action') as HTMLButtonElement;
+  copyBtn.type = 'button';
+  copyBtn.setAttribute('data-ai-msg-action', 'copy');
+  copyBtn.setAttribute('aria-label', '复制');
+  const copyIcon = svgIcon(ICON_COPY);
+  if (copyIcon) copyBtn.appendChild(copyIcon);
+  const retryBtn = el('button', 'ai-msg-action') as HTMLButtonElement;
+  retryBtn.type = 'button';
+  retryBtn.setAttribute('data-ai-msg-action', 'retry');
+  retryBtn.setAttribute('aria-label', '重试');
+  const retryIcon = svgIcon(ICON_RETRY);
+  if (retryIcon) retryBtn.appendChild(retryIcon);
+  actions.append(copyBtn, retryBtn);
+  row.appendChild(actions);
+
+  const handle: AiMessageHandle = {
+    el: row,
+    body,
+    setMeta(meta: string): void {
+      metaEl.textContent = meta;
+    },
+    setError(message: string): void {
+      row.classList.add('ai-msg--error');
+      let errEl = row.querySelector<HTMLElement>('.ai-msg-error-text');
+      if (!errEl) {
+        errEl = el('div', 'ai-msg-error-text');
+        body.appendChild(errEl);
+      }
+      errEl.textContent = message;
+    },
+    stream(): AiStreamHandle {
+      const span = el('span', 'ai-msg-stream-text');
+      body.appendChild(span);
+      return createAiStream(span);
+    },
+  };
+
+  if (model.error != null) handle.setError(model.error);
+  if (model.streaming) row.classList.add('is-streaming');
+  scrollEl.appendChild(row);
+  return handle;
 }

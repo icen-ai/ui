@@ -45,6 +45,16 @@
  *   setComposerUsage(el, usage, opts)            工具条右侧挂 renderAiUsageRing（./ai-panel）。
  *   历史：发送成功的文本进历史数组（每 composer 独立）；输入为空时 ↑ 取回上一条；
  *         运行中 ↑ 优先取回最后一条排队消息（从队列移除并派 icen:ai-dequeue）。
+ *   附件三入口：钮选 / textarea 粘贴文件 / box 拖放文件（共用 icen:ai-attach {files}，
+ *         拖放时 box 挂 .is-dragover 高亮）。
+ *
+ * 绑定层（spec §11，「零接线全链路」）：
+ *   bindComposer(el, opts?) → { unbind() }：事件驱动把 composer ↔ 消息区 ↔ client ↔
+ *         用量环接成闭环。opts.client + opts.messages = 对话全托管（send → renderAiMessage
+ *         用户消息 + client.stream → assistant 流式渲染 → done 收尾；错误 → setError+fail；
+ *         stop → cancel；排队消息自动续发）；opts.usage.from = 'context'（默认，环语义
+ *         正确的上下文估算）| 'billing'（计费累加）| AiAuditor（summary()）；running 自动
+ *         管理（send→running / icen:ai-done→解除）。不传 client 为纯状态绑定（渐进采用）。
  *
  * 向后兼容：未配置 models/usage 时工具条不出现，v1 markup（.ai-composer-actions 旧结构）
  *   零改动可用；配置后 v1 的 attach/send 按钮被移入工具条（事件监听不受影响）。
@@ -52,9 +62,15 @@
  * SSR 下为 no-op；文本一律 textContent，禁 innerHTML。
  */
 
-import { formatTokens, svgIcon, type AiUsage } from './ai-core';
+import { formatTokens, contextEstimate, svgIcon, type AiUsage } from './ai-core';
 import { closePopover, openPopover } from './popover';
 import { renderAiUsageRing, type AiUsageRingOpts } from './ai-panel';
+import {
+  renderAiMessage,
+  type AiMessageHandle,
+  type AiStreamHandle,
+} from './ai-chat';
+import type { AiAuditor, AiChatMessage, AiClient, AiDoneEventDetail, AiStreamSession } from './ai-provider';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -240,6 +256,15 @@ function makeChip(text: string, removable: boolean, ariaLabel: string): HTMLElem
     chip.appendChild(remove);
   }
   return chip;
+}
+
+/** 队列 chips 渲染（模块级：setupComposer 与 bindComposer 的排队自动发送共用） */
+function renderQueueChips(composer: HTMLElement): void {
+  const queueEl = composer.querySelector<HTMLElement>('.ai-composer-queue');
+  if (!queueEl) return;
+  const queue = QUEUES.get(composer) ?? [];
+  queueEl.replaceChildren(...queue.map((text, i) => makeChip(text, true, `移除排队消息 ${i + 1}`)));
+  queueEl.hidden = queue.length === 0;
 }
 
 /* ══════════════ v1 运行态（§4.3 契约，不变）══════════════ */
@@ -602,6 +627,8 @@ function openModelPopup(composer: HTMLElement): void {
       MODELS.set(composer, { providers: cfg.providers, current: { provider, model } });
       if (typeof context === 'number' && Number.isFinite(context) && context > 0) {
         MODEL_CTX.set(composer, context);
+      } else {
+        MODEL_CTX.delete(composer); /* 无 context 显式清除，环回退无上限形态（不留陈旧值） */
       }
       updateModelButton(composer);
       emit(composer, 'icen:ai-model-change', { provider, model, label, context });
@@ -1051,12 +1078,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
   }
 
   /* ── 队列 chips 渲染 ── */
-  const renderQueue = (): void => {
-    if (!queueEl) return;
-    const queue = QUEUES.get(composer) ?? [];
-    queueEl.replaceChildren(...queue.map((text, i) => makeChip(text, true, `移除排队消息 ${i + 1}`)));
-    queueEl.hidden = queue.length === 0;
-  };
+  const renderQueue = (): void => renderQueueChips(composer);
 
   const enqueue = (text: string): void => {
     const queue = QUEUES.get(composer) ?? [];
@@ -1209,7 +1231,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     if (source) removeActiveRef(composer, source);
   };
 
-  /* ── 附件 ── */
+  /* ── 附件（钮选 / 粘贴 / 拖放三入口共用）── */
   const fileInput = document.createElement('input');
   fileInput.type = 'file';
   fileInput.hidden = true;
@@ -1220,9 +1242,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     fileInput.click();
   };
 
-  const onFileChange = (): void => {
-    const files = Array.from(fileInput.files ?? []);
-    fileInput.value = '';
+  const addFiles = (files: File[]): void => {
     if (files.length === 0) return;
     if (attachEl) {
       for (const f of files) {
@@ -1236,11 +1256,47 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     emit(composer, 'icen:ai-attach', { files });
   };
 
+  const onFileChange = (): void => {
+    const files = Array.from(fileInput.files ?? []);
+    fileInput.value = '';
+    addFiles(files);
+  };
+
+  /* 粘贴文件 → 附件（截图/拖进编辑器的图片直接落 chips；有文本时不拦截） */
+  const onPaste = (e: ClipboardEvent): void => {
+    const files = Array.from(e.clipboardData?.files ?? []);
+    if (files.length === 0) return;
+    e.preventDefault();
+    addFiles(files);
+  };
+
+  /* 拖放文件 → 附件（box 高亮随 dragover/dragleave） */
+  const boxEl = composer.querySelector<HTMLElement>('.ai-composer-box');
+  const onDragOver = (e: DragEvent): void => {
+    if (!e.dataTransfer?.types.includes('Files')) return;
+    e.preventDefault();
+    boxEl?.classList.add('is-dragover');
+  };
+  const onDragLeave = (): void => {
+    boxEl?.classList.remove('is-dragover');
+  };
+  const onDrop = (e: DragEvent): void => {
+    boxEl?.classList.remove('is-dragover');
+    const files = Array.from(e.dataTransfer?.files ?? []);
+    if (files.length === 0) return;
+    e.preventDefault();
+    addFiles(files);
+  };
+
   /* ── 监听装配 ── */
   ta.addEventListener('keydown', onKeydown);
   ta.addEventListener('input', onInput);
   ta.addEventListener('compositionstart', onCompositionStart);
   ta.addEventListener('compositionend', onCompositionEnd);
+  ta.addEventListener('paste', onPaste);
+  boxEl?.addEventListener('dragover', onDragOver);
+  boxEl?.addEventListener('dragleave', onDragLeave);
+  boxEl?.addEventListener('drop', onDrop);
   sendBtn?.addEventListener('click', onSendClick);
   queueEl?.addEventListener('click', onQueueClick);
   composer.addEventListener('click', onRefsClick);
@@ -1264,6 +1320,10 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     ta.removeEventListener('input', onInput);
     ta.removeEventListener('compositionstart', onCompositionStart);
     ta.removeEventListener('compositionend', onCompositionEnd);
+    ta.removeEventListener('paste', onPaste);
+    boxEl?.removeEventListener('dragover', onDragOver);
+    boxEl?.removeEventListener('dragleave', onDragLeave);
+    boxEl?.removeEventListener('drop', onDrop);
     sendBtn?.removeEventListener('click', onSendClick);
     queueEl?.removeEventListener('click', onQueueClick);
     composer.removeEventListener('click', onRefsClick);
@@ -1333,6 +1393,8 @@ export function setComposerModels(
   const model = provider.models.find((m) => m.id === cur.model) ?? provider.models[0];
   if (typeof model.context === 'number' && model.context > 0) {
     MODEL_CTX.set(composer, model.context);
+  } else {
+    MODEL_CTX.delete(composer); /* 无 context 显式清除（bindComposer 与取回场景共用） */
   }
   syncToolbar(composer);
   updateModelButton(composer);
@@ -1400,4 +1462,191 @@ export function setComposerUsage(
   USAGE.set(composer, { usage, opts });
   syncToolbar(composer);
   refreshUsageRing(composer);
+}
+
+/* ══════════════ 绑定层 bindComposer（spec §11，「零接线全链路」的胶水） ══════════════ */
+
+export interface AiComposerBindOpts {
+  /**
+   * 传入即托管对话（client 模式）：icen:ai-send → renderAiMessage 用户消息 + running +
+   * client.stream → assistant 消息 + createAiStream 逐 chunk 追加 → done 收尾（meta 自动填
+   * token/成本）；错误 → setError + fail；stop → session.cancel()；排队消息每轮完成自动发送。
+   * 需要 messages 容器。history 由绑定层维护（system 消息可先经 client 直接对话时自带）。
+   */
+  client?: AiClient;
+  /** 消息挂载容器（.ai-chat-scroll 或任意元素；client 模式必填） */
+  messages?: HTMLElement;
+  /**
+   * 用量环自动更新（监听 document 的 icen:ai-done）：
+   * 'context'（默认）= 上下文估算口径（ai-core contextEstimate——环语义正确）；
+   * 'billing' = 请求用量累加（计费视角）；传 AiAuditor 实例 = auditor.summary()。
+   * total 缺省沿用 setComposerModels 的模型 context 闭环。
+   */
+  usage?: { from: 'context' | 'billing' | AiAuditor; total?: number };
+  /** 运行态自动管理（默认 true）：icen:ai-send → running；icen:ai-done → 解除 */
+  running?: boolean;
+}
+
+export interface AiComposerBinding {
+  /** 解绑全部监听并中止进行中的托管会话（composer 本身的 init 不受影响） */
+  unbind(): void;
+}
+
+const BOUND = new WeakSet<HTMLElement>();
+
+const USAGE_KEYS: Array<keyof AiUsage> = ['input', 'output', 'cacheRead', 'cacheWrite', 'reasoning', 'total'];
+
+function accumulateUsage(acc: AiUsage, add?: AiUsage): void {
+  if (!add) return;
+  for (const k of USAGE_KEYS) {
+    const v = add[k];
+    if (typeof v === 'number' && Number.isFinite(v)) acc[k] = (acc[k] as number | undefined ?? 0) + v;
+  }
+}
+
+/**
+ * composer ↔ 消息区 ↔ client ↔ 用量环的闭环绑定（事件驱动，传输会话所有权仍归消费方）。
+ * 不传 client 时为纯状态绑定（send→running、done→解除、环更新），渐进采用。
+ * 注意：running 自动管理依赖 client 派发的 icen:ai-done；无 client 的纯事件用法需
+ * 自行派发该事件或传 running:false。
+ */
+export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): AiComposerBinding {
+  const noop = (): void => undefined;
+  if (!isBrowser()) return { unbind: noop };
+  const composer = resolveComposer(el);
+  if (!composer) return { unbind: noop };
+  if (BOUND.has(composer)) return { unbind: noop }; /* 防重复绑定 */
+  BOUND.add(composer);
+
+  const disposers: Array<() => void> = [];
+  const usageCfg = opts.usage;
+  const manageRunning = opts.running ?? true;
+
+  /* ── 用量环自动更新（icen:ai-done 驱动）── */
+  if (usageCfg) {
+    let cost = 0;
+    let billing: AiUsage = {};
+    const onDone = (e: Event): void => {
+      const detail = (e as CustomEvent<AiDoneEventDetail>).detail;
+      if (!detail?.usage) return;
+      if (typeof detail.cost === 'number') cost += detail.cost;
+      let usage: AiUsage;
+      if (usageCfg.from === 'context') {
+        /* 环的正确口径：下一轮上下文估算（segments 保留作弹层分解，total 为估算值） */
+        const u = detail.usage;
+        usage = {
+          input: u.input,
+          cacheRead: u.cacheRead,
+          cacheWrite: u.cacheWrite,
+          output: u.output,
+          reasoning: u.reasoning,
+          total: contextEstimate(u),
+        };
+      } else if (usageCfg.from === 'billing') {
+        accumulateUsage(billing, detail.usage);
+        usage = billing;
+      } else {
+        usage = usageCfg.from.summary();
+      }
+      setComposerUsage(composer, usage, {
+        total: usageCfg.total,
+        cost: cost > 0 ? Math.round(cost * 1e6) / 1e6 : undefined,
+      });
+    };
+    document.addEventListener('icen:ai-done', onDone);
+    disposers.push(() => document.removeEventListener('icen:ai-done', onDone));
+  }
+
+  /* ── client 模式：对话全托管 ── */
+  if (opts.client && opts.messages) {
+    const client = opts.client;
+    const messages = opts.messages;
+    const history: AiChatMessage[] = [];
+    let session: AiStreamSession | null = null;
+
+    const metaOf = (r: { usage: AiUsage; cost?: number }): string => {
+      const tok = r.usage.total ?? 0;
+      const parts = [tok > 0 ? `${formatTokens(tok)} tok` : '完成'];
+      if (typeof r.cost === 'number') parts.push(`$${r.cost.toFixed(4)}`);
+      return `刚刚 · ${parts.join(' · ')}`;
+    };
+
+    const startTurn = (): void => {
+      const assistant: AiMessageHandle = renderAiMessage(messages, {
+        role: 'assistant',
+        content: '',
+        streaming: true,
+        model: client.config.model,
+      });
+      const streamH: AiStreamHandle = assistant.stream();
+      setComposerRunning(composer, true);
+      const s = client.stream({ messages: [...history] });
+      session = s;
+      let failed = false;
+      void (async () => {
+        for await (const chunk of s) {
+          if (chunk.type === 'text') streamH.append(chunk.delta);
+          else if (chunk.type === 'error') {
+            failed = true;
+            streamH.fail();
+            assistant.setError(chunk.message);
+          }
+        }
+        const result = await s.done;
+        session = null;
+        if (!failed) streamH.done();
+        assistant.setMeta(metaOf(result));
+        if (result.text) history.push({ role: 'assistant', content: result.text });
+        setComposerRunning(composer, false);
+        /* 排队消息自动发送下一条（Claude Code 模式） */
+        const queue = QUEUES.get(composer) ?? [];
+        if (queue.length > 0) {
+          const next = queue.shift() as string;
+          QUEUES.set(composer, queue);
+          renderQueueChips(composer);
+          emit(composer, 'icen:ai-dequeue', { index: 0 });
+          send(next);
+        }
+      })();
+    };
+
+    const send = (text: string): void => {
+      renderAiMessage(messages, { role: 'user', content: text });
+      history.push({ role: 'user', content: text });
+      startTurn();
+    };
+
+    const onSend = (e: Event): void => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (typeof text === 'string' && text) send(text);
+    };
+    const onStop = (): void => {
+      session?.cancel();
+    };
+    composer.addEventListener('icen:ai-send', onSend);
+    composer.addEventListener('icen:ai-stop', onStop);
+    disposers.push(() => {
+      composer.removeEventListener('icen:ai-send', onSend);
+      composer.removeEventListener('icen:ai-stop', onStop);
+      session?.cancel();
+    });
+  } else if (manageRunning) {
+    /* ── 纯状态绑定：send → running；done → 解除 ── */
+    const onSend = (): void => setComposerRunning(composer, true);
+    const onDone = (): void => setComposerRunning(composer, false);
+    composer.addEventListener('icen:ai-send', onSend);
+    document.addEventListener('icen:ai-done', onDone);
+    disposers.push(() => {
+      composer.removeEventListener('icen:ai-send', onSend);
+      document.removeEventListener('icen:ai-done', onDone);
+    });
+  }
+
+  return {
+    unbind(): void {
+      for (const dispose of disposers) dispose();
+      disposers.length = 0;
+      BOUND.delete(composer);
+    },
+  };
 }

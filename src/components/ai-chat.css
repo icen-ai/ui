@@ -253,6 +253,87 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── 多模态消息部件（renderAiMessage，spec §10）── */
+
+.ai-msg-text {
+  display: block;
+}
+
+/* 图片 / 音频 / 视频：宽度自稳定（不超正文列），纵向生长 */
+.ai-msg-media {
+  display: block;
+  max-width: min(100%, 360px);
+  margin: var(--density-space-xs) 0;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  background: var(--token-surface);
+}
+.ai-msg-media--image {
+  max-height: 320px;
+  object-fit: contain;
+}
+.ai-msg-media--audio {
+  width: min(100%, 300px);
+  height: 40px;
+}
+.ai-msg-media--video {
+  max-width: min(100%, 480px);
+  max-height: 300px;
+}
+
+/* 文件 chip（含可选下载链接） */
+.ai-msg-file {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  margin: 2px var(--density-space-xs) 2px 0;
+  padding: 2px var(--density-space-sm);
+  border: 1px solid var(--token-line);
+  border-radius: var(--radius-sm);
+  background: var(--token-surface);
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text);
+}
+.ai-msg-file-link {
+  color: var(--token-accent);
+  text-decoration: none;
+}
+.ai-msg-file-link:hover {
+  text-decoration: underline;
+}
+
+/* MCP ResourceLink 等资源引用 */
+.ai-msg-link {
+  color: var(--token-accent);
+}
+
+/* assistant 消息的模型名标签 */
+.ai-msg-model {
+  display: inline-block;
+  margin-left: var(--density-space-xs);
+  padding: 0 6px;
+  border-radius: var(--radius-xs);
+  background: var(--token-fill-1);
+  color: var(--token-text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  vertical-align: middle;
+}
+
+/* ── 错误变体（renderAiMessage.setError / createAiStream.fail）── */
+
+.ai-msg--error .ai-msg-body {
+  border-left: 2px solid var(--token-error);
+  padding-left: var(--density-space-sm);
+}
+.ai-msg-error-text {
+  display: block;
+  margin-top: var(--density-space-xs);
+  color: var(--token-error);
+  font-size: var(--density-font-size-xs);
+}
+
 /* ══════════════ ai-reasoning ══════════════ */
 
 .ai-reasoning {
@@ -850,6 +931,12 @@
 /* 运行态：输入台整体 busy 标记（aria-busy 等价，状态机语言） */
 .ai-composer.is-running .ai-composer-box {
   border-color: color-mix(in srgb, var(--token-accent) 30%, var(--token-line-soft));
+}
+
+/* 拖放文件高亮（粘贴/拖放附件入口，spec §11） */
+.ai-composer-box.is-dragover {
+  border-color: var(--token-accent);
+  box-shadow: var(--icen-ring);
 }
 
 /* ══════════════ data-density 三档（summary 纯 CSS 降噪） ══════════════ */

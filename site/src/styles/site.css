@@ -511,10 +511,13 @@
     border-bottom: 1px solid var(--token-line-soft);
     padding: 12px 16px;
   }
+  /* 列式布局下 shell 是 align-items: flex-start，main 不拉伸而按内容自适应——
+     代码块长行会把 max-content 顶到 max-width(860)，视口 <880 即整页横向溢出。
+     给定 100% 定宽后，pre 的 overflow:auto 在列内滚动，页面不再横滚。 */
+  .docs-main { width: 100%; padding: 24px 18px 64px; }
   .docs-group { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 2px; margin-bottom: 10px; }
   .docs-group-name { flex: 0 0 100%; padding: 0 6px; }
   .docs-link { border-left: 0; padding: 4px 8px; }
-  .docs-main { padding: 24px 18px 64px; }
   .doc-actions { display: none; }
 }
 @media (max-width: 640px) {

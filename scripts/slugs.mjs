@@ -112,10 +112,10 @@ export const SLUG_EXPORTS = {
   'chart-gauge': ['renderGauge'],
   'chart-sparkline': ['renderSparkline'],
   // ── AI 族：behavior 挂到别模块的 slug，kit 入口按此 re-export ──
-  'ai-message': ['createAiStream', 'initAiChat'],
+  'ai-message': ['renderAiMessage', 'createAiStream', 'initAiChat'],
   'ai-reasoning': ['createAiStream', 'initAiChat'],
   'ai-files': ['renderAiDiff'],
-  'ai-usage': ['renderAiUsage', 'renderAiUsageRing'],
+  'ai-usage': ['renderAiUsage', 'renderAiUsageRing', 'renderAiAudit'],
 };
 
 /** slug → 对应组件 CSS 文件名。 */

@@ -53,10 +53,12 @@ import {
   aiStatusLabel,
   formatDuration,
   getAiKind,
+  normalizeContentParts,
   svgIcon,
   type AiStatus,
   type AiToolCallModel,
 } from './ai-core';
+import { renderAiContentPart } from './ai-chat';
 
 /* ── 状态机（规格 §1，唯一语言） ── */
 const AI_STATUSES: readonly AiStatus[] = [
@@ -172,19 +174,40 @@ function buildHead(headClass: string): HeadParts {
 interface IoParts {
   root: HTMLDivElement;
   pre: HTMLPreElement;
+  /** 多模态回执容器（MCP content 数组 → 媒体/链接，spec §10.3） */
+  media: HTMLDivElement;
 }
 
 function buildIo(label: string): IoParts {
   const root = h('div', 'ai-tool-io');
   root.append(h('div', 'ai-tool-io-label', label));
   const pre = h('pre', 'ai-tool-io-content');
-  root.append(pre);
-  return { root, pre };
+  const media = h('div', 'ai-tool-io-media');
+  media.hidden = true;
+  root.append(pre, media);
+  return { root, pre, media };
 }
 
 function setIo(io: IoParts, value: unknown): void {
+  /* MCP / 业界 wire 的 content 数组（或显式 AiContentPart[]）→ 多模态回执渲染 */
+  const parts = Array.isArray(value) ? normalizeContentParts(value) : [];
+  if (parts.length > 0) {
+    io.pre.textContent = '';
+    io.pre.hidden = true;
+    io.media.replaceChildren();
+    for (const part of parts) {
+      const node = renderAiContentPart(part);
+      if (node) io.media.appendChild(node);
+    }
+    io.media.hidden = io.media.childElementCount === 0;
+    io.root.hidden = io.media.hidden;
+    return;
+  }
+  io.media.replaceChildren();
+  io.media.hidden = true;
   const text = prettyValue(value).trim();
   io.pre.textContent = text;
+  io.pre.hidden = false;
   io.root.hidden = !text;
 }
 

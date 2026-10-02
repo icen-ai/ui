@@ -16,6 +16,15 @@
  *   formatDuration(1234)                → '1.2s'
  *   svgIcon(svgString)                  → 消毒后的 SVGElement；SSR 返回 null
  *
+ *   标准化内容模型（spec §10，2026-10 业界调研：AI SDK v5 parts / MCP / OpenAI / Anthropic）：
+ *   normalizeContentParts(raw)          → AiContentPart[]（四族 wire → 一套 parts）
+ *   normalizeMcpContent(raw)            → MCP 场景别名（含 EmbeddedResource / resource_link）
+ *   isAiContentPartArray(v)             → 部件数组守卫（tool output 多模态探测）
+ *   contentToText(content)              → 拼接 text 部件（复制 / 降级传输）
+ *   aiContentUrl(part)                  → 渲染地址（url 或 data URI）
+ *   estimateTokens(content|usage)       → token 粗估（CJK ×0.6 + 其余 ÷4 + 媒体经验值）
+ *   contextEstimate(usage)              → 下一轮上下文估算（上下文环正确口径；≠ 累计计费）
+ *
  * SSR 安全：除 svgIcon 外全部纯函数；svgIcon 有 document 守卫。文本一律 textContent，禁 innerHTML。
  */
 
@@ -463,6 +472,269 @@ export function formatDuration(ms: number): string {
   const h = Math.floor(ms / 3_600_000);
   const rm = Math.round((ms % 3_600_000) / 60_000);
   return rm > 0 ? `${h}h${rm}m` : `${h}h`;
+}
+
+/* ════════════════════════════════════════════
+   标准化内容模型 AiContent（spec §10）
+   调研依据（2026-10）：AI SDK v5 UIMessage parts / MCP 内容类型 /
+   OpenAI content parts / Anthropic content blocks——一套 parts 表达任意输入，
+   渲染组件、估算器、传输层全部只认这一套。
+   ════════════════════════════════════════════ */
+
+export interface AiTextPart {
+  type: 'text';
+  text: string;
+  /** 流式状态（AI SDK TextUIPart 对齐）；渲染不依赖，消费方可选 */
+  state?: 'streaming' | 'done';
+}
+
+/** 媒体部件族：url 与 data 二选一（data 为无前缀 base64，必须伴随 mimeType） */
+export interface AiImagePart {
+  type: 'image';
+  url?: string;
+  data?: string;
+  mimeType?: string;
+  /** 替代文本 */
+  alt?: string;
+}
+
+export interface AiAudioPart {
+  type: 'audio';
+  url?: string;
+  data?: string;
+  mimeType?: string;
+}
+
+export interface AiVideoPart {
+  type: 'video';
+  url?: string;
+  data?: string;
+  mimeType?: string;
+}
+
+export interface AiFilePart {
+  type: 'file';
+  url?: string;
+  data?: string;
+  mimeType?: string;
+  /** 文件名（url 槽对 openai 族承载 Files API file_id 时也作展示名） */
+  filename?: string;
+}
+
+export type AiMediaPart = AiImagePart | AiAudioPart | AiVideoPart | AiFilePart;
+
+/** MCP ResourceLink：引用未内联的资源 */
+export interface AiResourceLinkPart {
+  type: 'resource-link';
+  uri: string;
+  name?: string;
+  mimeType?: string;
+}
+
+export type AiContentPart = AiTextPart | AiMediaPart | AiResourceLinkPart;
+
+/** 消息与工具回执的内容：字符串（纯文本捷径）或部件数组（多模态） */
+export type AiContent = string | AiContentPart[];
+
+const PART_TYPES = new Set(['text', 'image', 'audio', 'video', 'file', 'resource-link']);
+
+export function isAiContentPart(v: unknown): v is AiContentPart {
+  if (!isObj(v)) return false;
+  const t = v.type;
+  if (typeof t !== 'string' || !PART_TYPES.has(t)) return false;
+  if (t === 'text') return typeof v.text === 'string';
+  if (t === 'resource-link') return typeof v.uri === 'string';
+  return typeof v.url === 'string' || (typeof v.data === 'string' && typeof v.mimeType === 'string');
+}
+
+/** 数组且至少一项像内容部件 → 视为部件数组（tool output 多模态探测用） */
+export function isAiContentPartArray(v: unknown): v is AiContentPart[] {
+  return Array.isArray(v) && v.length > 0 && v.every(isAiContentPart);
+}
+
+/** 渲染地址归一：url 直取；data + mimeType 拼 data URI（base64） */
+export function aiContentUrl(part: AiContentPart): string | undefined {
+  if (part.type === 'text' || part.type === 'resource-link') return undefined;
+  if (typeof part.url === 'string' && part.url) return part.url;
+  if (typeof part.data === 'string' && part.data && typeof part.mimeType === 'string') {
+    return `data:${part.mimeType};base64,${part.data}`;
+  }
+  return undefined;
+}
+
+/* ── wire → parts 归一化（OpenAI / Anthropic / MCP / 素朴，逐项探测）── */
+
+/** OpenAI `data:<mime>;base64,<data>` URI 拆解成 data + mimeType */
+function splitDataUri(uri: string): { data: string; mimeType: string } | undefined {
+  const m = /^data:([^;,]+);base64,(.*)$/s.exec(uri);
+  return m ? { mimeType: m[1] ?? '', data: m[2] ?? '' } : undefined;
+}
+
+function partFromOpenAi(item: Record<string, unknown>): AiContentPart | undefined {
+  const type = str(item.type) ?? '';
+  if (type === 'text' && typeof item.text === 'string') return { type: 'text', text: item.text };
+  if (type === 'image_url') {
+    const iu = isObj(item.image_url) ? item.image_url : undefined;
+    const url = iu ? str(iu.url) : undefined;
+    if (!url) return undefined;
+    const inline = splitDataUri(url);
+    return inline
+      ? { type: 'image', data: inline.data, mimeType: inline.mimeType }
+      : { type: 'image', url };
+  }
+  if (type === 'input_audio') {
+    const ia = isObj(item.input_audio) ? item.input_audio : undefined;
+    const data = ia ? str(ia.data) : undefined;
+    const fmt = ia ? str(ia.format) : undefined;
+    if (!data) return undefined;
+    return { type: 'audio', data, mimeType: fmt ? `audio/${fmt}` : 'audio/wav' };
+  }
+  if (type === 'file') {
+    const f = isObj(item.file) ? item.file : undefined;
+    const fileId = f ? str(f.file_id) ?? str(f.filename) : undefined;
+    if (!fileId) return undefined;
+    return { type: 'file', url: fileId, filename: str(f?.filename) };
+  }
+  return undefined;
+}
+
+/** anthropic source（base64 | url 两种形态）→ 媒体部件 */
+function partFromAnthropicSource(
+  mediaType: 'image' | 'audio' | 'file',
+  src: unknown,
+  fallbackMime: string,
+): AiContentPart | undefined {
+  if (!isObj(src)) return undefined;
+  if (str(src.type) === 'url') {
+    const url = str(src.url);
+    return url ? { type: mediaType, url } : undefined;
+  }
+  const data = str(src.data);
+  const mimeType = str(src.media_type) ?? fallbackMime;
+  return data ? { type: mediaType, data, mimeType } : undefined;
+}
+
+function partFromAnthropic(block: Record<string, unknown>): AiContentPart | undefined {
+  const type = str(block.type) ?? '';
+  if (type === 'text' && typeof block.text === 'string') return { type: 'text', text: block.text };
+  if (type === 'image') return partFromAnthropicSource('image', block.source, 'image/png');
+  if (type === 'audio') return partFromAnthropicSource('audio', block.source, 'audio/wav');
+  if (type === 'document') return partFromAnthropicSource('file', block.source, 'application/pdf');
+  return undefined;
+}
+
+function partFromMcp(item: Record<string, unknown>): AiContentPart | undefined {
+  const type = str(item.type) ?? '';
+  if (type === 'text' && typeof item.text === 'string') return { type: 'text', text: item.text };
+  if (type === 'image' || type === 'audio') {
+    const data = str(item.data);
+    const mimeType = str(item.mimeType) ?? (type === 'image' ? 'image/png' : 'audio/wav');
+    return data ? { type, data, mimeType } : undefined;
+  }
+  if (type === 'resource_link') {
+    const uri = str(item.uri) ?? str(item.url);
+    return uri ? { type: 'resource-link', uri, name: str(item.name), mimeType: str(item.mimeType) } : undefined;
+  }
+  if (type === 'resource') {
+    /* EmbeddedResource：text 文本或 blob base64（mimeType 决定形态） */
+    const res = isObj(item.resource) ? item.resource : undefined;
+    if (!res) return undefined;
+    const uri = str(res.uri);
+    const mimeType = str(res.mimeType) ?? '';
+    const text = str(res.text);
+    if (text) return { type: 'text', text };
+    const blob = str(res.blob);
+    if (blob) {
+      if (mimeType.startsWith('image/')) return { type: 'image', data: blob, mimeType };
+      if (mimeType.startsWith('audio/')) return { type: 'audio', data: blob, mimeType };
+      if (mimeType.startsWith('video/')) return { type: 'video', data: blob, mimeType };
+      return { type: 'file', data: blob, mimeType: mimeType || 'application/octet-stream', filename: uri?.split('/').pop() };
+    }
+    return uri ? { type: 'resource-link', uri, mimeType: mimeType || undefined } : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * 归一化内容部件：OpenAI content parts / Anthropic content blocks /
+ * MCP content 数组（含 EmbeddedResource）/ 素朴（本类型族原样通过）。
+ * 未知形态剔除；空结果返回 []。
+ */
+export function normalizeContentParts(raw: unknown): AiContentPart[] {
+  if (typeof raw === 'string') return raw ? [{ type: 'text', text: raw }] : [];
+  if (!Array.isArray(raw)) return [];
+  const out: AiContentPart[] = [];
+  for (const item of raw) {
+    if (isAiContentPart(item)) {
+      out.push(item);
+      continue;
+    }
+    if (!isObj(item)) continue;
+    const part = partFromOpenAi(item) ?? partFromAnthropic(item) ?? partFromMcp(item);
+    if (part) out.push(part);
+  }
+  return out;
+}
+
+/** MCP 场景别名（同 normalizeContentParts，可发现性） */
+export const normalizeMcpContent = normalizeContentParts;
+
+/** 拼接全部 text 部件（复制按钮 / 不支持多模态的降级传输用） */
+export function contentToText(content: AiContent): string {
+  if (typeof content === 'string') return content;
+  return content
+    .filter((p): p is AiTextPart => p.type === 'text')
+    .map((p) => p.text)
+    .join('');
+}
+
+/* ── 估算器（spec §10.4）── */
+
+const CJK_RE = /[\u2e80-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]/g;
+
+function estimatePartTokens(part: AiContentPart): number {
+  switch (part.type) {
+    case 'text':
+      return estimateTextTokens(part.text);
+    case 'image':
+      return 1000; /* 经验值：中等分辨率视觉 token */
+    case 'audio':
+      return 1500; /* 无时长信息的中短音频 */
+    case 'video':
+      return 6000; /* 前瞻位经验值 */
+    case 'file':
+      return 500; /* 文档内容未知 */
+    case 'resource-link':
+      return estimateTextTokens(part.name ?? part.uri);
+  }
+}
+
+function estimateTextTokens(text: string): number {
+  if (!text) return 0;
+  const cjk = text.match(CJK_RE)?.length ?? 0;
+  const rest = text.length - cjk;
+  return Math.max(1, Math.round(cjk * 0.6 + rest / 4));
+}
+
+/**
+ * token 估算（无依赖启发式）：CJK 字符 ×0.6 + 其余字符 ÷4；
+ * 媒体部件给经验值。传 AiUsage 时直接返回归一 total。
+ */
+export function estimateTokens(content: AiContent | AiUsage): number {
+  if (typeof content === 'string') return estimateTextTokens(content);
+  if (Array.isArray(content)) return content.reduce((acc, p) => acc + estimatePartTokens(p), 0);
+  const u = normalizeUsage(content);
+  return u.total ?? (u.input ?? 0) + (u.output ?? 0) + (u.cacheRead ?? 0) + (u.cacheWrite ?? 0) + (u.reasoning ?? 0);
+}
+
+/**
+ * 下一轮上下文估算（上下文环的正确口径，spec §10.4）：
+ * input + cacheRead + cacheWrite + output（+ 单列的 reasoning）——
+ * 本次输出会成为下轮输入的一部分。与 auditor.summary()（累计计费）语义不同。
+ */
+export function contextEstimate(usage: AiUsage): number {
+  const u = normalizeUsage(usage);
+  return (u.input ?? 0) + (u.cacheRead ?? 0) + (u.cacheWrite ?? 0) + (u.output ?? 0) + (u.reasoning ?? 0);
 }
 
 /* ════════════════════════════════════════════

@@ -6,15 +6,20 @@
  *
  * ── 注册表（§9.1，2026-10 调研值）──
  *   listAiProviders()             → 内置五家：openai / claude / deepseek / glm / kimi
- *   getAiProvider('kimi')         → 单家定义（baseURL/chatPath/wire/auth/extraHeaders/models/browserDirect）
+ *   getAiProvider('kimi')         → 单家定义（baseURL/chatPath/wire/auth/extraHeaders/models/pricing/browserDirect）
  *   registerAiProvider(def)       → 第三方/自建网关注册（同 id 覆盖）
+ *   estimateCost(usage, p, m)     → 按定价表估算成本（USD）；未命中定价返回 undefined（不猜价）
  *
- * ── 客户端（§9.2）──
+ * ── 客户端（§9.2，多模态 §10）──
  *   const client = createAiClient({ provider: 'deepseek', apiKey, baseURL?, model?, onAudit?, auditor?, fetch? });
  *   client.config                 → 只读 { provider, baseURL, model }
- *   await client.chat(req)        → { text, usage（ai-core normalizeUsage 归一）, finishReason?, raw? }
+ *   await client.chat(req)        → { text, usage（归一）, cost?, parts?（多模态回执）, finishReason?, raw? }
  *   const s = client.stream(req)  → AsyncIterable<AiStreamChunk> + cancel() + done: Promise<AiChatResult>
  *     for await (const c of s)    → { type:'text', delta } | { type:'done' } | { type:'error', message }
+ *   · AiChatMessage.content 支持 string | AiContentPart[]（ai-core 标准化内容，多模态）：
+ *     openai 族映射 text/image_url/input_audio/file(file_id)；anthropic 族映射 text/image/audio/document(pdf)
+ *     + cache_control 断点（cacheControl: true 时本消息末块生效）；video 两族均诚实报不支持
+ *   · role 'tool' + toolCallId：openai 族 → tool_call_id 消息；anthropic 族 → user 的 tool_result block（真回灌）
  *   · openai 族（OpenAI/DeepSeek/GLM/Kimi）：POST {baseURL}{chatPath}，Authorization: Bearer，
  *     流式自动注入 stream_options.include_usage（AI SDK 同款）；SSE 按空行分帧 + [DONE] 收尾，
  *     choices[].delta.content 累积
@@ -24,18 +29,29 @@
  *     input 系 + message_delta 的 output（快照替换，不 += 累加）
  *   · 错误统一抛 AiProviderError { provider, status, type, message, raw }：
  *     OpenAI/DeepSeek error.{message,type}、Kimi 自有 type 枚举、GLM 业务码信封、
- *     Anthropic {type:'error',error:{type,message}} 双层包装均映射；非 2xx 读 body 解析
+ *     Anthropic {type:'error',error:{type,message}} 双层包装均映射；非 2xx 读 body 解析；
+ *     不支持的输入形态 type='unsupported'
  *   · CORS 诚实：浏览器直连失败（TypeError）且 browserDirect 非 'yes' 时，message 追加代理建议
  *
- * ── 审计（§9.3）──
+ * ── 审计（§9.3 / §12.2）──
  *   const auditor = createAiAuditor({ persist?: 'my-key'（localStorage）, max?: 100（环形） });
- *   auditor.log(entry) / list() / clear() / summary()（全量聚合 AiUsage）/ byModel()（provider/model 分组）
- *   client 每次请求自动产 AiAuditEntry（onAudit 回调 + 传 auditor 实例则自动 log）；
- *   请求完成在 document 派 icen:ai-usage（detail=本次归一 usage，bubbles）——
- *   上下文环（renderAiUsageRing）/用量面板监听即实时更新
+ *   auditor.log(entry) / list() / clear() / summary()（全量聚合 AiUsage）
+ *   / totals()（{ usage, cost, requests, errors, avgTtftMs }）/ byModel()（provider/model 分组）
+ *   client 每次请求自动产 AiAuditEntry（含 cost 定价估算 + ttftMs 首 token 延迟；onAudit 回调 +
+ *   传 auditor 实例则自动 log）；请求完成在 document 派 icen:ai-usage（detail=归一 usage）与
+ *   icen:ai-done（detail=AiDoneEventDetail：status/provider/model/usage/cost/error/durationMs/ttftMs，
+ *   bubbles）——bindComposer 绑定层与用量面板监听即实时更新
  */
 
-import { normalizeUsage, type AiUsage } from './ai-core';
+import {
+  normalizeUsage,
+  normalizeContentParts,
+  contentToText,
+  aiContentUrl,
+  type AiUsage,
+  type AiContent,
+  type AiContentPart,
+} from './ai-core';
 
 /* ════════════════════════════════════════════
    小工具（本地副本，与 ai-core 同语义）
@@ -94,6 +110,16 @@ export interface AiProviderModel {
   context?: number;
   /** 单次输出上限 token 数 */
   outputLimit?: number;
+  /** 定价（USD / MTok，2026-10 调研近似值）；缺省 = 不猜价（estimateCost 返回 undefined） */
+  pricing?: AiPricing;
+}
+
+/** 定价（USD / MTok）：cacheRead 缺省按 input 价；cacheWrite 缺省按 input × 1.25（cache 写溢价惯例） */
+export interface AiPricing {
+  input: number;
+  output: number;
+  cacheRead?: number;
+  cacheWrite?: number;
 }
 
 export interface AiProviderDef {
@@ -132,10 +158,10 @@ const BUILTIN_PROVIDERS: readonly AiProviderDef[] = [
     auth: 'bearer',
     browserDirect: 'no', // 官方禁止浏览器直连（CORS + 安全策略）
     models: [
-      { id: 'gpt-5', label: 'GPT-5', context: 400_000, outputLimit: 128_000 },
-      { id: 'gpt-5-mini', label: 'GPT-5 Mini', context: 400_000, outputLimit: 128_000 },
-      { id: 'gpt-5.1', label: 'GPT-5.1', context: 400_000, outputLimit: 128_000 },
-      { id: 'gpt-5.5', label: 'GPT-5.5', context: 1_000_000, outputLimit: 128_000 },
+      { id: 'gpt-5', label: 'GPT-5', context: 400_000, outputLimit: 128_000, pricing: { input: 1.25, output: 10, cacheRead: 0.125 } },
+      { id: 'gpt-5-mini', label: 'GPT-5 Mini', context: 400_000, outputLimit: 128_000, pricing: { input: 0.25, output: 2, cacheRead: 0.025 } },
+      { id: 'gpt-5.1', label: 'GPT-5.1', context: 400_000, outputLimit: 128_000, pricing: { input: 1.25, output: 10, cacheRead: 0.125 } },
+      { id: 'gpt-5.5', label: 'GPT-5.5', context: 1_000_000, outputLimit: 128_000, pricing: { input: 2, output: 12, cacheRead: 0.2 } },
     ],
   },
   {
@@ -152,10 +178,10 @@ const BUILTIN_PROVIDERS: readonly AiProviderDef[] = [
     },
     browserDirect: 'yes', // 官方支持浏览器直连（CORS 白名单）
     models: [
-      { id: 'claude-opus-5-5', label: 'Claude Opus 5.5', context: 500_000, outputLimit: 64_000 },
-      { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', context: 500_000, outputLimit: 64_000 },
-      { id: 'claude-fable-5-1', label: 'Claude Fable 5.1', context: 200_000, outputLimit: 64_000 },
-      { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', context: 200_000, outputLimit: 64_000 },
+      { id: 'claude-opus-5-5', label: 'Claude Opus 5.5', context: 500_000, outputLimit: 64_000, pricing: { input: 4, output: 20, cacheRead: 0.4, cacheWrite: 5 } },
+      { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', context: 500_000, outputLimit: 64_000, pricing: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 } },
+      { id: 'claude-fable-5-1', label: 'Claude Fable 5.1', context: 200_000, outputLimit: 64_000, pricing: { input: 10, output: 50, cacheRead: 1, cacheWrite: 12.5 } },
+      { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', context: 200_000, outputLimit: 64_000, pricing: { input: 1, output: 5, cacheRead: 0.1, cacheWrite: 1.25 } },
     ],
   },
   {
@@ -168,8 +194,8 @@ const BUILTIN_PROVIDERS: readonly AiProviderDef[] = [
     auth: 'bearer',
     browserDirect: 'unknown', // 无承诺，建议代理
     models: [
-      { id: 'deepseek-flash', label: 'DeepSeek Flash', context: 128_000, outputLimit: 8_000 },
-      { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', context: 1_000_000, outputLimit: 128_000 },
+      { id: 'deepseek-flash', label: 'DeepSeek Flash', context: 128_000, outputLimit: 8_000, pricing: { input: 0.14, output: 0.28, cacheRead: 0.014 } },
+      { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', context: 1_000_000, outputLimit: 128_000, pricing: { input: 0.55, output: 1.1, cacheRead: 0.055 } },
     ],
   },
   {
@@ -182,10 +208,10 @@ const BUILTIN_PROVIDERS: readonly AiProviderDef[] = [
     auth: 'bearer', // API key 直接当 Bearer；JWT 可选不做
     browserDirect: 'unknown',
     models: [
-      { id: 'glm-5.3', label: 'GLM-5.3', context: 200_000, outputLimit: 128_000 },
-      { id: 'glm-5.3-flash', label: 'GLM-5.3 Flash', context: 128_000, outputLimit: 64_000 },
-      { id: 'glm-5.2', label: 'GLM-5.2', context: 128_000, outputLimit: 64_000 },
-      { id: 'glm-4.6', label: 'GLM-4.6', context: 200_000, outputLimit: 128_000 },
+      { id: 'glm-5.3', label: 'GLM-5.3', context: 200_000, outputLimit: 128_000, pricing: { input: 0.55, output: 2.2, cacheRead: 0.055 } },
+      { id: 'glm-5.3-flash', label: 'GLM-5.3 Flash', context: 128_000, outputLimit: 64_000, pricing: { input: 0.14, output: 0.55, cacheRead: 0.014 } },
+      { id: 'glm-5.2', label: 'GLM-5.2', context: 128_000, outputLimit: 64_000, pricing: { input: 0.5, output: 3, cacheRead: 0.05 } },
+      { id: 'glm-4.6', label: 'GLM-4.6', context: 200_000, outputLimit: 128_000, pricing: { input: 0.6, output: 2.2, cacheRead: 0.06 } },
     ],
   },
   {
@@ -198,9 +224,9 @@ const BUILTIN_PROVIDERS: readonly AiProviderDef[] = [
     auth: 'bearer',
     browserDirect: 'unknown',
     models: [
-      { id: 'kimi-k3', label: 'Kimi K3', context: 1_000_000, outputLimit: 128_000 },
-      { id: 'kimi-k2.7-code', label: 'Kimi K2.7 Code', context: 256_000, outputLimit: 128_000 },
-      { id: 'kimi-k2.6', label: 'Kimi K2.6', context: 256_000, outputLimit: 128_000 },
+      { id: 'kimi-k3', label: 'Kimi K3', context: 1_000_000, outputLimit: 128_000, pricing: { input: 3, output: 15, cacheRead: 0.3 } },
+      { id: 'kimi-k2.7-code', label: 'Kimi K2.7 Code', context: 256_000, outputLimit: 128_000, pricing: { input: 1.1, output: 3.3, cacheRead: 0.11 } },
+      { id: 'kimi-k2.6', label: 'Kimi K2.6', context: 256_000, outputLimit: 128_000, pricing: { input: 0.95, output: 3, cacheRead: 0.1 } },
     ],
   },
 ];
@@ -220,6 +246,23 @@ export function getAiProvider(id: string): AiProviderDef | undefined {
 /** 全部已注册 provider（副本数组，内置在前）。 */
 export function listAiProviders(): AiProviderDef[] {
   return Array.from(providerRegistry.values());
+}
+
+/* ════════════════════════════════════════════
+   定价估算（spec §12.1；未命中定价返回 undefined，不猜价）
+   ════════════════════════════════════════════ */
+
+/** 按注册表定价估算一次用量的成本（USD）：cacheRead 缺省按 input 价、cacheWrite 缺省按 input × 1.25。 */
+export function estimateCost(usage: AiUsage, provider: string, model: string): number | undefined {
+  const p = getAiProvider(provider)?.models.find((m) => m.id === model)?.pricing;
+  if (!p) return undefined;
+  const u = normalizeUsage(usage);
+  const cost =
+    ((u.input ?? 0) / 1e6) * p.input +
+    ((u.output ?? 0) / 1e6) * p.output +
+    ((u.cacheRead ?? 0) / 1e6) * (p.cacheRead ?? p.input) +
+    ((u.cacheWrite ?? 0) / 1e6) * (p.cacheWrite ?? p.input * 1.25);
+  return Math.round(cost * 1e6) / 1e6;
 }
 
 /* ════════════════════════════════════════════
@@ -301,10 +344,24 @@ export interface AiAuditEntry {
   stream: boolean;
   status: 'ok' | 'error';
   durationMs: number;
+  /** 首 token 延迟（流式；非流式缺省） */
+  ttftMs?: number;
+  /** 本次成本（USD，定价表命中时） */
+  cost?: number;
   /** 归一 usage（错误且无用量信息时缺省） */
   usage?: AiUsage;
   /** 错误信息（含取消：'请求已取消'） */
   error?: string;
+}
+
+/** 审计聚合汇总（spec §12.2） */
+export interface AiAuditTotals {
+  usage: AiUsage;
+  cost: number;
+  requests: number;
+  errors: number;
+  /** 平均首 token 延迟（有 ttft 记录的条目） */
+  avgTtftMs?: number;
 }
 
 export interface AiAuditor {
@@ -314,6 +371,8 @@ export interface AiAuditor {
   clear(): void;
   /** 全量聚合（各段求和）——直接喂 renderAiUsage / renderAiUsageRing */
   summary(): AiUsage;
+  /** 完整汇总：usage + cost + 计数 + 平均 TTFT——喂 renderAiAudit 的 totals 行 */
+  totals(): AiAuditTotals;
   /** 按 `${provider}/${model}` 分组聚合 */
   byModel(): Record<string, AiUsage>;
 }
@@ -401,6 +460,30 @@ export function createAiAuditor(opts?: AiAuditorOptions): AiAuditor {
       for (const e of entries) addUsage(sum, e.usage);
       return sum;
     },
+    totals() {
+      const usage: AiUsage = {};
+      let cost = 0;
+      let errors = 0;
+      let ttftSum = 0;
+      let ttftN = 0;
+      for (const e of entries) {
+        addUsage(usage, e.usage);
+        if (typeof e.cost === 'number') cost += e.cost;
+        if (e.status === 'error') errors++;
+        if (typeof e.ttftMs === 'number') {
+          ttftSum += e.ttftMs;
+          ttftN++;
+        }
+      }
+      const totals: AiAuditTotals = {
+        usage,
+        cost: Math.round(cost * 1e6) / 1e6,
+        requests: entries.length,
+        errors,
+      };
+      if (ttftN > 0) totals.avgTtftMs = Math.round(ttftSum / ttftN);
+      return totals;
+    },
     byModel() {
       const out: Record<string, AiUsage> = {};
       for (const e of entries) {
@@ -416,11 +499,16 @@ export function createAiAuditor(opts?: AiAuditorOptions): AiAuditor {
    请求 / 响应模型（§9.2）
    ════════════════════════════════════════════ */
 
-export type AiChatRole = 'system' | 'user' | 'assistant';
+export type AiChatRole = 'system' | 'user' | 'assistant' | 'tool';
 
 export interface AiChatMessage {
   role: AiChatRole;
-  content: string;
+  /** 标准化内容（spec §10）：字符串（纯文本）或 AiContentPart[]（多模态） */
+  content: AiContent;
+  /** role 'tool' 时必填：openai 族 → tool_call_id；anthropic 族 → 映射为 user 的 tool_result block（真回灌） */
+  toolCallId?: string;
+  /** anthropic 族：本消息末块打 cache_control 断点（prompt 缓存一等公民）；openai 族自动缓存、忽略 */
+  cacheControl?: boolean;
 }
 
 export interface AiChatRequest {
@@ -438,6 +526,10 @@ export interface AiChatResult {
   text: string;
   /** ai-core normalizeUsage 归一；无任何用量信息时为 {} */
   usage: AiUsage;
+  /** 定价表命中时的本次成本（USD） */
+  cost?: number;
+  /** 响应内容部件（非流式且响应为 content parts 数组时归一出，含图/文件等多模态回执） */
+  parts?: AiContentPart[];
   finishReason?: string;
   /** 原始 usage 对象（流式=最终快照；排障用） */
   raw?: unknown;
@@ -657,15 +749,85 @@ async function* parseAnthropicStream(res: Response, signal?: AbortSignal): Async
 }
 
 /* ════════════════════════════════════════════
-   请求组装
+   请求组装（多模态内容映射，spec §9.2 / §10）
    ════════════════════════════════════════════ */
 
-function buildOpenAiBody(req: AiChatRequest, model: string, streaming: boolean): Record<string, unknown> {
-  const body: Record<string, unknown> = {
-    model,
-    messages: req.messages.map((m) => ({ role: m.role, content: m.content })),
-    stream: streaming,
-  };
+function unsupported(provider: string, what: string): AiProviderError {
+  return new AiProviderError({
+    provider,
+    status: 0,
+    type: 'unsupported',
+    message: `${provider} 线协议不支持 ${what}`,
+  });
+}
+
+/** parts → openai 族 content（字符串捷径直取；部件逐项映射，video 诚实报不支持） */
+function toOpenAiContent(provider: string, content: AiContent): string | unknown[] {
+  if (typeof content === 'string') return content;
+  const out: unknown[] = [];
+  for (const part of content) {
+    if (part.type === 'text') {
+      out.push({ type: 'text', text: part.text });
+    } else if (part.type === 'image') {
+      const url = aiContentUrl(part);
+      if (url) out.push({ type: 'image_url', image_url: { url } });
+    } else if (part.type === 'audio') {
+      if (!part.data) throw unsupported(provider, '仅 URL 的音频（input_audio 需 base64，请先取回内联）');
+      const format = (part.mimeType ?? 'audio/wav').split('/')[1] ?? 'wav';
+      out.push({ type: 'input_audio', input_audio: { data: part.data, format } });
+    } else if (part.type === 'video') {
+      throw unsupported(provider, 'video 输入（无主流 chat API 支持）');
+    } else if (part.type === 'file') {
+      /* url 槽承载 file_id（Files API 上传产物） */
+      if (!part.url) throw unsupported(provider, 'base64 文件（file 部件需 Files API file_id，请置于 url 槽）');
+      out.push({ type: 'file', file: { file_id: part.url } });
+    } else {
+      out.push({ type: 'text', text: `[资源] ${part.name ?? ''} (${part.uri})`.trim() });
+    }
+  }
+  return out;
+}
+
+/** parts → anthropic 族 content blocks（document 支持 pdf；video 诚实报不支持） */
+function toAnthropicBlocks(provider: string, content: AiContent): unknown[] {
+  if (typeof content === 'string') return content ? [{ type: 'text', text: content }] : [];
+  const out: Array<Record<string, unknown>> = [];
+  for (const part of content) {
+    if (part.type === 'text') {
+      out.push({ type: 'text', text: part.text });
+    } else if (part.type === 'image') {
+      const source = part.url
+        ? { type: 'url', url: part.url }
+        : { type: 'base64', media_type: part.mimeType ?? 'image/png', data: part.data ?? '' };
+      out.push({ type: 'image', source });
+    } else if (part.type === 'audio') {
+      if (!part.data) throw unsupported(provider, '仅 URL 的音频（audio 块需 base64 source）');
+      out.push({ type: 'audio', source: { type: 'base64', media_type: part.mimeType ?? 'audio/wav', data: part.data } });
+    } else if (part.type === 'video') {
+      throw unsupported(provider, 'video 输入');
+    } else if (part.type === 'file') {
+      const mime = part.mimeType ?? 'application/pdf';
+      if (mime !== 'application/pdf') throw unsupported(provider, `非 PDF 文件块（document 块为 application/pdf，收到 ${mime}）`);
+      const source = part.url
+        ? { type: 'url', url: part.url }
+        : { type: 'base64', media_type: mime, data: part.data ?? '' };
+      out.push({ type: 'document', source });
+    } else {
+      out.push({ type: 'text', text: `[资源] ${part.name ?? ''} (${part.uri})`.trim() });
+    }
+  }
+  return out;
+}
+
+function buildOpenAiBody(provider: string, req: AiChatRequest, model: string, streaming: boolean): Record<string, unknown> {
+  const messages = req.messages.map((m) => {
+    if (m.role === 'tool') {
+      if (!m.toolCallId) throw unsupported(provider, "role 'tool' 且缺 toolCallId（openai 族需 tool_call_id）");
+      return { role: 'tool', content: contentToText(m.content), tool_call_id: m.toolCallId };
+    }
+    return { role: m.role, content: toOpenAiContent(provider, m.content) };
+  });
+  const body: Record<string, unknown> = { model, messages, stream: streaming };
   if (req.temperature != null) body.temperature = req.temperature;
   if (req.maxTokens != null) body.max_tokens = req.maxTokens;
   /* AI SDK 同款：流式自动注入，末帧才带 usage */
@@ -673,20 +835,32 @@ function buildOpenAiBody(req: AiChatRequest, model: string, streaming: boolean):
   return body;
 }
 
-/* anthropic：system 从 messages 抽为顶层参数（多段空行拼接）；max_tokens 必填，缺省 4096 */
-function buildAnthropicBody(req: AiChatRequest, model: string, streaming: boolean): Record<string, unknown> {
-  const system = req.messages
-    .filter((m) => m.role === 'system')
-    .map((m) => m.content)
-    .join('\n\n');
+/* anthropic：system 从 messages 抽为顶层参数（多段空行拼接；末段带 cacheControl 时用块数组形态打断点）；
+   role 'tool' + toolCallId 映射为 user 的 tool_result block（对话真回灌）；max_tokens 必填，缺省 4096 */
+function buildAnthropicBody(provider: string, req: AiChatRequest, model: string, streaming: boolean): Record<string, unknown> {
+  const systemMsgs = req.messages.filter((m) => m.role === 'system');
+  const system = systemMsgs.map((m) => contentToText(m.content)).join('\n\n');
+  const messages = req.messages
+    .filter((m) => m.role !== 'system')
+    .map((m) => {
+      if (m.role === 'tool') {
+        if (!m.toolCallId) throw unsupported(provider, "role 'tool' 且缺 toolCallId（anthropic 族映射 tool_result 需 tool_use_id）");
+        return { role: 'user', content: [{ type: 'tool_result', tool_use_id: m.toolCallId, content: toAnthropicBlocks(provider, m.content) }] };
+      }
+      const blocks = toAnthropicBlocks(provider, m.content) as Array<Record<string, unknown>>;
+      if (m.cacheControl && blocks.length > 0) blocks[blocks.length - 1]!.cache_control = { type: 'ephemeral' };
+      return { role: m.role as 'user' | 'assistant', content: blocks };
+    });
   const body: Record<string, unknown> = {
     model,
-    messages: req.messages
-      .filter((m) => m.role !== 'system')
-      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+    messages,
     max_tokens: req.maxTokens ?? 4096,
   };
-  if (system) body.system = system;
+  if (system) {
+    body.system = systemMsgs.some((m) => m.cacheControl)
+      ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
+      : system;
+  }
   if (req.temperature != null) body.temperature = req.temperature;
   if (streaming) body.stream = true;
   return body;
@@ -721,6 +895,29 @@ function dispatchUsageEvent(usage: AiUsage): void {
   if (typeof document === 'undefined') return;
   try {
     document.dispatchEvent(new CustomEvent<AiUsage>('icen:ai-usage', { detail: usage, bubbles: true }));
+  } catch {
+    /* 非 DOM 环境静默 */
+  }
+}
+
+/** icen:ai-done 的 detail（spec §5；绑定层 bindComposer 的驱动事件） */
+export interface AiDoneEventDetail {
+  status: 'ok' | 'error' | 'cancelled';
+  provider: string;
+  model: string;
+  stream: boolean;
+  usage?: AiUsage;
+  cost?: number;
+  error?: string;
+  durationMs: number;
+  ttftMs?: number;
+}
+
+/** 请求收尾在 document 派 icen:ai-done（chat 与 stream 的 finally 均派；bubbles） */
+function dispatchDoneEvent(detail: AiDoneEventDetail): void {
+  if (typeof document === 'undefined') return;
+  try {
+    document.dispatchEvent(new CustomEvent<AiDoneEventDetail>('icen:ai-done', { detail, bubbles: true }));
   } catch {
     /* 非 DOM 环境静默 */
   }
@@ -769,8 +966,8 @@ export function createAiClient(options: AiClientOptions): AiClient {
     const model = req.model ?? defaultModel;
     const body =
       def.wire === 'anthropic'
-        ? buildAnthropicBody(req, model, streaming)
-        : buildOpenAiBody(req, model, streaming);
+        ? buildAnthropicBody(def.id, req, model, streaming)
+        : buildOpenAiBody(def.id, req, model, streaming);
     let res: Response;
     try {
       res = await doFetch(url, {
@@ -793,16 +990,21 @@ export function createAiClient(options: AiClientOptions): AiClient {
     usage: AiUsage,
     durationMs: number,
     error?: string,
-  ): void {
+    ttftMs?: number,
+  ): { entry: AiAuditEntry; cost?: number } {
+    const model = req.model ?? defaultModel;
+    const cost = estimateCost(usage, def.id, model);
     const entry: AiAuditEntry = {
       id: genEntryId(),
       ts: Date.now(),
       provider: def.id,
-      model: req.model ?? defaultModel,
+      model,
       baseURL,
       stream: streaming,
       status,
       durationMs,
+      ttftMs,
+      cost,
       usage: Object.keys(usage).length > 0 ? usage : undefined,
       error,
     };
@@ -812,6 +1014,7 @@ export function createAiClient(options: AiClientOptions): AiClient {
     } catch {
       /* 审计回调自身异常不影响主流程 */
     }
+    return { entry, cost };
   }
 
   const publishUsage = (usage: AiUsage): void => {
@@ -834,40 +1037,55 @@ export function createAiClient(options: AiClientOptions): AiClient {
       }
 
       let outText = '';
+      let outParts: AiContentPart[] | undefined;
       let finishReason: string | undefined;
       let usageRaw: unknown;
       if (isObj(j)) {
         if (def.wire === 'anthropic') {
           const blocks = Array.isArray(j.content) ? j.content : [];
-          outText = blocks
-            .filter((b): b is Record<string, unknown> => isObj(b) && b.type === 'text')
-            .map((b) => (typeof b.text === 'string' ? b.text : ''))
-            .join('');
+          outParts = normalizeContentParts(blocks);
+          outText = contentToText(outParts);
           finishReason = pickStr(j, ['stop_reason']);
         } else {
           const choice = Array.isArray(j.choices) && isObj(j.choices[0]) ? j.choices[0] : undefined;
           const message = choice && isObj(choice.message) ? choice.message : undefined;
           const content = message?.content;
-          outText =
-            typeof content === 'string'
-              ? content
-              : Array.isArray(content)
-                ? content
-                    .filter((p): p is Record<string, unknown> => isObj(p))
-                    .map((p) => (typeof p.text === 'string' ? p.text : ''))
-                    .join('')
-                : '';
+          if (typeof content === 'string') {
+            outText = content;
+          } else if (Array.isArray(content)) {
+            outParts = normalizeContentParts(content);
+            outText = contentToText(outParts);
+          }
           finishReason = choice ? pickStr(choice, ['finish_reason']) : undefined;
         }
         usageRaw = j.usage;
       }
       const usage = normalizeUsage(usageRaw);
       publishUsage(usage);
-      audit(req, false, 'ok', usage, Date.now() - t0);
-      return { text: outText, usage, finishReason, raw: j };
+      const { cost } = audit(req, false, 'ok', usage, Date.now() - t0);
+      dispatchDoneEvent({
+        status: 'ok',
+        provider: def.id,
+        model: req.model ?? defaultModel,
+        stream: false,
+        usage,
+        cost,
+        durationMs: Date.now() - t0,
+      });
+      const result: AiChatResult = { text: outText, usage, cost, finishReason, raw: j };
+      if (outParts && outParts.length > 0) result.parts = outParts;
+      return result;
     } catch (err) {
       const e = normalizeThrown(err);
       audit(req, false, 'error', {}, Date.now() - t0, e.message);
+      dispatchDoneEvent({
+        status: e.type === 'cancelled' ? 'cancelled' : 'error',
+        provider: def.id,
+        model: req.model ?? defaultModel,
+        stream: false,
+        error: e.message,
+        durationMs: Date.now() - t0,
+      });
       throw e;
     }
   }
@@ -901,12 +1119,15 @@ export function createAiClient(options: AiClientOptions): AiClient {
       let usageRaw: unknown;
       let status: 'ok' | 'error' = 'ok';
       let error: string | undefined;
+      let errorType: string | undefined;
+      let ttftMs: number | undefined;
       try {
         const res = await post(req, true, signal);
         const events =
           def.wire === 'anthropic' ? parseAnthropicStream(res, signal) : parseOpenAiStream(res, signal);
         for await (const ev of events) {
           if (ev.kind === 'text') {
+            if (ttftMs == null) ttftMs = Date.now() - t0;
             text += ev.delta;
             push({ type: 'text', delta: ev.delta });
           } else if (ev.kind === 'usage') {
@@ -924,16 +1145,36 @@ export function createAiClient(options: AiClientOptions): AiClient {
         const e = normalizeThrown(err);
         status = 'error';
         error = e.message;
+        errorType = e.type;
         /* 主动取消（cancel() / 外部 signal）静默收尾，不产 error chunk */
         if (e.type !== 'cancelled') push({ type: 'error', message: e.message });
       } finally {
         const usage = normalizeUsage(usageRaw);
         publishUsage(usage);
-        audit(req, true, status, usage, Date.now() - t0, error);
+        const { cost } = audit(
+          req,
+          true,
+          errorType === 'cancelled' ? 'error' : status,
+          usage,
+          Date.now() - t0,
+          errorType === 'cancelled' ? '请求已取消' : error,
+          ttftMs,
+        );
+        dispatchDoneEvent({
+          status: errorType === 'cancelled' ? 'cancelled' : status,
+          provider: def.id,
+          model: req.model ?? defaultModel,
+          stream: true,
+          usage,
+          cost,
+          error: errorType === 'cancelled' ? undefined : error,
+          durationMs: Date.now() - t0,
+          ttftMs,
+        });
         finished = true;
         notify();
         ac.abort(); // 幂等：挂起的 reader/连接清理
-        resolveDone({ text, usage, finishReason, raw: usageRaw });
+        resolveDone({ text, usage, cost, finishReason, raw: usageRaw });
       }
     })();
 

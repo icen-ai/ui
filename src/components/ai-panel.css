@@ -528,6 +528,150 @@
   min-width: 0;
 }
 
+/* ══════════════ ai-audit（renderAiAudit，规格 §12.2） ══════════════ */
+
+/*
+ *   <div class="ai-audit">
+ *     <div class="ai-audit-totals"><span class="ai-audit-totals-text">12 次请求 · 1 失败 · 1.2M tok · $0.42 · TTFT 240ms</span></div>
+ *     <div class="ai-audit-models">
+ *       <div class="ai-audit-model-row"><span class="ai-audit-model-name">kimi/kimi-k3</span>
+ *         <span class="ai-audit-model-meta">8 次 · 900k tok · $0.31</span></div>…
+ *     </div>
+ *     <div class="ai-audit-list">
+ *       <div class="ai-audit-item is-done|is-error">
+ *         <span class="ai-audit-dot"></span>
+ *         <span class="ai-audit-item-main"><span class="ai-audit-item-model">kimi · kimi-k3</span>
+ *           <span class="ai-audit-item-meta">14:03 · 1.2s · TTFT 240ms · 12.3k tok</span></span>
+ *         <span class="ai-audit-item-error">网络请求失败：…</span>   <!-- 仅 is-error -->
+ *       </div>…
+ *     </div>
+ *     <button class="btn btn-sm ai-audit-clear">清除审计</button>
+ *   </div>
+ */
+
+.ai-audit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-sm);
+  align-self: stretch;
+  min-width: 0;
+  font-size: var(--density-font-size-sm);
+}
+.ai-audit-empty {
+  padding: var(--density-space-md);
+  text-align: center;
+  color: var(--token-text-faint);
+  font-size: var(--density-font-size-xs);
+}
+
+/* totals 行：等宽数字，faint 汇总 */
+.ai-audit-totals-text {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* byModel 分组行 */
+.ai-audit-models {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ai-audit-model-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  min-width: 0;
+}
+.ai-audit-model-name {
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-audit-model-meta {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 最近条目（最新在前） */
+.ai-audit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.ai-audit-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--density-space-xs);
+  padding: 2px var(--density-space-xs);
+  border-radius: var(--radius-xs);
+  min-width: 0;
+}
+.ai-audit-item:hover {
+  background: var(--token-fill-1);
+}
+.ai-audit-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--token-text-faint);
+}
+.ai-audit-item.is-done .ai-audit-dot {
+  background: var(--token-success);
+}
+.ai-audit-item.is-error .ai-audit-dot {
+  background: var(--token-error);
+}
+.ai-audit-item-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.ai-audit-item-model {
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-audit-item-meta {
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.ai-audit-item-error {
+  flex-shrink: 0;
+  max-width: 45%;
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-error);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-audit-item.is-error .ai-audit-item-model {
+  color: var(--token-error);
+}
+
+/* 清除钮（右对齐；视觉复用 .btn .btn-sm） */
+.ai-audit-clear {
+  align-self: flex-end;
+}
+
 /* ── 动效守卫 ── */
 
 @media (prefers-reduced-motion: reduce) {
