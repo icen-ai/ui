@@ -1,13 +1,99 @@
 ---
+import pkg from '../../../package.json';
+
+/* 六预设身份色（accent 基值）——色尺是页脚的签名手势：
+   不用文字宣称「有六套预设」，刻度尺本身就是切换器 */
+const presets = [
+  ['clay', 'clay 陶土', '#d97757'],
+  ['piano', 'piano 钢琴', '#b89145'],
+  ['art', 'art 艺术', '#d66f4f'],
+  ['vangogh', 'vangogh 梵高', '#1f527c'],
+  ['ink', 'ink 墨', '#5b7a5e'],
+  ['retro', 'retro 复古', '#d03030'],
+] as const;
+
+const logoSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="var(--token-accent)"/><path d="M12 6.5 17.5 12 12 17.5 6.5 12z" fill="var(--token-bg)"/><circle cx="12" cy="12" r="1.6" fill="var(--token-accent)"/></svg>`;
 ---
+
 <footer class="site-footer">
+  <div class="footer-ruler" role="group" aria-label="色彩预设">
+    {presets.map(([value, label, color]) => (
+      <button
+        class="footer-ruler-seg"
+        type="button"
+        data-preset={value}
+        title={label}
+        aria-label={`切换到 ${label}`}
+        aria-pressed="false"
+        style={`--seg:${color}`}
+      />
+    ))}
+  </div>
+
   <div class="site-footer-inner">
-    <span>@icen.ai/ui — icen.ai 生态的统一设计系统</span>
-    <span class="site-footer-dim">6 色彩预设 × 3 风格 × 明暗双模 · 无框架组件</span>
-    <span class="site-footer-dim">
-      <a href="/llms.txt">llms.txt</a> · <a href="/llms-full.txt">llms-full</a> ·
-      <a href="https://github.com/icen-ai/ui/blob/main/AGENTS.md">AGENTS.md</a>
-      <span class="site-footer-hint">（给 AI 看的文档层）</span>
-    </span>
+    <div class="footer-id">
+      <a class="footer-brand" href="/" aria-label="ICEN UI 首页">
+        <Fragment set:html={logoSvg} />
+        <span>ICEN UI</span>
+      </a>
+      <button class="footer-install" type="button" data-install="bun add @icen.ai/ui" title="复制安装命令">
+        <span class="footer-install-cmd">$ bun add @icen.ai/ui</span>
+        <span class="footer-install-state" aria-hidden="true">复制</span>
+      </button>
+      <p class="footer-facts">v{pkg.version} · MIT · © 2026 icen.ai</p>
+    </div>
+
+    <nav class="footer-nav" aria-label="页脚导航">
+      <div class="footer-nav-row">
+        <a href="/components/">组件</a>
+        <a href="/primitives/">原语</a>
+        <a href="/tokens/">色彩</a>
+      </div>
+      <div class="footer-nav-row footer-nav-row--soft">
+        <a href="/llms.txt">llms.txt</a>
+        <a href="/llms-full.txt">llms-full</a>
+        <a href="https://github.com/icen-ai/ui/blob/main/AGENTS.md" target="_blank" rel="noopener">AGENTS.md</a>
+        <a href="https://github.com/icen-ai/ui" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
   </div>
 </footer>
+
+<script>
+  import { initTheme, setTheme } from '../../../src/behaviors/theme.ts';
+
+  /* 色尺：当前预设段全亮，其余压暗为刻度；点击切换（头部 select 经 icen:theme-change 联动） */
+  const segs = document.querySelectorAll<HTMLButtonElement>('.footer-ruler-seg');
+  const reflectRuler = (preset: string): void => {
+    segs.forEach((s) => s.setAttribute('aria-pressed', String(s.dataset.preset === preset)));
+  };
+  reflectRuler(initTheme().preset);
+  segs.forEach((s) =>
+    s.addEventListener('click', () => {
+      const v = s.dataset.preset;
+      if (v) reflectRuler(setTheme({ preset: v }).preset);
+    }),
+  );
+  /* 其他入口（头部 select / 深浅钮）切主题时色尺同步 */
+  document.addEventListener('icen:theme-change', (ev) => {
+    reflectRuler((ev as CustomEvent<{ preset: string }>).detail.preset);
+  });
+
+  /* 安装芯片：点击复制，✓ 反馈 1.4s */
+  const installBtn = document.querySelector<HTMLButtonElement>('.footer-install');
+  installBtn?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(installBtn.dataset.install ?? '');
+    } catch {
+      /* 非安全上下文无剪贴板 API——命令就在按钮上，肉眼可抄 */
+    }
+    const state = installBtn.querySelector('.footer-install-state');
+    if (!state) return;
+    installBtn.classList.add('is-copied');
+    state.textContent = '已复制';
+    window.setTimeout(() => {
+      installBtn.classList.remove('is-copied');
+      state.textContent = '复制';
+    }, 1400);
+  });
+</script>

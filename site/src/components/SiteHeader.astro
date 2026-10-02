@@ -203,4 +203,7 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
     reflect(setTheme({ style: (ev.target as HTMLInputElement).value }));
   });
   darkBtn?.addEventListener('click', () => reflect(toggleDark()));
+
+  /* 页脚色尺等任意入口切主题时同步头部控件（icen:theme-change 自 documentElement 冒泡） */
+  document.addEventListener('icen:theme-change', (ev) => reflect((ev as CustomEvent<ThemeState>).detail));
 </script>
