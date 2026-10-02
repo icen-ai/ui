@@ -440,3 +440,67 @@
     transition: none;
   }
 }
+
+/* ═══ 工具卡内嵌图表（回执 = ChartSpec 时 setIo 走 renderChart，§13）═══ */
+.ai-tool-io-chart {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ═══ AI 工具挂载区（ai-tools.ts 的 createAiToolArea，§13）═══
+ *   .ai-tools-mount > .ai-tools-item > head（名/时间/×）+ body（工具自渲染） */
+.ai-tools-mount {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--density-space-md);
+  align-items: start;
+}
+.ai-tools-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  background: var(--token-surface);
+  animation: icen-pop-in var(--duration-normal) var(--ease-out);
+}
+.ai-tools-item-head {
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-sm);
+  padding: var(--density-space-xs) var(--density-space-sm);
+  border-bottom: 1px solid var(--token-line-soft);
+}
+.ai-tools-item-name {
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text);
+}
+.ai-tools-item-meta {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.ai-tools-item-remove {
+  border: 0;
+  background: transparent;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  font-size: var(--density-font-size-sm);
+  line-height: 1;
+  padding: 2px 6px;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.ai-tools-item-remove:hover { color: var(--token-error); background: var(--token-fill-1); }
+.ai-tools-item-remove:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+.ai-tools-item-body {
+  padding: var(--density-space-sm);
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-tools-item { animation: none; }
+}

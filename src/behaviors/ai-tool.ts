@@ -59,6 +59,7 @@ import {
   type AiToolCallModel,
 } from './ai-core';
 import { renderAiContentPart } from './ai-chat';
+import { renderChart } from './charts';
 
 /* ── 状态机（规格 §1，唯一语言） ── */
 const AI_STATUSES: readonly AiStatus[] = [
@@ -188,7 +189,33 @@ function buildIo(label: string): IoParts {
   return { root, pre, media };
 }
 
+/** 形似 ChartSpec（{type:'chart',spec} 信封或裸 spec）→ 工具卡内嵌小图 */
+function chartSpecOf(value: unknown): unknown | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const v = value as Record<string, unknown>;
+  if (v.type === 'chart' && v.spec && typeof v.spec === 'object') return v.spec;
+  const t = typeof v.type === 'string' ? v.type : undefined;
+  const looksChart = Array.isArray(v.series) || Array.isArray(v.segments) || Array.isArray(v.points)
+    || Array.isArray(v.dates) || (Array.isArray(v.labels) && Array.isArray(v.values));
+  if (looksChart && (t === undefined || typeof t === 'string')) return v;
+  return null;
+}
+
 function setIo(io: IoParts, value: unknown): void {
+  /* 工具回执内嵌图表：{type:'chart',spec} 或裸 ChartSpec → renderChart 小图 */
+  const chartSpec = chartSpecOf(value);
+  if (chartSpec) {
+    io.pre.textContent = '';
+    io.pre.hidden = true;
+    io.media.replaceChildren();
+    const holder = document.createElement('div');
+    holder.className = 'ai-tool-io-chart';
+    io.media.appendChild(holder);
+    renderChart(holder, chartSpec);
+    io.media.hidden = false;
+    io.root.hidden = false;
+    return;
+  }
   /* MCP / 业界 wire 的 content 数组（或显式 AiContentPart[]）→ 多模态回执渲染 */
   const parts = Array.isArray(value) ? normalizeContentParts(value) : [];
   if (parts.length > 0) {

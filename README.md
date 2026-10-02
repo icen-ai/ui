@@ -11,6 +11,7 @@ icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明
 - 标准化内容模型 `AiContent`（v0.7.1，对标 AI SDK v5 parts / MCP / OpenAI / Anthropic，2026-10 调研）：一套 `AiContentPart[]`（text / image / audio / video / file / resource-link）表达任意输入——消息渲染（renderAiMessage 多模态 + 错误变体）、工具回执（MCP content 数组零改动进卡片）、传输层（parts → 两族 wire，含 anthropic `cache_control` 与 tool_result 回灌）全部只认这一套；`normalizeContentParts` 一函数归一四族来源，`estimateTokens` / `contextEstimate` 提供粗估与上下文口径
 - ai-provider 适配层（v0.7.1 增强）：五家厂商注册表（含定价表，`estimateCost` 未命中不猜价）、chat + stream 双族线协议多模态传输、审计闭环（`createAiAuditor` 条目含 cost 定价估算与 ttftMs 首 token 延迟，`renderAiAudit` 面板 + `ai-context` 抽屉审计节）、请求收尾派 `icen:ai-done`（status/usage/cost/error/durationMs/ttftMs）
 - 绑定层 `bindComposer`（v0.7.1，「零接线全链路」）：一行把 composer ↔ 消息区（renderAiMessage）↔ client（stream + 停止 + 排队续发 + 错误路径）↔ 上下文环（`usage.from: 'context'` 正确口径 / `'billing'` 计费口径 / auditor）接成闭环；不传 client 为纯状态绑定（渐进采用）；附件三入口（钮选 / 粘贴 / 拖放）
+- AI 工具体系（v0.8，`ai-tools`）：UI 能力注册为模型可调用的工具（内置 `render_chart` 吃 ChartSpec 纯 JSON）；`createAiToolArea` 挂载区三层控制（白名单 / max LRU / 运行时调节）；模型侧 `aiToolsToOpenAI()` 直接给 tools 参数、`aiToolsManifest()` 贴 system prompt；工具回执内嵌图（output 为 chart spec → 工具卡展开区直接渲染）
 - 行为：theme / tabs / toast / copy / input / select / slider / tag-input / upload / modal / dropdown / popover / context-menu / accordion / tree / carousel / charts / nav / sidebar / datatable / notification / back-top / command-palette / date-picker / split-pane / ai-core / ai-chat / ai-composer / ai-tool / ai-diff / ai-panel（31 个，全部 SSR 守卫 + 幂等 init + textContent-only）
 
 ## 使用

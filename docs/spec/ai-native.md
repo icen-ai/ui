@@ -595,3 +595,57 @@ GLM-5.x ~$0.5/$3 档；Kimi K3 $3/$15、缓存读 ~$0.3，K2.6 ~$0.95/$3）。ca
   （消费方调 `auditor.clear()` 后重渲染）；`opts.onClear` 可替代事件。
 - `AiContextModel` 增 `audit?: AiAuditor | AiAuditEntry[]`：上下文抽屉自动出现「审计」节（复用 renderAiAudit 内部件，无清除钮）。
 - localStorage 持久化审计在多 tab 下为 last-write-wins：绑定层不自动同步，文档写明（审计以单 tab 会话为准）。
+
+---
+
+## 13. AI 工具体系（v0.8，`src/behaviors/ai-tools.ts`）
+
+> 任何 UI 能力（图表渲染、未来的 diff 应用 / todo 写入……）注册为 **AiToolDef**，
+> 模型侧可调用、宿主侧全控。库内置 `render_chart` 一个工具（吃 ChartSpec 纯 JSON）。
+
+### 13.1 注册表
+
+```ts
+export interface AiToolDef<TInput = unknown> {
+  name: string;                    // 模型侧 function name（snake_case）
+  description: string;             // 给模型看的说明
+  inputSchema: Record<string, unknown>;  // OpenAI parameters / MCP inputSchema 兼容
+  run: (input: TInput, mount: HTMLElement) => unknown;  // 在挂载点上渲染，返回值即工具结果
+  present?: 'mount' | 'data';
+}
+registerAiTool(def) / unregisterAiTool(name) / getAiTool(name) / listAiTools()
+```
+
+### 13.2 挂载区（挂不挂 / 挂哪些 / 挂几个——宿主三层控制）
+
+```ts
+createAiToolArea(el, { tools?: string[]; max?: number; itemMinHeight?: number }) → AiToolArea
+// tools 白名单支持通配 'chart-*'；max 超出 LRU 淘汰最旧挂载
+// AiToolArea: { el, count, call(name, input), can(name), setTools, setMax, clear, onChange(fn) }
+```
+
+- 三层控制：① 不 import 本模块 = 生态无工具体系（tree-shake）；② area 白名单 + max；
+  ③ 运行时 setTools/setMax/clear + unregisterAiTool 全局下架。
+- 挂载项结构：`.ai-tools-mount > .ai-tools-item > head（工具名/时间/×）+ body（工具自渲染）`。
+- 事件（bubbles）：`icen:ai-tool-call {name, input, el}` / `icen:ai-tool-result {name, ok, el, error?, count}`
+  / `icen:ai-tool-evict {name, el}`。
+
+### 13.3 模型侧导出（agent loop 直接消费）
+
+```ts
+aiToolsToOpenAI(names?)   // → chat.completions tools 参数格式
+aiToolsToMcp(names?)      // → MCP tools 格式（name/description/inputSchema）
+aiToolsManifest(names?)   // → system prompt 能力清单文本
+parseAiToolArgs(raw)      // tool_call 参数容错解析（JSON 字符串/对象/坏 JSON→{}）
+```
+
+宿主 agent loop 接线：模型回 `render_chart` tool_call → `area.call('render_chart', parseAiToolArgs(args))`。
+
+### 13.4 图表与 AI 族的接缝
+
+- `render_chart` 工具：inputSchema = ChartSpec JSON Schema；run = renderChart（自动选型 /
+  容错归一 / 交互事件族 / 可隐藏图例全数继承）。
+- **工具回执内嵌图**：`renderAiToolCall` 的 output 为 `{type:'chart', spec}` 信封或裸
+  ChartSpec 时，IO 区直接渲染小图（`chartSpecOf` 探测，`.ai-tool-io-chart` 容器）。
+- **kind**：ai-core 内置 `chart` kind（折线图标，info tint，summarize 取 title）；
+  `inferKind`：工具名含 chart/plot/visualize → 'chart'。

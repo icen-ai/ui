@@ -3487,7 +3487,19 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
   <button class="btn btn-sm btn-primary" type="button" id="ai-tool-run">模拟执行（pending → running → done）</button>
   <span class="toolbar-label" id="ai-tool-log">rm 失败卡自动展开 · 审批卡展开后允许 / 拒绝</span>
 </div>
-<div id="ai-tool-live" style="margin-top:8px"></div>`,
+<div id="ai-tool-live" style="margin-top:8px"></div>
+<div class="toolbar" style="margin-top:14px">
+  <span class="toolbar-label">AI 工具挂载区</span>
+  <button class="btn btn-sm btn-primary" type="button" id="ai-tools-call">模拟 AI 调用 render_chart</button>
+  <button class="btn btn-sm" type="button" id="ai-tools-chart-receipt">工具卡内嵌图</button>
+  <span class="toolbar-spacer"></span>
+  <button class="btn btn-sm" type="button" id="ai-tools-max">上限：2</button>
+  <button class="btn btn-sm" type="button" id="ai-tools-clear">清空</button>
+</div>
+<p class="demo-label" style="margin:6px 0 10px">createAiToolArea：白名单 ['render_chart'] · max=2（超出 LRU 淘汰最旧）· 点模拟调用连发三种图看淘汰</p>
+<div id="ai-tools-area"></div>
+<div id="ai-tools-receipt" style="margin-top:12px"></div>
+<p class="demo-label" id="ai-tools-log" style="margin-top:8px">工具体系事件日志</p>`, 
     usage: `import { initAiTool, renderAiToolCall } from '@icen.ai/ui/kit/ai-tool-call';
 initAiTool();   // 展开/折叠 + 审批按钮委托（icen:ai-approve / icen:ai-reject，detail {id, kind}）
 
@@ -3508,8 +3520,20 @@ const h = renderAiToolCall(el, {
   input: { cmd: 'bun run build' },   // 摘要行：注册表 summarize 或压缩 JSON
 });
 h.update({ status: 'running' });
-h.update({ status: 'done', output: '…', durationMs: 3200 });`,
-    behaviors: ['ai-tool'],
+h.update({ status: 'running' });
+h.update({ status: 'done', output: '…', durationMs: 3200 });
+
+// 工具回执内嵌图：output 为 {type:'chart',spec} 或裸 ChartSpec → 展开区直接渲染小图
+h.update({ status: 'done', kind: 'chart', output: { type: 'chart', spec: { labels: ['Q1','Q2'], values: [4, 7] } } });
+
+// ── AI 工具体系（ai-tools）：UI 能力注册为模型工具，宿主全控 ──
+import { createAiToolArea, registerAiTool, aiToolsToOpenAI, aiToolsManifest } from '@icen.ai/ui';
+const area = createAiToolArea(el, { tools: ['render_chart'], max: 4 });  // 白名单 + 上限（LRU）
+area.call('render_chart', toolCallArgs);   // 模型 tool_call 的落地入口
+registerAiTool({ name: 'highlight_row', description: '…', inputSchema: {/* OpenAI/MCP 兼容 */}, run: (input, mount) => {/*…*/} });
+aiToolsToOpenAI();    // → chat.completions tools 参数
+aiToolsManifest();    // → system prompt 能力清单`,
+    behaviors: ['ai-tool', 'ai-tools', 'charts'],
     behaviorInit: { 'ai-tool': 'initAiTool' },
     script: `const host = document.getElementById('ai-tool-live');
 const logEl = document.getElementById('ai-tool-log');
@@ -3539,6 +3563,49 @@ document.querySelectorAll('.ai-tool').forEach(function (card) {
   card.addEventListener('icen:ai-reject', function (e) {
     if (logEl) logEl.textContent = 'icen:ai-reject · id=' + e.detail.id + ' kind=' + e.detail.kind;
   });
+});
+
+/* ── 工具体系：挂载区（白名单 + LRU 上限）与工具卡内嵌图 ── */
+const areaEl = document.getElementById('ai-tools-area');
+const toolsLog = document.getElementById('ai-tools-log');
+function tlog(msg) { if (toolsLog) toolsLog.textContent = msg; }
+let area = null;
+if (areaEl && aiToolsMod) {
+  area = aiToolsMod.createAiToolArea(areaEl, { tools: ['render_chart'], max: 2 });
+  areaEl.addEventListener('icen:ai-tool-evict', function (e) { tlog('icen:ai-tool-evict · LRU 淘汰 ' + e.detail.name); });
+  areaEl.addEventListener('icen:ai-tool-result', function (e) { tlog('icen:ai-tool-result · ' + e.detail.name + (e.detail.ok ? ' ✓' : ' ✗')); });
+}
+const AI_SPECS = [
+  { title: '模型延迟（自动选型：折线）', labels: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00'], values: [120, 98, 145, 132, 160, 141], format: { notation: 'ms' } },
+  { type: 'donut', title: '错误分布（环形）', segments: [{ label: '超时', value: 12 }, { label: '限流', value: 7 }, { label: '5xx', value: 3 }] },
+  { type: 'scatter', title: '延迟 × 流量（散点）', points: Array.from({ length: 18 }, function (_, i) { return { x: Math.round((i * 37) % 90 + 10), y: Math.round((i * 53) % 140 + 20), size: 5 + (i % 4) * 8 }; }) },
+];
+let specTurn = 0;
+document.getElementById('ai-tools-call')?.addEventListener('click', function () {
+  if (!area) return;
+  const rec = area.call('render_chart', AI_SPECS[specTurn++ % AI_SPECS.length]);
+  if (!rec) tlog('调用被拒：工具不在白名单或未注册');
+});
+document.getElementById('ai-tools-clear')?.addEventListener('click', function () { area?.clear(); tlog('已清空挂载区'); });
+const maxBtn = document.getElementById('ai-tools-max');
+let maxVal = 2;
+maxBtn?.addEventListener('click', function () {
+  maxVal = maxVal === 2 ? 1 : 2;
+  if (maxBtn) maxBtn.textContent = '上限：' + maxVal;
+  area?.setMax(maxVal);
+  tlog('setMax(' + maxVal + ') — 超限部分立即 LRU 淘汰');
+});
+document.getElementById('ai-tools-chart-receipt')?.addEventListener('click', function () {
+  const host = document.getElementById('ai-tools-receipt');
+  if (!host) return;
+  host.textContent = '';
+  aiToolMod.renderAiToolCall(host, {
+    id: 'chart-1', name: 'render_chart', kind: 'chart', status: 'done',
+    input: { type: 'bar', labels: ['Q1', 'Q2', 'Q3'], values: [4, 7, 6] },
+    output: { type: 'chart', spec: { title: '季度调用量', labels: ['Q1', 'Q2', 'Q3'], series: [{ name: 'API', values: [420, 510, 620] }, { name: 'Web', values: [260, 300, 380] }] } },
+    durationMs: 240,
+  });
+  aiToolMod.initAiTool();
 });`,
   },
   {

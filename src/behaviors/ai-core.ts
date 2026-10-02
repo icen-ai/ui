@@ -161,6 +161,9 @@ const ICON_LIST_CHECKS = svg(
 const ICON_BOT = svg(
   '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
 );
+const ICON_CHART = svg(
+  '<path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/>',
+);
 const ICON_FILE_TEXT = svg(
   '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
 );
@@ -245,6 +248,7 @@ const BUILTIN_KINDS: Record<string, AiKindDef> = {
   plan: { label: '计划', icon: ICON_LIST_CHECKS, tint: 'info' },
   subagent: { label: '子代理', icon: ICON_BOT, tint: 'accent', summarize: sum((i) => pickStr(i, ['task', 'description', 'prompt', 'message', 'subagent_type'])) },
   note: { label: '笔记', icon: ICON_FILE_TEXT, tint: 'muted' },
+  chart: { label: '图表', icon: ICON_CHART, tint: 'info', summarize: sum((i) => pickStr(i, ['title', 'name'])) },
 };
 
 const FALLBACK_KIND: AiKindDef = { label: '笔记', icon: ICON_FILE_TEXT, tint: 'muted' };
@@ -267,6 +271,7 @@ export function getAiKind(name: string): AiKindDef {
 /* 规则按优先级排列，首命中生效（覆盖业界主流 tool 命名） */
 const KIND_RULES: ReadonlyArray<readonly [RegExp, string]> = [
   [/^mcp__/, 'mcp'],
+  [/chart|plot|visuali[sz]e|render_chart/, 'chart'],
   [/bash|shell|terminal|powershell|zsh|\bcmd\b|exec/, 'shell'],
   [/todo/, 'todo'],
   [/sub.?agent|^task$|dispatch|spawn|agent/, 'subagent'],
