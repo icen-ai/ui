@@ -42,6 +42,8 @@ const LONG_PRESS_MOVE_LIMIT = 12;
 const FLIP_MARGIN = 10;
 const CLAMP_MARGIN = 8;
 
+import { applyPanelSizing, readPanelSizing, type PanelSizing } from './popover';
+
 const registry = new Map<string, ContextMenuItem[]>();
 let fallbackItems: ContextMenuItem[] | null = null;
 let initialized = false;
@@ -151,8 +153,15 @@ function buildItem(item: ContextMenuItem): HTMLElement {
   return btn;
 }
 
-/** 在 (x, y) 打开右键菜单（视口边缘自动翻转并 clamp）。 */
-export function openContextMenu(x: number, y: number, items: ContextMenuItem[]): void {
+/** 在 (x, y) 打开右键菜单（视口边缘自动翻转并 clamp）。
+    尺寸走全库统一 PanelSizing 契约：opts.sizing 直接传入（面板无固定宿主元素，
+    由调用方从其根元素 readPanelSizing 读入，如 datatable 行右键）。 */
+export function openContextMenu(
+  x: number,
+  y: number,
+  items: ContextMenuItem[],
+  opts?: { sizing?: PanelSizing },
+): void {
   if (typeof document === 'undefined') return;
   closeMenu();
 
@@ -160,6 +169,7 @@ export function openContextMenu(x: number, y: number, items: ContextMenuItem[]):
   panel.className = 'menu menu--context';
   panel.setAttribute('role', 'menu');
   panel.style.visibility = 'hidden';
+  applyPanelSizing(panel, opts?.sizing ?? {});
 
   for (const item of items) panel.appendChild(buildItem(item));
   document.body.appendChild(panel);
@@ -254,7 +264,8 @@ function clearLongPress(): void {
 }
 
 function openForTarget(target: Element | null, x: number, y: number): void {
-  openContextMenu(x, y, resolveItems(target));
+  /* 声明式区域的 data-panel-* 尺寸契约随区域元素读入 */
+  openContextMenu(x, y, resolveItems(target), { sizing: readPanelSizing(target) });
 }
 
 /**

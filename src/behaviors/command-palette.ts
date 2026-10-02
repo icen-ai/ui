@@ -39,6 +39,8 @@
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+import { applyPanelSizing, readPanelSizing } from './popover';
+
 let openId: string | null = null;
 let restoreFocusTo: HTMLElement | null = null;
 let prevBodyOverflow = '';
@@ -114,6 +116,9 @@ export function openCommandPalette(id: string): void {
   }
   const panel = backdrop.querySelector<HTMLElement>('.command-palette');
   if (!panel) return;
+
+  /* 面板尺寸契约（PanelSizing）：backdrop 上 data-panel-width / -max-height 覆盖 CSS 默认 */
+  applyPanelSizing(panel, readPanelSizing(backdrop));
 
   if (backdrop.parentElement !== document.body) document.body.appendChild(backdrop);
 

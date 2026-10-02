@@ -197,6 +197,9 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 - **交互基元**：`base.css` 提供 6 个组件地基 `.pressable` / `.control` / `.field` / `.lift` / `.surface-elevated` / `.focus-ring`。`style-profiles.css` 的 `.style-retro` 段选择器引用这 6 个类名——改名必须同步修 style-profiles.css，否则 retro 风格失效。共享 keyframes（`icen-pop-in` / `icen-spin` / `icen-skeleton-pulse`）也在 base.css，组件动画复用、不各自重定义。
 - **z-index 标尺**：浮层一律 portal 到 body，z-index 取 `--z-base/raised/sticky/chrome/toast/banner/dialog/popover/tooltip/fx`（0.6.0 新增 `--z-fx`，retro-effects 特效层用）。
 - **浮层 portal 家族**：popover / dropdown / context-menu / command-palette / date-picker / **select**（0.6.0 起 panel 也 portal 到 body，与 popover 共用定位模式）。
+- **凹槽 × 尺寸双契约（全库统一心智模型，v0.8 收敛）**：
+  - **凹槽（内容）**：标记驱动组件 = 任意 HTML 凹槽（契约在各组件 CSS 头注释，如 modal 的 `.modal-body`、select 的 `.select-option` 内可写色卡/图标/多行）；函数渲染组件 = 类型化 model（一律 `textContent` 防 XSS）+ 指定挂载点（`renderAiMessage` 的 `handle.body`、datatable 的 `columns.render → Node`）。toast / notification 保持纯文本是安全纪律，不开 HTML 口子。
+  - **尺寸（PanelSizing）**：所有浮层面板共享 `behaviors/popover.ts` 的 `PanelSizing` 类型（`width 固定（最高优先）/ minWidth / maxWidth / maxHeight`）与同名 data 属性 `data-panel-width / data-panel-min / data-panel-max / data-panel-max-height`（挂组件根；context-menu 等无宿主面板的走 `opts.sizing` 程序面，datatable 右键自动从宿主读）。共享解析 `readPanelSizing(el)` / `resolvePanelSizing(el, overrides)`（程序面 > 属性面）+ `sizingToLayout`（锚定布局）/ `applyPanelSizing`（自建面板内联，固定宽连带盖掉 CSS 侧 max-width）。已接入：select / popover(openPopover) / dropdown / context-menu / date-picker / command-palette / modal。新增浮层组件必须走此契约，禁止再写死宽高。
 - **事件前缀纪律**：behavior 派发的自定义事件统一 `icen:` 前缀（如 tabs 的 `icen:tab-change`、upload 的 `icen:upload`）。otp 为兼容双发 `icen:otp-complete`（新）与 `otp:complete`（deprecated，下个大版本删）。
 - **a11y**：所有可聚焦元素必须有 `:focus-visible` 环；状态变化必须同步 `aria-*`；modal/dialog 必须有 focus trap + ESC 关闭 + 焦点还原。
 - **动效守卫**：所有动画/过渡在 `@media (prefers-reduced-motion: reduce)` 下压缩为 ~0ms；触屏（`pointer: coarse`）关闭 `:hover` 抬升；高对比度模式（`forced-colors: active`）保留焦点环。

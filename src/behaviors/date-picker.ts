@@ -16,11 +16,15 @@
  *   data-date-picker-max="2026-12-31"     最大可选日期
  *   data-date-picker-week-start="0"       周首日（0=周日，1=周一，默认 1）
  *   data-date-picker-placeholder="选择日期" 空值占位文本
+ *   面板尺寸走全库统一 PanelSizing 契约：data-panel-width 覆盖默认 280 宽，
+ *   data-panel-min / -max / -max-height 同理（面板为跨实例单例）。
  *
  * behavior 渲染日历面板（portal 到 body，DOM API 构建，禁 innerHTML），
  * 点选后更新 hidden input + 触发 change 事件。外点 / Esc 关闭；
  * 滚动 / resize 重定位监听随面板关闭一并移除。
  */
+
+import { readPanelSizing } from './popover';
 
 interface MarkedPicker extends HTMLElement {
   __icenDatePickerInit?: boolean;
@@ -72,7 +76,13 @@ function ensurePanel(): HTMLElement {
 
 function positionPanel(panel: HTMLElement, trigger: HTMLElement): void {
   const r = trigger.getBoundingClientRect();
-  const pw = 280;
+  /* 面板尺寸契约（PanelSizing）：根上 data-panel-* 可覆盖默认 280 宽与高度上限；
+     面板是跨实例单例，未指定的字段必须清空内联，避免串味 */
+  const sizing = readPanelSizing(trigger.closest('[data-date-picker]'));
+  const pw = sizing.width ?? sizing.minWidth ?? 280;
+  panel.style.width = sizing.width != null || sizing.minWidth != null ? `${pw}px` : '';
+  panel.style.maxWidth = sizing.maxWidth != null ? `${sizing.maxWidth}px` : '';
+  panel.style.maxHeight = sizing.maxHeight != null ? `${sizing.maxHeight}px` : '';
   const ph = panel.offsetHeight || 320;
   let left = r.left;
   let top = r.bottom + 4;

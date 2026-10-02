@@ -24,6 +24,8 @@ let prevBodyOverflow = '';
 let keyHandler: ((e: KeyboardEvent) => void) | null = null;
 let initialized = false;
 
+import { applyPanelSizing, readPanelSizing } from './popover';
+
 function findBackdrop(id: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`.modal-backdrop[data-modal="${CSS.escape(id)}"]`);
 }
@@ -46,6 +48,9 @@ export function openModal(id: string): void {
   }
   const panel = backdrop.querySelector<HTMLElement>('.modal');
   if (!panel) return;
+
+  /* 面板尺寸契约（PanelSizing）：backdrop 上 data-panel-width / -max-height 等覆盖 CSS 类修饰 */
+  applyPanelSizing(panel, readPanelSizing(backdrop));
 
   portal(backdrop);
 

@@ -41,6 +41,86 @@ export interface PopoverLayoutOptions {
   contentHeightHint?: number;
 }
 
+/* ═══════════ 面板尺寸统一契约（PanelSizing） ═══════════
+   全库浮层面板共用同一套尺寸心智模型：
+   - 属性面（声明式，挂组件根/面板元素）：data-panel-width（固定宽，最高优先）/
+     data-panel-min（最小宽）/ data-panel-max（最大宽）/ data-panel-max-height（高度上限）
+   - 程序面（命令式）：PanelSizing 对象，经 resolvePanelSizing 与属性面合并（程序面优先）
+   消费方：select / dropdown / context-menu / date-picker / command-palette / modal /
+   openPopover。布局引擎只认解析后的纯数字，属性读写全部收敛在本模块。 */
+export interface PanelSizing {
+  /** 固定宽（最高优先，跳过 min/max 夹取） */
+  width?: number;
+  /** 最小宽（默认 = 锚点/trigger 宽或组件 CSS 默认） */
+  minWidth?: number;
+  /** 最大宽 */
+  maxWidth?: number;
+  /** 高度上限 */
+  maxHeight?: number;
+}
+
+const PANEL_SIZING_ATTRS = {
+  width: 'data-panel-width',
+  minWidth: 'data-panel-min',
+  maxWidth: 'data-panel-max',
+  maxHeight: 'data-panel-max-height',
+} as const;
+
+/** 从元素读取 data-panel-* 尺寸属性（非法/缺失字段跳过，不抛异常）。 */
+export function readPanelSizing(el: Element | null | undefined): PanelSizing {
+  const out: PanelSizing = {};
+  if (!el) return out;
+  for (const key of Object.keys(PANEL_SIZING_ATTRS) as (keyof PanelSizing)[]) {
+    const raw = el.getAttribute(PANEL_SIZING_ATTRS[key]);
+    if (raw == null) continue;
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) out[key] = n;
+  }
+  return out;
+}
+
+/** 合并尺寸：程序面 overrides 优先于属性面（undefined 字段不覆盖）。 */
+export function resolvePanelSizing(
+  el: Element | null | undefined,
+  overrides?: PanelSizing | null,
+): PanelSizing {
+  const base = readPanelSizing(el);
+  if (!overrides) return base;
+  for (const key of Object.keys(overrides) as (keyof PanelSizing)[]) {
+    const v = overrides[key];
+    if (typeof v === 'number' && Number.isFinite(v) && v > 0) base[key] = v;
+  }
+  return base;
+}
+
+/** 把 PanelSizing 折算进布局 opts：固定宽 → min=max；否则 min/max 夹取；maxHeight 透传。 */
+export function sizingToLayout<T extends { minWidth?: number; maxWidth?: number; maxHeight?: number }>(
+  sizing: PanelSizing,
+  opts: T,
+): T {
+  const out = { ...opts };
+  if (sizing.minWidth != null) out.minWidth = sizing.minWidth;
+  if (sizing.maxWidth != null) out.maxWidth = sizing.maxWidth;
+  if (sizing.width != null) {
+    out.minWidth = sizing.width;
+    out.maxWidth = sizing.width;
+  }
+  if (sizing.maxHeight != null) out.maxHeight = sizing.maxHeight;
+  return out;
+}
+
+/** 把尺寸契约内联到内容驱动的自建面板（dropdown / context-menu / date-picker 等 fixed 面板）。 */
+export function applyPanelSizing(panel: HTMLElement, sizing: PanelSizing): void {
+  if (sizing.width != null) {
+    /* 固定宽需同时盖掉 CSS 侧的 max-width 上限（如 menu 320 / command-palette 560） */
+    panel.style.width = `${sizing.width}px`;
+    panel.style.maxWidth = `${sizing.width}px`;
+  }
+  if (sizing.minWidth != null) panel.style.minWidth = `${sizing.minWidth}px`;
+  if (sizing.maxWidth != null && sizing.width == null) panel.style.maxWidth = `${sizing.maxWidth}px`;
+  if (sizing.maxHeight != null) panel.style.maxHeight = `${sizing.maxHeight}px`;
+}
+
 export interface PopoverLayout {
   side: PopoverSide;
   left: number;
@@ -51,6 +131,8 @@ export interface PopoverLayout {
 
 export interface OpenPopoverOptions extends PopoverLayoutOptions {
   anchor: Element | PopoverRect;
+  /** 统一面板尺寸契约（优先于面板元素的 data-panel-* 与上方直接尺寸字段） */
+  sizing?: PanelSizing;
   /** 关闭（含外点/Esc 触发的关闭）后的回调 */
   onClose?: () => void;
 }
@@ -201,7 +283,9 @@ export function openPopover(panel: HTMLElement, options: OpenPopoverOptions): vo
   if (typeof document === 'undefined') return;
   if (openPanels.has(panel)) closePopover(panel);
 
-  const { anchor, onClose, ...layoutOpts } = options;
+  const { anchor, onClose, sizing, ...rest } = options;
+  /* 尺寸契约：opts.sizing > 面板元素 data-panel-* > 上方直接尺寸字段 */
+  const layoutOpts = sizingToLayout(resolvePanelSizing(panel, sizing), rest);
 
   // 记录原位，关闭后还原
   const placeholder = document.createComment('popover-anchor');

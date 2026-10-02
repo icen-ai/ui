@@ -13,10 +13,16 @@
  * 视口 12px margin 内 clamp，下方空间不足翻上）。trigger click/ArrowDown 打开；
  * ↑↓ 循环高亮（跳过 disabled/separator）、Enter 激活并关闭、Esc 关闭还原焦点、
  * 外点/滚动（捕获）关闭；trigger aria-expanded 同步。SSR 下为 no-op。
+ *
+ * 面板尺寸走全库统一 PanelSizing 契约（见 behaviors/popover.ts）：
+ * 根上 data-panel-width（固定）/ data-panel-min / data-panel-max /
+ * data-panel-max-height → 创建面板时内联应用（宽度默认内容驱动，CSS min 180/max 320）。
  */
 
 const VIEWPORT_MARGIN = 12;
 const SIDE_OFFSET = 4;
+
+import { applyPanelSizing, readPanelSizing } from './popover';
 
 interface ActiveDropdown {
   trigger: HTMLElement;
@@ -78,6 +84,7 @@ function openDropdown(trigger: HTMLElement, highlightFirst = false): void {
   panel.className = 'menu';
   panel.setAttribute('role', 'menu');
   panel.style.visibility = 'hidden';
+  applyPanelSizing(panel, readPanelSizing(root));
   while (template.firstChild) panel.appendChild(template.firstChild);
   panel
     .querySelectorAll<HTMLElement>('.menu-item')

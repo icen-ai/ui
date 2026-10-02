@@ -38,6 +38,7 @@
  */
 
 import { openContextMenu, type ContextMenuItem } from './context-menu';
+import { readPanelSizing } from './popover';
 
 export interface TableColumn<Row = Record<string, unknown>> {
   key: string;
@@ -797,7 +798,9 @@ export function createTable<Row = Record<string, unknown>>(
       tr.addEventListener('contextmenu', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
-        openContextMenu(ev.clientX, ev.clientY, opts.contextMenu!(row));
+        openContextMenu(ev.clientX, ev.clientY, opts.contextMenu!(row), {
+          sizing: readPanelSizing(el),
+        });
       });
     }
     return tr;
