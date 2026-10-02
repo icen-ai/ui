@@ -523,7 +523,7 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
     slug: 'select',
     name: '选择器',
     group: '表单',
-    desc: '触发器与 input 同视觉；弹层支持 ↑↓ 移动、Enter 选中、Esc / 外点关闭，选中值同步隐藏 input。增强：data-select-search 可搜索过滤、data-select-multiple 多选（逗号分隔）、data-select-max 上限。',
+    desc: '触发器与 input 同视觉；弹层支持 ↑↓ 移动、Enter 选中、Esc / 外点关闭，选中值同步隐藏 input。选项内容支持任意 HTML（色卡/图标/多行）。增强：data-select-search 可搜索过滤、data-select-multiple 多选（逗号分隔）、data-select-max 上限；面板尺寸：data-select-panel-width 固定宽 / -min / -max 夹取 / -max-height 高度上限。',
     demo: `<div class="demo-col">
   <p class="chart-cap" style="margin:0 0 6px">基础单选</p>
   <div class="select" data-select style="max-width:280px">
@@ -583,6 +583,19 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
     </div>
     <input type="hidden" data-select-value name="tags" />
   </div>
+  <p class="chart-cap" style="margin:14px 0 6px">富选项（任意 HTML）+ 固定面板宽（data-select-panel-width）</p>
+  <div class="select" data-select data-select-panel-width="216" style="max-width:216px">
+    <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
+      <span class="select-value is-empty">选择色彩预设</span>
+      ${svgChevron}
+    </button>
+    <div class="select-panel" hidden>
+      <button class="select-option" type="button" data-value="clay"><span class="opt-dots" aria-hidden="true"><i style="background:#faf9f5"></i><i style="background:#d97757"></i><i style="background:#7a9cb0"></i></span>clay 陶土</button>
+      <button class="select-option" type="button" data-value="piano"><span class="opt-dots" aria-hidden="true"><i style="background:#f1eee6"></i><i style="background:#b89145"></i><i style="background:#566370"></i></span>piano 钢琴</button>
+      <button class="select-option" type="button" data-value="vangogh"><span class="opt-dots" aria-hidden="true"><i style="background:#e8ddb2"></i><i style="background:#1f527c"></i><i style="background:#476f45"></i></span>vangogh 梵高</button>
+    </div>
+    <input type="hidden" data-select-value name="preset" />
+  </div>
 </div>`,
     usage: `import { initSelect } from '@icen.ai/ui/behaviors/select';
 initSelect();
@@ -595,7 +608,13 @@ initSelect();
 
 <!-- 多选 + 上限 -->
 <div class="select" data-select data-select-multiple data-select-max="3">…</div>
-<!-- 多选：trigger 内加 .select-clear 清除全部 -->`,
+<!-- 多选：trigger 内加 .select-clear 清除全部 -->
+
+<!-- 富选项：.select-option 内可直接写任意 HTML（色卡 / 图标 / 多行） -->
+<!-- 面板尺寸：
+     data-select-panel-width="216"   固定宽（优先）
+     data-select-panel-min / -max    以 trigger 宽为基准夹取
+     data-select-panel-max-height="320"  高度上限（默认 240） -->`,
     behaviors: ['select'],
     behaviorInit: { select: 'initSelect' },
   },

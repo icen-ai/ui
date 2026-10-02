@@ -170,6 +170,81 @@
 }
 .nav-icon-btn:hover { color: var(--token-text); border-color: var(--token-line-soft); background: var(--token-bg-soft); text-decoration: none; }
 
+/* ═══════════ 导航主题选择器：色卡 + 风格自预览 ═══════════
+   面板被 behavior portal 到 body，修饰类挂在面板自身（.nav-panel--*）上才能生效。 */
+
+/* 触发器上的迷你色点（背景随预设切换，由 SiteHeader reflect 驱动） */
+.nav-trigger-dots { display: inline-flex; flex: none; }
+.nav-trigger-dots i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--token-surface);
+  box-shadow: 0 0 0 1px var(--token-line-soft);
+  margin-left: -4px;
+}
+.nav-trigger-dots i:first-child { margin-left: 0; }
+
+/* 面板公共：防文字换行（修复选项折行变丑）；宽度由 behavior 按 data-select-panel-width 内联写入 */
+.nav-panel--preset,
+.nav-panel--style { padding: 5px; }
+.nav-panel--preset .select-option,
+.nav-panel--style .select-option {
+  white-space: nowrap;
+  gap: 9px;
+  padding: 7px 10px;
+  line-height: 1.4;
+}
+
+/* 预设选项：三圆点色卡（底色 / 主色 / 冷色——内容数据，非 UI 样式） */
+.opt-dots { display: inline-flex; flex: none; }
+.opt-dots i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--token-card-strong, var(--token-surface));
+  box-shadow: 0 0 0 1px var(--token-line-soft);
+  margin-left: -5px;
+}
+.opt-dots i:first-child { margin-left: 0; }
+
+/* 风格选项：每个按钮长成它所代表的风格 */
+/* modern —— 默认形态即现代风（软圆角、无衬线），不额外覆盖 */
+.style-opt--retro {
+  /* 像素风：硬边框 + 硬偏移投影 + 零圆角 + 像素字体 + 瞬时切换（无过渡即其性格） */
+  font-family: 'Pixel Retro', ui-monospace, monospace;
+  letter-spacing: 0.5px;
+  border: 2px solid var(--token-text);
+  border-radius: 0;
+  box-shadow: 2.5px 2.5px 0 var(--token-text);
+  margin: 2px 5px 4px 2px; /* 给投影留出不被面板裁切的空间 */
+  width: calc(100% - 7px);
+  transition: none;
+}
+.style-opt--retro:hover:not(.is-disabled) {
+  background: var(--token-fill-1);
+  box-shadow: 3.5px 3.5px 0 var(--token-text);
+  transform: translate(-1px, -1px);
+}
+.style-opt--terminal {
+  /* 终端风：CRT 深底 + 绿字等宽 + 提示符（预览内容，固定色不随预设变化） */
+  font-family: var(--font-mono);
+  background: #16191d;
+  color: #5ed97e;
+  border: 1px solid #2b3138;
+  border-radius: 0;
+}
+.style-opt--terminal::before {
+  content: '>';
+  color: #5ed97e;
+  opacity: 0.55;
+  font-weight: 700;
+}
+.style-opt--terminal:hover:not(.is-disabled),
+.style-opt--terminal.is-focused { background: #1d2228; color: #5ed97e; }
+.style-opt--terminal.is-selected { background: #1b241e; color: #7ee99b; }
+.style-opt--terminal.is-selected::after { color: #5ed97e; }
+
 /* ═══════════ 页脚 ═══════════ */
 .site-footer { border-top: 1px solid var(--token-line-soft); }
 .site-footer-inner {

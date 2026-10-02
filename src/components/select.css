@@ -4,7 +4,10 @@
  *
  * 完整契约：
  *   <div class="select [data-disabled] [.is-open]" data-select
- *        [data-select-search] [data-select-multiple] [data-select-max="3"]>
+ *        [data-select-search] [data-select-multiple] [data-select-max="3"]
+ *        [data-select-panel-min="200"] [data-select-panel-max="360"]
+ *        [data-select-panel-width="220"] [data-select-panel-max-height="320"]>
+ *     <!-- 选项 .select-option 内支持任意 HTML（色卡 / 图标 / 多行） -->
  *     <button class="select-trigger pressable focus-ring [--sm|--lg]" aria-haspopup="listbox"
  *             aria-expanded="false" [disabled]>
  *       <span class="select-leading">…</span>           可选前缀

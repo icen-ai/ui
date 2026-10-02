@@ -18,6 +18,9 @@
  *   data-select-multiple        多选：点击切选（不关面板），trigger 显示计数/标签，hidden input 同步逗号分隔值
  *   data-select-max="3"         多选上限（配合 data-select-multiple），达到上限后其余选项 .is-disabled
  *   data-select-placeholder     自定义占位文案（也可直接写在 .select-value 内）
+ *   选项内容支持任意 HTML（色卡/图标/多行等，直接写在 .select-option 内）
+ *   面板尺寸：data-select-panel-min / data-select-panel-max 夹取 trigger 宽（px），
+ *             data-select-panel-width 固定宽（优先），data-select-panel-max-height 高度上限（默认 240）
  *
  * 分组：面板内可用 .select-group > .select-group-label + .select-option 结构，
  *   搜索过滤时自动隐藏空分组。
@@ -119,6 +122,14 @@ function setup(container: Element): void {
   const isMultiple = container.hasAttribute('data-select-multiple');
   const isSearchable = container.hasAttribute('data-select-search');
   const maxSelect = Number(container.getAttribute('data-select-max')) || 0;
+  /* 面板尺寸控制（默认 = trigger 宽 × PANEL_MAX_HEIGHT 高）：
+     data-select-panel-min 最小宽 / data-select-panel-max 最大宽（二者夹取 trigger 宽），
+     data-select-panel-width 固定宽（优先于 min/max），data-select-panel-max-height 高度上限。
+     富选项（色卡/图标等多内容）场景用它们消除滚动条与折行。 */
+  const panelMinWidth = Number(container.getAttribute('data-select-panel-min')) || 0;
+  const panelMaxWidth = Number(container.getAttribute('data-select-panel-max')) || 0;
+  const panelFixedWidth = Number(container.getAttribute('data-select-panel-width')) || 0;
+  const panelMaxHeight = Number(container.getAttribute('data-select-panel-max-height')) || PANEL_MAX_HEIGHT;
   const placeholder =
     container.getAttribute('data-select-placeholder') ??
     (valueEl?.classList.contains('is-empty') ? (valueEl?.textContent ?? '') : '');
@@ -222,9 +233,14 @@ function setup(container: Element): void {
     });
   }
 
-  /** 按 trigger rect 计算面板定位（panel 在 body 下，left/top 换算为文档坐标）。 */
+  /** 按 trigger rect 计算面板定位（panel 在 body 下，left/top 换算为文档坐标）。
+      宽度：固定 width 优先，否则 trigger 宽经 [panel-min, panel-max] 夹取。 */
   function positionPanel(): void {
     const rect = trigger.getBoundingClientRect();
+    let panelWidth = rect.width;
+    if (panelMinWidth > 0) panelWidth = Math.max(panelWidth, panelMinWidth);
+    if (panelMaxWidth > 0) panelWidth = Math.min(panelWidth, panelMaxWidth);
+    if (panelFixedWidth > 0) panelWidth = panelFixedWidth;
     const layout = computePopoverLayout(
       rect,
       { width: window.innerWidth, height: window.innerHeight },
@@ -232,9 +248,9 @@ function setup(container: Element): void {
         side: 'bottom',
         align: 'stretch',
         offset: PANEL_OFFSET,
-        minWidth: rect.width,
-        maxWidth: rect.width,
-        maxHeight: PANEL_MAX_HEIGHT,
+        minWidth: panelWidth,
+        maxWidth: panelWidth,
+        maxHeight: panelMaxHeight,
       },
     );
     panel.style.left = `${layout.left + window.scrollX}px`;

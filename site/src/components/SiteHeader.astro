@@ -17,13 +17,17 @@ const paletteGroups = GROUPS.map((g) => ({
 })).filter((g) => g.items.length > 0);
 
 const presets = [
-  ['clay', 'clay 陶土'],
-  ['piano', 'piano 钢琴'],
-  ['art', 'art 艺术'],
-  ['vangogh', 'vangogh 梵高'],
-  ['ink', 'ink 墨'],
-  ['retro', 'retro 复古'],
+  ['clay', 'clay 陶土', '#faf9f5', '#d97757', '#7a9cb0'],
+  ['piano', 'piano 钢琴', '#f1eee6', '#b89145', '#566370'],
+  ['art', 'art 艺术', '#dce8e3', '#d66f4f', '#4f8f90'],
+  ['vangogh', 'vangogh 梵高', '#e8ddb2', '#1f527c', '#476f45'],
+  ['ink', 'ink 墨', '#f5f2ed', '#5b7a5e', '#6b7e8a'],
+  ['retro', 'retro 复古', '#f0f0e8', '#d03030', '#3030a0'],
 ] as const;
+/** 触发器色点用的身份色（accent + cold，预设的识别色，属内容数据非 UI 样式） */
+const PRESET_DOT_COLORS: Record<string, [string, string]> = Object.fromEntries(
+  presets.map(([id, , , accent, cold]) => [id, [accent, cold]]),
+);
 const styles = [
   ['modern', 'modern 现代'],
   ['retro', 'retro 像素'],
@@ -56,26 +60,32 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
         <kbd class="nav-kbd">⌘K</kbd>
       </button>
       <span class="nav-sep" aria-hidden="true"></span>
-      <div class="select nav-select" id="preset-select" data-select data-value="clay">
+      <div class="select nav-select" id="preset-select" data-select data-value="clay" data-select-panel-width="204">
         <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="色彩预设">
+          <span class="nav-trigger-dots" aria-hidden="true"><i></i><i></i></span>
           <span class="select-value">clay 陶土</span>
           <Fragment set:html={chevronSvg} />
         </button>
-        <div class="select-panel" hidden role="listbox" aria-label="色彩预设">
-          {presets.map(([v, label], i) => (
-            <button class:list={['select-option', { 'is-selected': i === 0 }]} type="button" data-value={v}>{label}</button>
+        <div class="select-panel nav-panel--preset" hidden role="listbox" aria-label="色彩预设">
+          {presets.map(([v, label, bg, accent, cold], i) => (
+            <button class:list={['select-option', 'nav-opt--preset', { 'is-selected': i === 0 }]} type="button" data-value={v}>
+              <span class="opt-dots" aria-hidden="true">
+                <i style={`background:${bg}`}></i><i style={`background:${accent}`}></i><i style={`background:${cold}`}></i>
+              </span>
+              <span>{label}</span>
+            </button>
           ))}
         </div>
         <input type="hidden" data-select-value name="preset" value="clay" />
       </div>
-      <div class="select nav-select nav-select--style" id="style-select" data-select data-value="modern">
+      <div class="select nav-select nav-select--style" id="style-select" data-select data-value="modern" data-select-panel-width="188">
         <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="风格">
           <span class="select-value">modern 现代</span>
           <Fragment set:html={chevronSvg} />
         </button>
-        <div class="select-panel" hidden role="listbox" aria-label="风格">
+        <div class="select-panel nav-panel--style" hidden role="listbox" aria-label="风格">
           {styles.map(([v, label], i) => (
-            <button class:list={['select-option', { 'is-selected': i === 0 }]} type="button" data-value={v}>{label}</button>
+            <button class:list={['select-option', `style-opt--${v}`, { 'is-selected': i === 0 }]} type="button" data-value={v}>{label}</button>
           ))}
         </div>
         <input type="hidden" data-select-value name="style" value="modern" />
@@ -158,7 +168,14 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
   }
 
   function reflect(t: ThemeState): void {
-    if (presetBox) syncSelect(presetBox, t.preset);
+    if (presetBox) {
+      syncSelect(presetBox, t.preset);
+      /* 触发器色点同步当前预设的身份色 */
+      const dc = PRESET_DOT_COLORS[t.preset];
+      presetBox.querySelectorAll<HTMLElement>('.nav-trigger-dots i').forEach((d, i) => {
+        if (dc) d.style.background = dc[i];
+      });
+    }
     if (styleBox) syncSelect(styleBox, t.style);
     darkBtn?.querySelectorAll('svg').forEach((s) => {
       (s as SVGSVGElement).toggleAttribute(

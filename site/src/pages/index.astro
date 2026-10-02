@@ -6,12 +6,17 @@ import { COMPONENTS, GROUPS } from '../lib/components';
 import pkg from '../../../package.json';
 
 import '../../../src/components/input.css';
-import '../../../src/components/form.css';
 import '../../../src/components/switch.css';
 import '../../../src/components/feedback.css';
 import '../../../src/components/media.css';
+import '../../../src/components/content.css';
+import '../../../src/components/slider.css';
+import '../../../src/components/tag.css';
 import '../../../src/components/charts.css';
-import '../../../src/components/chart-line.css';
+import '../../../src/components/chart-heatmap.css';
+import '../../../src/components/chart-gauge.css';
+import '../../../src/components/chart-sparkline.css';
+import '../../../src/components/chart-pie.css';
 import '../../../src/components/ai-chat.css';
 import '../../../src/components/ai-tool.css';
 import '../../../src/components/ai-panel.css';
@@ -22,135 +27,357 @@ const GROUP_LINK: Record<string, string> = {
   '图表': 'charts', '浮层': 'modal', '反馈': 'alert', '导航': 'nav',
 };
 
+/* 预设色板：展示内容为各预设自身的基值（色值即数据，非 UI 样式） */
+const PRESET_SWATCHES = [
+  { id: 'clay',    name: 'clay 陶土',    bg: '#faf9f5', accent: '#d97757', cold: '#7a9cb0' },
+  { id: 'piano',   name: 'piano 钢琴',   bg: '#f1eee6', accent: '#b89145', cold: '#566370' },
+  { id: 'art',     name: 'art 艺术',     bg: '#dce8e3', accent: '#d66f4f', cold: '#4f8f90' },
+  { id: 'vangogh', name: 'vangogh 梵高', bg: '#e8ddb2', accent: '#1f527c', cold: '#476f45' },
+  { id: 'ink',     name: 'ink 墨',       bg: '#f5f2ed', accent: '#5b7a5e', cold: '#6b7e8a' },
+  { id: 'retro',   name: 'retro 复古',   bg: '#f0f0e8', accent: '#d03030', cold: '#3030a0' },
+] as const;
+
 const importCss = `import '@icen.ai/ui/tokens.css';
 import '@icen.ai/ui/ui.css';`;
 const htmlPreset = `<html class="piano dark"> … </html>`;
+
+const copySvg = `<svg class="ic-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
+const checkSvg = `<svg class="ic-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+const searchSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
+const starSvg = `<svg viewBox="0 0 24 24" stroke-linejoin="round"><path d="M12 2.5l2.95 6.26 6.85.72-5.1 4.63 1.4 6.74L12 17.6l-6.1 3.25 1.4-6.74-5.1-4.63 6.85-.72z"/></svg>`;
+const rocketSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`;
+const featureIcons = {
+  ai: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>`,
+  chart: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>`,
+  layers: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>`,
+  box: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></svg>`,
+};
+const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 ---
 
 <Base title="ICEN UI · 为 AI 时代而生的设计系统">
-  <!-- ═══ Hero ═══ -->
+  <!-- ═══ Hero（背景全宽出血） ═══ -->
   <section class="hero">
-    <a class="hero-pill" href="/components/ai-overview/">
-      <span class="hero-pill-badge">v{pkg.version}</span>
-      <span>AI 原生组件族 · 图表通用层 · 工具体系已发布</span>
-      <span class="hero-pill-arrow" aria-hidden="true">→</span>
-    </a>
-    <h1 class="hero-title">设计系统<br />为 AI 时代而生</h1>
-    <p class="hero-sub">
-      设计 tokens（6 预设 × 明暗）+ 无框架组件 + AI 原生族（7 态状态机 / 多模态 / 定价审计）
-      + 图表通用层（ChartSpec 纯 JSON）。全部消费同一套 <code>--token-*</code>，换肤零改动；
-      UI 能力可注册为模型直接调用的工具。
-    </p>
-    <div class="hero-actions">
-      <a class="btn btn-primary" href="#quickstart">开始使用</a>
-      <a class="btn" href="/components/">浏览 {COMPONENTS.length} 个组件</a>
+    <div class="hero-bg" aria-hidden="true">
+      <span class="hero-orb hero-orb--a"></span>
+      <span class="hero-orb hero-orb--b"></span>
+      <span class="hero-orb hero-orb--c"></span>
+      <span class="hero-grid"></span>
     </div>
+    <div class="hero-inner">
+      <a class="hero-pill fade-up" href="/components/ai-overview/">
+        <span class="hero-pill-dot" aria-hidden="true"></span>
+        <span class="hero-pill-badge">v{pkg.version}</span>
+        <span>AI 原生组件族 · 图表通用层已发布</span>
+        <span class="hero-pill-arrow" aria-hidden="true">→</span>
+      </a>
+      <h1 class="hero-title">
+        <span class="reveal-line"><span>设计系统，</span></span>
+        <span class="reveal-line"><span>为 <em class="hero-grad">AI 时代</em> 而生</span></span>
+      </h1>
+      <p class="hero-sub fade-up fade-up--2">
+        设计 tokens（6 预设 × 明暗）× 无框架组件 × AI 原生族（7 态状态机 / 多模态 / 定价审计）
+        × 图表通用层（ChartSpec 纯 JSON）。全部消费同一套 <code>--token-*</code>，换肤零改动；
+        UI 能力可直接注册为模型调用的工具。
+      </p>
+      <div class="hero-actions fade-up fade-up--3">
+        <a class="btn btn-primary btn-lg" href="#quickstart">开始使用</a>
+        <a class="btn btn-lg" href="/components/">浏览 {COMPONENTS.length} 个组件</a>
+        <span class="install-chip">
+          <span class="install-prompt" aria-hidden="true">$</span>
+          <code class="install-cmd">bun add @icen.ai/ui</code>
+          <button class="copy-btn install-copy" type="button" data-copy="bun add @icen.ai/ui" data-copy-icon aria-label="复制安装命令">
+            <Fragment set:html={copySvg + checkSvg} />
+          </button>
+        </span>
+      </div>
 
-    <!-- 数字带：一眼看清规模 -->
-    <div class="hero-stats" role="list">
-      <div class="hero-stat" role="listitem"><b>78</b><span>kit 入口</span></div>
-      <div class="hero-stat" role="listitem"><b>33</b><span>行为模块</span></div>
-      <div class="hero-stat" role="listitem"><b>12</b><span>图表类型</span></div>
-      <div class="hero-stat" role="listitem"><b>11</b><span>AI 原生</span></div>
-      <div class="hero-stat" role="listitem"><b>0</b><span>运行时依赖</span></div>
+      <!-- 数字带：一眼看清规模（滚动入场时计数） -->
+      <div class="hero-stats fade-up fade-up--4" role="list">
+        <div class="hero-stat" role="listitem"><b data-count={COMPONENTS.length}>0</b><span>kit 入口</span></div>
+        <div class="hero-stat" role="listitem"><b data-count="33">0</b><span>行为模块</span></div>
+        <div class="hero-stat" role="listitem"><b data-count="12">0</b><span>图表类型</span></div>
+        <div class="hero-stat" role="listitem"><b data-count="11">0</b><span>AI 原生</span></div>
+        <div class="hero-stat" role="listitem"><b data-count="0">0</b><span>运行时依赖</span></div>
+      </div>
     </div>
   </section>
 
-  <!-- ═══ 悬浮拼贴：真实组件漂浮在画布上（hover 抬升） ═══ -->
-  <section class="float-stage" aria-label="精选组件">
-    <div class="float-grid">
-      <article class="float-card float-card--xl">
-        <span class="float-cap">数据可视化 · renderChart <em>ChartSpec 纯 JSON · 图例眼睛 · 六类交互事件</em></span>
-        <div class="float-body" id="home-chart"></div>
-      </article>
+  <!-- ═══ 袖珍组件群岛：19 个真实组件迷你卡，手工排布成有机云状（视差 × 呼吸 × 抬升三层变换互不冲突） ═══ -->
+  <section class="stage-sec" aria-label="精选组件">
+    <div class="sec-head">
+      <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>SHOWCASE · 精选组件</p>
+      <h2 class="sec-title">先体验，再安装</h2>
+      <p class="sec-desc">这里没有一个截图 —— 每个组件都由 @icen.ai/ui 当场渲染，可以直接点击、拖动、输入。悬停任意卡片查看组件名。</p>
+    </div>
+    <div class="stage" id="stage">
+      <span class="stage-glow" aria-hidden="true"></span>
+      <span class="stage-orbit" aria-hidden="true"></span>
+      <div class="f-canvas">
 
-      <article class="float-card float-card--chat">
-        <span class="float-cap">AI 会话 · renderAiMessage <em>多模态消息 + 工具调用卡</em></span>
-        <div class="float-body float-body--col" id="home-ai"></div>
-      </article>
-
-      <article class="float-card float-card--lift">
-        <span class="float-cap">贡献日历 · renderCalendar <em>GitHub 同款热力</em></span>
-        <div class="float-body" id="home-calendar"></div>
-      </article>
-
-      <article class="float-card">
-        <span class="float-cap">AI 状态 · 待办 + 上下文环 <em>业界模式三处同源</em></span>
-        <div class="float-body float-body--split">
-          <div id="home-todo"></div>
-          <div id="home-ring" class="float-ring"></div>
-        </div>
-      </article>
-
-      <article class="float-card float-card--ctrl">
-        <span class="float-cap">控件</span>
-        <div class="float-body float-body--col">
-          <div class="demo-row">
-            <button class="switch" type="button" role="switch" aria-checked="true" aria-label="自动发布"><span class="switch-thumb"></span></button>
-            <button class="switch" type="button" role="switch" aria-checked="false" aria-label="预览环境"><span class="switch-thumb"></span></button>
-            <span class="pill pill--success">运行中</span>
-            <span class="pill pill--warning">排队</span>
-          </div>
-          <div class="demo-row">
-            <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="false" aria-label="未选中"></button>
-            <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="true" aria-label="已选中"></button>
-            <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="mixed" aria-label="半选"></button>
+        <div class="f-cell" data-depth="14" data-label="统计 + 迷你趋势线 · stat / sparkline" style="left:27%;top:1%">
+          <div class="f-lev" style="--in-delay:.05s;--lev-duration:7.4s;--lev-delay:1.1s">
+            <article class="mini-card" style="--w:180px">
+              <p class="mn-label">周活跃用户</p>
+              <div class="mn-stat-row"><b class="mn-num">8,642</b><span class="pill pill--success">+12.4%</span></div>
+              <div id="mc-spark"></div>
+            </article>
           </div>
         </div>
-      </article>
 
-      <article class="float-card">
-        <span class="float-cap">构建状态</span>
-        <div class="float-body float-body--col build">
-          <div class="build-row">
-            <span class="pill pill--success">运行中</span>
-            <span class="build-text">gateway · 3 分钟前</span>
-            <span class="spinner spinner--sm"></span>
-          </div>
-          <div class="progress">
-            <div class="progress-track"><div class="progress-bar" style="width:64%"></div></div>
-            <span class="progress-label">64%</span>
+        <div class="f-cell" data-depth="8" data-label="贡献日历 · renderCalendar" style="left:46%;top:0%">
+          <div class="f-lev" style="--in-delay:.11s;--lev-duration:6.8s;--lev-delay:.8s">
+            <article class="mini-card" style="--w:190px">
+              <div id="mc-cal"></div>
+            </article>
           </div>
         </div>
-      </article>
 
-      <article class="float-card">
-        <span class="float-cap">支付表单</span>
-        <div class="float-body float-body--col pay">
-          <label class="pay-field">
-            <span class="pay-label">持卡人姓名</span>
-            <div class="input-wrap control"><input class="input" placeholder="张三" /></div>
-          </label>
-          <div class="pay-row">
-            <label class="pay-field pay-field--grow">
-              <span class="pay-label">卡号</span>
-              <div class="input-wrap control"><input class="input" placeholder="1234 5678 9012 3456" /></div>
-            </label>
-            <label class="pay-field pay-field--cvv">
-              <span class="pay-label">CVV</span>
-              <div class="input-wrap control"><input class="input" placeholder="123" /></div>
-            </label>
-          </div>
-          <div class="pay-actions">
-            <button class="btn btn-primary btn-sm" type="button">提交</button>
-            <button class="btn btn-sm" type="button">取消</button>
+        <div class="f-cell" data-depth="11" data-label="环形占比 · renderDonut" style="left:64%;top:4%">
+          <div class="f-lev" style="--in-delay:.17s;--lev-duration:6.2s;--lev-delay:1.3s">
+            <article class="mini-card" style="--w:200px">
+              <div id="mc-donut"></div>
+            </article>
           </div>
         </div>
-      </article>
 
-      <article class="float-card float-card--team">
-        <span class="float-cap">协作</span>
-        <div class="float-body team">
-          <div class="team-avatars">
-            <span class="avatar" style="background:#d97757;color:#fff">林</span>
-            <span class="avatar">沈</span>
-            <span class="avatar">顾</span>
+        <div class="f-cell" data-depth="18" data-label="开关 · switch" style="left:79%;top:2%">
+          <div class="f-lev" style="--in-delay:.23s;--lev-duration:5.9s;--lev-delay:1s">
+            <article class="mini-card" style="--w:110px">
+              <div class="mn-row"><button class="switch switch--sm" type="button" role="switch" aria-checked="true" aria-label="自动发布"><span class="switch-thumb"></span></button><span class="mn-lb">自动</span></div>
+              <div class="mn-row"><button class="switch switch--sm" type="button" role="switch" aria-checked="false" aria-label="预览"><span class="switch-thumb"></span></button><span class="mn-lb">预览</span></div>
+            </article>
           </div>
-          <p class="team-title">暂无团队成员</p>
-          <p class="team-desc">邀请你的团队协作完成此项目。</p>
-          <button class="btn btn-sm" type="button">＋ 邀请成员</button>
         </div>
-      </article>
+
+        <div class="f-cell" data-depth="22" data-label="仪表盘 · renderGauge 轮询" style="left:90%;top:14%">
+          <div class="f-lev" style="--in-delay:.29s;--lev-duration:8.1s;--lev-delay:1.45s">
+            <article class="mini-card" style="--w:130px">
+              <div class="mn-gauge">
+                <div id="mc-gauge"></div>
+                <span class="pill pill--success gauge-live"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="16" data-label="通知 · notification" style="left:3%;top:8%">
+          <div class="f-lev" style="--in-delay:.35s;--lev-duration:6.4s;--lev-delay:.9s">
+            <article class="mini-card" style="--w:220px">
+              <div class="mn-row mn-row--top">
+                <span class="mn-ic" aria-hidden="true"><Fragment set:html={rocketSvg} /></span>
+                <div class="mn-main">
+                  <p class="mn-t">部署成功 <span class="pill pill--success">新</span></p>
+                  <p class="mn-d">gateway · 32 秒前</p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="10" data-label="待办 + 上下文环 · ai-todo / ai-usage" style="left:12%;top:28%">
+          <div class="f-lev" style="--in-delay:.41s;--lev-duration:6.6s;--lev-delay:1.05s">
+            <article class="mini-card" style="--w:220px">
+              <div class="mn-split">
+                <div id="mc-todo"></div>
+                <div id="mc-ring" class="mn-ring"></div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="6" data-label="AI 会话 · renderAiMessage 流式" style="left:37%;top:22%">
+          <div class="f-lev" style="--in-delay:.47s;--lev-duration:7.1s;--lev-delay:1.2s">
+            <article class="mini-card" style="--w:230px">
+              <div class="mc-chat" id="mc-chat"></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="20" data-label="状态徽章 · pill" style="left:60%;top:26%">
+          <div class="f-lev" style="--in-delay:.53s;--lev-duration:5.7s;--lev-delay:1.35s">
+            <article class="mini-card" style="--w:150px">
+              <div class="mn-wrap">
+                <span class="pill pill--success">稳定</span>
+                <span class="pill pill--warning">排队</span>
+                <span class="pill pill--error">失败</span>
+                <span class="pill pill--info">Beta</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="24" data-label="搜索输入 · input" style="left:76%;top:32%">
+          <div class="f-lev" style="--in-delay:.59s;--lev-duration:7.6s;--lev-delay:.95s">
+            <article class="mini-card" style="--w:190px">
+              <div class="input-wrap control input-wrap--sm">
+                <span class="input-leading"><Fragment set:html={searchSvg} /></span>
+                <input class="input" placeholder="搜索组件…" aria-label="搜索组件" />
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="26" data-label="头像组 · avatar" style="left:90%;top:40%">
+          <div class="f-lev" style="--in-delay:.65s;--lev-duration:7.8s;--lev-delay:1.4s">
+            <article class="mini-card" style="--w:150px">
+              <div class="mn-row">
+                <span class="mn-avatars">
+                  <span class="avatar" style="background:#d97757;color:#fff">林</span>
+                  <span class="avatar">沈</span>
+                  <span class="avatar">顾</span>
+                </span>
+                <span class="mn-lb"><span class="mn-dot" aria-hidden="true"></span>5 位</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="9" data-label="工具调用 · renderAiToolCall" style="left:8%;top:52%">
+          <div class="f-lev" style="--in-delay:.71s;--lev-duration:6.1s;--lev-delay:1.25s">
+            <article class="mini-card" style="--w:210px">
+              <div id="mc-tool"></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="17" data-label="评分 · rating" style="left:30%;top:48%">
+          <div class="f-lev" style="--in-delay:.77s;--lev-duration:7.2s;--lev-delay:1.5s">
+            <article class="mini-card" style="--w:160px">
+              <div class="rating" role="group" aria-label="评分 4.5 星，满分 5 星">
+                <button class="rating-star is-filled" type="button" aria-label="1 星"><Fragment set:html={starSvg} /></button>
+                <button class="rating-star is-filled" type="button" aria-label="2 星"><Fragment set:html={starSvg} /></button>
+                <button class="rating-star is-filled" type="button" aria-label="3 星"><Fragment set:html={starSvg} /></button>
+                <button class="rating-star is-filled" type="button" aria-label="4 星"><Fragment set:html={starSvg} /></button>
+                <button class="rating-star is-half" type="button" aria-label="5 星"><Fragment set:html={starSvg} /></button>
+              </div>
+              <p class="mn-d" style="margin:7px 0 0">4.5 · 128 条评价</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="13" data-label="进度 · progress" style="left:50%;top:52%">
+          <div class="f-lev" style="--in-delay:.83s;--lev-duration:6.3s;--lev-delay:.85s">
+            <article class="mini-card" style="--w:180px">
+              <p class="mn-label">构建中</p>
+              <div class="progress">
+                <div class="progress-track"><div class="progress-bar" style="width:64%"></div></div>
+                <span class="progress-label">64%</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="19" data-label="复选 · checkbox" style="left:68%;top:50%">
+          <div class="f-lev" style="--in-delay:.89s;--lev-duration:6.9s;--lev-delay:1.15s">
+            <article class="mini-card" style="--w:140px">
+              <div class="mn-row"><button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="true" aria-label="全量"></button><span class="mn-lb">全量</span></div>
+              <div class="mn-row"><button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="mixed" aria-label="增量"></button><span class="mn-lb">增量</span></div>
+              <div class="mn-row"><button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="false" aria-label="跳过"></button><span class="mn-lb">跳过</span></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="21" data-label="快捷键 · kbd" style="left:84%;top:58%">
+          <div class="f-lev" style="--in-delay:.95s;--lev-duration:5.8s;--lev-delay:1.3s">
+            <article class="mini-card" style="--w:120px">
+              <div class="mn-row mn-row--center">
+                <kbd class="kbd">⌘</kbd><kbd class="kbd">K</kbd>
+              </div>
+              <p class="mn-d" style="margin:7px 0 0;text-align:center">命令面板</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="15" data-label="滑块 · slider" style="left:20%;top:70%">
+          <div class="f-lev" style="--in-delay:1.01s;--lev-duration:6.7s;--lev-delay:1.05s">
+            <article class="mini-card" style="--w:180px">
+              <div class="mn-row mn-row--spread"><span class="mn-lb">音量</span><span class="mn-d" id="mc-slider-val">40</span></div>
+              <div class="slider">
+                <div class="slider-track"></div>
+                <div class="slider-fill" style="width:40%"></div>
+                <div class="slider-thumb" style="left:calc(40% - 8px)"></div>
+                <input class="slider-native" type="range" min="0" max="100" value="40" aria-label="音量" />
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="12" data-label="加载 · spinner" style="left:42%;top:72%">
+          <div class="f-lev" style="--in-delay:1.07s;--lev-duration:7.3s;--lev-delay:1.2s">
+            <article class="mini-card" style="--w:130px">
+              <div class="mn-row mn-row--center">
+                <span class="spinner spinner--sm" aria-hidden="true"></span>
+                <span class="mn-lb">构建中…</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="f-cell" data-depth="23" data-label="标签 · tag" style="left:64%;top:72%">
+          <div class="f-lev" style="--in-delay:1.13s;--lev-duration:6s;--lev-delay:.9s">
+            <article class="mini-card" style="--w:150px">
+              <div class="mn-wrap">
+                <span class="tag tag--sm"><span class="tag-label">设计系统</span></span>
+                <span class="tag tag--sm tag--accent"><span class="tag-label">v{pkg.version}</span></span>
+                <span class="tag tag--sm"><span class="tag-label">AI 原生</span></span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 预设换肤带：点击即换肤，全站零改动 ═══ -->
+  <section class="presets-sec" aria-label="色彩预设">
+    <div class="sec-head">
+      <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>TOKENS · 三层正交</p>
+      <h2 class="sec-title">一套 tokens，六副面孔</h2>
+      <p class="sec-desc">色彩预设 × 明暗 × 风格 profile 互不耦合。点一张色板 —— 整站包括上面的每张卡片，即刻换肤。</p>
+    </div>
+    <div class="preset-grid" role="group" aria-label="切换色彩预设">
+      {PRESET_SWATCHES.map((p) => (
+        <button class="preset-chip" type="button" data-preset={p.id} aria-pressed="false">
+          <span class="preset-check" aria-hidden="true"><Fragment set:html={presetCheckSvg} /></span>
+          <span class="preset-dots" aria-hidden="true">
+            <i style={`background:${p.bg}`}></i><i style={`background:${p.accent}`}></i><i style={`background:${p.cold}`}></i>
+          </span>
+          <span class="preset-name">{p.name}</span>
+        </button>
+      ))}
+    </div>
+    <p class="preset-hint">{COMPONENTS.length} 个组件共享同一套 <code>--token-*</code> —— 换肤不改一行组件代码。</p>
+  </section>
+
+  <!-- ═══ 特性 ═══ -->
+  <section class="features-sec" aria-label="设计哲学">
+    <div class="sec-head">
+      <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>WHY · 设计哲学</p>
+      <h2 class="sec-title">为下一个十年的界面而生</h2>
+    </div>
+    <div class="features">
+      <div class="feature">
+        <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.ai} /></span>
+        <h3 class="feature-title">AI 原生族</h3>
+        <p class="feature-desc">7 态状态机 + 多模态内容模型（对标 AI SDK v5 / MCP / OpenAI / Anthropic）+ 定价审计闭环，零接线一行绑定。</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.chart} /></span>
+        <h3 class="feature-title">图表通用层</h3>
+        <p class="feature-desc"><code>renderChart</code> 吃纯 JSON ChartSpec，12 种图；悬停 / 单击 / 双击 / 右键事件与图例眼睛内建。</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.layers} /></span>
+        <h3 class="feature-title">三层正交</h3>
+        <p class="feature-desc">色彩预设 × 风格 profile × 明暗，三层互不耦合；{COMPONENTS.length} 个组件共享同一套 <code>--token-*</code>，换肤零改动。</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.box} /></span>
+        <h3 class="feature-title">零依赖无框架</h3>
+        <p class="feature-desc">纯 CSS class 契约 + 按需 behavior JS，SSR 安全；React / Vue / 原生都能接，类型面（.d.mts）随包发布。</p>
+      </div>
     </div>
   </section>
 
@@ -163,26 +390,6 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
         <span class="group-arrow" aria-hidden="true">→</span>
       </a>
     ))}
-  </section>
-
-  <!-- ═══ 特性 ═══ -->
-  <section class="features">
-    <div class="feature">
-      <h3 class="feature-title">AI 原生族</h3>
-      <p class="feature-desc">7 态状态机 + 多模态内容模型（对标 AI SDK v5 / MCP / OpenAI / Anthropic）+ 定价审计闭环，零接线一行绑定。</p>
-    </div>
-    <div class="feature">
-      <h3 class="feature-title">图表通用层</h3>
-      <p class="feature-desc"><code>renderChart</code> 吃纯 JSON ChartSpec，12 种图；悬停 / 单击 / 双击 / 右键事件与图例眼睛内建。</p>
-    </div>
-    <div class="feature">
-      <h3 class="feature-title">三层正交</h3>
-      <p class="feature-desc">色彩预设 × 风格 profile × 明暗，三层互不耦合；{COMPONENTS.length} 个组件共享同一套 <code>--token-*</code>，换肤零改动。</p>
-    </div>
-    <div class="feature">
-      <h3 class="feature-title">零依赖无框架</h3>
-      <p class="feature-desc">纯 CSS class 契约 + 按需 behavior JS，SSR 安全；React / Vue / 原生都能接，类型面（.d.mts）随包发布。</p>
-    </div>
   </section>
 
   <!-- ═══ 快速开始 ═══ -->
@@ -203,51 +410,40 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
   </section>
 
   <script>
-    import { renderChart, renderCalendar } from '../../../src/behaviors/charts.ts';
+    import { renderCalendar, renderGauge, renderDonut, renderSparkline } from '../../../src/behaviors/charts.ts';
     import { renderAiMessage } from '../../../src/behaviors/ai-chat.ts';
     import { renderAiToolCall, initAiTool } from '../../../src/behaviors/ai-tool.ts';
     import { renderAiTodo, renderAiUsageRing } from '../../../src/behaviors/ai-panel.ts';
     import { initInput } from '../../../src/behaviors/input.ts';
+    import { initSlider } from '../../../src/behaviors/slider.ts';
     import { initCopy } from '../../../src/behaviors/copy.ts';
+    import { getTheme, setTheme } from '../../../src/behaviors/theme.ts';
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     initInput();
+    initSlider();
     initCopy();
     initAiTool();
 
-    /* 门面图表：与 AI 总览同数据（v0.1 → v0.8 能力数，多系列折线） */
-    const chartEl = document.getElementById('home-chart');
-    if (chartEl) renderChart(chartEl, {
-      type: 'line',
-      labels: ['v0.1', 'v0.2', 'v0.3', 'v0.4', 'v0.5', 'v0.6', 'v0.7', 'v0.8'],
-      series: [
-        { name: '组件', values: [31, 41, 43, 47, 51, 55, 66, 67] },
-        { name: 'AI 专属', values: [0, 0, 0, 0, 0, 0, 11, 13] },
-        { name: '图表类型', values: [1, 5, 10, 10, 10, 10, 10, 12] },
+    /* ── 统计卡：迷你趋势线 ── */
+    const sparkEl = document.getElementById('mc-spark');
+    if (sparkEl) renderSparkline(sparkEl, { values: [4, 6, 5, 8, 7, 9, 11, 10, 13, 12, 15, 14] });
+
+    /* ── 环形占比卡（显式 tone 三色分段 + 图例百分比） ── */
+    const donutEl = document.getElementById('mc-donut');
+    if (donutEl) renderDonut(donutEl, {
+      segments: [
+        { name: '组件', value: 67, tone: 'accent' },
+        { name: 'AI 原生', value: 13, tone: 'success' },
+        { name: '图表类型', value: 12, tone: 'muted' },
       ],
     });
 
-    /* AI 会话卡：一条多模态消息 + 一张已完成的工具调用卡 */
-    const aiEl = document.getElementById('home-ai');
-    if (aiEl) {
-      const msg = document.createElement('div');
-      renderAiMessage(msg, {
-        role: 'assistant', model: 'kimi-k3',
-        content: '能力曲线已就绪：四幕叙事 + 多系列折线，写入 history.md 前待你确认。',
-        meta: '刚刚 · 1.1k tok',
-      });
-      const tool = document.createElement('div');
-      renderAiToolCall(tool, {
-        id: 'home-tc', name: 'render_chart', kind: 'chart', status: 'done',
-        input: { type: 'line', series: '×3' }, output: '已渲染 → 右上「数据可视化」卡',
-        durationMs: 240,
-      });
-      aiEl.append(msg, tool);
-    }
-
-    /* 贡献日历：确定性伪随机（近 182 天，dates+values 配对） */
-    const calEl = document.getElementById('home-calendar');
+    /* ── 贡献日历：确定性伪随机（近 63 天，dates+values 配对） ── */
+    const calEl = document.getElementById('mc-cal');
     if (calEl) {
-      const days = 182;
+      const days = 63;
       const values = Array.from({ length: days }, (_, i) => {
         const base = Math.abs(Math.sin(i * 0.61)) * 7;
         const spike = i % 17 === 0 ? 8 : 0;
@@ -259,181 +455,709 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
       renderCalendar(calEl, { dates, values });
     }
 
-    /* AI 状态卡：待办（3/5）+ 上下文环（42%） */
-    const todoEl = document.getElementById('home-todo');
+    /* ── AI 会话卡：用户提问 → 助手流式回复，固定高度循环播放（不挤兑群岛其他卡） ── */
+    const chatEl = document.getElementById('mc-chat');
+    if (chatEl) {
+      const USER_TEXT = '看下能力曲线';
+      const REPLY = '已渲染三系列折线，图例与悬停事件内建。';
+      const timeouts = [];
+      const intervals = [];
+      const later = (fn, ms) => timeouts.push(setTimeout(fn, ms));
+      const every = (fn, ms) => intervals.push(setInterval(fn, ms));
+      const clearAll = () => {
+        timeouts.splice(0).forEach(clearTimeout);
+        intervals.splice(0).forEach(clearInterval);
+      };
+
+      function cycle() {
+        clearAll();
+        chatEl.textContent = '';
+        if (document.hidden) { later(cycle, 4000); return; }
+        const user = document.createElement('div');
+        chatEl.append(user);
+        renderAiMessage(user, { role: 'user', content: USER_TEXT });
+        later(() => {
+          const host = document.createElement('div');
+          chatEl.append(host);
+          const h = renderAiMessage(host, { role: 'assistant', model: 'kimi-k3', content: '' });
+          const s = h.stream();
+          let i = 0;
+          every(() => {
+            s.append(REPLY.slice(i, i + 2));
+            i += 2;
+            if (i >= REPLY.length) {
+              clearAll();
+              s.done();
+              h.setMeta('刚刚 · 0.4k tok');
+              later(cycle, 3600);
+            }
+          }, 34);
+        }, 450);
+      }
+
+      if (reducedMotion) {
+        const user = document.createElement('div');
+        chatEl.append(user);
+        renderAiMessage(user, { role: 'user', content: USER_TEXT });
+        const host = document.createElement('div');
+        chatEl.append(host);
+        renderAiMessage(host, { role: 'assistant', model: 'kimi-k3', content: REPLY, meta: '刚刚 · 0.4k tok' });
+      } else {
+        cycle();
+      }
+    }
+
+    /* ── 待办 + 上下文环 ── */
+    const todoEl = document.getElementById('mc-todo');
     if (todoEl) renderAiTodo(todoEl, [
-      { content: '搜集公开迭代资料', status: 'done' },
-      { content: '拉取内部发布记录', status: 'done' },
-      { content: '提炼阶段叙事与数据', status: 'done' },
-      { content: '渲染能力增长可视化', status: 'running', activeForm: '正在渲染能力增长可视化' },
-      { content: '写入 docs/history.md', status: 'pending' },
+      { content: '提炼阶段叙事', status: 'done' },
+      { content: '渲染能力可视化', status: 'running', activeForm: '正在渲染可视化' },
+      { content: '写入 history.md', status: 'pending' },
     ]);
-    const ringEl = document.getElementById('home-ring');
+    const ringEl = document.getElementById('mc-ring');
     if (ringEl) renderAiUsageRing(ringEl, { input: 420000 }, { total: 1000000 });
 
-    /* 纯 CSS 状态组件的演示接线（实际项目由使用方状态驱动） */
+    /* ── 工具调用卡：静态完成态（默认折叠一行摘要，点击展开） ── */
+    const toolEl = document.getElementById('mc-tool');
+    if (toolEl) renderAiToolCall(toolEl, {
+      id: 'mc-tc', name: 'WebSearch', kind: 'search', status: 'done',
+      input: { query: 'icen ui 设计系统' }, output: '命中 24 条结果', durationMs: 1800,
+    });
+
+    /* ── 仪表盘卡：renderGauge 初始渲染后只改 dasharray / 数值（CSS 过渡平滑接管） ── */
+    const gaugeEl = document.getElementById('mc-gauge');
+    if (gaugeEl) {
+      const GAUGE_R = 42;
+      const CIRC = 2 * Math.PI * GAUGE_R;
+      let gv = 72;
+      renderGauge(gaugeEl, { value: gv, max: 100, label: '健康度' });
+      if (!reducedMotion) {
+        setInterval(() => {
+          if (document.hidden) return;
+          gv = Math.min(94, Math.max(58, gv + (Math.random() * 16 - 8)));
+          const ratio = gv / 100;
+          const arc = gaugeEl.querySelectorAll('svg circle')[1];
+          if (arc) arc.setAttribute('stroke-dasharray', `${(ratio * CIRC).toFixed(1)} ${(CIRC - ratio * CIRC).toFixed(1)}`);
+          const val = gaugeEl.querySelector('.chart-gauge-value');
+          if (val) val.textContent = `${Math.round(ratio * 100)}%`;
+        }, 4000);
+      }
+    }
+
+    /* ── 纯 CSS 状态组件的演示接线（实际项目由使用方状态驱动） ── */
     document.querySelectorAll('.switch[role="switch"], .checkbox[role="checkbox"]').forEach((el) => {
       el.addEventListener('click', () => {
         el.setAttribute('aria-checked', el.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
       });
     });
+
+    /* ── 数字带：滚动入场计数（reduced-motion 直接落终值） ── */
+    const statNums = document.querySelectorAll('.hero-stat b[data-count]');
+    const setFinal = (el) => { el.textContent = el.getAttribute('data-count'); };
+    if (reducedMotion || !('IntersectionObserver' in window)) {
+      statNums.forEach(setFinal);
+    } else {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          io.unobserve(en.target);
+          const el = en.target;
+          const target = parseInt(el.getAttribute('data-count') || '0', 10);
+          const t0 = performance.now();
+          const dur = 1100;
+          const tick = (t) => {
+            const p = Math.min(1, (t - t0) / dur);
+            el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+      }, { threshold: 0.4 });
+      statNums.forEach((el) => io.observe(el));
+    }
+
+    /* ── 指针视差：rAF 插值逼近，data-depth 决定景深（触屏/reduced-motion/窄屏关闭） ── */
+    const stage = document.getElementById('stage');
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)').matches;
+    if (stage && finePointer && !reducedMotion) {
+      const layers = stage.querySelectorAll('[data-depth]');
+      let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+      const step = () => {
+        cx += (tx - cx) * 0.08;
+        cy += (ty - cy) * 0.08;
+        layers.forEach((layer) => {
+          const d = parseFloat(layer.getAttribute('data-depth') || '10');
+          layer.style.transform = `translate3d(${(-cx * d).toFixed(2)}px, ${(-cy * d).toFixed(2)}px, 0)`;
+        });
+        raf = (Math.abs(tx - cx) > 0.0006 || Math.abs(ty - cy) > 0.0006) ? requestAnimationFrame(step) : 0;
+      };
+      const kick = () => { if (!raf) raf = requestAnimationFrame(step); };
+      stage.addEventListener('pointermove', (e) => {
+        const r = stage.getBoundingClientRect();
+        tx = (e.clientX - r.left) / r.width - 0.5;
+        ty = (e.clientY - r.top) / r.height - 0.5;
+        kick();
+      });
+      stage.addEventListener('pointerleave', () => { tx = 0; ty = 0; kick(); });
+    }
+
+    /* ── 预设色板：点击换肤 + 双向同步（头部 select 换肤时经 MutationObserver 回同步色板） ── */
+    const presetChips = document.querySelectorAll('.preset-chip[data-preset]');
+    const reflectPreset = (p) => {
+      presetChips.forEach((c) => {
+        const on = c.getAttribute('data-preset') === p;
+        c.classList.toggle('is-active', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    };
+    reflectPreset(getTheme().preset);
+    presetChips.forEach((c) => c.addEventListener('click', () => {
+      const p = c.getAttribute('data-preset');
+      if (!p) return;
+      setTheme({ preset: p });
+      reflectPreset(p);
+      /* 同步头部 preset select 的展示态（复用其 change 监听，幂等） */
+      const input = document.querySelector('#preset-select input[data-select-value]');
+      if (input && input.value !== p) {
+        input.value = p;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }));
+    new MutationObserver(() => reflectPreset(getTheme().preset))
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   </script>
 </Base>
 
 <style is:global>
-  /* ═══ Hero ═══ */
-  .hero { padding: 88px 0 24px; text-align: center; }
+  /* hero-bg 以 100vw 全宽出血：clip 必须挂在 body 上（挂 .site-main 会把背景裁回内容边界），
+     overflow:clip 不产生滚动容器，sticky 导航不受影响 */
+  body { overflow-x: clip; }
+
+  /* ═══ Hero：极光 + 点阵 + 逐行升起 ═══ */
+  .hero { position: relative; padding: 108px 0 56px; text-align: center; }
+  .hero-bg {
+    position: absolute;
+    top: -57px; bottom: -140px;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hero-orb { position: absolute; border-radius: 50%; filter: blur(72px); }
+  .hero-orb--a {
+    width: 560px; height: 560px; left: 6%; top: -190px;
+    background: color-mix(in srgb, var(--token-accent) 26%, transparent);
+  }
+  .hero-orb--b {
+    width: 460px; height: 460px; right: 5%; top: -110px;
+    background: color-mix(in srgb, var(--token-accent-cold) 22%, transparent);
+  }
+  .hero-orb--c {
+    width: 380px; height: 380px; left: 44%; top: 220px;
+    background: color-mix(in srgb, var(--token-success) 10%, transparent);
+  }
+  .dark .hero-orb { opacity: 0.55; }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(color-mix(in srgb, var(--token-text) 16%, transparent) 1px, transparent 1.4px);
+    background-size: 26px 26px;
+    -webkit-mask-image: radial-gradient(ellipse 62% 62% at 50% 18%, black 25%, transparent 76%);
+    mask-image: radial-gradient(ellipse 62% 62% at 50% 18%, black 25%, transparent 76%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-orb--a { animation: orb-a 24s ease-in-out infinite; }
+    .hero-orb--b { animation: orb-b 29s ease-in-out infinite; }
+    .hero-orb--c { animation: orb-c 21s ease-in-out infinite; }
+    @keyframes orb-a {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(56px, 36px) scale(1.14); }
+    }
+    @keyframes orb-b {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-48px, 54px) scale(1.1); }
+    }
+    @keyframes orb-c {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-36px, -42px) scale(1.16); }
+    }
+  }
+  .hero-inner { position: relative; z-index: 1; }
+
   .hero-pill {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 5px 14px 5px 5px;
+    padding: 5px 14px 5px 6px;
     border: 1px solid var(--token-line-soft);
     border-radius: var(--radius-full);
-    background: var(--token-surface);
+    background: color-mix(in srgb, var(--token-surface) 86%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    box-shadow: var(--token-shadow-elevated);
     color: var(--token-text-muted);
     font-size: 12.5px;
     transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
   }
   .hero-pill:hover { border-color: var(--token-accent); color: var(--token-text); text-decoration: none; }
+  .hero-pill-dot {
+    position: relative;
+    width: 7px; height: 7px; flex: none;
+    border-radius: 50%;
+    background: var(--token-success);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-pill-dot::after {
+      content: '';
+      position: absolute; inset: -4px;
+      border-radius: 50%;
+      border: 1.5px solid var(--token-success);
+      animation: ping 2.2s var(--ease-out) infinite;
+    }
+    @keyframes ping {
+      0% { transform: scale(0.5); opacity: 0.9; }
+      80%, 100% { transform: scale(1.4); opacity: 0; }
+    }
+  }
   .hero-pill-badge {
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--token-surface);
+    color: var(--token-on-accent);
     background: var(--token-accent);
     border-radius: var(--radius-full);
     padding: 2px 8px;
   }
-  .hero-pill-arrow { color: var(--token-text-faint); }
+  .hero-pill-arrow { color: var(--token-text-faint); transition: transform var(--duration-fast) var(--ease-out); }
+  .hero-pill:hover .hero-pill-arrow { transform: translateX(3px); color: var(--token-accent); }
+
   .hero-title {
     font-family: var(--font-heading);
-    font-size: clamp(40px, 6.4vw, 64px);
+    font-size: clamp(42px, 6.8vw, 72px);
     font-weight: 700;
-    letter-spacing: 3px;
-    line-height: 1.2;
-    margin: 28px 0 18px;
+    letter-spacing: 2px;
+    line-height: 1.16;
+    margin: 30px 0 20px;
+  }
+  .reveal-line { display: block; overflow: hidden; padding: 0.06em 0.1em; }
+  .reveal-line > span { display: inline-block; }
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-line > span { animation: hero-rise 0.9s var(--ease-out) backwards; }
+    .reveal-line:nth-child(2) > span { animation-delay: 0.12s; }
+    @keyframes hero-rise {
+      from { transform: translateY(110%); }
+      to { transform: translateY(0); }
+    }
+    .fade-up { animation: fade-up 0.8s var(--ease-out) backwards; }
+    .fade-up--2 { animation-delay: 0.18s; }
+    .fade-up--3 { animation-delay: 0.3s; }
+    .fade-up--4 { animation-delay: 0.42s; }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  }
+  .hero-grad {
+    font-style: normal;
+    background: linear-gradient(105deg,
+      var(--token-accent-deep, var(--token-accent)) 0%,
+      var(--token-accent) 46%,
+      var(--token-accent-cold) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   .hero-sub {
     color: var(--token-text-muted);
     font-size: 15px;
     line-height: 1.9;
     max-width: 680px;
-    margin: 0 auto 32px;
+    margin: 0 auto 34px;
   }
-  .hero-actions { display: flex; justify-content: center; gap: 12px; }
+  .hero-actions { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+  .install-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 7px 0 16px;
+    border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--token-surface) 88%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    box-shadow: var(--token-shadow-elevated);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+  .install-prompt { color: var(--token-text-faint); user-select: none; }
+  .install-cmd { background: none; border: 0; padding: 0; font-size: inherit; color: var(--token-text); }
+  .install-copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--token-text-faint);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+  }
+  .install-copy:hover { color: var(--token-accent); background: var(--token-accent-subtle); }
+  .install-copy .ic-check { display: none; }
+  .install-copy.is-done { color: var(--token-success); }
+  .install-copy.is-done .ic-copy { display: none; }
+  .install-copy.is-done .ic-check { display: inline; }
+
   .hero-stats {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 12px 48px;
-    margin-top: 48px;
-    padding: 18px 0 0;
+    margin-top: 60px;
+    padding-top: 24px;
     border-top: 1px solid var(--token-line-soft);
   }
-  .hero-stat { display: flex; align-items: baseline; gap: 8px; }
-  .hero-stat b { font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--token-text); }
-  .hero-stat span { font-size: 12px; color: var(--token-text-faint); letter-spacing: 1px; }
-
-  /* ═══ 悬浮拼贴（参考 Vuesax 式组件漂浮画布，全部为实时渲染的真组件） ═══ */
-  .float-stage { padding: 56px 0 8px; }
-  .float-grid {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 22px;
-  }
-  .float-card {
-    --float-shadow: 0 1px 2px rgba(28,25,23,.05), 0 18px 44px -14px rgba(28,25,23,.16);
-    --float-shadow-hover: 0 2px 4px rgba(28,25,23,.06), 0 30px 68px -18px rgba(28,25,23,.24);
-    grid-column: span 4;
+  .hero-stat {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    border: 1px solid var(--token-line-soft);
-    border-radius: 20px;
-    background: var(--token-surface);
-    padding: 18px 20px 20px;
-    box-shadow: var(--float-shadow);
-    transition:
-      transform var(--duration-mid, 240ms) var(--ease-out),
-      box-shadow var(--duration-mid, 240ms) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out);
-    will-change: transform;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 30px;
+    border-left: 1px solid var(--token-line-soft);
   }
-  .dark .float-card {
-    --float-shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 44px -14px rgba(0,0,0,.55);
-    --float-shadow-hover: 0 2px 4px rgba(0,0,0,.45), 0 30px 68px -18px rgba(0,0,0,.7);
+  .hero-stat:first-child { border-left: 0; }
+  .hero-stat b {
+    font-family: var(--font-mono);
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--token-text);
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-stat span { font-size: 12px; color: var(--token-text-faint); letter-spacing: 1px; }
+
+  /* ═══ 节标题（overline + 宋体大标 + 描述） ═══ */
+  .sec-head { text-align: center; max-width: 660px; margin: 0 auto 46px; }
+  .sec-over {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    color: var(--token-text-faint);
+    margin: 0 0 14px;
+  }
+  .sec-over-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--token-accent);
+    box-shadow: 0 0 0 4px var(--token-accent-glow);
+  }
+  .sec-title {
+    font-family: var(--font-heading);
+    font-size: clamp(26px, 3.4vw, 36px);
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    margin: 0 0 14px;
+  }
+  .sec-desc { color: var(--token-text-muted); font-size: 14px; line-height: 1.85; margin: 0; }
+
+  /* ═══ 袖珍组件群岛 ═══ */
+  .stage-sec { padding: 84px 0 8px; }
+  .stage { position: relative; }
+  .stage-glow {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 720px; height: 720px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, var(--token-accent-glow), transparent);
+    pointer-events: none;
+  }
+  /* 装饰轨道环：群岛的「星座线」 */
+  .stage-orbit {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 640px; height: 640px;
+    transform: translate(-50%, -50%);
+    border: 1px dashed var(--token-line-dashed);
+    border-radius: 50%;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(closest-side, transparent 62%, black 78%);
+    mask-image: radial-gradient(closest-side, transparent 62%, black 78%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .stage-orbit { animation: orbit-spin 90s linear infinite; }
+    @keyframes orbit-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+  }
+  .f-canvas { position: relative; z-index: 1; height: 660px; }
+  .f-cell { position: absolute; min-width: 0; }
+
+  /* 悬停揭晓的组件名标签：挂在未缩放的 .f-cell 上（mini-card 有 zoom，标签要保持清晰） */
+  .f-cell::after {
+    content: attr(data-label);
+    position: absolute;
+    top: -9px; left: 6px;
+    z-index: 6;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    color: var(--token-accent);
+    background: var(--token-surface);
+    border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-full);
+    padding: 2px 8px;
+    box-shadow: var(--token-shadow-elevated);
+    opacity: 0;
+    transform: translateY(3px);
+    transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+    pointer-events: none;
+  }
+  .f-cell:hover::after,
+  .f-cell:focus-within::after { opacity: 1; transform: none; }
+
+  /* 袖珍卡：zoom 0.8 整体缩微（约等于上版的 1/3.5 面积），文字层级保持可读 */
+  .mini-card {
+    --mc-shadow: 0 1px 2px rgba(28, 25, 23, 0.05), 0 14px 30px -12px rgba(28, 25, 23, 0.16);
+    --mc-shadow-hover: 0 2px 4px rgba(28, 25, 23, 0.07), 0 22px 52px -16px rgba(28, 25, 23, 0.3);
+    zoom: 0.8;
+    position: relative;
+    width: var(--w);
+    box-sizing: border-box;
+    border: 1px solid var(--token-line-soft);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--token-surface) 93%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    padding: 11px 12px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), var(--mc-shadow);
+    transition:
+      transform var(--duration-slow) var(--ease-out),
+      box-shadow var(--duration-slow) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .dark .mini-card {
+    --mc-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 30px -12px rgba(0, 0, 0, 0.55);
+    --mc-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.45), 0 22px 52px -16px rgba(0, 0, 0, 0.72);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), var(--mc-shadow);
   }
   @media (hover: hover) and (pointer: fine) {
-    /* hover 只加深投影与层级，不抢 transform —— 呼吸漂浮不因指针打断 */
-    .float-card:hover {
-      box-shadow: var(--float-shadow-hover);
+    /* hover 抬升作用在卡片自身；呼吸在 .f-lev、视差在 .f-cell，三层变换互不覆盖 */
+    .mini-card:hover {
+      transform: translateY(-4px);
       border-color: var(--token-line);
-      z-index: 3;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), var(--mc-shadow-hover);
+    }
+    .dark .mini-card:hover {
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), var(--mc-shadow-hover);
     }
   }
-  .float-card--xl { grid-column: span 7; }
-  .float-card--chat { grid-column: span 5; }
-  .float-card--lift { grid-column: span 5; margin-top: -40px; z-index: 2; }
-  .float-card--ctrl { grid-column: span 3; }
-  .float-card--team .float-body { align-items: center; }
-  .float-cap {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    color: var(--token-text-muted);
-  }
-  .float-cap em {
-    font-style: normal;
-    font-weight: 400;
-    font-size: 10.5px;
-    color: var(--token-text-faint);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .float-body { flex: 1; min-width: 0; }
-  .float-body--col { display: flex; flex-direction: column; gap: 12px; }
-  .float-body--split { display: flex; align-items: center; gap: 16px; }
-  .float-body--split > #home-todo { flex: 1; min-width: 0; }
-  .float-ring { flex: none; }
+  .mini-card:focus-within { border-color: var(--token-accent); }
 
-  /* 进场 + 持续呼吸漂浮：入场（一次性）之后接无限 levitate（每卡不同时长/相位，有机错落）。
-     levitate 用正延迟等入场结束再接管 transform，两段动画不冲突；动效守卫下全部关闭。 */
+  /* 迷你卡内容件 */
+  .mn-label { margin: 0 0 5px; font-size: 11px; color: var(--token-text-faint); }
+  .mn-stat-row { display: flex; align-items: baseline; gap: 7px; margin-bottom: 6px; }
+  .mn-num {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--token-text);
+    font-variant-numeric: tabular-nums;
+  }
+  .mn-row { display: flex; align-items: center; gap: 8px; }
+  .mn-row + .mn-row { margin-top: 8px; }
+  .mn-row--top { align-items: flex-start; }
+  .mn-row--spread { justify-content: space-between; margin-bottom: 7px; }
+  .mn-row--center { justify-content: center; }
+  .mn-lb { font-size: 11.5px; color: var(--token-text-muted); white-space: nowrap; }
+  .mn-t { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--token-text); display: flex; align-items: center; gap: 6px; }
+  .mn-d { margin: 2px 0 0; font-size: 10.5px; color: var(--token-text-faint); }
+  .mn-main { min-width: 0; }
+  .mn-ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; height: 24px;
+    flex: none;
+    border-radius: 7px;
+    background: var(--token-accent-subtle);
+    color: var(--token-accent);
+  }
+  .mn-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mn-avatars { display: inline-flex; }
+  .mn-avatars .avatar { width: 24px; height: 24px; font-size: 10px; margin-left: -7px; box-shadow: 0 0 0 2px var(--token-surface); }
+  .mn-avatars .avatar:first-child { margin-left: 0; }
+  .mn-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    margin-right: 4px;
+    border-radius: 50%;
+    background: var(--token-success);
+  }
+  .mn-split { display: flex; align-items: center; gap: 10px; }
+  .mn-split > #mc-todo { flex: 1; min-width: 0; }
+  .mn-ring { flex: none; width: 64px; }
+  .mn-gauge { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .mn-gauge > #mc-gauge { width: 72px; }
+  .mini-card--center { text-align: center; }
+
+  /* 环形卡在袖珍卡里纵向排布 + 缩小环体（默认 132px 侧排在窄卡会溢出） */
+  #mc-donut .chart-donut { flex-direction: column; gap: 8px; min-height: 0; }
+  #mc-donut .chart-donut > svg { width: 88px; height: 96px; flex: none; }
+  #mc-donut .chart-legend { font-size: 10.5px; }
+
+  /* AI 会话卡：固定高度——流式循环清空重建时卡片高度恒定，不挤兑群岛里的其他卡 */
+  .mc-chat { height: 148px; overflow: hidden; display: flex; flex-direction: column; gap: 9px; }
+  /* 袖珍卡内省略模型名标签，避免拥挤换行 */
+  .mc-chat .ai-msg-model { display: none; }
+
+  .gauge-live { display: inline-flex; align-items: center; gap: 5px; }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
   @media (prefers-reduced-motion: no-preference) {
-    .float-card {
-      --lev-duration: 6.5s;
-      --lev-delay: 1s;
+    .live-dot { animation: live-breathe 1.6s ease-in-out infinite; }
+    @keyframes live-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  }
+  /* gauge 实时轮询：dasharray 变更由 CSS 过渡平滑接管 */
+  .mn-gauge .chart-gauge svg circle[stroke-dasharray] {
+    transition: stroke-dasharray 1.1s var(--ease-out);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mn-gauge .chart-gauge svg circle[stroke-dasharray] { transition: none; }
+  }
+
+  /* 进场（一次性，逐卡错拍）+ 持续呼吸漂浮（每卡不同时长/相位，有机错落）。
+     呼吸作用在 .f-lev，与视差（.f-cell）、hover 抬升（.mini-card）三层分离。 */
+  @media (prefers-reduced-motion: no-preference) {
+    .f-lev {
       animation:
-        float-in .55s var(--ease-out) backwards,
-        levitate var(--lev-duration) ease-in-out var(--lev-delay) infinite;
+        float-in 0.6s var(--ease-out) var(--in-delay, 0s) backwards,
+        levitate var(--lev-duration, 6.5s) ease-in-out var(--lev-delay, 1s) infinite;
     }
-    .float-card:nth-child(1) { --lev-duration: 6.4s; --lev-delay: .75s; }
-    .float-card:nth-child(2) { --lev-duration: 7.6s; --lev-delay: 1.0s; }
-    .float-card:nth-child(3) { --lev-duration: 5.9s; --lev-delay: 1.25s; }
-    .float-card:nth-child(4) { --lev-duration: 7.0s; --lev-delay: .9s; }
-    .float-card:nth-child(5) { --lev-duration: 6.1s; --lev-delay: 1.15s; }
-    .float-card:nth-child(6) { --lev-duration: 8.0s; --lev-delay: 1.4s; }
-    .float-card:nth-child(7) { --lev-duration: 6.8s; --lev-delay: 1.05s; }
-    .float-card:nth-child(8) { --lev-duration: 7.3s; --lev-delay: 1.3s; }
     @keyframes float-in {
-      from { opacity: 0; transform: translateY(22px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(26px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     @keyframes levitate {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-7px); }
+      50% { transform: translateY(-8px); }
     }
   }
+
+  /* ═══ 预设换肤带 ═══ */
+  .presets-sec { padding: 88px 0 8px; }
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+  }
+  .preset-chip {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 11px;
+    padding: 20px 12px 15px;
+    font: inherit;
+    background: var(--token-surface);
+    border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .preset-chip:hover {
+    transform: translateY(-3px);
+    border-color: var(--token-line);
+    box-shadow: var(--token-shadow-elevated);
+  }
+  .preset-chip:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 2px; }
+  .preset-chip.is-active {
+    border-color: var(--token-accent);
+    box-shadow: 0 0 0 3px var(--token-accent-glow);
+  }
+  .preset-dots { display: flex; }
+  .preset-dots i {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--token-surface);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+    margin-left: -7px;
+  }
+  .preset-dots i:first-child { margin-left: 0; }
+  .preset-name {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--token-text-muted);
+    letter-spacing: 0.3px;
+  }
+  .preset-check {
+    position: absolute;
+    top: 8px; right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    background: var(--token-accent);
+    color: var(--token-on-accent);
+    opacity: 0;
+    transform: scale(0.4);
+    transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-bounce);
+  }
+  .preset-chip.is-active .preset-check { opacity: 1; transform: scale(1); }
+  .preset-hint {
+    text-align: center;
+    margin: 20px 0 0;
+    font-size: 12.5px;
+    color: var(--token-text-faint);
+  }
+
+  /* ═══ 特性 ═══ */
+  .features-sec { padding: 88px 0 8px; }
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+  }
+  .feature {
+    padding: 22px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-lg);
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .feature:hover {
+    background: var(--token-surface);
+    border-color: var(--token-line-soft);
+    box-shadow: var(--token-shadow-elevated);
+    transform: translateY(-2px);
+  }
+  .feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--token-accent-subtle);
+    color: var(--token-accent);
+    margin-bottom: 14px;
+  }
+  .feature-title { font-size: 14px; font-weight: 600; margin: 0 0 8px; color: var(--token-text); }
+  .feature-desc { font-size: 13px; color: var(--token-text-muted); line-height: 1.7; margin: 0; }
 
   /* ═══ 分组导航带 ═══ */
   .groups {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 12px;
-    padding: 48px 0 8px;
+    padding: 64px 0 8px;
   }
   .group-card {
     display: flex;
@@ -444,9 +1168,16 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
     border-radius: var(--radius-lg);
     background: var(--token-surface);
     text-decoration: none;
-    transition: border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
   }
-  .group-card:hover { border-color: var(--token-accent); transform: translateY(-2px); }
+  .group-card:hover {
+    border-color: var(--token-accent);
+    transform: translateY(-2px);
+    box-shadow: var(--token-shadow-elevated);
+  }
   .group-name { font-size: 13.5px; font-weight: 600; color: var(--token-text); }
   .group-count {
     font-family: var(--font-mono);
@@ -457,42 +1188,16 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
     border-radius: var(--radius-full);
     padding: 1px 7px;
   }
-  .group-arrow { margin-left: auto; color: var(--token-text-faint); font-size: 12px; }
-  .group-card:hover .group-arrow { color: var(--token-accent); }
-
-  /* 拼贴内复用的旧卡内容 */
-  .pay { display: flex; flex-direction: column; gap: 12px; }
-  .pay-field { display: flex; flex-direction: column; gap: 5px; }
-  .pay-field--grow { flex: 1; }
-  .pay-field--cvv { width: 84px; }
-  .pay-label { font-size: 12px; color: var(--token-text-muted); }
-  .pay-row { display: flex; gap: 10px; }
-  .pay-actions { display: flex; gap: 8px; margin-top: 2px; }
-  .team { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 6px 0; }
-  .team-avatars { display: flex; margin-bottom: 6px; }
-  .team-avatars .avatar { margin-left: -8px; box-shadow: 0 0 0 2px var(--token-surface); }
-  .team-avatars .avatar:first-child { margin-left: 0; }
-  .team-title { font-size: 14px; font-weight: 600; margin: 0; }
-  .team-desc { font-size: 12px; color: var(--token-text-muted); margin: 0 0 6px; }
-  .build { display: flex; flex-direction: column; gap: 12px; }
-  .build-row { display: flex; align-items: center; gap: 10px; }
-  .build-row .spinner { margin-left: auto; }
-  .build-text { font-size: 12px; color: var(--token-text-muted); }
-
-  /* ═══ 特性 ═══ */
-  .features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 24px;
-    padding: 56px 0;
-    border-top: 1px solid var(--token-line-soft);
-    margin-top: 48px;
+  .group-arrow {
+    margin-left: auto;
+    color: var(--token-text-faint);
+    font-size: 12px;
+    transition: transform var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
   }
-  .feature-title { font-size: 14px; font-weight: 600; margin: 0 0 8px; color: var(--token-text); }
-  .feature-desc { font-size: 13px; color: var(--token-text-muted); line-height: 1.7; margin: 0; }
+  .group-card:hover .group-arrow { color: var(--token-accent); transform: translateX(3px); }
 
   /* ═══ 快速开始 ═══ */
-  .quickstart { max-width: 720px; margin: 0 auto; padding-bottom: 24px; }
+  .quickstart { max-width: 720px; margin: 0 auto; padding: 80px 0 24px; scroll-margin-top: 72px; }
   .qs-title {
     font-family: var(--font-heading);
     font-size: 24px; font-weight: 700; letter-spacing: 2px;
@@ -507,15 +1212,26 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
     font-size: 12px; font-weight: 700; flex: none;
   }
 
+  /* ═══ 响应式：群岛在窄屏退化为规整网格（取消缩微） ═══ */
   @media (max-width: 1023px) {
-    .float-card, .float-card--xl, .float-card--chat, .float-card--lift, .float-card--ctrl { grid-column: span 6; }
-    .float-card--lift { margin-top: 0; }
+    .stage-orbit { display: none; }
+    .f-canvas {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      height: auto;
+    }
+    .f-cell { position: static; }
+    .f-cell::after { display: none; }
+    .mini-card { width: auto; zoom: 1; }
   }
   @media (max-width: 720px) {
-    .hero { padding: 56px 0 32px; }
-    .hero-stats { gap: 10px 28px; }
-    .float-card, .float-card--xl, .float-card--chat, .float-card--lift, .float-card--ctrl { grid-column: span 12; }
-    .float-card--lift { margin-top: 0; }
-    .float-cap em { display: none; }
+    .hero { padding: 64px 0 40px; }
+    .hero-stat { border-left: 0; padding: 4px 16px; }
+    .install-chip { width: 100%; justify-content: center; }
+    .preset-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .f-canvas { grid-template-columns: 1fr; }
   }
 </style>
