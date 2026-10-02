@@ -1000,7 +1000,11 @@ const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="no
   .mn-split > #mc-todo { flex: 1; min-width: 0; }
   .mn-ring { flex: none; width: 64px; }
   .mn-gauge { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .mn-gauge > #mc-gauge { width: 72px; }
+  /* chart-gauge 默认 132px 硬宽会溢出袖珍卡：环体与中心值一起缩 */
+  .mn-gauge .chart-gauge { width: 76px; }
+  .mn-gauge .chart-gauge > svg { width: 76px; height: 76px; }
+  .mn-gauge .chart-gauge-value { font-size: 15px; }
+  .mn-gauge .chart-gauge-label { font-size: 9px; }
   .mini-card--center { text-align: center; }
 
   /* 环形卡在袖珍卡里纵向排布 + 缩小环体（默认 132px 侧排在窄卡会溢出） */

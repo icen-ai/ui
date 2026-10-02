@@ -566,13 +566,13 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
     </div>
     <input type="hidden" data-select-value name="city" />
   </div>
-  <p class="chart-cap" style="margin:14px 0 6px">多选（data-select-multiple + data-select-max="3"）</p>
+  <p class="chart-cap" style="margin:14px 0 6px">多选（data-select-multiple + data-select-max="3"；chips 单项 × 悬停出现，右侧 × 清除全部）</p>
   <div class="select" data-select data-select-multiple data-select-max="3" data-select-placeholder="选择标签（最多 3 个）" style="max-width:280px">
     <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="select-value is-empty">选择标签（最多 3 个）</span>
-      <button class="select-clear" type="button" aria-label="清除">×</button>
       ${svgChevron}
     </button>
+    <button class="select-clear" type="button" aria-label="清除全部" hidden>×</button>
     <div class="select-panel" hidden>
       <button class="select-option" type="button" data-value="ts">TypeScript</button>
       <button class="select-option" type="button" data-value="react">React</button>
@@ -608,7 +608,7 @@ initSelect();
 
 <!-- 多选 + 上限 -->
 <div class="select" data-select data-select-multiple data-select-max="3">…</div>
-<!-- 多选：trigger 内加 .select-clear 清除全部 -->
+<!-- 多选：trigger 同级加 .select-clear（叠进右侧）清除全部；选中项渲染为 chips（单项 × 悬停出现） -->
 
 <!-- 富选项：.select-option 内可直接写任意 HTML（色卡 / 图标 / 多行） -->
 <!-- 面板尺寸（全库统一 PanelSizing 契约，浮层组件通用）：

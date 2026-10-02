@@ -12,10 +12,16 @@
  *     <button class="select-trigger pressable focus-ring [--sm|--lg]" aria-haspopup="listbox"
  *             aria-expanded="false" [disabled]>
  *       <span class="select-leading">…</span>           可选前缀
- *       <span class="select-value is-empty">占位</span>
- *       <button class="select-clear" aria-label="清除">×</button>  ← 多选时可选
+ *       <span class="select-value is-empty">占位</span>   多选有选中时 behavior 隐藏它
+ *       <span class="select-chips">                     ← 多选选中态由 behavior 渲染（勿手写）
+ *         <span class="select-chip">标签<span class="select-chip-x" role="button" tabindex="-1">×</span></span>
+ *         <span class="select-chip select-chip--more">+2</span>
+ *       </span>
  *       <svg class="select-chevron">…</svg>
  *     </button>
+ *     <button class="select-clear" aria-label="清除全部" hidden>×</button>  ← 多选可选：
+ *         与 trigger 同级（不能嵌套在 button 内），绝对定位叠进 trigger 右侧；
+ *         behavior 在有选中时自动显示
  *     <div class="select-panel" hidden role="listbox">
  *       <div class="select-search">                      ← data-select-search 时 behavior 自动注入
  *         <input class="select-search-input" placeholder="搜索…" />
@@ -213,8 +219,13 @@
   box-shadow: var(--icen-control-focus-shadow);
 }
 
-/* ── 多选清除按钮 ── */
+/* ── 多选清除按钮（与 trigger 同级，绝对定位叠进 trigger 右侧、chevron 左侧） ── */
 .select-clear {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--density-space-sm) + 20px);
+  transform: translateY(-50%);
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -235,6 +246,53 @@
   color: var(--token-text);
   background: var(--token-fill-1);
 }
+/* 有清除钮时 trigger 右侧让位（clear 18px + chevron 14px + 间距） */
+.select:has(.select-clear) .select-trigger { padding-right: 52px; }
+
+/* ── 多选 chips（tag 式展示；× 仅 hover 对应 chip 时出现） ── */
+.select-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.select-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  font-size: var(--density-font-size-xs);
+  line-height: 1.6;
+  color: var(--token-text);
+  background: var(--token-fill-2);
+  border-radius: var(--radius-sm);
+  padding: 0 7px;
+  white-space: nowrap;
+}
+.select-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-left: 0;
+  color: var(--token-text-faint);
+  border-radius: var(--radius-full);
+  font-size: var(--density-font-size-md);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    width var(--icen-tx-fast),
+    opacity var(--icen-tx-fast),
+    margin-left var(--icen-tx-fast),
+    color var(--icen-tx-fast);
+}
+.select-chip:hover .select-chip-x,
+.select-chip-x:focus-visible { width: 12px; opacity: 1; margin-left: 4px; }
+.select-chip-x:hover { color: var(--token-error); }
+.select-chip--more { color: var(--token-text-muted); background: var(--token-fill-1); }
 
 /* ── 多选 trigger 高度自适应（chips 可能换行） ── */
 .select[data-select-multiple] .select-trigger {
@@ -267,5 +325,6 @@
 @media (prefers-reduced-motion: reduce) {
   .select-panel { animation: none; }
   .select-search-input,
+  .select-chip-x,
   .select-clear { transition: none; }
 }

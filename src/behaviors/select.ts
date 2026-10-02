@@ -15,7 +15,8 @@
  *
  * 增强模式：
  *   data-select-search          可搜索/过滤：面板顶部自动插入搜索输入框
- *   data-select-multiple        多选：点击切选（不关面板），trigger 显示计数/标签，hidden input 同步逗号分隔值
+ *   data-select-multiple        多选：点击切选（不关面板），trigger 渲染 chips（单项 × 悬停出现，
+ *                               超 data-select-max-label 折叠 +n），hidden input 同步逗号分隔值
  *   data-select-max="3"         多选上限（配合 data-select-multiple），达到上限后其余选项 .is-disabled
  *   data-select-placeholder     自定义占位文案（也可直接写在 .select-value 内）
  *   选项内容支持任意 HTML（色卡/图标/多行等，直接写在 .select-option 内）
@@ -306,19 +307,64 @@ function setup(container: Element): void {
   function updateMultiTrigger(): void {
     if (!valueEl) return;
     const selected = allOptions().filter((o) => o.classList.contains('is-selected'));
+    /* chips 容器惰性创建（trigger 内、valueEl 之后）；有选中时 valueEl 隐藏、chips 接管 */
+    let chipsEl = trigger.querySelector<HTMLElement>('.select-chips');
     if (selected.length === 0) {
       valueEl.textContent = placeholder;
       valueEl.classList.add('is-empty');
+      valueEl.hidden = false;
+      if (chipsEl) chipsEl.hidden = true;
       container.removeAttribute('data-value');
     } else {
       valueEl.classList.remove('is-empty');
-      const maxLabel = Number(container.getAttribute('data-select-max-label')) || 2;
-      if (selected.length <= maxLabel) {
-        valueEl.textContent = selected.map((o) => o.textContent ?? '').join('、');
-      } else {
-        valueEl.textContent = `已选 ${selected.length} 项`;
+      valueEl.hidden = true;
+      if (!chipsEl) {
+        chipsEl = document.createElement('span');
+        chipsEl.className = 'select-chips';
+        valueEl.insertAdjacentElement('afterend', chipsEl);
       }
+      chipsEl.hidden = false;
+      chipsEl.textContent = '';
+      /* 超过 data-select-max-label（默认 3）折叠为 +n 汇总 chip */
+      const maxLabel = Number(container.getAttribute('data-select-max-label')) || 3;
+      const shown = selected.slice(0, maxLabel);
+      const rest = selected.length - shown.length;
+      for (const o of shown) {
+        const label = o.textContent ?? '';
+        const chip = document.createElement('span');
+        chip.className = 'select-chip';
+        const lb = document.createElement('span');
+        lb.textContent = label;
+        chip.appendChild(lb);
+        /* 单项 ×（hover chip 才出现）：span 而非 button——trigger 是 button，不能嵌套按钮；
+           指针通道；键盘/读屏的等价路径 = 面板反选 */
+        const x = document.createElement('span');
+        x.className = 'select-chip-x';
+        x.setAttribute('role', 'button');
+        x.setAttribute('tabindex', '-1');
+        x.setAttribute('aria-label', `移除 ${label}`);
+        x.textContent = '×';
+        x.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+        x.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          ev.preventDefault();
+          o.classList.remove('is-selected');
+          updateMultiTrigger();
+          syncHiddenInput();
+        });
+        chip.appendChild(x);
+        chipsEl.appendChild(chip);
+      }
+      if (rest > 0) {
+        const more = document.createElement('span');
+        more.className = 'select-chip select-chip--more';
+        more.textContent = `+${rest}`;
+        chipsEl.appendChild(more);
+      }
+      container.setAttribute('data-value', getSelectedValues().join(','));
     }
+    /* 清除全部钮：有选中才显示 */
+    if (clearBtn) clearBtn.hidden = selected.length === 0;
     // 多选上限约束
     if (maxSelect > 0) {
       const atMax = selected.length >= maxSelect;
@@ -365,7 +411,7 @@ function setup(container: Element): void {
     }
   }
 
-  // ── 清除按钮（多选时 trigger 内出现）──
+  // ── 清除全部按钮（多选可选；与 trigger 同级叠放右侧，不能嵌套进 button）──
   const clearBtn = container.querySelector<HTMLElement>('.select-clear');
   if (clearBtn && isMultiple) {
     clearBtn.addEventListener('click', (ev) => {
