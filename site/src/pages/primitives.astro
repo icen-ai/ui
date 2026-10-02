@@ -143,8 +143,95 @@ const tokens = [
         <div class="desc-item"><dt>z-index</dt><dd><code>--z-base/raised/sticky/chrome/toast/banner/dialog/popover/tooltip</code></dd></div>
       </dl>
     </div>
+  <section class="panel">
+    <div class="panel-title"><span>事件体系</span><span>手势 × 协议 × 策略</span></div>
+    <div class="panel-body">
+      <p class="dim">
+        组件事件收敛为三层：<strong>手势层</strong>（任意容器挂 <code>data-gestures</code> 即开通
+        <code>icen:click / dblclick / contextmenu / longpress / select</code> 归一化手势事件）→
+        <strong>协议层</strong>（全部 CustomEvent，bubbles + composed + cancelable，detail 统一
+        <code>{'{ source, originalEvent, x, y, text? }'}</code>）→
+        <strong>策略层</strong>（<code>setEventPolicy</code> 一处赋予/覆盖/禁用全站默认行为）。
+        领域事件（<code>icen:chart-*</code> / <code>icen:ai-*</code>）与手势层互补不变。
+      </p>
+      <CodeBlock code={`import { initGestures, onIcen, setEventPolicy } from '@icen.ai/ui/behaviors/events';
+
+initGestures();   // 幂等，全局一次
+
+<!-- 任意容器开通手势（空格分隔） -->
+<div class="card" data-gestures="click dblclick contextmenu select">…</div>
+
+// 监听（detail：{ source, originalEvent, x, y, text? }）
+onIcen('icen:select', (e) => console.log('划词:', e.detail.text));
+
+// 策略层：一处赋予全站默认行为
+setEventPolicy('icen:contextmenu', (e) => openMyMenu(e.detail.x, e.detail.y));
+setEventPolicy('icen:dblclick', null);   // 禁用某类默认`} lang="js" />
+      <p class="dim" style="margin:14px 0 8px">活演示 —— 对下面卡片单击 / 双击 / 右键 / 长按 / 划词：</p>
+      <div class="gesture-demo" data-gestures="click dblclick contextmenu longpress select" tabindex="0">
+        <p class="gesture-demo-title">手势试验田</p>
+        <p class="gesture-demo-hint">这是一段可以划选的文本。Try me: click, double-click, right-click, long-press, or select this text.</p>
+      </div>
+      <p class="gesture-log" id="gesture-log" aria-live="polite">等待手势…</p>
+    </div>
   </section>
 </Docs>
+
+<script>
+  import { initGestures, onIcen, setEventPolicy } from '../../../src/behaviors/events.ts';
+
+  initGestures();
+  const log = document.getElementById('gesture-log');
+  const demo = document.querySelector('.gesture-demo');
+  const LABELS = {
+    'icen:click': '单击',
+    'icen:dblclick': '双击',
+    'icen:contextmenu': '右键',
+    'icen:longpress': '长按',
+    'icen:select': '划词',
+  };
+  /* 策略层活示例：右键默认行为 = 闪烁强调（真实项目里换成自己的菜单） */
+  setEventPolicy('icen:contextmenu', () => {
+    demo?.classList.add('is-policy-hit');
+    setTimeout(() => demo?.classList.remove('is-policy-hit'), 500);
+  });
+  for (const type of Object.keys(LABELS)) {
+    onIcen(type, (e) => {
+      if (!log) return;
+      const d = e.detail;
+      const extra = type === 'icen:select' && d.text ? `：「${d.text.slice(0, 24)}${d.text.length > 24 ? '…' : ''}」` : '';
+      log.textContent = `${type} · ${LABELS[type]}${extra} · (${Math.round(d.x)}, ${Math.round(d.y)})`;
+      demo?.classList.remove('is-hit');
+      void (demo as HTMLElement | null)?.offsetWidth;
+      demo?.classList.add('is-hit');
+    });
+  }
+</script>
+
+<style is:global>
+  .gesture-demo {
+    border: 1px dashed var(--token-line-dashed);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    user-select: text;
+    cursor: default;
+    transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+  }
+  .gesture-demo:hover { border-color: var(--token-line); }
+  .gesture-demo:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 2px; }
+  .gesture-demo.is-hit { border-color: var(--token-accent); background: var(--token-accent-glow); }
+  .gesture-demo.is-policy-hit { border-color: var(--token-warning); background: var(--token-warning-muted); }
+  .gesture-demo-title { margin: 0 0 6px; font-weight: 600; font-size: 14px; color: var(--token-text); }
+  .gesture-demo-hint { margin: 0; font-size: 13px; color: var(--token-text-muted); line-height: 1.7; }
+  .gesture-log {
+    margin: 10px 0 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--token-accent);
+    min-height: 1.5em;
+  }
+</style>
+
 
 <style is:global>
   .page-title { font-family: var(--font-heading); letter-spacing: 2px; margin: 0 0 8px; }
