@@ -27,7 +27,9 @@
     "**/*.css"
   ],
   "files": [
-    "dist"
+    "dist",
+    "AGENTS.md",
+    "docs"
   ],
   "license": "MIT",
   "publishConfig": {
@@ -41,5 +43,13 @@
     "@types/node": "^20.14.0",
     "tsup": "^8.3.0",
     "typescript": "^5.5.0"
-  }
+  },
+  "keywords": [
+    "design-system",
+    "ai-components",
+    "zero-dependency",
+    "charts",
+    "css",
+    "tokens"
+  ]
 }

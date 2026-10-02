@@ -184,6 +184,9 @@
   font-size: 12px;
 }
 .site-footer-dim { letter-spacing: 1px; }
+.site-footer-dim a { color: var(--token-text-faint); text-decoration: underline dotted; }
+.site-footer-dim a:hover { color: var(--token-text); }
+.site-footer-hint { opacity: 0.7; }
 
 /* ═══════════ 文档分栏（侧栏 + 正文） ═══════════ */
 .docs-shell {

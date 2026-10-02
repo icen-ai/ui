@@ -1,6 +1,139 @@
 # AGENTS.md — @icen.ai/ui
 
-本文件面向 AI 编程助手，介绍本仓库的结构、构建流程与开发约定。
+本文件面向 AI 编程助手，分两段：**第一段 = 消费方速查**（在用户项目里使用本包的 AI 先读这段，随 npm 发布于 `node_modules/@icen.ai/ui/AGENTS.md`）；**第二段 = 本仓库开发约定**（给在本仓库内写代码的 AI）。
+
+---
+
+# 第一段 · 消费方速查（在用户项目里用 @icen.ai/ui）
+
+完整类型签名看包内 `dist/*.d.ts`；交互式文档 <https://ui.icen.ai>；AI 能力规格 `docs/spec/ai-native.md`；文档全文（喂模型）<https://ui.icen.ai/llms-full.txt>。
+
+## 形态约束（先读，避免生成跑不通的代码）
+
+- 零依赖纯 ESM + TypeScript；组件 = CSS + 行为 JS，**不绑定框架**（React/Vue 在 effect/mounted 里调行为函数即可）。
+- 先引 tokens 再引组件：`@import '@icen.ai/ui/tokens.css';`（组件 CSS 全部消费 `--token-*` 变量）。
+- **Astro 陷阱**：kit 入口的 css import 在页面 `<script>`（client bundle）里会被摇掉——Astro 项目必须在布局 frontmatter 引组件 CSS；Vite SPA / webpack 无此问题。
+- 行为函数全部**幂等**且 **SSR 安全**（`window` 未定义静默返回）；渲染只写 `textContent`，绝不 innerHTML。
+- 自定义事件统一 `icen:` 前缀（图表 `icen:chart-*`，AI 族 `icen:ai-*`）。明暗 = html `data-theme="dark"`；密度 = 容器 `data-density`。
+
+## 安装颗粒度
+
+```bash
+bun add @icen.ai/ui               # 或 npm i
+bunx @icen.ai/ui list             # 全部 slug
+bunx @icen.ai/ui add btn toast    # 按 slug 打印引入行
+```
+
+```css
+@import '@icen.ai/ui/tokens.css';
+@import '@icen.ai/ui/ui.css';     /* 全量；或单引 @icen.ai/ui/components/btn.css */
+```
+
+- **kit 一行入口**（CSS + behavior 一起）：`import '@icen.ai/ui/kit/btn';`
+- **只取行为 JS**：`import { renderChart } from '@icen.ai/ui/behaviors/charts';`
+- slug 清单机器可读：`@icen.ai/ui/registry.json`。
+
+## 图表通用层（behaviors/charts）— ChartSpec 纯 JSON，天然可被模型调用
+
+```ts
+import { renderChart } from '@icen.ai/ui/behaviors/charts';
+const c = renderChart(el, {
+  type: 'line',                  // line|area|vbar|hbar|stack|donut|radar|heatmap|calendar|sparkline|gauge|scatter
+  title: '各版本能力数',
+  labels: ['v0.1','v0.2','v0.3'],
+  series: [{ name: '组件', values: [31,41,43] }, { name: 'AI 专属', values: [0,0,0] }],
+  format: { unit: ' 个', places: 0 },  // 值格式化描述符（chartFormatValue）
+});
+c.update(newSpec);
+c.on('click', (e) => e.detail);   // { index, seriesIndex, seriesName, label, value, pointerX, pointerY }
+c.destroy();
+```
+
+- 省略 `type` 时 `inferChartType` 自动选型（ISO 日期/年月/周几/版本号 v0.8/纯年份等时序标签 → line）。
+- 事件：`icen:chart-{move,out,click,dblclick,contextmenu,legend-toggle}`；内置 tooltip 门户（`tooltip:false` 关闭只派事件）；图表头统一带**图例眼睛**（隐藏/显示全部指标）。
+- 底层渲染器（同 chrome，非 AI 场景直用）：`renderVBar/renderHBar/renderStack/renderDonut/renderLine/renderArea/renderRadar/renderHeatmap/renderCalendar/renderSparkline/renderGauge/renderScatter`。
+
+## AI 原生族 — 7 态状态机 + kind 注册表
+
+状态：`pending | running | streaming | approval | done | error | cancelled`。
+
+```ts
+import { renderAiMessage, createAiStream } from '@icen.ai/ui/behaviors/ai-chat';
+import { renderAiToolCall, renderAiSubagent, initAiTool, initAiSubagent } from '@icen.ai/ui/behaviors/ai-tool';
+
+renderAiMessage(el, {
+  role: 'assistant', model: 'kimi-k3',
+  content: [                        // 多模态 parts（纯 string 也可）
+    { type: 'text', text: '结论如下' },
+    { type: 'image', url, alt },    // 另有 audio / video / file{mimeType,filename} / resource_link
+  ],
+  meta: '刚刚 · 1.1k tok',
+});
+
+const t = renderAiToolCall(el, { id, name: 'WebSearch', kind: 'browser', status: 'running', input: { query } });
+t.update({ status: 'done', output: '命中 24 条', durationMs: 1800 });
+// 审批态：status:'approval' + approval:{reason} → 卡上按钮派 icen:ai-approve / icen:ai-reject
+renderAiSubagent(el, { name: 'verify', input: { task }, activities: [/* 同工具卡 */] });
+initAiTool(); initAiSubagent();      // 事件委托，页面级一次
+```
+
+- 线格式归一 `normalizeContentParts`（OpenAI/Anthropic/MCP 通吃）；取纯文本 `contentToText`；资源 URL `aiContentUrl`。
+- kind 可扩展：`registerAiKind({ label, icon, tint, summarize })`；工具卡输入 JSON 默认折叠，`chart`/`error`/`approval`/多模态输出默认展开。
+- 推理块 `.ai-reasoning` + `createAiStream(host)` 流入（host 在 `.ai-reasoning` 内时完成自动折叠并回填耗时）。
+- 面板：`renderAiTodo/renderAiUsage/renderAiContext/renderAiAudit`（ai-panel）、`parseUnifiedDiff/renderAiDiff`（ai-diff）。
+
+## 输入台 + 零接线绑定
+
+```ts
+import { initAiComposer, bindComposer, setComposerTodo, setComposerModels } from '@icen.ai/ui/behaviors/ai-composer';
+
+initAiComposer(el);
+setComposerModels(el, listAiProviders(), { provider: 'kimi', model: 'kimi-k3' });
+bindComposer(el, { client, messages: chatEl });  // 一行接通发送→流式→停止→排队→错误→用量环
+setComposerTodo(el, [                           // 业界模式：plan 是工具调用，实时状态挂输入框
+  { content: '搜集资料', status: 'done' },
+  { content: '渲染图表', status: 'running', activeForm: '正在渲染图表' },
+]);  // chip 显示 x/y；全 done → is-done；有 error/cancelled → is-error；点开弹层看清单
+```
+
+## Provider 层（behaviors/ai-provider）
+
+```ts
+import { createAiClient, createAiAuditor, estimateCost } from '@icen.ai/ui/behaviors/ai-provider';
+
+const client = createAiClient({ provider: 'kimi', model: 'kimi-k3', apiKey });
+await client.chat({ messages });       // 或 client.stream(...)（SSE 逐 chunk）
+const auditor = createAiAuditor();     // log() 条目含 cost（定价表估算）与 ttftMs
+// 每次请求收尾派 icen:ai-done（detail: status/usage/cost/error/durationMs/ttftMs）
+```
+
+- 多模态出线：`toOpenAiContent/toAnthropicBlocks`（含 cache_control 与 tool_result 回传）。
+- 用量双口径：`contextEstimate(history)` = 上下文估算（输入框用量环）；计费走 `normalizeUsage` + `estimateCost`（定价表未命中不猜价）。别混用。
+
+## 工具体系（behaviors/ai-tools）— 把 UI 能力注册成模型可调用工具
+
+```ts
+import { createAiToolArea, aiToolsToOpenAI, aiToolsToMcp, aiToolsManifest, parseAiToolArgs }
+  from '@icen.ai/ui/behaviors/ai-tools';
+
+const area = createAiToolArea(mountEl, {
+  tools: ['render_chart', 'chart-*'],  // 白名单支持 glob；缺省 = 全部已注册
+  max: 4,                              // 挂载上限，LRU 淘汰
+});
+area.call('render_chart', { type: 'line', labels, series });  // 宿主手动/模型触发
+area.setTools(['render_chart']);  area.setMax(2);  area.onChange(cb);
+
+aiToolsToOpenAI();   // → OpenAI tools 数组
+aiToolsToMcp();      // → MCP tools/list 形态
+aiToolsManifest();   // → 自描述 manifest
+parseAiToolArgs('render_chart', raw);   // 模型回包解析（容错 JSON 字符串/对象）
+```
+
+自定义工具：`registerAiTool({ name, description, inputSchema, onCall })`；内置 `render_chart`。挂载区条目可折叠/移除，超限 LRU 自动回收。
+
+---
+
+# 第二段 · 本仓库开发约定
 
 ## 项目概览
 
