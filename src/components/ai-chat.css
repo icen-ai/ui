@@ -1010,3 +1010,28 @@
     transform: none;
   }
 }
+
+/* 实时待办 chip（setComposerTodo：业界模式——plan 状态挂输入区，不进对话流） */
+.ai-composer-todo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-full);
+  background: var(--token-surface);
+  color: var(--token-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-2xs);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), border-color var(--icen-tx-fast);
+}
+.ai-composer-todo svg { width: 13px; height: 13px; color: var(--token-accent); }
+.ai-composer-todo:hover { border-color: var(--icen-hover-border, var(--token-line)); color: var(--token-text); }
+.ai-composer-todo:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+.ai-composer-todo.is-done svg { color: var(--token-success); }
+.ai-composer-todo.is-error svg { color: var(--token-warning); }
+.ai-composer-todo-pop { min-width: 240px; max-width: 320px; }
+.ai-composer-todo-pop .ai-todo { padding: 0; }

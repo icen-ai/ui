@@ -244,7 +244,15 @@ const BUILTIN_KINDS: Record<string, AiKindDef> = {
   fetch: { label: '请求', icon: ICON_DOWNLOAD, tint: 'info', summarize: sum((i) => pickStr(i, ['url', 'uri', 'endpoint'])) },
   mcp: { label: 'MCP', icon: ICON_BLOCKS, tint: 'muted', summarize: sum((i) => pickStr(i, ['tool', 'method', 'name'])) },
   skill: { label: '技能', icon: ICON_ZAP, tint: 'accent', summarize: sum((i) => pickStr(i, ['skill', 'name', 'command'])) },
-  todo: { label: '待办', icon: ICON_LIST, tint: 'info' },
+  todo: {
+    label: '待办', icon: ICON_LIST, tint: 'info',
+    summarize: sum((input) => {
+      const items = input && typeof input === 'object' && Array.isArray((input as Record<string, unknown>).items)
+        ? ((input as Record<string, unknown>).items as unknown[]) : Array.isArray(input) ? input : [];
+      const done = items.filter((it) => (it as Record<string, unknown>)?.status === 'done').length;
+      return items.length > 0 ? `${done}/${items.length} 完成` : '';
+    }),
+  },
   plan: { label: '计划', icon: ICON_LIST_CHECKS, tint: 'info' },
   subagent: { label: '子代理', icon: ICON_BOT, tint: 'accent', summarize: sum((i) => pickStr(i, ['task', 'description', 'prompt', 'message', 'subagent_type'])) },
   note: { label: '笔记', icon: ICON_FILE_TEXT, tint: 'muted' },

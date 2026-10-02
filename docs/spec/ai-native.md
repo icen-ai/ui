@@ -236,6 +236,13 @@ interface AiMessageModel {
 
 chip 态：`is-added/is-modified/is-deleted` + hover 操作（可选）。无 behavior（文档说明）。
 
+### 4.8a 输入框实时待办（setComposerTodo，业界模式）
+
+待办是**工具调用**（对话里只留折叠的 TodoWrite 卡，todo kind summarize 显示 x/y 完成），
+**实时状态挂在输入区**而非对话流：`setComposerTodo(el, items | null)` 在工具条渲染
+`.ai-composer-todo` chip（清单图标 + x/y；进行中 accent / 全部完成 success / 有失败
+warning），点击弹层展示完整清单（popover + renderAiTodo 只读）；传 null 清除。
+
 ### 4.8 ai-todo（ai-panel.css + ai-panel.ts）
 
 ```html

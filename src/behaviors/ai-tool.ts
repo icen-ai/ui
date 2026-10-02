@@ -201,9 +201,10 @@ function chartSpecOf(value: unknown): unknown | null {
   return null;
 }
 
-function setIo(io: IoParts, value: unknown): void {
-  /* 工具回执内嵌图表：{type:'chart',spec} 或裸 ChartSpec → renderChart 小图 */
-  const chartSpec = chartSpecOf(value);
+function setIo(io: IoParts, value: unknown, allowChart = true): void {
+  /* 工具回执内嵌图表：{type:'chart',spec} 或裸 ChartSpec → renderChart 小图（仅输出；
+     输入是给机器的原始参数，展开成图对用户是噪音——保持 JSON） */
+  const chartSpec = allowChart ? chartSpecOf(value) : null;
   if (chartSpec) {
     io.pre.textContent = '';
     io.pre.hidden = true;
@@ -328,7 +329,7 @@ export function renderAiToolCall(el: HTMLElement, model: AiToolCallModel): AiToo
     applyKindVisual(parts, m);
     const meta = m.durationMs != null ? formatDuration(m.durationMs) : '';
     applyStatusMeta(parts, m.status, meta);
-    setIo(inputIo, m.input);
+    setIo(inputIo, m.input, false);
     setIo(outputIo, m.errorText ?? m.output);
     const reason = m.approval?.reason ? compactValue(m.approval.reason, 300) : '';
     approval.reason.textContent = reason;

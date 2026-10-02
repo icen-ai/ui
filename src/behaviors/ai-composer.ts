@@ -64,7 +64,9 @@
 
 import { formatTokens, contextEstimate, svgIcon, type AiUsage } from './ai-core';
 import { closePopover, openPopover } from './popover';
-import { renderAiUsageRing, type AiUsageRingOpts } from './ai-panel';
+import { renderAiUsageRing, renderAiTodo, type AiUsageRingOpts } from './ai-panel';
+import type { AiStatus } from './ai-core';
+import type { AiTodoItem } from './ai-panel';
 import {
   renderAiMessage,
   type AiMessageHandle,
@@ -172,6 +174,7 @@ const COMMANDS = new WeakMap<HTMLElement, AiComposerCommand[]>();
 const REF_SOURCES = new WeakMap<HTMLElement, AiComposerRefSource[]>();
 const ACTIVE_REFS = new WeakMap<HTMLElement, AiComposerRefSource[]>();
 const USAGE = new WeakMap<HTMLElement, { usage: AiUsage; opts: AiUsageRingOpts }>();
+const TODO = new WeakMap<HTMLElement, AiTodoItem[]>();
 const HISTORIES = new WeakMap<HTMLElement, { items: string[]; index: number }>();
 const POPUP = new WeakMap<HTMLElement, ComposerPopup>();
 /** setupComposer 注册的 submit 闭包（弹层无匹配 Enter 回退发送用） */
@@ -1462,6 +1465,69 @@ export function setComposerUsage(
   USAGE.set(composer, { usage, opts });
   syncToolbar(composer);
   refreshUsageRing(composer);
+}
+
+/**
+ * 输入框旁的实时待办（业界模式：plan/todo 是工具调用，实时状态挂在输入区而非对话流）：
+ * chip = 图标 + x/y，状态色随进度（进行中 accent / 全部完成 success / 有失败 warning）；
+ * 点击弹出完整清单（popover + renderAiTodo，只读）。传 null 清除。
+ */
+export function setComposerTodo(el: HTMLElement, items: AiTodoItem[] | null): void {
+  if (!isBrowser()) return;
+  const composer = resolveComposer(el);
+  if (!composer) return;
+  let chip = composer.querySelector<HTMLElement>('.ai-composer-todo');
+  if (!items || items.length === 0) {
+    TODO.delete(composer);
+    chip?.remove();
+    return;
+  }
+  TODO.set(composer, items);
+  if (!chip) {
+    chip = document.createElement('button');
+    (chip as HTMLButtonElement).type = 'button';
+    chip.className = 'ai-composer-todo';
+    chip.setAttribute('aria-haspopup', 'true');
+    chip.addEventListener('click', () => {
+      const cur = TODO.get(composer);
+      if (!cur) return;
+      const p = document.createElement('div');
+      p.className = 'popover ai-composer-todo-pop';
+      p.hidden = true;
+      const title = document.createElement('div');
+      title.className = 'ai-usage-popover-title';
+      title.textContent = '当前待办';
+      const body = document.createElement('div');
+      body.className = 'ai-usage-popover-body';
+      renderAiTodo(body, cur);
+      p.append(title, body);
+      openPopover(p, {
+        anchor: chip as HTMLElement,
+        side: 'top',
+        align: 'end',
+        onClose: () => p.remove(),
+      });
+    });
+    const icon = svgIcon(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>',
+    );
+    if (icon) chip.appendChild(icon);
+    chip.appendChild(document.createElement('span')).className = 'ai-composer-todo-label';
+    const toolbar = composer.querySelector<HTMLElement>('.ai-composer-toolbar');
+    const usage = composer.querySelector<HTMLElement>('.ai-composer-usage');
+    if (toolbar) toolbar.insertBefore(chip, usage ?? null);
+    else {
+      const box = composer.querySelector<HTMLElement>('.ai-composer-box');
+      box?.before(chip);
+    }
+  }
+  const done = items.filter((t) => t.status === 'done').length;
+  const failed = items.some((t) => t.status === 'error' || t.status === 'cancelled');
+  chip.classList.toggle('is-done', done === items.length && !failed);
+  chip.classList.toggle('is-error', failed);
+  chip.setAttribute('aria-label', `当前待办 ${done}/${items.length}${failed ? '（有失败项）' : ''}`);
+  const label = chip.querySelector<HTMLElement>('.ai-composer-todo-label');
+  if (label) label.textContent = `${done}/${items.length}`;
 }
 
 /* ══════════════ 绑定层 bindComposer（spec §11，「零接线全链路」的胶水） ══════════════ */

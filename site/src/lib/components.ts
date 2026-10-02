@@ -3051,10 +3051,13 @@ function reasoning(text, ms) {
     timers.push(t);
   });
 }
-let todoHost = null;
+let todoCard = null;
 function todo(list) {
-  if (!todoHost) { todoHost = document.createElement('div'); scroll.appendChild(todoHost); }
-  M.panel.renderAiTodo(todoHost, list);
+  /* 业界模式：待办是对话里的工具调用（折叠卡，摘要 x/y 完成），实时状态挂输入框 chip */
+  const input = { items: list };
+  if (!todoCard) todoCard = card('TodoWrite', 'todo', { input: input });
+  else todoCard.update({ input: input });
+  M.comp.setComposerTodo(composer, list);
 }
 function card(name, kind, model) {
   const holder = document.createElement('div');
@@ -3076,7 +3079,7 @@ async function play() {
   await reasoning('用户要迭代历史的完整分析。先明确数据源：git log、发布记录、changelog。计划：搜索公开资料，调内部接口拿发布数据，提炼阶段叙事，做能力增长可视化，最后落一份 history.md。风险：数据口径要统一，按版本对齐。', 1600);
   logAudit('kimi', 'kimi-k3', true, M.core.normalizeUsage(U(14200)), 210);
 
-  stage('③ 规划（todo activeForm 推进）');
+  stage('③ 规划（TodoWrite 工具 + 输入框待办 chip）');
   todo([
     { content: '搜集公开迭代资料', status: 'running', activeForm: '正在搜索公开迭代资料' },
     { content: '拉取内部发布记录', status: 'pending' },
@@ -3220,7 +3223,8 @@ function reset() {
   cancelled = true;
   timers.forEach(function (t) { clearTimeout(t); clearInterval(t); }); timers = [];
   if (scroll) scroll.textContent = '';
-  todoHost = null;
+  todoCard = null;
+  M.comp.setComposerTodo(composer, null);
   M.comp.setComposerRunning(composer, false);
   stage('场景：分析 AI 迭代历史 · 全组件走一遍（约 30 秒，中途有一处需要你点「允许」）');
   if (playBtn) playBtn.disabled = false;
