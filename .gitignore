@@ -3,3 +3,6 @@ dist/
 .astro/
 .wrangler/
 *.log
+
+# llms.txt/llms-full.txt 由 scripts/llms.mjs 构建期生成（bun run build 前置）
+site/public/llms*.txt
