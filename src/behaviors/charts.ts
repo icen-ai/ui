@@ -31,6 +31,9 @@
  *     detail 含 index/seriesIndex/seriesName/label/value/指针坐标）/ click / dblclick /
  *     contextmenu（默认 preventDefault，接自家 context-menu 组件）；内置 tooltip
  *     portal 跟随指针（spec.tooltip: false 关闭）；spec.title 渲染 .chart-title。
+ *     图例可见性：有图例的图型渲染头部行（.chart-head = 标题 + 小眼睛钮），
+ *     点击切换根 data-legend-hidden（容器级 CSS 隐藏全部图型图例，统一继承），
+ *     派 icen:chart-legend-visibility { visible }；spec.legend=false 定初值。
  *   normalizeChartSpec(raw)   归一：字符串 JSON.parse / 类型别名（bar→vbar、pie→donut、
  *                             contribution→calendar…）/ 字符串数值容错 / data[] pivot；不抛异常
  *   inferChartType(spec)      自动选型（确定性规则）
@@ -1233,6 +1236,8 @@ export interface ChartSpec {
   format?: ChartValueFormat;
   /** 内置 tooltip（默认开；false 关闭后只派事件） */
   tooltip?: boolean;
+  /** 图例：false = 初始隐藏（头部行的小眼睛仍可再展开）；true/缺省 = 显示 */
+  legend?: boolean;
   emptyLabel?: string;
 }
 
@@ -1374,7 +1379,7 @@ export function normalizeChartSpec(raw: unknown): ChartSpec {
   for (const k of ['title', 'tone', 'emptyLabel'] as const) {
     if (typeof s[k] === 'string') (spec as Record<string, unknown>)[k] = s[k];
   }
-  for (const k of ['stacked', 'fill', 'tooltip'] as const) {
+  for (const k of ['stacked', 'fill', 'tooltip', 'legend'] as const) {
     if (typeof s[k] === 'boolean') (spec as Record<string, unknown>)[k] = s[k];
   }
   for (const k of ['weeks', 'max', 'levels'] as const) {
@@ -1586,35 +1591,116 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
 
   const typeOf = (): ChartType => (current.type as ChartType) ?? 'vbar';
 
+  /** 图例隐藏状态跨 update 存活（spec.legend=false 只定初值，眼睛切换后以切换为准） */
+  let legendHidden: boolean | null = null;
+
+  /** 该图型是否有图例（决定头部行是否渲染小眼睛） */
+  const hasLegend = (spec: ChartSpec): boolean => {
+    switch (spec.type) {
+      case 'donut':
+      case 'stack':
+        return (spec.segments?.length ?? 0) > 0;
+      case 'heatmap':
+      case 'calendar':
+        return true;
+      case 'line':
+      case 'vbar':
+      case 'radar':
+        return (spec.series?.length ?? 0) > 1;
+      default:
+        return false;
+    }
+  };
+
+  /* 图例可见性小眼睛（chart-head 右侧）：切换根 data-legend-hidden，
+     容器级 CSS 隐藏全部图型图例——统一继承，零逐图型代码 */
+  const EYE_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c7 0 10 7 10 7a13.2 13.2 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 7 10 7a9.7 9.7 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  const parseSvg = (svg: string): Element | null => {
+    try {
+      const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+      const el = doc.documentElement;
+      return el && el.tagName.toLowerCase() === 'svg' && !doc.querySelector('parsererror')
+        ? document.importNode(el, true)
+        : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const syncEye = (btn: HTMLButtonElement): void => {
+    const hidden = root.getAttribute('data-legend-hidden') === 'true';
+    btn.setAttribute('aria-pressed', String(!hidden));
+    btn.setAttribute('aria-label', hidden ? '显示图例' : '隐藏图例');
+    btn.setAttribute('title', hidden ? '显示图例' : '隐藏图例');
+    const icon = parseSvg(hidden ? EYE_OFF_SVG : EYE_SVG);
+    if (icon) btn.replaceChildren(icon);
+  };
+
+  const buildChartHead = (spec: ChartSpec): HTMLElement => {
+    const head = document.createElement('div');
+    head.className = 'chart-head';
+    const title = document.createElement('div');
+    title.className = 'chart-title';
+    title.textContent = spec.title ?? '';
+    if (!spec.title) title.setAttribute('aria-hidden', 'true');
+    const eye = document.createElement('button');
+    eye.type = 'button';
+    eye.className = 'chart-legend-eye';
+    eye.dataset.chartLegendEye = '';
+    eye.addEventListener('click', () => {
+      const hidden = root.getAttribute('data-legend-hidden') === 'true';
+      root.setAttribute('data-legend-hidden', String(!hidden));
+      legendHidden = !hidden;
+      syncEye(eye);
+      root.dispatchEvent(new CustomEvent('icen:chart-legend-visibility', {
+        bubbles: true,
+        detail: { visible: hidden },
+      }));
+    });
+    syncEye(eye);
+    head.append(title, eye);
+    return head;
+  };
+
   const render = (): void => {
     if (!current.type) current = { ...current, type: inferChartType(current) };
     const spec = current;
     root.textContent = '';
+    /* 图表体渲染进内层容器——底层渲染器按契约先清空传入 el，头部不能与它们同层 */
+    const body = document.createElement('div');
+    body.className = 'chart-body';
     const formatValue = chartFormatValue(spec.format);
-    if (spec.title) {
-      const t = document.createElement('div');
-      t.className = 'chart-title';
-      t.textContent = spec.title;
-      root.appendChild(t);
+    if (spec.title || hasLegend(spec)) {
+      /* 显式 spec.legend 每次生效；未给时沿用眼睛的历史切换（初值显示） */
+      if (spec.legend !== undefined) legendHidden = spec.legend === false;
+      else if (legendHidden == null) legendHidden = false;
+      root.setAttribute('data-legend-hidden', String(legendHidden));
+      root.append(buildChartHead(spec), body);
+    } else {
+      root.removeAttribute('data-legend-hidden');
+      root.appendChild(body);
     }
     switch (spec.type) {
       case 'line':
-        renderLine(root, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: spec.fill, formatValue, emptyLabel: spec.emptyLabel });
+        renderLine(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: spec.fill, formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'area':
-        renderLine(root, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: true, formatValue, emptyLabel: spec.emptyLabel });
+        renderLine(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: true, formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'vbar':
-        renderVBar(root, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, stacked: spec.stacked, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        renderVBar(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, stacked: spec.stacked, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'hbar':
-        renderHBar(root, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        renderHBar(body, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'stack':
-        renderStack(root, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel });
+        renderStack(body, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'donut':
-        renderDonut(root, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel });
+        renderDonut(body, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'radar': {
         const series = spec.series
@@ -1622,26 +1708,26 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
           : spec.values
             ? [{ name: '', values: spec.values }]
             : [];
-        renderRadar(root, { axes: spec.axes ?? spec.labels ?? [], series, max: spec.max, levels: spec.levels, formatValue, emptyLabel: spec.emptyLabel });
+        renderRadar(body, { axes: spec.axes ?? spec.labels ?? [], series, max: spec.max, levels: spec.levels, formatValue, emptyLabel: spec.emptyLabel });
         break;
       }
       case 'heatmap':
-        renderHeatmap(root, { values: spec.values, data: spec.data as HeatmapDatum[] | undefined, weeks: spec.weeks, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        renderHeatmap(body, { values: spec.values, data: spec.data as HeatmapDatum[] | undefined, weeks: spec.weeks, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'calendar':
-        renderCalendar(root, { dates: spec.dates, values: spec.values, data: spec.data as HeatmapDatum[] | undefined, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        renderCalendar(body, { dates: spec.dates, values: spec.values, data: spec.data as HeatmapDatum[] | undefined, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'sparkline':
-        renderSparkline(root, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        renderSparkline(body, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
         break;
       case 'gauge':
-        renderGauge(root, { value: spec.values?.[0] ?? 0, max: spec.max, tone: spec.tone, label: spec.labels?.[0], formatValue });
+        renderGauge(body, { value: spec.values?.[0] ?? 0, max: spec.max, tone: spec.tone, label: spec.labels?.[0], formatValue });
         break;
       case 'scatter':
-        renderScatter(root, { points: spec.points ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        renderScatter(body, { points: spec.points ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
         break;
       default:
-        renderEmpty(root, spec.emptyLabel);
+        renderEmpty(body, spec.emptyLabel);
     }
   };
 

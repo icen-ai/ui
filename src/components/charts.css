@@ -95,6 +95,39 @@
   color: var(--token-text);
 }
 
+/* 头部行（renderChart 渲染）：标题 + 图例可见性小眼睛 */
+.chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-space-sm);
+  min-height: 24px;
+}
+.chart-legend-eye {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.chart-legend-eye:hover { color: var(--token-text); background: var(--token-fill-1); }
+.chart-legend-eye:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+.chart-legend-eye svg { width: 13px; height: 13px; }
+
+/* 图例统一隐藏：容器级继承——data-legend-hidden 一条选择器覆盖全部图型的图例 */
+[data-legend-hidden='true'] .chart-legend,
+[data-legend-hidden='true'] .chart-legend--toggle,
+[data-legend-hidden='true'] .chart-heatmap-legend {
+  display: none;
+}
+
 /* 内置 tooltip：portal 到 body 的单例，position: fixed 跟随指针 */
 .chart-tooltip {
   position: fixed;

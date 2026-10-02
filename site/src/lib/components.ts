@@ -1983,7 +1983,7 @@ initCarousel();
   <button class="btn btn-sm" type="button" data-chart-spec="calendar">贡献日历</button>
   <button class="btn btn-sm" type="button" data-chart-spec="donut">环形占比</button>
 </div>
-<p class="demo-label" style="margin:0 0 10px">悬停看 tooltip · 单击/双击/右键任意数据点 · 点图例行切换系列——事件日志在下方</p>
+<p class="demo-label" style="margin:0 0 10px">悬停看 tooltip · 单击/双击/右键数据点 · 点图例行切换系列 · 标题右侧小眼睛隐藏/显示图例——事件日志在下方</p>
 <div class="chart" id="chart-universal" style="border:1px solid var(--token-line-soft);border-radius:var(--radius-md);padding:12px"></div>
 <p class="demo-label" id="chart-event-log" style="margin-top:8px">事件日志：等待交互…</p>
 <div class="chart-grid" style="margin-top:16px">
@@ -2032,8 +2032,9 @@ const handle = renderChart(el, {
   ],
   format: { notation: 'compact', unit: '次' },
   // type 缺省自动推断（时间序→line / 占比→donut / dates→calendar / points→scatter…）
-  // tooltip: false 关闭内置提示；stacked: true 堆叠柱
+  // tooltip: false 关闭内置提示；stacked: true 堆叠柱；legend: false 初始隐藏图例
 });
+handle.on 右侧小眼睛随时切换（icen:chart-legend-visibility）。
 
 handle.on('click', (d) => console.log(d.label, d.value, d.seriesName));
 handle.on('contextmenu', (d, e) => openContextMenu(e, d));  // 右键接自家 context-menu
