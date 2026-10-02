@@ -7,6 +7,10 @@
  * 触屏：长按 520ms 打开，移动容差 12px。面板为 body 下的 .menu.menu--context，
  * fixed 定位鼠标点，量尺寸后翻转并 clamp ≥8px，z-index 9999（见 menu.css）。
  * 文本一律 textContent 赋值（icon 为调用方提供的可信 svg 字符串）。SSR 下为 no-op。
+ *
+ * 条目选中（点击或 Enter）统一派发 icen:menu-select
+ * { source: 面板, item, value: item.dataset.value ?? '', label: textContent 前 80 字 }
+ * ——与 dropdown / command-palette 共用同一事件（统一菜单选中流）。
  */
 
 export interface ContextMenuEntry {
@@ -43,6 +47,20 @@ const FLIP_MARGIN = 10;
 const CLAMP_MARGIN = 8;
 
 import { applyPanelSizing, readPanelSizing, type PanelSizing } from './popover';
+import { emitIcen } from './events';
+
+/** 菜单选中统一事件（dropdown / context-menu / command-palette 同一契约）。 */
+function emitMenuSelect(source: HTMLElement, item: HTMLElement): void {
+  emitIcen(item, 'icen:menu-select', {
+    source,
+    item,
+    value: item.dataset.value ?? '',
+    /* 优先专用 label 子元素（避开快捷键/图标文本混入），无则退整项文本 */
+    label: (item.querySelector('.menu-item-label, .command-item-label')?.textContent ?? item.textContent ?? '')
+      .trim()
+      .slice(0, 80),
+  });
+}
 
 const registry = new Map<string, ContextMenuItem[]>();
 let fallbackItems: ContextMenuItem[] | null = null;
@@ -92,7 +110,7 @@ function isEditable(target: Element | null): boolean {
   return Boolean(target?.closest('input, textarea, [contenteditable="true"]'));
 }
 
-function buildItem(item: ContextMenuItem): HTMLElement {
+function buildItem(item: ContextMenuItem, menuPanel: HTMLElement): HTMLElement {
   if ('type' in item && item.type === 'separator') {
     const sep = document.createElement('div');
     sep.className = 'menu-separator';
@@ -147,8 +165,10 @@ function buildItem(item: ContextMenuItem): HTMLElement {
   }
 
   btn.addEventListener('click', () => {
+    /* 先派菜单选中统一事件，再执行条目回调（Enter 路径经 click() 同样到达） */
+    emitMenuSelect(menuPanel, btn);
     entry.onClick?.();
-    closeMenu();
+    closeContextMenu();
   });
   return btn;
 }
@@ -163,7 +183,7 @@ export function openContextMenu(
   opts?: { sizing?: PanelSizing },
 ): void {
   if (typeof document === 'undefined') return;
-  closeMenu();
+  closeContextMenu();
 
   panel = document.createElement('div');
   panel.className = 'menu menu--context';
@@ -171,7 +191,7 @@ export function openContextMenu(
   panel.style.visibility = 'hidden';
   applyPanelSizing(panel, opts?.sizing ?? {});
 
-  for (const item of items) panel.appendChild(buildItem(item));
+  for (const item of items) panel.appendChild(buildItem(item, panel));
   document.body.appendChild(panel);
 
   // 量尺寸后翻转：越右/下边缘就往左/上翻，最后 clamp ≥ 8px
@@ -203,7 +223,7 @@ export function openContextMenu(
 }
 
 /** 关闭当前右键菜单（未打开时为 no-op）。 */
-export function closeMenu(): void {
+export function closeContextMenu(): void {
   if (!panel) return;
   panel.remove();
   panel = null;
@@ -215,6 +235,14 @@ export function closeMenu(): void {
   window.removeEventListener('keydown', onKeyDown);
 }
 
+/**
+ * @deprecated 已更名 closeContextMenu（与全库浮层 close* 命名对齐）；
+ * 本别名仅为兼容保留，下个大版本删除。
+ */
+export function closeMenu(): void {
+  closeContextMenu();
+}
+
 function setFocused(next: number): void {
   if (!panel || focusableItems.length === 0) return;
   focusedIndex = ((next % focusableItems.length) + focusableItems.length) % focusableItems.length;
@@ -224,24 +252,24 @@ function setFocused(next: number): void {
 function onOutsidePointerDown(e: Event): void {
   if (!panel) return;
   const target = e.target;
-  if (!(target instanceof Node) || !panel.contains(target)) closeMenu();
+  if (!(target instanceof Node) || !panel.contains(target)) closeContextMenu();
 }
 
 function onScrollSignal(e: Event): void {
   /* 滚动发生在面板内部（菜单自身滚动）时不关闭 */
   if (panel && e.target instanceof Node && panel.contains(e.target)) return;
-  closeMenu();
+  closeContextMenu();
 }
 
 function onCloseSignal(): void {
-  closeMenu();
+  closeContextMenu();
 }
 
 function onKeyDown(e: KeyboardEvent): void {
   if (!panel) return;
   if (e.key === 'Escape') {
     e.preventDefault();
-    closeMenu();
+    closeContextMenu();
     return;
   }
   if (focusableItems.length === 0) return;

@@ -1,5 +1,5 @@
 /*
- * @icen.ai/ui — Behavior: nav（scroll 收缩，与 components/nav.css 配套）
+ * @icen.ai/ui — Behavior: nav（scroll 收缩 + 导航项选中，与 components/nav.css 配套）
  *
  * DOM 契约：
  *   <nav class="nav nav--sticky" data-scroll-reactive>…</nav>
@@ -11,11 +11,18 @@
  *   data-nav-hide-on-scroll  → 滚动方向感知（向下滚隐藏、向上/静止恢复）
  *   data-nav-threshold="40"  → 自定义触发阈值（默认 12px）
  *
+ * 导航项选中（nav.css 契约的项类为 .nav-btn / .nav-link，二者同权）：
+ * 点击项 → 同 nav 内其余项互斥摘除 .is-active / aria-current，当前项挂上
+ * .is-active + aria-current="page"，并派发 icen:nav-select { item, index }
+ * （index 为项在本 nav 全部 .nav-btn/.nav-link 中的序号；禁用项不响应）。
+ *
  * 同一元素重复 init 幂等。监听器挂在 window 上，元素从 DOM 移除后**不会**自动回收
  * （window 持有 listener 引用，元素无法随之 GC）——initNav 返回销毁函数，
- * 元素卸载/页面析构时应调用它移除 window scroll/resize 监听。SSR 下为 no-op。
+ * 元素卸载/页面析构时应调用它移除 window scroll/resize 与 nav click 监听。SSR 下为 no-op。
  * prefers-reduced-motion: reduce 时仍同步状态但不依赖动画过渡（视觉上瞬切）。
  */
+
+import { emitIcen } from './events';
 
 interface MarkedNav extends HTMLElement {
   __icenNavInit?: boolean;
@@ -24,6 +31,17 @@ interface MarkedNav extends HTMLElement {
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** nav.css 契约的导航项选择器（按钮式 .nav-btn 与链接式 .nav-link）。 */
+const NAV_ITEM_SELECTOR = '.nav-btn, .nav-link';
+
+function isNavItemDisabled(item: HTMLElement): boolean {
+  return (
+    item.classList.contains('is-disabled') ||
+    item.getAttribute('aria-disabled') === 'true' ||
+    (item instanceof HTMLButtonElement && item.disabled)
+  );
 }
 
 function setup(nav: HTMLElement): (() => void) | undefined {
@@ -77,17 +95,41 @@ function setup(nav: HTMLElement): (() => void) | undefined {
   window.addEventListener('resize', onResize, { passive: true });
   apply();
 
-  /* 销毁：移除 window 级监听并复位幂等标记（可重新 init） */
+  /* 导航项选中：.nav-btn / .nav-link 同 nav 互斥 is-active + aria-current="page" */
+  const onSelect = (ev: Event): void => {
+    const target = ev.target;
+    if (!(target instanceof Element)) return;
+    const item = target.closest<HTMLElement>(NAV_ITEM_SELECTOR);
+    if (!item || item.closest('.nav') !== nav) return;
+    if (isNavItemDisabled(item)) return;
+
+    const items = Array.from(nav.querySelectorAll<HTMLElement>(NAV_ITEM_SELECTOR));
+    const index = items.indexOf(item);
+    if (index === -1) return;
+
+    items.forEach((it) => {
+      if (it === item) return;
+      it.classList.remove('is-active');
+      if (it.getAttribute('aria-current') === 'page') it.removeAttribute('aria-current');
+    });
+    item.classList.add('is-active');
+    item.setAttribute('aria-current', 'page');
+    emitIcen(item, 'icen:nav-select', { item, index });
+  };
+  nav.addEventListener('click', onSelect);
+
+  /* 销毁：移除 window 级监听与 nav 项委托，复位幂等标记（可重新 init） */
   return () => {
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);
+    nav.removeEventListener('click', onSelect);
     el.__icenNavInit = false;
   };
 }
 
 /**
  * 为 root 下每个 .nav[data-scroll-reactive] 初始化（root 自身匹配也算）。
- * 返回销毁函数：移除本次初始化挂上的全部 window scroll/resize 监听。
+ * 返回销毁函数：移除本次初始化挂上的全部 window scroll/resize 与 nav click 监听。
  */
 export function initNav(root?: ParentNode): () => void {
   const cleanups: Array<() => void> = [];

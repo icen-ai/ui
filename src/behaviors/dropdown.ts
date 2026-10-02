@@ -14,6 +14,10 @@
  * ↑↓ 循环高亮（跳过 disabled/separator）、Enter 激活并关闭、Esc 关闭还原焦点、
  * 外点/滚动（捕获）关闭；trigger aria-expanded 同步。SSR 下为 no-op。
  *
+ * 菜单项选中（点击或 Enter）统一派发 icen:menu-select
+ * { source: 面板, item, value: item.dataset.value ?? '', label: textContent 前 80 字 }
+ * ——与 context-menu / command-palette 共用同一事件（统一菜单选中流）。
+ *
  * 面板尺寸走全库统一 PanelSizing 契约（见 behaviors/popover.ts）：
  * 根上 data-panel-width（固定）/ data-panel-min / data-panel-max /
  * data-panel-max-height → 创建面板时内联应用（宽度默认内容驱动，CSS min 180/max 320）。
@@ -23,6 +27,20 @@ const VIEWPORT_MARGIN = 12;
 const SIDE_OFFSET = 4;
 
 import { applyPanelSizing, readPanelSizing } from './popover';
+import { emitIcen } from './events';
+
+/** 菜单选中统一事件（dropdown / context-menu / command-palette 同一契约）。 */
+function emitMenuSelect(source: HTMLElement, item: HTMLElement): void {
+  emitIcen(item, 'icen:menu-select', {
+    source,
+    item,
+    value: item.dataset.value ?? '',
+    /* 优先专用 label 子元素（避开快捷键/图标文本混入），无则退整项文本 */
+    label: (item.querySelector('.menu-item-label, .command-item-label')?.textContent ?? item.textContent ?? '')
+      .trim()
+      .slice(0, 80),
+  });
+}
 
 interface ActiveDropdown {
   trigger: HTMLElement;
@@ -159,31 +177,41 @@ function onKeyDown(e: KeyboardEvent): void {
   if (e.key === 'Enter' && active.highlight >= 0) {
     e.preventDefault();
     const item = items[active.highlight];
+    /* 面板尚在文档内先派 menu-select（关闭后 item 已脱文档，冒泡不可达 document） */
+    emitMenuSelect(active.panel, item);
     closeDropdown(true);
     item.click();
   }
 }
 
-/** 绑定全部 [data-dropdown-trigger]（document 级委托，重复调用安全）。 */
-export function initDropdown(root?: ParentNode): void {
-  if (typeof document === 'undefined') return;
+/**
+ * 绑定全部 [data-dropdown-trigger]（document 级委托，重复调用安全）。
+ * 返回销毁函数：摘除 document 委托并复位幂等标记（销毁后可重新 init）；
+ * 销毁时若有面板开着会顺带收起。SSR 下返回 no-op。
+ */
+export function initDropdown(root?: ParentNode): () => void {
+  if (typeof document === 'undefined') return () => {};
   const scope = root ?? document;
 
   scope
     .querySelectorAll<HTMLElement>('[data-dropdown-trigger]')
     .forEach((el) => el.setAttribute('aria-expanded', 'false'));
 
-  if (initialized) return;
+  if (initialized) return () => {};
   initialized = true;
 
-  document.addEventListener('click', (e) => {
+  const onClick = (e: MouseEvent): void => {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
 
-    // 面板内点击菜单项：激活后关闭（item 自身的 click 监听照常执行）
+    // 面板内点击菜单项：派 menu-select 后关闭（item 自身的 click 监听照常执行）
     if (active && target.closest('.menu-item') && active.panel.contains(target)) {
-      const item = target.closest('.menu-item');
+      const item = target.closest<HTMLElement>('.menu-item');
       if (item) {
+        /* 与 Enter 路径一致：不可选项（.is-disabled/:disabled）不派选中事件 */
+        if (!item.matches('.is-disabled') && !item.matches(':disabled')) {
+          emitMenuSelect(active.panel, item);
+        }
         closeDropdown();
         return;
       }
@@ -193,9 +221,10 @@ export function initDropdown(root?: ParentNode): void {
     if (!trigger) return;
     if (active && active.trigger === trigger) closeDropdown();
     else openDropdown(trigger);
-  });
+  };
+  document.addEventListener('click', onClick);
 
-  document.addEventListener('keydown', (e) => {
+  const onKeyDown = (e: KeyboardEvent): void => {
     if (e.key !== 'ArrowDown') return;
     if (active) return;
     const target = e.target instanceof Element ? e.target : null;
@@ -203,5 +232,15 @@ export function initDropdown(root?: ParentNode): void {
     if (!trigger) return;
     e.preventDefault();
     openDropdown(trigger, true);
-  });
+  };
+  document.addEventListener('keydown', onKeyDown);
+
+  const destroy = (): void => {
+    document.removeEventListener('click', onClick);
+    document.removeEventListener('keydown', onKeyDown);
+    closeDropdown();
+    /* 复位幂等标记，销毁后可重新 init */
+    initialized = false;
+  };
+  return destroy;
 }

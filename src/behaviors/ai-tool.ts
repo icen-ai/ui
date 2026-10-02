@@ -45,7 +45,8 @@
  *   icen:ai-reject  { id, kind }          — data-ai-reject 点击
  *
  * initAiTool / initAiSubagent：每卡片一个监听（accordion 同款 per-container 委托），
- * 幂等（__icenAiToolInit / __icenAiSubagentInit 标记）；动态新增卡片后重跑 init 即可接管。
+ * 幂等（__icenAiToolInit / __icenAiSubagentInit 标记）；动态新增卡片后重跑 init 即可接管；
+ * 返回销毁函数（解绑监听 + 复位标记，AI 族 init 统一约定）。
  * SSR 下为 no-op；文本一律 textContent（禁 innerHTML，SVG 走 ai-core 的 svgIcon() 消毒解析）。
  */
 
@@ -446,10 +447,10 @@ export function renderAiSubagent(el: HTMLElement, model: AiToolCallModel): AiSub
 function setupItem(
   item: HTMLElement,
   kind: 'tool' | 'subagent',
-): void {
+): () => void {
   const marked = item as MarkedElement;
   const flag = kind === 'tool' ? '__icenAiToolInit' : '__icenAiSubagentInit';
-  if (marked[flag]) return;
+  if (marked[flag]) return () => undefined;
   marked[flag] = true;
 
   const headClass = kind === 'tool' ? '.ai-tool-head' : '.ai-subagent-head';
@@ -465,7 +466,7 @@ function setupItem(
     }
   };
 
-  item.addEventListener('click', (ev) => {
+  const onCardClick = (ev: MouseEvent): void => {
     const target = ev.target;
     if (!(target instanceof Element)) return;
 
@@ -487,7 +488,8 @@ function setupItem(
     if (!headEl || ownerOf(headEl) !== item || !head) return;
     item.dataset.aiUserToggled = '1';   /* 手动切换后默认展开策略不再干预 */
     setOpen(head.getAttribute('aria-expanded') !== 'true');
-  });
+  };
+  item.addEventListener('click', onCardClick);
 
   /* 静态卡初始化：默认展开集（error / chart kind / 待审批）首次渲染直接展开 */
   if (body?.hidden) {
@@ -500,27 +502,46 @@ function setupItem(
       delete item.dataset.aiUserToggled;
     }
   }
+
+  return () => {
+    item.removeEventListener('click', onCardClick);
+    marked[flag] = false;
+  };
 }
 
 function initItems(
   root: ParentNode | undefined,
   selector: '.ai-tool' | '.ai-subagent',
   kind: 'tool' | 'subagent',
-): void {
-  if (typeof document === 'undefined') return;
+): Array<() => void> {
+  if (typeof document === 'undefined') return [];
   const scope = root ?? document;
   const items: HTMLElement[] = [];
   if (scope instanceof Element && scope.matches(selector)) items.push(scope as HTMLElement);
   items.push(...Array.from(scope.querySelectorAll<HTMLElement>(selector)));
-  for (const item of items) setupItem(item, kind);
+  return items.map((item) => setupItem(item, kind));
 }
 
-/** 初始化 root 下所有工具调用卡（root 自身是 .ai-tool 也算）。重复调用幂等。 */
-export function initAiTool(root?: ParentNode): void {
-  initItems(root, '.ai-tool', 'tool');
+/**
+ * 初始化 root 下所有工具调用卡（root 自身是 .ai-tool 也算）。重复调用幂等；
+ * 返回销毁函数（复刻 initAiChat 约定：解绑全部卡片监听并复位幂等标记）。
+ */
+export function initAiTool(root?: ParentNode): () => void {
+  const cleanups = initItems(root, '.ai-tool', 'tool');
+  return () => {
+    for (const fn of cleanups) fn();
+    cleanups.length = 0;
+  };
 }
 
-/** 初始化 root 下所有子智能体卡（含嵌套；root 自身是 .ai-subagent 也算）。重复调用幂等。 */
-export function initAiSubagent(root?: ParentNode): void {
-  initItems(root, '.ai-subagent', 'subagent');
+/**
+ * 初始化 root 下所有子智能体卡（含嵌套；root 自身是 .ai-subagent 也算）。重复调用幂等；
+ * 返回销毁函数（复刻 initAiChat 约定：解绑全部卡片监听并复位幂等标记）。
+ */
+export function initAiSubagent(root?: ParentNode): () => void {
+  const cleanups = initItems(root, '.ai-subagent', 'subagent');
+  return () => {
+    for (const fn of cleanups) fn();
+    cleanups.length = 0;
+  };
 }

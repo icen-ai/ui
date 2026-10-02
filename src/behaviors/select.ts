@@ -40,6 +40,7 @@
  */
 
 import { computePopoverLayout, resolvePanelSizing } from './popover';
+import { emitIcen } from './events';
 
 interface MarkedSelect extends Element {
   __icenSelectInit?: boolean;
@@ -107,16 +108,21 @@ function unbindOpenListeners(): void {
   window.removeEventListener('resize', onWindowChange);
 }
 
-function setup(container: Element): void {
+function setup(container: Element): () => void {
   const el = container as MarkedSelect;
-  if (el.__icenSelectInit) return;
+  if (el.__icenSelectInit) return () => {};
   el.__icenSelectInit = true;
+  /* 本容器全部监听挂同一 AbortSignal：销毁一次摘净，销毁后可重新 init */
+  const ac = new AbortController();
+  const on = (t: EventTarget, ev: string, fn: (e: never) => void): void => {
+    t.addEventListener(ev, fn as never, { signal: ac.signal });
+  };
 
   const triggerEl = container.querySelector<HTMLButtonElement>('.select-trigger');
   const panelEl = container.querySelector<HTMLElement>('.select-panel');
   const valueEl = container.querySelector<HTMLElement>('.select-value');
   const hiddenInput = container.querySelector<HTMLInputElement>('input[data-select-value]');
-  if (!triggerEl || !panelEl) return;
+  if (!triggerEl || !panelEl) return () => {};
   // 闭包内不保留 narrowing，转为非空常量
   const trigger = triggerEl;
   const panel = panelEl;
@@ -227,9 +233,9 @@ function setup(container: Element): void {
   }
 
   if (searchInput) {
-    searchInput.addEventListener('input', () => filterOptions(searchInput!.value));
+    on(searchInput, 'input', () => filterOptions(searchInput!.value));
     // 阻止搜索框的按键冒泡到 document 级处理
-    searchInput.addEventListener('keydown', (ev) => {
+    on(searchInput, 'keydown', (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') {
         ev.stopPropagation();
         searchInput!.value = '';
@@ -344,8 +350,8 @@ function setup(container: Element): void {
         x.setAttribute('tabindex', '-1');
         x.setAttribute('aria-label', `移除 ${label}`);
         x.textContent = '×';
-        x.addEventListener('pointerdown', (ev) => ev.stopPropagation());
-        x.addEventListener('click', (ev) => {
+        on(x, 'pointerdown', (ev: PointerEvent) => ev.stopPropagation());
+        on(x, 'click', (ev: MouseEvent) => {
           ev.stopPropagation();
           ev.preventDefault();
           o.classList.remove('is-selected');
@@ -377,8 +383,14 @@ function setup(container: Element): void {
   }
 
   function syncHiddenInput(): void {
-    if (!hiddenInput) return;
     const values = getSelectedValues();
+    /* 领域事件走 icen: 契约；hidden input 的原生 change 保留给表单框架（双通道） */
+    const label = allOptions()
+      .filter((o) => o.classList.contains('is-selected'))
+      .map((o) => (o.textContent ?? '').trim())
+      .join(', ');
+    emitIcen(container, 'icen:select-change', { value: values[0] ?? '', values, label });
+    if (!hiddenInput) return;
     hiddenInput.value = isMultiple ? values.join(',') : (values[0] ?? '');
     hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
   }
@@ -414,18 +426,18 @@ function setup(container: Element): void {
   // ── 清除全部按钮（多选可选；与 trigger 同级叠放右侧，不能嵌套进 button）──
   const clearBtn = container.querySelector<HTMLElement>('.select-clear');
   if (clearBtn && isMultiple) {
-    clearBtn.addEventListener('click', (ev) => {
+    on(clearBtn, 'click', (ev: MouseEvent) => {
       ev.stopPropagation();
       allOptions().forEach((o) => o.classList.remove('is-selected'));
       updateMultiTrigger();
       syncHiddenInput();
     });
-    clearBtn.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+    on(clearBtn, 'pointerdown', (ev: PointerEvent) => ev.stopPropagation());
   }
 
-  trigger.addEventListener('click', () => (isOpen() ? closePanel() : openPanel()));
+  on(trigger, 'click', () => (isOpen() ? closePanel() : openPanel()));
 
-  trigger.addEventListener('keydown', (ev) => {
+  on(trigger, 'keydown', (ev: KeyboardEvent) => {
     if (!isOpen()) {
       if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp' || ev.key === 'Enter' || ev.key === ' ') {
         ev.preventDefault(); // 阻止 button 原生 click 激活，避免双 toggle
@@ -447,7 +459,7 @@ function setup(container: Element): void {
     }
   });
 
-  panel.addEventListener('click', (ev) => {
+  on(panel, 'click', (ev: MouseEvent) => {
     const t = ev.target;
     if (!(t instanceof Element)) return;
     const opt = t.closest('.select-option');
@@ -455,7 +467,7 @@ function setup(container: Element): void {
   });
 
   // 悬停同步键盘焦点态，鼠标与键盘看到同一个 is-focused
-  panel.addEventListener('mouseover', (ev) => {
+  on(panel, 'mouseover', (ev: MouseEvent) => {
     const t = ev.target;
     if (!(t instanceof Element)) return;
     const opt = t.closest('.select-option');
@@ -466,16 +478,43 @@ function setup(container: Element): void {
 
   // 初始化：多选 trigger 回填
   if (isMultiple) updateMultiTrigger();
+
+  return (): void => {
+    ac.abort();
+    el.__icenSelectInit = false;
+  };
 }
 
-/** 为 root 下每个 [data-select] 容器初始化（root 自身是 [data-select] 也算）。 */
-export function initSelect(root?: ParentNode): void {
-  if (typeof document === 'undefined') return;
+/** 活跃容器销毁器（最后一个销毁时连带摘除全局委托）。 */
+const activeSetups = new Set<() => void>();
+
+/** 为 root 下每个 [data-select] 容器初始化（root 自身是 [data-select] 也算）。
+ *  返回销毁函数：摘除本次初始化容器的全部监听并复位幂等标记（可重新 init）；
+ *  最后一个容器销毁时同时摘除 document 级单例委托。 */
+export function initSelect(root?: ParentNode): () => void {
+  if (typeof document === 'undefined') return () => {};
   const scope = root ?? document;
   // 外点 / Esc 的 document 级单例委托，全库只挂一次
   bindGlobalListeners();
   const containers: Element[] = [];
   if (scope instanceof Element && scope.matches('[data-select]')) containers.push(scope);
   containers.push(...Array.from(scope.querySelectorAll('[data-select]')));
-  for (const c of containers) setup(c);
+  const disposers: Array<() => void> = [];
+  for (const c of containers) {
+    const dispose = setup(c);
+    activeSetups.add(dispose);
+    disposers.push(dispose);
+  }
+  return (): void => {
+    for (const d of disposers) {
+      d();
+      activeSetups.delete(d);
+    }
+    /* 最后一个容器销毁时摘除 document 级单例委托，销毁后可重新 init */
+    if (activeSetups.size === 0 && globalBound) {
+      document.removeEventListener('pointerdown', onGlobalPointerDown);
+      document.removeEventListener('keydown', onGlobalKeyDown);
+      globalBound = false;
+    }
+  };
 }

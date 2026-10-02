@@ -18,8 +18,10 @@
  *   data-back-top-offset="0"        滚动到多少 px（默认 0）
  *
  * 同一元素重复 init 幂等；initBackTop 返回销毁函数（移除 scroll/resize/click 监听）。
- * SSR 下为 no-op。
+ * 点击回顶动作时从按钮派发 icen:back-top {}（bubbles）。SSR 下为 no-op。
  */
+
+import { emitIcen } from './events';
 
 interface MarkedBtn extends HTMLElement {
   __icenBackTopInit?: boolean;
@@ -105,7 +107,10 @@ function setup(btn: HTMLElement, opts: BackTopOptions = {}): (() => void) | unde
   scrollHost.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
 
-  const onClick = (): void => scrollToTop(target, offset);
+  const onClick = (): void => {
+    scrollToTop(target, offset);
+    emitIcen(btn, 'icen:back-top', {});
+  };
   btn.addEventListener('click', onClick);
 
   apply();

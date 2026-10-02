@@ -38,7 +38,8 @@
  */
 
 import { openContextMenu, type ContextMenuItem } from './context-menu';
-import { readPanelSizing } from './popover';
+import { emitIcen } from './events';
+import { applyPanelSizing, computePopoverLayout, readPanelSizing, resolvePanelSizing } from './popover';
 
 export interface TableColumn<Row = Record<string, unknown>> {
   key: string;
@@ -94,6 +95,14 @@ export interface TableOptions<Row = Record<string, unknown>> {
   onSelectionChange?: (rows: Row[]) => void;
   onRowClick?: (row: Row) => void;
   onSortChange?: (key: string | null, dir: 'asc' | 'desc') => void;
+  /** 搜索谓词（默认跨列 String includes；自定义拼音/高亮/索引匹配） */
+  searchFn?: (query: string, row: Row) => boolean;
+  /** 服务端/受控分页：开启后翻页只派事件与回调，不再本地切片（配 totalCount + setData/setPage 喂数） */
+  remote?: boolean;
+  /** remote 模式总条数（缺省 data.length） */
+  totalCount?: number;
+  onPageChange?: (page: number, pageSize: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export interface TableHandle<Row = Record<string, unknown>> {
@@ -110,6 +119,9 @@ export interface TableHandle<Row = Record<string, unknown>> {
   exportCSV(filename?: string): void;
   /** 显示/隐藏列 */
   showColumn(key: string): void;
+  /** 外部驱动页码（remote 模式与服务端同步） */
+  setPage(page: number): void;
+  setPageSize(size: number): void;
   hideColumn(key: string): void;
   /** 数据被外部原地修改后重渲 */
   refresh(): void;
@@ -152,6 +164,7 @@ function noopHandle<Row>(): TableHandle<Row> {
     setData: noop, getSelected: () => [], clearSelection: noop,
     setSearch: noop, setFilter: noop, setSort: noop, refresh: noop, destroy: noop,
     getData: () => [], exportCSV: noop, showColumn: noop, hideColumn: noop,
+    setPage: noop, setPageSize: noop,
   };
 }
 
@@ -216,7 +229,9 @@ export function createTable<Row = Record<string, unknown>>(
     if (search) {
       const q = search.toLowerCase();
       rows = rows.filter((row) =>
-        cols().some((c) => String(row[c.key as keyof Row] ?? '').toLowerCase().includes(q)),
+        opts.searchFn
+          ? opts.searchFn(search, row)
+          : cols().some((c) => String(row[c.key as keyof Row] ?? '').toLowerCase().includes(q)),
       );
     }
     if (filters.size > 0) {
@@ -380,6 +395,23 @@ export function createTable<Row = Record<string, unknown>>(
   /* 筛选面板 portal 到 body（.dt-scroll 有 overflow，绝对定位会被裁切） */
   let openPanel: { key: string; el: HTMLElement } | null = null;
 
+/** 浮层面板定位走全库 PanelSizing 契约：根 data-panel-* 可覆盖宽/高度上限，
+    视口翻转/夹取复用 computePopoverLayout（与 popover 家族同一布局纪律）。 */
+  function positionDropdownPanel(panel: HTMLElement, btn: HTMLElement): void {
+    panel.hidden = false;
+    const sizing = resolvePanelSizing(root);
+    applyPanelSizing(panel, sizing);
+    const rect = btn.getBoundingClientRect();
+    const pr = panel.getBoundingClientRect();
+    const layout = computePopoverLayout(
+      { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height },
+      { width: window.innerWidth, height: window.innerHeight },
+      { side: 'bottom', align: 'end', offset: 4, margin: 8, minWidth: Math.max(pr.width, 180), maxWidth: Math.max(pr.width, 180), contentHeightHint: pr.height, maxHeight: sizing.maxHeight },
+    );
+    panel.style.left = `${layout.left}px`;
+    panel.style.top = `${layout.top}px`;
+  }
+
   function onPanelScroll(ev: Event): void {
     if (openPanel && ev.target instanceof Node && openPanel.el.contains(ev.target)) return;
     closeFilterPanel();
@@ -400,15 +432,7 @@ export function createTable<Row = Record<string, unknown>>(
     openPanel = { key: col.key, el: panel };
     btn.classList.add('is-open');
 
-    const rect = btn.getBoundingClientRect();
-    const pr = panel.getBoundingClientRect();
-    let x = rect.right - pr.width;
-    let y = rect.bottom + 4;
-    if (x < 8) x = 8;
-    if (y + pr.height > window.innerHeight - 8) y = rect.top - pr.height - 4;
-    panel.style.left = `${x}px`;
-    panel.style.top = `${y}px`;
-    panel.hidden = false;
+    positionDropdownPanel(panel, btn);
 
     window.addEventListener('scroll', onPanelScroll, true);
     window.addEventListener('resize', onPanelScroll);
@@ -470,6 +494,7 @@ export function createTable<Row = Record<string, unknown>>(
           else if (sortDir === 'asc') sortDir = 'desc';
           else sortKey = null;
           invalidate();
+          if (sortKey) emitIcen(root, 'icen:table-sort-change', { key: sortKey, dir: sortDir });
           opts.onSortChange?.(sortKey, sortDir);
           renderAll();
         };
@@ -598,6 +623,7 @@ export function createTable<Row = Record<string, unknown>>(
       box.addEventListener('change', () => {
         if (box.checked) colHidden.delete(col.key);
         else colHidden.set(col.key, true);
+        emitIcen(root, 'icen:table-columns-change', { hidden: Array.from(colHidden.keys()) });
         invalidate();
         /* 列增删要重建表头，但面板保持打开（与筛选面板同纪律） */
         renderBody();
@@ -612,15 +638,7 @@ export function createTable<Row = Record<string, unknown>>(
     document.body.appendChild(panel);
     openPanel = { key: '__cols', el: panel };
 
-    const rect = btn.getBoundingClientRect();
-    const pr = panel.getBoundingClientRect();
-    let x = rect.right - pr.width;
-    let y = rect.bottom + 4;
-    if (x < 8) x = 8;
-    if (y + pr.height > window.innerHeight - 8) y = rect.top - pr.height - 4;
-    panel.style.left = `${x}px`;
-    panel.style.top = `${y}px`;
-    panel.hidden = false;
+    positionDropdownPanel(panel, btn);
     window.addEventListener('scroll', onPanelScroll, true);
     window.addEventListener('resize', onPanelScroll);
   }
@@ -628,6 +646,7 @@ export function createTable<Row = Record<string, unknown>>(
   /* ── CSV 导出（当前管线数据） ── */
   function exportCSV(filename?: string): void {
     const rows = pipeline();
+    emitIcen(root, 'icen:table-export', { count: rows.length });
     const visible = cols();
     const header = visible.map((c) => csvEscape(c.title)).join(',');
     const lines = rows.map((row) =>
@@ -671,6 +690,7 @@ export function createTable<Row = Record<string, unknown>>(
         else cur.delete(v);
         if (cur.size === values.length) filters.delete(col.key);
         else filters.set(col.key, cur);
+        emitIcen(root, 'icen:table-filter-change', { key: col.key, values: Array.from(filters.get(col.key) ?? []) });
         invalidate();
         page = 1;
         /* 只重渲表体/底部 + 同步表头徽标，不重建表头（renderHead 会关掉本面板） */
@@ -752,7 +772,7 @@ export function createTable<Row = Record<string, unknown>>(
         lastClickedIndex = rowIndex;
         emitSelection();
         syncHeadState();
-        renderFoot(pipeline().length);
+        renderFoot(opts.remote ? (opts.totalCount ?? data.length) : pipeline().length);
       });
       cell.appendChild(box);
       tr.appendChild(cell);
@@ -770,6 +790,7 @@ export function createTable<Row = Record<string, unknown>>(
         ev.stopPropagation();
         if (expanded.has(key)) expanded.delete(key);
         else expanded.add(key);
+        emitIcen(root, 'icen:table-row-toggle', { row, index: rowIndex, expanded: expanded.has(key) });
         renderBody();
       });
       cell.appendChild(btn);
@@ -794,6 +815,9 @@ export function createTable<Row = Record<string, unknown>>(
       tr.classList.add('is-clickable');
       tr.addEventListener('click', () => opts.onRowClick!(row));
     }
+    tr.addEventListener('click', () => {
+      emitIcen(root, 'icen:table-row-click', { row, index: rowIndex });
+    });
     if (opts.contextMenu) {
       tr.addEventListener('contextmenu', (ev) => {
         ev.preventDefault();
@@ -818,7 +842,7 @@ export function createTable<Row = Record<string, unknown>>(
   /* ── 表体渲染（分页切片 / 虚拟窗口） ── */
   function visibleRange(total: number): [number, number] {
     if (!virtual) {
-      if (opts.pagination === false) return [0, total];
+      if (opts.remote || opts.pagination === false) return [0, total];
       const start = (page - 1) * pageSize;
       return [start, Math.min(total, start + pageSize)];
     }
@@ -831,7 +855,7 @@ export function createTable<Row = Record<string, unknown>>(
 
   function renderBody(): void {
     const rows = pipeline();
-    const total = rows.length;
+    const total = opts.remote ? (opts.totalCount ?? data.length) : rows.length;
     /* 虚拟模式：清空 body 会塌掉 scrollHeight 导致 scrollTop 被浏览器夹回 0，
        先记下滚动位置，重渲后恢复（恢复为同值不会再触发 scroll） */
     const keepTop = virtual ? scroll.scrollTop : 0;
@@ -931,6 +955,10 @@ export function createTable<Row = Record<string, unknown>>(
     sizeSel.addEventListener('change', () => {
       pageSize = Number(sizeSel.value);
       page = 1;
+      emitIcen(root, 'icen:table-page-size-change', { pageSize });
+      emitIcen(root, 'icen:table-page-change', { page, pageSize });
+      opts.onPageSizeChange?.(pageSize);
+      opts.onPageChange?.(page, pageSize);
       renderAll();
     });
     pager.appendChild(sizeSel);
@@ -943,7 +971,12 @@ export function createTable<Row = Record<string, unknown>>(
       b.disabled = opts2.disabled === true;
       b.textContent = label;
       if (opts2.aria) b.setAttribute('aria-label', opts2.aria);
-      b.addEventListener('click', () => { page = target; renderAll(); });
+      b.addEventListener('click', () => {
+        page = target;
+        emitIcen(root, 'icen:table-page-change', { page, pageSize });
+        opts.onPageChange?.(page, pageSize);
+        renderAll();
+      });
       return b;
     };
 
@@ -974,6 +1007,7 @@ export function createTable<Row = Record<string, unknown>>(
     window.clearTimeout(searchTimer);
     searchTimer = window.setTimeout(() => {
       search = searchInput?.value.trim() ?? '';
+      emitIcen(root, 'icen:table-search-change', { query: search });
       invalidate();
       page = 1;
       renderAll();
@@ -1001,9 +1035,9 @@ export function createTable<Row = Record<string, unknown>>(
   document.addEventListener('keydown', onDocKeydown);
 
   function emitSelection(): void {
-    if (!opts.onSelectionChange) return;
     const rows = data.filter((r) => selected.has(keyOfRow(r)));
-    opts.onSelectionChange(rows);
+    emitIcen(root, 'icen:table-selection-change', { selected: rows });
+    opts.onSelectionChange?.(rows);
   }
 
   function renderAll(): void {
@@ -1015,7 +1049,28 @@ export function createTable<Row = Record<string, unknown>>(
   rekey();
   renderAll();
 
+  /** 外部驱动页码（remote 模式与服务端同步；本地模式也可用于「跳到第 N 页」） */
+  function setPage(n: number): void {
+    if (!Number.isFinite(n) || n < 1) return;
+    page = Math.round(n);
+    emitIcen(root, 'icen:table-page-change', { page, pageSize });
+    opts.onPageChange?.(page, pageSize);
+    renderAll();
+  }
+  function setPageSize(n: number): void {
+    if (!Number.isFinite(n) || n <= 0) return;
+    pageSize = Math.round(n);
+    page = 1;
+    emitIcen(root, 'icen:table-page-size-change', { pageSize });
+    emitIcen(root, 'icen:table-page-change', { page, pageSize });
+    opts.onPageSizeChange?.(pageSize);
+    opts.onPageChange?.(page, pageSize);
+    renderAll();
+  }
+
   return {
+    setPage,
+    setPageSize,
     setData(next) { data = next; rekey(); invalidate(); page = 1; renderAll(); },
     getSelected() { return data.filter((r) => selected.has(keyOfRow(r))); },
     clearSelection() { selected.clear(); emitSelection(); renderAll(); },

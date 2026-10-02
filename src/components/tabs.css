@@ -221,3 +221,26 @@
 @media (prefers-reduced-motion: reduce) {
   .page-tab, .tabs a, .page-tab-close { transition: none; }
 }
+
+/* ── 指示条（[data-tabs-ink]，与 behaviors/tabs 配套；本节为追加）── */
+/* tablist（.tabs）挂 data-tabs-ink 时，行为层创建并移动 .tabs-ink：
+   宽 / translateX 由 JS 内联写入（布局定位，同 popover 模式）；
+   此处只负责视觉（高度 / 圆角 / 背景）与位移过渡（--duration / --ease token）。 */
+.tabs[data-tabs-ink] {
+  position: relative;
+}
+.tabs-ink {
+  position: absolute;
+  bottom: -1px; /* 盖在容器 1px 底边线上，与活动 tab 的 2px 下划线同高 */
+  left: 0;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: var(--token-accent);
+  pointer-events: none;
+  transition:
+    width var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tabs-ink { transition: none; }
+}

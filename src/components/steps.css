@@ -14,7 +14,8 @@
  *   </ol>
  *
  * 四态：finish / process / wait / error（错误用 error 色 dot + 描边）。
- * 点击 .step[role=button] 由使用方实现跳转。
+ * 点击 .step[role=button] 由 behaviors/controls.ts 的 initSteps() 接线（激活态位移 +
+ * icen:step-change）；跳转业务仍由使用方监听事件实现。
  */
 
 .steps {

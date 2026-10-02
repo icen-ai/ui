@@ -109,7 +109,8 @@ const bootData = JSON.stringify({
 
     type BootData = {
       behaviors?: string[];
-      init?: Record<string, string>;
+      /** 模块 → init 函数名（string 或 string[]：同一模块多个 init 依序执行） */
+      init?: Record<string, string | string[]>;
       script?: string;
     };
 
@@ -137,8 +138,11 @@ const bootData = JSON.stringify({
       // 按注册表给出的 init 函数名初始化（accordion→initAccordion 等）
       for (const b of data.behaviors ?? []) {
         const initName = data.init?.[b];
-        const fn = initName ? loaded[b]?.[initName] : undefined;
-        if (typeof fn === 'function') (fn as () => void)();
+        const names = Array.isArray(initName) ? initName : initName ? [initName] : [];
+        for (const n of names) {
+          const fn = loaded[b]?.[n];
+          if (typeof fn === 'function') (fn as () => void)();
+        }
       }
       // 额外接线脚本（charts 渲染数据、context-menu 注册、演示回显等），
       // 以 camelCase + 'Mod' 形参暴露各模块（context-menu → contextMenuMod）。

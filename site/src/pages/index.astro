@@ -37,6 +37,13 @@ const PRESET_SWATCHES = [
   { id: 'retro',   name: 'retro 复古',   bg: '#f0f0e8', accent: '#d03030', cold: '#3030a0' },
 ] as const;
 
+import { readdirSync } from 'node:fs';
+import { SLUGS } from '../../../scripts/slugs.mjs';
+/* 数字带全部构建期派生（src/behaviors 目录 + SLUGS 清单），发版永不漂移 */
+const behaviorCount = readdirSync(new URL('../../../src/behaviors', import.meta.url)).filter((f) => f.endsWith('.ts')).length;
+const chartKitCount = SLUGS.filter((s) => s.startsWith('chart-')).length;
+const aiCount = SLUGS.filter((s) => s.startsWith('ai-')).length;
+
 const importCss = `import '@icen.ai/ui/tokens.css';
 import '@icen.ai/ui/ui.css';`;
 const htmlPreset = `<html class="piano dark"> … </html>`;
@@ -95,9 +102,9 @@ const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="no
       <!-- 数字带：一眼看清规模（滚动入场时计数） -->
       <div class="hero-stats fade-up fade-up--4" role="list">
         <div class="hero-stat" role="listitem"><b data-count={COMPONENTS.length}>0</b><span>kit 入口</span></div>
-        <div class="hero-stat" role="listitem"><b data-count="33">0</b><span>行为模块</span></div>
-        <div class="hero-stat" role="listitem"><b data-count="12">0</b><span>图表类型</span></div>
-        <div class="hero-stat" role="listitem"><b data-count="11">0</b><span>AI 原生</span></div>
+        <div class="hero-stat" role="listitem"><b data-count={behaviorCount}>0</b><span>行为模块</span></div>
+        <div class="hero-stat" role="listitem"><b data-count={chartKitCount}>0</b><span>图表 kit</span></div>
+        <div class="hero-stat" role="listitem"><b data-count={aiCount}>0</b><span>AI 原生</span></div>
         <div class="hero-stat" role="listitem"><b data-count="0">0</b><span>运行时依赖</span></div>
       </div>
     </div>

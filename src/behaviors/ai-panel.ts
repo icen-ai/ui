@@ -43,7 +43,8 @@
  *
  * 行为：
  *   - renderAiTodo(el, items)：DOM API 渲染；进度 x/y + 进度条（feedback progress 视觉，token 消费）；
- *     is-running 项以 activeForm 替换原文案（CSS 驱动，JS 同步类名）
+ *     is-running 项以 activeForm 替换原文案（CSS 驱动，JS 同步类名）。
+ *     render* 系列统一返回挂载容器 el（「render* 返回挂载元素」约定，SSR 原样返回）
  *   - initAiTodo(root?)：幂等（__icenAiTodoInit）；仅 data-ai-todo-interactive 容器可交互，
  *     点击/Enter/Space 循环 pending→running→done→pending，更新状态类/进度/aria，
  *     派 icen:ai-todo-toggle {index, status}（bubbles）；默认只读。返回销毁函数
@@ -54,6 +55,7 @@
  *   - initAiContext(root?)：幂等（__icenAiContextInit）；[data-ai-context-open] 委托开合
  *     （属性值可作 #id / 类选择器，空值取默认抽屉），抽屉 fixed 右侧滑入（--z-chrome），
  *     Esc / 外点 / [data-ai-context-close] 关闭并还原焦点；Tab 焦点圈禁；
+ *     开/合从抽屉根派 icen:ai-context-open {} / icen:ai-context-close {}；
  *     .ai-context--inline 为页面流内嵌变体（不参与开合）。返回销毁函数
  *   - renderAiAudit(el, source, opts?)（§12.2）：审计面板——totals（请求数/失败/累计
  *     tokens/累计成本/平均 TTFT）+ byModel 分组 + 最近条目（默认 10，最新在前）；
@@ -71,12 +73,13 @@ import {
   type AiUsage,
 } from './ai-core';
 import { closePopover, openPopover } from './popover';
-import { emitIcen } from './events';
+import { emitIcen, type IcenEventMap } from './events';
 import type { AiAuditEntry, AiAuditor } from './ai-provider';
 
 /* ── 小工具 ── */
 
-function el<K extends keyof HTMLElementTagNameMap>(
+/* DOM 工厂（与 ai-tool.ts 的 h() 同款；不叫 el 是为给 render* 的容器参数 el 让名） */
+function h<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   className: string,
   text?: string,
@@ -87,7 +90,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-function dispatch(node: Element, name: string, detail: unknown): void {
+function dispatch<K extends keyof IcenEventMap>(node: Element, name: K, detail: IcenEventMap[K]): void {
   emitIcen(node, name, detail);
 }
 
@@ -109,9 +112,9 @@ export interface AiTodoItem {
 }
 
 function buildTodoHead(done: number, total: number): HTMLElement {
-  const head = el('div', 'ai-todo-head');
-  head.appendChild(el('span', 'ai-todo-progress', `${done}/${total}`));
-  const bar = el('div', 'ai-todo-bar');
+  const head = h('div', 'ai-todo-head');
+  head.appendChild(h('span', 'ai-todo-progress', `${done}/${total}`));
+  const bar = h('div', 'ai-todo-bar');
   bar.setAttribute('role', 'progressbar');
   bar.setAttribute('aria-valuemin', '0');
   bar.setAttribute('aria-valuemax', String(total));
@@ -125,28 +128,30 @@ function buildTodoHead(done: number, total: number): HTMLElement {
 }
 
 function buildTodoItem(item: AiTodoItem, index: number): HTMLElement {
-  const row = el('div', `ai-todo-item is-${item.status}`);
+  const row = h('div', `ai-todo-item is-${item.status}`);
   row.dataset.index = String(index);
-  row.appendChild(el('span', 'ai-item-status'));
-  row.appendChild(el('span', 'ai-todo-text', item.content));
+  row.appendChild(h('span', 'ai-item-status'));
+  row.appendChild(h('span', 'ai-todo-text', item.content));
   /* activeForm 缺省时退化为 content，保证 is-running 替换后不空 */
-  row.appendChild(el('span', 'ai-todo-active', item.activeForm ?? item.content));
+  row.appendChild(h('span', 'ai-todo-active', item.activeForm ?? item.content));
   return row;
 }
 
 /**
  * 渲染 todo 列表（DOM API，全 textContent）。全部完成时容器加 .is-complete。
+ * 返回挂载容器 el（render* 返回挂载元素约定，SSR 下原样返回）。
  */
-export function renderAiTodo(elm: HTMLElement, items: AiTodoItem[]): void {
-  if (typeof document === 'undefined') return;
-  elm.textContent = '';
-  const root = el('div', 'ai-todo');
+export function renderAiTodo(el: HTMLElement, items: AiTodoItem[]): HTMLElement {
+  if (typeof document === 'undefined') return el;
+  el.textContent = '';
+  const root = h('div', 'ai-todo');
   const list = Array.isArray(items) ? items : [];
   const done = list.filter((i) => i.status === 'done').length;
   root.appendChild(buildTodoHead(done, list.length));
   list.forEach((item, i) => root.appendChild(buildTodoItem(item, i)));
   if (list.length > 0 && done === list.length) root.classList.add('is-complete');
-  elm.appendChild(root);
+  el.appendChild(root);
+  return el;
 }
 
 interface MarkedScope extends ParentNode {
@@ -276,15 +281,15 @@ interface UsageSeg {
 }
 
 /**
- * 渲染用量分段条 + 图例 + 占比。
+ * 渲染用量分段条 + 图例 + 占比。返回挂载容器 el（render* 返回挂载元素约定）。
  * 配色契约：input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint。
  */
 export function renderAiUsage(
-  elm: HTMLElement,
+  el: HTMLElement,
   usage: AiUsage,
   opts: AiUsageRenderOpts = {},
-): void {
-  if (typeof document === 'undefined') return;
+): HTMLElement {
+  if (typeof document === 'undefined') return el;
   const u = normalizeUsage(usage);
 
   const segs: UsageSeg[] = [
@@ -298,11 +303,11 @@ export function renderAiUsage(
   const sum = activeSegs.reduce((acc, s) => acc + s.value, 0);
   const total = u.total ?? sum;
 
-  elm.textContent = '';
-  const root = el('div', 'ai-usage');
+  el.textContent = '';
+  const root = h('div', 'ai-usage');
 
   /* 分段条 */
-  const bar = el('div', 'ai-usage-bar');
+  const bar = h('div', 'ai-usage-bar');
   const summary = activeSegs.length > 0
     ? activeSegs.map((s) => `${s.label} ${formatTokens(s.value)}`).join('，')
     : '暂无用量';
@@ -318,15 +323,15 @@ export function renderAiUsage(
 
   /* 图例（缓存分列，计费诚实） */
   if (activeSegs.length > 0) {
-    const legend = el('div', 'ai-usage-legend');
+    const legend = h('div', 'ai-usage-legend');
     for (const s of activeSegs) {
-      const item = el('span', 'ai-usage-legend-item');
+      const item = h('span', 'ai-usage-legend-item');
       const dot = document.createElement('i');
       dot.className = `ai-usage-dot ${s.className}`;
       dot.setAttribute('aria-hidden', 'true');
       item.appendChild(dot);
-      item.appendChild(el('span', 'ai-usage-legend-label', s.label));
-      item.appendChild(el('span', 'ai-usage-legend-value', formatTokens(s.value)));
+      item.appendChild(h('span', 'ai-usage-legend-label', s.label));
+      item.appendChild(h('span', 'ai-usage-legend-value', formatTokens(s.value)));
       legend.appendChild(item);
     }
     root.appendChild(legend);
@@ -341,9 +346,10 @@ export function renderAiUsage(
   if (typeof opts.cost === 'number' && Number.isFinite(opts.cost)) {
     totalParts.push(` · $${opts.cost.toFixed(4)}`);
   }
-  root.appendChild(el('div', 'ai-usage-total', totalParts.join('')));
+  root.appendChild(h('div', 'ai-usage-total', totalParts.join('')));
 
-  elm.appendChild(root);
+  el.appendChild(root);
+  return el;
 }
 
 /* ══════════════ ai-usage-ring（上下文窗口环形指示器，§4.9 变体） ══════════════ */
@@ -359,14 +365,14 @@ export interface AiUsageRingOpts extends AiUsageRenderOpts {
  * opts.total 给上下文窗口上限（如 200000）——环填充比 = 已用 / total；
  * 缺省 total 时环不填充、中心显示已用量。
  * 状态档：<60% is-ok（accent）/ 60–85% is-warn / >85% is-hot（error）。
- * 重复调用重渲染；打开中的弹层会被关闭重建。
+ * 重复调用重渲染；打开中的弹层会被关闭重建。返回挂载容器 el。
  */
 export function renderAiUsageRing(
-  elm: HTMLElement,
+  el: HTMLElement,
   usage: AiUsage,
   opts: AiUsageRingOpts = {},
-): void {
-  if (typeof document === 'undefined') return;
+): HTMLElement {
+  if (typeof document === 'undefined') return el;
   const u = normalizeUsage(usage);
   const used =
     u.total ??
@@ -374,8 +380,8 @@ export function renderAiUsageRing(
   const hasLimit = typeof opts.total === 'number' && opts.total > 0;
   const pct = hasLimit ? Math.min(100, Math.max(0, Math.round((used / (opts.total as number)) * 100))) : 0;
 
-  elm.textContent = '';
-  const btn = el('button', 'ai-usage-ring');
+  el.textContent = '';
+  const btn = h('button', 'ai-usage-ring');
   btn.type = 'button';
   btn.classList.add(pct >= 85 ? 'is-hot' : pct >= 60 ? 'is-warn' : 'is-ok');
   btn.setAttribute('aria-haspopup', 'true');
@@ -401,7 +407,7 @@ export function renderAiUsageRing(
     svg.appendChild(c);
   }
   btn.appendChild(svg);
-  btn.appendChild(el('span', 'ai-usage-ring-pct', hasLimit ? `${pct}%` : formatTokens(used)));
+  btn.appendChild(h('span', 'ai-usage-ring-pct', hasLimit ? `${pct}%` : formatTokens(used)));
 
   /* 点击开/关弹层（弹层为一次性动态面板，关闭即移除） */
   let panel: HTMLElement | null = null;
@@ -417,10 +423,10 @@ export function renderAiUsageRing(
       closePanel();
       return;
     }
-    const p = el('div', 'popover ai-usage-popover');
+    const p = h('div', 'popover ai-usage-popover');
     p.hidden = true;
-    p.appendChild(el('div', 'ai-usage-popover-title', opts.title ?? '上下文窗口'));
-    const body = el('div', 'ai-usage-popover-body');
+    p.appendChild(h('div', 'ai-usage-popover-title', opts.title ?? '上下文窗口'));
+    const body = h('div', 'ai-usage-popover-body');
     renderAiUsage(body, usage, opts);
     p.appendChild(body);
     openPopover(p, {
@@ -435,7 +441,8 @@ export function renderAiUsageRing(
     panel = p;
   });
 
-  elm.appendChild(btn);
+  el.appendChild(btn);
+  return el;
 }
 
 /* ══════════════ ai-context（§4.10） ══════════════ */
@@ -519,8 +526,8 @@ function fileKindIcon(kind: FileKind): string {
 
 function renderFileChip(file: AiContextFile): HTMLElement {
   const kind = fileKind(file.path);
-  const chip = el('span', `ai-file-chip ai-file-chip--${kind} is-${file.status ?? 'modified'}`);
-  const icon = el('span', 'ai-file-icon');
+  const chip = h('span', `ai-file-chip ai-file-chip--${kind} is-${file.status ?? 'modified'}`);
+  const icon = h('span', 'ai-file-icon');
   const svg = svgIcon(fileKindIcon(kind));
   if (svg) icon.appendChild(svg);
   chip.appendChild(icon);
@@ -529,9 +536,9 @@ function renderFileChip(file: AiContextFile): HTMLElement {
 }
 
 function renderSection(title: string): { section: HTMLElement; body: HTMLElement } {
-  const section = el('section', 'ai-context-section');
-  section.appendChild(el('h3', '', title));
-  const body = el('div', 'ai-context-section-body');
+  const section = h('section', 'ai-context-section');
+  section.appendChild(h('h3', '', title));
+  const body = h('div', 'ai-context-section-body');
   section.appendChild(body);
   return { section, body };
 }
@@ -539,18 +546,19 @@ function renderSection(title: string): { section: HTMLElement; body: HTMLElement
 /**
  * 组合渲染上下文抽屉：usage → renderAiUsage；files → ai-file-chip；
  * mcpServers / skills → .ai-item 行。aside 默认 hidden，由 initAiContext 开合。
+ * 返回挂载容器 el（render* 返回挂载元素约定）。
  */
-export function renderAiContext(elm: HTMLElement, model: AiContextModel): void {
-  if (typeof document === 'undefined') return;
-  elm.textContent = '';
+export function renderAiContext(el: HTMLElement, model: AiContextModel): HTMLElement {
+  if (typeof document === 'undefined') return el;
+  el.textContent = '';
   const m = model ?? {};
-  const aside = el('aside', 'ai-context');
+  const aside = h('aside', 'ai-context');
   aside.hidden = true;
 
   /* head */
-  const head = el('div', 'ai-context-head');
-  head.appendChild(el('span', '', '上下文'));
-  const closeBtn = el('button', '', '×');
+  const head = h('div', 'ai-context-head');
+  head.appendChild(h('span', '', '上下文'));
+  const closeBtn = h('button', '', '×');
   closeBtn.type = 'button';
   closeBtn.setAttribute('data-ai-context-close', '');
   closeBtn.setAttribute('aria-label', '关闭');
@@ -576,7 +584,7 @@ export function renderAiContext(elm: HTMLElement, model: AiContextModel): void {
   const files = Array.isArray(m.files) ? m.files : [];
   if (files.length > 0) {
     const { section, body } = renderSection(`文件 (${files.length})`);
-    const chips = el('div', 'ai-files');
+    const chips = h('div', 'ai-files');
     for (const f of files) chips.appendChild(renderFileChip(f));
     body.appendChild(chips);
     aside.appendChild(section);
@@ -588,17 +596,17 @@ export function renderAiContext(elm: HTMLElement, model: AiContextModel): void {
     const { section, body } = renderSection(`MCP (${servers.length})`);
     for (const s of servers) {
       const ok = s.status !== 'disconnected';
-      const row = el('div', `ai-item is-${ok ? 'done' : 'error'}`);
-      const icon = el('span', 'ai-item-icon');
+      const row = h('div', `ai-item is-${ok ? 'done' : 'error'}`);
+      const icon = h('span', 'ai-item-icon');
       const svg = svgIcon(ICON_SERVER);
       if (svg) icon.appendChild(svg);
       row.appendChild(icon);
-      const main = el('span', 'ai-item-main');
-      main.appendChild(el('span', 'ai-item-title', s.name));
+      const main = h('span', 'ai-item-main');
+      main.appendChild(h('span', 'ai-item-title', s.name));
       row.appendChild(main);
-      const side = el('span', 'ai-item-side');
-      side.appendChild(el('span', 'ai-item-status'));
-      side.appendChild(el('span', 'ai-item-meta', typeof s.tools === 'number' ? `${s.tools} 工具` : ''));
+      const side = h('span', 'ai-item-side');
+      side.appendChild(h('span', 'ai-item-status'));
+      side.appendChild(h('span', 'ai-item-meta', typeof s.tools === 'number' ? `${s.tools} 工具` : ''));
       row.appendChild(side);
       body.appendChild(row);
     }
@@ -610,21 +618,22 @@ export function renderAiContext(elm: HTMLElement, model: AiContextModel): void {
   if (skills.length > 0) {
     const { section, body } = renderSection('Skills');
     for (const s of skills) {
-      const row = el('div', 'ai-item');
-      const icon = el('span', 'ai-item-icon');
+      const row = h('div', 'ai-item');
+      const icon = h('span', 'ai-item-icon');
       const svg = svgIcon(ICON_SPARKLES);
       if (svg) icon.appendChild(svg);
       row.appendChild(icon);
-      const main = el('span', 'ai-item-main');
-      main.appendChild(el('span', 'ai-item-title', s.name));
-      if (s.description) main.appendChild(el('span', 'ai-item-sub', s.description));
+      const main = h('span', 'ai-item-main');
+      main.appendChild(h('span', 'ai-item-title', s.name));
+      if (s.description) main.appendChild(h('span', 'ai-item-sub', s.description));
       row.appendChild(main);
       body.appendChild(row);
     }
     aside.appendChild(section);
   }
 
-  elm.appendChild(aside);
+  el.appendChild(aside);
+  return el;
 }
 
 /* ── initAiContext ── */
@@ -643,6 +652,7 @@ function isInline(drawer: HTMLElement): boolean {
  *   - 打开：去 hidden → reflow → .is-open 滑入（CSS transition），焦点移入 close 钮
  *   - 关闭：[data-ai-context-close] / Esc / 外点；.is-open 移除 → transition 结束（或兜底计时）
  *     后恢复 hidden，焦点还原触发器；Tab/Shift+Tab 焦点圈禁
+ *   - 开/合从抽屉根元素派 icen:ai-context-open {} / icen:ai-context-close {}（bubbles）
  *   - .ai-context--inline 为页面流内嵌变体：不参与开合、不做 fixed
  */
 export function initAiContext(root?: ParentNode): () => void {
@@ -695,6 +705,7 @@ export function initAiContext(root?: ParentNode): () => void {
     void drawer.offsetWidth; // reflow，让 transition 从 translateX(100%) 起步
     drawer.classList.add('is-open');
     syncTriggers(drawer, true);
+    dispatch(drawer, 'icen:ai-context-open', {});
     const closeBtn = drawer.querySelector<HTMLElement>('[data-ai-context-close]');
     (closeBtn ?? drawer).focus?.();
   }
@@ -703,6 +714,7 @@ export function initAiContext(root?: ParentNode): () => void {
     if (drawer.hidden && !drawer.classList.contains('is-open')) return;
     drawer.classList.remove('is-open');
     syncTriggers(drawer, false);
+    dispatch(drawer, 'icen:ai-context-close', {});
     const finish = (): void => {
       drawer.hidden = true;
       if (restoreFocus && lastTrigger && document.contains(lastTrigger)) {
@@ -868,23 +880,23 @@ function buildAuditBody(body: HTMLElement, entries: AiAuditEntry[], opts: { limi
   }
 
   /* totals 行 */
-  const totals = el('div', 'ai-audit-totals');
+  const totals = h('div', 'ai-audit-totals');
   const bits = [`${entries.length} 次请求`];
   if (errors > 0) bits.push(`${errors} 失败`);
   bits.push(`${formatTokens(tokens)} tok`);
   if (cost > 0) bits.push(`$${(Math.round(cost * 1e6) / 1e6).toFixed(4)}`);
   if (ttftN > 0) bits.push(`TTFT ${formatDuration(Math.round(ttftSum / ttftN))}`);
-  totals.appendChild(el('span', 'ai-audit-totals-text', bits.join(' · ')));
+  totals.appendChild(h('span', 'ai-audit-totals-text', bits.join(' · ')));
   body.appendChild(totals);
 
   /* byModel 分组行（tokens 降序） */
   const sorted = Array.from(groups.values()).sort((a, b) => b.tokens - a.tokens);
   if (sorted.length > 0) {
-    const list = el('div', 'ai-audit-models');
+    const list = h('div', 'ai-audit-models');
     for (const g of sorted) {
-      const row = el('div', 'ai-audit-model-row');
-      row.appendChild(el('span', 'ai-audit-model-name', g.key));
-      row.appendChild(el('span', 'ai-audit-model-meta', `${g.requests} 次 · ${formatTokens(g.tokens)} tok${g.cost > 0 ? ` · $${g.cost.toFixed(4)}` : ''}`));
+      const row = h('div', 'ai-audit-model-row');
+      row.appendChild(h('span', 'ai-audit-model-name', g.key));
+      row.appendChild(h('span', 'ai-audit-model-meta', `${g.requests} 次 · ${formatTokens(g.tokens)} tok${g.cost > 0 ? ` · $${g.cost.toFixed(4)}` : ''}`));
       list.appendChild(row);
     }
     body.appendChild(list);
@@ -892,18 +904,18 @@ function buildAuditBody(body: HTMLElement, entries: AiAuditEntry[], opts: { limi
 
   /* 最近条目（最新在前） */
   const recent = entries.slice(-limit).reverse();
-  const list = el('div', 'ai-audit-list');
+  const list = h('div', 'ai-audit-list');
   for (const e of recent) {
-    const item = el('div', `ai-audit-item is-${e.status === 'ok' ? 'done' : 'error'}`);
-    item.appendChild(el('span', 'ai-audit-dot'));
-    const main = el('span', 'ai-audit-item-main');
-    main.appendChild(el('span', 'ai-audit-item-model', `${e.provider} · ${e.model}`));
+    const item = h('div', `ai-audit-item is-${e.status === 'ok' ? 'done' : 'error'}`);
+    item.appendChild(h('span', 'ai-audit-dot'));
+    const main = h('span', 'ai-audit-item-main');
+    main.appendChild(h('span', 'ai-audit-item-model', `${e.provider} · ${e.model}`));
     const metaBits = [timeOf(e.ts), formatDuration(e.durationMs)];
     if (typeof e.ttftMs === 'number') metaBits.push(`TTFT ${formatDuration(e.ttftMs)}`);
     if ((e.usage?.total ?? 0) > 0) metaBits.push(`${formatTokens(e.usage?.total ?? 0)} tok`);
-    main.appendChild(el('span', 'ai-audit-item-meta', metaBits.filter(Boolean).join(' · ')));
+    main.appendChild(h('span', 'ai-audit-item-meta', metaBits.filter(Boolean).join(' · ')));
     item.appendChild(main);
-    if (e.error) item.appendChild(el('span', 'ai-audit-item-error', e.error));
+    if (e.error) item.appendChild(h('span', 'ai-audit-item-error', e.error));
     list.appendChild(item);
   }
   body.appendChild(list);
@@ -913,28 +925,28 @@ function buildAuditBody(body: HTMLElement, entries: AiAuditEntry[], opts: { limi
  * 渲染审计面板：totals（请求数/失败/累计 tokens/累计成本/平均 TTFT）+ byModel 分组 +
  * 最近请求条目（默认 10 条，最新在前）。source 为 auditor 实例或条目数组（快照渲染，
  * 数据更新后重调）。清除钮派 icen:ai-audit-clear { }（消费方调 auditor.clear() 后重渲染），
- * opts.onClear 给了则走回调。
+ * opts.onClear 给了则走回调。返回挂载容器 el（render* 返回挂载元素约定）。
  */
 export function renderAiAudit(
-  elm: HTMLElement,
+  el: HTMLElement,
   source: AiAuditor | AiAuditEntry[],
   opts: AiAuditRenderOpts = {},
-): void {
-  if (typeof document === 'undefined') return;
-  elm.textContent = '';
-  const root = el('div', 'ai-audit');
+): HTMLElement {
+  if (typeof document === 'undefined') return el;
+  el.textContent = '';
+  const root = h('div', 'ai-audit');
   const entries = auditEntriesOf(source);
 
   if (entries.length === 0) {
-    root.appendChild(el('div', 'ai-audit-empty', '暂无审计记录'));
-    elm.appendChild(root);
-    return;
+    root.appendChild(h('div', 'ai-audit-empty', '暂无审计记录'));
+    el.appendChild(root);
+    return el;
   }
 
   buildAuditBody(root, entries, { limit: opts.limit });
 
   if (opts.clearButton !== false) {
-    const clear = el('button', 'btn btn-sm ai-audit-clear', '清除审计');
+    const clear = h('button', 'btn btn-sm ai-audit-clear', '清除审计');
     clear.type = 'button';
     clear.addEventListener('click', () => {
       if (opts.onClear) opts.onClear();
@@ -943,5 +955,6 @@ export function renderAiAudit(
     root.appendChild(clear);
   }
 
-  elm.appendChild(root);
+  el.appendChild(root);
+  return el;
 }

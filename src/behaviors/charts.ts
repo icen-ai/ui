@@ -9,6 +9,9 @@
  * （条/段上设 --chart-tone，SVG 上直接写 stroke/fill 为 var(--token-*)）。
  *
  * ── 底层渲染器（保留直调；多系列与交互标记已内建）──
+ *   全部返回传入的容器 el，并在收尾自动挂交互委托（bindChartEvents）——
+ *   直调底层渲染器同样能收 icen:chart-* 事件（hover/click/dblclick/contextmenu
+ *   + 内置 tooltip），无需经过 renderChart。
  *   renderVBar(el,  { labels, values, series?, stacked?, tone? })   垂直柱状（分组/堆叠）
  *   renderHBar(el,  { labels, values, tone? })                      水平条形
  *   renderStack(el, { segments:[{label,value,tone?}] })             堆叠条 + 图例
@@ -16,8 +19,8 @@
  *   renderLine(el,  { labels, values, series?, fill?, tone? })      折线（多系列调色盘 + 可切换图例）
  *   renderArea(el,  { labels, values, tone? })                      面积
  *   renderRadar(el, { axes, series })                               雷达/蛛网（多系列 + 可切换图例）
- *   renderHeatmap(el, { data | values, weeks?, tone? })             周格热力（7 行 × N 周，5 档色阶）
- *   renderCalendar(el, { dates+values | data, tone? })              贡献日历（月份标签 + 星期列，GitHub 同款）
+ *   renderHeatmap(el, { data | values, weeks?, tone?, weekStart?, labels? })  周格热力（7 行 × N 周，5 档色阶）
+ *   renderCalendar(el, { dates+values | data, tone?, weekStart?, labels? })   贡献日历（月份标签 + 星期列，GitHub 同款）
  *   renderSparkline(el, { values, tone? })                          迷你趋势线
  *   renderGauge(el, { value, max?, tone?, label? })                 进度环
  *   renderScatter(el, { points, tone?, xLabel?, yLabel? })          散点/气泡（size 第三维 → 半径 3–10）
@@ -39,6 +42,8 @@
  *   inferChartType(spec)      自动选型（确定性规则）
  *   chartFormatValue(format)  格式化描述符 → 函数（compact/percent/ms + unit 后缀——
  *                             替代函数回调，可 JSON 序列化，AI 可给）
+ *   bindChartEvents(root)     交互委托独立挂载（幂等，返回解绑；renderChart 内部同款）
+ *   registerChartTone(name, cssVar)  注册自定义调色盘档位（tone 命名取色）
  *
  * 空数据（values 为空 / segments 总和 ≤ 0）渲染 .chart-empty（emptyLabel 可覆盖，默认「暂无数据」）。
  * 图例切换（多系列 line/vbar/radar）：点击图例行 → 同系列标记与行挂 .is-off（纯视觉淡化，
@@ -47,7 +52,8 @@
 
 import { emitIcen } from './events';
 
-export type ChartTone = 'accent' | 'success' | 'warning' | 'error' | 'muted';
+/** 色调名：内置 5 语义名（经 --token-* 取色）；`string & {}` 保自动补全同时放行 registerChartTone 注册的命名档 */
+export type ChartTone = 'accent' | 'success' | 'warning' | 'error' | 'muted' | (string & {});
 
 export interface ChartSeriesOptions extends ChartChromeOptions {
   labels: string[];
@@ -71,7 +77,30 @@ export interface ChartSegmentsOptions extends ChartChromeOptions {
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+/* 自定义调色盘档位注册表（name → CSS 变量）：toneVar 先查这里再回退内置语义名 */
+const REGISTERED_TONES = new Map<string, string>();
+
+/**
+ * 注册自定义调色盘档位（CSS 变量名，宿主须在样式里提供该变量）；tone 取值在
+ * 内置 5 语义名（accent/success/warning/error/muted）与调色盘序号之外的自定义
+ * 命名档。注册后任意 tone 槽位（spec.series[i].tone / segments[].tone / 各渲染器
+ * opts.tone）用该名字取色；查不到该变量时浏览器回退到初始色。
+ *
+ * @example
+ * ```css
+ * :root { --my-brand: #e2543e; }
+ * ```
+ * registerChartTone('brand', '--my-brand');
+ * spec.series[0].tone = 'brand';
+ */
+export function registerChartTone(name: string, cssVar: string): void {
+  if (!name || !cssVar) return;
+  REGISTERED_TONES.set(name, cssVar.startsWith('var(') ? cssVar : `var(${cssVar})`);
+}
+
 function toneVar(tone: ChartTone = 'accent'): string {
+  const registered = REGISTERED_TONES.get(tone);
+  if (registered) return registered;
   switch (tone) {
     case 'success': return 'var(--token-success)';
     case 'warning': return 'var(--token-warning)';
@@ -160,7 +189,7 @@ function normalizeSeriesInput(opts: { values?: number[]; tone?: ChartTone; serie
   return [{ name: '', values: opts.values ?? [], tone: opts.tone }];
 }
 
-/** 调色盘（与 charts.css 的 .chart-tone-1..6 一致）：序号 → CSS 变量；语义名直取 */
+/** 调色盘（与 charts.css 的 .chart-tone-1..6 一致）：序号 → CSS 变量；字符串 tone（语义名 / registerChartTone 注册名）先查注册表再回退内置 */
 function toneOf(tone: ChartTone | number | undefined, seriesIndex: number): string | undefined {
   if (typeof tone === 'string') return toneVar(tone);
   if (typeof tone === 'number') return paletteVar(tone);
@@ -360,8 +389,8 @@ export interface ChartVBarOptions extends ChartSeriesOptions {
   stacked?: boolean;
 }
 
-export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   const seriesList = normalizeSeriesInput(opts);
   const labels = opts.labels ?? [];
   const n = Math.min(labels.length, ...seriesList.map((s) => s.values.length));
@@ -414,11 +443,13 @@ export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): void {
   body.append(wrap, labelsRow(labelsUsed));
   if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
   });
+  attachChartInteraction(el, 'vbar');
+  return el;
 }
 
 /** 水平条形图 */
-export function renderHBar(el: HTMLElement, opts: ChartSeriesOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderHBar(el: HTMLElement, opts: ChartSeriesOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, false, (body) => {
   const n = Math.min(opts.labels.length, opts.values.length);
   if (n === 0) { renderEmpty(body, opts.emptyLabel); return; }
@@ -452,11 +483,13 @@ export function renderHBar(el: HTMLElement, opts: ChartSeriesOptions): void {
   });
   body.appendChild(wrap);
   });
+  attachChartInteraction(el, 'hbar');
+  return el;
 }
 
 /** 堆叠条形图（单条 100% + 图例） */
-export function renderStack(el: HTMLElement, opts: ChartSegmentsOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderStack(el: HTMLElement, opts: ChartSegmentsOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, opts.segments.length > 0, (body) => {
   const total = opts.segments.reduce((sum, s) => sum + s.value, 0);
   if (opts.segments.length === 0 || total <= 0) { renderEmpty(body, opts.emptyLabel); return; }
@@ -480,11 +513,13 @@ export function renderStack(el: HTMLElement, opts: ChartSegmentsOptions): void {
   }
   body.append(bar, legend);
   });
+  attachChartInteraction(el, 'stack');
+  return el;
 }
 
 /** 环形图（SVG stroke-dasharray 累加）+ 图例百分比 */
-export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, opts.segments.length > 0, (body) => {
   const total = opts.segments.reduce((sum, s) => sum + s.value, 0);
   if (opts.segments.length === 0 || total <= 0) { renderEmpty(body, opts.emptyLabel); return; }
@@ -526,6 +561,8 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): void {
   wrap.append(svg, legend);
   body.appendChild(wrap);
   });
+  attachChartInteraction(el, 'donut');
+  return el;
 }
 
 // 折线面积渐变 id 计数器（同页多图时保持唯一）
@@ -539,8 +576,8 @@ export interface ChartLineOptions extends ChartSeriesOptions {
   fill?: boolean;
 }
 
-export function renderLine(el: HTMLElement, opts: ChartLineOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   const seriesList = normalizeSeriesInput(opts);
   const labels = opts.labels ?? [];
   const n = Math.min(labels.length, ...seriesList.map((s) => s.values.length));
@@ -638,11 +675,13 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): void {
   body.appendChild(wrap);
   if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
   });
+  attachChartInteraction(el, 'line');
+  return el;
 }
 
 /** 面积图（与折线同族，以面积填充为视觉主体） */
-export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, false, (body) => {
   const n = Math.min(opts.labels.length, opts.values.length);
   if (n === 0) { renderEmpty(body, opts.emptyLabel); return; }
@@ -707,6 +746,8 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): void {
   wrap.append(svg, labelsRow(sampleLabels(labels)));
   body.appendChild(wrap);
   });
+  attachChartInteraction(el, 'area');
+  return el;
 }
 
 /* ═══════════ 雷达图 ═══════════ */
@@ -732,8 +773,8 @@ export interface ChartRadarOptions extends ChartChromeOptions {
 }
 
 /** 雷达图（N 轴蛛网 + 多系列多边形 + 图例）。 */
-export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, opts.series.length > 1, (body) => {
   const axes = opts.axes;
   const n = axes.length;
@@ -843,6 +884,8 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): void {
   })());
   body.appendChild(wrap);
   });
+  attachChartInteraction(el, 'radar');
+  return el;
 }
 
 /** 把一个正数向上取整到 "好看" 的刻度值（1/2/5/10/20/50/…） */
@@ -867,6 +910,18 @@ export interface HeatmapDatum {
   value: number;
 }
 
+/** calendar/heatmap 本地化文案：纯字符串描述符，保持 JSON 可序列化（ChartSpec 是 AI 可调用的纯 JSON 契约，禁函数） */
+export interface ChartI18nLabels {
+  /** 周标签（7 项，行序与 weekStart 对齐；缺省 ['一','','三','','五','','日']，weekStart=0 时自动旋转为周日首） */
+  weekdays?: string[];
+  /** 月标签（12 项，索引即月 0..11；缺省 `${m+1}月`） */
+  months?: string[];
+  /** 色阶图例左端文案（默认「少」） */
+  less?: string;
+  /** 色阶图例右端文案（默认「多」） */
+  more?: string;
+}
+
 export interface ChartHeatmapOptions extends ChartChromeOptions {
   /** 精确形态：日期 + 值（旧 → 新）。与 values 二选一，data 优先。 */
   data?: HeatmapDatum[];
@@ -875,6 +930,9 @@ export interface ChartHeatmapOptions extends ChartChromeOptions {
   /** 列数（周），默认按数据量推算（向上取整到整周） */
   weeks?: number;
   tone?: ChartTone;
+  /** 本地化：周首日（0=周日，默认 1=周一；与 date-picker 的 data-date-picker-week-start 语义对齐）与标签文案（纯字符串，保持 JSON 可序列化） */
+  weekStart?: 0 | 1;
+  labels?: ChartI18nLabels;
   emptyLabel?: string;
   formatValue?: (value: number) => string;
 }
@@ -885,9 +943,14 @@ function isoDate(d: Date): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-/** GitHub 贡献图式热力格：7 行（周一 → 周日）× N 周列，5 档色阶。 */
-export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void {
-  if (typeof document === 'undefined') return;
+/** 周一首默认周标签（['一','','三','','五','','日']）按 JS 星期序号（0=周日..6=周六）取文案 */
+function weekdayLabelAt(defaults: string[], day: number): string {
+  return defaults[(day + 6) % 7] ?? '';
+}
+
+/** GitHub 贡献图式热力格：7 行（默认周一 → 周日，weekStart=0 则周日起）× N 周列，5 档色阶。 */
+export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, true, (body) => {
 
   let entries: HeatmapDatum[];
@@ -920,9 +983,10 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void 
   grid.className = 'chart-heatmap-grid';
   grid.setAttribute('role', 'img');
 
-  // 首周对齐：第一个日期是星期几（周一 = 0），前面补占位格
+  // 首周对齐：第一个日期是星期几（周首日 = 第 0 行），前面补占位格
+  const weekStart = opts.weekStart === 0 ? 0 : 1;
   const first = new Date(`${entries[0]!.date}T00:00:00`);
-  const pad = (first.getDay() + 6) % 7;
+  const pad = (first.getDay() + 7 - weekStart) % 7;
   for (let i = 0; i < pad; i++) {
     const blank = document.createElement('span');
     blank.className = 'chart-heatmap-cell is-blank';
@@ -937,13 +1001,13 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void 
     grid.appendChild(cell);
   }
 
-  // 图例：少 → 多（5 档）
+  // 图例：少 → 多（5 档；文案可经 labels.less/labels.more 本地化）
   const legend = document.createElement('div');
   legend.className = 'chart-heatmap-legend';
   const less = document.createElement('span');
-  less.textContent = '少';
+  less.textContent = opts.labels?.less ?? '少';
   const more = document.createElement('span');
-  more.textContent = '多';
+  more.textContent = opts.labels?.more ?? '多';
   legend.appendChild(less);
   for (let lv = 0; lv <= 4; lv++) {
     const cell = document.createElement('span');
@@ -956,11 +1020,13 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void 
   wrap.append(grid, legend);
   body.appendChild(wrap);
   });
+  attachChartInteraction(el, 'heatmap');
+  return el;
 }
 
 /** 迷你趋势线（无轴小图，适合嵌入指标卡）。 */
-export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, false, (body) => {
   const values = opts.values;
   if (values.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
@@ -1010,6 +1076,8 @@ export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): void
   wrap.appendChild(svg);
   body.appendChild(wrap);
   });
+  attachChartInteraction(el, 'sparkline');
+  return el;
 }
 
 export interface ChartGaugeOptions {
@@ -1022,8 +1090,8 @@ export interface ChartGaugeOptions {
 }
 
 /** 进度环（环形单值 + 中心百分比）。 */
-export function renderGauge(el: HTMLElement, opts: ChartGaugeOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderGauge(el: HTMLElement, opts: ChartGaugeOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   el.textContent = '';
   const max = opts.max ?? 100;
   const ratio = max > 0 ? Math.min(1, Math.max(0, opts.value / max)) : 0;
@@ -1066,6 +1134,8 @@ export function renderGauge(el: HTMLElement, opts: ChartGaugeOptions): void {
 
   wrap.append(svg, center);
   el.appendChild(wrap);
+  attachChartInteraction(el, 'gauge');
+  return el;
 }
 
 /* ═══════════ 日历热力图（GitHub 贡献图完整形态：月份标签 + 周格）═══════════ */
@@ -1077,13 +1147,16 @@ export interface ChartCalendarOptions extends ChartChromeOptions {
   /** 精确形态：{date, value}[]（与 dates+values 二选一，优先） */
   data?: HeatmapDatum[];
   tone?: ChartTone;
+  /** 本地化：周首日（0=周日，默认 1=周一；与 date-picker 的 data-date-picker-week-start 语义对齐）与标签文案（纯字符串，保持 JSON 可序列化） */
+  weekStart?: 0 | 1;
+  labels?: ChartI18nLabels;
   emptyLabel?: string;
   formatValue?: (value: number) => string;
 }
 
-/** 贡献日历（calendar heatmap）：dates → 自动周布局 + 月份标签，GitHub 同款 */
-export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): void {
-  if (typeof document === 'undefined') return;
+/** 贡献日历（calendar heatmap）：dates → 自动周布局 + 月份标签，GitHub 同款。周首日与文案可经 weekStart/labels 本地化。 */
+export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, true, (body) => {
 
   let entries: HeatmapDatum[];
@@ -1101,6 +1174,12 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): voi
   if (opts.tone) wrap.style.setProperty('--chart-tone', toneVar(opts.tone));
 
   /* 月份标签行：按周列定位（第 N 周的左缘），同月只标第一次出现 */
+  const weekStart = opts.weekStart === 0 ? 0 : 1;
+  /* 周标签：默认 ['一','','三','','五','','日']（周一首）；weekStart=0 时同一组文案自动旋转为周日首（与 date-picker 同语义），labels.weekdays 可整体覆盖 */
+  const weekdayDefaults = ['一', '', '三', '', '五', '', '日'];
+  const weekdayLabels = opts.labels?.weekdays
+    ?? weekdayDefaults.map((_, i) => weekdayLabelAt(weekdayDefaults, (weekStart + i) % 7));
+  const monthLabel = (m: number): string => opts.labels?.months?.[m] ?? `${m + 1}月`;
   const grid = document.createElement('div');
   grid.className = 'chart-heatmap-grid';
   grid.setAttribute('role', 'img');
@@ -1108,7 +1187,7 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): voi
   months.className = 'chart-calendar-months';
   const weekdayRow = document.createElement('div');
   weekdayRow.className = 'chart-calendar-weekdays';
-  ['一', '', '三', '', '五', '', '日'].forEach((w) => {
+  weekdayLabels.forEach((w) => {
     const s = document.createElement('span');
     s.textContent = w;
     weekdayRow.appendChild(s);
@@ -1117,8 +1196,9 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): voi
   const max = maxOf(entries.map((e) => e.value));
   const levelOf = (v: number): number => (v <= 0 ? 0 : Math.min(4, Math.ceil((v / max) * 4)));
 
+  /* 首周对齐：第一个日期是星期几（周首日 = 第 0 行），前面补占位格 */
   const first = new Date(`${entries[0]!.date}T00:00:00`);
-  const pad = (first.getDay() + 6) % 7;
+  const pad = (first.getDay() + 7 - weekStart) % 7;
   for (let i = 0; i < pad; i++) {
     const blank = document.createElement('span');
     blank.className = 'chart-heatmap-cell is-blank';
@@ -1132,7 +1212,7 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): voi
       lastMonth = d.getMonth();
       const label = document.createElement('span');
       label.className = 'chart-calendar-month';
-      label.textContent = `${d.getMonth() + 1}月`;
+      label.textContent = monthLabel(d.getMonth());
       label.style.setProperty('--col', String(col));
       months.appendChild(label);
     }
@@ -1144,13 +1224,13 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): voi
     grid.appendChild(cell);
   });
 
-  /* 图例：少 → 多 */
+  /* 图例：少 → 多（文案可经 labels.less/labels.more 本地化） */
   const legend = document.createElement('div');
   legend.className = 'chart-heatmap-legend';
   const less = document.createElement('span');
-  less.textContent = '少';
+  less.textContent = opts.labels?.less ?? '少';
   const more = document.createElement('span');
-  more.textContent = '多';
+  more.textContent = opts.labels?.more ?? '多';
   legend.appendChild(less);
   for (let lv = 0; lv <= 4; lv++) {
     const cell = document.createElement('span');
@@ -1165,6 +1245,8 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): voi
   wrap.append(months, weekdayRow, grid, legend);
   body.appendChild(wrap);
   });
+  attachChartInteraction(el, 'calendar');
+  return el;
 }
 
 /* ═══════════ 散点 / 气泡图 ═══════════ */
@@ -1188,8 +1270,8 @@ export interface ChartScatterOptions extends ChartChromeOptions {
 }
 
 /** 散点图（可选 size 第三维 → 气泡）；坐标域自动 nice 取整 + 边界刻度 */
-export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): void {
-  if (typeof document === 'undefined') return;
+export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLElement {
+  if (typeof document === 'undefined') return el;
   withChrome(el, opts, false, (body) => {
   const pts = opts.points.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
   if (pts.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
@@ -1270,6 +1352,8 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): void 
   wrap.appendChild(svg);
   body.appendChild(wrap);
   });
+  attachChartInteraction(el, 'scatter');
+  return el;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1347,6 +1431,8 @@ export interface ChartSpec {
   /** 图例：false = 初始隐藏（头部行的小眼睛仍可再展开）；true/缺省 = 显示 */
   legend?: boolean;
   emptyLabel?: string;
+  /** 本地化透传（calendar/heatmap）：weekStart 0=周日/1=周一 与标签文案，纯字符串保持 JSON 可序列化 */
+  i18n?: ChartI18nLabels & { weekStart?: 0 | 1 };
 }
 
 /** 格式化描述符 → 函数（底层渲染器的 formatValue 槽） */
@@ -1618,7 +1704,7 @@ export interface ChartHandle {
   update(next: ChartSpec | unknown): void;
   /** icen:chart-<name> 监听糖（hover/click/dblclick/contextmenu）；返回解绑函数 */
   on(name: ChartEventName, listener: (detail: ChartEventDetail, event: Event) => void): () => void;
-  /** 清空渲染并摘除绑定标记（委托随 el 生存期，destroy 后可重新 renderChart） */
+  /** 清空渲染并解绑交互委托（destroy 后可重新 renderChart） */
   destroy(): void;
 }
 
@@ -1680,6 +1766,130 @@ function moveTooltip(x: number, y: number): void {
   tip.style.top = `${Math.round(top)}px`;
 }
 
+/* ── 交互委托（bindChartEvents：renderChart 与底层渲染器共用）── */
+
+/** 派发 icen:chart-* 时读取的每容器元数据（图型 + tooltip 开关；renderChart 写动态 getter，直调渲染器写静态值） */
+interface ChartDelegateMeta {
+  type(): ChartType;
+  tooltip(): boolean;
+}
+const chartDelegateMeta = new WeakMap<HTMLElement, ChartDelegateMeta>();
+const chartDelegateUnbind = new WeakMap<HTMLElement, () => void>();
+
+/**
+ * 在图表容器上挂交互委托（幂等，沿用 __icenChartBound 标记）：pointer / click /
+ * dblclick / contextmenu 归一到 [data-chart-mark] 标记 → icen:chart-hover
+ * （phase enter/move/leave）/ icen:chart-click / icen:chart-dblclick /
+ * icen:chart-contextmenu（均 bubbles，detail 含 index/seriesIndex/seriesName/
+ * label/value/指针坐标；右键默认 preventDefault），内置 tooltip portal 跟随指针。
+ *
+ * renderChart 内部即调它；12 个底层渲染器（renderVBar…renderScatter）收尾也会
+ * 自动调用——**直调底层渲染器同样能收 icen:chart-\* 事件**，无需经过 renderChart
+ * （detail.chart 报该渲染器的图型）。容器已处于某个绑定了委托的外层图表容器
+ * 内时自动跳过（renderChart → 底层渲染器路径，外层已覆盖该子树，防重复派发）。
+ * 返回解绑函数（移除全部监听并复位标记；解绑后可重新 bind / 重新渲染）。
+ */
+export function bindChartEvents(root: HTMLElement): () => void {
+  const noop = (): void => undefined;
+  if (typeof document === 'undefined') return noop;
+  const attached = root as HTMLElement & { __icenChartBound?: boolean };
+  if (attached.__icenChartBound) {
+    const prev = chartDelegateUnbind.get(root);
+    if (prev) return prev;
+  }
+  /* 外层已有图表委托（__icenChartBound 沿父链）：跳过防同一标记重复派发 */
+  for (let p: HTMLElement | null = root.parentElement; p; p = p.parentElement) {
+    if ((p as HTMLElement & { __icenChartBound?: boolean }).__icenChartBound) return noop;
+  }
+
+  const typeNow = (): ChartType => chartDelegateMeta.get(root)?.type() ?? 'vbar';
+  const tipEnabled = (): boolean => chartDelegateMeta.get(root)?.tooltip() ?? true;
+  const markOf = (e: Event): Element | null => {
+    const t = e.target;
+    return t instanceof Element ? t.closest('[data-chart-mark]') : null;
+  };
+  let hoverMark: Element | null = null;
+
+  const enterMark = (mark: Element, x: number, y: number): void => {
+    hoverMark = mark;
+    mark.classList.add('is-hover');
+    dispatchChartEvent(root, 'hover', mark, typeNow(), 'enter', { x, y });
+    if (tipEnabled()) {
+      const tip = chartTooltip();
+      tip.textContent = tooltipText(mark);
+      tip.hidden = false;
+      moveTooltip(x, y);
+    }
+  };
+  const leaveMark = (pointer?: { x: number; y: number }): void => {
+    if (!hoverMark) return;
+    hoverMark.classList.remove('is-hover');
+    dispatchChartEvent(root, 'hover', hoverMark, typeNow(), 'leave', pointer);
+    hoverMark = null;
+    chartTooltip().hidden = true;
+  };
+
+  const bindings: Array<[string, EventListener]> = [];
+  const on = <T extends Event>(type: string, fn: (e: T) => void): void => {
+    const listener: EventListener = (evt) => fn(evt as T);
+    root.addEventListener(type, listener);
+    bindings.push([type, listener]);
+  };
+
+  on<PointerEvent>('pointerover', (e) => {
+    const mark = markOf(e);
+    if (!mark || mark === hoverMark) return;
+    leaveMark({ x: e.clientX, y: e.clientY });
+    enterMark(mark, e.clientX, e.clientY);
+  });
+  on<PointerEvent>('pointermove', (e) => {
+    if (hoverMark && tipEnabled()) {
+      dispatchChartEvent(root, 'hover', hoverMark, typeNow(), 'move', { x: e.clientX, y: e.clientY });
+      moveTooltip(e.clientX, e.clientY);
+    }
+  });
+  on<PointerEvent>('pointerout', (e) => {
+    const mark = markOf(e);
+    if (mark && mark === hoverMark) leaveMark({ x: e.clientX, y: e.clientY });
+  });
+  on<Event>('pointerleave', () => leaveMark());
+  on<MouseEvent>('click', (e) => {
+    const mark = markOf(e);
+    if (mark) dispatchChartEvent(root, 'click', mark, typeNow(), undefined, { x: e.clientX, y: e.clientY });
+  });
+  on<MouseEvent>('dblclick', (e) => {
+    const mark = markOf(e);
+    if (mark) dispatchChartEvent(root, 'dblclick', mark, typeNow(), undefined, { x: e.clientX, y: e.clientY });
+  });
+  on<MouseEvent>('contextmenu', (e) => {
+    const mark = markOf(e);
+    if (!mark) return;
+    e.preventDefault();
+    dispatchChartEvent(root, 'contextmenu', mark, typeNow(), undefined, { x: e.clientX, y: e.clientY });
+  });
+
+  const unbind = (): void => {
+    for (const [type, listener] of bindings) root.removeEventListener(type, listener);
+    bindings.length = 0;
+    attached.__icenChartBound = false;
+    chartDelegateUnbind.delete(root);
+    if (hoverMark) {
+      hoverMark.classList.remove('is-hover');
+      hoverMark = null;
+    }
+    chartTooltip().hidden = true;
+  };
+  attached.__icenChartBound = true;
+  chartDelegateUnbind.set(root, unbind);
+  return unbind;
+}
+
+/** 底层渲染器收尾统一调用：登记自身图型元数据 + 挂交互委托（外层已委托的子树内自动跳过） */
+function attachChartInteraction(el: HTMLElement, type: ChartType): void {
+  chartDelegateMeta.set(el, { type: () => type, tooltip: () => true });
+  bindChartEvents(el);
+}
+
 /** 该图型是否有图例（决定头部行是否渲染小眼睛） */
 function hasLegendOf(spec: ChartSpec): boolean {
   switch (spec.type) {
@@ -1711,9 +1921,6 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
     return { el, spec: {}, update: noop, on: () => noop, destroy: noop };
   }
   const root = el;
-  const attached = root as HTMLElement & { __icenChartBound?: boolean };
-  const wasBound = attached.__icenChartBound === true;
-  attached.__icenChartBound = true;
 
   let current = normalizeChartSpec(raw);
 
@@ -1757,10 +1964,10 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
           break;
         }
         case 'heatmap':
-          renderHeatmap(body, { values: spec.values, data: spec.data as HeatmapDatum[] | undefined, weeks: spec.weeks, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          renderHeatmap(body, { values: spec.values, data: spec.data as HeatmapDatum[] | undefined, weeks: spec.weeks, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend, weekStart: spec.i18n?.weekStart, labels: spec.i18n });
           break;
         case 'calendar':
-          renderCalendar(body, { dates: spec.dates, values: spec.values, data: spec.data as HeatmapDatum[] | undefined, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          renderCalendar(body, { dates: spec.dates, values: spec.values, data: spec.data as HeatmapDatum[] | undefined, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend, weekStart: spec.i18n?.weekStart, labels: spec.i18n });
           break;
         case 'sparkline':
           renderSparkline(body, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
@@ -1777,66 +1984,10 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
     });
   };
 
-  /* 交互委托（挂 root 一次，跨 update 存活；标记随渲染更替） */
-  if (!wasBound) {
-    const markOf = (e: Event): Element | null => {
-      const t = e.target;
-      return t instanceof Element ? t.closest('[data-chart-mark]') : null;
-    };
-    const tipEnabled = (): boolean => current.tooltip !== false;
-    let hoverMark: Element | null = null;
-
-    const enterMark = (mark: Element, x: number, y: number): void => {
-      hoverMark = mark;
-      mark.classList.add('is-hover');
-      dispatchChartEvent(root, 'hover', mark, typeOf(), 'enter', { x, y });
-      if (tipEnabled()) {
-        const tip = chartTooltip();
-        tip.textContent = tooltipText(mark);
-        tip.hidden = false;
-        moveTooltip(x, y);
-      }
-    };
-    const leaveMark = (pointer?: { x: number; y: number }): void => {
-      if (!hoverMark) return;
-      hoverMark.classList.remove('is-hover');
-      dispatchChartEvent(root, 'hover', hoverMark, typeOf(), 'leave', pointer);
-      hoverMark = null;
-      chartTooltip().hidden = true;
-    };
-
-    root.addEventListener('pointerover', (e: PointerEvent) => {
-      const mark = markOf(e);
-      if (!mark || mark === hoverMark) return;
-      leaveMark({ x: e.clientX, y: e.clientY });
-      enterMark(mark, e.clientX, e.clientY);
-    });
-    root.addEventListener('pointermove', (e: PointerEvent) => {
-      if (hoverMark && tipEnabled()) {
-        dispatchChartEvent(root, 'hover', hoverMark, typeOf(), 'move', { x: e.clientX, y: e.clientY });
-        moveTooltip(e.clientX, e.clientY);
-      }
-    });
-    root.addEventListener('pointerout', (e: PointerEvent) => {
-      const mark = markOf(e);
-      if (mark && mark === hoverMark) leaveMark({ x: e.clientX, y: e.clientY });
-    });
-    root.addEventListener('pointerleave', () => leaveMark());
-    root.addEventListener('click', (e: MouseEvent) => {
-      const mark = markOf(e);
-      if (mark) dispatchChartEvent(root, 'click', mark, typeOf(), undefined, { x: e.clientX, y: e.clientY });
-    });
-    root.addEventListener('dblclick', (e: MouseEvent) => {
-      const mark = markOf(e);
-      if (mark) dispatchChartEvent(root, 'dblclick', mark, typeOf(), undefined, { x: e.clientX, y: e.clientY });
-    });
-    root.addEventListener('contextmenu', (e: MouseEvent) => {
-      const mark = markOf(e);
-      if (!mark) return;
-      e.preventDefault();
-      dispatchChartEvent(root, 'contextmenu', mark, typeOf(), undefined, { x: e.clientX, y: e.clientY });
-    });
-  }
+  /* 交互委托（挂 root 一次，跨 update 存活；标记随渲染更替）。图型与 tooltip
+     开关经 meta 动态读取（update 换 type / 关 tooltip 即时生效）。 */
+  chartDelegateMeta.set(root, { type: typeOf, tooltip: () => current.tooltip !== false });
+  const unbindEvents = bindChartEvents(root);
 
   render();
 
@@ -1856,7 +2007,7 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
     },
     destroy(): void {
       root.textContent = '';
-      attached.__icenChartBound = false;
+      unbindEvents();
       chartTooltip().hidden = true;
     },
   };

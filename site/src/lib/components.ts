@@ -583,7 +583,7 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
     </div>
     <input type="hidden" data-select-value name="tags" />
   </div>
-  <p class="chart-cap" style="margin:14px 0 6px">富选项（任意 HTML）+ 固定面板宽（data-select-panel-width）</p>
+  <p class="chart-cap" style="margin:14px 0 6px">富选项（任意 HTML）+ 固定面板宽（data-panel-width，全库浮层统一 PanelSizing 契约）</p>
   <div class="select" data-select data-panel-width="216" style="max-width:216px">
     <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="select-value is-empty">选择色彩预设</span>
@@ -706,10 +706,7 @@ initTagInput();`,
 </button>
 <!-- 状态由使用方驱动：点击切换 aria-checked，CSS 负责全部视觉 -->`,
     script: `// 纯 CSS 状态组件的演示接线（实际项目由使用方状态驱动）
-document.querySelectorAll('.switch[role="switch"], .checkbox[role="checkbox"]').forEach((el) => {
-  el.addEventListener('click', () => {
-    el.setAttribute('aria-checked', el.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
-  });
+/* 开关/勾选交互已由 behaviors/controls 的 initSwitch 接管（含三态与键盘） */
 });
 document.querySelectorAll('.radio-group').forEach((group) => {
   group.querySelectorAll('.radio-item').forEach((item) => {
@@ -721,7 +718,9 @@ document.querySelectorAll('.radio-group').forEach((group) => {
     });
   });
 });`,
-  },
+
+    behaviors: ['controls'],
+    behaviorInit: { controls: 'initSwitch' },  },
   {
     slug: 'segmented',
     name: '分段选择',
@@ -761,8 +760,6 @@ document.querySelectorAll('.radio-group').forEach((group) => {
     usage: `import { initInput } from '@icen.ai/ui/behaviors/input';
 initInput(); // OTP 单元格的输入跳格 / 粘贴分摊由 input behavior 处理
 // segmented / toggle-group / stepper 为纯 CSS 契约，选中态由使用方切换`,
-    behaviors: ['input'],
-    behaviorInit: { input: 'initInput' },
     script: `document.querySelectorAll('.segmented, .toggle-group').forEach((group) => {
   group.querySelectorAll('.segmented-item, .toggle-item').forEach((item) => {
     item.addEventListener('click', () => {
@@ -784,7 +781,9 @@ document.querySelectorAll('.stepper').forEach((s) => {
     });
   });
 });`,
-  },
+
+    behaviors: ['input', 'controls'],
+    behaviorInit: { input: 'initInput', controls: ['initSegmented', 'initStepper'] },  },
   {
     slug: 'upload',
     name: '上传',
@@ -962,8 +961,10 @@ COMPONENTS.push(
     </div>
   </div>
 </div>`,
-    usage: `import { initModal, open, close } from '@icen.ai/ui/behaviors/modal';
-initModal(); // 事件委托一次绑定，后续 open(id) / close(id) 可编程控制`,
+    usage: `import { initModal, openModal, closeModal } from '@icen.ai/ui/behaviors/modal';
+initModal();            // 事件委托一次绑定
+openModal('confirm');   // 编程打开（可传 { initialFocus } 控制初始焦点）
+closeModal('confirm');  // 编程关闭；开合均派 icen:modal-open / icen:modal-close`,
     behaviors: ['modal'],
     behaviorInit: { modal: 'initModal' },
   },
@@ -1722,7 +1723,9 @@ document.getElementById('notif-clear')?.addEventListener('click', () => {
   <button class="rating-star" type="button" aria-label="5 星">…星形 svg…</button>
 </div>
 <!-- 填充态由使用方按分数挂 .is-filled / .is-half -->`,
-  },
+
+    behaviors: ['controls'],
+    behaviorInit: { controls: 'initRating' },  },
   {
     slug: 'kbd',
     name: '键盘键',
@@ -2053,8 +2056,7 @@ const handle = renderChart(el, {
   // type 缺省自动推断（时间序→line / 占比→donut / dates→calendar / points→scatter…）
   // tooltip: false 关闭内置提示；stacked: true 堆叠柱；legend: false 初始隐藏图例
 });
-handle.on 右侧小眼睛随时切换（icen:chart-legend-visibility）。
-
+// 头部小眼睛切换全部图例（派 icen:chart-legend-visibility）；点图例项切换单系列
 handle.on('click', (d) => console.log(d.label, d.value, d.seriesName));
 handle.on('contextmenu', (d, e) => openContextMenu(e, d));  // 右键接自家 context-menu
 handle.update(nextSpec);   // 原地重渲染（事件委托保留）
@@ -2501,7 +2503,9 @@ if (el && chartsMod.renderCalendar) {
     <tfoot><tr><td>合计</td></tr></tfoot>
   </table>
 </div>`,
-  },
+
+    behaviors: ['controls'],
+    behaviorInit: { controls: 'initTableSort' },  },
   {
     slug: 'datatable',
     name: '数据表格',
@@ -2788,7 +2792,9 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
   <button class="page-btn motion is-active" aria-current="page">1</button>
   <button class="page-btn motion" aria-label="下一页">›</button>
 </nav>`,
-  },
+
+    behaviors: ['controls'],
+    behaviorInit: { controls: 'initPagination' },  },
   {
     slug: 'steps',
     name: '步骤条',
@@ -2866,7 +2872,9 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
   <li class="step step--process">…</li>
   <li class="step step--wait">…</li>
 </ol>`,
-  },
+
+    behaviors: ['controls'],
+    behaviorInit: { controls: 'initSteps' },  },
   {
     slug: 'back-top',
     name: '回到顶部',

@@ -24,7 +24,8 @@
  * 滚动 / resize 重定位监听随面板关闭一并移除。
  */
 
-import { readPanelSizing } from './popover';
+import { applyPanelSizing, readPanelSizing } from './popover';
+import { emitIcen } from './events';
 
 interface MarkedPicker extends HTMLElement {
   __icenDatePickerInit?: boolean;
@@ -79,10 +80,14 @@ function positionPanel(panel: HTMLElement, trigger: HTMLElement): void {
   /* 面板尺寸契约（PanelSizing）：根上 data-panel-* 可覆盖默认 280 宽与高度上限；
      面板是跨实例单例，未指定的字段必须清空内联，避免串味 */
   const sizing = readPanelSizing(trigger.closest('[data-date-picker]'));
+  /* 面板是跨实例单例：先复位全部内联尺寸再按本次契约应用（applyPanelSizing(null) 复位语义） */
+  applyPanelSizing(panel, null);
+  if (sizing.width != null || sizing.minWidth != null) {
+    applyPanelSizing(panel, { width: sizing.width ?? sizing.minWidth, maxWidth: sizing.maxWidth, maxHeight: sizing.maxHeight });
+  } else {
+    applyPanelSizing(panel, sizing);
+  }
   const pw = sizing.width ?? sizing.minWidth ?? 280;
-  panel.style.width = sizing.width != null || sizing.minWidth != null ? `${pw}px` : '';
-  panel.style.maxWidth = sizing.maxWidth != null ? `${sizing.maxWidth}px` : '';
-  panel.style.maxHeight = sizing.maxHeight != null ? `${sizing.maxHeight}px` : '';
   const ph = panel.offsetHeight || 320;
   let left = r.left;
   let top = r.bottom + 4;
@@ -261,9 +266,17 @@ function closePanel(): void {
   }
 }
 
-function setupPicker(container: HTMLElement): void {
+/** 已初始化容器（幂等 + 销毁后可重新 init）。 */
+const pickersInit = new WeakSet<HTMLElement>();
+
+function setupPicker(container: HTMLElement): () => void {
+  if (pickersInit.has(container)) return () => {};
+  pickersInit.add(container);
   const el = container as MarkedPicker;
-  if (el.__icenDatePickerInit) return;
+  /* 本容器持久监听挂同一 AbortSignal：销毁一次摘净 */
+  const ac = new AbortController();
+  const disposers: Array<() => void> = [() => { ac.abort(); pickersInit.delete(container); }];
+  if (el.__icenDatePickerInit) return () => {};
   el.__icenDatePickerInit = true;
 
   const fmt = el.dataset.datePickerFormat ?? 'yyyy-mm-dd';
@@ -310,9 +323,10 @@ function setupPicker(container: HTMLElement): void {
     // 使用 MutationObserver 监听 hidden input 的 value 被外部修改
     const obs = new MutationObserver(() => paint());
     obs.observe(hidden, { attributes: true, attributeFilter: ['value'] });
+    disposers.push(() => obs.disconnect());
   }
 
-  trigger.addEventListener('click', () => {
+  const onTriggerClick = (): void => {
     if (openPicker === el) {
       closePanel();
       return;
@@ -337,17 +351,10 @@ function setupPicker(container: HTMLElement): void {
       max,
       weekStart,
       onPick: (d: Date | null) => {
-        if (d === null) {
-          if (hidden) {
-            hidden.value = '';
-            hidden.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        } else {
-          if (hidden) {
-            hidden.value = toDateStr(d);
-            hidden.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        }
+        if (hidden) hidden.value = d ? toDateStr(d) : '';
+        /* 领域事件走 icen: 契约；hidden input 的原生 change 保留给表单框架（双通道） */
+        emitIcen(el, 'icen:date-change', { value: d ? toDateStr(d) : '', date: d });
+        if (hidden) hidden.dispatchEvent(new Event('change', { bubbles: true }));
         paint();
         closePanel();
       },
@@ -376,16 +383,25 @@ function setupPicker(container: HTMLElement): void {
     };
     window.addEventListener('scroll', repositionHandler, { passive: true });
     window.addEventListener('resize', repositionHandler, { passive: true });
-  });
+  };
+  trigger.addEventListener('click', onTriggerClick, { signal: ac.signal });
+
+  return (): void => {
+    for (const d of disposers) d();
+  };
 }
 
-/** 初始化：扫描 root 下的 .date-picker[data-date-picker]。 */
-export function initDatePicker(root?: ParentNode): void {
-  if (typeof document === 'undefined') return;
-  if (typeof window === 'undefined') return;
+/** 返回销毁函数：摘除本次初始化容器的全部监听并复位幂等标记（可重新 init）。 */
+export function initDatePicker(root?: ParentNode): () => void {
+  if (typeof document === 'undefined') return () => {};
+  if (typeof window === 'undefined') return () => {};
   const scope = root ?? document;
   const pickers: Element[] = [];
   if (scope instanceof Element && scope.matches('.date-picker[data-date-picker]')) pickers.push(scope);
   pickers.push(...Array.from(scope.querySelectorAll('.date-picker[data-date-picker]')));
-  for (const p of pickers) setupPicker(p as HTMLElement);
+  const disposers: Array<() => void> = [];
+  for (const p of pickers) disposers.push(setupPicker(p as HTMLElement));
+  return (): void => {
+    for (const d of disposers) d();
+  };
 }

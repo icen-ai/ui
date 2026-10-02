@@ -20,6 +20,8 @@
  *   </div>
  *   弹层 .ai-composer-popup（portal body，JS 动态创建/移除，listbox 语义）：
  *     模型切换 / 斜杠命令 / @ 引用三模式共用基座，含搜索框、分组、空态、底部提示。
+ *     尺寸走 PanelSizing 契约：composer 根 data-panel-* 为用户覆盖（三弹层共用），
+ *     bindComposer opts.popoverSizing 整体覆盖，原内置魔数仅为默认。
  *
  * v1 契约（§4.3，全部保留）：
  *   initAiComposer(root?)        幂等（__icenAiComposerInit）；autosize（默认上限 8 行后内滚）；
@@ -41,7 +43,9 @@
  *   setComposerRefs(el, sources)                 任意位置 `@` 触发引用弹层（按 kind 分组）；
  *                                选中插入 `@label ` + refs chip +1，派 icen:ai-ref
  *                                {action:'add', ref}；chip × 移除（同时删文本首个 `@label`）
- *                                派 {action:'remove', ref}。
+ *                                派 {action:'remove', ref}。kind 开放注册：registerRefKind
+ *                                (kind, {label, icon?, order?})；未知 kind 不丢弃（通用文档
+ *                                图标 + kind 原文兜底，排最后）。
  *   setComposerUsage(el, usage, opts)            工具条右侧挂 renderAiUsageRing（./ai-panel）。
  *   历史：发送成功的文本进历史数组（每 composer 独立）；输入为空时 ↑ 取回上一条；
  *         运行中 ↑ 优先取回最后一条排队消息（从队列移除并派 icen:ai-dequeue）。
@@ -55,6 +59,7 @@
  *         stop → cancel；排队消息自动续发）；opts.usage.from = 'context'（默认，环语义
  *         正确的上下文估算）| 'billing'（计费累加）| AiAuditor（summary()）；running 自动
  *         管理（send→running / icen:ai-done→解除）。不传 client 为纯状态绑定（渐进采用）。
+ *         opts.popoverSizing（PanelSizing）整体覆盖三弹层尺寸（> composer 根 data-panel-*）。
  *
  * 向后兼容：未配置 models/usage 时工具条不出现，v1 markup（.ai-composer-actions 旧结构）
  *   零改动可用；配置后 v1 的 attach/send 按钮被移入工具条（事件监听不受影响）。
@@ -63,7 +68,7 @@
  */
 
 import { formatTokens, contextEstimate, svgIcon, type AiUsage } from './ai-core';
-import { closePopover, openPopover } from './popover';
+import { closePopover, openPopover, resolvePanelSizing, type PanelSizing } from './popover';
 import { renderAiUsageRing, renderAiTodo, type AiUsageRingOpts } from './ai-panel';
 import type { AiStatus } from './ai-core';
 import type { AiTodoItem } from './ai-panel';
@@ -73,7 +78,7 @@ import {
   type AiStreamHandle,
 } from './ai-chat';
 import type { AiAuditor, AiChatMessage, AiClient, AiDoneEventDetail, AiStreamSession } from './ai-provider';
-import { emitIcen } from './events';
+import { emitIcen, type IcenEventMap } from './events';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -146,19 +151,75 @@ const ICON_BOT = svgWrap(
   '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
 );
 
-const REF_KIND_LABEL: Record<AiComposerRefKind, string> = {
-  file: '文件',
-  folder: '文件夹',
-  doc: '文档',
-  agent: '代理',
+/* ── 引用 kind 注册表（照 ai-core registerAiKind 模式：内置默认 + Map 注册表 + 兜底） ── */
+
+/** 引用 kind 定义（registerRefKind 的注册面）。 */
+export interface AiComposerRefDef {
+  /** 分组标题（弹层 group label；未知 kind 兜底为 kind 原文） */
+  label: string;
+  /** 单色 SVG 字符串（经 svgIcon 消毒）；缺省用通用文档图标 */
+  icon?: string;
+  /** 分组排序权重（小者在前）；缺省排在已知 kind 之后（最后） */
+  order?: number;
+}
+
+/** 内部解析形态：三字段全部落定（label/icon/order 查找的统一返回）。 */
+interface ResolvedRefKindDef {
+  label: string;
+  icon: string;
+  order: number;
+}
+
+/** 内置 kind 默认（取代原 LABEL/ICON/ORDER 三张硬编码表；注册表可逐项覆盖）。 */
+const REF_KIND_BUILTIN: Record<string, ResolvedRefKindDef> = {
+  file: { label: '文件', icon: ICON_FILE, order: 0 },
+  folder: { label: '文件夹', icon: ICON_FOLDER, order: 1 },
+  doc: { label: '文档', icon: ICON_DOC, order: 2 },
+  agent: { label: '代理', icon: ICON_BOT, order: 3 },
 };
-const REF_KIND_ICON: Record<AiComposerRefKind, string> = {
-  file: ICON_FILE,
-  folder: ICON_FOLDER,
-  doc: ICON_DOC,
-  agent: ICON_BOT,
-};
-const REF_KIND_ORDER: AiComposerRefKind[] = ['file', 'folder', 'doc', 'agent'];
+
+/** 未知且未注册 kind 的排序兜底（恒排最后）。 */
+const REF_KIND_ORDER_LAST = Number.MAX_SAFE_INTEGER;
+
+const REF_KIND_REGISTRY = new Map<string, AiComposerRefDef>();
+
+/**
+ * 注册（或覆盖）一个引用 kind（第三方扩展入口，照 registerAiKind 的 Map + 兜底模式）。
+ * 注册后弹层分组标题/图标/排序取注册表值；未注册的未知 kind 不再静默丢弃——
+ * 标题用 kind 原文、图标用通用文档图标、排序排最后。
+ */
+export function registerRefKind(kind: string, def: AiComposerRefDef): void {
+  const key = kind.trim();
+  if (key) REF_KIND_REGISTRY.set(key, def);
+}
+
+/** kind 定义查找（内置默认 + 注册表合并）：注册表优先 → 内置默认 → 通用兜底。 */
+function getRefKindDef(kind: string): ResolvedRefKindDef {
+  const reg = REF_KIND_REGISTRY.get(kind);
+  const builtin = REF_KIND_BUILTIN[kind];
+  return {
+    label: reg?.label ?? builtin?.label ?? kind,
+    icon: reg?.icon ?? builtin?.icon ?? ICON_DOC,
+    order:
+      reg && typeof reg.order === 'number' && Number.isFinite(reg.order)
+        ? reg.order
+        : builtin?.order ?? REF_KIND_ORDER_LAST,
+  };
+}
+
+/**
+ * 已知 kind 全集 = 内置 ∪ 注册表 ∪ 当前 sources 里出现过的 kind，按解析后的 order
+ * 升序（未知 kind 恒排最后；同序保持插入序稳定）。渲染/过滤不依赖 AiComposerRefKind
+ * 穷举——sources 传入联合之外的 kind 也会得到分组。
+ */
+function knownRefKinds(sources: AiComposerRefSource[]): string[] {
+  const kinds = new Set<string>(Object.keys(REF_KIND_BUILTIN));
+  for (const key of REF_KIND_REGISTRY.keys()) kinds.add(key);
+  for (const s of sources) {
+    if (typeof s?.kind === 'string' && s.kind) kinds.add(s.kind);
+  }
+  return Array.from(kinds).sort((a, b) => getRefKindDef(a).order - getRefKindDef(b).order);
+}
 
 /* ══════════════ 每 composer 状态（WeakMap，配置跨 init/destroy 保留）══════════════ */
 
@@ -180,6 +241,8 @@ const HISTORIES = new WeakMap<HTMLElement, { items: string[]; index: number }>()
 const POPUP = new WeakMap<HTMLElement, ComposerPopup>();
 /** setupComposer 注册的 submit 闭包（弹层无匹配 Enter 回退发送用） */
 const SUBMITS = new WeakMap<HTMLElement, () => void>();
+/** bindComposer opts.popoverSizing：三弹层共用的程序面整体覆盖（> composer 根 data-panel-* > 内置默认） */
+const POPUP_SIZING = new WeakMap<HTMLElement, PanelSizing>();
 
 /* ══════════════ 小工具 ══════════════ */
 
@@ -187,7 +250,7 @@ function isBrowser(): boolean {
   return typeof document !== 'undefined' && typeof window !== 'undefined';
 }
 
-function emit(target: HTMLElement, name: string, detail: unknown): void {
+function emit<K extends keyof IcenEventMap>(target: HTMLElement, name: K, detail: IcenEventMap[K]): void {
   emitIcen(target, name, detail);
 }
 
@@ -547,13 +610,25 @@ function closePopup(composer: HTMLElement, restoreFocus = true): void {
 interface MountPopupInit {
   mode: ComposerPopup['mode'];
   anchor: Element;
-  minWidth: number;
-  maxWidth: number;
-  maxHeight: number;
+  /** 本弹层的内置默认尺寸（原魔数）；实际生效见 resolvePopupSizing 的三层合并 */
+  sizing: PanelSizing;
   returnFocus: HTMLElement | null;
   refRange?: { start: number; end: number } | null;
   pick: (opt: HTMLButtonElement) => void;
   build: (session: ComposerPopup) => void;
+}
+
+/**
+ * 三弹层（模型/命令/引用）共用的尺寸解析（PanelSizing 契约）：
+ * 用户属性面 = composer 根上的 data-panel-*（data-panel-width/min/max/min-height/max-height，
+ * 三弹层共用一套）；程序面 = bindComposer opts.popoverSizing（整体覆盖三个弹层）；
+ * init.sizing 的原魔数仅作缺省默认。优先级：popoverSizing > data-panel-* > 内置默认。
+ */
+function resolvePopupSizing(composer: HTMLElement, defaults: PanelSizing): PanelSizing {
+  /* resolvePanelSizing：先读 composer 根属性面，程序面字段覆盖（契约内方向） */
+  const explicit = resolvePanelSizing(composer, POPUP_SIZING.get(composer));
+  /* 内置默认只填空：属性面/程序面显式给出的字段优先 */
+  return { ...defaults, ...explicit };
 }
 
 function mountPopup(composer: HTMLElement, init: MountPopupInit): ComposerPopup {
@@ -580,9 +655,7 @@ function mountPopup(composer: HTMLElement, init: MountPopupInit): ComposerPopup 
     side: 'top',
     align: 'start',
     offset: 8,
-    minWidth: init.minWidth,
-    maxWidth: init.maxWidth,
-    maxHeight: init.maxHeight,
+    sizing: resolvePopupSizing(composer, init.sizing),
     onClose: () => {
       if (POPUP.get(composer) === session) POPUP.delete(composer);
       panel.remove();
@@ -619,9 +692,7 @@ function openModelPopup(composer: HTMLElement): void {
   const session = mountPopup(composer, {
     mode: 'model',
     anchor,
-    minWidth: 220,
-    maxWidth: 320,
-    maxHeight: 340,
+    sizing: { minWidth: 220, maxWidth: 320, maxHeight: 340 },
     returnFocus: btn ?? ta,
     pick: (opt) => {
       const provider = opt.dataset.provider ?? '';
@@ -755,9 +826,7 @@ function openCommandPopup(composer: HTMLElement, token: string): void {
   const session = mountPopup(composer, {
     mode: 'command',
     anchor: box,
-    minWidth: Math.min(Math.max(boxRect.width, 200), 320),
-    maxWidth: 360,
-    maxHeight: 320,
+    sizing: { minWidth: Math.min(Math.max(boxRect.width, 200), 320), maxWidth: 360, maxHeight: 320 },
     returnFocus: ta,
     pick: (opt) => {
       const name = opt.dataset.name ?? '';
@@ -864,9 +933,7 @@ function openRefPopup(
   const session = mountPopup(composer, {
     mode: 'ref',
     anchor: box,
-    minWidth: Math.min(Math.max(boxRect.width, 200), 320),
-    maxWidth: 360,
-    maxHeight: 320,
+    sizing: { minWidth: Math.min(Math.max(boxRect.width, 200), 320), maxWidth: 360, maxHeight: 320 },
     returnFocus: ta,
     refRange: range,
     pick: (opt) => {
@@ -889,7 +956,8 @@ function openRefPopup(
       list.className = 'ai-composer-popup-list';
       list.setAttribute('role', 'listbox');
       list.setAttribute('aria-label', '引用');
-      for (const kind of REF_KIND_ORDER) {
+      for (const kind of knownRefKinds(sources)) {
+        const def = getRefKindDef(kind);
         const items = sources.filter((r) => r.kind === kind);
         if (items.length === 0) continue;
         const group = document.createElement('div');
@@ -897,7 +965,7 @@ function openRefPopup(
         group.dataset.kind = kind;
         group.appendChild(Object.assign(document.createElement('div'), {
           className: 'ai-composer-popup-group-label',
-          textContent: REF_KIND_LABEL[kind],
+          textContent: def.label,
         }));
         for (const r of items) {
           const opt = document.createElement('button');
@@ -908,7 +976,7 @@ function openRefPopup(
           opt.dataset.hay = `${r.label} ${r.sub ?? ''}`.toLowerCase();
           const icon = document.createElement('span');
           icon.className = 'ai-composer-popup-option-icon';
-          const svg = svgIcon(REF_KIND_ICON[kind]);
+          const svg = svgIcon(def.icon);
           if (svg) icon.appendChild(svg);
           const label = document.createElement('span');
           label.className = 'ai-composer-popup-option-label';
@@ -1425,7 +1493,9 @@ export function setComposerCommands(el: HTMLElement, commands: AiComposerCommand
 }
 
 /**
- * 配置 @ 引用源（§8）：任意位置 token 起点 `@` 触发引用弹层（按 kind 分组：file/folder/doc/agent）。
+ * 配置 @ 引用源（§8）：任意位置 token 起点 `@` 触发引用弹层（按 kind 分组：内置
+ * file/folder/doc/agent，可经 registerRefKind 扩展/覆盖；未知 kind 不丢弃——通用文档
+ * 图标 + kind 原文兜底，排序缺省排最后）。
  * 选中后文本插入 `@label ` + refs chip +1，派 icen:ai-ref {action:'add', ref}；
  * chip × 移除 chip 并删文本里首个 `@label`，派 {action:'remove', ref}。
  */
@@ -1552,6 +1622,12 @@ export interface AiComposerBindOpts {
   usage?: { from: 'context' | 'billing' | AiAuditor; total?: number };
   /** 运行态自动管理（默认 true）：icen:ai-send → running；icen:ai-done → 解除 */
   running?: boolean;
+  /**
+   * 三弹层（模型/命令/引用）尺寸的整体程序覆盖（PanelSizing 契约）：
+   * 优先于 composer 根上的 data-panel-*（三弹层共用的用户覆盖面）与各弹层内置默认，
+   * 一次设置对三个弹层同时生效。
+   */
+  popoverSizing?: PanelSizing;
 }
 
 export interface AiComposerBinding {
@@ -1584,6 +1660,9 @@ export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): Ai
   if (!composer) return { unbind: noop };
   if (BOUND.has(composer)) return { unbind: noop }; /* 防重复绑定 */
   BOUND.add(composer);
+
+  /* 三弹层尺寸整体覆盖（> composer 根 data-panel-* > 内置默认；跨 bind/unbind 保留的配置） */
+  if (opts.popoverSizing) POPUP_SIZING.set(composer, opts.popoverSizing);
 
   const disposers: Array<() => void> = [];
   const usageCfg = opts.usage;

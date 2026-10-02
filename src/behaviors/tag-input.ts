@@ -10,8 +10,10 @@
  * button.tag-chip-x）；Enter / 逗号提交草稿（trim；重复值静默清空；达到 data-max
  * 拒加并保留草稿）；空草稿 Backspace 删尾 chip；blur 提交草稿；chip × mousedown
  * preventDefault 防 blur 抢跑、click 删除；达到 data-max 容器加 .is-max。
- * 每次变化把最新 tags 回写容器 data-tags；tags 非空时清空 placeholder。
- * 同一容器重复 init 幂等。
+ * 每次变化把最新 tags 回写容器 data-tags 并派发 icen:tags-change { tags }；
+ * tags 非空时清空 placeholder。
+ * 同一容器重复 init 幂等；initTagInput 返回销毁函数（移除 field 全部监听并复位
+ * 幂等标记，销毁后可重新 init；销毁至重 init 之间残留 chip 的点击不派发）。SSR 下返回 no-op。
  */
 
 import { emitIcen } from './events';
@@ -20,23 +22,26 @@ interface MarkedTagInput extends HTMLElement {
   __icenTagInit?: boolean;
 }
 
-function setup(wrap: HTMLElement): void {
+function setup(wrap: HTMLElement): (() => void) | undefined {
   const el = wrap as MarkedTagInput;
-  if (el.__icenTagInit) return;
+  if (el.__icenTagInit) return undefined;
   el.__icenTagInit = true;
 
   const fieldEl = wrap.querySelector<HTMLInputElement>('.tag-input-field');
-  if (!fieldEl) return;
+  if (!fieldEl) return undefined;
   const field = fieldEl; // 闭包内不保留 narrowing，转为非空常量
   const maxAttr = wrap.getAttribute('data-max');
   const max = maxAttr ? Number(maxAttr) || Infinity : Infinity;
   const placeholder = field.placeholder;
 
+  /* 销毁后残留 chip 的监听不派发（重 init 会整体重建 chip） */
+  let alive = true;
+
   /* IME 组合态跟踪：compositionend 在部分浏览器里晚于 Enter 的 keydown，
      仅看 ev.isComposing 会漏判，本地跟踪兜底 */
   let isComposing = false;
-  field.addEventListener('compositionstart', () => { isComposing = true; });
-  field.addEventListener('compositionend', () => { isComposing = false; });
+  const onCompositionStart = (): void => { isComposing = true; };
+  const onCompositionEnd = (): void => { isComposing = false; };
 
   let tags: string[] = (wrap.getAttribute('data-tags') ?? '')
     .split(',')
@@ -53,10 +58,12 @@ function setup(wrap: HTMLElement): void {
   }
 
   function emit(): void {
+    if (!alive) return;
     emitIcen(wrap, 'icen:tags-change', { tags: [...tags] });
   }
 
   function remove(index: number): void {
+    if (!alive) return;
     tags.splice(index, 1);
     render();
     emit();
@@ -86,6 +93,7 @@ function setup(wrap: HTMLElement): void {
   }
 
   function commit(): void {
+    if (!alive) return;
     const v = field.value.trim();
     if (!v) return;
     if (tags.length >= max) return; // 拒加，保留草稿让用户看到未被接受
@@ -96,7 +104,7 @@ function setup(wrap: HTMLElement): void {
     emit();
   }
 
-  field.addEventListener('keydown', (ev) => {
+  const onKeyDown = (ev: KeyboardEvent): void => {
     // IME 组合中（中文/日文输入法选词）Enter 是确认候选，不提交
     if (isComposing || ev.isComposing) return;
     if (ev.key === 'Enter' || ev.key === ',') {
@@ -105,18 +113,44 @@ function setup(wrap: HTMLElement): void {
     } else if (ev.key === 'Backspace' && !field.value && tags.length > 0) {
       remove(tags.length - 1);
     }
-  });
+  };
+
+  field.addEventListener('compositionstart', onCompositionStart);
+  field.addEventListener('compositionend', onCompositionEnd);
+  field.addEventListener('keydown', onKeyDown);
   field.addEventListener('blur', commit);
 
   render();
+
+  /* 销毁：移除 field 全部监听并复位幂等标记（可重新 init） */
+  return () => {
+    alive = false;
+    field.removeEventListener('compositionstart', onCompositionStart);
+    field.removeEventListener('compositionend', onCompositionEnd);
+    field.removeEventListener('keydown', onKeyDown);
+    field.removeEventListener('blur', commit);
+    el.__icenTagInit = false;
+  };
 }
 
-/** 为 root 下每个 .tag-input 容器初始化（root 自身匹配也算；data-tags 为可选初始值配置）。 */
-export function initTagInput(root?: ParentNode): void {
-  if (typeof document === 'undefined') return;
-  const scope = root ?? document;
-  const containers: HTMLElement[] = [];
-  if (scope instanceof HTMLElement && scope.matches('.tag-input')) containers.push(scope);
-  containers.push(...Array.from(scope.querySelectorAll<HTMLElement>('.tag-input')));
-  for (const c of containers) setup(c);
+/**
+ * 为 root 下每个 .tag-input 容器初始化（root 自身匹配也算；data-tags 为可选初始值配置）。
+ * 返回销毁函数：移除本次挂上的全部监听并复位幂等标记（销毁后可重新 init）。SSR 下返回 no-op。
+ */
+export function initTagInput(root?: ParentNode): () => void {
+  const cleanups: Array<() => void> = [];
+  if (typeof document !== 'undefined') {
+    const scope = root ?? document;
+    const containers: HTMLElement[] = [];
+    if (scope instanceof HTMLElement && scope.matches('.tag-input')) containers.push(scope);
+    containers.push(...Array.from(scope.querySelectorAll<HTMLElement>('.tag-input')));
+    for (const c of containers) {
+      const cleanup = setup(c);
+      if (cleanup) cleanups.push(cleanup);
+    }
+  }
+  return () => {
+    for (const fn of cleanups) fn();
+    cleanups.length = 0;
+  };
 }

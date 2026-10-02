@@ -3,10 +3,19 @@
  * 命中最近的 .copy-btn[data-copy] → navigator.clipboard.writeText，
  * 失败回退 textarea + execCommand；成功后按钮文本变「已复制」加 .is-done 类，1.4s 还原。
  * 图标按钮：按钮带 data-copy-icon 属性时不改文本，只加 .is-done 类（由 CSS 切换图标，如剪贴板→对勾）。
- * 同一 root 重复 init 幂等。
+ *
+ * 事件（从命中按钮派发，bubbles）：
+ *   icen:copy-success { text }            复制成功（含 execCommand 回退成功）
+ *   icen:copy-error   { text, reason }    复制失败（此前静默；reason 为失败原因描述）
+ *
+ * 同一 root 重复 init 幂等；initCopy 返回销毁函数（移除委托监听并复位幂等标记，可重新 init）。
+ * SSR 下返回 no-op。
  */
 
-const initialized = new WeakSet<ParentNode>();
+import { emitIcen } from './events';
+
+/** root → 已挂的委托处理器（销毁时摘除用；存在性即幂等标记） */
+const handlers = new WeakMap<ParentNode, (ev: Event) => void>();
 const flashing = new WeakMap<HTMLElement, { original: string | null; timer: number }>();
 
 function legacyCopy(text: string): boolean {
@@ -27,16 +36,28 @@ function legacyCopy(text: string): boolean {
   return ok;
 }
 
-async function copyText(text: string): Promise<boolean> {
-  try {
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+interface CopyOutcome {
+  ok: boolean;
+  /** 失败原因（ok=false 时必有；给 icen:copy-error 的 reason） */
+  reason?: string;
+}
+
+async function copyText(text: string): Promise<CopyOutcome> {
+  const hasApi = typeof navigator !== 'undefined' && !!navigator.clipboard?.writeText;
+  if (hasApi) {
+    try {
       await navigator.clipboard.writeText(text);
-      return true;
+      return { ok: true };
+    } catch (err) {
+      /* clipboard 被拒（权限/非安全上下文）→ 回落 execCommand */
+      const fallbackOk = legacyCopy(text);
+      if (fallbackOk) return { ok: true };
+      const reason = err instanceof Error ? err.message : String(err);
+      return { ok: false, reason: `clipboard API 被拒（${reason}）且回退 execCommand 失败` };
     }
-  } catch {
-    /* clipboard 被拒（权限/非安全上下文）→ 回落 execCommand */
   }
-  return legacyCopy(text);
+  if (legacyCopy(text)) return { ok: true };
+  return { ok: false, reason: '剪贴板不可用（无 clipboard API 且 execCommand 回退失败）' };
 }
 
 function flashDone(btn: HTMLElement): void {
@@ -61,16 +82,29 @@ function onClick(root: ParentNode, ev: Event): void {
   // root 为 Element 时，closest 可能爬到 root 之外，需要兜住
   if (!btn || !(root as Node).contains(btn)) return;
   const text = btn.getAttribute('data-copy') ?? '';
-  void copyText(text).then((ok) => {
-    if (ok) flashDone(btn as HTMLElement);
+  void copyText(text).then((outcome) => {
+    if (outcome.ok) {
+      flashDone(btn as HTMLElement);
+      emitIcen(btn, 'icen:copy-success', { text });
+    } else {
+      emitIcen(btn, 'icen:copy-error', { text, reason: outcome.reason ?? '未知错误' });
+    }
   });
 }
 
-/** 委托监听 click；同一 root（含默认的 document）重复调用幂等。 */
-export function initCopy(root?: ParentNode): void {
-  if (typeof document === 'undefined') return;
+/**
+ * 委托监听 click；同一 root（含默认的 document）重复调用幂等。
+ * 返回销毁函数：移除委托监听并复位幂等标记（销毁后可重新 init）。SSR 下返回 no-op。
+ */
+export function initCopy(root?: ParentNode): () => void {
+  if (typeof document === 'undefined') return () => {};
   const scope = root ?? document;
-  if (initialized.has(scope)) return;
-  initialized.add(scope);
-  (scope as EventTarget).addEventListener('click', (ev) => onClick(scope, ev));
+  if (handlers.has(scope)) return () => {};
+  const handler = (ev: Event): void => onClick(scope, ev);
+  handlers.set(scope, handler);
+  (scope as EventTarget).addEventListener('click', handler);
+  return () => {
+    (scope as EventTarget).removeEventListener('click', handler);
+    handlers.delete(scope);
+  };
 }

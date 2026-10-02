@@ -25,7 +25,7 @@ export interface PopoverViewport {
   height: number;
 }
 
-export type PopoverSide = 'top' | 'bottom';
+export type PopoverSide = 'top' | 'bottom' | 'left' | 'right';
 export type PopoverAlign = 'start' | 'center' | 'end' | 'stretch';
 
 export interface PopoverLayoutOptions {
@@ -44,8 +44,10 @@ export interface PopoverLayoutOptions {
 /* ═══════════ 面板尺寸统一契约（PanelSizing） ═══════════
    全库浮层面板共用同一套尺寸心智模型：
    - 属性面（声明式，挂组件根/面板元素）：data-panel-width（固定宽，最高优先）/
-     data-panel-min（最小宽）/ data-panel-max（最大宽）/ data-panel-max-height（高度上限）
+     data-panel-min（最小宽）/ data-panel-max（最大宽）/ data-panel-min-height /
+     data-panel-max-height（高度上限）
    - 程序面（命令式）：PanelSizing 对象，经 resolvePanelSizing 与属性面合并（程序面优先）
+   - 值域：正数 px（与布局引擎同构）；百分比/rem/CSS 变量不属于本契约
    消费方：select / dropdown / context-menu / date-picker / command-palette / modal /
    openPopover。布局引擎只认解析后的纯数字，属性读写全部收敛在本模块。 */
 export interface PanelSizing {
@@ -55,6 +57,8 @@ export interface PanelSizing {
   minWidth?: number;
   /** 最大宽 */
   maxWidth?: number;
+  /** 最小高（与 PopoverLayoutOptions.minHeight 对齐） */
+  minHeight?: number;
   /** 高度上限 */
   maxHeight?: number;
 }
@@ -63,6 +67,7 @@ const PANEL_SIZING_ATTRS = {
   width: 'data-panel-width',
   minWidth: 'data-panel-min',
   maxWidth: 'data-panel-max',
+  minHeight: 'data-panel-min-height',
   maxHeight: 'data-panel-max-height',
 } as const;
 
@@ -109,15 +114,30 @@ export function sizingToLayout<T extends { minWidth?: number; maxWidth?: number;
   return out;
 }
 
-/** 把尺寸契约内联到内容驱动的自建面板（dropdown / context-menu / date-picker 等 fixed 面板）。 */
-export function applyPanelSizing(panel: HTMLElement, sizing: PanelSizing): void {
+/** 把尺寸契约内联到自建面板（dropdown / context-menu / date-picker 等 fixed 面板）。
+ *  传 null 复位全部内联尺寸——单例面板跨实例复用时防「上次的设置串味」。
+ *  视口守卫：width / maxWidth 一律夹到 视口宽 − 24px（窄屏上过大的 data-panel-width 不溢出，
+ *  与 computePopoverLayout 的 availableWidth 同一纪律，不再两套标准）。 */
+export function applyPanelSizing(panel: HTMLElement, sizing: PanelSizing | null): void {
+  if (sizing == null) {
+    panel.style.width = '';
+    panel.style.minWidth = '';
+    panel.style.maxWidth = '';
+    panel.style.minHeight = '';
+    panel.style.maxHeight = '';
+    return;
+  }
+  const vw = typeof document === 'undefined' ? Number.POSITIVE_INFINITY : document.documentElement.clientWidth;
+  const fitW = (n: number): number => Math.min(n, Math.max(80, vw - 24));
   if (sizing.width != null) {
     /* 固定宽需同时盖掉 CSS 侧的 max-width 上限（如 menu 320 / command-palette 560） */
-    panel.style.width = `${sizing.width}px`;
-    panel.style.maxWidth = `${sizing.width}px`;
+    const w = fitW(sizing.width);
+    panel.style.width = `${w}px`;
+    panel.style.maxWidth = `${w}px`;
   }
-  if (sizing.minWidth != null) panel.style.minWidth = `${sizing.minWidth}px`;
-  if (sizing.maxWidth != null && sizing.width == null) panel.style.maxWidth = `${sizing.maxWidth}px`;
+  if (sizing.minWidth != null) panel.style.minWidth = `${fitW(sizing.minWidth)}px`;
+  if (sizing.maxWidth != null && sizing.width == null) panel.style.maxWidth = `${fitW(sizing.maxWidth)}px`;
+  if (sizing.minHeight != null) panel.style.minHeight = `${sizing.minHeight}px`;
   if (sizing.maxHeight != null) panel.style.maxHeight = `${sizing.maxHeight}px`;
 }
 
@@ -167,7 +187,10 @@ function horizontalAnchor(anchor: PopoverRect, width: number, align: PopoverAlig
   return anchor.left;
 }
 
-/** 视口智能布局：返回 {side, left, top, width, maxHeight}。 */
+/** 视口智能布局：返回 {side, left, top, width, maxHeight}。
+ *  纵向侧（top/bottom）：选侧按上下空间，宽按 min/max 夹取，高按内容预期。
+ *  横向侧（left/right）：锚点左右翻转，宽取 min..max（不随锚点 stretch），高占满可用空间，
+ *  纵向按 align（start/center/end；stretch 视作 start）贴锚。 */
 export function computePopoverLayout(
   anchor: PopoverRect,
   viewport: PopoverViewport,
@@ -175,13 +198,42 @@ export function computePopoverLayout(
 ): PopoverLayout {
   const margin = opts.margin ?? 12;
   const offset = opts.offset ?? 8;
+  const preferredSide = opts.side ?? 'top';
+  const align = opts.align ?? 'start';
+
+  if (preferredSide === 'left' || preferredSide === 'right') {
+    const availableLeft = Math.max(0, anchor.left - margin - offset);
+    const availableRight = Math.max(0, viewport.width - anchor.right - margin - offset);
+    const side: PopoverSide =
+      (preferredSide === 'left' ? availableLeft : availableRight) >= DEFAULT_MIN_WIDTH
+        ? preferredSide
+        : preferredSide === 'left' ? 'right' : 'left';
+    const minWidth = Math.max(1, opts.minWidth ?? DEFAULT_MIN_WIDTH);
+    const maxWidth = Math.min(
+      Math.max(opts.maxWidth ?? DEFAULT_MAX_WIDTH, minWidth),
+      side === 'left' ? availableLeft : availableRight,
+    );
+    const width = clamp(minWidth, Math.min(minWidth, maxWidth), Math.max(minWidth, maxWidth));
+    const left = clamp(
+      side === 'left' ? anchor.left - offset - width : anchor.right + offset,
+      margin,
+      viewport.width - margin - width,
+    );
+    const availableHeight = Math.max(80, viewport.height - margin * 2);
+    const maxHeight = Math.min(opts.maxHeight ?? DEFAULT_MAX_HEIGHT, availableHeight);
+    const desired = clamp(opts.contentHeightHint ?? Math.min(anchor.height, maxHeight), 40, maxHeight);
+    const anchorTop = align === 'center' ? anchor.top + anchor.height / 2 - desired / 2
+      : align === 'end' ? anchor.bottom - desired
+      : anchor.top;
+    const top = clamp(anchorTop, margin, viewport.height - margin - desired);
+    return { side, left, top, width, maxHeight };
+  }
+
   const availableWidth = Math.max(80, viewport.width - margin * 2);
   const requestedMinWidth = Math.max(1, opts.minWidth ?? DEFAULT_MIN_WIDTH);
   const requestedMaxWidth = Math.max(requestedMinWidth, opts.maxWidth ?? DEFAULT_MAX_WIDTH);
   const maxWidth = Math.min(requestedMaxWidth, availableWidth);
   const minWidth = Math.min(requestedMinWidth, maxWidth);
-  const preferredSide = opts.side ?? 'top';
-  const align = opts.align ?? 'start';
   const availableTop = Math.max(0, anchor.top - margin - offset);
   const availableBottom = Math.max(0, viewport.height - anchor.bottom - margin - offset);
   const availableHeight = Math.max(80, viewport.height - margin * 2);

@@ -10,7 +10,9 @@
  *     <button class="page-btn motion" aria-label="下一页">›</button>
  *   </nav>
  *
- * 翻页逻辑由消费方实现，这里只提供静态样式契约。
+ * 点击接线由 behaviors/controls.ts 的 initPagination() 提供（.page-btn 激活位移 +
+ * icen:page-change，上下页按钮按 aria-label / data-dir 推断方向）；总页数与省略号
+ * 折叠策略由消费方维护，这里只提供样式契约。
  */
 
 .pagination {

@@ -29,7 +29,7 @@ const spec = read('docs/spec/ai-native.md');
 
 /* 复杂模块的类型面原文（dist 的 .d.mts，构建期自动内嵌 —— 零漂移的「深层 AGENTS 文档」） */
 const DEEP_MODULES = [
-  'ai-core', 'ai-chat', 'ai-composer', 'ai-tool', 'ai-panel', 'ai-diff', 'ai-provider', 'ai-tools', 'charts',
+  'events', 'controls', 'ai-core', 'ai-chat', 'ai-composer', 'ai-tool', 'ai-panel', 'ai-diff', 'ai-provider', 'ai-tools', 'charts',
 ];
 
 mkdirSync(SITE_PUBLIC, { recursive: true });

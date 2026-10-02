@@ -1,18 +1,20 @@
 # @icen.ai/ui — Icen Design System
 
-icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明暗双模 × 3 风格 profile）+ 无框架组件 CSS（56 组件）+ 行为 JS（33 behaviors）+ AI 原生组件族 + 图表通用层 + AI 工具体系**。工程形态与 `@icen.ai/cli` 一致（Bun + TS + tsup + ESM + MIT）。
+icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明暗双模 × 3 风格 profile）+ 无框架组件 CSS（56 组件）+ 行为 JS（35 behaviors）+ 统一事件体系 + AI 原生组件族 + 图表通用层 + AI 工具体系**。工程形态与 `@icen.ai/cli` 一致（Bun + TS + tsup + ESM + MIT）。
 
 - 色彩预设：`clay`（默认，陶土橙 × 纸白 = icen 品牌）/ `piano` / `art` / `vangogh` / `ink` / `retro`，各含 `.dark` 变体
 - 风格配置：`.style-modern` / `.style-retro` / `.style-terminal`（几何 / 密度 / 动效 / 字体 token，与色彩正交）
 - 可选效果层：`retro-effects.css`（CRT 扫描线 / 颗粒 / 像素边框 / 打字机光标 —— 仅 `.style-retro` 激活时生效，按需 import）
-- 组件：btn / form / input / select / slider / switch / tag-input / upload / modal / popover / tooltip / menu（含 dropdown + context-menu）/ tabs / nav / sidebar / breadcrumb / pagination / steps / segmented / accordion / tree / carousel / charts / table / stat / card / panel / pill / tag / badge / empty / feedback / content / media / toolbar / split-pane / date-picker / command-palette / notification / copy / scroll-area / back-top / datatable / layout（56 个组件 CSS，含 charts 基座 + 11 个细分图表 kit，贡献日历样式并入基座）
+- 组件：btn / form / input / select / slider / switch / tag-input / upload / modal / popover / tooltip / menu（含 dropdown + context-menu）/ tabs / nav / sidebar / breadcrumb / pagination / steps / segmented / accordion / tree / carousel / charts / table / stat / card / panel / pill / tag / badge / empty / feedback / content / media / toolbar / split-pane / date-picker / command-palette / notification / copy / scroll-area / back-top / datatable / layout（56 个组件 CSS，含 charts 基座 + 11 个细分图表 kit，贡献日历样式并入基座）；浮层尺寸统一 PanelSizing 契约（`data-panel-width/-min/-max/-min-height/-max-height` 属性面 + 程序面对象，含视口夹取）
 - 图表通用层（v0.8）：`renderChart(el, spec)` 统一入口——纯 JSON 规格（type 缺省自动推断；data[] + dims 任意维度透视）、多系列折线/分组堆叠柱、内置 tooltip、`icen:chart-hover/click/dblclick/contextmenu` 交互事件族、图例点击切换系列；新增贡献日历 renderCalendar（GitHub 同款）与散点气泡 renderScatter
 - AI 原生组件族（v0.7，11 个 slug）：ai-chat（会话容器）/ ai-message（消息行）/ ai-reasoning（推理块）/ ai-composer（输入台）/ ai-tool-call（工具调用卡）/ ai-subagent（子智能体卡）/ ai-diff（差异审阅）/ ai-files（文件标签）/ ai-todo（任务清单）/ ai-context（上下文抽屉）/ ai-usage（用量条）——共享 7 态状态机与 kind 注册表，事件统一 `icen:ai-*` 前缀
 - 标准化内容模型 `AiContent`（v0.7.1，对标 AI SDK v5 parts / MCP / OpenAI / Anthropic，2026-10 调研）：一套 `AiContentPart[]`（text / image / audio / video / file / resource-link）表达任意输入——消息渲染（renderAiMessage 多模态 + 错误变体）、工具回执（MCP content 数组零改动进卡片）、传输层（parts → 两族 wire，含 anthropic `cache_control` 与 tool_result 回灌）全部只认这一套；`normalizeContentParts` 一函数归一四族来源，`estimateTokens` / `contextEstimate` 提供粗估与上下文口径
 - ai-provider 适配层（v0.7.1 增强）：五家厂商注册表（含定价表，`estimateCost` 未命中不猜价）、chat + stream 双族线协议多模态传输、审计闭环（`createAiAuditor` 条目含 cost 定价估算与 ttftMs 首 token 延迟，`renderAiAudit` 面板 + `ai-context` 抽屉审计节）、请求收尾派 `icen:ai-done`（status/usage/cost/error/durationMs/ttftMs）
 - 绑定层 `bindComposer`（v0.7.1，「零接线全链路」）：一行把 composer ↔ 消息区（renderAiMessage）↔ client（stream + 停止 + 排队续发 + 错误路径）↔ 上下文环（`usage.from: 'context'` 正确口径 / `'billing'` 计费口径 / auditor）接成闭环；不传 client 为纯状态绑定（渐进采用）；附件三入口（钮选 / 粘贴 / 拖放）
 - AI 工具体系（v0.8，`ai-tools`）：UI 能力注册为模型可调用的工具（内置 `render_chart` 吃 ChartSpec 纯 JSON）；`createAiToolArea` 挂载区三层控制（白名单 / max LRU / 运行时调节）；模型侧 `aiToolsToOpenAI()` 直接给 tools 参数、`aiToolsManifest()` 贴 system prompt；工具回执内嵌图（output 为 chart spec → 工具卡展开区直接渲染）
-- 行为：theme / tabs / toast / copy / input / select / slider / tag-input / upload / modal / dropdown / popover / context-menu / accordion / tree / carousel / charts / nav / sidebar / datatable / notification / back-top / command-palette / date-picker / split-pane / ai-core / ai-chat / ai-composer / ai-tool / ai-provider / ai-diff / ai-panel / ai-tools（33 个，全部 SSR 守卫 + 幂等 init + textContent-only）
+- 事件体系（events）：`onIcen` 一个入口（类型化 `IcenEventMap` + 选择器委托 + `{ within, signal, once }`）+ `emitIcen` 唯一派生口 + `setEventPolicy` 手势默认行为 + `data-gestures` 声明式手势（click/dblclick/contextmenu/longpress/text-select，位移守卫与消歧内建）
+- 控件族（controls）：`initSwitch`（开关/三态勾选/单选组）/ `initStepper` / `initSegmented` / `initSteps` / `initRating` / `initPagination` / `initTableSort`——纯 CSS 控件的行为承载与 `icen:*-change` 事件
+- 行为：theme / tabs / toast / copy / input / select / slider / tag-input / upload / modal / dropdown / popover / context-menu / accordion / tree / carousel / charts / nav / sidebar / datatable / notification / back-top / command-palette / date-picker / split-pane / events / controls / ai-core / ai-chat / ai-composer / ai-tool / ai-provider / ai-diff / ai-panel / ai-tools（35 个，全部 SSR 守卫 + 幂等 init + 返回销毁函数 + textContent-only）
 
 ## 使用
 

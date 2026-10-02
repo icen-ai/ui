@@ -13,10 +13,21 @@
  * data-close-on-overlay="false" 可禁用）。同时只开一个；打开时 backdrop
  * 被 portal 到 document.body。backdrop 被外部移除时关闭路径仍复位
  * 滚动锁/监听/焦点。SSR 下为 no-op。
+ * 事件：打开成功派 icen:modal-open { id }、关闭派 icen:modal-close { id }
+ * （均从 document 广播，onIcen 全局/within 均可收）。
  */
 
 const FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), audio, video, details>summary';
+
+/** openModal 可选项。 */
+export interface ModalOpenOptions {
+  /**
+   * 初始焦点：缺省 = 聚焦面板内第一个可聚焦元素（无则面板自身）；
+   * 传 HTMLElement = 聚焦该元素；'none' = 不动焦点（调用方自管，焦点陷阱仍生效）。
+   */
+  initialFocus?: HTMLElement | 'none';
+}
 
 let openId: string | null = null;
 let restoreFocusTo: HTMLElement | null = null;
@@ -25,6 +36,7 @@ let keyHandler: ((e: KeyboardEvent) => void) | null = null;
 let initialized = false;
 
 import { applyPanelSizing, readPanelSizing } from './popover';
+import { emitIcen } from './events';
 
 function findBackdrop(id: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`.modal-backdrop[data-modal="${CSS.escape(id)}"]`);
@@ -35,8 +47,11 @@ function portal(backdrop: HTMLElement): void {
   if (backdrop.parentElement !== document.body) document.body.appendChild(backdrop);
 }
 
-/** 打开指定 id 的 modal；已有其他 modal 打开时先关闭它。 */
-export function openModal(id: string): void {
+/**
+ * 打开指定 id 的 modal；已有其他 modal 打开时先关闭它。
+ * 打开成功后从 document 派发 icen:modal-open { id }（广播）。
+ */
+export function openModal(id: string, opts?: ModalOpenOptions): void {
   if (typeof document === 'undefined') return;
   if (openId === id) return;
   if (openId) closeModal(openId);
@@ -114,11 +129,24 @@ export function openModal(id: string): void {
   };
   window.addEventListener('keydown', keyHandler);
 
-  const focusable = panel.querySelector<HTMLElement>(FOCUSABLE);
-  (focusable ?? panel).focus();
+  /* 初始焦点：默认第一个可聚焦（无则面板自身）；元素 = 聚焦它；'none' = 不动 */
+  if (opts?.initialFocus === 'none') {
+    /* 调用方自管焦点；Tab 焦点陷阱仍生效 */
+  } else if (opts?.initialFocus instanceof HTMLElement) {
+    opts.initialFocus.focus();
+  } else {
+    const focusable = panel.querySelector<HTMLElement>(FOCUSABLE);
+    (focusable ?? panel).focus();
+  }
+
+  emitIcen(document, 'icen:modal-open', { id });
 }
 
-/** 关闭指定 id 的 modal（backdrop 已被外部移除时也照常复位状态/监听/滚动锁）。 */
+/**
+ * 关闭指定 id 的 modal（backdrop 已被外部移除时也照常复位状态/监听/滚动锁）。
+ * 关闭已打开的 modal 后从 document 派发 icen:modal-close { id }（广播）；
+ * 关闭未被接管打开的 modal（幂等空操作路径）不派发。
+ */
 export function closeModal(id: string): void {
   if (typeof document === 'undefined') return;
   const backdrop = findBackdrop(id);
@@ -133,24 +161,27 @@ export function closeModal(id: string): void {
   document.body.style.overflow = prevBodyOverflow;
   if (restoreFocusTo && restoreFocusTo.isConnected) restoreFocusTo.focus();
   restoreFocusTo = null;
+  emitIcen(document, 'icen:modal-close', { id });
 }
 
 /**
  * 绑定触发器/关闭钮/backdrop 点击（document 级事件委托，重复调用安全）。
  * root 用于扫描 [data-modal-open] 补 aria-haspopup=dialog。
+ * 返回销毁函数：摘除 document 委托并复位幂等标记（销毁后可重新 init）；
+ * 销毁时若有 modal 开着会顺带关闭（复位滚动锁/监听/焦点）。SSR 下返回 no-op。
  */
-export function initModal(root?: ParentNode): void {
-  if (typeof document === 'undefined') return;
+export function initModal(root?: ParentNode): () => void {
+  if (typeof document === 'undefined') return () => {};
   const scope = root ?? document;
 
   scope
     .querySelectorAll<HTMLElement>('[data-modal-open]')
     .forEach((el) => el.setAttribute('aria-haspopup', 'dialog'));
 
-  if (initialized) return;
+  if (initialized) return () => {};
   initialized = true;
 
-  document.addEventListener('click', (e) => {
+  const onClick = (e: MouseEvent): void => {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
 
@@ -177,5 +208,14 @@ export function initModal(root?: ParentNode): void {
     ) {
       closeModal(target.dataset.modal);
     }
-  });
+  };
+  document.addEventListener('click', onClick);
+
+  const destroy = (): void => {
+    document.removeEventListener('click', onClick);
+    if (openId) closeModal(openId);
+    /* 复位幂等标记，销毁后可重新 init */
+    initialized = false;
+  };
+  return destroy;
 }

@@ -38,7 +38,7 @@
  */
 
 import { formatDuration, aiContentUrl, svgIcon, type AiContent, type AiContentPart, type AiTextPart } from './ai-core';
-import { emitIcen } from './events';
+import { emitIcen, type IcenEventMap } from './events';
 
 /* 消息操作图标（lucide 风格 24×24，与静态 DOM 契约同款；svgIcon 消毒解析） */
 const ICON_COPY =
@@ -59,7 +59,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function emit(target: HTMLElement, name: string, detail: unknown): void {
+function emit<K extends keyof IcenEventMap>(target: HTMLElement, name: K, detail: IcenEventMap[K]): void {
   emitIcen(target, name, detail);
 }
 

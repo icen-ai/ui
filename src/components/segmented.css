@@ -28,7 +28,9 @@
  *        …
  *      </div>
  *
- * segmented/toggle 是纯 CSS 状态组件（.is-active）；stepper/otp 由 behaviors/input.ts 接线。
+ * segmented / stepper 由 behaviors/controls.ts 接线（initSegmented / initStepper，
+ * 派 icen:segmented-change / icen:stepper-change）；otp 由 behaviors/input.ts 的
+ * initInput 接线；toggle-group 为纯 CSS 状态组件（.is-active，使用方自行驱动）。
  */
 
 /* ── 分段控件（排他单选） ── */

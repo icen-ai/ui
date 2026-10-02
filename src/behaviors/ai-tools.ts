@@ -25,7 +25,7 @@
  */
 
 import { renderChart, type ChartSpec, type ChartHandle } from './charts';
-import { emitIcen } from './events';
+import { emitIcen, type IcenEventMap } from './events';
 
 /* ══════════════ 工具注册表 ══════════════ */
 
@@ -201,7 +201,7 @@ function isBrowserTools(): boolean {
   return typeof document !== 'undefined' && typeof window !== 'undefined';
 }
 
-function emitArea(area: HTMLElement, name: string, detail: unknown): void {
+function emitArea<K extends keyof IcenEventMap>(area: HTMLElement, name: K, detail: IcenEventMap[K]): void {
   try {
     emitIcen(area, name, detail);
   } catch {

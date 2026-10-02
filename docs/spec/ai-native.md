@@ -291,7 +291,7 @@ warning），点击弹层展示完整清单（popover + renderAiTodo 只读）�
 </aside>
 ```
 
-- `initAiContext(root?)`：触发器 `[data-ai-context-open]` 全局委托开合；抽屉 fixed 右侧滑入（`--z-chrome`），Esc/外点关闭；`.ai-context--inline` 变体为页面流内嵌（不做 fixed）。
+- `initAiContext(root?)`：触发器 `[data-ai-context-open]` 全局委托开合；抽屉 fixed 右侧滑入（`--z-chrome`），Esc/外点关闭；`.ai-context--inline` 变体为页面流内嵌（不做 fixed）。开/合从抽屉根派 `icen:ai-context-open` / `icen:ai-context-close` `{}`。
 - `renderAiContext(el, { usage?, files?, mcpServers?, skills? })`：组合渲染（内部复用 renderAiUsage / ai-files chip / ai-item 行）。
 - MCP server 行：`.ai-item` 基元 + `is-done`（已连接）/`is-error`（断开）。
 
@@ -388,10 +388,14 @@ export function svgIcon(svg: string): SVGElement | null;  // DOMParser 消毒（
 - `setComposerRefs(el, sources: { kind: 'file'|'folder'|'doc'|'agent', id, label, sub? }[])`：
   任意位置输入 `@` 触发弹层（分组按 kind + 图标）；选中后文本插入 `@label ` 且 refs chip 行 +1，
   派 `icen:ai-ref { action: 'add', ref }`；chip × 移除（同时删文本里首个 `@label`）派 `{ action: 'remove' }`。
+  kind 开放注册：`registerRefKind(kind, { label, icon?, order? })`（照 registerAiKind 的 Map + 兜底模式）；
+  未知且未注册的 kind 不丢弃——通用文档图标 + kind 原文兜底，order 缺省排最后。
 - `setComposerUsage(el, usage, opts)`：工具条右侧挂 `renderAiUsageRing`。
 - 历史：输入为空时按 `↑` 取回上一条已发送文本（会话内历史数组，每 composer 独立）。
 - 运行态（v1 已有 queue/stop）补充：运行中按 `↑` 把最后一条排队消息取回输入框重新编辑（Claude Code 模式）。
 - 弹层接管时键盘事件 preventDefault；IME 组合态安全（沿用 v1）。
+- 三弹层尺寸走 PanelSizing 契约：composer 根 `data-panel-*` 为用户覆盖（三弹层共用），
+  `bindComposer` opts.popoverSizing 整体覆盖，原内置魔数仅为默认。
 - 图标对齐修复：工具条按钮统一 28px 方形、svg 14px 居中、gap 走 density token。
 
 事件新增：`icen:ai-model-change` / `icen:ai-command` / `icen:ai-ref`（全 bubbles）。

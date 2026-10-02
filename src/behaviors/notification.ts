@@ -116,7 +116,10 @@ export interface NotificationHandle {
   id: string;
   /** 当前 DOM 元素（可能已脱离 DOM） */
   el: HTMLElement;
-  /** 关闭本条 */
+  /**
+   * 关闭本条。设计边界：dismiss 不可拦截（无 before-close 钩子，onClose 只能事后观察）；
+   * 持久化走 localStorage 是当前设计边界（无网络/多端同步，配额或隐私模式受限时静默放弃）。
+   */
   dismiss(): void;
   /** 部分更新（title / description / progress / unread / actions / tag 等） */
   update(patch: NotificationUpdatePatch): void;
@@ -179,6 +182,10 @@ interface NotifyFn {
   info(title: string, opts?: NotificationOptions): NotificationHandle | null;
   progress(title: string, opts?: NotificationOptions): NotificationHandle | null;
   confirm(title: string, opts?: NotificationConfirmOptions): Promise<boolean>;
+  /**
+   * 关闭单条（id 缺省 = 全部）。设计边界：dismiss 不可拦截、持久化走 localStorage
+   * 是当前设计边界（详见 NotificationHandle.dismiss）。
+   */
   dismiss(id?: string): void;
   clear(): void;
   markRead(id?: string): void;
@@ -1280,18 +1287,36 @@ export const notify: NotifyFn = Object.assign(
   },
 );
 
-/** 委托初始化：建立默认容器 + 恢复持久化通知。幂等。 */
-export function initNotification(): void {
-  if (!isBrowser()) return;
-  if (globalInit.done) return;
+/**
+ * 委托初始化：建立默认容器 + 恢复持久化通知。幂等。
+ * 返回销毁函数：移除本次恢复的持久化通知（连同 DOM 与 store 记录），默认容器已空时
+ * 一并回收，并复位幂等标记（可重新 init）。注意：销毁只回收 init 恢复的内容；
+ * notify() 逐条创建的通知不在回收范围（由宿主自行 dismiss），destroy 后 push 仍可用。
+ */
+export function initNotification(): () => void {
+  if (!isBrowser()) return () => {};
+  if (globalInit.done) return () => {};
   globalInit.done = true;
   const container = ensureContainer();
   // 恢复持久化通知
   const key = persistKeyFor(cfg.persist);
+  const restored: NotificationRecord[] = [];
   if (key) {
     knownPersistKeys.add(key);
     for (const r of restorePersisted(container, key)) {
       store.set(r.id, r);
+      restored.push(r);
     }
   }
+  return () => {
+    for (const r of restored) {
+      if (r.timer) window.clearTimeout(r.timer);
+      store.delete(r.id);
+      r.el?.remove();
+    }
+    restored.length = 0;
+    /* 默认容器已空则一并回收（仍有活跃通知时保留容器） */
+    if (container.childElementCount === 0) container.remove();
+    globalInit.done = false;
+  };
 }

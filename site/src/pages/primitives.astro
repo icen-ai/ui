@@ -161,10 +161,10 @@ const tokens = [
 initGestures();   // 幂等，全局一次
 
 <!-- 任意容器开通手势（空格分隔） -->
-<div class="card" data-gestures="click dblclick contextmenu select">…</div>
+<div class="card" data-gestures="click dblclick contextmenu text-select">…</div>
 
 // 绑定：一个入口，三种形态（类型安全，返回解绑函数）
-onIcen('icen:select', (e) => console.log('划词:', e.detail.text));
+onIcen('icen:text-select', (e) => console.log('划词:', e.detail.text));
 onIcen('icen:chart-click', '.chart', (e) => …);          // 选择器委托
 onIcen('icen:upload', (e) => …, { within: formEl });     // 子树限定
 
@@ -178,7 +178,7 @@ setEventPolicy('icen:dblclick', null);   // 禁用某类默认
 // 组件作者：派发自定义事件走唯一派生口（勿裸写 new CustomEvent）
 emitIcen(el, 'icen:my-change', { value });`} lang="js" />
       <p class="dim" style="margin:14px 0 8px">活演示 —— 对下面卡片单击 / 双击 / 右键 / 长按 / 划词：</p>
-      <div class="gesture-demo" data-gestures="click dblclick contextmenu longpress select" tabindex="0">
+      <div class="gesture-demo" data-gestures="click dblclick contextmenu longpress text-select" tabindex="0">
         <p class="gesture-demo-title">手势试验田</p>
         <p class="gesture-demo-hint">这是一段可以划选的文本。Try me: click, double-click, right-click, long-press, or select this text.</p>
       </div>
@@ -198,7 +198,7 @@ emitIcen(el, 'icen:my-change', { value });`} lang="js" />
     'icen:dblclick': '双击',
     'icen:contextmenu': '右键',
     'icen:longpress': '长按',
-    'icen:select': '划词',
+    'icen:text-select': '划词',
   };
   /* 策略层活示例：右键默认行为 = 闪烁强调（真实项目里换成自己的菜单） */
   setEventPolicy('icen:contextmenu', () => {
@@ -209,7 +209,7 @@ emitIcen(el, 'icen:my-change', { value });`} lang="js" />
     onIcen(type, (e) => {
       if (!log) return;
       const d = e.detail;
-      const extra = type === 'icen:select' && d.text ? `：「${d.text.slice(0, 24)}${d.text.length > 24 ? '…' : ''}」` : '';
+      const extra = type === 'icen:text-select' && d.text ? `：「${d.text.slice(0, 24)}${d.text.length > 24 ? '…' : ''}」` : '';
       log.textContent = `${type} · ${LABELS[type]}${extra} · (${Math.round(d.x)}, ${Math.round(d.y)})`;
       demo?.classList.remove('is-hit');
       void (demo as HTMLElement | null)?.offsetWidth;

@@ -13,6 +13,11 @@ export * from './behaviors/toast';
 export * from './behaviors/tabs';
 export * from './behaviors/copy';
 export * from './behaviors/input';
+/* controls 具名导出：模块内为 kit/segmented 转发的 initInput 若走 export * 会与
+   input 的同名导出构成 ESM 歧义名（被静默剔除），故逐个具名带出 */
+export {
+  initSwitch, initStepper, initSegmented, initSteps, initRating, initPagination, initTableSort,
+} from './behaviors/controls';
 export * from './behaviors/select';
 export * from './behaviors/slider';
 export * from './behaviors/tag-input';

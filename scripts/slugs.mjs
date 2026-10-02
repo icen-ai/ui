@@ -79,11 +79,16 @@ export const SLUG_INIT = {
   modal: 'initModal',
   nav: 'initNav',
   notification: 'initNotification',
+  pagination: 'initPagination',
+  rating: 'initRating',
   select: 'initSelect',
   sidebar: 'initSidebar',
   slider: 'initSlider',
   'split-pane': 'initSplitPane',
+  steps: 'initSteps',
+  switch: 'initSwitch',
   'back-top': 'initBackTop',
+  table: 'initTableSort',
   tabs: 'initTabs',
   'tag-input': 'initTagInput',
   tree: 'initTree',
@@ -94,8 +99,15 @@ export const SLUG_INIT = {
 export const SLUG_EXPORTS = {
   notification: ['notify'],
   toast: ['toast'],
-  // segmented 的 OTP 行为由 input.ts 的 initInput 提供，kit 入口需 re-export
-  segmented: ['initInput'],
+  // ── 表单/导航控件族：交互在 controls.ts（behavior 映射见 SLUG_BEHAVIOR）──
+  // segmented 的 OTP 仍由 input.ts 的 initInput 提供，kit 入口从 controls re-export，
+  // 故此处三项并存（追加而非替换 initInput，保持 kit/segmented 兼容）
+  segmented: ['initInput', 'initSegmented', 'initStepper'],
+  switch: ['initSwitch'],
+  steps: ['initSteps'],
+  rating: ['initRating'],
+  pagination: ['initPagination'],
+  table: ['initTableSort'],
   popover: ['openPopover', 'closePopover', 'computePopoverLayout'],
   charts: [
     'renderVBar', 'renderHBar', 'renderStack', 'renderDonut', 'renderLine',
@@ -133,8 +145,15 @@ export function cssOf(slug) {
  * charts 细分类型的 behavior 统一在 charts.ts，slug 与文件名不同。
  */
 export const SLUG_BEHAVIOR = {
-  // segmented 无独立 behavior 文件：OTP 等行为在 input.ts
-  segmented: 'input',
+  // ── 表单/导航控件族：交互在 controls.ts ──
+  // segmented 无独立 behavior 文件：分段/步进在 controls.ts，OTP 仍在 input.ts
+  // （controls.ts re-export initInput，kit/segmented 经 SLUG_EXPORTS 一并带出）
+  segmented: 'controls',
+  switch: 'controls',
+  steps: 'controls',
+  rating: 'controls',
+  pagination: 'controls',
+  table: 'controls',
   // AI 族：message/reasoning 复用 ai-chat、files 复用 ai-diff、usage 复用 ai-panel
   'ai-message': 'ai-chat',
   'ai-reasoning': 'ai-chat',

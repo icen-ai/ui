@@ -1,6 +1,8 @@
 /*
  * @icen.ai/ui — Component: switch / checkbox / radio（开关 / 勾选 / 单选行）
- * 纯 CSS 状态组件：状态全走 aria-checked / .is-selected；交互由使用方或演示页脚本切换。
+ * 状态组件：状态全走 aria-checked / .is-selected；交互由 behaviors/controls.ts 的
+ * initSwitch() 接线（点击 / Space / Enter 翻转并派 icen:switch-change / icen:check-change），
+ * 不接线时亦可由使用方自行驱动状态。
  *
  * 完整契约：
  *   <button class="switch [--sm|--lg]" role="switch" aria-checked="true|false" [disabled]>

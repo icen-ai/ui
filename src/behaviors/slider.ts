@@ -16,13 +16,21 @@
  * left/right 与两个 thumb，并钳制 lo ≤ hi − step（反向同理 hi ≥ lo + step）。
  * 双滑块另按 lo/hi 位置给两个 native input 写 clip-path，把点击区域切成左右两半
  * （同 opengal DualRangeSlider，否则叠在上层的 input 会吞掉全部指针事件）。
- * 初始化时先同步一次；同一容器重复 init 幂等。
+ * input 派 icen:slider-input、change 派 icen:slider-change（单值 value / 双值 lo+hi）。
+ * 初始化时先同步一次；同一容器重复 init 幂等；initSlider 返回销毁函数
+ * （移除 native input 上的全部监听并复位幂等标记，销毁后可重新 init）。SSR 下返回 no-op。
  */
 
 import { emitIcen } from './events';
 
 interface MarkedSlider extends Element {
   __icenSliderInit?: boolean;
+}
+
+/** 元素级监听登记（销毁时统一摘除） */
+function bind(target: EventTarget, type: string, fn: () => void, bag: Array<() => void>): void {
+  target.addEventListener(type, fn);
+  bag.push(() => target.removeEventListener(type, fn));
 }
 
 function pct(input: HTMLInputElement): number {
@@ -33,7 +41,7 @@ function pct(input: HTMLInputElement): number {
   return ((Number(input.value) - min) / range) * 100;
 }
 
-function setupSingle(slider: Element, native: HTMLInputElement): void {
+function setupSingle(slider: Element, native: HTMLInputElement, bag: Array<() => void>): void {
   const fill = slider.querySelector<HTMLElement>('.slider-fill');
   const thumb = slider.querySelector<HTMLElement>('.slider-thumb');
   const sync = (): void => {
@@ -41,17 +49,17 @@ function setupSingle(slider: Element, native: HTMLInputElement): void {
     if (fill) fill.style.width = `${p}%`;
     if (thumb) thumb.style.left = `calc(${p}% - 8px)`;
   };
-  native.addEventListener('input', () => {
+  bind(native, 'input', () => {
     sync();
     emitIcen(slider, 'icen:slider-input', { value: Number(native.value) });
-  });
-  native.addEventListener('change', () => {
+  }, bag);
+  bind(native, 'change', () => {
     emitIcen(slider, 'icen:slider-change', { value: Number(native.value) });
-  });
+  }, bag);
   sync();
 }
 
-function setupDual(slider: Element, natives: HTMLInputElement[]): void {
+function setupDual(slider: Element, natives: HTMLInputElement[], bag: Array<() => void>): void {
   const lo = natives.find((n) => n.getAttribute('data-thumb') === 'lo') ?? natives[0];
   const hi = natives.find((n) => n.getAttribute('data-thumb') === 'hi') ?? natives[1];
   if (!lo || !hi || lo === hi) return;
@@ -78,39 +86,60 @@ function setupDual(slider: Element, natives: HTMLInputElement[]): void {
     hi.style.clipPath = `inset(0 0 0 ${pHi}%)`;
   };
 
-  lo.addEventListener('input', () => {
+  bind(lo, 'input', () => {
     sync(lo);
     emitIcen(slider, 'icen:slider-input', { lo: Number(lo.value), hi: Number(hi.value) });
-  });
-  hi.addEventListener('input', () => {
+  }, bag);
+  bind(hi, 'input', () => {
     sync(hi);
     emitIcen(slider, 'icen:slider-input', { lo: Number(lo.value), hi: Number(hi.value) });
-  });
+  }, bag);
   const onChange = (): void => {
     emitIcen(slider, 'icen:slider-change', { lo: Number(lo.value), hi: Number(hi.value) });
   };
-  lo.addEventListener('change', onChange);
-  hi.addEventListener('change', onChange);
+  bind(lo, 'change', onChange, bag);
+  bind(hi, 'change', onChange, bag);
   sync(null);
 }
 
-function setup(slider: Element): void {
+function setup(slider: Element): (() => void) | undefined {
   const el = slider as MarkedSlider;
-  if (el.__icenSliderInit) return;
+  if (el.__icenSliderInit) return undefined;
   el.__icenSliderInit = true;
 
   const natives = Array.from(slider.querySelectorAll<HTMLInputElement>('.slider-native'));
-  if (natives.length === 0) return;
-  if (slider.classList.contains('slider--dual')) setupDual(slider, natives);
-  else setupSingle(slider, natives[0] as HTMLInputElement);
+  if (natives.length === 0) return undefined;
+
+  const bag: Array<() => void> = [];
+  if (slider.classList.contains('slider--dual')) setupDual(slider, natives, bag);
+  else setupSingle(slider, natives[0] as HTMLInputElement, bag);
+
+  /* 销毁：摘掉 native input 上的全部监听并复位幂等标记（可重新 init） */
+  return () => {
+    for (const off of bag) off();
+    bag.length = 0;
+    el.__icenSliderInit = false;
+  };
 }
 
-/** 为 root 下每个 .slider 容器初始化（root 自身是 .slider 也算）。 */
-export function initSlider(root?: ParentNode): void {
-  if (typeof document === 'undefined') return;
-  const scope = root ?? document;
-  const containers: Element[] = [];
-  if (scope instanceof Element && scope.matches('.slider')) containers.push(scope);
-  containers.push(...Array.from(scope.querySelectorAll('.slider')));
-  for (const c of containers) setup(c);
+/**
+ * 为 root 下每个 .slider 容器初始化（root 自身是 .slider 也算）。
+ * 返回销毁函数：移除本次挂上的全部监听并复位幂等标记（销毁后可重新 init）。SSR 下返回 no-op。
+ */
+export function initSlider(root?: ParentNode): () => void {
+  const cleanups: Array<() => void> = [];
+  if (typeof document !== 'undefined') {
+    const scope = root ?? document;
+    const containers: Element[] = [];
+    if (scope instanceof Element && scope.matches('.slider')) containers.push(scope);
+    containers.push(...Array.from(scope.querySelectorAll('.slider')));
+    for (const c of containers) {
+      const cleanup = setup(c);
+      if (cleanup) cleanups.push(cleanup);
+    }
+  }
+  return () => {
+    for (const fn of cleanups) fn();
+    cleanups.length = 0;
+  };
 }
