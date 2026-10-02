@@ -1,5 +1,36 @@
 # 更新日志
 
+## 0.8.1 - 2026-10-03
+
+> 以重构与文档站为主：全仓库优雅轮（死代码 / 重复 / 契约漂移清扫）+ 文档站四件重设计与客户端换页，另含少量行为修复。无破坏性变更。
+
+### 修复
+
+- **kit 坏产物**：`kit/chart-calendar` 与 `kit/ai-tool-call` 两条入口 import 不存在的 CSS（消费方解析失败）；`build-css` 增加存在性守卫，坏登记即刻报错不再静默产出
+- upload 列表模式下 Enter/Space 被区域级 keydown 吞掉（键盘用户无法移除文件）
+- ai-chat 未读计数只增不减（消息清空后新增消息永远不计）；`renderAiMessage` 补 SSR 守卫；模型名 chip 不再混入复制文本
+- date-picker 双幂等标记冲突（销毁后容器永不再接线）；select / date-picker 销毁时收浮层（监听不再泄漏）
+- input / slider / split-pane / tabs / carousel / upload 六处「标记先于校验」——结构不完整的容器被永久标记，补全 DOM 后 init 不再接管
+- steps 圆点变体的连线校准 20px → 5px
+- tag-input 重复值 `.is-shake` 抖动反馈接线（CSS 承诺从未生效）；OTP 完成时挂 `.is-complete`
+- ai-tools：`present: 'data'` 模式落地（此前仅有类型承诺）；`unregisterAiTool` / `getAiTool` 接线，`call()` / `can()` 改走注册表，全局下架联动摘除已挂载卡
+- `renderAiDiff` 返回挂载元素（render* 全库约定统一）
+- notification 全局 / 多容器双实现收敛为单一流水线（逐字段行为等价）；散点图 `formatValue` 真正生效
+
+### 重构（库内，行为不变）
+
+- AI 集群四处 `h()` / `AI_STATUSES` / `addUsage` 收敛至 ai-core 单一定义点；composer 三份过滤 / 空态装配合一；dropdown 手写定位统一进 `computePopoverLayout`；`emitMenuSelect` / `FOCUSABLE` 三份逐字拷贝收敛
+- 删除死代码：`isAiContentPartArray`、`prevStatus`、`__icenTabsCleanup`、`ChartLegendState` 导出与 96 行无引用 CSS（tree 拖拽态 / upload 进度条 / donut 中心 / breadcrumb 下拉 / 死 keyframes 等）
+- 注释诚实化：events 广播语义四处改准（`within` 收不到自 document 派发的广播）、PanelSizing 文档去除未实现字段等；AGENTS / README / spec 与实现逐条同步
+
+### 文档站
+
+- 页头重设计：滚动感应 hairline（顶端无界悬浮）、导航墨条（hover 滑移预览）、版本徽章替代口号标签、预设触发器改纯三色点
+- 页脚重设计：六预设色尺（即主题切换器，与墨条 / 选择器经 `icen:theme-change` 双向联动）+ 可复制安装芯片 + 两行对称布局
+- 文档侧栏：默认全收 + 深链开组、滚动条隐藏、scroll-timeline 上下渐隐（方向感知）、组开合记忆（客户端换页保留手动展开 / 真刷新归零）
+- 文档域客户端换页：ClientRouter + 页头页尾 `transition:persist` 常驻，hover 预取，导航墨条跨页滑移
+- 站点修复：switch 页悬空 `});` 致整页接线失效、upload / date-picker 演示脚本 TS 语法泄漏进 `new Function`、primitives 未闭合 section、Docs 布局缺 chart-scatter.css（散点 demo 裸奔）、首页 kit 统计口径（77）
+
 ## 0.8.0 - 2026-10-02
 
 > 本次发布横跨内部 0.6 / 0.7 / 0.8 三个迭代（自 0.5.0 之后首次发版），0.6 的类名规范收敛含破坏性变更，升级请先读该节。
