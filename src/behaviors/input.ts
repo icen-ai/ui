@@ -32,11 +32,16 @@ interface MarkedElement extends Element {
   __icenTrimInit?: boolean;
 }
 
-/* ── IME 组合态追踪（全局，跨所有 input）── */
-let isComposing = false;
-if (typeof document !== 'undefined') {
-  document.addEventListener('compositionstart', () => { isComposing = true; });
-  document.addEventListener('compositionend', () => { isComposing = false; });
+/* ── IME 组合态跟踪（每输入元素一份）──
+   composition 事件在输入元素上冒泡：各 setup 对自己的元素挂监听读局部标志，生命周期
+   与元素上已有的 input/keydown 监听一致（initInput 无销毁通道，监听本就随元素存亡），
+   不再需要模块级 document 监听（那类全局状态无法摘除且跨元素串味）。
+   compositionend 在部分浏览器晚于 Enter keydown，本地跟踪兜底（同 tag-input）。 */
+function trackComposing(target: Element): () => boolean {
+  let composing = false;
+  target.addEventListener('compositionstart', () => { composing = true; });
+  target.addEventListener('compositionend', () => { composing = false; });
+  return () => composing;
 }
 
 /* ── 清除钮 ── */
@@ -98,7 +103,6 @@ function setupCounter(field: HTMLInputElement | HTMLTextAreaElement): void {
   const dataCount = field.getAttribute('data-count');
   // 有 maxlength 或显式 data-count 都启用
   if (!maxAttr && dataCount === null) return;
-  el.__icenCounterInit = true;
 
   const max = maxAttr ? Number(maxAttr) : 0;
 
@@ -121,6 +125,9 @@ function setupCounter(field: HTMLInputElement | HTMLTextAreaElement): void {
 
   const counterEl = counter;
   if (!counterEl) return;
+  // 校验通过后再置位：字段不在 wrap 内时无处挂计数器，不置位以便补上 wrap 后重新 init 可重试
+  el.__icenCounterInit = true;
+  const isComposing = trackComposing(field);
 
   function update(): void {
     const len = field.value.length;
@@ -128,12 +135,13 @@ function setupCounter(field: HTMLInputElement | HTMLTextAreaElement): void {
     counterEl!.classList.remove('is-warn', 'is-error');
     if (max > 0) {
       const ratio = len / max;
+      // 阈值分级：80% 起转 warning，到顶（≥100%）转 error
       if (ratio >= 1) counterEl!.classList.add('is-error');
       else if (ratio >= 0.8) counterEl!.classList.add('is-warn');
     }
-  }
+  };
 
-  field.addEventListener('input', () => { if (!isComposing) update(); });
+  field.addEventListener('input', () => { if (!isComposing()) update(); });
   update();
 }
 
@@ -144,6 +152,7 @@ function setupMask(field: HTMLInputElement): void {
   const mask = field.getAttribute('data-mask');
   if (!mask) return;
   el.__icenMaskInit = true;
+  const isComposing = trackComposing(field);
 
   const maskChars: string[] = [];
   for (const ch of mask) maskChars.push(ch);
@@ -196,7 +205,7 @@ function setupMask(field: HTMLInputElement): void {
   field.setAttribute('data-raw-value', extractRaw(lastFormatted));
 
   field.addEventListener('input', () => {
-    if (isComposing) return;
+    if (isComposing()) return;
     const cursorPos = field.selectionStart ?? 0;
     const oldRaw = extractRaw(lastFormatted);
     // 新增了多少个字符 → 预估 raw input
@@ -232,7 +241,7 @@ function setupMask(field: HTMLInputElement): void {
 
   // 阻止不合法按键（但允许功能键）
   field.addEventListener('keydown', (ev) => {
-    if (isComposing) return;
+    if (isComposing()) return;
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
     if (['Backspace', 'Delete', 'Tab', 'Escape', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'].includes(ev.key)) return;
     // 检查下一个需要填充的 slot
@@ -267,6 +276,8 @@ function setupOtp(group: Element): void {
   const el = group as MarkedElement;
   if (el.__icenInputInit) return;
   el.__icenInputInit = true;
+  /* IME 组合态：composition 事件在 cell 上冒泡到容器，容器挂一份全 cell 共读 */
+  const isComposing = trackComposing(group);
 
   const cells = Array.from(group.querySelectorAll<HTMLInputElement>('.otp-cell'));
   const syncFilled = (cell: HTMLInputElement): void => {
@@ -281,7 +292,7 @@ function setupOtp(group: Element): void {
     syncFilled(cell);
 
     cell.addEventListener('input', () => {
-      if (isComposing) return;
+      if (isComposing()) return;
       const ch = cell.value.slice(-1);
       cell.value = ch;
       syncFilled(cell);
@@ -313,6 +324,8 @@ function setupOtp(group: Element): void {
   const fireComplete = (): void => {
     const code = cells.map((c) => c.value).join('');
     if (code.length === cells.length && cells.every((c) => c.value.length > 0)) {
+      // 完成时挂 .otp.is-complete（segmented.css 既有状态样式，此前无行为接线；classList.add 天然幂等）
+      group.classList.add('is-complete');
       emitIcen(group, 'icen:otp-complete', { code });
       /** @deprecated 旧事件名（无 icen: 前缀），仅为兼容保留，请迁移到 icen:otp-complete */
       group.dispatchEvent(new CustomEvent('otp:complete', { detail: { code }, bubbles: true }));

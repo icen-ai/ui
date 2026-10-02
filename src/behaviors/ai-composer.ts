@@ -67,7 +67,7 @@
  * SSR 下为 no-op；文本一律 textContent，禁 innerHTML。
  */
 
-import { formatTokens, contextEstimate, svgIcon, type AiUsage } from './ai-core';
+import { formatTokens, contextEstimate, svgIcon, addUsage, type AiUsage } from './ai-core';
 import { closePopover, openPopover, resolvePanelSizing, type PanelSizing } from './popover';
 import { renderAiUsageRing, renderAiTodo, type AiUsageRingOpts } from './ai-panel';
 import type { AiStatus } from './ai-core';
@@ -109,7 +109,8 @@ export interface AiComposerCommand {
   argsHint?: string;
 }
 
-export type AiComposerRefKind = 'file' | 'folder' | 'doc' | 'agent';
+/** 引用 kind：内置 4 种 + 开放注册；`string & {}` 保自动补全同时放行 registerRefKind 注册的任意 kind（照 charts.ts ChartTone 手法） */
+export type AiComposerRefKind = 'file' | 'folder' | 'doc' | 'agent' | (string & {});
 
 export interface AiComposerRefSource {
   kind: AiComposerRefKind;
@@ -236,7 +237,8 @@ const COMMANDS = new WeakMap<HTMLElement, AiComposerCommand[]>();
 const REF_SOURCES = new WeakMap<HTMLElement, AiComposerRefSource[]>();
 const ACTIVE_REFS = new WeakMap<HTMLElement, AiComposerRefSource[]>();
 const USAGE = new WeakMap<HTMLElement, { usage: AiUsage; opts: AiUsageRingOpts }>();
-const TODO = new WeakMap<HTMLElement, AiTodoItem[]>();
+/** 待办业务状态（命名避开 TODO 扫描标记：这是数据不是待办） */
+const TODO_STATES = new WeakMap<HTMLElement, AiTodoItem[]>();
 const HISTORIES = new WeakMap<HTMLElement, { items: string[]; index: number }>();
 const POPUP = new WeakMap<HTMLElement, ComposerPopup>();
 /** setupComposer 注册的 submit 闭包（弹层无匹配 Enter 回退发送用） */
@@ -557,6 +559,15 @@ function settlePopup(s: ComposerPopup): void {
   setPopupFocus(s, 0);
 }
 
+/** 弹层选项统一过滤（三弹层共用）：q 非空时按各 option 的 dataset.hay 隐藏不匹配项；hay 组装留在各弹层构建处。 */
+function filterPopupOptions(s: ComposerPopup, q: string): void {
+  const needle = q.trim().toLowerCase();
+  for (const opt of s.options) {
+    opt.hidden = needle !== '' && !(opt.dataset.hay ?? '').includes(needle);
+  }
+  settlePopup(s);
+}
+
 function popupKeydown(composer: HTMLElement, s: ComposerPopup, e: KeyboardEvent): void {
   if (e.isComposing) return; /* IME 组合态安全 */
   switch (e.key) {
@@ -597,10 +608,10 @@ function closePopup(composer: HTMLElement, restoreFocus = true): void {
   if (s.searchInput && s.keydownHandler) {
     s.searchInput.removeEventListener('keydown', s.keydownHandler);
   }
+  /* 互补条件合并：model 弹层的展开态锚在模型钮，其余两弹层锚在 textarea */
   if (s.mode === 'model') {
     composer.querySelector('[data-ai-model-open]')?.setAttribute('aria-expanded', 'false');
-  }
-  if (s.mode !== 'model') {
+  } else {
     getTextarea(composer)?.setAttribute('aria-expanded', 'false');
   }
   closePopover(s.panel); /* onClose 里移除面板 */
@@ -680,6 +691,20 @@ function mountPopup(composer: HTMLElement, init: MountPopupInit): ComposerPopup 
   return session;
 }
 
+/** 弹层空态装配（三弹层共用：默认隐藏，settlePopup 依可见项数切换）。 */
+function appendPopupEmpty(s: ComposerPopup, text: string): void {
+  s.emptyEl.className = 'ai-composer-popup-empty';
+  s.emptyEl.textContent = text;
+  s.emptyEl.hidden = true;
+  s.panel.appendChild(s.emptyEl);
+}
+
+/** 命令/引用弹层共用尺寸（随锚宽自适应）：200 下限防窄锚、320 上限防溢出、360 面板高。 */
+function popupSizingFor(box: Element): PanelSizing {
+  const w = box.getBoundingClientRect().width;
+  return { minWidth: Math.min(Math.max(w, 200), 320), maxWidth: 360, maxHeight: 320 };
+}
+
 /* ── 模型弹层 ── */
 
 function openModelPopup(composer: HTMLElement): void {
@@ -747,6 +772,8 @@ function openModelPopup(composer: HTMLElement): void {
           opt.dataset.providerLabel = p.label;
           opt.dataset.model = m.id;
           opt.dataset.label = m.label;
+          /* hay：模型名 + provider 名（filterPopupOptions 的过滤口径） */
+          opt.dataset.hay = `${m.label} ${p.label}`.toLowerCase();
           if (typeof m.context === 'number') opt.dataset.context = String(m.context);
           const selected = cfg.current.provider === p.id && cfg.current.model === m.id;
           opt.setAttribute('aria-selected', String(selected));
@@ -772,10 +799,7 @@ function openModelPopup(composer: HTMLElement): void {
       }
       s.panel.appendChild(list);
 
-      s.emptyEl.className = 'ai-composer-popup-empty';
-      s.emptyEl.textContent = '无匹配模型';
-      s.emptyEl.hidden = true;
-      s.panel.appendChild(s.emptyEl);
+      appendPopupEmpty(s, '无匹配模型');
 
       /* 底部提示：切换模型会使 prompt 缓存失效；cacheRead 占比高时升级 warning 色 */
       const foot = document.createElement('div');
@@ -800,12 +824,7 @@ function openModelPopup(composer: HTMLElement): void {
       s.keydownHandler = (e) => popupKeydown(composer, s, e);
       input.addEventListener('keydown', s.keydownHandler);
       input.addEventListener('input', () => {
-        const q = input.value.trim().toLowerCase();
-        for (const opt of s.options) {
-          const hay = `${opt.dataset.label ?? ''} ${opt.dataset.providerLabel ?? ''}`.toLowerCase();
-          opt.hidden = q !== '' && !hay.includes(q);
-        }
-        settlePopup(s);
+        filterPopupOptions(s, input.value);
       });
     },
   });
@@ -821,12 +840,11 @@ function openCommandPopup(composer: HTMLElement, token: string): void {
   if (!commands || commands.length === 0) return;
   const box = composer.querySelector('.ai-composer-box') ?? composer;
   const ta = getTextarea(composer);
-  const boxRect = box.getBoundingClientRect();
 
   const session = mountPopup(composer, {
     mode: 'command',
     anchor: box,
-    sizing: { minWidth: Math.min(Math.max(boxRect.width, 200), 320), maxWidth: 360, maxHeight: 320 },
+    sizing: popupSizingFor(box),
     returnFocus: ta,
     pick: (opt) => {
       const name = opt.dataset.name ?? '';
@@ -880,28 +898,17 @@ function openCommandPopup(composer: HTMLElement, token: string): void {
       s.groups.push(group);
       s.panel.appendChild(list);
 
-      s.emptyEl.className = 'ai-composer-popup-empty';
-      s.emptyEl.textContent = '无匹配命令';
-      s.emptyEl.hidden = true;
-      s.panel.appendChild(s.emptyEl);
+      appendPopupEmpty(s, '无匹配命令');
     },
   });
 
   ta?.setAttribute('aria-expanded', 'true');
-  filterCommandOptions(session, token);
+  filterPopupOptions(session, token);
 }
 
 function commandToken(value: string): string {
   /* 过滤令牌：'/' 后首个空白前的部分（参数区不影响过滤） */
   return value.slice(1).split(/\s/, 1)[0] ?? '';
-}
-
-function filterCommandOptions(s: ComposerPopup, token: string): void {
-  const q = token.trim().toLowerCase();
-  for (const opt of s.options) {
-    opt.hidden = q !== '' && !(opt.dataset.hay ?? '').includes(q);
-  }
-  settlePopup(s);
 }
 
 function updateCommandPopup(composer: HTMLElement, s: ComposerPopup): void {
@@ -914,7 +921,7 @@ function updateCommandPopup(composer: HTMLElement, s: ComposerPopup): void {
     maybeOpenTriggerPopups(composer);
     return;
   }
-  filterCommandOptions(s, commandToken(value));
+  filterPopupOptions(s, commandToken(value));
 }
 
 /* ── 引用弹层 ── */
@@ -928,12 +935,11 @@ function openRefPopup(
   if (!sources || sources.length === 0) return;
   const box = composer.querySelector('.ai-composer-box') ?? composer;
   const ta = getTextarea(composer);
-  const boxRect = box.getBoundingClientRect();
 
   const session = mountPopup(composer, {
     mode: 'ref',
     anchor: box,
-    sizing: { minWidth: Math.min(Math.max(boxRect.width, 200), 320), maxWidth: 360, maxHeight: 320 },
+    sizing: popupSizingFor(box),
     returnFocus: ta,
     refRange: range,
     pick: (opt) => {
@@ -996,23 +1002,12 @@ function openRefPopup(
       }
       s.panel.appendChild(list);
 
-      s.emptyEl.className = 'ai-composer-popup-empty';
-      s.emptyEl.textContent = '无匹配引用';
-      s.emptyEl.hidden = true;
-      s.panel.appendChild(s.emptyEl);
+      appendPopupEmpty(s, '无匹配引用');
     },
   });
 
   ta?.setAttribute('aria-expanded', 'true');
-  filterRefOptions(session, filter);
-}
-
-function filterRefOptions(s: ComposerPopup, filter: string): void {
-  const q = filter.trim().toLowerCase();
-  for (const opt of s.options) {
-    opt.hidden = q !== '' && !(opt.dataset.hay ?? '').includes(q);
-  }
-  settlePopup(s);
+  filterPopupOptions(session, filter);
 }
 
 function updateRefPopup(composer: HTMLElement, s: ComposerPopup): void {
@@ -1024,7 +1019,7 @@ function updateRefPopup(composer: HTMLElement, s: ComposerPopup): void {
     return;
   }
   s.refRange = { start: t.start, end: t.end };
-  filterRefOptions(s, t.filter);
+  filterPopupOptions(s, t.filter);
 }
 
 /* ── 触发探测：输入开头 '/' → 命令；任意位置 token 起点 '@' → 引用 ── */
@@ -1183,7 +1178,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     const queue = QUEUES.get(composer) ?? [];
     if (queue.length === 0) return;
     const index = queue.length - 1;
-    const text = queue.pop() as string;
+    const text = queue.pop() ?? ''; /* 上方已验非空，?? 仅安抚类型 */
     QUEUES.set(composer, queue);
     renderQueue();
     ta.value = text;
@@ -1205,7 +1200,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
         return;
       }
     }
-    ta.value = h.items[h.index] as string;
+    ta.value = h.items[h.index] ?? '';
     autosizeTa(ta);
   };
 
@@ -1547,20 +1542,21 @@ export function setComposerTodo(el: HTMLElement, items: AiTodoItem[] | null): vo
   if (!isBrowser()) return;
   const composer = resolveComposer(el);
   if (!composer) return;
-  let chip = composer.querySelector<HTMLElement>('.ai-composer-todo');
+  let chip = composer.querySelector<HTMLButtonElement>('.ai-composer-todo');
   if (!items || items.length === 0) {
-    TODO.delete(composer);
+    TODO_STATES.delete(composer);
     chip?.remove();
     return;
   }
-  TODO.set(composer, items);
+  TODO_STATES.set(composer, items);
   if (!chip) {
-    chip = document.createElement('button');
-    (chip as HTMLButtonElement).type = 'button';
-    chip.className = 'ai-composer-todo';
-    chip.setAttribute('aria-haspopup', 'true');
-    chip.addEventListener('click', () => {
-      const cur = TODO.get(composer);
+    /* 局部 const 持有按钮：闭包内 let 的窄化会被 TS 还原成可空（原代码的 as 即为此） */
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ai-composer-todo';
+    btn.setAttribute('aria-haspopup', 'true');
+    btn.addEventListener('click', () => {
+      const cur = TODO_STATES.get(composer);
       if (!cur) return;
       const p = document.createElement('div');
       p.className = 'popover ai-composer-todo-pop';
@@ -1573,12 +1569,13 @@ export function setComposerTodo(el: HTMLElement, items: AiTodoItem[] | null): vo
       renderAiTodo(body, cur);
       p.append(title, body);
       openPopover(p, {
-        anchor: chip as HTMLElement,
+        anchor: btn,
         side: 'top',
         align: 'end',
         onClose: () => p.remove(),
       });
     });
+    chip = btn;
     const icon = svgIcon(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>',
     );
@@ -1637,16 +1634,6 @@ export interface AiComposerBinding {
 
 const BOUND = new WeakSet<HTMLElement>();
 
-const USAGE_KEYS: Array<keyof AiUsage> = ['input', 'output', 'cacheRead', 'cacheWrite', 'reasoning', 'total'];
-
-function accumulateUsage(acc: AiUsage, add?: AiUsage): void {
-  if (!add) return;
-  for (const k of USAGE_KEYS) {
-    const v = add[k];
-    if (typeof v === 'number' && Number.isFinite(v)) acc[k] = (acc[k] as number | undefined ?? 0) + v;
-  }
-}
-
 /**
  * composer ↔ 消息区 ↔ client ↔ 用量环的闭环绑定（事件驱动，传输会话所有权仍归消费方）。
  * 不传 client 时为纯状态绑定（send→running、done→解除、环更新），渐进采用。
@@ -1689,7 +1676,7 @@ export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): Ai
           total: contextEstimate(u),
         };
       } else if (usageCfg.from === 'billing') {
-        accumulateUsage(billing, detail.usage);
+        billing = addUsage(billing, detail.usage); /* 六键求和走 ai-core 共享实现 */
         usage = billing;
       } else {
         usage = usageCfg.from.summary();
@@ -1704,6 +1691,10 @@ export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): Ai
   }
 
   /* ── client 模式：对话全托管 ── */
+  /* 给了 client 漏 messages：无法渲染消息流，降级为纯状态绑定（不静默吞掉配置错误） */
+  if (opts.client && !opts.messages) {
+    console.warn('[ai-composer] client 模式需要 opts.messages，已降级为纯状态绑定');
+  }
   if (opts.client && opts.messages) {
     const client = opts.client;
     const messages = opts.messages;
@@ -1747,7 +1738,7 @@ export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): Ai
         /* 排队消息自动发送下一条（Claude Code 模式） */
         const queue = QUEUES.get(composer) ?? [];
         if (queue.length > 0) {
-          const next = queue.shift() as string;
+          const next = queue.shift() ?? ''; /* 队列只进非空文本，?? 仅安抚类型 */
           QUEUES.set(composer, queue);
           renderQueueChips(composer);
           emit(composer, 'icen:ai-dequeue', { index: 0 });

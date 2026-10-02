@@ -31,6 +31,12 @@
  * segmented / stepper 由 behaviors/controls.ts 接线（initSegmented / initStepper，
  * 派 icen:segmented-change / icen:stepper-change）；otp 由 behaviors/input.ts 的
  * initInput 接线；toggle-group 为纯 CSS 状态组件（.is-active，使用方自行驱动）。
+ *
+ * 增强段（正文"增强"段）：
+ *   变体：segmented--block / segmented--ghost / toggle-group--block / toggle-group--ghost
+ *   槽位：stepper-unit（步进器单位后缀）/ otp-separator（OTP 分组分隔符）
+ *   状态类（消费方施加）：.otp.is-complete（behavior 接线中）/ .otp.is-error /
+ *         .segmented.is-error / .segmented.is-disabled / .toggle-group.is-error / .toggle-group.is-disabled
  */
 
 /* ── 分段控件（排他单选） ── */

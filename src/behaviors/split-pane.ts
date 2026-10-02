@@ -45,11 +45,11 @@ function pct(value: number, min: number, max: number): number {
 function setup(container: HTMLElement): (() => void) | undefined {
   const el = container as MarkedPane;
   if (el.__icenSplitPaneInit) return undefined;
-  el.__icenSplitPaneInit = true;
 
-  const dividerQuery = el.querySelector<HTMLElement>('.split-pane-divider');
-  if (!dividerQuery) return undefined;
-  const divider: HTMLElement = dividerQuery;
+  const divider = el.querySelector<HTMLElement>('.split-pane-divider');
+  // 校验通过后再置位：无 divider 早退不置位，以便补上 divider 后重新 init 可重试
+  if (!divider) return undefined;
+  el.__icenSplitPaneInit = true;
 
   const min = numOr(el.dataset.splitMin, 10);
   const max = numOr(el.dataset.splitMax, 90);
@@ -58,6 +58,8 @@ function setup(container: HTMLElement): (() => void) | undefined {
 
   const orientation = vertical ? 'vertical' : 'horizontal';
   divider.setAttribute('role', 'separator');
+  /* ARIA separator 的 orientation 描述分隔条自身方向，与 pane 分割轴垂直：
+     纵向布局（上下 pane）的分隔条是横条 → 'horizontal'，反之亦然——反向映射是正确的，别当 bug 改 */
   divider.setAttribute('aria-orientation', orientation === 'vertical' ? 'horizontal' : 'vertical');
   divider.setAttribute('aria-valuemin', String(min));
   divider.setAttribute('aria-valuemax', String(max));
@@ -71,7 +73,8 @@ function setup(container: HTMLElement): (() => void) | undefined {
   /* 最近一次 write 生效的钳制后百分比（拖拽结束派发取值用；初始同步不派发） */
   let cur = readCurrent();
 
-  function write(p: number): void {
+  /* 箭头 const（非提升的 function 声明）：守卫建立的 const 窄化才能保留进闭包体 */
+  const write = (p: number): void => {
     const v = pct(p, min, max);
     cur = v;
     el.style.setProperty('--split', v + '%');

@@ -70,12 +70,7 @@
   max-width: 100%;
   animation: tag-pop var(--icen-tx-fast);
 }
-.tag-chip-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px;
-}
+/* readonly 变体（消费方手写标记，behavior 不产出） */
 .tag-chip--readonly { background: var(--token-fill-2); color: var(--token-text-muted); }
 
 @keyframes tag-pop {

@@ -9,7 +9,7 @@
  *
  * 完整契约（由 behavior 渲染）：
  *   <div class="notification-container" role="region" aria-label="通知" data-position="top-right">
- *     <div class="notification [notification--success|warning|error|info]
+ *     <div class="notification [notification--success|warning|error]
  *          [.is-priority] [.is-unread] [.is-progress] [.is-clickable] [.is-paused]
  *          [.has-avatar]" role="alert|button">
  *       <span class="notification-icon">…svg 或 img.notification-avatar…</span>
@@ -81,7 +81,7 @@
 .notification.notification--success { border-left-color: var(--token-success); }
 .notification.notification--warning { border-left-color: var(--token-warning); }
 .notification.notification--error   { border-left-color: var(--token-error); }
-.notification.notification--info    { border-left-color: var(--token-info); }
+/* info 为基类默认配色（基类左侧边即 --token-info），无修饰类 */
 
 /* ── 优先级：高优先级强调（左侧加粗 + 更强阴影）── */
 .notification.is-priority {
@@ -138,7 +138,6 @@
 .notification--success .notification-icon { color: var(--token-success); }
 .notification--warning .notification-icon { color: var(--token-warning); }
 .notification--error   .notification-icon { color: var(--token-error); }
-.notification--info    .notification-icon { color: var(--token-info); }
 
 /* 头像（圆形图） */
 .notification-avatar {

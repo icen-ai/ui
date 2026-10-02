@@ -81,7 +81,7 @@ function setup(tree: Element): (() => void) | undefined {
     emitIcen(tree, 'icen:tree-select', { node });
   };
 
-  /* 键盘 ↑/↓/←/→ 导航（仅叶子节点参与） */
+  /* 键盘导航：↑/↓ 在全部未禁用节点间轮转焦点；←/→ 仅分支节点折叠/展开 */
   const onKeyDown = (ev: Event): void => {
     const kev = ev as KeyboardEvent;
     const target = kev.target;

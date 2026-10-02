@@ -2,7 +2,8 @@
  * @icen.ai/ui — Component: steps（步骤条，横向默认 / .steps--vertical 垂直）
  *
  * 完整契约：
- *   <ol class="steps [steps--vertical] [steps--sm|steps--lg]" aria-label="进度">
+ *   <ol class="steps [steps--vertical] [steps--sm|steps--lg] [steps--dots|steps--progress|steps--connected]"
+ *        aria-label="进度">
  *     <li class="step [step--finish|step--process|step--wait] [.step--error]">
  *       <span class="step-line"></span>                   ← 横向：右半段连线；末步自动隐藏
  *       <span class="step-dot">[✓ | ! | 数字]</span>
@@ -14,6 +15,9 @@
  *   </ol>
  *
  * 四态：finish / process / wait / error（错误用 error 色 dot + 描边）。
+ * 变体与增强（正文下半段）：--dots 纯点紧凑 / --progress 步骤间填充进度线 / --connected 虚线连接；
+ *   dot 内可放 svg.step-dot-icon；step-desc 旁可加 .step-extra 富化描述；
+ *   可点击步骤标 .step--clickable（与 controls.ts initSteps 的 JSDoc 同口径）。
  * 点击 .step[role=button] 由 behaviors/controls.ts 的 initSteps() 接线（激活态位移 +
  * icen:step-change）；跳转业务仍由使用方监听事件实现。
  */
@@ -142,7 +146,9 @@
   padding: 0;
   font-size: 0;
 }
-.steps--dots .step-line { top: 20px; }
+/* 线 top = dot 高度一半：默认 32→16 / sm 24→12 / lg 40→20 / dots 10→5；
+   本块位于尺寸变体之后，同等特异性下靠源顺序生效，dots 与 --sm/--lg 叠加时以 5px 为准 */
+.steps--dots .step-line { top: 5px; }
 .steps--dots .step-title,
 .steps--dots .step-desc { display: none; }
 .steps--dots .step { flex: none; }
@@ -172,8 +178,11 @@
 }
 
 /* ── 进度条变体（步骤间的填充进度，非离散连线） ── */
+/* 高度 1px→3px 时线只向下扩张 2px，整体上移 1px 使线心与 1px 基线居中一致；
+   用 translateY 而非改 top，可同时适配 --sm(12px)/--lg(20px) 的不同基线 */
 .steps--progress .step-line {
   height: 3px;
+  transform: translateY(-1px);
   border-radius: var(--radius-full);
   background: var(--token-fill-2);
   overflow: hidden;

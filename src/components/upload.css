@@ -195,21 +195,6 @@
   box-shadow: var(--icen-ring);
 }
 
-/* 进度条（behavior 可选注入 .upload-list-item-progress） */
-.upload-list-item-progress {
-  height: 2px;
-  width: 100%;
-  background: var(--token-fill-2);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-top: 2px;
-}
-.upload-list-item-progress-bar {
-  height: 100%;
-  background: var(--token-accent);
-  border-radius: var(--radius-full);
-  transition: width var(--icen-tx-normal) var(--ease-out);
-}
 .upload-list-item.is-error {
   border-color: var(--token-error);
 }

@@ -81,10 +81,11 @@ function sameFile(a: File, b: File): boolean {
 function setup(zone: HTMLElement): void {
   const el = zone as MarkedUpload;
   if (el.__icenUploadInit) return;
-  el.__icenUploadInit = true;
 
   const input = zone.querySelector<HTMLInputElement>('input[type="file"]');
+  // 校验通过后再置位：无 file input 早退不置位，以便补上后重新 init 可重试
   if (!input) return;
+  el.__icenUploadInit = true;
 
   const hasList = zone.hasAttribute('data-upload-list');
   const maxSize = Number(zone.getAttribute('data-max-size')) || 0;
@@ -95,7 +96,7 @@ function setup(zone: HTMLElement): void {
   let currentFiles: File[] = [];
   /** 对象 URL 映射，移除/重渲染时回收。 */
   const urlMap = new Map<File, string>();
-  /** 同步守卫：syncInputFiles 程序化回写期间忽略 input 的 change，防止重入 handleFiles。 */
+  /** 同步守卫：setInputFiles 程序化回写期间忽略 input 的 change，防止重入 handleFiles。 */
   let syncing = false;
 
   /** 查找或创建文件列表容器。 */
@@ -195,11 +196,12 @@ function setup(zone: HTMLElement): void {
     }
   }
 
-  /** 将 currentFiles 回写 input.files（DataTransfer）；守卫期内派发的 change 不会重入 handleFiles。 */
-  function syncInputFiles(): void {
+  /** 把给定文件集回写 input.files（DataTransfer）并派发 change；守卫期内派发的 change
+   *  不会重入 handleFiles。两处共用：list 模式写 currentFiles，非 list 模式 drop 写拖放结果。 */
+  function setInputFiles(files: File[]): void {
     try {
       const dt = new DataTransfer();
-      for (const f of currentFiles) dt.items.add(f);
+      for (const f of files) dt.items.add(f);
       syncing = true;
       input!.files = dt.files;
       input!.dispatchEvent(new Event('change', { bubbles: true }));
@@ -208,6 +210,11 @@ function setup(zone: HTMLElement): void {
     } finally {
       syncing = false;
     }
+  }
+
+  /** list 模式把事实源 currentFiles 回写 input.files。 */
+  function syncInputFiles(): void {
+    setInputFiles(currentFiles);
   }
 
   /** 校验单个文件。 */
@@ -267,6 +274,10 @@ function setup(zone: HTMLElement): void {
   });
   zone.addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter' || ev.key === ' ') {
+      // 镜像 click 守卫：焦点在 .upload-list 内控件（如移除钮）时放行原生激活，
+      // 否则 Enter/Space 被吃掉反而打开文件选择器
+      const tgt = ev.target;
+      if (tgt instanceof Element && tgt.closest('.upload-list')) return;
       ev.preventDefault();
       openPicker();
     }
@@ -299,20 +310,9 @@ function setup(zone: HTMLElement): void {
     if (!files || files.length === 0) return;
     handleFiles(Array.from(files));
 
-    // 非 list 模式下尝试赋给 input.files（守卫期内派发 change，避免 icen:upload 重复触发）
-    if (!hasList) {
-      try {
-        const dt = new DataTransfer();
-        for (const f of Array.from(files)) dt.items.add(f);
-        syncing = true;
-        input.files = dt.files;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      } catch {
-        /* noop */
-      } finally {
-        syncing = false;
-      }
-    }
+    // 非 list 模式把拖放结果回写 input.files（与 list 模式共用 setInputFiles，
+    // 守卫期内派发的 change 不会重复触发 icen:upload）
+    if (!hasList) setInputFiles(Array.from(files));
   });
 }
 

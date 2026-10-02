@@ -45,6 +45,9 @@ import {
 } from '@icen.ai/ui';
 
 initTheme();                       // 尽早调用（或内联同步脚本防闪烁，见 accounts Base.astro）
+setStyle('retro');                 // 切风格画像（modern/retro），与主题正交
+registerThemePreset('brand');       // 登记自建预设（宿主 CSS 先写好 .brand/.brand.dark token 面）
+listThemePresets();                // 枚举全部预设（含注册的），UI 切换器用
 initTabs();                        // [data-tabs] > [data-tab] + [data-tab-panel] 契约；切换派发 icen:tab-change
 initCopy();                        // .copy-btn[data-copy] 委托
 toast.ok('已保存');                // 或 toast.action('已删除', '撤销', undo)；类名 .toast--success 等

@@ -418,7 +418,7 @@
   background: color-mix(in srgb, var(--token-accent-subtle) 82%, var(--token-fill-1));
 }
 
-/* ── 行状态类（rowClassName 产出） ── */
+/* ── 行状态类（rowClassName 产出；--danger/--warning/--success 同族语义行底色） ── */
 .dt-row--danger { background: color-mix(in srgb, var(--token-error) 6%, transparent) !important; }
 .dt-row--danger:hover { background: color-mix(in srgb, var(--token-error) 10%, transparent) !important; }
 .dt-row--warning { background: color-mix(in srgb, var(--token-warning) 6%, transparent) !important; }

@@ -9,7 +9,7 @@
  * 三层控制（从粗到细）：
  *   1. 不 import 本模块 = 生态里根本没有工具体系（tree-shake 友好）
  *   2. createAiToolArea(el, { tools: ['render_chart'], max: 4 }) — 区域白名单 + 上限
- *      （超出上限 LRU 淘汰最旧挂载；tools 支持通配 'chart-*'）
+ *      （超出上限 FIFO 淘汰最旧挂载；tools 支持通配 'chart-*'）
  *   3. 运行时：area.setTools/setMax/clear + unregisterAiTool 全局下架
  *
  * 模型侧接线（自有 agent loop / 任意框架）：
@@ -24,7 +24,7 @@
  * SSR 安全；禁 innerHTML（渲染走各组件自己的安全路径）。
  */
 
-import { renderChart, type ChartSpec, type ChartHandle } from './charts';
+import { renderChart, type ChartSpec } from './charts';
 import { emitIcen, type IcenEventMap } from './events';
 
 /* ══════════════ 工具注册表 ══════════════ */
@@ -45,16 +45,17 @@ export interface AiToolDef<TInput = unknown> {
 
 export interface AiToolRecord {
   def: AiToolDef;
-  /** 挂载元素（present='mount' 时有值） */
+  /** 挂载元素（present='mount' 时有值；'data' 模式不占挂载位、无 el） */
   el?: HTMLElement;
-  /** render_chart 等返回的句柄（可 update/destroy） */
-  handle?: unknown;
   ts: number;
   input: unknown;
   result: unknown;
 }
 
 const toolRegistry = new Map<string, AiToolDef>();
+
+/** 存活挂载区登记：unregisterAiTool 下架时联动摘除各区域该工具的已挂载卡 */
+const LIVE_AREAS = new Set<{ el: HTMLElement; purge: (name: string) => void }>();
 
 /** 注册（或覆盖同名）一个工具；第三方扩展入口 */
 export function registerAiTool(def: AiToolDef): void {
@@ -63,15 +64,28 @@ export function registerAiTool(def: AiToolDef): void {
   }
 }
 
-/** 全局下架一个工具（所有区域随即不可再调用它） */
+/**
+ * 全局下架一个工具（所有区域随即不可再调用它）；各区域已挂载的卡同步收尾移除
+ * （record.el 存在则出 DOM + 出 records，照移除钮路径）。
+ */
 export function unregisterAiTool(name: string): void {
   toolRegistry.delete(name);
+  for (const entry of LIVE_AREAS) {
+    /* 顺带清扫失联区域（宿主丢弃 DOM 后未 clear 的登记），防闭包滞留 */
+    if (!entry.el.isConnected) {
+      LIVE_AREAS.delete(entry);
+      continue;
+    }
+    entry.purge(name);
+  }
 }
 
+/** 按名查已注册工具（call/can 内部同走此口；未注册返回 undefined） */
 export function getAiTool(name: string): AiToolDef | undefined {
   return toolRegistry.get(name);
 }
 
+/** 全部已注册工具的快照数组（aiToolsToOpenAI / aiToolsToMcp / aiToolsManifest 的底座） */
 export function listAiTools(): AiToolDef[] {
   return Array.from(toolRegistry.values());
 }
@@ -174,7 +188,7 @@ registerAiTool({
 export interface AiToolAreaOptions {
   /** 工具白名单（精确名或 'chart-*' 通配；缺省 = 全部已注册工具） */
   tools?: string[];
-  /** 最多同时挂载数（超出 LRU 淘汰最旧；缺省不限） */
+  /** 最多同时挂载数（超出 FIFO 淘汰最旧挂载；缺省不限） */
   max?: number;
   /** 挂载项的最小高度提示（px，默认 240） */
   itemMinHeight?: number;
@@ -211,7 +225,7 @@ function emitArea<K extends keyof IcenEventMap>(area: HTMLElement, name: K, deta
 
 /**
  * 创建 AI 工具挂载区：宿主声明「这块区域归 AI 用」——可白名单工具、限数量
- * （LRU 淘汰）。每次 call 渲染为一个 .ai-tools-item 卡（标题行 = 工具名 +
+ * （超出上限 FIFO 淘汰最旧挂载）。每次 call 渲染为一个 .ai-tools-item 卡（标题行 = 工具名 +
  * 时间 + 移除钮，体 = 工具自己的渲染）。事件 icen:ai-tool-call / -result /
  * -evict（bubbles），area 上也可原生 addEventListener。
  */
@@ -224,7 +238,6 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
   area.classList.add('ai-tools-mount');
   let allow: string[] | undefined = opts.tools;
   let max: number | undefined = opts.max;
-  let seq = 0;
   const records: AiToolRecord[] = [];
   const listeners: Array<(records: AiToolRecord[]) => void> = [];
 
@@ -243,13 +256,27 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
     }
   };
 
+  /* unregisterAiTool 下架联动：摘除本区域该工具的全部记录（有 el 的先出 DOM），照移除钮路径收尾 */
+  const purgeTool = (toolName: string): void => {
+    let removed = false;
+    for (let i = records.length - 1; i >= 0; i--) {
+      const r = records[i];
+      if (r.def.name !== toolName) continue;
+      r.el?.remove();
+      records.splice(i, 1);
+      removed = true;
+    }
+    if (removed) notify();
+  };
+  LIVE_AREAS.add({ el: area, purge: purgeTool });
+
   const areaApi: AiToolArea = {
     el: area,
     get count() {
       return records.filter((r) => r.el).length;
     },
     can(name: string): boolean {
-      return toolAllowed(name, allow) && toolRegistry.has(name);
+      return toolAllowed(name, allow) && getAiTool(name) != null;
     },
     setTools(tools: string[] | undefined): void {
       allow = tools;
@@ -271,11 +298,31 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
       };
     },
     call(name: string, input: unknown): AiToolRecord | null {
-      const def = toolRegistry.get(name);
+      const def = getAiTool(name);
       if (!def || !toolAllowed(name, allow)) return null;
-      void seq;
 
-      /* 挂载位：标题行（折叠钮 + 工具名 + 时间 + 移除钮）+ 渲染体（可折叠，默认展开） */
+      /* present:'data'（纯数据工具）：与 'mount' 的差异——不建挂载卡、record 无 el、
+         不占 max 挂载位（count 口径 = 有 el 的记录）；仍进 records、仍派 call/result
+         事件与 onChange，供宿主审计。事件 el 退传区域元素（events 契约 el 必填）。 */
+      if (def.present === 'data') {
+        const record: AiToolRecord = { def, ts: Date.now(), input, result: undefined };
+        emitArea(area, 'icen:ai-tool-call', { name, input, el: area });
+        let ok = true;
+        let error: string | undefined;
+        try {
+          /* mount 传脱离文档的 div：data 工具不应渲染，仅为满足 run 签名 */
+          record.result = def.run(input, document.createElement('div'));
+        } catch (err) {
+          ok = false;
+          error = err instanceof Error ? err.message : String(err);
+        }
+        records.push(record);
+        emitArea(area, 'icen:ai-tool-result', { name, ok, el: area, error, count: records.length });
+        notify();
+        return record;
+      }
+
+      /* 挂载位（present:'mount'，默认）：标题行（折叠钮 + 工具名 + 时间 + 移除钮）+ 渲染体（可折叠，默认展开） */
       const item = document.createElement('div');
       item.className = 'ai-tools-item';
       const head = document.createElement('button');
@@ -295,6 +342,7 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
       const remove = document.createElement('span');
       remove.className = 'ai-tools-item-remove';
       remove.setAttribute('role', 'button');
+      remove.tabIndex = 0; /* span 非原生按钮，键盘可达需手动补 */
       remove.setAttribute('aria-label', `移除 ${def.name} 挂载`);
       remove.textContent = '×';
       const mount = document.createElement('div');
@@ -311,6 +359,15 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
         mount.hidden = open;
         item.classList.toggle('is-collapsed', open);
       });
+      /* a11y：× 是 span[role=button]，Enter/Space 经 head 代理激活；stopPropagation +
+         preventDefault 防键盘事件外冒、防 Space 滚屏（remove.click 走既有移除路径） */
+      head.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        if (!(e.target instanceof Element) || !e.target.closest('.ai-tools-item-remove')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        remove.click();
+      });
 
       const record: AiToolRecord = { def, el: item, ts: Date.now(), input, result: undefined };
       remove.addEventListener('click', (e) => {
@@ -326,7 +383,6 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
       let error: string | undefined;
       try {
         record.result = def.run(input, mount);
-        record.handle = record.result;
       } catch (err) {
         ok = false;
         error = err instanceof Error ? err.message : String(err);
@@ -335,7 +391,7 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
       records.push(record);
       emitArea(area, 'icen:ai-tool-result', { name, ok, el: item, error, count: records.length });
 
-      /* 上限：LRU 淘汰（保留最新 max 个） */
+      /* 上限：FIFO 淘汰最旧挂载（保留最新 max 个；无 el 的 data 记录不占名额） */
       while (max != null && records.filter((r) => r.el).length > max) evictOldest();
       notify();
       return record;

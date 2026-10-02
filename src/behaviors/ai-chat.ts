@@ -13,6 +13,7 @@
  *     </div>
  *     <button class="ai-chat-jump" hidden>回到底部 · 3 条新消息</button>
  *   </div>
+ *   （各子节点 append 顺序不敏感，示例仅示意；实际顺序以 renderAiMessage 实现为准）
  *
  * 行为：
  *   initAiChat(root?)   幂等（__icenAiChatInit）；滚动钉底——贴底自动跟随新内容
@@ -37,7 +38,7 @@
  * SSR 下为 no-op；文本一律 textContent，禁 innerHTML。
  */
 
-import { formatDuration, aiContentUrl, svgIcon, type AiContent, type AiContentPart, type AiTextPart } from './ai-core';
+import { aiContentUrl, formatDuration, h, svgIcon, type AiContent, type AiContentPart, type AiTextPart } from './ai-core';
 import { emitIcen, type IcenEventMap } from './events';
 
 /* 消息操作图标（lucide 风格 24×24，与静态 DOM 契约同款；svgIcon 消毒解析） */
@@ -124,6 +125,7 @@ function setupChat(chat: HTMLElement): (() => void) | undefined {
   const scrollToBottom = (smooth: boolean): void => {
     if (!scrollEl) return;
     const behavior: ScrollBehavior = smooth && !prefersReducedMotion() ? 'smooth' : 'auto';
+    /* 600ms ≈ smooth 滚动到位的时间上限；100ms 掩盖 instant/auto 滚动自身触发的 scroll 事件 */
     suppressUntil = Date.now() + (behavior === 'smooth' ? 600 : 100);
     scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior });
   };
@@ -141,7 +143,7 @@ function setupChat(chat: HTMLElement): (() => void) | undefined {
       } else {
         unread = 0; // 消息被清空/替换
       }
-      lastMsgCount = Math.max(lastMsgCount, count);
+      lastMsgCount = count; // 无条件同步基线：清空后重建时计数必须能下降，否则新增消息永远不算未读
       updateJump();
     }
   };
@@ -183,7 +185,15 @@ function setupChat(chat: HTMLElement): (() => void) | undefined {
       if (!msg) return;
       const action = actionBtn.dataset.aiMsgAction;
       if (action === 'copy') {
-        copyText(msg.querySelector('.ai-msg-body')?.textContent ?? '');
+        /* 模型名 chip 挂在 body 内（视觉随正文走），复制需剔除：克隆后移除再取文本，不动原 DOM */
+        const bodyEl = msg.querySelector('.ai-msg-body');
+        const clone = bodyEl?.cloneNode(true);
+        if (clone instanceof HTMLElement) {
+          clone.querySelectorAll('.ai-msg-model').forEach((chip) => chip.remove());
+          copyText(clone.textContent ?? '');
+        } else {
+          copyText('');
+        }
         emit(msg, 'icen:ai-copy', { el: msg });
       } else if (action === 'retry') {
         emit(msg, 'icen:ai-retry', { el: msg });
@@ -391,18 +401,13 @@ function safeHref(uri: string): string | undefined {
   return uri;
 }
 
-function el(tag: string, className: string, text?: string): HTMLElement {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
-}
-
 /** 单个内容部件 → DOM 节点（文本一律 textContent；媒体 src 走 aiContentUrl 归一）。
- *  导出供 ai-tool 的 IO 区复用（MCP 多模态回执；类名 .ai-msg-* 语义即「消息部件」，全局生效）。 */
+ *  导出供 ai-tool 的 IO 区复用（MCP 多模态回执；类名 .ai-msg-* 语义即「消息部件」，全局生效）。
+ *  前置条件：浏览器环境——本函数无 SSR 守卫，SSR 由调用方守卫覆盖（renderAiMessage /
+ *  renderAiToolCall 头部守卫后才会触达此处）。 */
 export function renderAiContentPart(part: AiContentPart): HTMLElement | undefined {
   if (part.type === 'text') {
-    const span = el('span', 'ai-msg-text');
+    const span = h('span', 'ai-msg-text');
     span.textContent = part.text;
     if (part.state === 'streaming') span.classList.add('is-streaming');
     return span;
@@ -437,8 +442,8 @@ export function renderAiContentPart(part: AiContentPart): HTMLElement | undefine
     return video;
   }
   if (part.type === 'file') {
-    const chip = el('span', 'ai-msg-file');
-    chip.appendChild(el('span', 'ai-msg-file-name', part.filename ?? '文件'));
+    const chip = h('span', 'ai-msg-file');
+    chip.appendChild(h('span', 'ai-msg-file-name', part.filename ?? '文件'));
     /* url 槽可能是 http(s)/data 地址（可下载）或 Files API file_id（不可链） */
     const href = part.url ? safeHref(part.url) : undefined;
     if (href && /^(https?:|data:)/i.test(href)) {
@@ -467,9 +472,20 @@ export function renderAiContentPart(part: AiContentPart): HTMLElement | undefine
  * setMeta / setError / stream()。滚动跟随由 initAiChat 的钉底机制自动处理。
  */
 export function renderAiMessage(scrollEl: HTMLElement, model: AiMessageModel): AiMessageHandle {
-  const row = el('div', `ai-msg ai-msg--${model.role}`);
-  const avatar = el('span', 'ai-msg-avatar', ROLE_AVATAR[model.role] ?? '');
-  const body = el('div', 'ai-msg-body');
+  /* SSR no-op：不触碰 document，句柄退化为入参引用 + no-op 槽（口径同 renderAiTodo /
+   *  renderAiToolCall 的 SSR 分支：原样返回挂载元素、操作静默） */
+  if (typeof document === 'undefined') {
+    return {
+      el: scrollEl,
+      body: scrollEl,
+      setMeta: () => undefined,
+      setError: () => undefined,
+      stream: () => createAiStream(scrollEl),
+    };
+  }
+  const row = h('div', `ai-msg ai-msg--${model.role}`);
+  const avatar = h('span', 'ai-msg-avatar', ROLE_AVATAR[model.role] ?? '');
+  const body = h('div', 'ai-msg-body');
   row.appendChild(avatar);
   row.appendChild(body);
 
@@ -484,20 +500,20 @@ export function renderAiMessage(scrollEl: HTMLElement, model: AiMessageModel): A
   }
 
   /* 模型名标签（assistant）与元信息行 */
-  if (model.model) body.appendChild(el('span', 'ai-msg-model', model.model));
-  const metaEl = el('div', 'ai-msg-meta');
+  if (model.model) body.appendChild(h('span', 'ai-msg-model', model.model));
+  const metaEl = h('div', 'ai-msg-meta');
   if (model.meta != null) metaEl.textContent = model.meta;
   row.appendChild(metaEl);
 
   /* 动作钮（copy/retry 事件由 initAiChat 委托；CSS 为 22px 方形图标钮——放图标不放文字） */
-  const actions = el('div', 'ai-msg-actions');
-  const copyBtn = el('button', 'ai-msg-action') as HTMLButtonElement;
+  const actions = h('div', 'ai-msg-actions');
+  const copyBtn = h('button', 'ai-msg-action');
   copyBtn.type = 'button';
   copyBtn.setAttribute('data-ai-msg-action', 'copy');
   copyBtn.setAttribute('aria-label', '复制');
   const copyIcon = svgIcon(ICON_COPY);
   if (copyIcon) copyBtn.appendChild(copyIcon);
-  const retryBtn = el('button', 'ai-msg-action') as HTMLButtonElement;
+  const retryBtn = h('button', 'ai-msg-action');
   retryBtn.type = 'button';
   retryBtn.setAttribute('data-ai-msg-action', 'retry');
   retryBtn.setAttribute('aria-label', '重试');
@@ -516,13 +532,13 @@ export function renderAiMessage(scrollEl: HTMLElement, model: AiMessageModel): A
       row.classList.add('ai-msg--error');
       let errEl = row.querySelector<HTMLElement>('.ai-msg-error-text');
       if (!errEl) {
-        errEl = el('div', 'ai-msg-error-text');
+        errEl = h('div', 'ai-msg-error-text');
         body.appendChild(errEl);
       }
       errEl.textContent = message;
     },
     stream(): AiStreamHandle {
-      const span = el('span', 'ai-msg-stream-text');
+      const span = h('span', 'ai-msg-stream-text');
       body.appendChild(span);
       return createAiStream(span);
     },

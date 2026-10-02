@@ -45,12 +45,12 @@
  * opts.filter 可覆盖默认 includes 过滤。
  */
 
-/* 与 modal.ts 的 FOCUSABLE 同一选择器集合（焦点陷阱全库一致） */
-const FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), audio, video, details>summary';
-
 import { applyPanelSizing, readPanelSizing } from './popover';
 import { emitIcen } from './events';
+/* emitMenuSelect（菜单选中统一事件）与 FOCUSABLE（焦点陷阱选择器）收敛为
+   context-menu / modal 的唯一定义点，此处 import 复用（消除三份逐字拷贝） */
+import { emitMenuSelect } from './context-menu';
+import { FOCUSABLE } from './modal';
 
 /** 编程命令条目（openCommandPalette 的 opts.items 元素类型）。 */
 export interface CommandPaletteCommand {
@@ -85,19 +85,6 @@ let teardown: (() => void) | null = null;
 /* 编程条目运行时登记：DOM → 命令定义（供自定义过滤）+ 防与 Enter/点击路径双派 menu-select */
 const programmaticCommands = new WeakMap<HTMLElement, CommandPaletteCommand>();
 let customFilter: ((query: string, item: CommandPaletteCommand) => boolean) | null = null;
-
-/** 菜单选中统一事件（dropdown / context-menu / command-palette 同一契约）。 */
-function emitMenuSelect(source: HTMLElement, item: HTMLElement): void {
-  emitIcen(item, 'icen:menu-select', {
-    source,
-    item,
-    value: item.dataset.value ?? '',
-    /* 优先专用 label 子元素（避开快捷键/图标文本混入），无则退整项文本 */
-    label: (item.querySelector('.menu-item-label, .command-item-label')?.textContent ?? item.textContent ?? '')
-      .trim()
-      .slice(0, 80),
-  });
-}
 
 /** 用编程条目重建面板条目 DOM（沿用现有类名/data 契约，纯 textContent 渲染）。 */
 function buildCommandItems(panel: HTMLElement, commands: CommandPaletteCommand[]): void {
@@ -229,6 +216,9 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
   customFilter = opts?.filter ?? null;
   if (opts?.items) buildCommandItems(panel, opts.items);
 
+  /* backdrop 首开 portal 到 body 后不再还原原位：palette 是单例 backdrop，
+     常驻 body 让重开免重建/免回流；与 popover 的 placeholder 还原是两种策略——
+     popover 面板多实例、需归还原宿主，palette 无此需求 */
   if (backdrop.parentElement !== document.body) document.body.appendChild(backdrop);
 
   restoreFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;

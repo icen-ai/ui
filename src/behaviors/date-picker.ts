@@ -24,12 +24,8 @@
  * 滚动 / resize 重定位监听随面板关闭一并移除。
  */
 
-import { applyPanelSizing, readPanelSizing } from './popover';
+import { applyPanelSizing, computePopoverLayout, readPanelSizing } from './popover';
 import { emitIcen } from './events';
-
-interface MarkedPicker extends HTMLElement {
-  __icenDatePickerInit?: boolean;
-}
 
 let openPicker: HTMLElement | null = null;
 let panelEl: HTMLElement | null = null;
@@ -80,7 +76,8 @@ function positionPanel(panel: HTMLElement, trigger: HTMLElement): void {
   /* 面板尺寸契约（PanelSizing）：根上 data-panel-* 可覆盖默认 280 宽与高度上限；
      面板是跨实例单例，未指定的字段必须清空内联，避免串味 */
   const sizing = readPanelSizing(trigger.closest('[data-date-picker]'));
-  /* 面板是跨实例单例：先复位全部内联尺寸再按本次契约应用（applyPanelSizing(null) 复位语义） */
+  /* 面板是跨实例单例：先复位全部内联尺寸再按本次契约应用（applyPanelSizing(null) 复位语义）。
+     min 提升为固定宽：日历网格固定 7 列不随宽自适应，min 语义落空，故提升为固定宽 */
   applyPanelSizing(panel, null);
   if (sizing.width != null || sizing.minWidth != null) {
     applyPanelSizing(panel, { width: sizing.width ?? sizing.minWidth, maxWidth: sizing.maxWidth, maxHeight: sizing.maxHeight });
@@ -88,15 +85,16 @@ function positionPanel(panel: HTMLElement, trigger: HTMLElement): void {
     applyPanelSizing(panel, sizing);
   }
   const pw = sizing.width ?? sizing.minWidth ?? 280;
-  const ph = panel.offsetHeight || 320;
-  let left = r.left;
-  let top = r.bottom + 4;
-  if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
-  if (left < 12) left = 12;
-  if (top + ph > window.innerHeight - 12) top = r.top - ph - 4;
-  if (top < 12) top = 12;
-  panel.style.left = left + 'px';
-  panel.style.top = top + 'px';
+  /* 定位统一走 computePopoverLayout（与 select/dropdown 同一引擎）：prefer 下方、
+     空间不足翻上、视口 margin 内 clamp；固定宽经 minWidth=maxWidth 传入参与钳制。
+     面板 fixed 定位直接用视口坐标，不加 scrollX/Y */
+  const layout = computePopoverLayout(
+    r,
+    { width: window.innerWidth, height: window.innerHeight },
+    { side: 'bottom', offset: 4, margin: 12, minWidth: pw, maxWidth: pw, maxHeight: sizing.maxHeight },
+  );
+  panel.style.left = `${layout.left}px`;
+  panel.style.top = `${layout.top}px`;
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -145,7 +143,8 @@ function renderCalendar(
     min: Date | null;
     max: Date | null;
     weekStart: number;
-    onPick: (d: Date) => void;
+    /** 选中回调：null 表示「清除」选择（面板底部清除钮） */
+    onPick: (d: Date | null) => void;
   },
 ): void {
   const { view, selected, min, max, weekStart, onPick } = ctx;
@@ -229,20 +228,18 @@ function renderCalendar(
 
   panel.append(head, weekdays, grid, foot);
 
-  // 事件
+  // 事件（翻月直接以新 view 递归渲染，不改写 ctx 自身）
   prevBtn.addEventListener('click', () => {
-    ctx.view = new Date(year, month - 1, 15);
-    renderCalendar(panel, { ...ctx, view: ctx.view });
+    renderCalendar(panel, { ...ctx, view: new Date(year, month - 1, 15) });
   });
   nextBtn.addEventListener('click', () => {
-    ctx.view = new Date(year, month + 1, 15);
-    renderCalendar(panel, { ...ctx, view: ctx.view });
+    renderCalendar(panel, { ...ctx, view: new Date(year, month + 1, 15) });
   });
   todayBtn.addEventListener('click', () => {
     onPick(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   });
   clearBtn.addEventListener('click', () => {
-    onPick(null as unknown as Date);
+    onPick(null);
   });
 }
 
@@ -270,14 +267,21 @@ function closePanel(): void {
 const pickersInit = new WeakSet<HTMLElement>();
 
 function setupPicker(container: HTMLElement): () => void {
+  /* 幂等只认 WeakSet（销毁会 delete，支持重新 init）；不再叠加 __icenDatePickerInit
+     标记——它永不复位，销毁后容器永不再接线，违反 JSDoc 的「可重新 init」承诺 */
   if (pickersInit.has(container)) return () => {};
   pickersInit.add(container);
-  const el = container as MarkedPicker;
+  const el = container;
   /* 本容器持久监听挂同一 AbortSignal：销毁一次摘净 */
   const ac = new AbortController();
-  const disposers: Array<() => void> = [() => { ac.abort(); pickersInit.delete(container); }];
-  if (el.__icenDatePickerInit) return () => {};
-  el.__icenDatePickerInit = true;
+  const disposers: Array<() => void> = [
+    () => {
+      /* 打开状态下销毁：先收浮层（隐藏面板 + 摘外点/Esc/重定位监听），否则监听泄漏、面板留 body */
+      if (openPicker === el) closePanel();
+      ac.abort();
+      pickersInit.delete(container);
+    },
+  ];
 
   const fmt = el.dataset.datePickerFormat ?? 'yyyy-mm-dd';
   const minStr = el.dataset.datePickerMin;

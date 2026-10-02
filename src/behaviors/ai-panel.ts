@@ -64,9 +64,11 @@
  */
 
 import {
+  AI_STATUSES,
   aiStatusLabel,
   formatDuration,
   formatTokens,
+  h,
   normalizeUsage,
   svgIcon,
   type AiStatus,
@@ -78,28 +80,13 @@ import type { AiAuditEntry, AiAuditor } from './ai-provider';
 
 /* ── 小工具 ── */
 
-/* DOM 工厂（与 ai-tool.ts 的 h() 同款；不叫 el 是为给 render* 的容器参数 el 让名） */
-function h<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className: string,
-  text?: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
-
 function dispatch<K extends keyof IcenEventMap>(node: Element, name: K, detail: IcenEventMap[K]): void {
   emitIcen(node, name, detail);
 }
 
-const STATUS_CLASSES: AiStatus[] = [
-  'pending', 'running', 'streaming', 'approval', 'done', 'error', 'cancelled',
-];
-
+/* 七态清单统一取 ai-core 的 AI_STATUSES（与 aiStatusLabel 等同源，避免双份漂移） */
 function stripStatusClasses(node: HTMLElement): void {
-  for (const s of STATUS_CLASSES) node.classList.remove(`is-${s}`);
+  for (const s of AI_STATUSES) node.classList.remove(`is-${s}`);
 }
 
 /* ══════════════ ai-todo（§4.8） ══════════════ */
@@ -165,7 +152,7 @@ const TODO_NEXT: Record<string, AiStatus> = {
 };
 
 function todoItemStatus(item: HTMLElement): AiStatus {
-  for (const s of STATUS_CLASSES) {
+  for (const s of AI_STATUSES) {
     if (item.classList.contains(`is-${s}`)) return s;
   }
   return 'pending';
@@ -189,7 +176,7 @@ function refreshTodoProgress(todo: HTMLElement): void {
 }
 
 function toggleTodoItem(item: HTMLElement): void {
-  const todo = item.closest('[data-ai-todo-interactive]');
+  const todo = item.closest<HTMLElement>('[data-ai-todo-interactive]');
   if (!todo || !todo.hasAttribute('data-ai-todo-interactive')) return;
   const index = Array.from(
     todo.querySelectorAll('.ai-todo-item'),
@@ -210,7 +197,7 @@ function toggleTodoItem(item: HTMLElement): void {
     item.setAttribute('aria-label', `${text}，状态：${aiStatusLabel(next)}`);
   }
 
-  refreshTodoProgress(todo as HTMLElement);
+  refreshTodoProgress(todo);
   dispatch(item, 'icen:ai-todo-toggle', { index, status: next });
 }
 
@@ -884,6 +871,7 @@ function buildAuditBody(body: HTMLElement, entries: AiAuditEntry[], opts: { limi
   const bits = [`${entries.length} 次请求`];
   if (errors > 0) bits.push(`${errors} 失败`);
   bits.push(`${formatTokens(tokens)} tok`);
+  /* 多条目成本直接相加会引入 1e-17 级浮点尾差（.toFixed 会放大显示），先取整到 1e-6 再格式化 */
   if (cost > 0) bits.push(`$${(Math.round(cost * 1e6) / 1e6).toFixed(4)}`);
   if (ttftN > 0) bits.push(`TTFT ${formatDuration(Math.round(ttftSum / ttftN))}`);
   totals.appendChild(h('span', 'ai-audit-totals-text', bits.join(' · ')));

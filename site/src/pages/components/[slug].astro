@@ -3,6 +3,7 @@ import Docs from '../../layouts/Docs.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import PmInstall from '../../components/PmInstall.astro';
 import { COMPONENTS, cssFor, type ComponentDoc } from '../../lib/components';
+import { SLUGS } from '../../../../scripts/slugs.mjs';
 
 export function getStaticPaths() {
   return COMPONENTS.map((doc, i) => ({
@@ -18,12 +19,14 @@ interface Props {
 }
 const { doc, prev, next } = Astro.props;
 
-// kit 一行入口：CSS + behavior 自动带上；有 init 契约的组件给出初始化两行
-const initFn = Object.values(doc.behaviorInit ?? {})[0];
-const kitCode = initFn
-  ? `import { ${initFn} } from '@icen.ai/ui/kit/${doc.slug}';\n${initFn}();`
+// kit 一行入口：CSS + behavior 自动带上；behaviorInit 的值（string | string[]）全部拍平依序调用
+const initFns = Object.values(doc.behaviorInit ?? {}).flatMap((v) => (Array.isArray(v) ? v : v ? [v] : []));
+const kitCode = initFns.length
+  ? `import { ${initFns.join(', ')} } from '@icen.ai/ui/kit/${doc.slug}';\n${initFns.map((f) => `${f}();`).join('\n')}`
   : `import '@icen.ai/ui/kit/${doc.slug}';`;
 const cliCode = `bunx --bun @icen.ai/ui add ${doc.slug}`;
+// 纯文档聚合页（如 ai-overview）不在 SLUGS——包内无 kit/<slug> 入口，安装三段不渲染
+const isKit = SLUGS.includes(doc.slug);
 // usage 以 import 开头视为 JS，否则按 HTML 高亮
 const usageLang = /^\s*(import|const|\/\/)/.test(doc.usage) ? 'js' : 'html';
 const pageLink = `[${doc.name} · ICEN UI](https://ui.icen.ai/components/${doc.slug}/)`;
@@ -74,13 +77,17 @@ const bootData = JSON.stringify({
 
   <h2 class="doc-h2">安装</h2>
   <PmInstall />
-  <p class="doc-note">一行引入该组件（CSS 与 behavior 自动带上，无需关心内部 CSS 文件名）：</p>
-  <CodeBlock code={kitCode} lang="js" />
-  <p class="doc-note">也可以用脚手架直接打印引入行：</p>
-  <CodeBlock code={cliCode} lang="bash" />
-  <p class="doc-note doc-note--warn">
-    Astro 项目注意：kit 入口里的 CSS import 在页面 <code>&lt;script&gt;</code> 里会被 Astro 的 client bundle 摇掉——请改在布局 frontmatter 里引 CSS（<code>import '@icen.ai/ui/components/{cssFor(doc.slug)}';</code>），JS 行为仍可走 kit。Vite SPA / webpack 项目无此问题。
-  </p>
+  {isKit && (
+    <>
+      <p class="doc-note">一行引入该组件（CSS 与 behavior 自动带上，无需关心内部 CSS 文件名）：</p>
+      <CodeBlock code={kitCode} lang="js" />
+      <p class="doc-note">也可以用脚手架直接打印引入行：</p>
+      <CodeBlock code={cliCode} lang="bash" />
+      <p class="doc-note doc-note--warn">
+        Astro 项目注意：kit 入口里的 CSS import 在页面 <code>&lt;script&gt;</code> 里会被 Astro 的 client bundle 摇掉——请改在布局 frontmatter 里引 CSS（<code>import '@icen.ai/ui/components/{cssFor(doc.slug)}';</code>），JS 行为仍可走 kit。Vite SPA / webpack 项目无此问题。
+      </p>
+    </>
+  )}
 
   <h2 class="doc-h2">用法</h2>
   <CodeBlock code={doc.usage} lang={usageLang} />
@@ -146,6 +153,7 @@ const bootData = JSON.stringify({
       }
       // 额外接线脚本（charts 渲染数据、context-menu 注册、演示回显等），
       // 以 camelCase + 'Mod' 形参暴露各模块（context-menu → contextMenuMod）。
+      // 硬约束：components.ts 的 script 字段必须是纯 JS（new Function 执行，禁 TS 语法）。
       if (data.script) {
         const keys = Object.keys(loaded);
         const names = keys.map(

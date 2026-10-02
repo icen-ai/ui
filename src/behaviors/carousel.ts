@@ -28,28 +28,29 @@ interface MarkedElement extends Element {
 function setup(carousel: Element): (() => void) | undefined {
   const el = carousel as MarkedElement;
   if (el.__icenCarouselInit) return undefined;
-  el.__icenCarouselInit = true;
 
-  const trackQ = carousel.querySelector<HTMLElement>(':scope > .carousel-track');
-  if (!trackQ) return undefined;
-  const track: HTMLElement = trackQ;
+  const track = carousel.querySelector<HTMLElement>(':scope > .carousel-track');
+  if (!track) return undefined;
 
   const prev = carousel.querySelector<HTMLButtonElement>('.carousel-arrow--prev');
   const next = carousel.querySelector<HTMLButtonElement>('.carousel-arrow--next');
   const dotsBox = carousel.querySelector<HTMLElement>('.carousel-dots');
 
+  /* 箭头 const（非提升的 function 声明）：守卫建立的 const 窄化才能保留进闭包体 */
+  const querySlides = (): HTMLElement[] =>
+    Array.from(track.querySelectorAll<HTMLElement>(':scope > .carousel-slide'));
+
   let index = 0;
   let slides = querySlides();
   let count = slides.length;
+  // 两个校验（track 存在 / 至少 1 张 slide）都过后再置位：结构不完整早退不置位，
+  // 以便补全后重新 init 可重试
   if (count === 0) return undefined;
+  el.__icenCarouselInit = true;
   let dots: HTMLButtonElement[] = [];
 
   /* 当前代 dots 的解绑函数（buildDots 重建时先摘旧监听，销毁时统一调用） */
   let dotOffs: Array<() => void> = [];
-
-  function querySlides(): HTMLElement[] {
-    return Array.from(track.querySelectorAll<HTMLElement>(':scope > .carousel-slide'));
-  }
 
   function buildDots(): void {
     for (const off of dotOffs) off();
@@ -80,7 +81,7 @@ function setup(carousel: Element): (() => void) | undefined {
     buildDots();
   }
 
-  function render(): void {
+  const render = (): void => {
     track.style.transform = `translateX(${-index * 100}%)`;
     slides.forEach((s, i) => s.setAttribute('aria-hidden', String(i !== index)));
     dots.forEach((d, i) => {
@@ -117,17 +118,18 @@ function setup(carousel: Element): (() => void) | undefined {
   };
   carousel.addEventListener('keydown', onKeyDown);
 
-  /* reduced-motion：取消 transition 防闪烁（CSS 已守，行为层不再二次处理） */
   buildDots();
   render();
 
-  /* 销毁：移除箭头/键盘/当前代 dots 监听并复位幂等标记（可重新 init） */
+  /* 销毁：移除箭头/键盘/当前代 dots 监听，清空 dots 容器并复位幂等标记（可重新 init） */
   return () => {
     prev?.removeEventListener('click', onPrev);
     next?.removeEventListener('click', onNext);
     carousel.removeEventListener('keydown', onKeyDown);
     for (const off of dotOffs) off();
     dotOffs = [];
+    /* dots 全为本行为生成（buildDots 重建前先清容器），销毁时清空，对照 tabs 回收 .tabs-ink */
+    dotsBox?.replaceChildren();
     el.__icenCarouselInit = false;
   };
 }

@@ -105,38 +105,6 @@
   background: var(--token-fill-1);
 }
 
-/* ── 溢出下拉（behavior 可选：点击 … 展开被折叠的中间路径） ── */
-.breadcrumb-dropdown {
-  position: relative;
-}
-.breadcrumb-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  min-width: 160px;
-  padding: 4px;
-  background: var(--token-card-strong);
-  border: 1px solid var(--token-outline);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-overlay);
-  z-index: var(--z-popover);
-  animation: icen-pop-in var(--icen-tx-fast);
-}
-.breadcrumb-dropdown-menu[hidden] { display: none; }
-.breadcrumb-dropdown-menu a {
-  display: block;
-  padding: 4px var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
-  text-decoration: none;
-  border-radius: var(--radius-sm);
-  transition: background-color var(--icen-tx-fast), color var(--icen-tx-fast);
-}
-.breadcrumb-dropdown-menu a:hover {
-  background: var(--token-fill-1);
-  color: var(--token-text);
-}
-
 /* ── 面包屑分隔符变体 ── */
 .breadcrumb--slash .breadcrumb-sep::after { content: '/'; }
 .breadcrumb--arrow .breadcrumb-sep::after { content: '→'; }

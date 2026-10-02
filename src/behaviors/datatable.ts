@@ -174,7 +174,7 @@ export function createTable<Row = Record<string, unknown>>(
 ): TableHandle<Row> {
   if (typeof document === 'undefined') return noopHandle<Row>();
 
-  /* ── 状态 ── */
+  /* ═══ 状态 ═══ */
   let data = opts.data;
   let search = '';
   let page = 1;
@@ -220,7 +220,7 @@ export function createTable<Row = Record<string, unknown>>(
     data.forEach((r, i) => keyCache.set(r as object, keyOf(r, i)));
   }
 
-  /* ── 数据管线：搜索 → 筛选 → 排序（记忆化：同帧多次读不重算） ── */
+  /* ═══ 数据管线：搜索 → 筛选 → 排序（记忆化：同帧多次读不重算）═══ */
   let pipelineCache: Row[] | null = null;
   function invalidate(): void { pipelineCache = null; }
   function pipeline(): Row[] {
@@ -253,7 +253,7 @@ export function createTable<Row = Record<string, unknown>>(
     return rows;
   }
 
-  /* ── DOM 骨架 ── */
+  /* ═══ DOM 骨架 ═══ */
   el.textContent = '';
   const root = document.createElement('div');
   root.className = 'datatable';
@@ -341,7 +341,7 @@ export function createTable<Row = Record<string, unknown>>(
   root.appendChild(foot);
   el.appendChild(root);
 
-  /* ── 列模板（合并拖拽覆盖宽度 + 冻结偏移计算） ── */
+  /* ═══ 列模板（合并拖拽覆盖宽度 + 冻结偏移计算）═══ */
   /** 冻结列的左侧偏移 px 累计（用于 sticky left） */
   function frozenOffsets(): Map<string, number> {
     const offsets = new Map<string, number>();
@@ -370,7 +370,7 @@ export function createTable<Row = Record<string, unknown>>(
     return parts.join(' ');
   }
 
-  /* ── 单元格内容 ── */
+  /* ═══ 单元格内容 ═══ */
   function fillCell(cell: HTMLElement, col: TableColumn<Row>, row: Row, rowIndex: number): void {
     const value = row[col.key as keyof Row];
     if (col.render) {
@@ -391,7 +391,7 @@ export function createTable<Row = Record<string, unknown>>(
     return input;
   }
 
-  /* ── 表头渲染（排序/筛选状态跟随） ── */
+  /* ═══ 表头渲染（排序/筛选状态跟随）═══ */
   /* 筛选面板 portal 到 body（.dt-scroll 有 overflow，绝对定位会被裁切） */
   let openPanel: { key: string; el: HTMLElement } | null = null;
 
@@ -399,10 +399,12 @@ export function createTable<Row = Record<string, unknown>>(
     视口翻转/夹取复用 computePopoverLayout（与 popover 家族同一布局纪律）。 */
   function positionDropdownPanel(panel: HTMLElement, btn: HTMLElement): void {
     panel.hidden = false;
-    const sizing = resolvePanelSizing(root);
+    /* data-panel-* 须从用户可见根 el 读：root 是 createTable 内部 div，用户无法在其上挂覆盖 */
+    const sizing = resolvePanelSizing(el);
     applyPanelSizing(panel, sizing);
     const rect = btn.getBoundingClientRect();
     const pr = panel.getBoundingClientRect();
+    /* 宽度锁死（min=max）：勾选项增减不引起面板横向伸缩；180 为最小可读宽 */
     const layout = computePopoverLayout(
       { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height },
       { width: window.innerWidth, height: window.innerHeight },
@@ -576,7 +578,7 @@ export function createTable<Row = Record<string, unknown>>(
     }
   }
 
-  /* ── 列宽拖拽：pointer capture + 写入 colWidths → 重算模板 ── */
+  /* ═══ 列宽拖拽：pointer capture + 写入 colWidths → 重算模板 ═══ */
   function attachResize(handle: HTMLElement, col: TableColumn<Row>): void {
     handle.addEventListener('pointerdown', (ev) => {
       ev.preventDefault();
@@ -586,7 +588,7 @@ export function createTable<Row = Record<string, unknown>>(
       handle.setPointerCapture(ev.pointerId);
       const onMove = (e: PointerEvent): void => {
         const delta = e.clientX - startX;
-        const next = Math.max(48, Math.round(startW + delta));
+        const next = Math.max(48, Math.round(startW + delta)); /* 48：最小可读列宽，拖拽不至把列挤没 */
         colWidths.set(col.key, `${next}px`);
         headRow.style.gridTemplateColumns = template();
         body.querySelectorAll<HTMLElement>('.dt-row').forEach((r) => {
@@ -605,7 +607,7 @@ export function createTable<Row = Record<string, unknown>>(
     });
   }
 
-  /* ── 列显隐面板 ── */
+  /* ═══ 列显隐面板 ═══ */
   function openColumnPanel(btn: HTMLElement): void {
     const panel = document.createElement('div');
     panel.className = 'dt-filter-panel dt-col-panel';
@@ -643,7 +645,7 @@ export function createTable<Row = Record<string, unknown>>(
     window.addEventListener('resize', onPanelScroll);
   }
 
-  /* ── CSV 导出（当前管线数据） ── */
+  /* ═══ CSV 导出（当前管线数据）═══ */
   function exportCSV(filename?: string): void {
     const rows = pipeline();
     emitIcen(root, 'icen:table-export', { count: rows.length });
@@ -652,7 +654,8 @@ export function createTable<Row = Record<string, unknown>>(
     const lines = rows.map((row) =>
       visible.map((c) => csvEscape(String(row[c.key as keyof Row] ?? ''))).join(','),
     );
-    const csv = '﻿' + [header, ...lines].join('\r\n');
+    /* UTF-8 BOM：Excel 识别 UTF-8 CSV 用 */
+    const csv = '\uFEFF' + [header, ...lines].join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -667,7 +670,7 @@ export function createTable<Row = Record<string, unknown>>(
     return s;
   }
 
-  /* ── 筛选面板（去重值多选，即时生效） ── */
+  /* ═══ 筛选面板（去重值多选，即时生效）═══ */
   function buildFilterPanel(col: TableColumn<Row>): HTMLElement {
     const panel = document.createElement('div');
     panel.className = 'dt-filter-panel';
@@ -723,8 +726,9 @@ export function createTable<Row = Record<string, unknown>>(
     return panel;
   }
 
-  /* ── 行渲染 ── */
-  function makeRow(row: Row, rowIndex: number, key: string): HTMLElement {
+  /* ═══ 行渲染 ═══ */
+  /* offsets 由 renderBody 算一次传入：frozenOffsets 全列重扫，每行重算是 O(行×列) 放大 */
+  function makeRow(row: Row, rowIndex: number, key: string, offsets: Map<string, number>): HTMLElement {
     const tr = document.createElement('div');
     tr.className = 'dt-row';
     tr.setAttribute('role', 'row');
@@ -739,18 +743,21 @@ export function createTable<Row = Record<string, unknown>>(
     if (selectable) {
       const cell = document.createElement('div');
       cell.className = 'dt-cell dt-cell--check';
-      if (frozenOffsets().size > 0 && selectable) {
+      if (offsets.size > 0) {
         /* 选择列也冻结 */
         cell.classList.add('dt-cell--frozen');
         cell.style.left = '0px';
       }
       const box = makeCheck(selected.has(key), '选择该行');
+      /* click 先于 change 触发：shiftKey 经闭包变量中转（不往 DOM 元素上挂私有属性） */
+      let shiftClicked = false;
       box.addEventListener('click', (ev) => {
-        (box as HTMLInputElement & { _shift?: boolean })._shift = ev.shiftKey;
+        shiftClicked = ev.shiftKey;
         ev.stopPropagation();
       });
       box.addEventListener('change', () => {
-        const shift = (box as HTMLInputElement & { _shift?: boolean })._shift === true;
+        const shift = shiftClicked;
+        shiftClicked = false;
         if (shift && lastClickedIndex >= 0 && lastClickedIndex !== rowIndex) {
           /* Shift+点击：范围选 */
           const rows = pipeline();
@@ -797,7 +804,6 @@ export function createTable<Row = Record<string, unknown>>(
       tr.appendChild(cell);
     }
 
-    const offsets = frozenOffsets();
     for (const col of cols()) {
       const cell = document.createElement('div');
       cell.className = 'dt-cell';
@@ -839,7 +845,7 @@ export function createTable<Row = Record<string, unknown>>(
     return wrap;
   }
 
-  /* ── 表体渲染（分页切片 / 虚拟窗口） ── */
+  /* ═══ 表体渲染（分页切片 / 虚拟窗口）═══ */
   function visibleRange(total: number): [number, number] {
     if (!virtual) {
       if (opts.remote || opts.pagination === false) return [0, total];
@@ -847,7 +853,7 @@ export function createTable<Row = Record<string, unknown>>(
       return [start, Math.min(total, start + pageSize)];
     }
     const viewH = scroll.clientHeight || 420;
-    const overscan = 6;
+    const overscan = 6; /* 视口上下各预渲 6 行：快速滚动不露白 */
     const start = Math.max(0, Math.floor(scrollTop / rowH) - overscan);
     const end = Math.min(total, Math.ceil((scrollTop + viewH) / rowH) + overscan);
     return [start, end];
@@ -868,7 +874,7 @@ export function createTable<Row = Record<string, unknown>>(
         const bar = document.createElement('div');
         bar.className = 'skeleton';
         bar.style.height = '14px';
-        bar.style.width = `${88 - (i % 3) * 14}%`;
+        bar.style.width = `${88 - (i % 3) * 14}%`; /* 88/14：三档错落的伪内容宽度节奏，避免骨架齐刷刷一列 */
         sk.appendChild(bar);
         body.appendChild(sk);
       }
@@ -887,6 +893,7 @@ export function createTable<Row = Record<string, unknown>>(
 
     const [start, end] = visibleRange(total);
     const frag = document.createDocumentFragment();
+    const offsets = frozenOffsets();
     if (virtual && start > 0) {
       const top = document.createElement('div');
       top.style.height = `${start * rowH}px`;
@@ -895,7 +902,7 @@ export function createTable<Row = Record<string, unknown>>(
     for (let i = start; i < end; i++) {
       const row = rows[i]!;
       const key = keyOfRow(row);
-      frag.appendChild(makeRow(row, i, key));
+      frag.appendChild(makeRow(row, i, key, offsets));
       if (expandable && expanded.has(key)) frag.appendChild(makeExpandRow(row));
     }
     if (virtual && end < total) {
@@ -908,7 +915,7 @@ export function createTable<Row = Record<string, unknown>>(
     renderFoot(total);
   }
 
-  /* ── 底部（统计 + 分页） ── */
+  /* ═══ 底部（统计 + 分页）═══ */
   function renderFoot(total: number): void {
     foot.textContent = '';
 
@@ -1001,7 +1008,7 @@ export function createTable<Row = Record<string, unknown>>(
     foot.appendChild(pager);
   }
 
-  /* ── 事件与生命周期 ── */
+  /* ═══ 事件与生命周期 ═══ */
   let searchTimer = 0;
   function onSearch(): void {
     window.clearTimeout(searchTimer);
@@ -1085,7 +1092,14 @@ export function createTable<Row = Record<string, unknown>>(
     setSort(key, dir = 'asc') { sortKey = key; sortDir = dir; invalidate(); opts.onSortChange?.(sortKey, sortDir); renderAll(); },
     getData() { return pipeline(); },
     exportCSV,
-    showColumn(key) { colHidden.delete(key); opts.columns.find((c) => c.key === key)!.hidden = false; invalidate(); renderAll(); },
+    showColumn(key) {
+      colHidden.delete(key);
+      /* show/hide 不对称是明示设计：show 需翻静态 hidden（作者预隐藏列首次显示），hide 走动态 colHidden 即可 */
+      const col = opts.columns.find((c) => c.key === key);
+      if (col) col.hidden = false;
+      invalidate();
+      renderAll();
+    },
     hideColumn(key) { colHidden.set(key, true); invalidate(); renderAll(); },
     refresh() { invalidate(); renderAll(); },
     destroy() {

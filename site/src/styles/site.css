@@ -29,14 +29,8 @@
 
 /* 演示区：展示组件真实等宽形态（CJK 显式无衬线回退） */
 .demo-stage,
-.preview,
-.show-card {
+.preview {
   font-family: var(--site-font-mono);
-}
-/* 卡片内的 chrome 文本（说明/标注）仍用 sans */
-.show-card-cap,
-.home-note {
-  font-family: var(--site-font-sans);
 }
 
 /* ═══════════ 顶部导航 ═══════════ */

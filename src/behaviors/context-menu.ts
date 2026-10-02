@@ -41,16 +41,19 @@ export interface ContextMenuOptions {
   items?: ContextMenuItem[];
 }
 
+import { applyPanelSizing, readPanelSizing, type PanelSizing } from './popover';
+import { emitIcen } from './events';
+
+/* 触屏长按阈值/移动容差：与 events.ts 的 LONGPRESS_MS / LONGPRESS_MOVE 同值——
+   右键菜单的触屏长按自带（不经 data-gestures 授权），故独立命名、各自演化 */
 const LONG_PRESS_DELAY = 520;
 const LONG_PRESS_MOVE_LIMIT = 12;
 const FLIP_MARGIN = 10;
 const CLAMP_MARGIN = 8;
 
-import { applyPanelSizing, readPanelSizing, type PanelSizing } from './popover';
-import { emitIcen } from './events';
-
-/** 菜单选中统一事件（dropdown / context-menu / command-palette 同一契约）。 */
-function emitMenuSelect(source: HTMLElement, item: HTMLElement): void {
+/** 菜单选中统一事件（dropdown / context-menu / command-palette 同一契约）。
+ *  本模块为唯一定义点，dropdown / command-palette 改为 import 复用（收敛三份逐字拷贝）。 */
+export function emitMenuSelect(source: HTMLElement, item: HTMLElement): void {
   emitIcen(item, 'icen:menu-select', {
     source,
     item,
@@ -204,6 +207,8 @@ export function openContextMenu(
   if (y + rect.height > vh - FLIP_MARGIN) ny = y - rect.height;
   if (nx < CLAMP_MARGIN) nx = CLAMP_MARGIN;
   if (ny < CLAMP_MARGIN) ny = CLAMP_MARGIN;
+  /* data-side 写回（与 dropdown/select 同契约）：CSS 进场动画按方向区分 */
+  panel.dataset.side = ny < y ? 'top' : 'bottom';
   panel.style.left = `${nx}px`;
   panel.style.top = `${ny}px`;
   panel.style.visibility = '';
@@ -292,48 +297,73 @@ function clearLongPress(): void {
 }
 
 function openForTarget(target: Element | null, x: number, y: number): void {
-  /* 声明式区域的 data-panel-* 尺寸契约随区域元素读入 */
-  openContextMenu(x, y, resolveItems(target), { sizing: readPanelSizing(target) });
+  /* 声明式区域的 data-panel-* 尺寸契约随区域元素读入。
+     target 是右键命中的最深子元素，data-panel-* 挂在 [data-context-menu] 区域根上——
+     直接读 target 会读空，需上溯到区域根；非 Element（null）或无区域根时退 target 本身 */
+  openContextMenu(
+    x,
+    y,
+    resolveItems(target),
+    { sizing: readPanelSizing(target instanceof Element ? (target.closest('[data-context-menu]') ?? target) : target) },
+  );
+}
+
+// 输入框/可编辑区域保留原生菜单
+function onContextMenu(e: MouseEvent): void {
+  const target = e.target instanceof Element ? e.target : null;
+  if (isEditable(target)) return;
+  e.preventDefault();
+  openForTarget(target, e.clientX, e.clientY);
+}
+
+// 触屏长按起点（520ms 后打开，移动超过 12px 取消）
+function onLongPressStart(e: PointerEvent): void {
+  if (e.pointerType !== 'touch') return;
+  const target = e.target instanceof Element ? e.target : null;
+  if (!target || isEditable(target)) return;
+  clearLongPress();
+  const startX = e.clientX;
+  const startY = e.clientY;
+  const timer = window.setTimeout(() => {
+    longPress = null;
+    openForTarget(target, startX, startY);
+  }, LONG_PRESS_DELAY);
+  longPress = { timer, x: startX, y: startY, target };
+}
+
+function onLongPressMove(e: PointerEvent): void {
+  if (!longPress) return;
+  if (Math.hypot(e.clientX - longPress.x, e.clientY - longPress.y) > LONG_PRESS_MOVE_LIMIT) {
+    clearLongPress();
+  }
 }
 
 /**
  * 启动全局右键菜单（重复调用安全）。
  * opts.items 提供时替换内置默认菜单。
+ * 返回销毁函数：摘除 init 注册的全部 document 监听并复位幂等标记（销毁后可重新
+ * init）；销毁时若有菜单开着会顺带关闭（摘净 openContextMenu 挂的浮层监听）。
  */
-export function initContextMenu(opts: ContextMenuOptions = {}): void {
-  if (typeof document === 'undefined') return;
+export function initContextMenu(opts: ContextMenuOptions = {}): () => void {
+  if (typeof document === 'undefined') return () => {};
   if (opts.items) fallbackItems = opts.items;
-  if (initialized) return;
+  if (initialized) return () => {};
   initialized = true;
 
-  // 输入框/可编辑区域保留原生菜单
-  document.addEventListener('contextmenu', (e) => {
-    const target = e.target instanceof Element ? e.target : null;
-    if (isEditable(target)) return;
-    e.preventDefault();
-    openForTarget(target, e.clientX, e.clientY);
-  });
-
-  // 触屏长按（520ms，移动超过 12px 取消）
-  document.addEventListener('pointerdown', (e) => {
-    if (e.pointerType !== 'touch') return;
-    const target = e.target instanceof Element ? e.target : null;
-    if (!target || isEditable(target)) return;
-    clearLongPress();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const timer = window.setTimeout(() => {
-      longPress = null;
-      openForTarget(target, startX, startY);
-    }, LONG_PRESS_DELAY);
-    longPress = { timer, x: startX, y: startY, target };
-  });
-  document.addEventListener('pointermove', (e) => {
-    if (!longPress) return;
-    if (Math.hypot(e.clientX - longPress.x, e.clientY - longPress.y) > LONG_PRESS_MOVE_LIMIT) {
-      clearLongPress();
-    }
-  });
+  document.addEventListener('contextmenu', onContextMenu);
+  document.addEventListener('pointerdown', onLongPressStart);
+  document.addEventListener('pointermove', onLongPressMove);
   document.addEventListener('pointerup', clearLongPress);
   document.addEventListener('pointercancel', clearLongPress);
+
+  return (): void => {
+    document.removeEventListener('contextmenu', onContextMenu);
+    document.removeEventListener('pointerdown', onLongPressStart);
+    document.removeEventListener('pointermove', onLongPressMove);
+    document.removeEventListener('pointerup', clearLongPress);
+    document.removeEventListener('pointercancel', clearLongPress);
+    closeContextMenu();
+    /* 复位幂等标记，销毁后可重新 init */
+    initialized = false;
+  };
 }

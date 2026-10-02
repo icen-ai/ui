@@ -1,0 +1,20 @@
+---
+// 防主题闪烁：首帧渲染前同步恢复 localStorage 主题类（Base / Docs 共用；契约同 src/behaviors/theme.ts）。
+---
+<script is:inline>
+  // 存储契约与 src/behaviors/theme.ts 一致：'icen.ui.theme' = {"preset","dark","style"}。
+  (function () {
+    try {
+      var raw = localStorage.getItem('icen.ui.theme');
+      var t = raw ? JSON.parse(raw) : null;
+      var cl = document.documentElement.classList;
+      if (t && typeof t === 'object') {
+        if (typeof t.preset === 'string') cl.add(t.preset);
+        if (t.dark === true) cl.add('dark');
+        if (typeof t.style === 'string') cl.add('style-' + t.style);
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        cl.add('dark'); // 无持久化时跟随系统明暗（同 theme.ts 的默认行为）
+      }
+    } catch (e) { /* 坏数据时保持默认，initTheme 会兜底 */ }
+  })();
+</script>

@@ -22,7 +22,7 @@
  *   </span>
  *
  * 变体：--dot 纯圆点 / --sm 小号 / --lg 大号 / --bottom 底部角
- * 语义色：--success（在线）/ --warning / --error / --accent
+ * 语义色：--success（在线）/ --warning / --error / --info / --accent
  */
 
 .badge-host {

@@ -2,7 +2,8 @@
 // 单一事实源：site/src/lib/components.ts 的文档注册表（slug/name/group/desc/usage）
 //            + docs/spec/ai-native.md + 仓库 AGENTS.md 消费段。构建时再生成，永不漂移。
 // 消费：site/package.json 的 dev/build 前置（写入 site/public/，Astro 原样拷到 dist 根）。
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';import { dirname, join, resolve } from 'node:path';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -92,6 +93,7 @@ const full = [
 for (const m of DEEP_MODULES) {
   const d = read(`dist/behaviors/${m}.d.mts`);
   if (d) full.push('', `### behaviors/${m}.d.mts`, '', '```ts', d.trim(), '```');
+  else console.warn(`llms: 缺 dist/behaviors/${m}.d.mts，已跳过该模块类型面（先 bun run build 生成 .d.mts）`);
 }
 full.push(
   '',

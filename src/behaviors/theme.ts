@@ -9,7 +9,8 @@
  *   - style:  挂 `style-${style}` 类（modern 也显式挂 .style-modern）
  * 页面加载早期调用 initTheme() 防闪烁。全部函数带 SSR 守卫。
  * 主题实际生效（与上次不同）时从 documentElement 派发
- *   icen:theme-change { preset, dark, style }（bubbles，全局/子树监听均可收）。
+ *   icen:theme-change { preset, dark, style }（自 documentElement 冒泡——全局形态可收；
+ *   within 为普通元素时事件路径不经过它，收不到）。
  */
 
 import { emitIcen } from './events';
@@ -192,6 +193,8 @@ export function initTheme(): ThemeState {
     !systemListenerAttached &&
     !hasPersistedPreference()
   ) {
+    /* 页面生命周期单例监听：跟随系统明暗贯穿整个会话，刻意不提供 destroy
+       （监听本身轻量，且幂等守卫保证重复 init 不会叠加监听） */
     systemListenerAttached = true;
     let lastDark = t.dark;
     try {

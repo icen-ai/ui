@@ -16,16 +16,20 @@
  *   formatDuration(1234)                → '1.2s'
  *   svgIcon(svgString)                  → 消毒后的 SVGElement；SSR 返回 null
  *
+ *   集群共享构件（其他 AI 模块从这里 import）：
+ *   AI_STATUSES                         → 状态机七态表（readonly）
+ *   h('div', 'cls', 'text')             → 极简 DOM 构件（createElement + 可选 class + 可选 text）
+ *   addUsage(sum, u)                    → 六键用量求和（非破坏性，返回新对象）
+ *
  *   标准化内容模型（spec §10，2026-10 业界调研：AI SDK v5 parts / MCP / OpenAI / Anthropic）：
  *   normalizeContentParts(raw)          → AiContentPart[]（四族 wire → 一套 parts）
  *   normalizeMcpContent(raw)            → MCP 场景别名（含 EmbeddedResource / resource_link）
- *   isAiContentPartArray(v)             → 部件数组守卫（tool output 多模态探测）
  *   contentToText(content)              → 拼接 text 部件（复制 / 降级传输）
  *   aiContentUrl(part)                  → 渲染地址（url 或 data URI）
  *   estimateTokens(content|usage)       → token 粗估（CJK ×0.6 + 其余 ÷4 + 媒体经验值）
  *   contextEstimate(usage)              → 下一轮上下文估算（上下文环正确口径；≠ 累计计费）
  *
- * SSR 安全：除 svgIcon 外全部纯函数；svgIcon 有 document 守卫。文本一律 textContent，禁 innerHTML。
+ * SSR 安全：除 svgIcon（有 document 守卫）与 h（触碰 document，需调用方在自身 SSR 守卫内使用）外全部纯函数。文本一律 textContent，禁 innerHTML。
  */
 
 /* ════════════════════════════════════════════
@@ -41,7 +45,8 @@ export type AiStatus =
   | 'error'
   | 'cancelled';
 
-const AI_STATUSES: readonly AiStatus[] = [
+/** 状态机七态（规格 §1 的唯一语言）——集群共享（切 is-* 类 / 校验 wire status 用） */
+export const AI_STATUSES: readonly AiStatus[] = [
   'pending',
   'running',
   'streaming',
@@ -80,6 +85,19 @@ export interface AiUsage {
   cacheWrite?: number;
   reasoning?: number;
   total?: number;
+}
+
+/* 六键键序：归一化 AiUsage 的全部数值槽（audit 聚合 / 用量环求和共用） */
+const USAGE_KEYS = ['input', 'output', 'cacheRead', 'cacheWrite', 'reasoning', 'total'] as const;
+
+/** 六键用量求和（非破坏性：不动入参，返回新对象）；语义对齐 ai-provider 的同名私有实现，集群共用 */
+export function addUsage(sum: AiUsage, u: AiUsage): AiUsage {
+  const out: AiUsage = { ...sum };
+  for (const k of USAGE_KEYS) {
+    const v = u[k];
+    if (typeof v === 'number' && Number.isFinite(v)) out[k] = ((out[k] as number | undefined) ?? 0) + v;
+  }
+  return out;
 }
 
 /* ════════════════════════════════════════════
@@ -259,8 +277,6 @@ const BUILTIN_KINDS: Record<string, AiKindDef> = {
   chart: { label: '图表', icon: ICON_CHART, tint: 'info', summarize: sum((i) => pickStr(i, ['title', 'name'])) },
 };
 
-const FALLBACK_KIND: AiKindDef = { label: '笔记', icon: ICON_FILE_TEXT, tint: 'muted' };
-
 const kindRegistry = new Map<string, AiKindDef>(Object.entries(BUILTIN_KINDS));
 
 /** 注册（或覆盖）一个 kind；name 大小写不敏感。第三方扩展入口。 */
@@ -269,9 +285,10 @@ export function registerAiKind(name: string, def: AiKindDef): void {
   if (key) kindRegistry.set(key, def);
 }
 
-/** 取 kind 定义；未注册回退 'note'。 */
+/** 取 kind 定义；未注册回退内置 'note'。 */
 export function getAiKind(name: string): AiKindDef {
-  return kindRegistry.get(name.trim().toLowerCase()) ?? kindRegistry.get('note') ?? FALLBACK_KIND;
+  /* 注册表以含 note 的内置集初始化且只 set 不 delete——兜底直接取内置常量即可，无需第二层 get/回退对象 */
+  return kindRegistry.get(name.trim().toLowerCase()) ?? BUILTIN_KINDS.note;
 }
 
 /* ── kind 推断 ── */
@@ -551,6 +568,7 @@ export type AiContent = string | AiContentPart[];
 
 const PART_TYPES = new Set(['text', 'image', 'audio', 'video', 'file', 'resource-link']);
 
+/** 单部件守卫：type 合法且槽位类型正确（text 看 text、resource-link 看 uri、媒体看 url 或 data+mimeType） */
 export function isAiContentPart(v: unknown): v is AiContentPart {
   if (!isObj(v)) return false;
   const t = v.type;
@@ -558,11 +576,6 @@ export function isAiContentPart(v: unknown): v is AiContentPart {
   if (t === 'text') return typeof v.text === 'string';
   if (t === 'resource-link') return typeof v.uri === 'string';
   return typeof v.url === 'string' || (typeof v.data === 'string' && typeof v.mimeType === 'string');
-}
-
-/** 数组且至少一项像内容部件 → 视为部件数组（tool output 多模态探测用） */
-export function isAiContentPartArray(v: unknown): v is AiContentPart[] {
-  return Array.isArray(v) && v.length > 0 && v.every(isAiContentPart);
 }
 
 /** 渲染地址归一：url 直取；data + mimeType 拼 data URI（base64） */
@@ -748,6 +761,22 @@ export function estimateTokens(content: AiContent | AiUsage): number {
 export function contextEstimate(usage: AiUsage): number {
   const u = normalizeUsage(usage);
   return (u.input ?? 0) + (u.cacheRead ?? 0) + (u.cacheWrite ?? 0) + (u.output ?? 0) + (u.reasoning ?? 0);
+}
+
+/* ════════════════════════════════════════════
+   DOM 构件（集群共用）
+   ════════════════════════════════════════════ */
+
+/** 极简 DOM 构件：createElement + 可选 className + 可选 textContent —— 集群共用，免四处 createElement 三连 */
+export function h<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className?: string,
+  text?: string,
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text != null) node.textContent = text;
+  return node;
 }
 
 /* ════════════════════════════════════════════

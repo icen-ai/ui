@@ -23,24 +23,13 @@
  * data-panel-max-height → 创建面板时内联应用（宽度默认内容驱动，CSS min 180/max 320）。
  */
 
+import { applyPanelSizing, computePopoverLayout, readPanelSizing } from './popover';
+/* emitMenuSelect（菜单选中统一事件）收敛自 context-menu（唯一定义点，消除逐字拷贝）；
+   本模块不再直接用 emitIcen，events 导入随之移除 */
+import { emitMenuSelect } from './context-menu';
+
 const VIEWPORT_MARGIN = 12;
 const SIDE_OFFSET = 4;
-
-import { applyPanelSizing, readPanelSizing } from './popover';
-import { emitIcen } from './events';
-
-/** 菜单选中统一事件（dropdown / context-menu / command-palette 同一契约）。 */
-function emitMenuSelect(source: HTMLElement, item: HTMLElement): void {
-  emitIcen(item, 'icen:menu-select', {
-    source,
-    item,
-    value: item.dataset.value ?? '',
-    /* 优先专用 label 子元素（避开快捷键/图标文本混入），无则退整项文本 */
-    label: (item.querySelector('.menu-item-label, .command-item-label')?.textContent ?? item.textContent ?? '')
-      .trim()
-      .slice(0, 80),
-  });
-}
 
 interface ActiveDropdown {
   trigger: HTMLElement;
@@ -53,11 +42,6 @@ interface ActiveDropdown {
 let active: ActiveDropdown | null = null;
 let initialized = false;
 
-function clamp(value: number, min: number, max: number): number {
-  if (max < min) return min;
-  return Math.min(max, Math.max(min, value));
-}
-
 function menuItems(panel: HTMLElement): HTMLElement[] {
   return Array.from(panel.querySelectorAll<HTMLElement>('.menu-item:not(.is-disabled):not(:disabled)'));
 }
@@ -68,27 +52,22 @@ function setHighlight(next: number): void {
   active.highlight = next;
 }
 
+/* 布局统一走 computePopoverLayout（与 select 同一引擎）：prefer 下方、空间不足翻上、
+   视口 margin 内 clamp；fixed 定位直接用视口坐标，不加 scrollX/Y。
+   宽度不传 opts——面板宽仍内容驱动（CSS min 180 / max 320），引擎默认宽仅参与
+   left 的视口钳制；side 写回 dataset 供 CSS 进场动画分方向 */
 function place(): void {
   if (!active) return;
   const { trigger, panel } = active;
   const rect = trigger.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const pw = panel.offsetWidth;
-  const ph = panel.offsetHeight;
-
-  const left = clamp(rect.left, VIEWPORT_MARGIN, vw - VIEWPORT_MARGIN - pw);
-  let top = rect.bottom + SIDE_OFFSET;
-  let side: 'bottom' | 'top' = 'bottom';
-  if (top + ph > vh - VIEWPORT_MARGIN && rect.top - SIDE_OFFSET - ph >= VIEWPORT_MARGIN) {
-    top = rect.top - SIDE_OFFSET - ph;
-    side = 'top';
-  }
-  top = clamp(top, VIEWPORT_MARGIN, vh - VIEWPORT_MARGIN - ph);
-
-  panel.style.left = `${left}px`;
-  panel.style.top = `${top}px`;
-  panel.dataset.side = side;
+  const layout = computePopoverLayout(
+    rect,
+    { width: window.innerWidth, height: window.innerHeight },
+    { side: 'bottom', offset: SIDE_OFFSET, margin: VIEWPORT_MARGIN },
+  );
+  panel.style.left = `${layout.left}px`;
+  panel.style.top = `${layout.top}px`;
+  panel.dataset.side = layout.side;
 }
 
 function openDropdown(trigger: HTMLElement, highlightFirst = false): void {

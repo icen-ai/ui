@@ -7,7 +7,7 @@
  * ════════════════════════════════════════════════════════════════════════
  * icen 组件契约（统一抽象）
  * ════════════════════════════════════════════════════════════════════════
- * 所有 51 个组件遵循同一套抽象，由两层共同支撑：
+ * 所有 56 个组件遵循同一套抽象，由两层共同支撑：
  *
  * ── 层 1：--icen-* 原语 token（所有组件自洽消费）
  *    --icen-ring / --icen-ring-soft / --icen-ring-error /
@@ -55,7 +55,7 @@
  * 暴露的契约：
  *   - 元素基线：box-sizing / body / a / code / pre / img / ::selection
  *   - 滚动条：贴 --token-scrollbar-*（retro profile 另有硬覆盖）
- *   - 工具类：.mono / .dim / .faint / .sr-only / .skip-link
+ *   - 工具类：.mono / .serif / .dim / .faint / .numeric / .sr-only / .skip-link
  *   - z-index 标尺：--z-* （浮层一律 portal 到 body）
  *   - 共享 keyframes：icen-pop-in（弹层进场）/ icen-spin（旋转）/ icen-skeleton-pulse（骨架脉冲）
  *   - 交互基元 class：.pressable / .control / .field / .lift / .surface-elevated / .focus-ring / .motion
@@ -67,7 +67,7 @@
    ───────────────────────────────────────────────────────────────
    所有组件消费的"原语级"变量：聚焦环、悬停、按下、禁用、过渡。
    风格 profile（如 .style-retro）只需覆盖这里的少数变量，
-   即可让 51 个组件整体换肤；组件自身无需感知风格切换。
+   即可让 56 个组件整体换肤；组件自身无需感知风格切换。
    ══════════════════════════════════════════════════════════════ */
 :root {
   /* ── 聚焦环（focus-visible） ── */
@@ -391,6 +391,7 @@ html {
        <span class="field-label">姓名</span>
        <span class="control"><input /></span>
        <span class="field-hint">必填</span>
+       <span class="field-error">错误</span>
      </label> */
 .field {
   display: flex;

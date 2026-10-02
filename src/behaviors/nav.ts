@@ -19,7 +19,7 @@
  * 同一元素重复 init 幂等。监听器挂在 window 上，元素从 DOM 移除后**不会**自动回收
  * （window 持有 listener 引用，元素无法随之 GC）——initNav 返回销毁函数，
  * 元素卸载/页面析构时应调用它移除 window scroll/resize 与 nav click 监听。SSR 下为 no-op。
- * prefers-reduced-motion: reduce 时仍同步状态但不依赖动画过渡（视觉上瞬切）。
+ * prefers-reduced-motion: reduce 时仍同步 .is-scrolled，但禁用滚动隐藏（防晕动）。
  */
 
 import { emitIcen } from './events';
@@ -84,15 +84,9 @@ function setup(nav: HTMLElement): (() => void) | undefined {
     window.requestAnimationFrame(apply);
   };
 
-  const onResize = (): void => {
-    /* 视口尺寸变化时刷新一次状态（防止 sticky 计算陈旧） */
-    if (ticking) return;
-    ticking = true;
-    window.requestAnimationFrame(apply);
-  };
-
+  /* resize 复用 onScroll：两者函数体相同（rAF 节流跑一次 apply），不再单开函数 */
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onResize, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
   apply();
 
   /* 导航项选中：.nav-btn / .nav-link 同 nav 互斥 is-active + aria-current="page" */
@@ -121,7 +115,7 @@ function setup(nav: HTMLElement): (() => void) | undefined {
   /* 销毁：移除 window 级监听与 nav 项委托，复位幂等标记（可重新 init） */
   return () => {
     window.removeEventListener('scroll', onScroll);
-    window.removeEventListener('resize', onResize);
+    window.removeEventListener('resize', onScroll);
     nav.removeEventListener('click', onSelect);
     el.__icenNavInit = false;
   };

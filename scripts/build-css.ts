@@ -1,7 +1,7 @@
 // 构建 CSS 产物：拷贝 src 的 css 到 dist，拼合 tokens.css / ui.css，生成 registry.json
 // 另生成：kit 一行入口 dist/components/<slug>.mjs（import css + re-export behavior）与 CLI（dist/cli.mjs）
 // 运行：bun scripts/build-css.ts（在 tsup 之后执行）
-import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SLUGS, SLUG_INIT, SLUG_EXPORTS, SLUG_BEHAVIOR, EXTRA_CSS, cssOf } from './slugs.mjs';
@@ -61,12 +61,23 @@ await writeFile(join(DIST, 'ui.css'), uiOut);
 const behaviorSet = new Set(
   (await readdir(join(SRC, 'behaviors'))).filter(f => f.endsWith('.ts')).map(f => f.replace(/\.ts$/, '')),
 );
+// 存在性防御：kit 入口 import 的文件必须真实存在，否则 throw（chart-calendar 曾静默指向不存在的 css）
+async function assertSrc(rel: string, what: string) {
+  try {
+    await access(join(SRC, rel));
+  } catch {
+    throw new Error(`build-css: ${what} 不存在 → src/${rel}（检查 scripts/slugs.mjs 的映射，勿产出坏 kit 入口）`);
+  }
+}
 const slugsRegistry: Record<string, { css: string; extraCss?: string[]; behavior?: string; init?: string; exports?: string[] }> = {};
 for (const slug of SLUGS) {
   const css = cssOf(slug);
   const extra = EXTRA_CSS[slug] ?? [];
+  await assertSrc(join('components', css), `kit/${slug} 的主 CSS`);
+  for (const e of extra) await assertSrc(join('components', e), `kit/${slug} 的附加 CSS`);
   const behaviorMod = SLUG_BEHAVIOR?.[slug] ?? null;
   const ownBehavior = !behaviorMod && behaviorSet.has(slug);
+  if (behaviorMod) await assertSrc(join('behaviors', `${behaviorMod}.ts`), `kit/${slug} 的 behavior 模块`);
   const init = SLUG_INIT[slug];
   const explicitExports = behaviorMod ? SLUG_EXPORTS[slug] : null;
   const lines = [`// @icen.ai/ui — kit: ${slug}（CSS + behavior 一行入口；构建产物，勿手改）`, `import './${css}';`];

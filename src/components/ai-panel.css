@@ -399,7 +399,7 @@
   user-select: none;
 }
 
-/* 大号变体（常驻工具栏/头部用） */
+/* 大号变体（消费方变体，常驻头部大号环；behavior 不产出，由使用方手写标记） */
 .ai-usage-ring--lg {
   width: 44px;
   height: 44px;

@@ -2,6 +2,7 @@
  * @icen.ai/ui — Typography Tokens（icen canonical）
  * 美学基调：等宽数字精密感 × 衬线书卷气（宋体标题）
  * 默认（:root）即 icen 品牌形态；.style-modern 显式回退 system-ui 栈（见 style-profiles.css）
+ * 工具类：.font-math（数字密集区，"Numeric Math" 数学字体 + tabular-nums）
  */
 
 /* ── 数学/等宽数字字体（数字密集区的精密感） ── */
@@ -24,6 +25,7 @@
   --font-heading: 'Songti SC', 'STSong', 'Noto Serif SC', 'Source Han Serif SC', SimSun, serif;
   --font-cjk: var(--font-heading);
   --line-height-body: 1.7;
+  /* 独家定义（style-profiles.css 的 :root 不再重复；profile 差异化在各 .style-* 块覆盖） */
   --line-height-heading: 1.2;
 }
 

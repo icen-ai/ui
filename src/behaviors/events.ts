@@ -14,8 +14,9 @@
  *   2. 协议层 Protocol —— 全部 CustomEvent：bubbles + composed + cancelable。
  *      手势事件 detail 统一包络 IcenGestureDetail；领域事件 detail 契约登记在 IcenEventMap
  *      （onIcen 与 emitIcen 双侧共享同一张表，拼错事件名或 detail 结构不符都会被编译器拦下）。
- *      广播事件（如 icen:ai-done / icen:ai-usage，从 document 派发的全局生命周期通知）
- *      不经过任何元素子树：onIcen 的全局与 { within } 形态都能收到，选择器委托形态不适用。
+ *      广播事件（如 icen:ai-done / icen:ai-usage，自 document 派发的全局生命周期通知）
+ *      传播路径只经 [document, window]：只有全局形态能收到，within 为 Element 时收不到
+ *      （不经过元素子树），要收广播请用全局形态；选择器委托形态不适用。
  *
  *   3. 策略层 Policy —— setEventPolicy(type, fn | null) 给手势事件注册全站默认行为：
  *      事件未被 preventDefault 时触发策略。用户在一处即可赋予/覆盖/禁用全站默认，
@@ -167,7 +168,8 @@ export interface IcenEventMap {
 }
 
 export interface IcenListenOptions {
-  /** 只监听该子树内冒泡上来的事件（组件实例级绑定；广播事件无视此限定） */
+  /** 只监听该子树内冒泡上来的事件（组件实例级绑定）。
+   *  广播事件（自 document 派发）不经过元素子树：within 为 Element 时收不到，要收广播请用全局形态 */
   within?: Element | Document;
   /** AbortSignal：abort 即解绑（React useEffect 清理 / 批量卸载场景） */
   signal?: AbortSignal;
@@ -208,12 +210,15 @@ export function onIcen(
   const once = opts?.once === true;
   let off: () => void = () => {};
   const fn = (e: Event): void => {
-    /* 广播事件（target 非 Element，如 document 派发的 icen:ai-done）：
-       全局 / within 形态直接送达；选择器委托无 DOM 源可匹配，不适用。 */
+    /* 广播事件（target 非 Element，如自 document 派发的 icen:ai-done）传播路径只经
+       [document, window]：只有全局形态（within 缺省 = document）能收到；within 为 Element
+       时监听器不在传播路径上收不到；选择器委托无 DOM 源可匹配，不适用。 */
     const broadcast = !(e.target instanceof Element);
     if (selector) {
       if (broadcast) return;
       const detail = (e as CustomEvent).detail as { source?: unknown } | undefined;
+      /* 手势事件的 target 可能是 [data-gestures] 宿主内的深层子节点，委托匹配以
+         detail.source 宿主为准，否则选择器永远匹配不到深子节点命中的手势 */
       const src = detail?.source instanceof Element ? detail.source : e.target;
       if (!(src instanceof Element) || !src.closest(selector)) return;
     }
@@ -235,7 +240,8 @@ export function onIcen(
 /**
  * 全库唯一派生口：bubbles + composed + cancelable。返回 false = 被消费方 preventDefault。
  * 组件作者派发领域事件一律走这里（不要裸写 new CustomEvent）；detail 契约见 IcenEventMap。
- * 从 document 派发 = 全局广播（绕过子树，onIcen 全局/within 均可收）。
+ * 从 document 派发 = 全局广播（传播只经 [document, window]，仅 onIcen 全局形态可收；
+ * within 为 Element 收不到，要收广播请用全局形态）。
  */
 export function emitIcen<K extends keyof IcenEventMap>(
   source: Element | Document,
@@ -256,6 +262,7 @@ export function setEventPolicy(type: IcenGestureEvent, policy: IcenPolicy | null
   else policies.delete(type);
 }
 
+/** 读取某手势事件当前注册的策略（与 setEventPolicy 对称的调试/测试读取器；未注册返回 undefined）。 */
 export function getEventPolicy(type: IcenGestureEvent): IcenPolicy | undefined {
   return policies.get(type);
 }

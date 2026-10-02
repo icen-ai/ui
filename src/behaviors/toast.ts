@@ -137,6 +137,14 @@ function sanitizeSvgIcon(source: string): Element | null {
   }
 }
 
+/** 关闭钮图标的懒缓存：CLOSE_SVG 是库内静态常量，首条 closable 弹窗解析消毒一次，
+ *  之后每条克隆复用（解析结果节点直接 appendChild 会被搬走，必须克隆；走同一消毒入口）。 */
+let closeSvgCache: Element | null = null;
+function closeSvg(): Element | null {
+  closeSvgCache ??= sanitizeSvgIcon(CLOSE_SVG);
+  return closeSvgCache ? (closeSvgCache.cloneNode(true) as Element) : null;
+}
+
 /** 加退场类并调度移除（transitionend 或 400ms 兜底，只生效一次）。 */
 function scheduleRemove(el: HTMLElement): void {
   el.classList.add('is-leaving');
@@ -224,8 +232,8 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
     closeBtn.type = 'button';
     closeBtn.className = 'toast-close';
     closeBtn.setAttribute('aria-label', '关闭');
-    const closeSvg = sanitizeSvgIcon(CLOSE_SVG);
-    if (closeSvg) closeBtn.appendChild(closeSvg);
+    const svg = closeSvg();
+    if (svg) closeBtn.appendChild(svg);
     else closeBtn.textContent = '×';
     closeBtn.addEventListener('click', remove);
     el.appendChild(closeBtn);

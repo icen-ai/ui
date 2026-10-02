@@ -2,7 +2,7 @@
  * @icen.ai/ui — Behavior: ai-provider（provider 适配层：填入 key 即工作）
  *
  * 规格唯一事实源：docs/spec/ai-native.md §9。零依赖；全部 SSR 守卫；禁 innerHTML（无 DOM 操作，
- * 唯请求完成时于 document 派 icen:ai-usage 事件）。
+ * 唯请求完成时于 document 派 `icen:ai-usage` 与 `icen:ai-done` 事件）。
  *
  * ── 注册表（§9.1，2026-10 调研值）──
  *   listAiProviders()             → 内置五家：openai / claude / deepseek / glm / kimi
@@ -44,6 +44,7 @@
  */
 
 import {
+  addUsage,
   normalizeUsage,
   normalizeContentParts,
   contentToText,
@@ -52,7 +53,7 @@ import {
   type AiContent,
   type AiContentPart,
 } from './ai-core';
-import { emitIcen } from './events';
+import { emitIcen, type IcenEventMap } from './events';
 
 /* ════════════════════════════════════════════
    小工具（本地副本，与 ai-core 同语义）
@@ -385,17 +386,6 @@ export interface AiAuditorOptions {
   max?: number;
 }
 
-const USAGE_KEYS = ['input', 'output', 'cacheRead', 'cacheWrite', 'reasoning', 'total'] as const;
-
-function addUsage(sum: AiUsage, u?: AiUsage): AiUsage {
-  if (!u) return sum;
-  for (const k of USAGE_KEYS) {
-    const v = u[k];
-    if (typeof v === 'number' && Number.isFinite(v)) sum[k] = ((sum[k] as number | undefined) ?? 0) + v;
-  }
-  return sum;
-}
-
 function isAuditEntry(v: unknown): v is AiAuditEntry {
   return (
     isObj(v) &&
@@ -458,7 +448,7 @@ export function createAiAuditor(opts?: AiAuditorOptions): AiAuditor {
     },
     summary() {
       const sum: AiUsage = {};
-      for (const e of entries) addUsage(sum, e.usage);
+      for (const e of entries) addUsage(sum, e.usage ?? {});
       return sum;
     },
     totals() {
@@ -468,7 +458,7 @@ export function createAiAuditor(opts?: AiAuditorOptions): AiAuditor {
       let ttftSum = 0;
       let ttftN = 0;
       for (const e of entries) {
-        addUsage(usage, e.usage);
+        addUsage(usage, e.usage ?? {});
         if (typeof e.cost === 'number') cost += e.cost;
         if (e.status === 'error') errors++;
         if (typeof e.ttftMs === 'number') {
@@ -489,7 +479,7 @@ export function createAiAuditor(opts?: AiAuditorOptions): AiAuditor {
       const out: Record<string, AiUsage> = {};
       for (const e of entries) {
         const key = `${e.provider}/${e.model}`;
-        addUsage((out[key] ??= {}), e.usage);
+        addUsage((out[key] ??= {}), e.usage ?? {});
       }
       return out;
     },
@@ -884,21 +874,14 @@ function joinSignals(a: AbortSignal, b?: AbortSignal): AbortSignal {
     return c.signal;
   }
   const fwd = (): void => {
+    /* once 只摘触发侧，对侧监听若不手动移除会让 controller 活过请求生命周期（长流式下持引用不放） */
+    a.removeEventListener('abort', fwd);
+    b.removeEventListener('abort', fwd);
     if (!c.signal.aborted) c.abort();
   };
   a.addEventListener('abort', fwd, { once: true });
   b.addEventListener('abort', fwd, { once: true });
   return c.signal;
-}
-
-/** 请求完成即在 document 派 icen:ai-usage（detail=归一 usage，bubbles）——环/面板监听即实时更新 */
-function dispatchUsageEvent(usage: AiUsage): void {
-  if (typeof document === 'undefined') return;
-  try {
-    emitIcen(document, 'icen:ai-usage', usage);
-  } catch {
-    /* 非 DOM 环境静默 */
-  }
 }
 
 /** icen:ai-done 的 detail（spec §5；绑定层 bindComposer 的驱动事件） */
@@ -914,11 +897,15 @@ export interface AiDoneEventDetail {
   ttftMs?: number;
 }
 
-/** 请求收尾在 document 派 icen:ai-done（chat 与 stream 的 finally 均派；bubbles） */
-function dispatchDoneEvent(detail: AiDoneEventDetail): void {
+/** 广播派发统一口：请求完成即在 document 派 icen:ai-usage（detail=归一 usage）/
+    icen:ai-done（detail=AiDoneEventDetail），bubbles——环/面板与绑定层监听即实时更新 */
+function dispatchAiEvent<K extends 'icen:ai-usage' | 'icen:ai-done'>(
+  name: K,
+  detail: IcenEventMap[K],
+): void {
   if (typeof document === 'undefined') return;
   try {
-    emitIcen(document, 'icen:ai-done', detail);
+    emitIcen(document, name, detail);
   } catch {
     /* 非 DOM 环境静默 */
   }
@@ -1019,7 +1006,46 @@ export function createAiClient(options: AiClientOptions): AiClient {
   }
 
   const publishUsage = (usage: AiUsage): void => {
-    if (Object.keys(usage).length > 0) dispatchUsageEvent(usage);
+    if (Object.keys(usage).length > 0) dispatchAiEvent('icen:ai-usage', usage);
+  };
+
+  /**
+   * 请求收尾收敛（chat 成功路径与 stream finally 共用）：audit 落账 + 派 icen:ai-done。
+   * done.status 三态、audit 仅两态——cancelled 落账为 error + 固定文案「请求已取消」、
+   * done 事件不带 error（消费方以 status 区分）；durationMs 在此一次取值，
+   * 避免 audit 与事件两处分别取时钟产生漂移。
+   */
+  const finalize = (
+    req: AiChatRequest,
+    streaming: boolean,
+    status: AiDoneEventDetail['status'],
+    usage: AiUsage,
+    error: string | undefined,
+    t0: number,
+    ttftMs?: number,
+  ): number | undefined => {
+    const durationMs = Date.now() - t0;
+    const { cost } = audit(
+      req,
+      streaming,
+      status === 'ok' ? 'ok' : 'error',
+      usage,
+      durationMs,
+      status === 'cancelled' ? '请求已取消' : error,
+      ttftMs,
+    );
+    dispatchAiEvent('icen:ai-done', {
+      status,
+      provider: def.id,
+      model: req.model ?? defaultModel,
+      stream: streaming,
+      usage,
+      cost,
+      error: status === 'cancelled' ? undefined : error,
+      durationMs,
+      ttftMs,
+    });
+    return cost;
   };
 
   async function chat(req: AiChatRequest): Promise<AiChatResult> {
@@ -1042,6 +1068,8 @@ export function createAiClient(options: AiClientOptions): AiClient {
       let finishReason: string | undefined;
       let usageRaw: unknown;
       if (isObj(j)) {
+        /* 同一请求模型、两族线协议的非流式响应形态不同：anthropic 为顶层 content blocks
+           （多模态回执），openai 为 choices[0].message.content（字符串或部件数组）——按 wire 分派 */
         if (def.wire === 'anthropic') {
           const blocks = Array.isArray(j.content) ? j.content : [];
           outParts = normalizeContentParts(blocks);
@@ -1063,23 +1091,14 @@ export function createAiClient(options: AiClientOptions): AiClient {
       }
       const usage = normalizeUsage(usageRaw);
       publishUsage(usage);
-      const { cost } = audit(req, false, 'ok', usage, Date.now() - t0);
-      dispatchDoneEvent({
-        status: 'ok',
-        provider: def.id,
-        model: req.model ?? defaultModel,
-        stream: false,
-        usage,
-        cost,
-        durationMs: Date.now() - t0,
-      });
+      const cost = finalize(req, false, 'ok', usage, undefined, t0);
       const result: AiChatResult = { text: outText, usage, cost, finishReason, raw: j };
       if (outParts && outParts.length > 0) result.parts = outParts;
       return result;
     } catch (err) {
       const e = normalizeThrown(err);
       audit(req, false, 'error', {}, Date.now() - t0, e.message);
-      dispatchDoneEvent({
+      dispatchAiEvent('icen:ai-done', {
         status: e.type === 'cancelled' ? 'cancelled' : 'error',
         provider: def.id,
         model: req.model ?? defaultModel,
@@ -1093,7 +1112,11 @@ export function createAiClient(options: AiClientOptions): AiClient {
 
   function stream(req: AiChatRequest): AiStreamSession {
     const ac = new AbortController();
+    /* fetch 只收一个 signal：内部 ac（cancel()/迭代器早退）与外部 req.signal 在此合并，
+       任一触发即中止网络请求，且互不覆盖对方的中止语义 */
     const signal = joinSignals(ac.signal, req.signal);
+    /* 唤醒队列：网络侧 eager 推流入 chunks 缓冲，消费侧 next() 无数据时挂 waiter、
+       push/finish 时 notify 逐个唤醒——慢消费者不反压网络读取（背压以内存缓冲为代价） */
     const chunks: AiStreamChunk[] = [];
     const waiters: Array<() => void> = [];
     let finished = false;
@@ -1124,6 +1147,8 @@ export function createAiClient(options: AiClientOptions): AiClient {
       let ttftMs: number | undefined;
       try {
         const res = await post(req, true, signal);
+        /* 流式按 wire 分派专用解析器：两族 SSE 事件模型不同
+           （anthropic event: 分派 + usage 快照替换；openai data: 帧 + [DONE] 收尾） */
         const events =
           def.wire === 'anthropic' ? parseAnthropicStream(res, signal) : parseOpenAiStream(res, signal);
         for await (const ev of events) {
@@ -1152,26 +1177,15 @@ export function createAiClient(options: AiClientOptions): AiClient {
       } finally {
         const usage = normalizeUsage(usageRaw);
         publishUsage(usage);
-        const { cost } = audit(
+        const cost = finalize(
           req,
           true,
-          errorType === 'cancelled' ? 'error' : status,
+          errorType === 'cancelled' ? 'cancelled' : status,
           usage,
-          Date.now() - t0,
-          errorType === 'cancelled' ? '请求已取消' : error,
+          error,
+          t0,
           ttftMs,
         );
-        dispatchDoneEvent({
-          status: errorType === 'cancelled' ? 'cancelled' : status,
-          provider: def.id,
-          model: req.model ?? defaultModel,
-          stream: true,
-          usage,
-          cost,
-          error: errorType === 'cancelled' ? undefined : error,
-          durationMs: Date.now() - t0,
-          ttftMs,
-        });
         finished = true;
         notify();
         ac.abort(); // 幂等：挂起的 reader/连接清理

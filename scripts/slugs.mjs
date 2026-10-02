@@ -48,11 +48,14 @@ export const MERGED_CSS = {
   carousel: 'media.css',
   dropdown: 'menu.css',
   'context-menu': 'menu.css',
+  // chart-calendar 无独立 css，样式并入 chart-heatmap.css（.chart-calendar* 规则）
+  'chart-calendar': 'chart-heatmap.css',
   // AI 族合并文件：ai-chat.css / ai-tool.css / ai-diff.css / ai-panel.css
   'ai-message': 'ai-chat.css',
   'ai-reasoning': 'ai-chat.css',
   'ai-composer': 'ai-chat.css',
   'ai-subagent': 'ai-tool.css',
+  'ai-tool-call': 'ai-tool.css',
   'ai-files': 'ai-diff.css',
   'ai-todo': 'ai-panel.css',
   'ai-context': 'ai-panel.css',
@@ -113,7 +116,7 @@ export const SLUG_EXPORTS = {
     'renderVBar', 'renderHBar', 'renderStack', 'renderDonut', 'renderLine',
     'renderArea', 'renderRadar', 'renderHeatmap', 'renderSparkline', 'renderGauge',
     'renderCalendar', 'renderScatter', 'renderChart', 'normalizeChartSpec',
-    'inferChartType', 'chartFormatValue',
+    'inferChartType', 'chartFormatValue', 'registerChartTone',
   ],
   datatable: ['createTable'],
   // ── 图表细分类型：仅导出该类型的渲染函数 ──
@@ -192,5 +195,6 @@ export const EXTRA_CSS = {
   'chart-gauge': ['charts.css'],
   'chart-sparkline': ['charts.css'],
   'chart-scatter': ['charts.css'],
-  'chart-calendar': ['charts.css', 'chart-heatmap.css'],
+  // 图表细分类型依赖共享基座 charts.css（calendar 主 css 已由 MERGED_CSS 指向 chart-heatmap.css）
+  'chart-calendar': ['charts.css'],
 };

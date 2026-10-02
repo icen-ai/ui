@@ -15,10 +15,10 @@ export interface ComponentDoc {
   demo: string;
   usage: string;
   behaviors?: string[];
-  behaviorInit?: Record<string, string>;
+  behaviorInit?: Record<string, string | string[]>;
   script?: string;
 }
-/** 组件分组的展示名（顺序即侧栏顺序）。原「数据」已拆为四组：数据展示 / 表格 / 图表 / 反馈。 */
+/** 组件分组的展示名（顺序即侧栏顺序）。原「数据」已拆为三组：数据展示（含表格）/ 图表 / 反馈。 */
 export const GROUPS: string[] = ['基础', 'AI 原生', '表单', '数据展示', '图表', '浮层', '反馈', '导航'];
 
 /** slug → 组件 css 文件名（单一事实源在 scripts/slugs.mjs，与 kit 入口/CLI 共享）。 */
@@ -707,7 +707,6 @@ initTagInput();`,
 <!-- 状态由使用方驱动：点击切换 aria-checked，CSS 负责全部视觉 -->`,
     script: `// 纯 CSS 状态组件的演示接线（实际项目由使用方状态驱动）
 /* 开关/勾选交互已由 behaviors/controls 的 initSwitch 接管（含三态与键盘） */
-});
 document.querySelectorAll('.radio-group').forEach((group) => {
   group.querySelectorAll('.radio-item').forEach((item) => {
     item.addEventListener('click', () => {
@@ -720,7 +719,8 @@ document.querySelectorAll('.radio-group').forEach((group) => {
 });`,
 
     behaviors: ['controls'],
-    behaviorInit: { controls: 'initSwitch' },  },
+    behaviorInit: { controls: 'initSwitch' },
+  },
   {
     slug: 'segmented',
     name: '分段选择',
@@ -783,7 +783,8 @@ document.querySelectorAll('.stepper').forEach((s) => {
 });`,
 
     behaviors: ['input', 'controls'],
-    behaviorInit: { input: 'initInput', controls: ['initSegmented', 'initStepper'] },  },
+    behaviorInit: { input: 'initInput', controls: ['initSegmented', 'initStepper'] },
+  },
   {
     slug: 'upload',
     name: '上传',
@@ -818,7 +819,7 @@ initUpload();
     behaviorInit: { upload: 'initUpload' },
     script: `document.querySelectorAll('.upload[data-upload-list]').forEach((zone) => {
   zone.addEventListener('icen:upload-error', (ev) => {
-    const detail = (ev as CustomEvent).detail;
+    const detail = ev.detail;
     const msg = document.getElementById('demo-upload-files');
     if (msg) {
       msg.hidden = false;
@@ -865,7 +866,7 @@ initDatePicker();
     script: `// hidden input 值变化监听演示
 document.querySelectorAll('.date-picker input[type="hidden"]').forEach((inp) => {
   inp.addEventListener('change', () => {
-    console.log('date change:', (inp as HTMLInputElement).value);
+    console.log('date change:', inp.value);
   });
 });`,
   },
@@ -1725,7 +1726,8 @@ document.getElementById('notif-clear')?.addEventListener('click', () => {
 <!-- 填充态由使用方按分数挂 .is-filled / .is-half -->`,
 
     behaviors: ['controls'],
-    behaviorInit: { controls: 'initRating' },  },
+    behaviorInit: { controls: 'initRating' },
+  },
   {
     slug: 'kbd',
     name: '键盘键',
@@ -2505,7 +2507,8 @@ if (el && chartsMod.renderCalendar) {
 </div>`,
 
     behaviors: ['controls'],
-    behaviorInit: { controls: 'initTableSort' },  },
+    behaviorInit: { controls: 'initTableSort' },
+  },
   {
     slug: 'datatable',
     name: '数据表格',
@@ -2794,7 +2797,8 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
 </nav>`,
 
     behaviors: ['controls'],
-    behaviorInit: { controls: 'initPagination' },  },
+    behaviorInit: { controls: 'initPagination' },
+  },
   {
     slug: 'steps',
     name: '步骤条',
@@ -2874,7 +2878,8 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
 </ol>`,
 
     behaviors: ['controls'],
-    behaviorInit: { controls: 'initSteps' },  },
+    behaviorInit: { controls: 'initSteps' },
+  },
   {
     slug: 'back-top',
     name: '回到顶部',

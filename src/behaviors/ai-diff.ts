@@ -31,7 +31,7 @@
  *   - parseUnifiedDiff(text)：解析标准 unified diff（多文件 diff --git / hunk @@ / 行号追踪），
  *     纯函数、SSR 安全；返回结构化 AiDiffFile[]
  *   - renderAiDiff(el, { files })：全 DOM API 渲染，文本一律 textContent（禁 innerHTML）；
- *     body 默认折叠（长 diff 只露 head）
+ *     body 默认折叠（长 diff 只露 head）；返回挂载元素 el（render* 约定，SSR 原样返回）
  *   - initAiDiff(root?)：幂等（__icenAiDiffInit），事件委托（渲染后注入的新文件同样生效）：
  *       · head 点击 / Enter / Space → 展开折叠 body，同步 aria-expanded，派 icen:ai-toggle {el, open}
  *       · [data-ai-diff-accept] / [data-ai-diff-reject] → 文件加 .is-accepted / .is-rejected
@@ -40,6 +40,7 @@
  *   - 返回销毁函数：移除监听、复位幂等标记（销毁后可重新 init）
  */
 
+import { h } from './ai-core';
 import { emitIcen } from './events';
 
 /* ── 数据模型 ── */
@@ -227,44 +228,33 @@ export function parseUnifiedDiff(text: string): AiDiffFile[] {
   return files;
 }
 
-/* ── 渲染 ── */
-
-function el<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className: string,
-  text?: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
+/* ── 渲染（DOM 构件 h 走 ai-core，集群共享） ── */
 
 function renderLineRow(line: AiDiffLine): HTMLTableRowElement {
   const tr = document.createElement('tr');
   tr.className = `ai-diff-line--${line.type}`;
   if (line.type === 'hunk') {
-    const td = el('td', '', line.text);
+    const td = h('td', '', line.text);
     td.colSpan = 3;
     tr.appendChild(td);
     return tr;
   }
-  const oldTd = el('td', 'ai-diff-ln', line.oldNo === null ? '' : String(line.oldNo));
+  const oldTd = h('td', 'ai-diff-ln', line.oldNo === null ? '' : String(line.oldNo));
   oldTd.setAttribute('aria-hidden', 'true');
-  const newTd = el('td', 'ai-diff-ln', line.newNo === null ? '' : String(line.newNo));
+  const newTd = h('td', 'ai-diff-ln', line.newNo === null ? '' : String(line.newNo));
   newTd.setAttribute('aria-hidden', 'true');
   tr.appendChild(oldTd);
   tr.appendChild(newTd);
-  tr.appendChild(el('td', 'ai-diff-code', line.text));
+  tr.appendChild(h('td', 'ai-diff-code', line.text));
   return tr;
 }
 
 function renderFile(file: AiDiffFile): HTMLElement {
-  const root = el('div', `ai-diff-file is-${file.status}`);
+  const root = h('div', `ai-diff-file is-${file.status}`);
   root.dataset.path = file.path;
 
   /* head */
-  const head = el('div', 'ai-diff-head');
+  const head = h('div', 'ai-diff-head');
   head.setAttribute('role', 'button');
   head.tabIndex = 0;
   head.setAttribute('aria-expanded', 'false');
@@ -272,33 +262,33 @@ function renderFile(file: AiDiffFile): HTMLElement {
   const pathText = file.status === 'renamed' && file.oldPath
     ? `${file.oldPath} → ${file.path}`
     : file.path;
-  head.appendChild(el('span', 'ai-diff-path', pathText));
+  head.appendChild(h('span', 'ai-diff-path', pathText));
 
-  const stat = el('span', 'ai-diff-stat');
-  if (file.addCount > 0) stat.appendChild(el('b', 'ai-diff-add', `+${file.addCount}`));
-  if (file.delCount > 0) stat.appendChild(el('b', 'ai-diff-del', `−${file.delCount}`));
+  const stat = h('span', 'ai-diff-stat');
+  if (file.addCount > 0) stat.appendChild(h('b', 'ai-diff-add', `+${file.addCount}`));
+  if (file.delCount > 0) stat.appendChild(h('b', 'ai-diff-del', `−${file.delCount}`));
   if (stat.children.length > 0) head.appendChild(stat);
 
-  const actions = el('span', 'ai-diff-actions');
-  actions.appendChild(el('button', '', '接受')).setAttribute('data-ai-diff-accept', '');
-  const rejectBtn = el('button', '', '拒绝');
+  const actions = h('span', 'ai-diff-actions');
+  actions.appendChild(h('button', '', '接受')).setAttribute('data-ai-diff-accept', '');
+  const rejectBtn = h('button', '', '拒绝');
   rejectBtn.setAttribute('data-ai-diff-reject', '');
   actions.appendChild(rejectBtn);
   head.appendChild(actions);
 
-  const verdict = el('span', 'ai-diff-verdict');
+  const verdict = h('span', 'ai-diff-verdict');
   verdict.hidden = true;
   head.appendChild(verdict);
   root.appendChild(head);
 
   /* body（默认折叠，只露 head） */
-  const body = el('div', 'ai-diff-body');
+  const body = h('div', 'ai-diff-body');
   body.hidden = true;
-  const table = el('table', 'ai-diff-table');
+  const table = h('table', 'ai-diff-table');
   if (file.hunks.length === 0) {
     const tr = document.createElement('tr');
     tr.className = 'ai-diff-line--ctx';
-    const td = el('td', '', file.binary ? '二进制文件，无法显示文本差异' : '无差异内容');
+    const td = h('td', '', file.binary ? '二进制文件，无法显示文本差异' : '无差异内容');
     td.colSpan = 3;
     tr.appendChild(td);
     table.appendChild(tr);
@@ -314,16 +304,17 @@ function renderFile(file: AiDiffFile): HTMLElement {
 }
 
 /**
- * 渲染 diff 审阅卡（DOM API，全 textContent）。
+ * 渲染 diff 审阅卡（DOM API，全 textContent），返回挂载元素 el（render* 约定）。
  * 接受 parseUnifiedDiff 的产物；重复调用会替换 el 内容。
  */
-export function renderAiDiff(elm: HTMLElement, model: AiDiffModel): void {
-  if (typeof document === 'undefined') return;
-  elm.textContent = '';
-  const root = el('div', 'ai-diff');
+export function renderAiDiff(el: HTMLElement, model: AiDiffModel): HTMLElement {
+  if (typeof document === 'undefined') return el; /* SSR：原样返回挂载元素（render* SSR 分支口径） */
+  el.textContent = '';
+  const root = h('div', 'ai-diff');
   const files = Array.isArray(model?.files) ? model.files : [];
   for (const file of files) root.appendChild(renderFile(file));
-  elm.appendChild(root);
+  el.appendChild(root);
+  return el;
 }
 
 /* ── 交互 ── */
@@ -364,7 +355,7 @@ function decide(btn: Element, accepted: boolean): void {
   file.classList.add(accepted ? 'is-accepted' : 'is-rejected');
   let verdict = file.querySelector<HTMLElement>('.ai-diff-verdict');
   if (!verdict) {
-    verdict = el('span', 'ai-diff-verdict');
+    verdict = h('span', 'ai-diff-verdict');
     file.querySelector('.ai-diff-head')?.appendChild(verdict);
   }
   verdict.textContent = accepted ? '已接受' : '已拒绝';
@@ -397,15 +388,17 @@ export function initAiDiff(root?: ParentNode): () => void {
     const t = e.target instanceof Element ? e.target : null;
     if (!t) return;
 
-    /* 决策按钮在 head 内，先处理并阻断展开 */
-    if (t.closest('[data-ai-diff-accept]')) {
+    /* 决策按钮在 head 内，先处理并阻断展开（单次 closest 查询，命中即决策） */
+    const acceptBtn = t.closest('[data-ai-diff-accept]');
+    if (acceptBtn) {
       e.stopPropagation();
-      decide(t.closest('[data-ai-diff-accept]')!, true);
+      decide(acceptBtn, true);
       return;
     }
-    if (t.closest('[data-ai-diff-reject]')) {
+    const rejectBtn = t.closest('[data-ai-diff-reject]');
+    if (rejectBtn) {
       e.stopPropagation();
-      decide(t.closest('[data-ai-diff-reject]')!, false);
+      decide(rejectBtn, false);
       return;
     }
 

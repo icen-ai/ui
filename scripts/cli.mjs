@@ -7,7 +7,7 @@
  * 用法：
  *   bunx --bun @icen.ai/ui add <slug...>   打印引入行（多个 slug 空格分隔）
  *   bunx --bun @icen.ai/ui list            列出全部组件 slug
- * 数据源：同目录 registry.json（构建期由 scripts/slugs.mjs 生成）。
+ * 数据源：同目录 registry.json（构建期由 scripts/build-css.ts 写入，映射数据源为 scripts/slugs.mjs）。
  */
 import { readFileSync } from 'node:fs';
 

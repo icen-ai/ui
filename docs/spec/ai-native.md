@@ -532,12 +532,11 @@ export function normalizeContentParts(raw: unknown): AiContentPart[];
 ### 10.3 工具与文本
 
 ```ts
-export function isAiContentPartArray(v: unknown): v is AiContentPart[];   // 守卫（tool output 多模态探测）
 export function contentToText(content: AiContent): string;                // 拼接全部 text 部件（复制/降级传输用）
 export function aiContentUrl(part: AiContentPart): string | undefined;    // url 或 data URI（渲染 src）
 ```
 
-`AiToolCallModel.output` 保持 `unknown`；`renderAiToolCall` 内部用 `isAiContentPartArray` 探测——数组部件渲染媒体/链接，其余保持 JSON `<pre>`（**MCP 回执的多模态呈现零改动打通**）。
+`AiToolCallModel.output` 保持 `unknown`；`renderAiToolCall` 内部用 `normalizeContentParts` 归一探测——数组部件渲染媒体/链接，其余保持 JSON `<pre>`（**MCP 回执的多模态呈现零改动打通**）。
 
 ### 10.4 估算器
 
@@ -632,7 +631,7 @@ registerAiTool(def) / unregisterAiTool(name) / getAiTool(name) / listAiTools()
 
 ```ts
 createAiToolArea(el, { tools?: string[]; max?: number; itemMinHeight?: number }) → AiToolArea
-// tools 白名单支持通配 'chart-*'；max 超出 LRU 淘汰最旧挂载
+// tools 白名单支持通配 'chart-*'；max 超出 FIFO 淘汰最旧挂载（present:'data' 的工具不占挂载位、不参与淘汰）
 // AiToolArea: { el, count, call(name, input), can(name), setTools, setMax, clear, onChange(fn) }
 ```
 

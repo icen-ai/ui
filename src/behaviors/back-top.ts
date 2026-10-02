@@ -1,7 +1,7 @@
 /*
  * @icen.ai/ui — Behavior: back-top（回到顶部，与 components/back-top.css 配套）
  *
- * 契约（两种用法）：
+ * 契约（三种用法）：
  *   1. 手写按钮 + init：
  *      <button class="back-top" data-back-top type="button" aria-label="回到顶部">…svg…</button>
  *      initBackTop();   // 给 .is-shown 切换 + 点击滚到顶
@@ -136,6 +136,9 @@ export function initBackTop(opts: BackTopOptions = {}): () => void {
 
     if (opts.autoCreate) {
       let btn = document.body.querySelector<HTMLButtonElement>('.back-top[data-back-top-auto]');
+      /* 是否由本次 autoCreate 生成：destroy 只移除本实例生成的按钮，
+         宿主手写的 [data-back-top-auto] 不随之回收 */
+      let created = false;
       if (!btn) {
         btn = document.createElement('button');
         btn.type = 'button';
@@ -147,9 +150,11 @@ export function initBackTop(opts: BackTopOptions = {}): () => void {
         const svg = new DOMParser().parseFromString(AUTO_BTN_SVG, 'image/svg+xml').documentElement;
         btn.appendChild(document.importNode(svg, true));
         document.body.appendChild(btn);
+        created = true;
       }
       const cleanup = setup(btn, opts);
       if (cleanup) cleanups.push(cleanup);
+      if (created) cleanups.push(() => { btn?.remove(); });
     }
 
     const candidates: Element[] = [];

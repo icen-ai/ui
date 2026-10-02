@@ -47,6 +47,8 @@ function setupSingle(slider: Element, native: HTMLInputElement, bag: Array<() =>
   const sync = (): void => {
     const p = pct(native);
     if (fill) fill.style.width = `${p}%`;
+    /* - 8px = 16px thumb 的半宽（slider.css 默认 --slider-thumb-size 契约）：百分比定位的是
+       thumb 左缘，减半宽让 thumb 中心对齐轨道位置 */
     if (thumb) thumb.style.left = `calc(${p}% - 8px)`;
   };
   bind(native, 'input', () => {
@@ -79,6 +81,7 @@ function setupDual(slider: Element, natives: HTMLInputElement[], bag: Array<() =
       range.style.left = `${pLo}%`;
       range.style.right = `${100 - pHi}%`;
     }
+    /* - 8px = 16px thumb 的半宽（slider.css 契约），双 thumb 同单值的居中对齐 */
     if (thumbLo) thumbLo.style.left = `calc(${pLo}% - 8px)`;
     if (thumbHi) thumbHi.style.left = `calc(${pHi}% - 8px)`;
     // 点击区域切分：lo 只响应自身位置以左，hi 只响应自身位置以右
@@ -105,14 +108,15 @@ function setupDual(slider: Element, natives: HTMLInputElement[], bag: Array<() =
 function setup(slider: Element): (() => void) | undefined {
   const el = slider as MarkedSlider;
   if (el.__icenSliderInit) return undefined;
-  el.__icenSliderInit = true;
 
   const natives = Array.from(slider.querySelectorAll<HTMLInputElement>('.slider-native'));
+  // 校验通过后再置位：natives 为空 = 结构不完整，不置位以便补全后重新 init 可重试
   if (natives.length === 0) return undefined;
+  el.__icenSliderInit = true;
 
   const bag: Array<() => void> = [];
   if (slider.classList.contains('slider--dual')) setupDual(slider, natives, bag);
-  else setupSingle(slider, natives[0] as HTMLInputElement, bag);
+  else setupSingle(slider, natives[0], bag);
 
   /* 销毁：摘掉 native input 上的全部监听并复位幂等标记（可重新 init） */
   return () => {

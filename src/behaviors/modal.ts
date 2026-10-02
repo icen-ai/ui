@@ -17,7 +17,11 @@
  * （均从 document 广播，onIcen 全局/within 均可收）。
  */
 
-const FOCUSABLE =
+import { applyPanelSizing, readPanelSizing } from './popover';
+import { emitIcen } from './events';
+
+/** 焦点陷阱的可聚焦元素选择器（modal / command-palette 焦点陷阱全库共用）。 */
+export const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), audio, video, details>summary';
 
 /** openModal 可选项。 */
@@ -34,9 +38,6 @@ let restoreFocusTo: HTMLElement | null = null;
 let prevBodyOverflow = '';
 let keyHandler: ((e: KeyboardEvent) => void) | null = null;
 let initialized = false;
-
-import { applyPanelSizing, readPanelSizing } from './popover';
-import { emitIcen } from './events';
 
 function findBackdrop(id: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`.modal-backdrop[data-modal="${CSS.escape(id)}"]`);
@@ -80,18 +81,20 @@ export function openModal(id: string, opts?: ModalOpenOptions): void {
   panel.setAttribute('aria-modal', 'true');
   if (!panel.hasAttribute('tabindex')) panel.tabIndex = -1;
 
-  /* 自动 aria-labelledby：若面板内有 .modal-title 且未显式声明，绑定过去 */
+  /* 自动 aria-labelledby：若面板内有 .modal-title 且未显式声明，绑定过去。
+     id 铸造用去非法字符而非 CSS.escape（escape 会产出含反斜杠的串，如 "a.b"→"a\.b"，
+     作为 id 值非法）；下方 findBackdrop 的 CSS.escape 是选择器转义，属正确用途，保留 */
   if (!panel.hasAttribute('aria-labelledby')) {
     const title = panel.querySelector<HTMLElement>('.modal-title');
     if (title) {
-      if (!title.id) title.id = `modal-title-${CSS.escape(id)}`;
+      if (!title.id) title.id = `modal-title-${id.replace(/[^\w-]/g, '-')}`;
       panel.setAttribute('aria-labelledby', title.id);
     }
   }
   if (!panel.hasAttribute('aria-describedby')) {
     const desc = panel.querySelector<HTMLElement>('.modal-description');
     if (desc) {
-      if (!desc.id) desc.id = `modal-desc-${CSS.escape(id)}`;
+      if (!desc.id) desc.id = `modal-desc-${id.replace(/[^\w-]/g, '-')}`;
       panel.setAttribute('aria-describedby', desc.id);
     }
   }

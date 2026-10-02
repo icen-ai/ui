@@ -24,7 +24,8 @@
  *     初始半选，mixed→false，此后并入循环）；
  *   - radio：组内互斥（aria-checked + .is-selected 同步；重复点击已选项 no-op）；
  *   - .checkbox-row 整行可点（CSS cursor:pointer 契约），行内原生交互元素不劫持。
- * 事件：icen:switch-change { el, checked }；icen:check-change { el, checked: boolean | 'mixed' }。
+ * 事件映射：switch → icen:switch-change { el, checked }；
+ *   checkbox / radio（含 .checkbox-row 回退路径）→ icen:check-change { el, checked: boolean | 'mixed' }。
  *
  * ── initStepper：数字步进器（segmented.css .stepper）──
  * 契约（依 segmented.css 头注释，按钮方向由 data-step 承载，±1 之外可写 ±n）：
@@ -402,8 +403,10 @@ function dirOf(btn: HTMLElement): -1 | 0 | 1 {
   if (dir === 'prev' || dir === '-1' || dir === 'previous') return -1;
   if (dir === 'next' || dir === '+1' || dir === '1') return 1;
   const label = btn.getAttribute('aria-label');
-  if (label && /上一页|上一张|向前|prev/i.test(label)) return -1;
-  if (label && /下一页|下一张|向后|next/i.test(label)) return 1;
+  /* 锚定整串匹配：prev 是 preview 的子串会误判成上一页；aria-label 约定为纯方向词，
+     整句 label 不参与此推断——需要宽松匹配时请显式写 data-dir */
+  if (label && /^上一页$|^上一张$|^向前$|^(prev|previous)$/i.test(label)) return -1;
+  if (label && /^下一页$|^下一张$|^向后$|^next$/i.test(label)) return 1;
   return 0;
 }
 
@@ -460,17 +463,22 @@ export const initPagination = createDelegatedInit({ click: onPaginationClick });
 
 /* ── 7. 静态表排序 ── */
 
+/** 列 key 取值：排序中 data-sort 被方向占用，以转存的 data-sort-key 为准；
+ *  未转存时取 data-sort 原值（本身就是方向则视为空 key）。 */
+function sortKeyOf(th: HTMLElement): string {
+  const cur = th.getAttribute('data-sort') ?? '';
+  return th.getAttribute('data-sort-key') ?? (cur === 'asc' || cur === 'desc' ? '' : cur);
+}
+
 /** 复位一个表头为其中性态（data-sort 还原为列 key）。 */
 function resetSortHeader(th: HTMLElement): void {
-  const cur = th.getAttribute('data-sort') ?? '';
-  const key = th.getAttribute('data-sort-key') ?? (cur === 'asc' || cur === 'desc' ? '' : cur);
-  th.setAttribute('data-sort', key);
+  th.setAttribute('data-sort', sortKeyOf(th));
 }
 
 function cycleSort(th: HTMLElement): void {
   const cur = th.getAttribute('data-sort') ?? '';
   /* 排序中 data-sort 被方向占用，列 key 以 data-sort-key 为准（首次交互转存） */
-  const key = th.getAttribute('data-sort-key') ?? (cur === 'asc' || cur === 'desc' ? '' : cur);
+  const key = sortKeyOf(th);
   if (!th.hasAttribute('data-sort-key') && key !== '') th.setAttribute('data-sort-key', key);
   const dir: 'asc' | 'desc' | null = cur === 'asc' ? 'desc' : cur === 'desc' ? null : 'asc';
   /* 单列排序：同表其他可排序表头复位 */

@@ -6,7 +6,7 @@
  *
  * 仅在 <html class="style-retro">（或叠加 .dark）激活时生效，对其它风格无副作用：
  *   - CRT 扫描线 + 暗角 + 颗粒噪点
- *   - 屏幕闪烁 / 抖动 / 游走扫描光
+ *   - 游走扫描光
  *   - RGB 色散 / 霓虹发光（暗色）
  *   - 像素边框 / 像素按钮 / 像素分隔线工具类
  *   - 开机自检 / 打字机光标 / 页面闪白动画
@@ -61,20 +61,6 @@
       rgba(0, 0, 0, 0.18) 100%
     );
   opacity: 0.55;
-}
-
-/* 屏幕闪烁（备用工具类，需要时挂在元素上） */
-@keyframes retro-flicker {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.985; }
-}
-
-/* 屏幕轻微抖动（备用工具类） */
-@keyframes retro-jitter {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(0.5px, 0); }
-  50% { transform: translate(-0.5px, 0.5px); }
-  75% { transform: translate(0, -0.5px); }
 }
 
 /* CRT 颗粒噪点 */
@@ -263,6 +249,7 @@
   opacity: 0;
 }
 
-.style-retro .retro-page-flash.active {
+/* 状态类遵循全库 .is-* 规范 */
+.style-retro .retro-page-flash.is-active {
   animation: retro-flash 0.2s steps(3) forwards;
 }

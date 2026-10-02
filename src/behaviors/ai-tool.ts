@@ -51,9 +51,11 @@
  */
 
 import {
+  AI_STATUSES,
   aiStatusLabel,
   formatDuration,
   getAiKind,
+  h,
   normalizeContentParts,
   svgIcon,
   type AiStatus,
@@ -61,18 +63,7 @@ import {
 } from './ai-core';
 import { emitIcen } from './events';
 import { renderAiContentPart } from './ai-chat';
-import { renderChart } from './charts';
-
-/* ── 状态机（规格 §1，唯一语言） ── */
-const AI_STATUSES: readonly AiStatus[] = [
-  'pending',
-  'running',
-  'streaming',
-  'approval',
-  'done',
-  'error',
-  'cancelled',
-];
+import { renderChart, type ChartSpec } from './charts';
 
 interface MarkedElement extends HTMLElement {
   __icenAiToolInit?: boolean;
@@ -89,17 +80,7 @@ export interface AiSubagentHandle {
   update(patch: Partial<AiToolCallModel>): void;
 }
 
-/* ── DOM 小工具（DOM API，禁 innerHTML） ── */
-function h<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className?: string,
-  text?: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
-}
+/* ── 状态类切换（七态表 AI_STATUSES / DOM 构件 h / svgIcon 均走 ai-core 集群共享构件） ── */
 
 function setStatusClass(item: HTMLElement, status: AiStatus): void {
   for (const s of AI_STATUSES) item.classList.toggle(`is-${s}`, s === status);
@@ -192,14 +173,14 @@ function buildIo(label: string): IoParts {
 }
 
 /** 形似 ChartSpec（{type:'chart',spec} 信封或裸 spec）→ 工具卡内嵌小图 */
-function chartSpecOf(value: unknown): unknown | null {
+function chartSpecOf(value: unknown): ChartSpec | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const v = value as Record<string, unknown>;
-  if (v.type === 'chart' && v.spec && typeof v.spec === 'object') return v.spec;
+  if (v.type === 'chart' && v.spec && typeof v.spec === 'object') return v.spec as ChartSpec;
   const t = typeof v.type === 'string' ? v.type : undefined;
   const looksChart = Array.isArray(v.series) || Array.isArray(v.segments) || Array.isArray(v.points)
     || Array.isArray(v.dates) || (Array.isArray(v.labels) && Array.isArray(v.values));
-  if (looksChart && (t === undefined || typeof t === 'string')) return v;
+  if (looksChart && (t === undefined || typeof t === 'string')) return v as unknown as ChartSpec;
   return null;
 }
 
@@ -241,7 +222,7 @@ function setIo(io: IoParts, value: unknown, allowChart = true): void {
   io.root.hidden = !text;
 }
 
-/** 默认展开集（spec §4.4）：图表可视化 / 失败 / 待人审批 / 多模态回执（图·视频直接看）；
+/** 默认展开集（spec §4.4）：图表可视化 / 失败 / 待人审批 / 多模态回执（图·视频·音频直接看）；
  * 其余 kind（shell/read/edit/mcp/skill…）默认折叠只露一行摘要。用户手动切换后不再自动干预。 */
 function defaultExpanded(m: AiToolCallModel): boolean {
   if (m.kind === 'chart' || m.status === 'error' || m.status === 'approval') return true;
@@ -293,6 +274,7 @@ function applyStatusMeta(parts: HeadParts, status: AiStatus, meta: string): void
 /* ══════════════════════════════════════════════════════════════
    renderAiToolCall — DOM API 构建整卡（流式场景），返回 { el, update }
    ══════════════════════════════════════════════════════════════ */
+/** 渲染工具调用卡（整卡挂进传入 el），返回 { el, update }——有生命周期的 render* 返句柄：update(patch) 增量重渲。 */
 export function renderAiToolCall(el: HTMLElement, model: AiToolCallModel): AiToolCallHandle {
   if (typeof document === 'undefined') {
     return { el: el, update: () => undefined };
@@ -322,7 +304,6 @@ export function renderAiToolCall(el: HTMLElement, model: AiToolCallModel): AiToo
     }
   };
 
-  let prevStatus: AiStatus | null = null;
   const apply = (m: AiToolCallModel): void => {
     setStatusClass(item, m.status);
     applyTint(item, m);
@@ -336,7 +317,6 @@ export function renderAiToolCall(el: HTMLElement, model: AiToolCallModel): AiToo
     approval.reason.hidden = !reason;
     /* 默认展开集：error/approval/chart/多模态 —— 用户未手动切换过才自动干预 */
     if (!item.dataset.aiUserToggled && defaultExpanded(m)) setOpen(true);
-    prevStatus = m.status;
   };
 
   apply(current);
@@ -353,6 +333,7 @@ export function renderAiToolCall(el: HTMLElement, model: AiToolCallModel): AiToo
 /* ══════════════════════════════════════════════════════════════
    renderAiSubagent — 子智能体卡；activities 递归复用 renderAiToolCall
    ══════════════════════════════════════════════════════════════ */
+/** 渲染子智能体卡（activities 递归复用 renderAiToolCall / 自身），返回 { el, update }——有生命周期的 render* 返句柄。 */
 export function renderAiSubagent(el: HTMLElement, model: AiToolCallModel): AiSubagentHandle {
   if (typeof document === 'undefined') {
     return { el: el, update: () => undefined };
@@ -410,7 +391,6 @@ export function renderAiSubagent(el: HTMLElement, model: AiToolCallModel): AiSub
     }
   };
 
-  let prevStatus: AiStatus | null = null;
   const apply = (m: AiToolCallModel): void => {
     setStatusClass(item, m.status);
     applyTint(item, m);
@@ -426,7 +406,6 @@ export function renderAiSubagent(el: HTMLElement, model: AiToolCallModel): AiSub
     result.hidden = !receipt;
     /* 默认展开集：error/approval/chart/多模态 —— 用户未手动切换过才自动干预 */
     if (!item.dataset.aiUserToggled && defaultExpanded(m)) setOpen(true);
-    prevStatus = m.status;
   };
 
   apply(current);
@@ -497,7 +476,6 @@ function setupItem(
     const isErr = item.classList.contains('is-error');
     const isApproval = item.classList.contains('is-approval');
     if (isErr || isApproval || kindName === 'chart') {
-      item.dataset.aiUserToggled = '';
       setOpen(true, false);
       delete item.dataset.aiUserToggled;
     }

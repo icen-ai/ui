@@ -262,7 +262,7 @@ export interface ChartChromeOptions {
 }
 
 /** 跨渲染存活的图例隐藏状态（renderChart 的 update 复渲染沿用；直调不传=每次新状态） */
-export interface ChartLegendState {
+interface ChartLegendState {
   hidden: boolean | null;
 }
 
@@ -342,7 +342,7 @@ interface LegendKey {
  * 可切换图例：点击图例行 → 同 key 的全部标记（data-chart-key）与图例行本身
  * 挂/摘 .is-off（纯视觉淡化，不重排）。标记侧由调用方在生成时附 data-chart-key。
  */
-function toggleLegend(items: LegendKey[], scope: ParentNode, _opts: unknown): HTMLElement {
+function toggleLegend(items: LegendKey[], scope: ParentNode): HTMLElement {
   const legend = document.createElement('div');
   legend.className = 'chart-legend chart-legend--toggle';
   for (const item of items) {
@@ -441,7 +441,7 @@ export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): HTMLElement
     wrap.appendChild(track);
   }
   body.append(wrap, labelsRow(labelsUsed));
-  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
+  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap));
   });
   attachChartInteraction(el, 'vbar');
   return el;
@@ -496,13 +496,13 @@ export function renderStack(el: HTMLElement, opts: ChartSegmentsOptions): HTMLEl
 
   const bar = document.createElement('div');
   bar.className = 'chart-stack';
-  for (const seg of opts.segments) {
+  for (const [segIndex, seg] of opts.segments.entries()) {
     const s = document.createElement('div');
     s.className = 'chart-stack-seg';
     s.style.width = `${(seg.value / total) * 100}%`;
     if (seg.tone) s.style.setProperty('--chart-tone', toneVar(seg.tone));
     s.setAttribute('title', `${seg.label}: ${fmt(opts, seg.value)}`);
-    setMarkData(s, { index: opts.segments.indexOf(seg), label: seg.label, value: seg.value });
+    setMarkData(s, { index: segIndex, label: seg.label, value: seg.value });
     bar.appendChild(s);
   }
 
@@ -673,7 +673,7 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement
   if (defs.firstChild) svg.insertBefore(defs, svg.firstChild);
   wrap.append(svg, labelsRow(sampleLabels(labelsUsed)));
   body.appendChild(wrap);
-  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
+  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap));
   });
   attachChartInteraction(el, 'line');
   return el;
@@ -754,7 +754,7 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
 
 export interface RadarSeries {
   name: string;
-  /** 各轴的值（0..max，顺序与 axes 一致）。元素类型须可转 number。 */
+  /** 各轴的值（0..max，顺序与 axes 一致） */
   values: number[];
   tone?: ChartTone;
 }
@@ -877,11 +877,9 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): HTMLEleme
     legendItems.push({ key: s.name || `系列${si + 1}`, label: s.name || `系列${si + 1}`, tone: s.tone, si });
   });
 
-  wrap.append(svg, opts.series.length > 1 ? toggleLegend(legendItems, wrap, opts) : (() => {
-    const l = document.createElement('div');
-    l.className = 'chart-legend';
-    return l;
-  })());
+  /* 单系列无系列项可切：不追加空的 .chart-legend 占位 div */
+  const legend = opts.series.length > 1 ? toggleLegend(legendItems, wrap) : null;
+  wrap.append(svg, ...(legend ? [legend] : []));
   body.appendChild(wrap);
   });
   attachChartInteraction(el, 'radar');
@@ -948,6 +946,42 @@ function weekdayLabelAt(defaults: string[], day: number): string {
   return defaults[(day + 6) % 7] ?? '';
 }
 
+/** 值 → 5 档色阶序号（0..4）：0 值单独一档，其余按 v/max 等比向上取整封顶 */
+function levelOf(v: number, max: number): number {
+  return v <= 0 ? 0 : Math.min(4, Math.ceil((v / max) * 4));
+}
+
+/** 首周对齐：第一个日期是星期几（周首日 = 第 0 行），前面补占位格；返回占位格数（calendar 定月份列用） */
+function padFirstWeek(grid: HTMLElement, firstDate: string, weekStart: number): number {
+  const first = new Date(`${firstDate}T00:00:00`);
+  const pad = (first.getDay() + 7 - weekStart) % 7;
+  for (let i = 0; i < pad; i++) {
+    const blank = document.createElement('span');
+    blank.className = 'chart-heatmap-cell is-blank';
+    grid.appendChild(blank);
+  }
+  return pad;
+}
+
+/** 少 → 多 5 档色阶图例（文案可经 labels.less/labels.more 本地化） */
+function heatmapLegend(labels?: ChartI18nLabels): HTMLElement {
+  const legend = document.createElement('div');
+  legend.className = 'chart-heatmap-legend';
+  const less = document.createElement('span');
+  less.textContent = labels?.less ?? '少';
+  const more = document.createElement('span');
+  more.textContent = labels?.more ?? '多';
+  legend.appendChild(less);
+  for (let lv = 0; lv <= 4; lv++) {
+    const cell = document.createElement('span');
+    cell.className = 'chart-heatmap-cell';
+    cell.dataset.level = String(lv);
+    legend.appendChild(cell);
+  }
+  legend.appendChild(more);
+  return legend;
+}
+
 /** GitHub 贡献图式热力格：7 行（默认周一 → 周日，weekStart=0 则周日起）× N 周列，5 档色阶。 */
 export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): HTMLElement {
   if (typeof document === 'undefined') return el;
@@ -973,7 +1007,6 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): HTMLE
   if (entries.length > weeks * 7) entries = entries.slice(entries.length - weeks * 7);
 
   const max = maxOf(entries.map((e) => e.value));
-  const levelOf = (v: number): number => (v <= 0 ? 0 : Math.min(4, Math.ceil((v / max) * 4)));
 
   const wrap = document.createElement('div');
   wrap.className = 'chart-heatmap';
@@ -983,41 +1016,17 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): HTMLE
   grid.className = 'chart-heatmap-grid';
   grid.setAttribute('role', 'img');
 
-  // 首周对齐：第一个日期是星期几（周首日 = 第 0 行），前面补占位格
-  const weekStart = opts.weekStart === 0 ? 0 : 1;
-  const first = new Date(`${entries[0]!.date}T00:00:00`);
-  const pad = (first.getDay() + 7 - weekStart) % 7;
-  for (let i = 0; i < pad; i++) {
-    const blank = document.createElement('span');
-    blank.className = 'chart-heatmap-cell is-blank';
-    grid.appendChild(blank);
-  }
-  for (const entry of entries) {
+  padFirstWeek(grid, entries[0]!.date, opts.weekStart === 0 ? 0 : 1);
+  for (const [i, entry] of entries.entries()) {
     const cell = document.createElement('span');
     cell.className = 'chart-heatmap-cell';
-    cell.dataset.level = String(levelOf(entry.value));
+    cell.dataset.level = String(levelOf(entry.value, max));
     cell.setAttribute('title', `${entry.date}：${fmt(opts, entry.value)}`);
-    setMarkData(cell, { index: entries.indexOf(entry), label: entry.date, value: entry.value });
+    setMarkData(cell, { index: i, label: entry.date, value: entry.value });
     grid.appendChild(cell);
   }
 
-  // 图例：少 → 多（5 档；文案可经 labels.less/labels.more 本地化）
-  const legend = document.createElement('div');
-  legend.className = 'chart-heatmap-legend';
-  const less = document.createElement('span');
-  less.textContent = opts.labels?.less ?? '少';
-  const more = document.createElement('span');
-  more.textContent = opts.labels?.more ?? '多';
-  legend.appendChild(less);
-  for (let lv = 0; lv <= 4; lv++) {
-    const cell = document.createElement('span');
-    cell.className = 'chart-heatmap-cell';
-    cell.dataset.level = String(lv);
-    legend.appendChild(cell);
-  }
-  legend.appendChild(more);
-
-  wrap.append(grid, legend);
+  wrap.append(grid, heatmapLegend(opts.labels));
   body.appendChild(wrap);
   });
   attachChartInteraction(el, 'heatmap');
@@ -1194,16 +1203,8 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): HTM
   });
 
   const max = maxOf(entries.map((e) => e.value));
-  const levelOf = (v: number): number => (v <= 0 ? 0 : Math.min(4, Math.ceil((v / max) * 4)));
 
-  /* 首周对齐：第一个日期是星期几（周首日 = 第 0 行），前面补占位格 */
-  const first = new Date(`${entries[0]!.date}T00:00:00`);
-  const pad = (first.getDay() + 7 - weekStart) % 7;
-  for (let i = 0; i < pad; i++) {
-    const blank = document.createElement('span');
-    blank.className = 'chart-heatmap-cell is-blank';
-    grid.appendChild(blank);
-  }
+  const pad = padFirstWeek(grid, entries[0]!.date, weekStart);
   let lastMonth = -1;
   entries.forEach((entry, i) => {
     const d = new Date(`${entry.date}T00:00:00`);
@@ -1218,27 +1219,13 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): HTM
     }
     const cell = document.createElement('span');
     cell.className = 'chart-heatmap-cell';
-    cell.dataset.level = String(levelOf(entry.value));
+    cell.dataset.level = String(levelOf(entry.value, max));
     cell.setAttribute('title', `${entry.date}：${fmt(opts, entry.value)}`);
     setMarkData(cell, { index: i, label: entry.date, value: entry.value });
     grid.appendChild(cell);
   });
 
-  /* 图例：少 → 多（文案可经 labels.less/labels.more 本地化） */
-  const legend = document.createElement('div');
-  legend.className = 'chart-heatmap-legend';
-  const less = document.createElement('span');
-  less.textContent = opts.labels?.less ?? '少';
-  const more = document.createElement('span');
-  more.textContent = opts.labels?.more ?? '多';
-  legend.appendChild(less);
-  for (let lv = 0; lv <= 4; lv++) {
-    const cell = document.createElement('span');
-    cell.className = 'chart-heatmap-cell';
-    cell.dataset.level = String(lv);
-    legend.appendChild(cell);
-  }
-  legend.appendChild(more);
+  const legend = heatmapLegend(opts.labels);
 
   const columns = Math.max(1, Math.ceil((pad + entries.length) / 7));
   months.style.setProperty('--columns', String(columns));
@@ -1309,7 +1296,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
     const txt = svgEl('text', {
       x: String(pad - 4), y: String(y + 3), 'text-anchor': 'end', 'font-size': '8', fill: 'var(--token-text-faint)',
     });
-    txt.textContent = String(Math.round(tv * 10) / 10);
+    txt.textContent = fmt(opts, Math.round(tv * 10) / 10);
     svg.appendChild(txt);
   }
   for (let i = 0; i <= 4; i++) {
@@ -1322,7 +1309,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
     const txt = svgEl('text', {
       x: String(x), y: String(height - pad + 12), 'text-anchor': 'middle', 'font-size': '8', fill: 'var(--token-text-faint)',
     });
-    txt.textContent = String(Math.round(tv * 10) / 10);
+    txt.textContent = fmt(opts, Math.round(tv * 10) / 10);
     svg.appendChild(txt);
   }
   if (opts.yLabel) {
@@ -1342,7 +1329,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
       fill: tone, 'fill-opacity': '0.55', stroke: tone, 'stroke-width': '1',
     });
     const title = svgEl('title', {});
-    title.textContent = `${p.label ?? `#${i + 1}`}: (${p.x}, ${p.y}${p.size != null ? `, size ${p.size}` : ''})`;
+    title.textContent = `${p.label ?? `#${i + 1}`}: (${fmt(opts, p.x)}, ${fmt(opts, p.y)}${p.size != null ? `, size ${fmt(opts, p.size)}` : ''})`;
     c.appendChild(title);
     setMarkData(c, { index: i, label: p.label ?? `#${i + 1}`, value: p.y });
     c.dataset.chartX = String(p.x);
@@ -1559,8 +1546,8 @@ export function normalizeChartSpec(raw: unknown): ChartSpec {
     try { src = JSON.parse(src); } catch { return {}; }
   }
   if (!src || typeof src !== 'object' || Array.isArray(src)) {
-    /* 数组捷径：[{label,value}] 记录数组当 data[] 用 */
-    if (Array.isArray(raw)) src = { data: raw };
+    /* 数组捷径：[{label,value}] 记录数组当 data[] 用（字符串化数组经 JSON.parse 后在 src 上） */
+    if (Array.isArray(src)) src = { data: src };
     else return {};
   }
   const s = src as Record<string, unknown>;
@@ -1643,6 +1630,9 @@ export function normalizeChartSpec(raw: unknown): ChartSpec {
   return spec;
 }
 
+/** 容忍 4 成脏标签：6 成命中即判时间轴 */
+const TEMPORAL_HIT_RATIO = 0.6;
+
 /** 类目标签是否呈时间序（ISO 日期 / 年月 / 季度 / 星期）——line 推断依据 */
 function looksTemporal(labels: string[]): boolean {
   if (labels.length === 0) return false;
@@ -1657,7 +1647,7 @@ function looksTemporal(labels: string[]): boolean {
     else if (/^(v|ver\.?|version[ .]?)?\d+(\.\d+)+$/i.test(l)) hits++; /* v0.8 / 1.2.3 版本序列 */
     else if (/^\d{4}$/.test(l)) hits++; /* 纯年份 */
   }
-  return hits / labels.length >= 0.6;
+  return hits / labels.length >= TEMPORAL_HIT_RATIO;
 }
 
 /** 未指定 type 时的自动选型（确定性规则，AI 只给数据也能画对） */
@@ -1763,11 +1753,12 @@ function tooltipText(mark: Element): string {
 }
 function moveTooltip(x: number, y: number): void {
   const tip = chartTooltip();
-  const pad = 12;
+  const pad = 12; /* 指针偏移 12px：tooltip 不遮指针下的命中标记 */
   const w = tip.offsetWidth || 120;
   const h = tip.offsetHeight || 28;
   let left = x + pad;
   let top = y - h - pad;
+  /* 距视口边 8px 内翻面：默认侧放不下就翻到指针另一侧 */
   if (left + w > window.innerWidth - 8) left = x - w - pad;
   if (top < 8) top = y + pad;
   tip.style.left = `${Math.round(left)}px`;

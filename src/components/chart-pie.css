@@ -18,9 +18,3 @@
   height: 132px;
   flex-shrink: 0;
 }
-.chart-donut-center {
-  font-variant-numeric: tabular-nums;
-  text-anchor: middle;
-  fill: var(--token-text);
-  font-weight: 600;
-}

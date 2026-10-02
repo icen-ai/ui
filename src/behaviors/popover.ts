@@ -11,6 +11,7 @@
  * SSR 下为 no-op。
  */
 
+/** 布局锚矩形（视口坐标，宽高齐全，元素锚或手工锚共用此形状）。 */
 export interface PopoverRect {
   left: number;
   top: number;
@@ -20,12 +21,15 @@ export interface PopoverRect {
   height: number;
 }
 
+/** 视口尺寸（可用空间计算的基准）。 */
 export interface PopoverViewport {
   width: number;
   height: number;
 }
 
+/** 浮层相对锚的展开侧。 */
 export type PopoverSide = 'top' | 'bottom' | 'left' | 'right';
+/** 浮层与锚的对齐方式（stretch = 纵向侧时随锚宽拉伸）。 */
 export type PopoverAlign = 'start' | 'center' | 'end' | 'stretch';
 
 export interface PopoverLayoutOptions {
@@ -189,8 +193,8 @@ function horizontalAnchor(anchor: PopoverRect, width: number, align: PopoverAlig
 
 /** 视口智能布局：返回 {side, left, top, width, maxHeight}。
  *  纵向侧（top/bottom）：选侧按上下空间，宽按 min/max 夹取，高按内容预期。
- *  横向侧（left/right）：锚点左右翻转，宽取 min..max（不随锚点 stretch），高占满可用空间，
- *  纵向按 align（start/center/end；stretch 视作 start）贴锚。 */
+ *  横向侧（left/right）：锚点左右翻转，宽取 min（无内容测量，横向侧取下限），
+ *  高占满可用空间，纵向按 align（start/center/end；stretch 视作 start）贴锚。 */
 export function computePopoverLayout(
   anchor: PopoverRect,
   viewport: PopoverViewport,
@@ -213,7 +217,9 @@ export function computePopoverLayout(
       Math.max(opts.maxWidth ?? DEFAULT_MAX_WIDTH, minWidth),
       side === 'left' ? availableLeft : availableRight,
     );
-    const width = clamp(minWidth, Math.min(minWidth, maxWidth), Math.max(minWidth, maxWidth));
+    /* 横向侧无内容测量（面板未先量宽），宽取下限 min：min..max 夹取在无测量值时
+       恒等于 min，直接落定 */
+    const width = minWidth;
     const left = clamp(
       side === 'left' ? anchor.left - offset - width : anchor.right + offset,
       margin,
@@ -236,14 +242,18 @@ export function computePopoverLayout(
   const minWidth = Math.min(requestedMinWidth, maxWidth);
   const availableTop = Math.max(0, anchor.top - margin - offset);
   const availableBottom = Math.max(0, viewport.height - anchor.bottom - margin - offset);
+  /* 兜底 80：极矮视口也保留最小可用高，避免负值把面板压成 0 高 */
   const availableHeight = Math.max(80, viewport.height - margin * 2);
   const minHeight = Math.min(Math.max(80, opts.minHeight ?? DEFAULT_MIN_HEIGHT), availableHeight);
   const requestedMaxHeight = Math.max(minHeight, opts.maxHeight ?? DEFAULT_MAX_HEIGHT);
   const fallbackHeight = Math.min(260, requestedMaxHeight);
   const contentHeight = Math.max(opts.contentHeightHint ?? 0, fallbackHeight);
   const desiredHeight = clamp(contentHeight, minHeight, Math.min(requestedMaxHeight, availableHeight));
+  /* 选侧：优先侧放得下用优先侧，放不下翻对侧，两侧都放不下取空间大者 */
   const side = chooseSide(preferredSide, availableTop, availableBottom, desiredHeight);
   const sideSpace = side === 'top' ? availableTop : availableBottom;
+  /* 高度上限三重钳制：请求值 × 选中侧空间（sideSpace 为 0 时退两侧较大者，防锚贴边
+     时算出 0 高）× 视口可用高 */
   const maxHeight = Math.min(
     requestedMaxHeight,
     Math.max(80, sideSpace || Math.max(availableTop, availableBottom)),

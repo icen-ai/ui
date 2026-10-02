@@ -111,11 +111,13 @@ function unbindOpenListeners(): void {
 function setup(container: Element): () => void {
   const el = container as MarkedSelect;
   if (el.__icenSelectInit) return () => {};
-  el.__icenSelectInit = true;
   /* 本容器全部监听挂同一 AbortSignal：销毁一次摘净，销毁后可重新 init */
   const ac = new AbortController();
-  const on = (t: EventTarget, ev: string, fn: (e: never) => void): void => {
-    t.addEventListener(ev, fn as never, { signal: ac.signal });
+  /* 泛型 on()：调用点直接写 (ev: KeyboardEvent) 等具体事件类型，内部经 EventListener
+     桥接挂载（charts.ts 同款），取代 (e: never) + as never 的压类型写法 */
+  const on = <T extends Event>(t: EventTarget, ev: string, fn: (e: T) => void): void => {
+    const listener: EventListener = (evt) => fn(evt as T);
+    t.addEventListener(ev, listener, { signal: ac.signal });
   };
 
   const triggerEl = container.querySelector<HTMLButtonElement>('.select-trigger');
@@ -123,6 +125,9 @@ function setup(container: Element): () => void {
   const valueEl = container.querySelector<HTMLElement>('.select-value');
   const hiddenInput = container.querySelector<HTMLInputElement>('input[data-select-value]');
   if (!triggerEl || !panelEl) return () => {};
+  /* 幂等标记在校验通过后才置位：异步渲染中途 trigger/panel 尚未就位时不占坑，
+     渲染完成后的容器还能被后续 init 接管（提前置位会让它永不再接线） */
+  el.__icenSelectInit = true;
   // 闭包内不保留 narrowing，转为非空常量
   const trigger = triggerEl;
   const panel = panelEl;
@@ -480,6 +485,9 @@ function setup(container: Element): () => void {
   if (isMultiple) updateMultiTrigger();
 
   return (): void => {
+    /* 打开状态下销毁：先收浮层（隐藏面板 + 摘 window scroll/resize 监听 + 清单例），
+       否则面板残留 body、跟随重定位监听泄漏 */
+    if (openSelect?.panel === panel) closePanel();
     ac.abort();
     el.__icenSelectInit = false;
   };

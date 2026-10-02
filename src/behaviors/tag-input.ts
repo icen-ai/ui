@@ -7,8 +7,8 @@
  *   </div>
  *
  * 行为：初始化按 data-tags（逗号分隔）渲染 .tag-chip（文本用 textContent，× 为
- * button.tag-chip-x）；Enter / 逗号提交草稿（trim；重复值静默清空；达到 data-max
- * 拒加并保留草稿）；空草稿 Backspace 删尾 chip；blur 提交草稿；chip × mousedown
+ * button.tag-chip-x）；Enter / 逗号提交草稿（trim；重复值被拒绝——清空草稿并短暂
+ * .is-shake 抖动反馈；达到 data-max 拒加并保留草稿）；空草稿 Backspace 删尾 chip；blur 提交草稿；chip × mousedown
  * preventDefault 防 blur 抢跑、click 删除；达到 data-max 容器加 .is-max。
  * 每次变化把最新 tags 回写容器 data-tags 并派发 icen:tags-change { tags }；
  * tags 非空时清空 placeholder。
@@ -31,6 +31,7 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
   if (!fieldEl) return undefined;
   const field = fieldEl; // 闭包内不保留 narrowing，转为非空常量
   const maxAttr = wrap.getAttribute('data-max');
+  // data-max="0" / 非法值视为不限（落到 Infinity）：保持现行为，仅声明语义
   const max = maxAttr ? Number(maxAttr) || Infinity : Infinity;
   const placeholder = field.placeholder;
 
@@ -48,18 +49,35 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
     .map((s) => s.trim())
     .filter(Boolean);
 
+  /* 自动 aria-label 只在宿主未提供时维护：首次自动写入后记 flag，之后 sync 无条件
+     更新计数文案——否则「共 N 个」只写一次即陈旧 */
+  const autoLabel = !wrap.hasAttribute('aria-label');
+
   function sync(): void {
     wrap.setAttribute('data-tags', tags.join(','));
     wrap.classList.toggle('is-max', tags.length >= max);
     field.placeholder = tags.length === 0 ? placeholder : '';
-    if (!wrap.hasAttribute('aria-label')) {
-      wrap.setAttribute('aria-label', `标签输入，共 ${tags.length} 个`);
-    }
+    if (autoLabel) wrap.setAttribute('aria-label', `标签输入，共 ${tags.length} 个`);
   }
 
   function emit(): void {
     if (!alive) return;
     emitIcen(wrap, 'icen:tags-change', { tags: [...tags] });
+  }
+
+  /* 重复值拒绝的抖动反馈：容器挂 .is-shake（tag-input.css 的 tag-shake keyframes，
+     默认 0.32s ≈ 定时器 320ms）。强制 reflow 重启动画（连续重复时也能再抖）；
+     一次性定时器摘类，destroy 时清理 */
+  let shakeTimer: ReturnType<typeof setTimeout> | null = null;
+  function shake(): void {
+    el.classList.remove('is-shake');
+    void el.offsetWidth;
+    el.classList.add('is-shake');
+    if (shakeTimer) clearTimeout(shakeTimer);
+    shakeTimer = setTimeout(() => {
+      el.classList.remove('is-shake');
+      shakeTimer = null;
+    }, 320);
   }
 
   function remove(index: number): void {
@@ -97,7 +115,11 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
     const v = field.value.trim();
     if (!v) return;
     if (tags.length >= max) return; // 拒加，保留草稿让用户看到未被接受
-    if (tags.includes(v)) { field.value = ''; return; } // 重复：静默清空
+    if (tags.includes(v)) { // 重复：拒绝——清空草稿并抖动反馈
+      field.value = '';
+      shake();
+      return;
+    }
     tags.push(v);
     field.value = '';
     render();
@@ -125,6 +147,7 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
   /* 销毁：移除 field 全部监听并复位幂等标记（可重新 init） */
   return () => {
     alive = false;
+    if (shakeTimer) clearTimeout(shakeTimer);
     field.removeEventListener('compositionstart', onCompositionStart);
     field.removeEventListener('compositionend', onCompositionEnd);
     field.removeEventListener('keydown', onKeyDown);

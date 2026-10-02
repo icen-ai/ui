@@ -56,7 +56,7 @@ function setup(container: Element): (() => void) | undefined {
     }
   };
 
-  /* 键盘导航：Home/End 跳到首/末项；Space/Enter 在 focus 时 toggle */
+  /* 键盘导航：Home/End 只移焦点；Space/Enter 由原生按钮 click 触发下方 onClick（本函数不处理） */
   const onKeyDown = (ev: Event): void => {
     const kev = ev as KeyboardEvent;
     const target = kev.target;

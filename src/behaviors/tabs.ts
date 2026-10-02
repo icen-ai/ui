@@ -33,7 +33,6 @@ import { emitIcen } from './events';
 
 interface MarkedElement extends Element {
   __icenTabsInit?: boolean;
-  __icenTabsCleanup?: () => void;
 }
 
 function tabButtons(container: Element): HTMLElement[] {
@@ -145,13 +144,14 @@ function nextEnabled(container: Element, from: number, dir: 1 | -1): number {
 function setup(container: Element): (() => void) | undefined {
   const el = container as MarkedElement;
   if (el.__icenTabsInit) return undefined;
-  el.__icenTabsInit = true;
 
   const useHash = hashWriteMethod(container) !== null;
   /* 激活模式：默认 manual（方向键只移焦点）；auto = follow focus（移焦点即激活） */
   const autoActivate = container.getAttribute('data-tabs-activation') === 'auto';
   const names = tabNames(container);
+  // 校验通过后再置位：names 为空早退不置位，以便补上 tab 后重新 init 可重试
   if (names.length === 0) return;
+  el.__icenTabsInit = true;
 
   /* 角色与 aria 默认值补齐 */
   const buttons = tabButtons(container);
@@ -292,7 +292,6 @@ function setup(container: Element): (() => void) | undefined {
     /* 复位幂等标记，销毁后可重新 init */
     el.__icenTabsInit = false;
   };
-  el.__icenTabsCleanup = cleanup;
   return cleanup;
 }
 

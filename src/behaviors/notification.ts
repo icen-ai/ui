@@ -150,7 +150,11 @@ export interface NotificationUpdatePatch {
   linkLabel?: string;
 }
 
-interface NotificationRecord {
+/**
+ * 通知的内部记录形态，同时是 get(id) / getAll() 的公开返回类型
+ * （导出以便消费方对返回值做类型注解）。
+ */
+export interface NotificationRecord {
   id: string;
   title: string;
   kind: NotificationKind;
@@ -202,8 +206,7 @@ export interface NotificationConfirmOptions extends Omit<NotificationOptions, 'a
   duration?: number;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 常量与图标库
+/* ═══ 常量与图标库 ═══ */
 
 const KIND_ICON: Record<NotificationKind, string> = {
   success:
@@ -222,8 +225,7 @@ const CLOSE_SVG =
 const PROGRESS_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>';
 
-// ──────────────────────────────────────────────────────────────────────────
-// 全局状态
+/* ═══ 全局状态 ═══ */
 
 let cfg: Required<NotificationConfig> = {
   position: 'top-right',
@@ -244,8 +246,7 @@ function genId(): string {
   return 'notif-' + Math.random().toString(36).slice(2, 10);
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 容器
+/* ═══ 容器 ═══ */
 
 function ensureContainer(): HTMLElement {
   const sel = `.notification-container[data-notif-default]`;
@@ -268,8 +269,7 @@ function syncContainerPosition(el: HTMLElement): void {
   el.dataset.position = cfg.position;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 持久化
+/* ═══ 持久化 ═══ */
 
 const DEFAULT_PERSIST_KEY = 'icen.ui.notifications';
 
@@ -396,8 +396,7 @@ function restorePersisted(
   return records;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 声音
+/* ═══ 声音 ═══ */
 
 let audioCtx: AudioContext | null = null;
 
@@ -436,8 +435,7 @@ function playSound(sound: boolean | string): void {
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// DOM 渲染
+/* ═══ DOM 渲染 ═══ */
 
 /** 递归剔除 SVG 子树中的 on* 属性与 script/foreignObject 节点。 */
 function stripUnsafeSvg(el: Element): void {
@@ -522,10 +520,7 @@ function buildDescription(text: string): HTMLElement {
   return el;
 }
 
-function buildActions(
-  record: NotificationRecord,
-  getHandle: () => NotificationHandle,
-): HTMLElement | null {
+function buildActions(record: NotificationRecord): HTMLElement | null {
   const actions = record.opts.actions?.length
     ? record.opts.actions
     : record.opts.actionLabel
@@ -544,13 +539,12 @@ function buildActions(
     btn.textContent = a.label;
     btn.addEventListener('click', (ev) => {
       ev.stopPropagation();
-      const h = getHandle();
       if (a.onClick) {
         const ret = a.onClick();
         if (ret === false) return;
       }
+      // keepOpen 时保持通知打开，无需处理
       if (!a.keepOpen) dismissRecord(record.id);
-      else void h; // 保留
     });
     wrap.appendChild(btn);
   }
@@ -684,7 +678,7 @@ function renderNotification(
   content.appendChild(buildTitle(record.title));
   if (record.opts.description) content.appendChild(buildDescription(record.opts.description));
 
-  const actions = buildActions(record, getHandle);
+  const actions = buildActions(record);
   if (actions) content.appendChild(actions);
 
   const link = buildLink(record);
@@ -718,8 +712,7 @@ function renderNotification(
   return el;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 入栈 / 出栈
+/* ═══ 入栈 / 出栈 ═══ */
 
 function pushToContainer(container: HTMLElement, el: HTMLElement, priority: 'normal' | 'high'): void {
   if (priority === 'high') {
@@ -734,6 +727,12 @@ function pushToContainer(container: HTMLElement, el: HTMLElement, priority: 'nor
   }
 }
 
+/**
+ * 退场动画兜底时长（毫秒）：与 components/notification.css 的退场过渡时长对齐并留少量余量；
+ * transitionend 因元素被隐藏 / display:none 等原因不触发时，由此超时保证节点必定移除。
+ */
+const LEAVE_FALLBACK_MS = 360;
+
 function removeOne(el: HTMLElement, onClose?: () => void): void {
   if (el.classList.contains('is-leaving')) return;
   el.classList.add('is-leaving');
@@ -745,13 +744,23 @@ function removeOne(el: HTMLElement, onClose?: () => void): void {
     onClose?.();
   };
   el.addEventListener('transitionend', finish, { once: true });
-  window.setTimeout(finish, 360);
+  window.setTimeout(finish, LEAVE_FALLBACK_MS);
 }
 
-function trimStack(container: HTMLElement): void {
+/**
+ * 超出堆叠上限时折叠最早的可折叠项。maxStack 与删除语义由调用方注入：
+ * 全局路径传 cfg.maxStack 且只删全局 store；center 路径传 local.maxStack 且
+ * 需双删（localStore 是该 center get/getAll 的数据源，store 是全量索引）。
+ * 计时器记录统一从全局 store 查——center 记录写入/清理均双 store 同步，二者必然同源。
+ */
+function trimStack(
+  container: HTMLElement,
+  maxStack: number,
+  remove: (id: string) => void,
+): void {
   for (;;) {
     const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > .notification'));
-    if (items.length <= cfg.maxStack) return;
+    if (items.length <= maxStack) return;
     // 优先折叠最早的、已读的、normal 优先级的
     const target = items.find((it) => !it.classList.contains('is-priority')) ?? items[0];
     if (!target) return;
@@ -760,18 +769,17 @@ function trimStack(container: HTMLElement): void {
     if (target.classList.contains('is-leaving')) {
       // 已在退场动画中：立即真正移除，保证循环必定推进
       target.remove();
-      if (target.id) store.delete(target.id);
+      if (target.id) remove(target.id);
       continue;
     }
     removeOne(target);
-    if (target.id) store.delete(target.id);
+    if (target.id) remove(target.id);
     // 已调度退场，退出循环（动画期间允许短暂超限）
     return;
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 倒计时 + hover 暂停
+/* ═══ 倒计时 + hover 暂停 ═══ */
 
 function attachTimer(record: NotificationRecord, handle: NotificationHandle): void {
   const el = record.el;
@@ -835,8 +843,7 @@ function attachTimer(record: NotificationRecord, handle: NotificationHandle): vo
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Handle 工厂
+/* ═══ Handle 工厂 ═══ */
 
 function makeHandle(record: NotificationRecord): NotificationHandle {
   const handle: NotificationHandle = {
@@ -855,8 +862,68 @@ function makeHandle(record: NotificationRecord): NotificationHandle {
   return handle;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 记录操作
+/* ═══ 记录操作 ═══ */
+
+/**
+ * showRecord 与 center.push 的公共入栈流水线：
+ * 构造 record → makeHandle → renderNotification → pushToContainer → 注册 store →
+ * attachTimer → trimStack → persistSave → playSound → onShow。
+ * 两条调用路径的差异全部参数化（差异点与理由）：
+ *   - maxStack：全局读 cfg（可被 notify.config 热更），center 读 local（可被 center.config 热更）
+ *   - cfgRef：center 记录挂 local 配置（驱动持久化分组、pauseOnHover、声音），全局为 undefined
+ *   - ownerStore：center 双写（localStore 为其 get/getAll 数据源，全局 store 兼作
+ *     全量索引以复用 dismissRecord / trimStack），全局路径仅写全局 store
+ */
+function pushRecord(
+  title: string,
+  kind: NotificationKind,
+  opts: NotificationOptions,
+  container: HTMLElement,
+  maxStack: number,
+  cfgRef?: Required<NotificationConfig>,
+  ownerStore?: Map<string, NotificationRecord>,
+): NotificationHandle {
+  const id = opts.id ?? genId();
+  const duration = opts.duration ?? 0;
+  const record: NotificationRecord = {
+    id,
+    title,
+    kind,
+    // 默认值放展开前会被显式传入的 { unread: undefined } 覆盖回 undefined，故先展开再兜底
+    opts: { ...opts, unread: opts.unread ?? false, id },
+    el: null,
+    createdAt: Date.now(),
+    duration,
+    remaining: duration,
+    paused: false,
+    timer: 0,
+    startedAt: 0,
+    cfgRef,
+    ownerStore,
+  };
+
+  const handle = makeHandle(record);
+  const el = renderNotification(record, container, () => handle);
+  record.el = el;
+  handle.el = el;
+
+  pushToContainer(container, el, record.opts.priority ?? 'normal');
+  // center 先写 localStore 再写全局索引 store；全局路径 ownerStore 为 undefined，仅写全局 store
+  ownerStore?.set(id, record);
+  store.set(id, record);
+
+  attachTimer(record, handle);
+  trimStack(container, maxStack, (removedId) => {
+    ownerStore?.delete(removedId);
+    store.delete(removedId);
+  });
+  persistSave();
+  playSound(cfgRef?.sound ?? cfg.sound);
+
+  opts.onShow?.(handle);
+
+  return handle;
+}
 
 function showRecord(
   title: string,
@@ -867,40 +934,11 @@ function showRecord(
 
   const container = ensureContainer();
   const id = opts.id ?? genId();
-  // 同 id 先清掉旧的
+  // 同 id 先清掉旧的（center.push 无此语义，是该路径的差异点，保留在包装层）
   if (store.has(id)) dismissRecord(id);
 
-  const duration = opts.duration ?? 0;
-  const record: NotificationRecord = {
-    id,
-    title,
-    kind,
-    opts: { unread: opts.unread ?? false, ...opts, id },
-    el: null,
-    createdAt: Date.now(),
-    duration,
-    remaining: duration,
-    paused: false,
-    timer: 0,
-    startedAt: 0,
-  };
-
-  const handle = makeHandle(record);
-  const el = renderNotification(record, container, () => handle);
-  record.el = el;
-  handle.el = el;
-
-  pushToContainer(container, el, record.opts.priority ?? 'normal');
-  store.set(id, record);
-
-  attachTimer(record, handle);
-  trimStack(container);
-  persistSave();
-  playSound(record.cfgRef?.sound ?? cfg.sound);
-
-  opts.onShow?.(handle);
-
-  return handle;
+  // 全局单例路径：maxStack/声音读全局 cfg，不挂 cfgRef / ownerStore
+  return pushRecord(title, kind, opts, container, cfg.maxStack);
 }
 
 function dismissRecord(id: string): void {
@@ -1007,8 +1045,7 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
   persistSave();
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Promise confirm
+/* ═══ Promise confirm ═══ */
 
 function confirmDialog(
   title: string,
@@ -1049,8 +1086,7 @@ function confirmDialog(
   });
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 多容器函数式 API
+/* ═══ 多容器函数式 API ═══ */
 
 export interface NotificationCenterHandle {
   push(notif: NotificationPushInput): NotificationHandle | null;
@@ -1089,6 +1125,7 @@ export function createNotificationCenter(
       get: () => null,
       getAll: () => [],
       config() { /* noop */ },
+      // SSR 桩：非真实元素，destroy 前不得触碰 el（本分支内其余方法均为 no-op）
       el: {} as HTMLElement,
     };
   }
@@ -1125,58 +1162,17 @@ export function createNotificationCenter(
 
   function push(input: NotificationPushInput): NotificationHandle | null {
     if (destroyed) return null;
-    const kind = input.kind ?? 'info';
-    const opts = input.options ?? {};
-    const id = opts.id ?? genId();
-    const duration = opts.duration ?? 0;
-    const record: NotificationRecord = {
-      id, title: input.title, kind,
-      opts: { unread: opts.unread ?? false, ...opts, id },
-      el: null,
-      createdAt: Date.now(),
-      duration, remaining: duration, paused: false, timer: 0,
-      startedAt: 0,
-      cfgRef: local,
-      ownerStore: localStore,
-    };
-    const handle = makeHandle(record);
-    const el = renderNotification(record, container, () => handle);
-    record.el = el;
-    handle.el = el;
-    pushToContainer(container, el, record.opts.priority ?? 'normal');
-    localStore.set(id, record);
-    store.set(id, record);
-    attachTimer(record, handle);
-    // 局部 trim
-    for (;;) {
-      const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > .notification'));
-      if (items.length <= local.maxStack) break;
-      const target = items.find((it) => !it.classList.contains('is-priority')) ?? items[0];
-      if (!target) break;
-      const tid = target.id;
-      const rec = tid ? localStore.get(tid) : undefined;
-      if (rec?.timer) window.clearTimeout(rec.timer);
-      if (target.classList.contains('is-leaving')) {
-        // 已在退场动画中：立即真正移除，保证循环必定推进
-        target.remove();
-        if (tid) {
-          localStore.delete(tid);
-          store.delete(tid);
-        }
-        continue;
-      }
-      removeOne(target);
-      if (tid) {
-        localStore.delete(tid);
-        store.delete(tid);
-      }
-      // 已调度退场，退出循环（动画期间允许短暂超限）
-      break;
-    }
-    persistSave();
-    playSound(local.sound);
-    opts.onShow?.(handle);
-    return handle;
+    // 局部 center 路径：maxStack/声音读 local，记录挂 cfgRef/ownerStore 双写两个 store；
+    // 与全局路径不同，这里不做同 id 先清（保留原语义）
+    return pushRecord(
+      input.title,
+      input.kind ?? 'info',
+      input.options ?? {},
+      container,
+      local.maxStack,
+      local,
+      localStore,
+    );
   }
 
   function dismiss(id?: string): void {
@@ -1240,8 +1236,7 @@ export function createNotificationCenter(
   };
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// 全局 notify
+/* ═══ 全局 notify ═══ */
 
 export const notify: NotifyFn = Object.assign(
   (title: string, opts?: NotificationOptions) => showRecord(title, 'info', opts ?? {}),

@@ -78,7 +78,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── 调色盘：多系列图（donut/stack/line/radar）由 behavior 选用 ── */
+/* ── 调色盘：手写 markup 调色盘；behavior 走 charts.ts PALETTE_VARS 内联同值（两处值需人工同步） ── */
 .chart-tone-1 { --chart-tone: var(--token-accent); }
 .chart-tone-2 { --chart-tone: var(--token-accent-cold); }
 .chart-tone-3 { --chart-tone: var(--token-success); }

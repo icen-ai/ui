@@ -3,7 +3,7 @@
  *
  * 契约：
  *   <div class="date-picker" data-date-picker data-date-picker-input="id">
- *     <button class="date-picker-trigger" type="button" aria-haspopup="dialog">
+ *     <button class="date-picker-trigger [--sm|--lg]" type="button" aria-haspopup="dialog">
  *       <span class="date-picker-value">2026-07-29</span>
  *       <svg class="date-picker-icon">…日历 svg…</svg>
  *     </button>
