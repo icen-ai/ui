@@ -2,394 +2,186 @@
 import Base from '../layouts/Base.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import PmInstall from '../components/PmInstall.astro';
-import { COMPONENTS } from '../lib/components';
+import { COMPONENTS, GROUPS } from '../lib/components';
 import pkg from '../../../package.json';
-
-const componentCount = COMPONENTS.length;
 
 import '../../../src/components/input.css';
 import '../../../src/components/form.css';
-import '../../../src/components/select.css';
 import '../../../src/components/switch.css';
-import '../../../src/components/tag-input.css';
-import '../../../src/components/stat.css';
-import '../../../src/components/table.css';
 import '../../../src/components/feedback.css';
 import '../../../src/components/media.css';
-import '../../../src/components/menu.css';
-import '../../../src/components/modal.css';
-import '../../../src/components/tooltip.css';
-import '../../../src/components/toast.css';
+import '../../../src/components/charts.css';
+import '../../../src/components/chart-line.css';
+import '../../../src/components/ai-chat.css';
+import '../../../src/components/ai-tool.css';
+import '../../../src/components/ai-panel.css';
 
-const starSvg = `<svg viewBox="0 0 24 24" stroke-linejoin="round"><path d="M12 2.5l2.95 6.26 6.85.72-5.1 4.63 1.4 6.74L12 17.6l-6.1 3.25 1.4-6.74-5.1-4.63 6.85-.72z"/></svg>`;
-const svgX = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
-const svgChevron = `<svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
-const svgCheck = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>`;
-const svgWarn = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
-const avatarImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' fill='%23d97757'/><circle cx='24' cy='18' r='8' fill='%23fffdf9'/><path d='M8 44c3-10 10-14 16-14s13 4 16 14z' fill='%23fffdf9'/></svg>`;
+/* 分组导航带：每组链接到伞页面 / 代表组件页 */
+const GROUP_LINK: Record<string, string> = {
+  '基础': 'btn', 'AI 原生': 'ai-overview', '表单': 'form', '数据展示': 'card',
+  '图表': 'charts', '浮层': 'modal', '反馈': 'alert', '导航': 'nav',
+};
 
 const importCss = `import '@icen.ai/ui/tokens.css';
 import '@icen.ai/ui/ui.css';`;
 const htmlPreset = `<html class="piano dark"> … </html>`;
 ---
-<Base title="ICEN UI · icen.ai 生态的设计系统">
+
+<Base title="ICEN UI · 为 AI 时代而生的设计系统">
   <!-- ═══ Hero ═══ -->
   <section class="hero">
-    <a class="hero-pill" href="/primitives/">
+    <a class="hero-pill" href="/components/ai-overview/">
       <span class="hero-pill-badge">v{pkg.version}</span>
-      <span>统一抽象层：6 个交互基元 + --icen-* 原语 token</span>
+      <span>AI 原生组件族 · 图表通用层 · 工具体系已发布</span>
       <span class="hero-pill-arrow" aria-hidden="true">→</span>
     </a>
-    <h1 class="hero-title">icen.ai 生态的<br />设计系统基础</h1>
+    <h1 class="hero-title">设计系统<br />为 AI 时代而生</h1>
     <p class="hero-sub">
-      设计 tokens + 无框架组件 CSS + 行为 JS。6 套色彩预设 × 3 种风格 × 明暗双模，
-      全部组件消费同一套 <code>--token-*</code>，换肤零改动。开源，开放代码。
+      设计 tokens（6 预设 × 明暗）+ 无框架组件 + AI 原生族（7 态状态机 / 多模态 / 定价审计）
+      + 图表通用层（ChartSpec 纯 JSON）。全部消费同一套 <code>--token-*</code>，换肤零改动；
+      UI 能力可注册为模型直接调用的工具。
     </p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="#quickstart">开始使用</a>
-      <a class="btn" href="/components/">浏览组件</a>
+      <a class="btn" href="/components/">浏览 {COMPONENTS.length} 个组件</a>
+    </div>
+
+    <!-- 数字带：一眼看清规模 -->
+    <div class="hero-stats" role="list">
+      <div class="hero-stat" role="listitem"><b>78</b><span>kit 入口</span></div>
+      <div class="hero-stat" role="listitem"><b>33</b><span>行为模块</span></div>
+      <div class="hero-stat" role="listitem"><b>12</b><span>图表类型</span></div>
+      <div class="hero-stat" role="listitem"><b>11</b><span>AI 原生</span></div>
+      <div class="hero-stat" role="listitem"><b>0</b><span>运行时依赖</span></div>
     </div>
   </section>
 
-  <!-- ═══ 组件陈列（tabs 切换四组卡片） ═══ -->
-  <section class="showcase" data-tabs>
-    <div class="showcase-bar">
-      <nav class="showcase-tabs" aria-label="组件分组">
-        <button class="showcase-tab is-active" type="button" data-tab="featured">精选</button>
-        <button class="showcase-tab" type="button" data-tab="form">表单</button>
-        <button class="showcase-tab" type="button" data-tab="data">数据</button>
-        <button class="showcase-tab" type="button" data-tab="overlay">浮层</button>
-      </nav>
-      <span class="showcase-hint">实时渲染 · 切换右上角预设 / 明暗查看换肤</span>
-    </div>
+  <!-- ═══ 悬浮拼贴：真实组件漂浮在画布上（hover 抬升） ═══ -->
+  <section class="float-stage" aria-label="精选组件">
+    <div class="float-grid">
+      <article class="float-card float-card--xl">
+        <span class="float-cap">数据可视化 · renderChart <em>ChartSpec 纯 JSON · 图例眼睛 · 六类交互事件</em></span>
+        <div class="float-body" id="home-chart"></div>
+      </article>
 
-    <div data-tab-panel="featured">
-      <div class="show-grid">
-        <div class="show-card">
-          <span class="show-card-cap">支付表单</span>
-          <div class="pay">
-            <label class="pay-field">
-              <span class="pay-label">持卡人姓名</span>
-              <div class="input-wrap control"><input class="input" placeholder="张三" /></div>
+      <article class="float-card float-card--chat">
+        <span class="float-cap">AI 会话 · renderAiMessage <em>多模态消息 + 工具调用卡</em></span>
+        <div class="float-body float-body--col" id="home-ai"></div>
+      </article>
+
+      <article class="float-card float-card--lift">
+        <span class="float-cap">贡献日历 · renderCalendar <em>GitHub 同款热力</em></span>
+        <div class="float-body" id="home-calendar"></div>
+      </article>
+
+      <article class="float-card">
+        <span class="float-cap">AI 状态 · 待办 + 上下文环 <em>业界模式三处同源</em></span>
+        <div class="float-body float-body--split">
+          <div id="home-todo"></div>
+          <div id="home-ring" class="float-ring"></div>
+        </div>
+      </article>
+
+      <article class="float-card float-card--ctrl">
+        <span class="float-cap">控件</span>
+        <div class="float-body float-body--col">
+          <div class="demo-row">
+            <button class="switch" type="button" role="switch" aria-checked="true" aria-label="自动发布"><span class="switch-thumb"></span></button>
+            <button class="switch" type="button" role="switch" aria-checked="false" aria-label="预览环境"><span class="switch-thumb"></span></button>
+            <span class="pill pill--success">运行中</span>
+            <span class="pill pill--warning">排队</span>
+          </div>
+          <div class="demo-row">
+            <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="false" aria-label="未选中"></button>
+            <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="true" aria-label="已选中"></button>
+            <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="mixed" aria-label="半选"></button>
+          </div>
+        </div>
+      </article>
+
+      <article class="float-card">
+        <span class="float-cap">构建状态</span>
+        <div class="float-body float-body--col build">
+          <div class="build-row">
+            <span class="pill pill--success">运行中</span>
+            <span class="build-text">gateway · 3 分钟前</span>
+            <span class="spinner spinner--sm"></span>
+          </div>
+          <div class="progress">
+            <div class="progress-track"><div class="progress-bar" style="width:64%"></div></div>
+            <span class="progress-label">64%</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="float-card">
+        <span class="float-cap">支付表单</span>
+        <div class="float-body float-body--col pay">
+          <label class="pay-field">
+            <span class="pay-label">持卡人姓名</span>
+            <div class="input-wrap control"><input class="input" placeholder="张三" /></div>
+          </label>
+          <div class="pay-row">
+            <label class="pay-field pay-field--grow">
+              <span class="pay-label">卡号</span>
+              <div class="input-wrap control"><input class="input" placeholder="1234 5678 9012 3456" /></div>
             </label>
-            <div class="pay-row">
-              <label class="pay-field pay-field--grow">
-                <span class="pay-label">卡号</span>
-                <div class="input-wrap control"><input class="input" placeholder="1234 5678 9012 3456" /></div>
-              </label>
-              <label class="pay-field pay-field--cvv">
-                <span class="pay-label">CVV</span>
-                <div class="input-wrap control"><input class="input" placeholder="123" /></div>
-              </label>
-            </div>
-            <div class="pay-actions">
-              <button class="btn btn-primary btn-sm" type="button">提交</button>
-              <button class="btn btn-sm" type="button">取消</button>
-            </div>
+            <label class="pay-field pay-field--cvv">
+              <span class="pay-label">CVV</span>
+              <div class="input-wrap control"><input class="input" placeholder="123" /></div>
+            </label>
+          </div>
+          <div class="pay-actions">
+            <button class="btn btn-primary btn-sm" type="button">提交</button>
+            <button class="btn btn-sm" type="button">取消</button>
           </div>
         </div>
+      </article>
 
-        <div class="show-card">
-          <span class="show-card-cap">团队</span>
-          <div class="team">
-            <div class="team-avatars">
-              <span class="avatar"><img src={avatarImg} alt="林晚晴" /></span>
-              <span class="avatar">沈</span>
-              <span class="avatar">顾</span>
-            </div>
-            <p class="team-title">暂无团队成员</p>
-            <p class="team-desc">邀请你的团队协作完成此项目。</p>
-            <button class="btn btn-sm" type="button">＋ 邀请成员</button>
+      <article class="float-card float-card--team">
+        <span class="float-cap">协作</span>
+        <div class="float-body team">
+          <div class="team-avatars">
+            <span class="avatar" style="background:#d97757;color:#fff">林</span>
+            <span class="avatar">沈</span>
+            <span class="avatar">顾</span>
           </div>
+          <p class="team-title">暂无团队成员</p>
+          <p class="team-desc">邀请你的团队协作完成此项目。</p>
+          <button class="btn btn-sm" type="button">＋ 邀请成员</button>
         </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">安全设置</span>
-          <div class="sec">
-            <div class="sec-row">
-              <div>
-                <p class="sec-title">双重身份验证</p>
-                <p class="sec-desc">通过电子邮件或手机号进行验证。</p>
-              </div>
-              <button class="switch" type="button" role="switch" aria-checked="true" aria-label="双重身份验证"><span class="switch-thumb"></span></button>
-            </div>
-            <div class="sec-row sec-row--line">
-              <div>
-                <p class="sec-title">登录通知</p>
-                <p class="sec-desc">新设备登录时推送提醒。</p>
-              </div>
-              <button class="switch switch--sm" type="button" role="switch" aria-checked="false" aria-label="登录通知"><span class="switch-thumb"></span></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">指标</span>
-          <div class="stat-grid stat-grid--home">
-            <div class="stat-card">
-              <div class="stat-num">1,280</div>
-              <div class="stat-label">用户总数</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-num stat-num--accent">96.2%</div>
-              <div class="stat-label">本周可用性</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-num stat-num--warning">12</div>
-              <div class="stat-label">待处理告警</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">构建状态</span>
-          <div class="build">
-            <div class="build-row">
-              <span class="pill pill--success">运行中</span>
-              <span class="build-text">gateway · 3 分钟前</span>
-              <span class="spinner spinner--sm"></span>
-            </div>
-            <div class="progress">
-              <div class="progress-track"><div class="progress-bar" style="width:64%"></div></div>
-              <span class="progress-label">64%</span>
-            </div>
-            <div class="build-row">
-              <span class="pill pill--warning">排队</span>
-              <span class="build-text">docs · 等待中</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">消息</span>
-          <div class="demo-col-wide" style="width:100%">
-            <div class="alert alert--success">
-              <span class="alert-icon" set:html={svgCheck}></span>
-              <div class="alert-content">
-                <p class="alert-title">构建成功</p>
-                <div class="alert-body">dist 产物已生成，耗时 42 秒。</div>
-              </div>
-            </div>
-            <div class="alert alert--warning">
-              <span class="alert-icon" set:html={svgWarn}></span>
-              <div class="alert-content">
-                <p class="alert-title">配额将尽</p>
-                <div class="alert-body">本月构建时长已用 80%。</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </article>
     </div>
+  </section>
 
-    <div data-tab-panel="form" hidden>
-      <div class="show-grid">
-        <div class="show-card">
-          <span class="show-card-cap">输入框</span>
-          <div class="demo-col" style="width:100%;max-width:none">
-            <div class="input-wrap control input-wrap--sm">
-              <input class="input" placeholder="小号（32px）" />
-            </div>
-            <div class="input-wrap control">
-              <span class="input-leading">¥</span>
-              <input class="input" placeholder="0.00" />
-              <span class="input-trailing">元</span>
-            </div>
-            <div class="input-wrap control">
-              <input class="input" value="点右侧 × 可清空" />
-              <button class="input-clear" type="button" aria-label="清空" set:html={svgX}></button>
-            </div>
-            <div class="input-wrap control is-error">
-              <input class="input" value="校验未通过的内容" />
-            </div>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">选择器</span>
-          <div class="demo-col" style="width:100%;max-width:none">
-            <div class="select" data-select>
-              <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
-                <span class="select-value is-empty">选择一种水果</span>
-                <Fragment set:html={svgChevron} />
-              </button>
-              <div class="select-panel" hidden>
-                <button class="select-option" type="button" data-value="apple">苹果</button>
-                <button class="select-option" type="button" data-value="banana">香蕉</button>
-                <button class="select-option" type="button" data-value="orange">橙子</button>
-              </div>
-              <input type="hidden" data-select-value name="fruit" />
-            </div>
-            <p class="home-note">↑↓ 移动 · Enter 选中 · Esc / 外点关闭</p>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">标签输入</span>
-          <div class="demo-col" style="width:100%;max-width:none">
-            <div class="tag-input control" data-tags="设计,前端" data-max="5">
-              <input class="tag-input-field" placeholder="输入后回车添加（最多 5 个）" />
-            </div>
-            <p class="home-note">Enter / 逗号提交 · 空草稿 Backspace 删尾</p>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">开关与勾选</span>
-          <div class="demo-col" style="width:100%;max-width:none">
-            <div class="demo-row">
-              <button class="switch" type="button" role="switch" aria-checked="true" aria-label="开关（开）"><span class="switch-thumb"></span></button>
-              <button class="switch" type="button" role="switch" aria-checked="false" aria-label="开关（关）"><span class="switch-thumb"></span></button>
-              <button class="switch switch--sm" type="button" role="switch" aria-checked="true" aria-label="小号开关"><span class="switch-thumb"></span></button>
-            </div>
-            <div class="demo-row">
-              <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="false" aria-label="未选中"></button>
-              <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="true" aria-label="已选中"></button>
-              <button class="checkbox focus-ring" type="button" role="checkbox" aria-checked="mixed" aria-label="半选"></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div data-tab-panel="data" hidden>
-      <div class="show-grid">
-        <div class="show-card show-card--wide">
-          <span class="show-card-cap">表格</span>
-          <div class="table-wrap" style="width:100%">
-            <table class="table">
-              <thead>
-                <tr><th>名称</th><th>状态</th><th class="ops">操作</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>gateway</td><td><span class="pill pill--success">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-                <tr><td>accounts</td><td><span class="pill pill--success">运行中</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-                <tr><td>billing</td><td><span class="pill pill--warning">降级</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">停用</button></td></tr>
-                <tr><td>archive</td><td><span class="pill pill--error">已停止</span></td><td class="ops"><button class="btn btn-sm">编辑</button><button class="btn btn-sm">启用</button></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">进度</span>
-          <div class="demo-col-wide" style="width:100%">
-            <div class="progress">
-              <div class="progress-track"><div class="progress-bar" style="width:64%"></div></div>
-              <span class="progress-label">64%</span>
-            </div>
-            <div class="progress progress--sm">
-              <div class="progress-track"><div class="progress-bar" style="width:32%"></div></div>
-              <span class="progress-label">32%</span>
-            </div>
-            <div class="demo-row" style="margin-top:6px">
-              <div class="spinner spinner--sm"></div>
-              <div class="spinner"></div>
-              <div class="spinner spinner--lg"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">评分</span>
-          <div class="demo-row">
-            <div class="rating" role="group" aria-label="评分 3.5 星，满分 5 星">
-              <button class="rating-star is-filled" type="button" aria-label="1 星" set:html={starSvg}></button>
-              <button class="rating-star is-filled" type="button" aria-label="2 星" set:html={starSvg}></button>
-              <button class="rating-star is-filled" type="button" aria-label="3 星" set:html={starSvg}></button>
-              <button class="rating-star is-half" type="button" aria-label="4 星" set:html={starSvg}></button>
-              <button class="rating-star" type="button" aria-label="5 星" set:html={starSvg}></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">骨架屏</span>
-          <div style="width:100%">
-            <div style="display:flex;align-items:center;gap:12px">
-              <div class="skeleton skeleton--circle" style="width:40px;height:40px"></div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
-                <div class="skeleton" style="height:12px;width:45%"></div>
-                <div class="skeleton" style="height:12px;width:80%"></div>
-              </div>
-            </div>
-            <div class="skeleton" style="height:12px;width:100%;margin-top:12px"></div>
-            <div class="skeleton" style="height:12px;width:66%;margin-top:8px"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div data-tab-panel="overlay" hidden>
-      <div class="show-grid">
-        <div class="show-card">
-          <span class="show-card-cap">下拉菜单</span>
-          <div class="dropdown" data-dropdown>
-            <button class="btn dropdown-trigger" data-dropdown-trigger aria-haspopup="menu" type="button">操作 ▾</button>
-            <div data-dropdown-menu hidden>
-              <div class="menu-label">文件</div>
-              <button class="menu-item pressable" type="button">
-                <span class="menu-item-icon"></span>
-                <span class="menu-item-label">重命名</span>
-                <span class="menu-item-shortcut">F2</span>
-              </button>
-              <button class="menu-item pressable" type="button">
-                <span class="menu-item-icon"></span>
-                <span class="menu-item-label">分享</span>
-              </button>
-              <div class="menu-separator"></div>
-              <button class="menu-item pressable menu-item--danger" type="button">
-                <span class="menu-item-icon"></span>
-                <span class="menu-item-label">删除</span>
-                <span class="menu-item-shortcut">⌫</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">对话框</span>
-          <button class="btn" type="button" data-modal-open="home-modal">打开对话框</button>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">提示</span>
-          <div class="demo-row">
-            <button class="btn" type="button" data-tooltip="默认在上方">上</button>
-            <button class="btn" type="button" data-tooltip="下方提示" data-tooltip-side="bottom">下</button>
-            <button class="btn" type="button" data-tooltip="左侧提示" data-tooltip-side="left">左</button>
-            <button class="btn" type="button" data-tooltip="右侧提示" data-tooltip-side="right">右</button>
-          </div>
-        </div>
-
-        <div class="show-card">
-          <span class="show-card-cap">轻提示</span>
-          <div class="demo-row">
-            <button class="btn" id="home-toast-ok" type="button">成功提示</button>
-            <button class="btn" id="home-toast-err" type="button">错误提示</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- ═══ 分组导航带 ═══ -->
+  <section class="groups" aria-label="组件分组">
+    {GROUPS.map((g) => (
+      <a class="group-card" href={`/components/${GROUP_LINK[g] ?? 'btn'}/`}>
+        <span class="group-name">{g}</span>
+        <span class="group-count">{COMPONENTS.filter((c) => c.group === g).length}</span>
+        <span class="group-arrow" aria-hidden="true">→</span>
+      </a>
+    ))}
   </section>
 
   <!-- ═══ 特性 ═══ -->
   <section class="features">
     <div class="feature">
+      <h3 class="feature-title">AI 原生族</h3>
+      <p class="feature-desc">7 态状态机 + 多模态内容模型（对标 AI SDK v5 / MCP / OpenAI / Anthropic）+ 定价审计闭环，零接线一行绑定。</p>
+    </div>
+    <div class="feature">
+      <h3 class="feature-title">图表通用层</h3>
+      <p class="feature-desc"><code>renderChart</code> 吃纯 JSON ChartSpec，12 种图；悬停 / 单击 / 双击 / 右键事件与图例眼睛内建。</p>
+    </div>
+    <div class="feature">
       <h3 class="feature-title">三层正交</h3>
-      <p class="feature-desc">色彩预设 × 风格 profile × 明暗，三层互不耦合，任意组合都自洽。</p>
+      <p class="feature-desc">色彩预设 × 风格 profile × 明暗，三层互不耦合；{COMPONENTS.length} 个组件共享同一套 <code>--token-*</code>，换肤零改动。</p>
     </div>
     <div class="feature">
-      <h3 class="feature-title">无框架</h3>
-      <p class="feature-desc">纯 CSS class 契约 + 按需 behavior JS，React / Vue / 原生都能接。</p>
-    </div>
-    <div class="feature">
-      <h3 class="feature-title">统一抽象层</h3>
-      <p class="feature-desc">6 个交互基元 class + <code>--icen-*</code> 原语 token，{componentCount} 个组件共享同一套状态语义。</p>
-    </div>
-    <div class="feature">
-      <h3 class="feature-title">SSR 友好</h3>
-      <p class="feature-desc">全部 behavior 带 SSR 守卫，文本赋值只用 textContent，无注入面。</p>
+      <h3 class="feature-title">零依赖无框架</h3>
+      <p class="feature-desc">纯 CSS class 契约 + 按需 behavior JS，SSR 安全；React / Vue / 原生都能接，类型面（.d.mts）随包发布。</p>
     </div>
   </section>
 
@@ -410,48 +202,76 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
     </div>
   </section>
 
-  <!-- 对话框 demo 的挂载点（portal 到 body 前藏于页面底部） -->
-  <div class="modal-backdrop" data-modal="home-modal" hidden>
-    <div class="modal modal--sm">
-      <div class="modal-header">
-        <div>
-          <h3 class="modal-title">确认发布</h3>
-          <p class="modal-description">Esc / 点击遮罩可关闭</p>
-        </div>
-        <button class="modal-close" data-modal-close aria-label="关闭" type="button">×</button>
-      </div>
-      <div class="modal-body">
-        <p>焦点已锁定在对话框内，关闭后焦点还原到触发按钮。</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-sm" data-modal-close type="button">取消</button>
-        <button class="btn btn-sm btn-primary" data-modal-close type="button">确定</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    import { initTabs } from '../../../src/behaviors/tabs.ts';
-    import { initCopy } from '../../../src/behaviors/copy.ts';
+    import { renderChart, renderCalendar } from '../../../src/behaviors/charts.ts';
+    import { renderAiMessage } from '../../../src/behaviors/ai-chat.ts';
+    import { renderAiToolCall, initAiTool } from '../../../src/behaviors/ai-tool.ts';
+    import { renderAiTodo, renderAiUsageRing } from '../../../src/behaviors/ai-panel.ts';
     import { initInput } from '../../../src/behaviors/input.ts';
-    import { initSelect } from '../../../src/behaviors/select.ts';
-    import { initTagInput } from '../../../src/behaviors/tag-input.ts';
-    import { initDropdown } from '../../../src/behaviors/dropdown.ts';
-    import { initModal } from '../../../src/behaviors/modal.ts';
-    import { toast } from '../../../src/behaviors/toast.ts';
+    import { initCopy } from '../../../src/behaviors/copy.ts';
 
-    initTabs();
-    initCopy();
     initInput();
-    initSelect();
-    initTagInput();
-    initDropdown();
-    initModal();
+    initCopy();
+    initAiTool();
 
-    document.getElementById('home-toast-ok')?.addEventListener('click', () => toast.ok('保存成功'));
-    document.getElementById('home-toast-err')?.addEventListener('click', () => toast.err('保存失败：网络超时'));
+    /* 门面图表：与 AI 总览同数据（v0.1 → v0.8 能力数，多系列折线） */
+    const chartEl = document.getElementById('home-chart');
+    if (chartEl) renderChart(chartEl, {
+      type: 'line',
+      labels: ['v0.1', 'v0.2', 'v0.3', 'v0.4', 'v0.5', 'v0.6', 'v0.7', 'v0.8'],
+      series: [
+        { name: '组件', values: [31, 41, 43, 47, 51, 55, 66, 67] },
+        { name: 'AI 专属', values: [0, 0, 0, 0, 0, 0, 11, 13] },
+        { name: '图表类型', values: [1, 5, 10, 10, 10, 10, 10, 12] },
+      ],
+    });
 
-    // 纯 CSS 状态组件的演示接线（实际项目由使用方状态驱动）
+    /* AI 会话卡：一条多模态消息 + 一张已完成的工具调用卡 */
+    const aiEl = document.getElementById('home-ai');
+    if (aiEl) {
+      const msg = document.createElement('div');
+      renderAiMessage(msg, {
+        role: 'assistant', model: 'kimi-k3',
+        content: '能力曲线已就绪：四幕叙事 + 多系列折线，写入 history.md 前待你确认。',
+        meta: '刚刚 · 1.1k tok',
+      });
+      const tool = document.createElement('div');
+      renderAiToolCall(tool, {
+        id: 'home-tc', name: 'render_chart', kind: 'chart', status: 'done',
+        input: { type: 'line', series: '×3' }, output: '已渲染 → 右上「数据可视化」卡',
+        durationMs: 240,
+      });
+      aiEl.append(msg, tool);
+    }
+
+    /* 贡献日历：确定性伪随机（近 182 天，dates+values 配对） */
+    const calEl = document.getElementById('home-calendar');
+    if (calEl) {
+      const days = 182;
+      const values = Array.from({ length: days }, (_, i) => {
+        const base = Math.abs(Math.sin(i * 0.61)) * 7;
+        const spike = i % 17 === 0 ? 8 : 0;
+        const rest = i % 11 === 0 ? -99 : 0;
+        return Math.max(0, Math.round(base + spike + rest));
+      });
+      const dates = Array.from({ length: days }, (_, i) =>
+        new Date(Date.now() - (days - 1 - i) * 86400000).toISOString().slice(0, 10));
+      renderCalendar(calEl, { dates, values });
+    }
+
+    /* AI 状态卡：待办（3/5）+ 上下文环（42%） */
+    const todoEl = document.getElementById('home-todo');
+    if (todoEl) renderAiTodo(todoEl, [
+      { content: '搜集公开迭代资料', status: 'done' },
+      { content: '拉取内部发布记录', status: 'done' },
+      { content: '提炼阶段叙事与数据', status: 'done' },
+      { content: '渲染能力增长可视化', status: 'running', activeForm: '正在渲染能力增长可视化' },
+      { content: '写入 docs/history.md', status: 'pending' },
+    ]);
+    const ringEl = document.getElementById('home-ring');
+    if (ringEl) renderAiUsageRing(ringEl, { input: 420000 }, { total: 1000000 });
+
+    /* 纯 CSS 状态组件的演示接线（实际项目由使用方状态驱动） */
     document.querySelectorAll('.switch[role="switch"], .checkbox[role="checkbox"]').forEach((el) => {
       el.addEventListener('click', () => {
         el.setAttribute('aria-checked', el.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
@@ -462,7 +282,7 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
 
 <style is:global>
   /* ═══ Hero ═══ */
-  .hero { padding: 88px 0 72px; text-align: center; }
+  .hero { padding: 88px 0 24px; text-align: center; }
   .hero-pill {
     display: inline-flex;
     align-items: center;
@@ -487,82 +307,149 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
   .hero-pill-arrow { color: var(--token-text-faint); }
   .hero-title {
     font-family: var(--font-heading);
-    font-size: clamp(38px, 6vw, 60px);
+    font-size: clamp(40px, 6.4vw, 64px);
     font-weight: 700;
-    letter-spacing: 2px;
-    line-height: 1.22;
+    letter-spacing: 3px;
+    line-height: 1.2;
     margin: 28px 0 18px;
   }
   .hero-sub {
     color: var(--token-text-muted);
     font-size: 15px;
     line-height: 1.9;
-    max-width: 620px;
+    max-width: 680px;
     margin: 0 auto 32px;
   }
   .hero-actions { display: flex; justify-content: center; gap: 12px; }
-
-  /* ═══ 陈列区 ═══ */
-  .showcase { margin-top: 8px; }
-  .showcase-bar {
+  .hero-stats {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 1px solid var(--token-line-soft);
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px 48px;
+    margin-top: 48px;
+    padding: 18px 0 0;
+    border-top: 1px solid var(--token-line-soft);
   }
-  .showcase-tabs { display: flex; gap: 4px; }
-  .showcase-tab {
-    font: inherit;
-    font-size: 13.5px;
-    color: var(--token-text-muted);
-    background: none;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    padding: 10px 14px;
-    cursor: pointer;
-    transition: color var(--duration-fast) var(--ease-out);
-  }
-  .showcase-tab:hover { color: var(--token-text); }
-  .showcase-tab.is-active {
-    color: var(--token-text);
-    font-weight: 600;
-    border-bottom-color: var(--token-accent);
-  }
-  .showcase-hint {
-    font-size: 11.5px;
-    color: var(--token-text-faint);
-    padding-bottom: 12px;
-    letter-spacing: 0.5px;
-  }
-  .show-grid {
+  .hero-stat { display: flex; align-items: baseline; gap: 8px; }
+  .hero-stat b { font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--token-text); }
+  .hero-stat span { font-size: 12px; color: var(--token-text-faint); letter-spacing: 1px; }
+
+  /* ═══ 悬浮拼贴（参考 Vuesax 式组件漂浮画布，全部为实时渲染的真组件） ═══ */
+  .float-stage { padding: 56px 0 8px; }
+  .float-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-    padding: 28px 0 8px;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 22px;
   }
-  .show-card {
+  .float-card {
+    --float-shadow: 0 1px 2px rgba(28,25,23,.05), 0 18px 44px -14px rgba(28,25,23,.16);
+    --float-shadow-hover: 0 2px 4px rgba(28,25,23,.06), 0 30px 68px -18px rgba(28,25,23,.24);
+    grid-column: span 4;
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
+    gap: 12px;
+    border: 1px solid var(--token-line-soft);
+    border-radius: 20px;
+    background: var(--token-surface);
+    padding: 18px 20px 20px;
+    box-shadow: var(--float-shadow);
+    transition:
+      transform var(--duration-mid, 240ms) var(--ease-out),
+      box-shadow var(--duration-mid, 240ms) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+    will-change: transform;
+  }
+  .dark .float-card {
+    --float-shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 44px -14px rgba(0,0,0,.55);
+    --float-shadow-hover: 0 2px 4px rgba(0,0,0,.45), 0 30px 68px -18px rgba(0,0,0,.7);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .float-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--float-shadow-hover);
+      border-color: var(--token-line);
+      z-index: 3;
+    }
+  }
+  .float-card--xl { grid-column: span 7; }
+  .float-card--chat { grid-column: span 5; }
+  .float-card--lift { grid-column: span 5; margin-top: -40px; z-index: 2; }
+  .float-card--ctrl { grid-column: span 3; }
+  .float-card--team .float-body { align-items: center; }
+  .float-cap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--token-text-muted);
+  }
+  .float-cap em {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 10.5px;
+    color: var(--token-text-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .float-body { flex: 1; min-width: 0; }
+  .float-body--col { display: flex; flex-direction: column; gap: 12px; }
+  .float-body--split { display: flex; align-items: center; gap: 16px; }
+  .float-body--split > #home-todo { flex: 1; min-width: 0; }
+  .float-ring { flex: none; }
+
+  /* 进场：交错上浮（动效守卫下关闭） */
+  @media (prefers-reduced-motion: no-preference) {
+    .float-card { animation: float-in .55s var(--ease-out) backwards; }
+    .float-card:nth-child(1) { animation-delay: .02s; }
+    .float-card:nth-child(2) { animation-delay: .08s; }
+    .float-card:nth-child(3) { animation-delay: .14s; }
+    .float-card:nth-child(4) { animation-delay: .20s; }
+    .float-card:nth-child(5) { animation-delay: .26s; }
+    .float-card:nth-child(6) { animation-delay: .30s; }
+    .float-card:nth-child(7) { animation-delay: .34s; }
+    .float-card:nth-child(8) { animation-delay: .38s; }
+    @keyframes float-in {
+      from { opacity: 0; transform: translateY(22px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  }
+
+  /* ═══ 分组导航带 ═══ */
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    padding: 48px 0 8px;
+  }
+  .group-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
     border: 1px solid var(--token-line-soft);
     border-radius: var(--radius-lg);
     background: var(--token-surface);
-    padding: 18px 20px 22px;
-    transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+    text-decoration: none;
+    transition: border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
   }
-  .show-card:hover { border-color: var(--token-line); box-shadow: var(--token-shadow-card); }
-  .show-card--wide { grid-column: span 2; }
-  .show-card-cap {
-    font-size: 11.5px;
-    letter-spacing: 0.5px;
+  .group-card:hover { border-color: var(--token-accent); transform: translateY(-2px); }
+  .group-name { font-size: 13.5px; font-weight: 600; color: var(--token-text); }
+  .group-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
     color: var(--token-text-faint);
+    background: var(--token-bg-soft);
+    border: 1px solid var(--token-line-soft);
+    border-radius: var(--radius-full);
+    padding: 1px 7px;
   }
-  .home-note { font-size: 11.5px; color: var(--token-text-faint); margin: 0; }
+  .group-arrow { margin-left: auto; color: var(--token-text-faint); font-size: 12px; }
+  .group-card:hover .group-arrow { color: var(--token-accent); }
 
-  /* 支付卡 */
+  /* 拼贴内复用的旧卡内容 */
   .pay { display: flex; flex-direction: column; gap: 12px; }
   .pay-field { display: flex; flex-direction: column; gap: 5px; }
   .pay-field--grow { flex: 1; }
@@ -570,24 +457,12 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
   .pay-label { font-size: 12px; color: var(--token-text-muted); }
   .pay-row { display: flex; gap: 10px; }
   .pay-actions { display: flex; gap: 8px; margin-top: 2px; }
-
-  /* 团队卡 */
   .team { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 6px 0; }
   .team-avatars { display: flex; margin-bottom: 6px; }
   .team-avatars .avatar { margin-left: -8px; box-shadow: 0 0 0 2px var(--token-surface); }
   .team-avatars .avatar:first-child { margin-left: 0; }
   .team-title { font-size: 14px; font-weight: 600; margin: 0; }
   .team-desc { font-size: 12px; color: var(--token-text-muted); margin: 0 0 6px; }
-
-  /* 安全卡 */
-  .sec { display: flex; flex-direction: column; }
-  .sec-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
-  .sec-row--line { border-top: 1px solid var(--token-line-soft); }
-  .sec-title { font-size: 13.5px; font-weight: 600; margin: 0; }
-  .sec-desc { font-size: 12px; color: var(--token-text-muted); margin: 2px 0 0; }
-
-  /* 指标 / 构建卡 */
-  .stat-grid--home { grid-template-columns: repeat(3, 1fr); }
   .build { display: flex; flex-direction: column; gap: 12px; }
   .build-row { display: flex; align-items: center; gap: 10px; }
   .build-row .spinner { margin-left: auto; }
@@ -602,51 +477,34 @@ const htmlPreset = `<html class="piano dark"> … </html>`;
     border-top: 1px solid var(--token-line-soft);
     margin-top: 48px;
   }
-  .feature-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0 0 8px;
-    color: var(--token-text);
-  }
+  .feature-title { font-size: 14px; font-weight: 600; margin: 0 0 8px; color: var(--token-text); }
   .feature-desc { font-size: 13px; color: var(--token-text-muted); line-height: 1.7; margin: 0; }
 
   /* ═══ 快速开始 ═══ */
   .quickstart { max-width: 720px; margin: 0 auto; padding-bottom: 24px; }
   .qs-title {
     font-family: var(--font-heading);
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-align: center;
-    margin: 0 0 28px;
+    font-size: 24px; font-weight: 700; letter-spacing: 2px;
+    text-align: center; margin: 0 0 28px;
   }
   .qs-step { margin-bottom: 24px; }
-  .qs-step-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0 0 10px;
-  }
+  .qs-step-title { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; margin: 0 0 10px; }
   .qs-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: var(--radius-full);
-    background: var(--token-accent-subtle);
-    color: var(--token-accent);
-    font-size: 12px;
-    font-weight: 700;
-    flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: var(--radius-full);
+    background: var(--token-accent-subtle); color: var(--token-accent);
+    font-size: 12px; font-weight: 700; flex: none;
   }
 
+  @media (max-width: 1023px) {
+    .float-card, .float-card--xl, .float-card--chat, .float-card--lift, .float-card--ctrl { grid-column: span 6; }
+    .float-card--lift { margin-top: 0; }
+  }
   @media (max-width: 720px) {
-    .hero { padding: 56px 0 48px; }
-    .showcase-hint { display: none; }
-    .show-card--wide { grid-column: span 1; }
-    .stat-grid--home { grid-template-columns: 1fr; }
+    .hero { padding: 56px 0 32px; }
+    .hero-stats { gap: 10px 28px; }
+    .float-card, .float-card--xl, .float-card--chat, .float-card--lift, .float-card--ctrl { grid-column: span 12; }
+    .float-card--lift { margin-top: 0; }
+    .float-cap em { display: none; }
   }
 </style>
