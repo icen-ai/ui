@@ -50,7 +50,7 @@ c.destroy();
 ```
 
 - 省略 `type` 时 `inferChartType` 自动选型（ISO 日期/年月/周几/版本号 v0.8/纯年份等时序标签 → line）。
-- 事件：`icen:chart-{move,out,click,dblclick,contextmenu,legend-toggle}`；内置 tooltip 门户（`tooltip:false` 关闭只派事件）；图表头统一带**图例眼睛**（隐藏/显示全部指标）。
+- 事件：`icen:chart-hover`（detail.phase ∈ enter/move/leave）/ `-click / -dblclick / -contextmenu / -legend-toggle / -legend-visibility`；内置 tooltip 门户（`tooltip:false` 关闭只派事件），tooltip 最大宽吃图表根 `data-panel-max`；图表头统一带**图例眼睛**（隐藏/显示全部指标）。直调底层渲染器同样有交互委托（`bindChartEvents`）。
 - 底层渲染器（同 chrome，非 AI 场景直用）：`renderVBar/renderHBar/renderStack/renderDonut/renderLine/renderArea/renderRadar/renderHeatmap/renderCalendar/renderSparkline/renderGauge/renderScatter`。
 
 ## AI 原生族 — 7 态状态机 + kind 注册表

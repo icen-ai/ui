@@ -1746,6 +1746,14 @@ function chartTooltip(): HTMLElement {
   }
   return tooltipEl;
 }
+/** 按当前宿主图表应用 PanelSizing 契约：data-panel-max 覆盖 CSS 默认 280px 上限
+    （单例 tooltip 跨图复用，每次显示以命中 mark 所属图表为准，未指定则复位）。 */
+function applyTooltipSizing(host: Element | null): void {
+  const tip = chartTooltip();
+  const raw = host?.closest<HTMLElement>('.chart, [data-chart-root]')?.getAttribute('data-panel-max') ?? null;
+  const n = raw != null ? Number(raw) : NaN;
+  tip.style.maxWidth = Number.isFinite(n) && n > 0 ? `${n}px` : '';
+}
 function tooltipText(mark: Element): string {
   const label = mark.getAttribute('data-chart-label') ?? '';
   const series = mark.getAttribute('data-chart-series-name');
@@ -1817,6 +1825,7 @@ export function bindChartEvents(root: HTMLElement): () => void {
     if (tipEnabled()) {
       const tip = chartTooltip();
       tip.textContent = tooltipText(mark);
+      applyTooltipSizing(mark);
       tip.hidden = false;
       moveTooltip(x, y);
     }
