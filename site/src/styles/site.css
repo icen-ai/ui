@@ -298,18 +298,24 @@
 .site-footer-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 18px 24px 28px;
+  padding: 16px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* 两行左右成对：主行（身份 + 结构导航）/ 元行（事实 + 机器文档），高度压半 */
+.footer-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 24px;
   flex-wrap: wrap;
 }
-.footer-id {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+.footer-ident {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 .footer-brand {
   display: inline-flex;
@@ -346,31 +352,37 @@
 }
 .footer-install.is-copied { border-color: var(--token-success); }
 .footer-install.is-copied .footer-install-state { color: var(--token-success); }
+.footer-nav { display: inline-flex; gap: 18px; font-size: 12.5px; }
+.footer-nav a { color: var(--token-text-muted); }
+.footer-nav a:hover { color: var(--token-text); }
+
 .footer-facts {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-family: var(--site-font-mono);
   font-size: 11px;
   letter-spacing: 1px;
   color: var(--token-text-faint);
 }
-.footer-nav {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  padding-top: 2px;
+/* GitHub 与版本同簇（事实行的末项）：图标内联，与 mono 文字同基调 */
+.footer-gh {
+  display: inline-flex;
+  align-items: center;
+  color: var(--token-text-faint);
+  transition: color 0.18s ease;
 }
-.footer-nav-row { display: flex; gap: 18px; font-size: 12.5px; }
-.footer-nav-row a { color: var(--token-text-muted); }
-.footer-nav-row a:hover { color: var(--token-text); }
-.footer-nav-row--soft a {
+.footer-gh:hover { color: var(--token-text); }
+.footer-ai-docs { display: inline-flex; gap: 16px; }
+.footer-ai-docs a {
   font-family: var(--site-font-mono);
   font-size: 11.5px;
   letter-spacing: 0.3px;
   color: var(--token-text-faint);
 }
-.footer-nav-row--soft a:hover { color: var(--token-text-muted); }
+.footer-ai-docs a:hover { color: var(--token-text-muted); }
 @media (max-width: 720px) {
-  .footer-nav { align-items: flex-start; }
+  .footer-row { justify-content: flex-start; }
 }
 
 /* ═══════════ 文档分栏（侧栏 + 正文） ═══════════ */
