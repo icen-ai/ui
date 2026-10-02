@@ -383,7 +383,7 @@
 /* 侧栏渐隐：scroll-timeline 直接绑定滚动位（程序化/键盘/滚轮即时跟随，
    无需 scroll 事件）；不可滚时 timeline 失活、动画无效果，两 var 回落 0px
    ——天然无渐隐。不支持 scroll() 的浏览器整体跳过（渐进增强）。
-   divider 在 .docs-main 左缘——mask 会连边线一起渐隐，故不画在本元素上 */
+   侧栏与主区之间无竖线——留白即分隔（边线画在本元素会被 mask 一起渐隐）*/
 @property --fade-top { syntax: '<length>'; inherits: true; initial-value: 0px; }
 @property --fade-bottom { syntax: '<length>'; inherits: true; initial-value: 0px; }
 @keyframes docs-fade-top {
@@ -492,7 +492,6 @@
   min-width: 0;
   max-width: 860px;
   padding: 40px 48px 96px;
-  border-left: 1px solid var(--token-line-soft);
 }
 
 /* ═══════════ 文档页版式 ═══════════ */
@@ -772,7 +771,6 @@
     border-bottom: 1px solid var(--token-line-soft);
     padding: 12px 16px;
   }
-  .docs-main { border-left: 0; }
   /* 列式布局下 shell 是 align-items: flex-start，main 不拉伸而按内容自适应——
      代码块长行会把 max-content 顶到 max-width(860)，视口 <880 即整页横向溢出。
      给定 100% 定宽后，pre 的 overflow:auto 在列内滚动，页面不再横滚。 */
