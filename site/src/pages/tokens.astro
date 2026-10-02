@@ -71,11 +71,14 @@ const swatches = [
   ))}
 
   <script>
-    // 计算并展示每个色块的实际颜色值（getComputedStyle 读解析后的 token）
-    document.querySelectorAll<HTMLElement>('.swatch-color').forEach((el) => {
-      const v = getComputedStyle(el).getPropertyValue(el.dataset.token || '').trim();
-      const out = el.parentElement?.querySelector('[data-val]');
-      if (out) out.textContent = v;
+    // 计算并展示每个色块的实际颜色值（getComputedStyle 读解析后的 token）；
+    // page-load 驱动：ClientRouter 换页后对新 DOM 重算
+    document.addEventListener('astro:page-load', () => {
+      document.querySelectorAll<HTMLElement>('.swatch-color').forEach((el) => {
+        const v = getComputedStyle(el).getPropertyValue(el.dataset.token || '').trim();
+        const out = el.parentElement?.querySelector('[data-val]');
+        if (out) out.textContent = v;
+      });
     });
   </script>
 </Docs>

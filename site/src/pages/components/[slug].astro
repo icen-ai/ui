@@ -111,8 +111,12 @@ const bootData = JSON.stringify({
   <script>
     import { initCopy } from '../../../../src/behaviors/copy.ts';
 
-    // 代码块复制按钮（.copy-btn[data-copy] 事件委托，幂等）
-    initCopy();
+    // astro:page-load = 首载 + 每次 ClientRouter 换页（模块脚本同 src 只评估一次，
+    // 直接调用会在第二次换页后断线；copy 是事件委托幂等，重复调用安全）
+    document.addEventListener('astro:page-load', () => {
+      initCopy();
+      void boot();
+    });
 
     type BootData = {
       behaviors?: string[];
@@ -168,7 +172,6 @@ const bootData = JSON.stringify({
         }
       }
     }
-    void boot();
   </script>
 </Docs>
 

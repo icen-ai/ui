@@ -191,32 +191,43 @@ emitIcen(el, 'icen:my-change', { value });`} lang="js" />
 <script>
   import { initGestures, onIcen, setEventPolicy } from '../../../src/behaviors/events.ts';
 
-  initGestures();
-  const log = document.getElementById('gesture-log');
-  const demo = document.querySelector('.gesture-demo');
-  const LABELS = {
+  /* page-load 驱动（首载 + ClientRouter 每次换页）：onIcen 是全局监听，
+     重入前先退订上一代，防叠加多写 */
+  let offs: Array<() => void> = [];
+  const init = (): void => {
+    offs.forEach((off) => off());
+    offs = [];
+    initGestures(); // 幂等（模块级单例手势层）
+    const log = document.getElementById('gesture-log');
+    const demo = document.querySelector('.gesture-demo');
+    const LABELS = {
     'icen:click': '单击',
     'icen:dblclick': '双击',
     'icen:contextmenu': '右键',
     'icen:longpress': '长按',
     'icen:text-select': '划词',
   };
-  /* 策略层活示例：右键默认行为 = 闪烁强调（真实项目里换成自己的菜单） */
-  setEventPolicy('icen:contextmenu', () => {
-    demo?.classList.add('is-policy-hit');
-    setTimeout(() => demo?.classList.remove('is-policy-hit'), 500);
-  });
-  for (const type of Object.keys(LABELS)) {
-    onIcen(type, (e) => {
-      if (!log) return;
-      const d = e.detail;
-      const extra = type === 'icen:text-select' && d.text ? `：「${d.text.slice(0, 24)}${d.text.length > 24 ? '…' : ''}」` : '';
-      log.textContent = `${type} · ${LABELS[type]}${extra} · (${Math.round(d.x)}, ${Math.round(d.y)})`;
-      demo?.classList.remove('is-hit');
-      void (demo as HTMLElement | null)?.offsetWidth;
-      demo?.classList.add('is-hit');
+    /* 策略层活示例：右键默认行为 = 闪烁强调（真实项目里换成自己的菜单）；
+       策略是全局单值，重设即幂等 */
+    setEventPolicy('icen:contextmenu', () => {
+      demo?.classList.add('is-policy-hit');
+      setTimeout(() => demo?.classList.remove('is-policy-hit'), 500);
     });
-  }
+    for (const type of Object.keys(LABELS)) {
+      offs.push(
+        onIcen(type, (e) => {
+          if (!log) return;
+          const d = e.detail;
+          const extra = type === 'icen:text-select' && d.text ? `：「${d.text.slice(0, 24)}${d.text.length > 24 ? '…' : ''}」` : '';
+          log.textContent = `${type} · ${LABELS[type]}${extra} · (${Math.round(d.x)}, ${Math.round(d.y)})`;
+          demo?.classList.remove('is-hit');
+          void (demo as HTMLElement | null)?.offsetWidth;
+          demo?.classList.add('is-hit');
+        }),
+      );
+    }
+  };
+  document.addEventListener('astro:page-load', init);
 </script>
 
 <style is:global>

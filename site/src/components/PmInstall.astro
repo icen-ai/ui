@@ -42,6 +42,9 @@ const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
 <script>
   import { initTabs } from '../../../src/behaviors/tabs.ts';
   import { initCopy } from '../../../src/behaviors/copy.ts';
-  initTabs();
-  initCopy();
+  // page-load 驱动：tabs 逐容器接线，ClientRouter 换页后的新 DOM 需重 init（幂等）
+  document.addEventListener('astro:page-load', () => {
+    initTabs();
+    initCopy();
+  });
 </script>

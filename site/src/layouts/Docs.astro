@@ -63,6 +63,7 @@ import '../styles/site.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ThemeRestore from '../components/ThemeRestore.astro';
+import { ClientRouter } from 'astro:transitions';
 import { COMPONENTS, GROUPS } from '../lib/components';
 
 interface Props {
@@ -91,6 +92,9 @@ const isActive = (href: string): boolean =>
     <meta property="og:url" content={canonical} />
     <title>{title}</title>
     <ThemeRestore />
+    {/* 文档域内客户端换页（组件↔原语↔色彩↔各组件页）：页头/页脚 transition:persist
+        常驻，仅主区与侧栏换血；首页走 Base 布局无路由，进出仍整页加载（两套 CSS 集） */}
+    <ClientRouter prefetch />
   </head>
   <body>
     <SiteHeader />
@@ -129,7 +133,7 @@ const isActive = (href: string): boolean =>
           })}
         </nav>
       </aside>
-      <script is:inline>
+      <script is:inline data-astro-rerun>
         /* 侧栏折叠 + 滚动位（首帧前同步完成，无闪烁）：
            ① 默认全收，仅深链命中组展开——url 进哪个页就开哪组，不做跨页记忆
            ② 渐隐纯 CSS（scroll-timeline，见 site.css），脚本只管折叠与滚动位
