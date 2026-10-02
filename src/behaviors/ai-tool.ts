@@ -238,6 +238,17 @@ function setIo(io: IoParts, value: unknown): void {
   io.root.hidden = !text;
 }
 
+/** 默认展开集（spec §4.4）：图表可视化 / 失败 / 待人审批 / 多模态回执（图·视频直接看）；
+ * 其余 kind（shell/read/edit/mcp/skill…）默认折叠只露一行摘要。用户手动切换后不再自动干预。 */
+function defaultExpanded(m: AiToolCallModel): boolean {
+  if (m.kind === 'chart' || m.status === 'error' || m.status === 'approval') return true;
+  if (Array.isArray(m.output)) {
+    const parts = normalizeContentParts(m.output);
+    if (parts.some((p) => p.type === 'image' || p.type === 'video' || p.type === 'audio')) return true;
+  }
+  return false;
+}
+
 function buildApproval(): { root: HTMLDivElement; reason: HTMLDivElement } {
   const root = h('div', 'ai-tool-approval');
   const reason = h('div', 'ai-tool-approval-reason');
@@ -322,7 +333,8 @@ export function renderAiToolCall(el: HTMLElement, model: AiToolCallModel): AiToo
     const reason = m.approval?.reason ? compactValue(m.approval.reason, 300) : '';
     approval.reason.textContent = reason;
     approval.reason.hidden = !reason;
-    if (m.status === 'error' && prevStatus !== 'error') setOpen(true); // 失败首次渲染自动展开
+    /* 默认展开集：error/approval/chart/多模态 —— 用户未手动切换过才自动干预 */
+    if (!item.dataset.aiUserToggled && defaultExpanded(m)) setOpen(true);
     prevStatus = m.status;
   };
 
@@ -413,7 +425,8 @@ export function renderAiSubagent(el: HTMLElement, model: AiToolCallModel): AiSub
     const receipt = compactValue(m.output);
     result.textContent = receipt;
     result.hidden = !receipt;
-    if (m.status === 'error' && prevStatus !== 'error') setOpen(true); // 失败首次渲染自动展开
+    /* 默认展开集：error/approval/chart/多模态 —— 用户未手动切换过才自动干预 */
+    if (!item.dataset.aiUserToggled && defaultExpanded(m)) setOpen(true);
     prevStatus = m.status;
   };
 
@@ -486,11 +499,21 @@ function setupItem(
     /* head 展开/折叠（键盘走原生 button 的 Enter/Space → click） */
     const headEl = target.closest('.ai-tool-head, .ai-subagent-head');
     if (!headEl || ownerOf(headEl) !== item || !head) return;
+    item.dataset.aiUserToggled = '1';   /* 手动切换后默认展开策略不再干预 */
     setOpen(head.getAttribute('aria-expanded') !== 'true');
   });
 
-  /* 失败条目首次渲染自动展开（aria-expanded + hidden 同步） */
-  if (item.classList.contains('is-error') && body?.hidden) setOpen(true);
+  /* 静态卡初始化：默认展开集（error / chart kind / 待审批）首次渲染直接展开 */
+  if (body?.hidden) {
+    const kindName = item.dataset.aiKind ?? '';
+    const isErr = item.classList.contains('is-error');
+    const isApproval = item.classList.contains('is-approval');
+    if (isErr || isApproval || kindName === 'chart') {
+      item.dataset.aiUserToggled = '';
+      setOpen(true, false);
+      delete item.dataset.aiUserToggled;
+    }
+  }
 }
 
 function initItems(

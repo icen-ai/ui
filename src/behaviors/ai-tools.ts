@@ -274,31 +274,46 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
       if (!def || !toolAllowed(name, allow)) return null;
       void seq;
 
-      /* 挂载位：标题行（工具名 + 时间 + 移除钮）+ 渲染体 */
+      /* 挂载位：标题行（折叠钮 + 工具名 + 时间 + 移除钮）+ 渲染体（可折叠，默认展开） */
       const item = document.createElement('div');
       item.className = 'ai-tools-item';
-      const head = document.createElement('div');
+      const head = document.createElement('button');
+      head.type = 'button';
       head.className = 'ai-tools-item-head';
+      head.setAttribute('aria-expanded', 'true');
+      const chevron = document.createElement('span');
+      chevron.className = 'ai-tools-item-chevron';
+      chevron.setAttribute('aria-hidden', 'true');
+      chevron.textContent = '▾';
       const label = document.createElement('span');
       label.className = 'ai-tools-item-name';
       label.textContent = def.name;
       const meta = document.createElement('span');
       meta.className = 'ai-tools-item-meta';
       meta.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const remove = document.createElement('button');
-      remove.type = 'button';
+      const remove = document.createElement('span');
       remove.className = 'ai-tools-item-remove';
+      remove.setAttribute('role', 'button');
       remove.setAttribute('aria-label', `移除 ${def.name} 挂载`);
       remove.textContent = '×';
       const mount = document.createElement('div');
       mount.className = 'ai-tools-item-body';
       mount.style.minHeight = `${opts.itemMinHeight ?? 240}px`;
-      head.append(label, meta, remove);
+      head.append(chevron, label, meta, remove);
       item.append(head, mount);
       area.appendChild(item);
+      /* head 点击 = 折叠切换；× 单独拦下（不冒泡成折叠） */
+      head.addEventListener('click', (e) => {
+        if (e.target instanceof Element && e.target.closest('.ai-tools-item-remove')) return;
+        const open = head.getAttribute('aria-expanded') === 'true';
+        head.setAttribute('aria-expanded', String(!open));
+        mount.hidden = open;
+        item.classList.toggle('is-collapsed', open);
+      });
 
       const record: AiToolRecord = { def, el: item, ts: Date.now(), input, result: undefined };
-      remove.addEventListener('click', () => {
+      remove.addEventListener('click', (e) => {
+        e.stopPropagation();
         item.remove();
         const i = records.indexOf(record);
         if (i >= 0) records.splice(i, 1);

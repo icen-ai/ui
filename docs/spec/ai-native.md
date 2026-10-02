@@ -170,7 +170,8 @@ interface AiMessageModel {
 </div>
 ```
 
-- `initAiTool(root?)`：委托展开/折叠（head click + 键盘）；`.is-error` 条目首次渲染自动展开；approval 按钮派 `icen:ai-approve` / `icen:ai-reject`（detail `{id, kind}`）。
+- `initAiTool(root?)`：委托展开/折叠（head click + 键盘）；**默认展开集**（spec §4.4.1）首渲染自动展开；approval 按钮派 `icen:ai-approve` / `icen:ai-reject`（detail `{id, kind}`）。
+- **默认展开集 §4.4.1（一切 AI 渲染物可折叠，默认态按「是否必须立刻看见」定）**：`chart` kind（数据可视化）/ `error`（Copilot 模式）/ `approval`（待人操作按钮必须可见）/ 多模态回执（output 含 image/video/audio 部件）→ 展开；其余 kind（shell/read/edit/write/rm/grep/glob/mcp/skill/todo/plan/subagent…）→ 折叠只露一行摘要。**用户手动切换后（data-ai-user-toggled）默认策略不再干预**；`update(patch)` 流转中新状态命中展开集仍会展开。
 - `renderAiToolCall(el, model: AiToolCallModel)`：DOM API 构建整卡（流式场景用），返回 `{ el, update(patch) }`。
 - kind 视觉：`ai-tool--<kind>` 覆盖 `--ai-item-tint` 与图标（注册表驱动）。内置 kinds：`shell read edit write rm grep glob browser search fetch mcp skill todo plan subagent note`。
 - 展开动画：grid-template-rows 0fr→1fr 或 max-height 之外，用 `hidden` + 入场 `icen-pop-in`（简单可靠）。
@@ -626,7 +627,7 @@ createAiToolArea(el, { tools?: string[]; max?: number; itemMinHeight?: number })
 
 - 三层控制：① 不 import 本模块 = 生态无工具体系（tree-shake）；② area 白名单 + max；
   ③ 运行时 setTools/setMax/clear + unregisterAiTool 全局下架。
-- 挂载项结构：`.ai-tools-mount > .ai-tools-item > head（工具名/时间/×）+ body（工具自渲染）`。
+- 挂载项结构：`.ai-tools-mount > .ai-tools-item > head（折叠钮 chevron/工具名/时间/×，button，aria-expanded）+ body（工具自渲染，默认展开，head 点击折叠；× 拦截冒泡只做移除）`。
 - 事件（bubbles）：`icen:ai-tool-call {name, input, el}` / `icen:ai-tool-result {name, ok, el, error?, count}`
   / `icen:ai-tool-evict {name, el}`。
 

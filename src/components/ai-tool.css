@@ -504,3 +504,29 @@
 @media (prefers-reduced-motion: reduce) {
   .ai-tools-item { animation: none; }
 }
+
+/* 挂载项折叠态：head 为 button（chevron + 名/时间 + ×） */
+.ai-tools-item-head {
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+}
+.ai-tools-item-chevron {
+  flex-shrink: 0;
+  color: var(--token-text-faint);
+  font-size: var(--density-font-size-xs);
+  transition: transform var(--icen-tx-fast);
+}
+.ai-tools-item-head[aria-expanded='false'] .ai-tools-item-chevron {
+  transform: rotate(-90deg);
+}
+.ai-tools-item.is-collapsed .ai-tools-item-body {
+  display: none;
+}
+.ai-tools-item-head:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
