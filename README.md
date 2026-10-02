@@ -1,18 +1,18 @@
 # @icen.ai/ui — Icen Design System
 
-icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明暗双模 × 3 风格 profile）+ 无框架组件 CSS（55 组件）+ 行为 JS（31 behaviors）**。工程形态与 `@icen.ai/cli` 一致（Bun + TS + tsup + ESM + MIT）。
+icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明暗双模 × 3 风格 profile）+ 无框架组件 CSS（56 组件）+ 行为 JS（33 behaviors）+ AI 原生组件族 + 图表通用层 + AI 工具体系**。工程形态与 `@icen.ai/cli` 一致（Bun + TS + tsup + ESM + MIT）。
 
 - 色彩预设：`clay`（默认，陶土橙 × 纸白 = icen 品牌）/ `piano` / `art` / `vangogh` / `ink` / `retro`，各含 `.dark` 变体
 - 风格配置：`.style-modern` / `.style-retro` / `.style-terminal`（几何 / 密度 / 动效 / 字体 token，与色彩正交）
 - 可选效果层：`retro-effects.css`（CRT 扫描线 / 颗粒 / 像素边框 / 打字机光标 —— 仅 `.style-retro` 激活时生效，按需 import）
-- 组件：btn / form / input / select / slider / switch / tag-input / upload / modal / popover / tooltip / menu（含 dropdown + context-menu）/ tabs / nav / sidebar / breadcrumb / pagination / steps / segmented / accordion / tree / carousel / charts / table / stat / card / panel / pill / tag / badge / empty / feedback / content / media / toolbar / split-pane / date-picker / command-palette / notification / copy / scroll-area / back-top / datatable / layout（56 个组件 CSS，含 charts 基座 + 10 个细分图表）
+- 组件：btn / form / input / select / slider / switch / tag-input / upload / modal / popover / tooltip / menu（含 dropdown + context-menu）/ tabs / nav / sidebar / breadcrumb / pagination / steps / segmented / accordion / tree / carousel / charts / table / stat / card / panel / pill / tag / badge / empty / feedback / content / media / toolbar / split-pane / date-picker / command-palette / notification / copy / scroll-area / back-top / datatable / layout（56 个组件 CSS，含 charts 基座 + 11 个细分图表 kit，贡献日历样式并入基座）
 - 图表通用层（v0.8）：`renderChart(el, spec)` 统一入口——纯 JSON 规格（type 缺省自动推断；data[] + dims 任意维度透视）、多系列折线/分组堆叠柱、内置 tooltip、`icen:chart-hover/click/dblclick/contextmenu` 交互事件族、图例点击切换系列；新增贡献日历 renderCalendar（GitHub 同款）与散点气泡 renderScatter
 - AI 原生组件族（v0.7，11 个 slug）：ai-chat（会话容器）/ ai-message（消息行）/ ai-reasoning（推理块）/ ai-composer（输入台）/ ai-tool-call（工具调用卡）/ ai-subagent（子智能体卡）/ ai-diff（差异审阅）/ ai-files（文件标签）/ ai-todo（任务清单）/ ai-context（上下文抽屉）/ ai-usage（用量条）——共享 7 态状态机与 kind 注册表，事件统一 `icen:ai-*` 前缀
 - 标准化内容模型 `AiContent`（v0.7.1，对标 AI SDK v5 parts / MCP / OpenAI / Anthropic，2026-10 调研）：一套 `AiContentPart[]`（text / image / audio / video / file / resource-link）表达任意输入——消息渲染（renderAiMessage 多模态 + 错误变体）、工具回执（MCP content 数组零改动进卡片）、传输层（parts → 两族 wire，含 anthropic `cache_control` 与 tool_result 回灌）全部只认这一套；`normalizeContentParts` 一函数归一四族来源，`estimateTokens` / `contextEstimate` 提供粗估与上下文口径
 - ai-provider 适配层（v0.7.1 增强）：五家厂商注册表（含定价表，`estimateCost` 未命中不猜价）、chat + stream 双族线协议多模态传输、审计闭环（`createAiAuditor` 条目含 cost 定价估算与 ttftMs 首 token 延迟，`renderAiAudit` 面板 + `ai-context` 抽屉审计节）、请求收尾派 `icen:ai-done`（status/usage/cost/error/durationMs/ttftMs）
 - 绑定层 `bindComposer`（v0.7.1，「零接线全链路」）：一行把 composer ↔ 消息区（renderAiMessage）↔ client（stream + 停止 + 排队续发 + 错误路径）↔ 上下文环（`usage.from: 'context'` 正确口径 / `'billing'` 计费口径 / auditor）接成闭环；不传 client 为纯状态绑定（渐进采用）；附件三入口（钮选 / 粘贴 / 拖放）
 - AI 工具体系（v0.8，`ai-tools`）：UI 能力注册为模型可调用的工具（内置 `render_chart` 吃 ChartSpec 纯 JSON）；`createAiToolArea` 挂载区三层控制（白名单 / max LRU / 运行时调节）；模型侧 `aiToolsToOpenAI()` 直接给 tools 参数、`aiToolsManifest()` 贴 system prompt；工具回执内嵌图（output 为 chart spec → 工具卡展开区直接渲染）
-- 行为：theme / tabs / toast / copy / input / select / slider / tag-input / upload / modal / dropdown / popover / context-menu / accordion / tree / carousel / charts / nav / sidebar / datatable / notification / back-top / command-palette / date-picker / split-pane / ai-core / ai-chat / ai-composer / ai-tool / ai-diff / ai-panel（31 个，全部 SSR 守卫 + 幂等 init + textContent-only）
+- 行为：theme / tabs / toast / copy / input / select / slider / tag-input / upload / modal / dropdown / popover / context-menu / accordion / tree / carousel / charts / nav / sidebar / datatable / notification / back-top / command-palette / date-picker / split-pane / ai-core / ai-chat / ai-composer / ai-tool / ai-provider / ai-diff / ai-panel / ai-tools（33 个，全部 SSR 守卫 + 幂等 init + textContent-only）
 
 ## 使用
 
@@ -84,10 +84,10 @@ Pages 项目 `icen-ui`（aidoll 账号），自定义域 `ui.icen.ai` → CNAME 
 
 ```bash
 bun install
-bun run build   # tsup（behaviors → dist/*.mjs）+ scripts/build-css.ts（css → dist/）
+bun run build   # tsup（behaviors → dist/*.mjs + .d.mts 类型面）+ scripts/dts-ext.mjs + scripts/build-css.ts（css → dist/）
 ```
 
-产物：`dist/tokens.css`（colors + style-profiles + typography 拼合）、`dist/ui.css`（tokens+base+组件）、`dist/base.css`、`dist/retro-effects.css`（按需）、`dist/tokens/*`、`dist/components/*`、`dist/behaviors/*.mjs`、`dist/index.mjs`、`dist/registry.json`（含 tokens/tokensExtras/base/components/behaviors 清单）。
+产物：`dist/tokens.css`（colors + style-profiles + typography 拼合）、`dist/ui.css`（tokens+base+组件）、`dist/base.css`、`dist/retro-effects.css`（按需）、`dist/tokens/*`、`dist/components/*`、`dist/behaviors/*.mjs` + `.d.mts`（34 个声明，JSDoc 约束注释存活）、`dist/index.mjs`、`dist/registry.json`（含 tokens/tokensExtras/base/components/behaviors 清单）。
 
 ## 目录
 
@@ -100,8 +100,8 @@ src/tokens/retro-effects.css   # 可选效果层：CRT/扫描线/像素工具类
 src/base.css                   # 元素基线 + 滚动条 + z-index 标尺 + 6 个交互基元
                                #   .pressable / .control / .field / .lift / .surface-elevated / .focus-ring
                                #   + a11y 工具类 .sr-only / .skip-link + 工具类 .mono/.dim/.faint/.numeric
-src/components/*.css           # 55 个无框架组件 CSS（含 4 个 AI 族合并文件）
-src/behaviors/*.ts             # 31 个 behaviors（含 6 个 AI 族）
+src/components/*.css           # 56 个无框架组件 CSS（含 4 个 AI 族合并文件）
+src/behaviors/*.ts             # 33 个 behaviors（含 8 个 AI 族）
 scripts/build-css.ts           # CSS 产物构建（拼合 + registry.json）
 site/                          # 文档站骨架（ui.icen.ai，独立 Astro 应用）
 ```
@@ -112,3 +112,5 @@ site/                          # 文档站骨架（ui.icen.ai，独立 Astro 应
 
 - **包引入（推荐）**：`bun add @icen.ai/ui`，按 `./tokens.css` / `./ui.css` / `./kit/<slug>` 引入。
 - **vendor 复制**：accounts 目前走这条路——`bun run sync:ui`（accounts 仓库内）把本仓库 `dist/` 复制到 `src/styles/vendor/icen/`，布局里 import 对应 CSS/JS。适合需要锁定版本或离线构建的场景。
+
+给 AI 代理的文档层：npm 包内 `AGENTS.md`（消费方速查）+ `dist/**/*.d.mts`（类型真相）；站点 <https://ui.icen.ai/llms.txt>（索引）与 `/llms-full.txt`（全文 + 类型面快照）；场景配方 skill `icen-ui`（skill.icen.ai）。
