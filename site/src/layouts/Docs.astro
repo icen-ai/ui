@@ -135,17 +135,30 @@ const isActive = (href: string): boolean =>
       </aside>
       <script is:inline data-astro-rerun>
         /* 侧栏折叠 + 滚动位（首帧前同步完成，无闪烁）：
-           ① 默认全收，仅深链命中组展开——url 进哪个页就开哪组，不做跨页记忆
-           ② 渐隐纯 CSS（scroll-timeline，见 site.css），脚本只管折叠与滚动位
-           ③ 滚动位写 sessionStorage，MPA 整页跳转不丢位置 */
+           ① 开组记忆住 window 内存——客户端换页（ClientRouter 同文档）保留手动
+              展开/收起；真刷新即新文档、内存归零，回到「全收 + 深链开组」默认
+           ② 每次换页确保当前页所在组展开（记忆 ∪ 当前组；当前组可被手动收起，
+              下一跳再进该组重新展开）
+           ③ 渐隐纯 CSS（scroll-timeline，见 site.css）；滚动位写 sessionStorage */
         (() => {
           var side = document.querySelector('.docs-side');
           if (!side) return;
           var groups = Array.prototype.slice.call(document.querySelectorAll('.docs-group[data-group]'));
 
+          var memory = window.__docsNavOpen;
+          if (!(memory instanceof Set)) memory = window.__docsNavOpen = new Set();
+
           var activeLink = document.querySelector('.docs-group[data-group] .docs-link.active');
           var activeGroup = activeLink ? activeLink.closest('.docs-group[data-group]') : null;
-          groups.forEach(function (d) { d.open = d === activeGroup; });
+          /* 初始化即写回记忆（open=true 的 toggle 事件也会镜像进 Set，保持一致） */
+          groups.forEach(function (d) { d.open = memory.has(d.getAttribute('data-group')) || d === activeGroup; });
+
+          groups.forEach(function (d) {
+            d.addEventListener('toggle', function () {
+              if (d.open) memory.add(d.getAttribute('data-group'));
+              else memory.delete(d.getAttribute('data-group'));
+            });
+          });
 
           var KEY = 'icen.docs.nav-scroll';
           var saved = sessionStorage.getItem(KEY);
