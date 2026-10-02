@@ -73,6 +73,7 @@ import {
   type AiStreamHandle,
 } from './ai-chat';
 import type { AiAuditor, AiChatMessage, AiClient, AiDoneEventDetail, AiStreamSession } from './ai-provider';
+import { emitIcen } from './events';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -187,7 +188,7 @@ function isBrowser(): boolean {
 }
 
 function emit(target: HTMLElement, name: string, detail: unknown): void {
-  target.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
+  emitIcen(target, name, detail);
 }
 
 /** el 传 composer 容器或其内部任意元素，就近解析 [data-ai-composer]。 */

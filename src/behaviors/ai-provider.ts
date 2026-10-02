@@ -52,6 +52,7 @@ import {
   type AiContent,
   type AiContentPart,
 } from './ai-core';
+import { emitIcen } from './events';
 
 /* ════════════════════════════════════════════
    小工具（本地副本，与 ai-core 同语义）
@@ -894,7 +895,7 @@ function joinSignals(a: AbortSignal, b?: AbortSignal): AbortSignal {
 function dispatchUsageEvent(usage: AiUsage): void {
   if (typeof document === 'undefined') return;
   try {
-    document.dispatchEvent(new CustomEvent<AiUsage>('icen:ai-usage', { detail: usage, bubbles: true }));
+    emitIcen(document, 'icen:ai-usage', usage);
   } catch {
     /* 非 DOM 环境静默 */
   }
@@ -917,7 +918,7 @@ export interface AiDoneEventDetail {
 function dispatchDoneEvent(detail: AiDoneEventDetail): void {
   if (typeof document === 'undefined') return;
   try {
-    document.dispatchEvent(new CustomEvent<AiDoneEventDetail>('icen:ai-done', { detail, bubbles: true }));
+    emitIcen(document, 'icen:ai-done', detail);
   } catch {
     /* 非 DOM 环境静默 */
   }

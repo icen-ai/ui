@@ -24,6 +24,8 @@
  * 同一容器重复 init 幂等。SSR 下为 no-op。
  */
 
+import { emitIcen } from './events';
+
 interface MarkedUpload extends HTMLElement {
   __icenUploadInit?: boolean;
 }
@@ -183,7 +185,7 @@ function setup(zone: HTMLElement): void {
       removeBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         currentFiles = currentFiles.filter((f) => f !== file);
-        zone.dispatchEvent(new CustomEvent('icen:upload-remove', { bubbles: true, detail: { file } }));
+        emitIcen(zone, 'icen:upload-remove', { file });
         renderList();
         syncInputFiles();
       });
@@ -221,7 +223,7 @@ function setup(zone: HTMLElement): void {
     for (const file of files) {
       const reason = validate(file);
       if (reason) {
-        zone.dispatchEvent(new CustomEvent('icen:upload-error', { bubbles: true, detail: { file, reason } }));
+        emitIcen(zone, 'icen:upload-error', { file, reason });
         continue;
       }
       valid.push(file);
@@ -239,10 +241,7 @@ function setup(zone: HTMLElement): void {
       if (maxFiles > 0) {
         const remaining = maxFiles - currentFiles.length;
         if (remaining <= 0) {
-          zone.dispatchEvent(new CustomEvent('icen:upload-error', {
-            bubbles: true,
-            detail: { file: null, reason: `最多 ${maxFiles} 个文件` },
-          }));
+          emitIcen(zone, 'icen:upload-error', { file: null, reason: `最多 ${maxFiles} 个文件` });
           return;
         }
         if (fresh.length > remaining) fresh.length = remaining;
@@ -250,11 +249,11 @@ function setup(zone: HTMLElement): void {
       currentFiles.push(...fresh);
       renderList();
       syncInputFiles();
-      zone.dispatchEvent(new CustomEvent('icen:upload', { bubbles: true, detail: { files: fresh } }));
+      emitIcen(zone, 'icen:upload', { files: fresh });
       return;
     }
 
-    zone.dispatchEvent(new CustomEvent('icen:upload', { bubbles: true, detail: { files: valid } }));
+    emitIcen(zone, 'icen:upload', { files: valid });
   }
 
   const openPicker = (): void => input.click();

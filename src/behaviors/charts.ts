@@ -45,6 +45,8 @@
  * 不重排），派 icen:chart-legend-toggle {key, seriesIndex, hidden}。
  */
 
+import { emitIcen } from './events';
+
 export type ChartTone = 'accent' | 'success' | 'warning' | 'error' | 'muted';
 
 export interface ChartSeriesOptions extends ChartChromeOptions {
@@ -290,10 +292,7 @@ function withChrome(
     if (state) state.hidden = hidden;
     el.setAttribute('data-legend-hidden', String(hidden));
     syncEye();
-    el.dispatchEvent(new CustomEvent('icen:chart-legend-visibility', {
-      bubbles: true,
-      detail: { visible: hidden ? false : true },
-    }));
+    emitIcen(el, 'icen:chart-legend-visibility', { visible: hidden ? false : true });
   });
   syncEye();
 
@@ -333,10 +332,7 @@ function toggleLegend(items: LegendKey[], scope: ParentNode, _opts: unknown): HT
       scope.querySelectorAll(`[data-chart-key="${CSS.escape(item.key)}"]`).forEach((m) => {
         m.classList.toggle('is-off', off);
       });
-      legend.dispatchEvent(new CustomEvent('icen:chart-legend-toggle', {
-        bubbles: true,
-        detail: { key: item.key, seriesIndex: item.si, hidden: off },
-      }));
+      emitIcen(legend, 'icen:chart-legend-toggle', { key: item.key, seriesIndex: item.si, hidden: off });
     };
     row.addEventListener('click', toggle);
     row.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -1649,7 +1645,7 @@ function dispatchChartEvent(
     pointerX: pointer?.x,
     pointerY: pointer?.y,
   };
-  root.dispatchEvent(new CustomEvent<ChartEventDetail>(`icen:chart-${type}`, { detail, bubbles: true }));
+  emitIcen(root, `icen:chart-${type}`, detail);
 }
 
 /* 内置 tooltip（单例 portal，token 样式；textContent only） */

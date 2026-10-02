@@ -150,23 +150,33 @@ const tokens = [
         组件事件收敛为三层：<strong>手势层</strong>（任意容器挂 <code>data-gestures</code> 即开通
         <code>icen:click / dblclick / contextmenu / longpress / select</code> 归一化手势事件）→
         <strong>协议层</strong>（全部 CustomEvent，bubbles + composed + cancelable，detail 统一
-        <code>{'{ source, originalEvent, x, y, text? }'}</code>）→
+        <code>{'{ source, originalEvent, x, y, text? }'}</code>；组件作者派发一律走 <code>emitIcen</code> 唯一派生口）→
         <strong>策略层</strong>（<code>setEventPolicy</code> 一处赋予/覆盖/禁用全站默认行为）。
         领域事件（<code>icen:chart-*</code> / <code>icen:ai-*</code>）与手势层互补不变。
+        绑定期许一个入口：<code>onIcen</code> —— 类型推断（IcenEventMap 注册表）+ 选择器委托 + 子树限定，
+        返回解绑函数，React/Vue/原生同写法。
       </p>
-      <CodeBlock code={`import { initGestures, onIcen, setEventPolicy } from '@icen.ai/ui/behaviors/events';
+      <CodeBlock code={`import { initGestures, onIcen, setEventPolicy, emitIcen } from '@icen.ai/ui/behaviors/events';
 
 initGestures();   // 幂等，全局一次
 
 <!-- 任意容器开通手势（空格分隔） -->
 <div class="card" data-gestures="click dblclick contextmenu select">…</div>
 
-// 监听（detail：{ source, originalEvent, x, y, text? }）
+// 绑定：一个入口，三种形态（类型安全，返回解绑函数）
 onIcen('icen:select', (e) => console.log('划词:', e.detail.text));
+onIcen('icen:chart-click', '.chart', (e) => …);          // 选择器委托
+onIcen('icen:upload', (e) => …, { within: formEl });     // 子树限定
+
+// React：useEffect(() => onIcen('icen:tab-change', h), [])   // 直接 return
+// Vue：  onUnmounted(onIcen('icen:tab-change', h))
 
 // 策略层：一处赋予全站默认行为
 setEventPolicy('icen:contextmenu', (e) => openMyMenu(e.detail.x, e.detail.y));
-setEventPolicy('icen:dblclick', null);   // 禁用某类默认`} lang="js" />
+setEventPolicy('icen:dblclick', null);   // 禁用某类默认
+
+// 组件作者：派发自定义事件走唯一派生口（勿裸写 new CustomEvent）
+emitIcen(el, 'icen:my-change', { value });`} lang="js" />
       <p class="dim" style="margin:14px 0 8px">活演示 —— 对下面卡片单击 / 双击 / 右键 / 长按 / 划词：</p>
       <div class="gesture-demo" data-gestures="click dblclick contextmenu longpress select" tabindex="0">
         <p class="gesture-demo-title">手势试验田</p>

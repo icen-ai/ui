@@ -21,6 +21,8 @@
  *   - initTabs 返回销毁函数：移除容器监听与 window hashchange（可重新 init）
  */
 
+import { emitIcen } from './events';
+
 interface MarkedElement extends Element {
   __icenTabsInit?: boolean;
   __icenTabsCleanup?: () => void;
@@ -74,10 +76,7 @@ function activate(container: Element, name: string, writeHash: boolean, emit = f
   if (emit) {
     const index = buttons.findIndex((b) => b.getAttribute('data-tab') === name);
     const tab = buttons[index] ?? null;
-    container.dispatchEvent(new CustomEvent('icen:tab-change', {
-      bubbles: true,
-      detail: { tab, panel, index },
-    }));
+    emitIcen(container, 'icen:tab-change', { tab, panel, index });
   }
 }
 

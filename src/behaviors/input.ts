@@ -23,6 +23,8 @@
  * 幂等：同一元素重复 init 不重复绑定。
  */
 
+import { emitIcen } from './events';
+
 interface MarkedElement extends Element {
   __icenInputInit?: boolean;
   __icenCounterInit?: boolean;
@@ -311,7 +313,7 @@ function setupOtp(group: Element): void {
   const fireComplete = (): void => {
     const code = cells.map((c) => c.value).join('');
     if (code.length === cells.length && cells.every((c) => c.value.length > 0)) {
-      group.dispatchEvent(new CustomEvent('icen:otp-complete', { detail: { code }, bubbles: true }));
+      emitIcen(group, 'icen:otp-complete', { code });
       /** @deprecated 旧事件名（无 icen: 前缀），仅为兼容保留，请迁移到 icen:otp-complete */
       group.dispatchEvent(new CustomEvent('otp:complete', { detail: { code }, bubbles: true }));
     }

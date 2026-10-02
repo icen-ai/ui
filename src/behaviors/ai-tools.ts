@@ -25,6 +25,7 @@
  */
 
 import { renderChart, type ChartSpec, type ChartHandle } from './charts';
+import { emitIcen } from './events';
 
 /* ══════════════ 工具注册表 ══════════════ */
 
@@ -202,7 +203,7 @@ function isBrowserTools(): boolean {
 
 function emitArea(area: HTMLElement, name: string, detail: unknown): void {
   try {
-    area.dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
+    emitIcen(area, name, detail);
   } catch {
     /* 非 DOM 环境静默 */
   }

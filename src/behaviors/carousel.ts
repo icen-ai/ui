@@ -18,6 +18,8 @@
  * 同一容器重复 init 幂等。SSR 下为 no-op。
  */
 
+import { emitIcen } from './events';
+
 interface MarkedElement extends Element {
   __icenCarouselInit?: boolean;
 }
@@ -87,10 +89,7 @@ function setup(carousel: Element): void {
     // 循环：越过首尾回卷
     index = ((i % count) + count) % count;
     render();
-    carousel.dispatchEvent(new CustomEvent('icen:carousel-change', {
-      bubbles: true,
-      detail: { index, count },
-    }));
+    emitIcen(carousel, 'icen:carousel-change', { index, count });
   }
 
   prev?.addEventListener('click', () => go(index - 1));

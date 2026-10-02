@@ -71,6 +71,7 @@ import {
   type AiUsage,
 } from './ai-core';
 import { closePopover, openPopover } from './popover';
+import { emitIcen } from './events';
 import type { AiAuditEntry, AiAuditor } from './ai-provider';
 
 /* ── 小工具 ── */
@@ -86,8 +87,8 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-function dispatch(node: Node, name: string, detail: unknown): void {
-  node.dispatchEvent(new CustomEvent(name, { bubbles: true, detail }));
+function dispatch(node: Element, name: string, detail: unknown): void {
+  emitIcen(node, name, detail);
 }
 
 const STATUS_CLASSES: AiStatus[] = [

@@ -14,6 +14,8 @@
  * 同一 .sidebar 元素重复 init 幂等；嵌套 sidebar 只处理各自直属的 title。
  */
 
+import { emitIcen } from './events';
+
 interface MarkedSidebar extends HTMLElement {
   __icenSidebarInit?: boolean;
 }
@@ -43,10 +45,7 @@ function setup(sidebar: HTMLElement): void {
     if (!group) return;
     const open = group.classList.toggle('is-open');
     title.setAttribute('aria-expanded', String(open));
-    sidebar.dispatchEvent(new CustomEvent('icen:sidebar-toggle', {
-      bubbles: true,
-      detail: { group, open },
-    }));
+    emitIcen(sidebar, 'icen:sidebar-toggle', { group, open });
   });
 }
 

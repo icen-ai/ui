@@ -58,6 +58,7 @@ import {
   type AiStatus,
   type AiToolCallModel,
 } from './ai-core';
+import { emitIcen } from './events';
 import { renderAiContentPart } from './ai-chat';
 import { renderChart } from './charts';
 
@@ -316,9 +317,7 @@ export function renderAiToolCall(el: HTMLElement, model: AiToolCallModel): AiToo
     parts.head.setAttribute('aria-expanded', String(open));
     body.hidden = !open;
     if (fire) {
-      item.dispatchEvent(
-        new CustomEvent('icen:ai-toggle', { detail: { el: item, open }, bubbles: true }),
-      );
+      emitIcen(item, 'icen:ai-toggle', { el: item, open });
     }
   };
 
@@ -378,9 +377,7 @@ export function renderAiSubagent(el: HTMLElement, model: AiToolCallModel): AiSub
     parts.head.setAttribute('aria-expanded', String(open));
     body.hidden = !open;
     if (fire) {
-      item.dispatchEvent(
-        new CustomEvent('icen:ai-toggle', { detail: { el: item, open }, bubbles: true }),
-      );
+      emitIcen(item, 'icen:ai-toggle', { el: item, open });
     }
   };
 
@@ -464,9 +461,7 @@ function setupItem(
     head?.setAttribute('aria-expanded', String(open));
     if (body) body.hidden = !open;
     if (fire) {
-      item.dispatchEvent(
-        new CustomEvent('icen:ai-toggle', { detail: { el: item, open }, bubbles: true }),
-      );
+      emitIcen(item, 'icen:ai-toggle', { el: item, open });
     }
   };
 
@@ -478,22 +473,12 @@ function setupItem(
     const ownerOf = (node: Element): Element | null => node.closest('.ai-tool, .ai-subagent');
     const approveBtn = target.closest('[data-ai-approve]');
     if (approveBtn && ownerOf(approveBtn) === item) {
-      item.dispatchEvent(
-        new CustomEvent('icen:ai-approve', {
-          detail: { id: item.dataset.aiId ?? '', kind: item.dataset.aiKind ?? '' },
-          bubbles: true,
-        }),
-      );
+      emitIcen(item, 'icen:ai-approve', { id: item.dataset.aiId ?? '', kind: item.dataset.aiKind ?? '' });
       return;
     }
     const rejectBtn = target.closest('[data-ai-reject]');
     if (rejectBtn && ownerOf(rejectBtn) === item) {
-      item.dispatchEvent(
-        new CustomEvent('icen:ai-reject', {
-          detail: { id: item.dataset.aiId ?? '', kind: item.dataset.aiKind ?? '' },
-          bubbles: true,
-        }),
-      );
+      emitIcen(item, 'icen:ai-reject', { id: item.dataset.aiId ?? '', kind: item.dataset.aiKind ?? '' });
       return;
     }
 

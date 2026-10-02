@@ -18,6 +18,8 @@
  *   .is-disabled 节点不响应。同一棵树重复 init 幂等。SSR 下为 no-op。
  */
 
+import { emitIcen } from './events';
+
 interface MarkedElement extends Element {
   __icenTreeInit?: boolean;
 }
@@ -71,10 +73,7 @@ function setup(tree: Element): void {
       });
     node.classList.add('is-selected');
     node.setAttribute('aria-selected', 'true');
-    tree.dispatchEvent(new CustomEvent('icen:tree-select', {
-      bubbles: true,
-      detail: { node },
-    }));
+    emitIcen(tree, 'icen:tree-select', { node });
   });
 
   /* 键盘 ↑/↓/←/→ 导航（仅叶子节点参与） */

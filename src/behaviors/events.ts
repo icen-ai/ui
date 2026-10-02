@@ -25,6 +25,8 @@
  * SSR 下全部 no-op；initGestures 幂等。
  */
 
+import type { ChartEventDetail } from './charts';
+
 export interface IcenGestureDetail {
   /** 手势命中源：最近的 [data-gestures] 宿主 */
   source: HTMLElement;
@@ -38,6 +40,83 @@ export interface IcenGestureDetail {
 }
 
 export type IcenPolicy = (e: CustomEvent<IcenGestureDetail>) => void;
+
+/* ── 协议层绑定：全库事件一个入口 ── */
+
+/** 全库事件注册表：已知事件 → detail 类型；未列出的领域事件经模板签名宽松回退。 */
+export interface IcenEventMap {
+  /* 手势层（本模块） */
+  'icen:click': IcenGestureDetail;
+  'icen:dblclick': IcenGestureDetail;
+  'icen:contextmenu': IcenGestureDetail;
+  'icen:longpress': IcenGestureDetail;
+  'icen:select': IcenGestureDetail;
+  /* 图表（charts.ts） */
+  'icen:chart-hover': ChartEventDetail;
+  'icen:chart-click': ChartEventDetail;
+  'icen:chart-dblclick': ChartEventDetail;
+  'icen:chart-contextmenu': ChartEventDetail;
+  'icen:chart-legend-toggle': ChartEventDetail;
+  'icen:chart-legend-visibility': ChartEventDetail;
+  /* tabs */
+  'icen:tab-change': { tab: HTMLButtonElement | null; panel: HTMLElement | null; index: number };
+  /* 其余领域事件（ai-* / upload-* / slider-* …）经模板签名宽松回退 */
+  [key: `icen:${string}`]: unknown;
+}
+
+export interface IcenListenOptions {
+  /** 只监听该子树内冒泡上来的事件（组件实例级绑定） */
+  within?: Element | Document;
+}
+
+/**
+ * 统一绑定器（全库事件一个入口）：
+ *   onIcen('icen:tab-change', (e) => e.detail.index)                       全局
+ *   onIcen('icen:chart-click', '.chart', (e) => …)                          选择器委托
+ *   onIcen('icen:upload', (e) => …, { within: formEl })                     子树限定
+ * 返回解绑函数 —— React useEffect / Vue onUnmounted 直接 return。
+ */
+export function onIcen<K extends keyof IcenEventMap>(
+  type: K,
+  handler: (e: CustomEvent<IcenEventMap[K]>) => void,
+  opts?: IcenListenOptions,
+): () => void;
+export function onIcen<K extends keyof IcenEventMap>(
+  type: K,
+  selector: string,
+  handler: (e: CustomEvent<IcenEventMap[K]>) => void,
+  opts?: IcenListenOptions,
+): () => void;
+export function onIcen(
+  type: string,
+  a: ((e: CustomEvent) => void) | string,
+  b?: ((e: CustomEvent) => void) | IcenListenOptions,
+  c?: IcenListenOptions,
+): () => void {
+  if (typeof document === 'undefined') return () => {};
+  const selector = typeof a === 'string' ? a : null;
+  const handler = (selector ? b : a) as (e: CustomEvent) => void;
+  const opts = (selector ? c : b) as IcenListenOptions | undefined;
+  const within = opts?.within ?? document;
+  const fn = (e: Event): void => {
+    if (selector) {
+      const detail = (e as CustomEvent).detail as { source?: unknown } | undefined;
+      const src = detail?.source instanceof Element ? detail.source : e.target;
+      if (!(src instanceof Element) || !src.closest(selector)) return;
+    }
+    handler(e as CustomEvent);
+  };
+  within.addEventListener(type, fn);
+  return () => within.removeEventListener(type, fn);
+}
+
+/** 全库唯一派生口：bubbles + composed + cancelable。返回 false = 被消费方 preventDefault。
+ *  组件作者派发领域事件一律走这里（不要裸写 new CustomEvent）。 */
+export function emitIcen(source: Element | Document, type: string, detail?: unknown): boolean {
+  return source.dispatchEvent(
+    new CustomEvent(type, { detail, bubbles: true, composed: true, cancelable: true }),
+  );
+}
 
 const policies = new Map<string, IcenPolicy>();
 
@@ -69,25 +148,7 @@ export function dispatchIcen(
     y: init.y ?? 0,
   };
   if (init.text != null) detail.text = init.text;
-  return source.dispatchEvent(
-    new CustomEvent<IcenGestureDetail>(type, {
-      detail,
-      bubbles: true,
-      composed: true,
-      cancelable: true,
-    }),
-  );
-}
-
-/** 全局委托监听（document 级），返回解绑函数。 */
-export function onIcen(
-  type: string,
-  handler: (e: CustomEvent<IcenGestureDetail>) => void,
-): () => void {
-  if (typeof document === 'undefined') return () => {};
-  const fn = (e: Event) => handler(e as CustomEvent<IcenGestureDetail>);
-  document.addEventListener(type, fn);
-  return () => document.removeEventListener(type, fn);
+  return emitIcen(source, type, detail);
 }
 
 /* ── 手势引擎 ── */
@@ -114,6 +175,7 @@ function emit(host: HTMLElement, type: string, originalEvent: Event, text?: stri
   const { x, y } = pointOf(originalEvent);
   const detail: IcenGestureDetail = { source: host, originalEvent, x, y };
   if (text != null) detail.text = text;
+  /* 需要事件对象本体（给策略与 defaultPrevented 判定），emitIcen 只返回布尔，这里自建后同协议派发 */
   const ev = new CustomEvent<IcenGestureDetail>(type, {
     detail,
     bubbles: true,

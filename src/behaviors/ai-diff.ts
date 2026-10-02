@@ -40,6 +40,8 @@
  *   - 返回销毁函数：移除监听、复位幂等标记（销毁后可重新 init）
  */
 
+import { emitIcen } from './events';
+
 /* ── 数据模型 ── */
 
 export type AiDiffFileStatus = 'added' | 'modified' | 'deleted' | 'renamed';
@@ -351,10 +353,7 @@ function toggleFile(head: HTMLElement): void {
   const open = body.hidden;
   body.hidden = !open;
   head.setAttribute('aria-expanded', String(open));
-  file.dispatchEvent(new CustomEvent('icen:ai-toggle', {
-    bubbles: true,
-    detail: { el: file, open },
-  }));
+  emitIcen(file, 'icen:ai-toggle', { el: file, open });
 }
 
 function decide(btn: Element, accepted: boolean): void {
@@ -378,10 +377,7 @@ function decide(btn: Element, accepted: boolean): void {
     b.disabled = true;
   });
 
-  file.dispatchEvent(new CustomEvent(accepted ? 'icen:ai-diff-accept' : 'icen:ai-diff-reject', {
-    bubbles: true,
-    detail: { path: filePath(file) },
-  }));
+  emitIcen(file, accepted ? 'icen:ai-diff-accept' : 'icen:ai-diff-reject', { path: filePath(file) });
 }
 
 /**

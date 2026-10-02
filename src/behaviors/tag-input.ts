@@ -14,6 +14,8 @@
  * 同一容器重复 init 幂等。
  */
 
+import { emitIcen } from './events';
+
 interface MarkedTagInput extends HTMLElement {
   __icenTagInit?: boolean;
 }
@@ -51,10 +53,7 @@ function setup(wrap: HTMLElement): void {
   }
 
   function emit(): void {
-    wrap.dispatchEvent(new CustomEvent('icen:tags-change', {
-      bubbles: true,
-      detail: { tags: [...tags] },
-    }));
+    emitIcen(wrap, 'icen:tags-change', { tags: [...tags] });
   }
 
   function remove(index: number): void {
