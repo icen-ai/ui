@@ -131,6 +131,18 @@ parseAiToolArgs('render_chart', raw);   // 模型回包解析（容错 JSON 字�
 
 自定义工具：`registerAiTool({ name, description, inputSchema, onCall })`；内置 `render_chart`。挂载区条目可折叠/移除，超限 LRU 自动回收。
 
+## 深挖索引（复杂模块不设单独 AGENTS.md，类型真相在 .d.mts）
+
+每个 behavior 的完整接口/类型/字段约束都随包发布在 `dist/behaviors/<模块>.d.mts`（JSDoc 注释含行为约束，如「el 传容器或内部任意元素，就近解析 `[data-ai-composer]`」）。**不建议也不需要按组件再写深层 AGENTS.md**——复制必漂移；读类型面即读文档：
+
+| 深挖什么 | 去哪读 |
+| --- | --- |
+| AI 族全部签名与字段约束 | 包内 `dist/behaviors/ai-{core,chat,composer,tool,panel,diff,provider,tools}.d.mts` |
+| 图表 ChartSpec 全字段 + 各类型 options | `dist/behaviors/charts.d.mts` |
+| 上述类型面 + JSDoc 的纯文本快照 | <https://ui.icen.ai/llms-full.txt>（「API 类型面」节，构建期自动内嵌） |
+| 设计动机 / 状态机语义 / 口径取舍 | `docs/spec/ai-native.md`（包内随发） |
+| DOM 契约 / CSS 类名 | 各组件文档页 <https://ui.icen.ai/components/<slug>/，kit 入口同款 CSS 头注释 |
+
 ---
 
 # 第二段 · 本仓库开发约定
@@ -150,7 +162,8 @@ icen canonical：`clay` 亮色 + IBM Plex Mono/CJK 宋体（`src/tokens/typograp
 
 ```bash
 bun install
-bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.mjs）
+bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.mjs + .d.mts 类型面）
+                  # + bun scripts/dts-ext.mjs（.d.ts 改名 .d.mts：.mjs 的声明必须同名 .d.mts）
                   # + bun scripts/build-css.ts（css → dist/：tokens.css/ui.css/base.css/
                   #   retro-effects.css/tokens/*/components/*/registry.json）
 ```

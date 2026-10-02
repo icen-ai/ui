@@ -27,6 +27,11 @@ const consumer = agents.includes('# 第一段')
   : '';
 const spec = read('docs/spec/ai-native.md');
 
+/* 复杂模块的类型面原文（dist 的 .d.mts，构建期自动内嵌 —— 零漂移的「深层 AGENTS 文档」） */
+const DEEP_MODULES = [
+  'ai-core', 'ai-chat', 'ai-composer', 'ai-tool', 'ai-panel', 'ai-diff', 'ai-provider', 'ai-tools', 'charts',
+];
+
 mkdirSync(SITE_PUBLIC, { recursive: true });
 
 /* ── llms.txt：索引（名称 + 一句话 + 页面 URL，按文档站分组） ─────────────── */
@@ -78,9 +83,22 @@ const full = [
   spec || '（见仓库 docs/spec/ai-native.md）',
   '',
   '════════════════════════════════════════════════════════',
+  '## API 类型面（复杂模块 .d.mts 原文，含全部 JSDoc 约束注释）',
+  '════════════════════════════════════════════════════════',
+  '',
+  '以下为 npm 包内 `dist/behaviors/<模块>.d.mts` 的构建期快照——接口/类型/字段约束的唯一真相，',
+  '与包内文件同源生成，永不漂移。其余模块类型面更薄，直接读包内同名 .d.mts。',
+];
+for (const m of DEEP_MODULES) {
+  const d = read(`dist/behaviors/${m}.d.mts`);
+  if (d) full.push('', `### behaviors/${m}.d.mts`, '', '```ts', d.trim(), '```');
+}
+full.push(
+  '',
+  '════════════════════════════════════════════════════════',
   '## 组件全表（desc + usage）',
   '════════════════════════════════════════════════════════',
-];
+);
 for (const [g, items] of groups) {
   full.push('', `### ${g}`);
   for (const c of items) {

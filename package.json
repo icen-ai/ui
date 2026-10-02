@@ -36,7 +36,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && bun scripts/build-css.ts",
+    "build": "tsup && bun scripts/dts-ext.mjs && bun scripts/build-css.ts",
     "prepublishOnly": "bun run build"
   },
   "devDependencies": {
