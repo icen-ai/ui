@@ -380,6 +380,22 @@
   display: flex;
   align-items: flex-start;
 }
+/* 侧栏渐隐：scroll-timeline 直接绑定滚动位（程序化/键盘/滚轮即时跟随，
+   无需 scroll 事件）；不可滚时 timeline 失活、动画无效果，两 var 回落 0px
+   ——天然无渐隐。不支持 scroll() 的浏览器整体跳过（渐进增强）。
+   divider 在 .docs-main 左缘——mask 会连边线一起渐隐，故不画在本元素上 */
+@property --fade-top { syntax: '<length>'; inherits: true; initial-value: 0px; }
+@property --fade-bottom { syntax: '<length>'; inherits: true; initial-value: 0px; }
+@keyframes docs-fade-top {
+  from { --fade-top: 0px; }
+  5% { --fade-top: 28px; }
+  to { --fade-top: 28px; }
+}
+@keyframes docs-fade-bottom {
+  from { --fade-bottom: 28px; }
+  95% { --fade-bottom: 28px; }
+  to { --fade-bottom: 0px; }
+}
 .docs-side {
   flex: 0 0 250px;
   width: 250px;
@@ -388,8 +404,26 @@
   max-height: calc(100vh - 52px);
   overflow-y: auto;
   padding: 28px 16px 64px;
-  border-right: 1px solid var(--token-line-soft);
+  /* 无滚动条：可滚方向由上面的渐隐提示 */
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    transparent 100%
+  );
+  animation: docs-fade-top linear both, docs-fade-bottom linear both;
+  animation-timeline: scroll(self block);
 }
+.docs-side::-webkit-scrollbar { display: none; }
 .docs-group { margin-bottom: 14px; }
 .docs-group-name {
   font-size: 12px;
@@ -458,6 +492,7 @@
   min-width: 0;
   max-width: 860px;
   padding: 40px 48px 96px;
+  border-left: 1px solid var(--token-line-soft);
 }
 
 /* ═══════════ 文档页版式 ═══════════ */
@@ -737,6 +772,7 @@
     border-bottom: 1px solid var(--token-line-soft);
     padding: 12px 16px;
   }
+  .docs-main { border-left: 0; }
   /* 列式布局下 shell 是 align-items: flex-start，main 不拉伸而按内容自适应——
      代码块长行会把 max-content 顶到 max-width(860)，视口 <880 即整页横向溢出。
      给定 100% 定宽后，pre 的 overflow:auto 在列内滚动，页面不再横滚。 */

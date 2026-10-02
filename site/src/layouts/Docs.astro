@@ -97,16 +97,21 @@ const isActive = (href: string): boolean =>
     <div class="docs-shell">
       <aside class="docs-side">
         <nav class="docs-nav" aria-label="文档导航">
-          <div class="docs-group">
-            <p class="docs-group-name">开始</p>
-            <a class:list={['docs-link', { active: path === '/' }]} href="/">介绍</a>
-            <a class:list={['docs-link', { active: isActive('/primitives/') }]} href="/primitives/">原语</a>
-            <a class:list={['docs-link', { active: isActive('/tokens/') }]} href="/tokens/">色彩 Tokens</a>
-          </div>
+          <details class="docs-group" data-group="开始">
+            <summary class="docs-group-name">
+              <span class="docs-group-title">开始</span>
+              <span class="docs-group-count">3</span>
+            </summary>
+            <div class="docs-group-links">
+              <a class:list={['docs-link', { active: path === '/' }]} href="/">介绍</a>
+              <a class:list={['docs-link', { active: isActive('/primitives/') }]} href="/primitives/">原语</a>
+              <a class:list={['docs-link', { active: isActive('/tokens/') }]} href="/tokens/">色彩 Tokens</a>
+            </div>
+          </details>
           {GROUPS.map((g) => {
             const items = COMPONENTS.filter((c) => c.group === g);
             return (
-              <details class="docs-group" data-group={g} open>
+              <details class="docs-group" data-group={g}>
                 <summary class="docs-group-name">
                   <span class="docs-group-title">{g}</span>
                   <span class="docs-group-count">{items.length}</span>
@@ -125,51 +130,28 @@ const isActive = (href: string): boolean =>
         </nav>
       </aside>
       <script is:inline>
-        /* 分组折叠状态：details 天然多开；首访（无存储）全开；之后按记忆恢复；
-           深链兜底——当前页所在组永远展开（toggle 自愈会把记忆里误存的折叠清掉）。
-           本脚本在 </aside> 后同步执行，首帧绘制前完成，无闪烁。 */
+        /* 侧栏折叠 + 滚动位（首帧前同步完成，无闪烁）：
+           ① 默认全收，仅深链命中组展开——url 进哪个页就开哪组，不做跨页记忆
+           ② 渐隐纯 CSS（scroll-timeline，见 site.css），脚本只管折叠与滚动位
+           ③ 滚动位写 sessionStorage，MPA 整页跳转不丢位置 */
         (() => {
-          const KEY = 'icen.docs.nav.groups';
-          const groups = Array.from(document.querySelectorAll('.docs-group[data-group]'));
-          if (!groups.length) return;
-          let collapsed = null;
-          try { collapsed = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { collapsed = null; }
-          if (!Array.isArray(collapsed)) { localStorage.setItem(KEY, '[]'); return; }
-          const activeLink = document.querySelector('.docs-group[data-group] .docs-link.active');
-          const activeGroup = activeLink ? activeLink.closest('.docs-group[data-group]') : null;
-          groups.forEach(function (d) {
-            d.open = collapsed.indexOf(d.getAttribute('data-group')) === -1;
-          });
-          if (activeGroup) activeGroup.open = true;
-          groups.forEach(function (d) {
-            d.addEventListener('toggle', function () {
-              const name = d.getAttribute('data-group');
-              if (!name) return;
-              let cur = [];
-              try { cur = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { cur = []; }
-              const next = d.open ? cur.filter(function (x) { return x !== name; })
-                                  : cur.concat([name]).filter(function (v, i, a) { return a.indexOf(v) === i; });
-              localStorage.setItem(KEY, JSON.stringify(next));
-            });
-          });
-        })();
-      </script>
-      <script is:inline>
-        /* 侧栏滚动位置跨页保持（MPA 整页跳转不丢滚动位）：
-           滚动时 rAF 节流写 sessionStorage；本脚本在 </aside> 后同步执行，
-           首帧绘制前恢复 scrollTop，无闪烁。 */
-        (() => {
-          const KEY = 'icen.docs.nav-scroll';
-          const scroller = document.querySelector('.docs-side');
-          if (!scroller) return;
-          const saved = sessionStorage.getItem(KEY);
-          if (saved !== null) scroller.scrollTop = Number(saved) || 0;
-          let raf = 0;
-          scroller.addEventListener('scroll', () => {
+          var side = document.querySelector('.docs-side');
+          if (!side) return;
+          var groups = Array.prototype.slice.call(document.querySelectorAll('.docs-group[data-group]'));
+
+          var activeLink = document.querySelector('.docs-group[data-group] .docs-link.active');
+          var activeGroup = activeLink ? activeLink.closest('.docs-group[data-group]') : null;
+          groups.forEach(function (d) { d.open = d === activeGroup; });
+
+          var KEY = 'icen.docs.nav-scroll';
+          var saved = sessionStorage.getItem(KEY);
+          if (saved !== null) side.scrollTop = Number(saved) || 0;
+          var raf = 0;
+          side.addEventListener('scroll', function () {
             if (raf) return;
-            raf = requestAnimationFrame(() => {
+            raf = requestAnimationFrame(function () {
               raf = 0;
-              sessionStorage.setItem(KEY, String(scroller.scrollTop));
+              sessionStorage.setItem(KEY, String(side.scrollTop));
             });
           }, { passive: true });
         })();
