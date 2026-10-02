@@ -47,7 +47,7 @@
 
 export type ChartTone = 'accent' | 'success' | 'warning' | 'error' | 'muted';
 
-export interface ChartSeriesOptions {
+export interface ChartSeriesOptions extends ChartChromeOptions {
   labels: string[];
   values: number[];
   tone?: ChartTone;
@@ -61,7 +61,7 @@ export interface ChartSegment {
   tone?: ChartTone;
 }
 
-export interface ChartSegmentsOptions {
+export interface ChartSegmentsOptions extends ChartChromeOptions {
   segments: ChartSegment[];
   emptyLabel?: string;
   formatValue?: (value: number) => string;
@@ -201,6 +201,107 @@ function copyMarkData(target: Element, source: Element): void {
   }
 }
 
+/* ═══ 图表 chrome（全部渲染器统一继承）：头部行 + 图例可见性小眼睛 ═══
+ * 任何渲染出图例的图型（以及给了 title 的任意图型）都渲染 .chart-head：
+ * 标题（左）+ 小眼睛钮（右）。点击切换根 data-legend-hidden，容器级 CSS
+ * 隐藏全部图例；图表体渲染进内层 .chart-body（渲染器契约是清空传入 el，
+ * 头部不能与图表体同层）。 */
+
+const CHART_EYE_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg>';
+const CHART_EYE_OFF_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c7 0 10 7 10 7a13.2 13.2 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 7 10 7a9.7 9.7 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
+function parseChartSvg(svg: string): Element | null {
+  try {
+    const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+    const el = doc.documentElement;
+    return el && el.tagName.toLowerCase() === 'svg' && !doc.querySelector('parsererror')
+      ? document.importNode(el, true)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/** chrome 选项（各渲染器 options 皆含）：title 进头部行；legend=false 初始隐藏图例 */
+export interface ChartChromeOptions {
+  title?: string;
+  legend?: boolean;
+}
+
+/** 跨渲染存活的图例隐藏状态（renderChart 的 update 复渲染沿用；直调不传=每次新状态） */
+export interface ChartLegendState {
+  hidden: boolean | null;
+}
+
+/**
+ * 渲染外壳：head（title + 小眼睛，仅 title 或有图例时）+ .chart-body 图表体。
+ * paint 在 body 上作画（渲染器契约=清空传入 el，故不能直接挂 el）。
+ */
+function withChrome(
+  el: HTMLElement,
+  opts: ChartChromeOptions,
+  hasLegend: boolean,
+  paint: (body: HTMLElement) => void,
+  state?: ChartLegendState,
+): void {
+  /* 已在 chrome 内（renderChart 的 .chart-body）：直接作画，不重复包装头部 */
+  if (el.dataset.chartBody != null) {
+    el.textContent = '';
+    paint(el);
+    return;
+  }
+  el.textContent = '';
+  const body = document.createElement('div');
+  body.className = 'chart-body';
+  body.dataset.chartBody = '';
+  if (!opts.title && !hasLegend) {
+    el.appendChild(body);
+    paint(body);
+    return;
+  }
+  let hidden = state && state.hidden != null ? state.hidden : opts.legend === false;
+  if (state) state.hidden = hidden;
+  el.setAttribute('data-legend-hidden', String(hidden));
+
+  const head = document.createElement('div');
+  head.className = 'chart-head';
+  const title = document.createElement('div');
+  title.className = 'chart-title';
+  title.textContent = opts.title ?? '';
+  if (!opts.title) title.setAttribute('aria-hidden', 'true');
+
+  const eye = document.createElement('button');
+  eye.type = 'button';
+  eye.className = 'chart-legend-eye';
+  eye.dataset.chartLegendEye = '';
+  const syncEye = (): void => {
+    const nowHidden = el.getAttribute('data-legend-hidden') === 'true';
+    eye.setAttribute('aria-pressed', String(!nowHidden));
+    eye.setAttribute('aria-label', nowHidden ? '显示图例' : '隐藏图例');
+    eye.setAttribute('title', nowHidden ? '显示图例' : '隐藏图例');
+    const icon = parseChartSvg(nowHidden ? CHART_EYE_OFF_SVG : CHART_EYE_SVG);
+    if (icon) eye.replaceChildren(icon);
+  };
+  eye.addEventListener('click', () => {
+    const nowHidden = el.getAttribute('data-legend-hidden') === 'true';
+    hidden = !nowHidden;
+    if (state) state.hidden = hidden;
+    el.setAttribute('data-legend-hidden', String(hidden));
+    syncEye();
+    el.dispatchEvent(new CustomEvent('icen:chart-legend-visibility', {
+      bubbles: true,
+      detail: { visible: hidden ? false : true },
+    }));
+  });
+  syncEye();
+
+  head.append(title, eye);
+  el.append(head, body);
+  paint(body);
+}
+
 /** 图例项元信息（toggleLegend 消费） */
 interface LegendKey {
   key: string;
@@ -265,11 +366,11 @@ export interface ChartVBarOptions extends ChartSeriesOptions {
 
 export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
   const seriesList = normalizeSeriesInput(opts);
   const labels = opts.labels ?? [];
   const n = Math.min(labels.length, ...seriesList.map((s) => s.values.length));
-  if (n === 0 || seriesList.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  withChrome(el, opts, seriesList.length > 1, (body) => {
+  if (n === 0 || seriesList.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const labelsUsed = labels.slice(0, n);
   /* 分组模式按簇内最大值归一；堆叠按各行合计的最大值归一 */
@@ -314,16 +415,17 @@ export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): void {
     });
     wrap.appendChild(track);
   }
-  el.append(wrap, labelsRow(labelsUsed));
-  if (seriesList.length > 1) el.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
+  body.append(wrap, labelsRow(labelsUsed));
+  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
+  });
 }
 
 /** 水平条形图 */
 export function renderHBar(el: HTMLElement, opts: ChartSeriesOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, false, (body) => {
   const n = Math.min(opts.labels.length, opts.values.length);
-  if (n === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  if (n === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const labels = opts.labels.slice(0, n);
   const values = opts.values.slice(0, n);
@@ -352,15 +454,16 @@ export function renderHBar(el: HTMLElement, opts: ChartSeriesOptions): void {
     row.append(label, track, val);
     wrap.appendChild(row);
   });
-  el.appendChild(wrap);
+  body.appendChild(wrap);
+  });
 }
 
 /** 堆叠条形图（单条 100% + 图例） */
 export function renderStack(el: HTMLElement, opts: ChartSegmentsOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, opts.segments.length > 0, (body) => {
   const total = opts.segments.reduce((sum, s) => sum + s.value, 0);
-  if (opts.segments.length === 0 || total <= 0) { renderEmpty(el, opts.emptyLabel); return; }
+  if (opts.segments.length === 0 || total <= 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const bar = document.createElement('div');
   bar.className = 'chart-stack';
@@ -379,15 +482,16 @@ export function renderStack(el: HTMLElement, opts: ChartSegmentsOptions): void {
   for (const seg of opts.segments) {
     legend.appendChild(legendItem(seg.label, fmt(opts, seg.value), seg.tone));
   }
-  el.append(bar, legend);
+  body.append(bar, legend);
+  });
 }
 
 /** 环形图（SVG stroke-dasharray 累加）+ 图例百分比 */
 export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, opts.segments.length > 0, (body) => {
   const total = opts.segments.reduce((sum, s) => sum + s.value, 0);
-  if (opts.segments.length === 0 || total <= 0) { renderEmpty(el, opts.emptyLabel); return; }
+  if (opts.segments.length === 0 || total <= 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
@@ -424,7 +528,8 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): void {
     legend.appendChild(legendItem(seg.label, `${Math.round((seg.value / total) * 100)}%`, seg.tone));
   }
   wrap.append(svg, legend);
-  el.appendChild(wrap);
+  body.appendChild(wrap);
+  });
 }
 
 // 折线面积渐变 id 计数器（同页多图时保持唯一）
@@ -440,11 +545,11 @@ export interface ChartLineOptions extends ChartSeriesOptions {
 
 export function renderLine(el: HTMLElement, opts: ChartLineOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
   const seriesList = normalizeSeriesInput(opts);
   const labels = opts.labels ?? [];
   const n = Math.min(labels.length, ...seriesList.map((s) => s.values.length));
-  if (n === 0 || seriesList.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  withChrome(el, opts, seriesList.length > 1, (body) => {
+  if (n === 0 || seriesList.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const labelsUsed = labels.slice(0, n);
   const width = 360;
@@ -534,16 +639,17 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): void {
 
   if (defs.firstChild) svg.insertBefore(defs, svg.firstChild);
   wrap.append(svg, labelsRow(sampleLabels(labelsUsed)));
-  el.appendChild(wrap);
-  if (seriesList.length > 1) el.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
+  body.appendChild(wrap);
+  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
+  });
 }
 
 /** 面积图（与折线同族，以面积填充为视觉主体） */
 export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, false, (body) => {
   const n = Math.min(opts.labels.length, opts.values.length);
-  if (n === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  if (n === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const labels = opts.labels.slice(0, n);
   const values = opts.values.slice(0, n);
@@ -603,7 +709,8 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): void {
   }
 
   wrap.append(svg, labelsRow(sampleLabels(labels)));
-  el.appendChild(wrap);
+  body.appendChild(wrap);
+  });
 }
 
 /* ═══════════ 雷达图 ═══════════ */
@@ -615,7 +722,7 @@ export interface RadarSeries {
   tone?: ChartTone;
 }
 
-export interface ChartRadarOptions {
+export interface ChartRadarOptions extends ChartChromeOptions {
   /** 各轴名（顺时针排列，首轴指向正上方） */
   axes: string[];
   /** 一个或多个系列。values 长度须等于 axes 长度 */
@@ -631,10 +738,10 @@ export interface ChartRadarOptions {
 /** 雷达图（N 轴蛛网 + 多系列多边形 + 图例）。 */
 export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, opts.series.length > 1, (body) => {
   const axes = opts.axes;
   const n = axes.length;
-  if (n < 3 || opts.series.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  if (n < 3 || opts.series.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   // 计算最大值（单一 max 或从数据推断）
   let maxVal = opts.max ?? 0;
@@ -738,7 +845,8 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): void {
     l.className = 'chart-legend';
     return l;
   })());
-  el.appendChild(wrap);
+  body.appendChild(wrap);
+  });
 }
 
 /** 把一个正数向上取整到 "好看" 的刻度值（1/2/5/10/20/50/…） */
@@ -763,7 +871,7 @@ export interface HeatmapDatum {
   value: number;
 }
 
-export interface ChartHeatmapOptions {
+export interface ChartHeatmapOptions extends ChartChromeOptions {
   /** 精确形态：日期 + 值（旧 → 新）。与 values 二选一，data 优先。 */
   data?: HeatmapDatum[];
   /** 便捷形态：最近 N 天的值（旧 → 新），日期从今天回推 */
@@ -784,7 +892,7 @@ function isoDate(d: Date): string {
 /** GitHub 贡献图式热力格：7 行（周一 → 周日）× N 周列，5 档色阶。 */
 export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, true, (body) => {
 
   let entries: HeatmapDatum[];
   if (opts.data && opts.data.length > 0) {
@@ -797,7 +905,7 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void 
       return { date: isoDate(d), value };
     });
   } else {
-    renderEmpty(el, opts.emptyLabel);
+    renderEmpty(body, opts.emptyLabel);
     return;
   }
 
@@ -850,15 +958,16 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void 
   legend.appendChild(more);
 
   wrap.append(grid, legend);
-  el.appendChild(wrap);
+  body.appendChild(wrap);
+  });
 }
 
 /** 迷你趋势线（无轴小图，适合嵌入指标卡）。 */
 export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, false, (body) => {
   const values = opts.values;
-  if (values.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  if (values.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const width = 96;
   const height = 28;
@@ -903,7 +1012,8 @@ export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): void
   svg.appendChild(dot);
 
   wrap.appendChild(svg);
-  el.appendChild(wrap);
+  body.appendChild(wrap);
+  });
 }
 
 export interface ChartGaugeOptions {
@@ -964,7 +1074,7 @@ export function renderGauge(el: HTMLElement, opts: ChartGaugeOptions): void {
 
 /* ═══════════ 日历热力图（GitHub 贡献图完整形态：月份标签 + 周格）═══════════ */
 
-export interface ChartCalendarOptions {
+export interface ChartCalendarOptions extends ChartChromeOptions {
   /** ISO 日期数组（YYYY-MM-DD，与 values 配对；或用 data） */
   dates?: string[];
   values?: number[];
@@ -978,7 +1088,7 @@ export interface ChartCalendarOptions {
 /** 贡献日历（calendar heatmap）：dates → 自动周布局 + 月份标签，GitHub 同款 */
 export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, true, (body) => {
 
   let entries: HeatmapDatum[];
   if (opts.data && opts.data.length > 0) {
@@ -986,7 +1096,7 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): voi
   } else if (opts.dates && opts.dates.length > 0 && opts.values) {
     entries = opts.dates.slice(0, opts.values.length).map((date, i) => ({ date, value: opts.values![i] ?? 0 }));
   } else {
-    renderEmpty(el, opts.emptyLabel);
+    renderEmpty(body, opts.emptyLabel);
     return;
   }
 
@@ -1057,7 +1167,8 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): voi
   const columns = Math.max(1, Math.ceil((pad + entries.length) / 7));
   months.style.setProperty('--columns', String(columns));
   wrap.append(months, weekdayRow, grid, legend);
-  el.appendChild(wrap);
+  body.appendChild(wrap);
+  });
 }
 
 /* ═══════════ 散点 / 气泡图 ═══════════ */
@@ -1070,7 +1181,7 @@ export interface ChartPointSpec {
   label?: string;
 }
 
-export interface ChartScatterOptions {
+export interface ChartScatterOptions extends ChartChromeOptions {
   points: ChartPointSpec[];
   tone?: ChartTone;
   /** X 轴名称（图例/tooltip 用） */
@@ -1083,9 +1194,9 @@ export interface ChartScatterOptions {
 /** 散点图（可选 size 第三维 → 气泡）；坐标域自动 nice 取整 + 边界刻度 */
 export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): void {
   if (typeof document === 'undefined') return;
-  el.textContent = '';
+  withChrome(el, opts, false, (body) => {
   const pts = opts.points.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
-  if (pts.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  if (pts.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const width = 360;
   const height = 220;
@@ -1161,7 +1272,8 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): void 
   });
 
   wrap.appendChild(svg);
-  el.appendChild(wrap);
+  body.appendChild(wrap);
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1570,6 +1682,24 @@ function moveTooltip(x: number, y: number): void {
   tip.style.top = `${Math.round(top)}px`;
 }
 
+/** 该图型是否有图例（决定头部行是否渲染小眼睛） */
+function hasLegendOf(spec: ChartSpec): boolean {
+  switch (spec.type) {
+    case 'donut':
+    case 'stack':
+      return (spec.segments?.length ?? 0) > 0;
+    case 'heatmap':
+    case 'calendar':
+      return true;
+    case 'line':
+    case 'vbar':
+    case 'radar':
+      return (spec.series?.length ?? 0) > 1;
+    default:
+      return false;
+  }
+}
+
 /**
  * 统一入口：normalizeChartSpec → inferChartType（type 缺省时）→ 分发到底层
  * 渲染器，并在 el 上挂交互委托（hover/click/dblclick/contextmenu → icen:chart-*，
@@ -1591,144 +1721,62 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
 
   const typeOf = (): ChartType => (current.type as ChartType) ?? 'vbar';
 
-  /** 图例隐藏状态跨 update 存活（spec.legend=false 只定初值，眼睛切换后以切换为准） */
-  let legendHidden: boolean | null = null;
-
-  /** 该图型是否有图例（决定头部行是否渲染小眼睛） */
-  const hasLegend = (spec: ChartSpec): boolean => {
-    switch (spec.type) {
-      case 'donut':
-      case 'stack':
-        return (spec.segments?.length ?? 0) > 0;
-      case 'heatmap':
-      case 'calendar':
-        return true;
-      case 'line':
-      case 'vbar':
-      case 'radar':
-        return (spec.series?.length ?? 0) > 1;
-      default:
-        return false;
-    }
-  };
-
-  /* 图例可见性小眼睛（chart-head 右侧）：切换根 data-legend-hidden，
-     容器级 CSS 隐藏全部图型图例——统一继承，零逐图型代码 */
-  const EYE_SVG =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg>';
-  const EYE_OFF_SVG =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c7 0 10 7 10 7a13.2 13.2 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 7 10 7a9.7 9.7 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
-  const parseSvg = (svg: string): Element | null => {
-    try {
-      const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
-      const el = doc.documentElement;
-      return el && el.tagName.toLowerCase() === 'svg' && !doc.querySelector('parsererror')
-        ? document.importNode(el, true)
-        : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const syncEye = (btn: HTMLButtonElement): void => {
-    const hidden = root.getAttribute('data-legend-hidden') === 'true';
-    btn.setAttribute('aria-pressed', String(!hidden));
-    btn.setAttribute('aria-label', hidden ? '显示图例' : '隐藏图例');
-    btn.setAttribute('title', hidden ? '显示图例' : '隐藏图例');
-    const icon = parseSvg(hidden ? EYE_OFF_SVG : EYE_SVG);
-    if (icon) btn.replaceChildren(icon);
-  };
-
-  const buildChartHead = (spec: ChartSpec): HTMLElement => {
-    const head = document.createElement('div');
-    head.className = 'chart-head';
-    const title = document.createElement('div');
-    title.className = 'chart-title';
-    title.textContent = spec.title ?? '';
-    if (!spec.title) title.setAttribute('aria-hidden', 'true');
-    const eye = document.createElement('button');
-    eye.type = 'button';
-    eye.className = 'chart-legend-eye';
-    eye.dataset.chartLegendEye = '';
-    eye.addEventListener('click', () => {
-      const hidden = root.getAttribute('data-legend-hidden') === 'true';
-      root.setAttribute('data-legend-hidden', String(!hidden));
-      legendHidden = !hidden;
-      syncEye(eye);
-      root.dispatchEvent(new CustomEvent('icen:chart-legend-visibility', {
-        bubbles: true,
-        detail: { visible: hidden },
-      }));
-    });
-    syncEye(eye);
-    head.append(title, eye);
-    return head;
-  };
+  /** 跨 update 存活的图例隐藏状态（withChrome 消费；spec.legend 显式值在 render 时覆写） */
+  const legendState: ChartLegendState = { hidden: null };
 
   const render = (): void => {
     if (!current.type) current = { ...current, type: inferChartType(current) };
     const spec = current;
-    root.textContent = '';
-    /* 图表体渲染进内层容器——底层渲染器按契约先清空传入 el，头部不能与它们同层 */
-    const body = document.createElement('div');
-    body.className = 'chart-body';
     const formatValue = chartFormatValue(spec.format);
-    if (spec.title || hasLegend(spec)) {
-      /* 显式 spec.legend 每次生效；未给时沿用眼睛的历史切换（初值显示） */
-      if (spec.legend !== undefined) legendHidden = spec.legend === false;
-      else if (legendHidden == null) legendHidden = false;
-      root.setAttribute('data-legend-hidden', String(legendHidden));
-      root.append(buildChartHead(spec), body);
-    } else {
-      root.removeAttribute('data-legend-hidden');
-      root.appendChild(body);
-    }
-    switch (spec.type) {
-      case 'line':
-        renderLine(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: spec.fill, formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'area':
-        renderLine(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: true, formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'vbar':
-        renderVBar(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, stacked: spec.stacked, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'hbar':
-        renderHBar(body, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'stack':
-        renderStack(body, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'donut':
-        renderDonut(body, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'radar': {
-        const series = spec.series
-          ? spec.series.map((s) => ({ name: s.name, values: s.values, tone: typeof s.tone === 'string' ? s.tone : undefined }))
-          : spec.values
-            ? [{ name: '', values: spec.values }]
-            : [];
-        renderRadar(body, { axes: spec.axes ?? spec.labels ?? [], series, max: spec.max, levels: spec.levels, formatValue, emptyLabel: spec.emptyLabel });
-        break;
+    if (spec.legend !== undefined) legendState.hidden = spec.legend === false;
+    withChrome(root, spec, hasLegendOf(spec), (body) => {
+      switch (spec.type) {
+        case 'line':
+          renderLine(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: spec.fill, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'area':
+          renderLine(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: true, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'vbar':
+          renderVBar(body, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, stacked: spec.stacked, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'hbar':
+          renderHBar(body, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'stack':
+          renderStack(body, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'donut':
+          renderDonut(body, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'radar': {
+          const series = spec.series
+            ? spec.series.map((s) => ({ name: s.name, values: s.values, tone: typeof s.tone === 'string' ? s.tone : undefined }))
+            : spec.values
+              ? [{ name: '', values: spec.values }]
+              : [];
+          renderRadar(body, { axes: spec.axes ?? spec.labels ?? [], series, max: spec.max, levels: spec.levels, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        }
+        case 'heatmap':
+          renderHeatmap(body, { values: spec.values, data: spec.data as HeatmapDatum[] | undefined, weeks: spec.weeks, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'calendar':
+          renderCalendar(body, { dates: spec.dates, values: spec.values, data: spec.data as HeatmapDatum[] | undefined, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'sparkline':
+          renderSparkline(body, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        case 'gauge':
+          renderGauge(body, { value: spec.values?.[0] ?? 0, max: spec.max, tone: spec.tone, label: spec.labels?.[0], formatValue });
+          break;
+        case 'scatter':
+          renderScatter(body, { points: spec.points ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel, title: spec.title, legend: spec.legend });
+          break;
+        default:
+          renderEmpty(body, spec.emptyLabel);
       }
-      case 'heatmap':
-        renderHeatmap(body, { values: spec.values, data: spec.data as HeatmapDatum[] | undefined, weeks: spec.weeks, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'calendar':
-        renderCalendar(body, { dates: spec.dates, values: spec.values, data: spec.data as HeatmapDatum[] | undefined, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'sparkline':
-        renderSparkline(body, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      case 'gauge':
-        renderGauge(body, { value: spec.values?.[0] ?? 0, max: spec.max, tone: spec.tone, label: spec.labels?.[0], formatValue });
-        break;
-      case 'scatter':
-        renderScatter(body, { points: spec.points ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
-        break;
-      default:
-        renderEmpty(body, spec.emptyLabel);
-    }
+    });
   };
 
   /* 交互委托（挂 root 一次，跨 update 存活；标记随渲染更替） */
