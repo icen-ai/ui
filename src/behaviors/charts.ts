@@ -8,18 +8,38 @@
  * 色调 tone = 'accent' | 'success' | 'warning' | 'error' | 'muted'，经 CSS 变量注入
  * （条/段上设 --chart-tone，SVG 上直接写 stroke/fill 为 var(--token-*)）。
  *
- *   renderVBar(el,  { labels, values, tone? })            垂直柱状（.chart-vbar）
- *   renderHBar(el,  { labels, values, tone? })            水平条形（.chart-hbar）
- *   renderStack(el, { segments:[{label,value,tone?}] })   堆叠条 + 图例
- *   renderDonut(el, { segments })                         环形（SVG viewBox 120，r42 粗 14，-90° 起笔）+ 图例百分比
- *   renderLine(el,  { labels, values, tone? })            折线（SVG 360×150，面积渐变 + 4 网格线 + ≤7 轴标签）
- *   renderArea(el,  { labels, values, tone? })            面积（与折线同族，面积渐变更浓、无数据点强调）
- *   renderRadar(el, { axes, series })                     雷达/蛛网（N 轴 + 多系列 + 图例）
- *   renderHeatmap(el, { data | values, weeks?, tone? })   GitHub 贡献图式热力格（7 行 × N 周，5 档色阶 + 图例）
- *   renderSparkline(el, { values, tone? })                迷你趋势线（SVG 96×28，无轴，末点高亮）
- *   renderGauge(el, { value, max?, tone?, label? })       进度环（环形单值 + 中心百分比）
+ * ── 底层渲染器（保留直调；多系列与交互标记已内建）──
+ *   renderVBar(el,  { labels, values, series?, stacked?, tone? })   垂直柱状（分组/堆叠）
+ *   renderHBar(el,  { labels, values, tone? })                      水平条形
+ *   renderStack(el, { segments:[{label,value,tone?}] })             堆叠条 + 图例
+ *   renderDonut(el, { segments })                                   环形（dasharray 累加）+ 图例百分比
+ *   renderLine(el,  { labels, values, series?, fill?, tone? })      折线（多系列调色盘 + 可切换图例）
+ *   renderArea(el,  { labels, values, tone? })                      面积
+ *   renderRadar(el, { axes, series })                               雷达/蛛网（多系列 + 可切换图例）
+ *   renderHeatmap(el, { data | values, weeks?, tone? })             周格热力（7 行 × N 周，5 档色阶）
+ *   renderCalendar(el, { dates+values | data, tone? })              贡献日历（月份标签 + 星期列，GitHub 同款）
+ *   renderSparkline(el, { values, tone? })                          迷你趋势线
+ *   renderGauge(el, { value, max?, tone?, label? })                 进度环
+ *   renderScatter(el, { points, tone?, xLabel?, yLabel? })          散点/气泡（size 第三维 → 半径 3–10）
+ *
+ * ── 通用层（renderChart 统一入口，AI 调用层的直接底座）──
+ *   renderChart(el, spec) → { el, spec, update(spec), on(name, fn), destroy() }
+ *     spec 为纯 JSON（ChartSpec）：type 缺省由 inferChartType 推断（时间序→line、
+ *     占比→donut、dates→calendar、points→scatter…）；labels/values/series/segments/
+ *     axes/points 直给，或 data[] + dims 字段映射（任意维度记录 pivot 成类目×系列）。
+ *     交互委托（挂 el 存活，跨 update）：icen:chart-hover（phase enter/move/leave，
+ *     detail 含 index/seriesIndex/seriesName/label/value/指针坐标）/ click / dblclick /
+ *     contextmenu（默认 preventDefault，接自家 context-menu 组件）；内置 tooltip
+ *     portal 跟随指针（spec.tooltip: false 关闭）；spec.title 渲染 .chart-title。
+ *   normalizeChartSpec(raw)   归一：字符串 JSON.parse / 类型别名（bar→vbar、pie→donut、
+ *                             contribution→calendar…）/ 字符串数值容错 / data[] pivot；不抛异常
+ *   inferChartType(spec)      自动选型（确定性规则）
+ *   chartFormatValue(format)  格式化描述符 → 函数（compact/percent/ms + unit 后缀——
+ *                             替代函数回调，可 JSON 序列化，AI 可给）
  *
  * 空数据（values 为空 / segments 总和 ≤ 0）渲染 .chart-empty（emptyLabel 可覆盖，默认「暂无数据」）。
+ * 图例切换（多系列 line/vbar/radar）：点击图例行 → 同系列标记与行挂 .is-off（纯视觉淡化，
+ * 不重排），派 icen:chart-legend-toggle {key, seriesIndex, hidden}。
  */
 
 export type ChartTone = 'accent' | 'success' | 'warning' | 'error' | 'muted';
@@ -120,32 +140,179 @@ function labelsRow(labels: string[]): HTMLElement {
   return row;
 }
 
-/** 垂直柱状图 */
-export function renderVBar(el: HTMLElement, opts: ChartSeriesOptions): void {
+/* ═══ 通用层共享助手（多系列 / 调色 / 数据标记 / 交互图例）═══ */
+
+/** 多系列系列项（ChartSpec 的 series 与各图型共用形态）；tone 可为语义名或调色盘序号 1..6 */
+export interface ChartSeriesSpec {
+  name: string;
+  values: number[];
+  tone?: ChartTone | number;
+}
+
+/** 单系列 values / 多系列 series 两种输入归一为系列数组 */
+function normalizeSeriesInput(opts: { values?: number[]; tone?: ChartTone; series?: ChartSeriesSpec[] }): ChartSeriesSpec[] {
+  if (opts.series && opts.series.length > 0) return opts.series;
+  return [{ name: '', values: opts.values ?? [], tone: opts.tone }];
+}
+
+/** 调色盘（与 charts.css 的 .chart-tone-1..6 一致）：序号 → CSS 变量；语义名直取 */
+function toneOf(tone: ChartTone | number | undefined, seriesIndex: number): string | undefined {
+  if (typeof tone === 'string') return toneVar(tone);
+  if (typeof tone === 'number') return paletteVar(tone);
+  return seriesIndex > 0 ? paletteVar(((seriesIndex - 1) % 6) + 1) : undefined;
+}
+const PALETTE_VARS = [
+  'var(--token-accent)',
+  'var(--token-accent-cold)',
+  'var(--token-success)',
+  'var(--token-warning)',
+  'var(--token-info)',
+  'color-mix(in srgb, var(--token-text) 50%, transparent)',
+];
+function paletteVar(index: number): string {
+  const i = ((Math.floor(index) - 1) % 6 + 6) % 6;
+  return PALETTE_VARS[i]!;
+}
+
+/** 交互事件携带的标记数据（renderChart 委托层据此派 icen:chart-* 事件） */
+export interface ChartMarkData {
+  index?: number;
+  seriesIndex?: number;
+  seriesName?: string;
+  label?: string;
+  value?: number;
+}
+
+function setMarkData(node: Element, data: ChartMarkData): void {
+  node.setAttribute('data-chart-mark', '1');
+  if (data.index != null) node.setAttribute('data-chart-index', String(data.index));
+  if (data.seriesIndex != null) node.setAttribute('data-chart-series', String(data.seriesIndex));
+  if (data.seriesName != null) node.setAttribute('data-chart-series-name', String(data.seriesName));
+  if (data.label != null) node.setAttribute('data-chart-label', String(data.label));
+  if (data.value != null) node.setAttribute('data-chart-value', String(data.value));
+}
+
+function copyMarkData(target: Element, source: Element): void {
+  for (const attr of Array.from(source.attributes)) {
+    if (attr.name.startsWith('data-chart-')) target.setAttribute(attr.name, attr.value);
+  }
+}
+
+/** 图例项元信息（toggleLegend 消费） */
+interface LegendKey {
+  key: string;
+  label: string;
+  tone?: ChartTone | number;
+  si: number;
+}
+
+/**
+ * 可切换图例：点击图例行 → 同 key 的全部标记（data-chart-key）与图例行本身
+ * 挂/摘 .is-off（纯视觉淡化，不重排）。标记侧由调用方在生成时附 data-chart-key。
+ */
+function toggleLegend(items: LegendKey[], scope: ParentNode, _opts: unknown): HTMLElement {
+  const legend = document.createElement('div');
+  legend.className = 'chart-legend chart-legend--toggle';
+  for (const item of items) {
+    const row = legendItem(item.label, '', item.tone as ChartTone | undefined);
+    row.classList.add('chart-legend-toggle-item');
+    row.setAttribute('role', 'button');
+    row.tabIndex = 0;
+    row.setAttribute('aria-pressed', 'true');
+    row.dataset.chartKey = item.key;
+    const dot = row.querySelector<HTMLElement>('.chart-legend-dot');
+    const toneColor = toneOf(item.tone, item.si + 1);
+    if (dot && toneColor) dot.style.setProperty('--chart-tone', toneColor);
+    const toggle = (): void => {
+      const off = row.classList.toggle('is-off');
+      row.setAttribute('aria-pressed', String(!off));
+      scope.querySelectorAll(`[data-chart-key="${CSS.escape(item.key)}"]`).forEach((m) => {
+        m.classList.toggle('is-off', off);
+      });
+      legend.dispatchEvent(new CustomEvent('icen:chart-legend-toggle', {
+        bubbles: true,
+        detail: { key: item.key, seriesIndex: item.si, hidden: off },
+      }));
+    };
+    row.addEventListener('click', toggle);
+    row.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+    legend.appendChild(row);
+  }
+  /* 给同 key 标记补 data-chart-key（本图渲染域内、按系列序号对位） */
+  for (const item of items) {
+    scope.querySelectorAll(`[data-chart-series="${item.si}"]`).forEach((m) => {
+      if (!m.hasAttribute('data-chart-key')) m.setAttribute('data-chart-key', item.key);
+    });
+  }
+  return legend;
+}
+
+/** 垂直柱状图（单系列，或 series 多系列分组/堆叠——通用层与 renderChart 消费） */
+export interface ChartVBarOptions extends ChartSeriesOptions {
+  /** 多系列（labels 共用，values 长度对齐）；缺省回落单系列 values */
+  series?: ChartSeriesSpec[];
+  /** 多系列时堆叠（默认分组并排） */
+  stacked?: boolean;
+}
+
+export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): void {
   if (typeof document === 'undefined') return;
   el.textContent = '';
-  const n = Math.min(opts.labels.length, opts.values.length);
-  if (n === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  const seriesList = normalizeSeriesInput(opts);
+  const labels = opts.labels ?? [];
+  const n = Math.min(labels.length, ...seriesList.map((s) => s.values.length));
+  if (n === 0 || seriesList.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
 
-  const labels = opts.labels.slice(0, n);
-  const values = opts.values.slice(0, n);
-  const max = maxOf(values);
+  const labelsUsed = labels.slice(0, n);
+  /* 分组模式按簇内最大值归一；堆叠按各行合计的最大值归一 */
+  let max = 1;
+  if (opts.stacked && seriesList.length > 1) {
+    for (let i = 0; i < n; i++) {
+      let sum = 0;
+      for (const s of seriesList) sum += Math.max(0, s.values[i] ?? 0);
+      if (sum > max) max = sum;
+    }
+  } else {
+    for (const s of seriesList) max = Math.max(max, maxOf(s.values.slice(0, n)));
+  }
 
   const wrap = document.createElement('div');
   wrap.className = 'chart-vbar';
   if (opts.tone) wrap.style.setProperty('--chart-tone', toneVar(opts.tone));
-  values.forEach((value, i) => {
+  for (let i = 0; i < n; i++) {
     const track = document.createElement('div');
     track.className = 'chart-vbar-track';
-    const bar = document.createElement('div');
-    bar.className = 'chart-vbar-bar';
-    /* 0 值不画最小高度（画 0）；>0 的极小值保留 6% 可视最小高度 */
-    bar.style.height = value > 0 ? `${Math.max(6, (value / max) * 100)}%` : '0%';
-    bar.setAttribute('title', `${labels[i]}: ${fmt(opts, value)}`);
-    track.appendChild(bar);
+    if (seriesList.length > 1) {
+      track.classList.add('chart-vbar-track--multi');
+      if (opts.stacked) track.classList.add('chart-vbar-track--stacked');
+    }
+    seriesList.forEach((s, si) => {
+      const value = s.values[i] ?? 0;
+      const bar = document.createElement('div');
+      bar.className = 'chart-vbar-bar';
+      const height = value > 0 ? Math.max(6, (value / max) * 100) : 0;
+      bar.style.height = `${height}%`;
+      const toneColor = toneOf(s.tone, si);
+      if (toneColor) bar.style.setProperty('--chart-tone', toneColor);
+      bar.setAttribute('title', seriesList.length > 1 ? `${labelsUsed[i]} · ${s.name}: ${fmt(opts, value)}` : `${labelsUsed[i]}: ${fmt(opts, value)}`);
+      setMarkData(bar, {
+        index: i,
+        seriesIndex: seriesList.length > 1 ? si : undefined,
+        seriesName: seriesList.length > 1 ? s.name : undefined,
+        label: labelsUsed[i] ?? '',
+        value,
+      });
+      track.appendChild(bar);
+    });
     wrap.appendChild(track);
-  });
-  el.append(wrap, labelsRow(labels));
+  }
+  el.append(wrap, labelsRow(labelsUsed));
+  if (seriesList.length > 1) el.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
 }
 
 /** 水平条形图 */
@@ -174,6 +341,7 @@ export function renderHBar(el: HTMLElement, opts: ChartSeriesOptions): void {
     bar.className = 'chart-hbar-bar';
     /* 0 值不画最小宽度（画 0）；>0 的极小值保留 2% 可视最小宽度 */
     bar.style.width = value > 0 ? `${Math.max(2, (value / max) * 100)}%` : '0%';
+    setMarkData(bar, { index: i, label: labels[i] ?? '', value });
     const val = document.createElement('span');
     val.className = 'chart-hbar-value';
     val.textContent = fmt(opts, value);
@@ -199,6 +367,7 @@ export function renderStack(el: HTMLElement, opts: ChartSegmentsOptions): void {
     s.style.width = `${(seg.value / total) * 100}%`;
     if (seg.tone) s.style.setProperty('--chart-tone', toneVar(seg.tone));
     s.setAttribute('title', `${seg.label}: ${fmt(opts, seg.value)}`);
+    setMarkData(s, { index: opts.segments.indexOf(seg), label: seg.label, value: seg.value });
     bar.appendChild(s);
   }
 
@@ -230,9 +399,9 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): void {
     fill: 'none', stroke: 'var(--token-line-soft)', 'stroke-width': '14',
   }));
   let offset = 0;
-  for (const seg of opts.segments) {
+  opts.segments.forEach((seg, segIndex) => {
     const dash = (seg.value / total) * circumference;
-    svg.appendChild(svgEl('circle', {
+    const arc = svgEl('circle', {
       cx: '60', cy: '60', r: String(radius),
       fill: 'none',
       stroke: toneVar(seg.tone),
@@ -240,9 +409,11 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): void {
       'stroke-dasharray': `${dash} ${circumference - dash}`,
       'stroke-dashoffset': String(-offset),
       'stroke-linecap': 'butt',
-    }));
+    });
+    setMarkData(arc, { index: segIndex, label: seg.label, value: seg.value });
+    svg.appendChild(arc);
     offset += dash;
-  }
+  });
 
   const legend = document.createElement('div');
   legend.className = 'chart-legend';
@@ -256,44 +427,33 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): void {
 // 折线面积渐变 id 计数器（同页多图时保持唯一）
 let lineGradientSeq = 0;
 
-/** 折线图（面积渐变 + 网格 + 数据点 + 底部 ≤7 个轴标签） */
-export function renderLine(el: HTMLElement, opts: ChartSeriesOptions): void {
+/** 折线图（面积渐变 + 网格 + 数据点 + 底部 ≤7 个轴标签；series 多系列走调色盘 + 可切换图例） */
+export interface ChartLineOptions extends ChartSeriesOptions {
+  /** 多系列（labels 共用）；缺省回落单系列 values */
+  series?: ChartSeriesSpec[];
+  /** 多系列时是否填充面积（默认首系列填充；area 类型全填充） */
+  fill?: boolean;
+}
+
+export function renderLine(el: HTMLElement, opts: ChartLineOptions): void {
   if (typeof document === 'undefined') return;
   el.textContent = '';
-  const n = Math.min(opts.labels.length, opts.values.length);
-  if (n === 0) { renderEmpty(el, opts.emptyLabel); return; }
+  const seriesList = normalizeSeriesInput(opts);
+  const labels = opts.labels ?? [];
+  const n = Math.min(labels.length, ...seriesList.map((s) => s.values.length));
+  if (n === 0 || seriesList.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
 
-  const labels = opts.labels.slice(0, n);
-  const values = opts.values.slice(0, n);
-
+  const labelsUsed = labels.slice(0, n);
   const width = 360;
   const height = 150;
   const pad = 14;
-  const max = maxOf(values);
-  const tone = toneVar(opts.tone);
-
-  const points = values.map((value, i) => ({
-    x: values.length <= 1 ? width / 2 : pad + (i / (values.length - 1)) * (width - pad * 2),
-    y: height - pad - (value / max) * (height - pad * 2),
-    value,
-    label: labels[i] ?? '',
-  }));
-  const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const last = points[points.length - 1]!;
-  const first = points[0]!;
-  const area = `${line} L${last.x.toFixed(1)},${height - pad} L${first.x.toFixed(1)},${height - pad} Z`;
-  const gradientId = `icen-chart-line-${++lineGradientSeq}`;
+  let max = 1;
+  for (const s of seriesList) max = Math.max(max, maxOf(s.values.slice(0, n)));
 
   const wrap = document.createElement('div');
   wrap.className = 'chart-line';
   const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
-
   const defs = svgEl('defs', {});
-  const gradient = svgEl('linearGradient', { id: gradientId, x1: '0', x2: '0', y1: '0', y2: '1' });
-  gradient.appendChild(svgEl('stop', { offset: '0%', 'stop-color': tone, 'stop-opacity': '0.32' }));
-  gradient.appendChild(svgEl('stop', { offset: '100%', 'stop-color': tone, 'stop-opacity': '0.02' }));
-  defs.appendChild(gradient);
-  svg.appendChild(defs);
 
   for (let i = 0; i < 4; i++) {
     const y = pad + (i * (height - pad * 2)) / 3;
@@ -303,25 +463,76 @@ export function renderLine(el: HTMLElement, opts: ChartSeriesOptions): void {
     }));
   }
 
-  svg.appendChild(svgEl('path', { d: area, fill: `url(#${gradientId})` }));
-  svg.appendChild(svgEl('path', {
-    d: line, fill: 'none', stroke: tone,
-    'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
-  }));
+  seriesList.forEach((s, si) => {
+    const tone = toneOf(s.tone, si) ?? toneVar(opts.tone);
+    const values = s.values.slice(0, n);
+    const points = values.map((value, i) => ({
+      i,
+      x: n <= 1 ? width / 2 : pad + (i / (n - 1)) * (width - pad * 2),
+      y: height - pad - (Math.max(0, value) / max) * (height - pad * 2),
+      value,
+      label: labelsUsed[i] ?? '',
+    }));
+    const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const last = points[points.length - 1]!;
+    const first = points[0]!;
 
-  for (const p of points) {
-    const dot = svgEl('circle', {
-      cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '3',
-      fill: 'var(--token-card)', stroke: tone, 'stroke-width': '2',
+    const fillArea = seriesList.length === 1 || opts.fill;
+    if (fillArea) {
+      const area = `${line} L${last.x.toFixed(1)},${height - pad} L${first.x.toFixed(1)},${height - pad} Z`;
+      const gradientId = `icen-chart-line-${++lineGradientSeq}`;
+      const gradient = svgEl('linearGradient', { id: gradientId, x1: '0', x2: '0', y1: '0', y2: '1' });
+      const strong = seriesList.length > 1 ? '0.20' : '0.32';
+      gradient.appendChild(svgEl('stop', { offset: '0%', 'stop-color': tone, 'stop-opacity': strong }));
+      gradient.appendChild(svgEl('stop', { offset: '100%', 'stop-color': tone, 'stop-opacity': '0.02' }));
+      defs.appendChild(gradient);
+      const areaPath = svgEl('path', { d: area, fill: `url(#${gradientId})` });
+      if (seriesList.length > 1) {
+        setMarkData(areaPath, { seriesIndex: si, seriesName: s.name, label: s.name, value: values.reduce((a, b) => a + b, 0) });
+      }
+      svg.appendChild(areaPath);
+    }
+
+    const linePath = svgEl('path', {
+      d: line, fill: 'none', stroke: tone,
+      'stroke-width': seriesList.length > 1 ? '2' : '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
     });
-    const title = svgEl('title', {});
-    title.textContent = `${p.label}: ${fmt(opts, p.value)}`;
-    dot.appendChild(title);
-    svg.appendChild(dot);
-  }
+    const lineTitle = svgEl('title', {});
+    lineTitle.textContent = s.name || '数值';
+    linePath.appendChild(lineTitle);
+    setMarkData(linePath, { seriesIndex: si, seriesName: s.name, label: s.name, value: values[values.length - 1] ?? 0 });
+    svg.appendChild(linePath);
 
-  wrap.append(svg, labelsRow(sampleLabels(labels)));
+    for (const p of points) {
+      const dot = svgEl('circle', {
+        cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '3',
+        fill: 'var(--token-card)', stroke: tone, 'stroke-width': '2',
+      });
+      const title = svgEl('title', {});
+      title.textContent = seriesList.length > 1 ? `${p.label} · ${s.name}: ${fmt(opts, p.value)}` : `${p.label}: ${fmt(opts, p.value)}`;
+      dot.appendChild(title);
+      setMarkData(dot, {
+        index: p.i,
+        seriesIndex: seriesList.length > 1 ? si : undefined,
+        seriesName: seriesList.length > 1 ? s.name : undefined,
+        label: p.label,
+        value: p.value,
+      });
+      svg.appendChild(dot);
+      /* 加大命中区（透明 8px 圆，hover/点击手感） */
+      const hit = svgEl('circle', {
+        cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '8', fill: 'transparent',
+        'data-chart-hit': '1',
+      });
+      copyMarkData(hit, dot);
+      svg.appendChild(hit);
+    }
+  });
+
+  if (defs.firstChild) svg.insertBefore(defs, svg.firstChild);
+  wrap.append(svg, labelsRow(sampleLabels(labelsUsed)));
   el.appendChild(wrap);
+  if (seriesList.length > 1) el.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap, opts));
 }
 
 /** 面积图（与折线同族，以面积填充为视觉主体） */
@@ -482,10 +693,9 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): void {
     svg.appendChild(txt);
   }
 
-  // 数据多边形（各系列）
-  const legend = document.createElement('div');
-  legend.className = 'chart-legend';
-  for (const s of opts.series) {
+  // 数据多边形（各系列，多系列走可切换图例）
+  const legendItems: LegendKey[] = [];
+  opts.series.forEach((s, si) => {
     const tone = toneVar(s.tone);
     const pts = Array.from({ length: n }, (_, i) => {
       const v = Math.max(0, Math.min(maxVal, s.values[i] ?? 0));
@@ -504,20 +714,27 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): void {
     const title = svgEl('title', {});
     title.textContent = `${s.name}: ${s.values.map((v) => fmt(opts, v)).join(' / ')}`;
     polyFill.appendChild(title);
+    setMarkData(polyFill, { seriesIndex: si, seriesName: s.name || undefined, label: s.name, value: s.values.reduce((a, b) => a + (b || 0), 0) });
     svg.appendChild(polyFill);
 
     for (let i = 0; i < n; i++) {
       const v = Math.max(0, Math.min(maxVal, s.values[i] ?? 0));
       const p = pointAt(i, (v / maxVal) * radius);
-      svg.appendChild(svgEl('circle', {
+      const dot = svgEl('circle', {
         cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '2.5',
         fill: 'var(--token-card)', stroke: tone, 'stroke-width': '1.5',
-      }));
+      });
+      setMarkData(dot, { index: i, seriesIndex: si, seriesName: s.name || undefined, label: axes[i] ?? '', value: s.values[i] ?? 0 });
+      svg.appendChild(dot);
     }
-    legend.appendChild(legendItem(s.name, '', s.tone));
-  }
+    legendItems.push({ key: s.name || `系列${si + 1}`, label: s.name || `系列${si + 1}`, tone: s.tone, si });
+  });
 
-  wrap.append(svg, legend);
+  wrap.append(svg, opts.series.length > 1 ? toggleLegend(legendItems, wrap, opts) : (() => {
+    const l = document.createElement('div');
+    l.className = 'chart-legend';
+    return l;
+  })());
   el.appendChild(wrap);
 }
 
@@ -609,6 +826,7 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): void 
     cell.className = 'chart-heatmap-cell';
     cell.dataset.level = String(levelOf(entry.value));
     cell.setAttribute('title', `${entry.date}：${fmt(opts, entry.value)}`);
+    setMarkData(cell, { index: entries.indexOf(entry), label: entry.date, value: entry.value });
     grid.appendChild(cell);
   }
 
@@ -739,4 +957,775 @@ export function renderGauge(el: HTMLElement, opts: ChartGaugeOptions): void {
 
   wrap.append(svg, center);
   el.appendChild(wrap);
+}
+
+/* ═══════════ 日历热力图（GitHub 贡献图完整形态：月份标签 + 周格）═══════════ */
+
+export interface ChartCalendarOptions {
+  /** ISO 日期数组（YYYY-MM-DD，与 values 配对；或用 data） */
+  dates?: string[];
+  values?: number[];
+  /** 精确形态：{date, value}[]（与 dates+values 二选一，优先） */
+  data?: HeatmapDatum[];
+  tone?: ChartTone;
+  emptyLabel?: string;
+  formatValue?: (value: number) => string;
+}
+
+/** 贡献日历（calendar heatmap）：dates → 自动周布局 + 月份标签，GitHub 同款 */
+export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): void {
+  if (typeof document === 'undefined') return;
+  el.textContent = '';
+
+  let entries: HeatmapDatum[];
+  if (opts.data && opts.data.length > 0) {
+    entries = opts.data;
+  } else if (opts.dates && opts.dates.length > 0 && opts.values) {
+    entries = opts.dates.slice(0, opts.values.length).map((date, i) => ({ date, value: opts.values![i] ?? 0 }));
+  } else {
+    renderEmpty(el, opts.emptyLabel);
+    return;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-calendar';
+  if (opts.tone) wrap.style.setProperty('--chart-tone', toneVar(opts.tone));
+
+  /* 月份标签行：按周列定位（第 N 周的左缘），同月只标第一次出现 */
+  const grid = document.createElement('div');
+  grid.className = 'chart-heatmap-grid';
+  grid.setAttribute('role', 'img');
+  const months = document.createElement('div');
+  months.className = 'chart-calendar-months';
+  const weekdayRow = document.createElement('div');
+  weekdayRow.className = 'chart-calendar-weekdays';
+  ['一', '', '三', '', '五', '', '日'].forEach((w) => {
+    const s = document.createElement('span');
+    s.textContent = w;
+    weekdayRow.appendChild(s);
+  });
+
+  const max = maxOf(entries.map((e) => e.value));
+  const levelOf = (v: number): number => (v <= 0 ? 0 : Math.min(4, Math.ceil((v / max) * 4)));
+
+  const first = new Date(`${entries[0]!.date}T00:00:00`);
+  const pad = (first.getDay() + 6) % 7;
+  for (let i = 0; i < pad; i++) {
+    const blank = document.createElement('span');
+    blank.className = 'chart-heatmap-cell is-blank';
+    grid.appendChild(blank);
+  }
+  let lastMonth = -1;
+  entries.forEach((entry, i) => {
+    const d = new Date(`${entry.date}T00:00:00`);
+    const col = Math.floor((pad + i) / 7);
+    if (d.getMonth() !== lastMonth) {
+      lastMonth = d.getMonth();
+      const label = document.createElement('span');
+      label.className = 'chart-calendar-month';
+      label.textContent = `${d.getMonth() + 1}月`;
+      label.style.setProperty('--col', String(col));
+      months.appendChild(label);
+    }
+    const cell = document.createElement('span');
+    cell.className = 'chart-heatmap-cell';
+    cell.dataset.level = String(levelOf(entry.value));
+    cell.setAttribute('title', `${entry.date}：${fmt(opts, entry.value)}`);
+    setMarkData(cell, { index: i, label: entry.date, value: entry.value });
+    grid.appendChild(cell);
+  });
+
+  /* 图例：少 → 多 */
+  const legend = document.createElement('div');
+  legend.className = 'chart-heatmap-legend';
+  const less = document.createElement('span');
+  less.textContent = '少';
+  const more = document.createElement('span');
+  more.textContent = '多';
+  legend.appendChild(less);
+  for (let lv = 0; lv <= 4; lv++) {
+    const cell = document.createElement('span');
+    cell.className = 'chart-heatmap-cell';
+    cell.dataset.level = String(lv);
+    legend.appendChild(cell);
+  }
+  legend.appendChild(more);
+
+  const columns = Math.max(1, Math.ceil((pad + entries.length) / 7));
+  months.style.setProperty('--columns', String(columns));
+  wrap.append(months, weekdayRow, grid, legend);
+  el.appendChild(wrap);
+}
+
+/* ═══════════ 散点 / 气泡图 ═══════════ */
+
+export interface ChartPointSpec {
+  x: number;
+  y: number;
+  /** 第三维：气泡大小（映射到半径 3–10） */
+  size?: number;
+  label?: string;
+}
+
+export interface ChartScatterOptions {
+  points: ChartPointSpec[];
+  tone?: ChartTone;
+  /** X 轴名称（图例/tooltip 用） */
+  xLabel?: string;
+  yLabel?: string;
+  emptyLabel?: string;
+  formatValue?: (value: number) => string;
+}
+
+/** 散点图（可选 size 第三维 → 气泡）；坐标域自动 nice 取整 + 边界刻度 */
+export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): void {
+  if (typeof document === 'undefined') return;
+  el.textContent = '';
+  const pts = opts.points.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+  if (pts.length === 0) { renderEmpty(el, opts.emptyLabel); return; }
+
+  const width = 360;
+  const height = 220;
+  const pad = 30;
+  let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity, sMax = 0;
+  for (const p of pts) {
+    if (p.x < xMin) xMin = p.x;
+    if (p.x > xMax) xMax = p.x;
+    if (p.y < yMin) yMin = p.y;
+    if (p.y > yMax) yMax = p.y;
+    if ((p.size ?? 0) > sMax) sMax = p.size ?? 0;
+  }
+  if (xMax === xMin) xMax = xMin + 1;
+  if (yMax === yMin) yMax = yMin + 1;
+  const rOf = (size?: number): number => (size && sMax > 0 ? 3 + (size / sMax) * 7 : 4);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-scatter';
+  const tone = toneVar(opts.tone);
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
+
+  /* 网格：3 横 + 4 竖 + 边界刻度值 */
+  const xAt = (x: number): number => pad + ((x - xMin) / (xMax - xMin)) * (width - pad * 2);
+  const yAt = (y: number): number => height - pad - ((y - yMin) / (yMax - yMin)) * (height - pad * 2);
+  for (let i = 0; i <= 3; i++) {
+    const y = pad + (i * (height - pad * 2)) / 3;
+    svg.appendChild(svgEl('line', {
+      x1: String(pad), x2: String(width - pad), y1: String(y), y2: String(y),
+      stroke: 'var(--token-line-soft)', 'stroke-width': '1',
+    }));
+    const tv = yMin + ((yMax - yMin) * (3 - i)) / 3;
+    const txt = svgEl('text', {
+      x: String(pad - 4), y: String(y + 3), 'text-anchor': 'end', 'font-size': '8', fill: 'var(--token-text-faint)',
+    });
+    txt.textContent = String(Math.round(tv * 10) / 10);
+    svg.appendChild(txt);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const x = pad + (i * (width - pad * 2)) / 4;
+    svg.appendChild(svgEl('line', {
+      x1: String(x), x2: String(x), y1: String(pad), y2: String(height - pad),
+      stroke: 'var(--token-line-soft)', 'stroke-width': '1', 'stroke-dasharray': '2 3',
+    }));
+    const tv = xMin + ((xMax - xMin) * i) / 4;
+    const txt = svgEl('text', {
+      x: String(x), y: String(height - pad + 12), 'text-anchor': 'middle', 'font-size': '8', fill: 'var(--token-text-faint)',
+    });
+    txt.textContent = String(Math.round(tv * 10) / 10);
+    svg.appendChild(txt);
+  }
+  if (opts.yLabel) {
+    const t = svgEl('text', { x: '10', y: String(pad - 10), 'font-size': '8', fill: 'var(--token-text-faint)' });
+    t.textContent = opts.yLabel;
+    svg.appendChild(t);
+  }
+  if (opts.xLabel) {
+    const t = svgEl('text', { x: String(width - pad), y: String(pad - 10), 'text-anchor': 'end', 'font-size': '8', fill: 'var(--token-text-faint)' });
+    t.textContent = opts.xLabel;
+    svg.appendChild(t);
+  }
+
+  pts.forEach((p, i) => {
+    const c = svgEl('circle', {
+      cx: xAt(p.x).toFixed(1), cy: yAt(p.y).toFixed(1), r: rOf(p.size).toFixed(1),
+      fill: tone, 'fill-opacity': '0.55', stroke: tone, 'stroke-width': '1',
+    });
+    const title = svgEl('title', {});
+    title.textContent = `${p.label ?? `#${i + 1}`}: (${p.x}, ${p.y}${p.size != null ? `, size ${p.size}` : ''})`;
+    c.appendChild(title);
+    setMarkData(c, { index: i, label: p.label ?? `#${i + 1}`, value: p.y });
+    c.dataset.chartX = String(p.x);
+    svg.appendChild(c);
+  });
+
+  wrap.appendChild(svg);
+  el.appendChild(wrap);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ChartSpec 通用层（统一规格 + 单一入口 + 交互事件族 + tooltip）
+   ————————————————————————————————————————————————————————————————
+   设计：全部现有 render* 保留为底层；renderChart(el, spec) 归一 → 推断 →
+   分发，并挂交互委托（icen:chart-hover / click / dblclick / contextmenu，
+   detail 携带 index/seriesIndex/seriesName/label/value）与可选内置 tooltip。
+   spec 为纯 JSON（无函数回调），是后续 AI 调用层（chartToolDefinition /
+   chart kind）的直接输入——人给函数、AI 给 format 描述符，两全。
+   ══════════════════════════════════════════════════════════════ */
+
+export type ChartType =
+  | 'line' | 'area' | 'vbar' | 'hbar' | 'stack' | 'donut'
+  | 'radar' | 'heatmap' | 'calendar' | 'sparkline' | 'gauge' | 'scatter';
+
+/** 数值格式化描述符（替代函数回调——可 JSON 序列化，AI 可给） */
+export interface ChartValueFormat {
+  /** 值后缀单位（"ms" / "¥" / "个"） */
+  unit?: string;
+  /** compact：1.2k/3.4M；percent：原值即百分数补 %；ms：时长自适应（800ms/1.2s/3m）；raw（默认） */
+  notation?: 'compact' | 'percent' | 'ms' | 'raw';
+}
+
+/** 任意维度数据记录 + 维度映射（data[] 路径：字段名可完全自定义） */
+export interface ChartDims {
+  /** 类目/横轴字段（默认 'label'） */
+  label?: string;
+  /** 系列分组字段（默认 'series'；存在即多系列） */
+  series?: string;
+  /** 数值字段（默认 'value'） */
+  value?: string;
+  /** 散点 x 字段（默认 'x'） */
+  x?: string;
+  /** 散点 y 字段（默认 'y'） */
+  y?: string;
+  /** 散点 size 字段（默认 'size'） */
+  size?: string;
+}
+
+/** 统一图表规格（纯 JSON；type 缺省由 inferChartType 推断） */
+export interface ChartSpec {
+  type?: string;
+  title?: string;
+  /** 类目轴（line/area/vbar/hbar） */
+  labels?: string[];
+  /** 单系列值（labels 配对；多系列用 series） */
+  values?: number[];
+  /** 多系列（line/vbar/radar） */
+  series?: ChartSeriesSpec[];
+  /** 占比型（donut/stack） */
+  segments?: ChartSegment[];
+  /** 雷达轴 */
+  axes?: string[];
+  /** 散点（或经 dims 从 data[] 提取） */
+  points?: ChartPointSpec[];
+  /** 任意维度原始记录 + dims 字段映射（pivot 到上述形态） */
+  data?: Record<string, unknown>[];
+  dims?: ChartDims;
+  /** 贡献日历：ISO 日期（与 values 配对） */
+  dates?: string[];
+  tone?: ChartTone;
+  /** vbar 多系列：堆叠（默认分组） */
+  stacked?: boolean;
+  /** line 多系列：填充面积 */
+  fill?: boolean;
+  weeks?: number;
+  /** radar/gauge 的值域上限 */
+  max?: number;
+  /** radar 网格层数 */
+  levels?: number;
+  format?: ChartValueFormat;
+  /** 内置 tooltip（默认开；false 关闭后只派事件） */
+  tooltip?: boolean;
+  emptyLabel?: string;
+}
+
+/** 格式化描述符 → 函数（底层渲染器的 formatValue 槽） */
+export function chartFormatValue(format?: ChartValueFormat): (value: number) => string {
+  if (!format) return (v) => String(v);
+  const notation = format.notation ?? 'raw';
+  return (v: number) => {
+    let text: string;
+    if (notation === 'compact') {
+      const abs = Math.abs(v);
+      text = abs >= 1_000_000 ? `${Math.round(v / 100_000) / 10}M`
+        : abs >= 1000 ? `${Math.round(v / 100) / 10}k`
+        : String(v);
+    } else if (notation === 'percent') {
+      text = `${Math.round(v * 10) / 10}%`;
+    } else if (notation === 'ms') {
+      if (v <= 0) text = '0ms';
+      else if (v < 1000) text = `${Math.round(v)}ms`;
+      else if (v < 60_000) text = `${Math.round(v / 100) / 10}s`;
+      else text = `${Math.floor(v / 60_000)}m`;
+    } else {
+      text = String(Math.round(v * 100) / 100);
+    }
+    return format.unit ? `${text} ${format.unit}` : text;
+  };
+}
+
+/* ── data[] + dims → pivot ── */
+
+function pivotData(spec: ChartSpec): Partial<ChartSpec> & { axes?: string[] } {
+  const data = spec.data;
+  if (!Array.isArray(data) || data.length === 0) return {};
+  const d = spec.dims ?? {};
+  const labelField = d.label ?? 'label';
+  const seriesField = d.series ?? 'series';
+  const valueField = d.value ?? 'value';
+  const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : Number(v) || 0);
+  const str = (v: unknown): string => (typeof v === 'string' ? v : v == null ? '' : String(v));
+
+  /* 散点形态：dims.x/y 字段存在数值即走 points */
+  if (d.x || data.some((r) => typeof r.x === 'number')) {
+    const xf = d.x ?? 'x';
+    const yf = d.y ?? 'y';
+    const sf = d.size ?? 'size';
+    const lf = d.label ?? 'label';
+    const points = data
+      .filter((r) => r[xf] != null && r[yf] != null)
+      .map((r) => ({
+        x: num(r[xf]),
+        y: num(r[yf]),
+        size: r[sf] != null ? num(r[sf]) : undefined,
+        label: r[lf] != null ? str(r[lf]) : undefined,
+      }));
+    return { points };
+  }
+
+  /* 一般形态：label 去重保序为类目；series 字段存在即分组多系列 */
+  const labels: string[] = [];
+  const seenLabel = new Set<string>();
+  const hasSeries = data.some((r) => r[seriesField] != null && r[seriesField] !== '');
+  const seriesNames: string[] = [];
+  const seenSeries = new Set<string>();
+  for (const r of data) {
+    const l = str(r[labelField]);
+    if (!seenLabel.has(l)) { seenLabel.add(l); labels.push(l); }
+    if (hasSeries) {
+      const sn = str(r[seriesField]);
+      if (!seenSeries.has(sn)) { seenSeries.add(sn); seriesNames.push(sn); }
+    }
+  }
+  const labelIndex = new Map(labels.map((l, i) => [l, i]));
+  const seriesIndex = new Map(seriesNames.map((s, i) => [s, i]));
+  const matrix = seriesNames.map(() => labels.map(() => NaN));
+  for (const r of data) {
+    const li = labelIndex.get(str(r[labelField])) ?? 0;
+    const si = hasSeries ? seriesIndex.get(str(r[seriesField])) ?? 0 : 0;
+    (matrix[si] ?? [])[li] = num(r[valueField]);
+  }
+  /* 缺失值填 0（稀疏矩阵在柱/线族友好） */
+  for (const row of matrix) for (let i = 0; i < row.length; i++) if (Number.isNaN(row[i]!)) row[i]! = 0;
+
+  if (hasSeries) {
+    return {
+      labels,
+      series: seriesNames.map((name, si) => ({ name, values: matrix[si] ?? [] })),
+    };
+  }
+  return { labels, values: matrix[0] ?? [] };
+}
+
+/* ── 归一化（业界/LLM 友好别名 + 类型纠正）── */
+
+const CHART_TYPE_ALIASES: Record<string, ChartType> = {
+  bar: 'vbar', column: 'vbar', 'vertical-bar': 'vbar', 'bar-vertical': 'vbar',
+  'horizontal-bar': 'hbar', 'bar-horizontal': 'hbar', ranking: 'hbar',
+  pie: 'donut', ring: 'donut', 'pie-chart': 'donut',
+  'stacked-bar': 'stack', 'stacked-bar-100': 'stack', ratio: 'stack',
+  time: 'line', timeline: 'line', trend: 'line', 'trend-line': 'line',
+  contribution: 'calendar', 'contribution-graph': 'calendar', 'calendar-heatmap': 'calendar',
+  heat: 'heatmap', matrix: 'heatmap',
+  bubble: 'scatter', 'scatter-plot': 'scatter',
+  dial: 'gauge', progress: 'gauge',
+  mini: 'sparkline', 'trend-sparkline': 'sparkline',
+  spider: 'radar', 'radar-chart': 'radar',
+};
+
+function toNum(v: unknown): number | undefined {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v.replace(/[,\s%]/g, ''));
+    if (Number.isFinite(n)) return n;
+  }
+  return undefined;
+}
+
+/**
+ * 归一化 ChartSpec：字符串输入尝试 JSON.parse；类型别名纠正；数值容错转换；
+ * data[] + dims pivot 到 labels/values/series/points。不抛异常——纠不了的
+ * 字段丢弃，返回的 spec 一定可交给 infer/render（空数据走 .chart-empty）。
+ */
+export function normalizeChartSpec(raw: unknown): ChartSpec {
+  let src: unknown = raw;
+  if (typeof src === 'string') {
+    try { src = JSON.parse(src); } catch { return {}; }
+  }
+  if (!src || typeof src !== 'object' || Array.isArray(src)) {
+    /* 数组捷径：[{label,value}] 记录数组当 data[] 用 */
+    if (Array.isArray(raw)) src = { data: raw };
+    else return {};
+  }
+  const s = src as Record<string, unknown>;
+  const spec: ChartSpec = {};
+
+  if (typeof s.type === 'string') {
+    const t = s.type.trim().toLowerCase();
+    spec.type = CHART_TYPE_ALIASES[t] ?? t;
+  }
+  for (const k of ['title', 'tone', 'emptyLabel'] as const) {
+    if (typeof s[k] === 'string') (spec as Record<string, unknown>)[k] = s[k];
+  }
+  for (const k of ['stacked', 'fill', 'tooltip'] as const) {
+    if (typeof s[k] === 'boolean') (spec as Record<string, unknown>)[k] = s[k];
+  }
+  for (const k of ['weeks', 'max', 'levels'] as const) {
+    const n = toNum(s[k]);
+    if (n != null) (spec as Record<string, unknown>)[k] = n;
+  }
+
+  if (Array.isArray(s.labels)) spec.labels = s.labels.map((v) => String(v ?? ''));
+  if (Array.isArray(s.values)) {
+    const values = s.values.map(toNum).filter((v): v is number => v != null);
+    if (values.length > 0) spec.values = values;
+  }
+  if (Array.isArray(s.dates)) spec.dates = s.dates.map((v) => String(v ?? ''));
+  if (Array.isArray(s.axes)) spec.axes = s.axes.map((v) => String(v ?? ''));
+  if (Array.isArray(s.series)) {
+    const series = s.series
+      .filter((v): v is Record<string, unknown> => !!v && typeof v === 'object')
+      .map((v, i) => {
+        const values = Array.isArray(v.values) ? v.values.map(toNum).filter((n): n is number => n != null) : [];
+        const sv: ChartSeriesSpec = { name: String(v.name ?? `系列${i + 1}`), values };
+        const tone = v.tone;
+        if (typeof tone === 'string' || typeof tone === 'number') sv.tone = tone as ChartTone | number;
+        return sv;
+      })
+      .filter((v) => v.values.length > 0);
+    if (series.length > 0) spec.series = series;
+  }
+  if (Array.isArray(s.segments)) {
+    const segments = s.segments
+      .filter((v): v is Record<string, unknown> => !!v && typeof v === 'object')
+      .map((v) => {
+        const seg: ChartSegment = { label: String(v.label ?? v.name ?? ''), value: toNum(v.value) ?? 0 };
+        if (typeof v.tone === 'string') seg.tone = v.tone as ChartTone;
+        return seg;
+      })
+      .filter((v) => v.label !== '' || v.value !== 0);
+    if (segments.length > 0) spec.segments = segments;
+  }
+  if (Array.isArray(s.points)) {
+    const points = s.points
+      .filter((v): v is Record<string, unknown> => !!v && typeof v === 'object')
+      .map((v) => ({
+        x: toNum(v.x) ?? 0,
+        y: toNum(v.y) ?? 0,
+        size: toNum(v.size),
+        label: typeof v.label === 'string' ? v.label : undefined,
+      }));
+    if (points.length > 0) spec.points = points;
+  }
+  if (Array.isArray(s.data)) spec.data = s.data.filter((v): v is Record<string, unknown> => !!v && typeof v === 'object');
+  if (s.dims && typeof s.dims === 'object' && !Array.isArray(s.dims)) spec.dims = s.dims as ChartDims;
+  if (s.format && typeof s.format === 'object') {
+    const f = s.format as Record<string, unknown>;
+    const format: ChartValueFormat = {};
+    if (typeof f.unit === 'string') format.unit = f.unit;
+    if (typeof f.notation === 'string' && ['compact', 'percent', 'ms', 'raw'].includes(f.notation)) {
+      format.notation = f.notation as ChartValueFormat['notation'];
+    }
+    spec.format = format;
+  }
+
+  /* data[] pivot（显式形态优先；heatmap/calendar 的 {date,value} 记录保持 data 原样） */
+  const isDateRecords = spec.data?.length && spec.data[0] && 'date' in (spec.data[0] as Record<string, unknown>);
+  if (spec.data && spec.data.length > 0 && !isDateRecords && !spec.series && !spec.points && !spec.values && !spec.segments) {
+    Object.assign(spec, pivotData(spec));
+  }
+  return spec;
+}
+
+/** 类目标签是否呈时间序（ISO 日期 / 年月 / 季度 / 星期）——line 推断依据 */
+function looksTemporal(labels: string[]): boolean {
+  if (labels.length === 0) return false;
+  let hits = 0;
+  for (const l of labels) {
+    if (/^\d{4}-\d{2}(-\d{2})?$/.test(l)) hits++;
+    else if (/^\d{4}\/\d{1,2}(\/\d{1,2})?$/.test(l)) hits++;
+    else if (/^\d{4}年/.test(l)) hits++;
+    else if (/^[Qq][1-4]$/.test(l)) hits++;
+    else if (/^(周一|周二|周三|周四|周五|周六|周日|Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i.test(l)) hits++;
+    else if (/^第?\d+[日时周月]/.test(l)) hits++;
+  }
+  return hits / labels.length >= 0.6;
+}
+
+/** 未指定 type 时的自动选型（确定性规则，AI 只给数据也能画对） */
+export function inferChartType(spec: ChartSpec): ChartType {
+  if (spec.points && spec.points.length > 0) return 'scatter';
+  if (spec.dates && spec.dates.length > 0) return 'calendar';
+  if (spec.segments && spec.segments.length > 0) return 'donut';
+  if (spec.axes && spec.axes.length >= 3) return 'radar';
+  const labels = spec.labels ?? [];
+  const multiSeries = (spec.series?.length ?? 0) > 1;
+  if (labels.length > 0) {
+    if (looksTemporal(labels)) return 'line';
+    if (multiSeries) return 'vbar';
+    return labels.length > 8 ? 'hbar' : 'vbar';
+  }
+  if (multiSeries) return 'line';
+  if (spec.values && spec.values.length > 1) return 'line';
+  if (typeof spec.max === 'number' && spec.values && spec.values.length === 1) return 'gauge';
+  return 'vbar';
+}
+
+/* ── renderChart：单一入口 + 交互委托 + tooltip ── */
+
+export type ChartEventName = 'hover' | 'click' | 'dblclick' | 'contextmenu';
+
+export interface ChartEventDetail extends ChartMarkData {
+  type: ChartEventName;
+  /** hover 专有：enter / leave / move */
+  phase?: 'enter' | 'move' | 'leave';
+  /** 归一后的图型 */
+  chart: ChartType;
+  /** 事件发生时的标记元素 */
+  target?: Element;
+  /** 指针视口坐标（tooltip 定位/自定义浮层用） */
+  pointerX?: number;
+  pointerY?: number;
+}
+
+export interface ChartHandle {
+  el: HTMLElement;
+  /** 归一 + 推断后的当前规格 */
+  spec: ChartSpec;
+  /** 原地重渲染（保留事件委托与句柄） */
+  update(next: ChartSpec | unknown): void;
+  /** icen:chart-<name> 监听糖（hover/click/dblclick/contextmenu）；返回解绑函数 */
+  on(name: ChartEventName, listener: (detail: ChartEventDetail, event: Event) => void): () => void;
+  /** 清空渲染并摘除绑定标记（委托随 el 生存期，destroy 后可重新 renderChart） */
+  destroy(): void;
+}
+
+function dispatchChartEvent(
+  root: HTMLElement,
+  type: ChartEventName,
+  mark: Element,
+  chart: ChartType,
+  phase?: 'enter' | 'move' | 'leave',
+  pointer?: { x: number; y: number },
+): void {
+  const read = (name: string): string | undefined => mark.getAttribute(name) ?? undefined;
+  const numOr = (v: string | undefined): number | undefined => (v == null ? undefined : Number(v));
+  const detail: ChartEventDetail = {
+    type,
+    phase,
+    chart,
+    index: numOr(read('data-chart-index')),
+    seriesIndex: numOr(read('data-chart-series')),
+    seriesName: read('data-chart-series-name'),
+    label: read('data-chart-label'),
+    value: numOr(read('data-chart-value')),
+    target: mark,
+    pointerX: pointer?.x,
+    pointerY: pointer?.y,
+  };
+  root.dispatchEvent(new CustomEvent<ChartEventDetail>(`icen:chart-${type}`, { detail, bubbles: true }));
+}
+
+/* 内置 tooltip（单例 portal，token 样式；textContent only） */
+let tooltipEl: HTMLElement | null = null;
+function chartTooltip(): HTMLElement {
+  if (!tooltipEl) {
+    tooltipEl = document.createElement('div');
+    tooltipEl.className = 'chart-tooltip';
+    tooltipEl.setAttribute('role', 'tooltip');
+    tooltipEl.hidden = true;
+    document.body.appendChild(tooltipEl);
+  }
+  return tooltipEl;
+}
+function tooltipText(mark: Element): string {
+  const label = mark.getAttribute('data-chart-label') ?? '';
+  const series = mark.getAttribute('data-chart-series-name');
+  const value = mark.getAttribute('data-chart-value');
+  const head = series ? (label ? `${series} · ${label}` : series) : label;
+  return value != null ? `${head}：${value}` : head;
+}
+function moveTooltip(x: number, y: number): void {
+  const tip = chartTooltip();
+  const pad = 12;
+  const w = tip.offsetWidth || 120;
+  const h = tip.offsetHeight || 28;
+  let left = x + pad;
+  let top = y - h - pad;
+  if (left + w > window.innerWidth - 8) left = x - w - pad;
+  if (top < 8) top = y + pad;
+  tip.style.left = `${Math.round(left)}px`;
+  tip.style.top = `${Math.round(top)}px`;
+}
+
+/**
+ * 统一入口：normalizeChartSpec → inferChartType（type 缺省时）→ 分发到底层
+ * 渲染器，并在 el 上挂交互委托（hover/click/dblclick/contextmenu → icen:chart-*，
+ * bubbles，detail 含 index/seriesIndex/seriesName/label/value/指针坐标）与可选
+ * tooltip（spec.tooltip !== false 时 portal 跟随指针；右键默认 preventDefault）。
+ * spec.title 有值时渲染 .chart-title。返回 { el, spec, update, on, destroy }。
+ */
+export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHandle {
+  const noop = (): void => undefined;
+  if (typeof document === 'undefined') {
+    return { el, spec: {}, update: noop, on: () => noop, destroy: noop };
+  }
+  const root = el;
+  const attached = root as HTMLElement & { __icenChartBound?: boolean };
+  const wasBound = attached.__icenChartBound === true;
+  attached.__icenChartBound = true;
+
+  let current = normalizeChartSpec(raw);
+
+  const typeOf = (): ChartType => (current.type as ChartType) ?? 'vbar';
+
+  const render = (): void => {
+    if (!current.type) current = { ...current, type: inferChartType(current) };
+    const spec = current;
+    root.textContent = '';
+    const formatValue = chartFormatValue(spec.format);
+    if (spec.title) {
+      const t = document.createElement('div');
+      t.className = 'chart-title';
+      t.textContent = spec.title;
+      root.appendChild(t);
+    }
+    switch (spec.type) {
+      case 'line':
+        renderLine(root, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: spec.fill, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'area':
+        renderLine(root, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, tone: spec.tone, fill: true, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'vbar':
+        renderVBar(root, { labels: spec.labels ?? [], values: spec.values ?? [], series: spec.series, stacked: spec.stacked, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'hbar':
+        renderHBar(root, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'stack':
+        renderStack(root, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'donut':
+        renderDonut(root, { segments: spec.segments ?? [], formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'radar': {
+        const series = spec.series
+          ? spec.series.map((s) => ({ name: s.name, values: s.values, tone: typeof s.tone === 'string' ? s.tone : undefined }))
+          : spec.values
+            ? [{ name: '', values: spec.values }]
+            : [];
+        renderRadar(root, { axes: spec.axes ?? spec.labels ?? [], series, max: spec.max, levels: spec.levels, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      }
+      case 'heatmap':
+        renderHeatmap(root, { values: spec.values, data: spec.data as HeatmapDatum[] | undefined, weeks: spec.weeks, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'calendar':
+        renderCalendar(root, { dates: spec.dates, values: spec.values, data: spec.data as HeatmapDatum[] | undefined, tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'sparkline':
+        renderSparkline(root, { labels: spec.labels ?? [], values: spec.values ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      case 'gauge':
+        renderGauge(root, { value: spec.values?.[0] ?? 0, max: spec.max, tone: spec.tone, label: spec.labels?.[0], formatValue });
+        break;
+      case 'scatter':
+        renderScatter(root, { points: spec.points ?? [], tone: spec.tone, formatValue, emptyLabel: spec.emptyLabel });
+        break;
+      default:
+        renderEmpty(root, spec.emptyLabel);
+    }
+  };
+
+  /* 交互委托（挂 root 一次，跨 update 存活；标记随渲染更替） */
+  if (!wasBound) {
+    const markOf = (e: Event): Element | null => {
+      const t = e.target;
+      return t instanceof Element ? t.closest('[data-chart-mark]') : null;
+    };
+    const tipEnabled = (): boolean => current.tooltip !== false;
+    let hoverMark: Element | null = null;
+
+    const enterMark = (mark: Element, x: number, y: number): void => {
+      hoverMark = mark;
+      mark.classList.add('is-hover');
+      dispatchChartEvent(root, 'hover', mark, typeOf(), 'enter', { x, y });
+      if (tipEnabled()) {
+        const tip = chartTooltip();
+        tip.textContent = tooltipText(mark);
+        tip.hidden = false;
+        moveTooltip(x, y);
+      }
+    };
+    const leaveMark = (pointer?: { x: number; y: number }): void => {
+      if (!hoverMark) return;
+      hoverMark.classList.remove('is-hover');
+      dispatchChartEvent(root, 'hover', hoverMark, typeOf(), 'leave', pointer);
+      hoverMark = null;
+      chartTooltip().hidden = true;
+    };
+
+    root.addEventListener('pointerover', (e: PointerEvent) => {
+      const mark = markOf(e);
+      if (!mark || mark === hoverMark) return;
+      leaveMark({ x: e.clientX, y: e.clientY });
+      enterMark(mark, e.clientX, e.clientY);
+    });
+    root.addEventListener('pointermove', (e: PointerEvent) => {
+      if (hoverMark && tipEnabled()) {
+        dispatchChartEvent(root, 'hover', hoverMark, typeOf(), 'move', { x: e.clientX, y: e.clientY });
+        moveTooltip(e.clientX, e.clientY);
+      }
+    });
+    root.addEventListener('pointerout', (e: PointerEvent) => {
+      const mark = markOf(e);
+      if (mark && mark === hoverMark) leaveMark({ x: e.clientX, y: e.clientY });
+    });
+    root.addEventListener('pointerleave', () => leaveMark());
+    root.addEventListener('click', (e: MouseEvent) => {
+      const mark = markOf(e);
+      if (mark) dispatchChartEvent(root, 'click', mark, typeOf(), undefined, { x: e.clientX, y: e.clientY });
+    });
+    root.addEventListener('dblclick', (e: MouseEvent) => {
+      const mark = markOf(e);
+      if (mark) dispatchChartEvent(root, 'dblclick', mark, typeOf(), undefined, { x: e.clientX, y: e.clientY });
+    });
+    root.addEventListener('contextmenu', (e: MouseEvent) => {
+      const mark = markOf(e);
+      if (!mark) return;
+      e.preventDefault();
+      dispatchChartEvent(root, 'contextmenu', mark, typeOf(), undefined, { x: e.clientX, y: e.clientY });
+    });
+  }
+
+  render();
+
+  return {
+    el: root,
+    spec: current,
+    update(next: ChartSpec | unknown): void {
+      current = normalizeChartSpec(next);
+      render();
+    },
+    on(name: ChartEventName, listener: (detail: ChartEventDetail, event: Event) => void): () => void {
+      const handler = (event: Event): void => {
+        listener((event as CustomEvent<ChartEventDetail>).detail, event);
+      };
+      root.addEventListener(`icen:chart-${name}`, handler as EventListener);
+      return () => root.removeEventListener(`icen:chart-${name}`, handler as EventListener);
+    },
+    destroy(): void {
+      root.textContent = '';
+      attached.__icenChartBound = false;
+      chartTooltip().hidden = true;
+    },
+  };
 }

@@ -20,6 +20,7 @@ export const SLUGS = [
   'charts',
   'chart-line', 'chart-bar', 'chart-pie', 'chart-radar', 'chart-heatmap',
   'chart-area', 'chart-stack', 'chart-gauge', 'chart-sparkline',
+  'chart-scatter', 'chart-calendar',
   // 反馈
   'alert', 'result', 'progress', 'spinner', 'skeleton', 'copy', 'notification',
   // 导航
@@ -99,6 +100,8 @@ export const SLUG_EXPORTS = {
   charts: [
     'renderVBar', 'renderHBar', 'renderStack', 'renderDonut', 'renderLine',
     'renderArea', 'renderRadar', 'renderHeatmap', 'renderSparkline', 'renderGauge',
+    'renderCalendar', 'renderScatter', 'renderChart', 'normalizeChartSpec',
+    'inferChartType', 'chartFormatValue',
   ],
   datatable: ['createTable'],
   // ── 图表细分类型：仅导出该类型的渲染函数 ──
@@ -111,6 +114,8 @@ export const SLUG_EXPORTS = {
   'chart-stack': ['renderStack'],
   'chart-gauge': ['renderGauge'],
   'chart-sparkline': ['renderSparkline'],
+  'chart-scatter': ['renderScatter'],
+  'chart-calendar': ['renderCalendar'],
   // ── AI 族：behavior 挂到别模块的 slug，kit 入口按此 re-export ──
   'ai-message': ['renderAiMessage', 'createAiStream', 'initAiChat'],
   'ai-reasoning': ['createAiStream', 'initAiChat'],
@@ -144,6 +149,8 @@ export const SLUG_BEHAVIOR = {
   'chart-stack': 'charts',
   'chart-gauge': 'charts',
   'chart-sparkline': 'charts',
+  'chart-scatter': 'charts',
+  'chart-calendar': 'charts',
 };
 
 /** slug → kit 入口需附加引入的其他 CSS（如 datatable 右键菜单依赖 menu.css）。 */
@@ -153,7 +160,7 @@ export const EXTRA_CSS = {
   charts: [
     'chart-line.css', 'chart-bar.css', 'chart-pie.css', 'chart-radar.css',
     'chart-heatmap.css', 'chart-area.css', 'chart-stack.css',
-    'chart-gauge.css', 'chart-sparkline.css',
+    'chart-gauge.css', 'chart-sparkline.css', 'chart-scatter.css',
   ],
   // 图表细分类型依赖共享基座 charts.css
   'chart-line': ['charts.css'],
@@ -165,4 +172,6 @@ export const EXTRA_CSS = {
   'chart-stack': ['charts.css'],
   'chart-gauge': ['charts.css'],
   'chart-sparkline': ['charts.css'],
+  'chart-scatter': ['charts.css'],
+  'chart-calendar': ['charts.css', 'chart-heatmap.css'],
 };

@@ -1973,8 +1973,20 @@ initCarousel();
     slug: 'charts',
     name: '图表总览',
     group: '图表',
-    desc: '零依赖纯 SVG/DOM 渲染（无 ECharts）——10 种图表一站式总览。实际使用时请按需安装细分类型（kit/chart-line 等），只引你需要的图表的 CSS + JS。',
-    demo: `<div class="chart-grid">
+    desc: '零依赖纯 SVG/DOM 渲染（无 ECharts）——12 种图表 + 通用层。renderChart 统一入口吃一份纯 JSON 规格（ChartSpec）：type 缺省自动推断、data[] + dims 任意维度透视、内置 tooltip、icen:chart-hover/click/dblclick/contextmenu 交互事件族、图例点击切换系列。下方 demo 可切换图型并实时看事件日志；实际使用请按需安装细分类型（kit/chart-line 等）。',
+    demo: `<div class="toolbar" style="margin-bottom:10px">
+  <span class="toolbar-label">通用层</span>
+  <button class="btn btn-sm btn-primary" type="button" data-chart-spec="line">多系列折线</button>
+  <button class="btn btn-sm" type="button" data-chart-spec="vbar">分组柱状</button>
+  <button class="btn btn-sm" type="button" data-chart-spec="stacked">堆叠柱状</button>
+  <button class="btn btn-sm" type="button" data-chart-spec="scatter">散点气泡</button>
+  <button class="btn btn-sm" type="button" data-chart-spec="calendar">贡献日历</button>
+  <button class="btn btn-sm" type="button" data-chart-spec="donut">环形占比</button>
+</div>
+<p class="demo-label" style="margin:0 0 10px">悬停看 tooltip · 单击/双击/右键任意数据点 · 点图例行切换系列——事件日志在下方</p>
+<div class="chart" id="chart-universal" style="border:1px solid var(--token-line-soft);border-radius:var(--radius-md);padding:12px"></div>
+<p class="demo-label" id="chart-event-log" style="margin-top:8px">事件日志：等待交互…</p>
+<div class="chart-grid" style="margin-top:16px">
   <div>
     <p class="chart-cap">垂直柱状 · 每月投稿</p>
     <div class="chart" id="chart-vbar"></div>
@@ -2008,62 +2020,169 @@ initCarousel();
     <div class="chart" id="chart-heatmap"></div>
   </div>
 </div>`,
-    usage: `// 按需导入：只有被引用的函数和这份 CSS 会进包，其余组件零成本
-import '@icen.ai/ui/components/charts.css';
-import { renderHeatmap, renderSparkline, renderGauge } from '@icen.ai/ui/behaviors/charts';
+    usage: `// ── 通用层（推荐；纯 JSON 规格，AI 调用层同构）──
+import { renderChart } from '@icen.ai/ui/behaviors/charts';
 
-renderHeatmap(el, { values: 近180天数值数组, weeks: 26 });       // GitHub 式贡献图
-renderHeatmap(el, { data: [{ date: '2026-07-01', value: 5 }] }); // 或精确日期形态
-renderSparkline(el, { values: [3, 8, 5, 12, 9, 14, 11] });       // 迷你趋势线
-renderGauge(el, { value: 64, label: '完成率' });                  // 进度环
-renderVBar(el,  { labels: ['一月','二月'], values: [12, 19] });  // 另有 vbar/hbar/stack/donut/line`,
+const handle = renderChart(el, {
+  title: '一周活跃',
+  labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+  series: [
+    { name: 'Web', values: [8, 14, 9, 18, 22, 16, 25] },
+    { name: 'CLI', values: [3, 5, 4, 8, 6, 11, 9] },
+  ],
+  format: { notation: 'compact', unit: '次' },
+  // type 缺省自动推断（时间序→line / 占比→donut / dates→calendar / points→scatter…）
+  // tooltip: false 关闭内置提示；stacked: true 堆叠柱
+});
+
+handle.on('click', (d) => console.log(d.label, d.value, d.seriesName));
+handle.on('contextmenu', (d, e) => openContextMenu(e, d));  // 右键接自家 context-menu
+handle.update(nextSpec);   // 原地重渲染（事件委托保留）
+
+// 任意维度原始记录 + 字段映射（pivot 成 类目 × 系列）
+renderChart(el, {
+  data: [{ 城市: '北京', 渠道: '直营', 销量: 120 }, /* … */],
+  dims: { label: '城市', series: '渠道', value: '销量' },
+});
+
+// 容错归一（LLM/外部输入友好）：'bar'→vbar、'pie'→donut、字符串数字、JSON 字符串
+import { normalizeChartSpec, inferChartType } from '@icen.ai/ui/behaviors/charts';
+
+// ── 底层渲染器（按需安装细分类型 kit/chart-line 等，只引需要的 CSS + JS）──
+import { renderHeatmap, renderCalendar, renderScatter } from '@icen.ai/ui/behaviors/charts';
+renderHeatmap(el, { values: 近180天数值数组, weeks: 26 });        // 周格热力
+renderCalendar(el, { dates: ['2026-07-01', /* … */], values: [5, /* … */] }); // 贡献日历（月份标签）
+renderScatter(el, { points: [{ x: 1, y: 2, size: 30, label: 'A' }] }); // 散点/气泡`,
     behaviors: ['charts'],
-    script: `const renderVBar = chartsMod.renderVBar;
-const renderHBar = chartsMod.renderHBar;
-const renderStack = chartsMod.renderStack;
-const renderDonut = chartsMod.renderDonut;
-const renderLine = chartsMod.renderLine;
-const renderHeatmap = chartsMod.renderHeatmap;
-const renderSparkline = chartsMod.renderSparkline;
-const renderGauge = chartsMod.renderGauge;
+    script: `const M = chartsMod;
 const on = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
-on('chart-vbar', (el) => renderVBar(el, { labels: ['一月', '二月', '三月', '四月', '五月', '六月'], values: [12, 19, 8, 24, 16, 28] }));
-on('chart-hbar', (el) => renderHBar(el, { labels: ['搜索', '推荐', '分享', '直接访问'], values: [320, 240, 160, 80], tone: 'success' }));
-on('chart-stack', (el) => renderStack(el, { segments: [{ label: '已完成', value: 45, tone: 'success' }, { label: '进行中', value: 30 }, { label: '待处理', value: 25, tone: 'warning' }] }));
-on('chart-donut', (el) => renderDonut(el, { segments: [{ label: '研发', value: 48 }, { label: '设计', value: 32, tone: 'success' }, { label: '测试', value: 20, tone: 'warning' }] }));
-on('chart-line', (el) => renderLine(el, { labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], values: [8, 14, 9, 18, 22, 16, 25] }));
-on('chart-gauge', (el) => renderGauge(el, { value: 64, label: '完成率' }));
-on('chart-spark', (el) => renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19] }));
+
+/* ── 通用层：renderChart + 交互事件日志 ── */
+const uni = document.getElementById('chart-universal');
+const logEl = document.getElementById('chart-event-log');
+const logDefault = logEl ? logEl.textContent : '';
+let logTimer = null;
+function log(msg) {
+  if (!logEl) return;
+  logEl.textContent = msg;
+  clearTimeout(logTimer);
+  logTimer = setTimeout(function () { logEl.textContent = logDefault; }, 2200);
+}
+
+const DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+const SPECS = {
+  line: { title: '一周活跃（多系列折线 · 自动推断）', labels: DAYS,
+    series: [
+      { name: 'Web', values: [8, 14, 9, 18, 22, 16, 25] },
+      { name: 'CLI', values: [3, 5, 4, 8, 6, 11, 9] },
+      { name: 'API', values: [12, 11, 15, 13, 17, 14, 19] },
+    ] },
+  vbar: { type: 'vbar', title: '季度注册（分组柱状）', labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    series: [
+      { name: '个人', values: [420, 480, 510, 620] },
+      { name: '团队', values: [180, 220, 260, 310] },
+    ], format: { notation: 'compact' } },
+  stacked: { type: 'vbar', stacked: true, title: '季度注册（堆叠柱状）', labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    series: [
+      { name: '个人', values: [420, 480, 510, 620] },
+      { name: '团队', values: [180, 220, 260, 310] },
+    ], format: { notation: 'compact' } },
+  scatter: { type: 'scatter', title: '构建时长 × 包体积（气泡 = 测试数）',
+    points: Array.from({ length: 26 }, function (_, i) {
+      return { x: Math.round((2 + i * 0.4) * 10) / 10, y: Math.round((30 + Math.sin(i * 0.7) * 22 + i * 1.6) * 10) / 10, size: 4 + (i % 5) * 9, label: '构建 #' + (i + 1) };
+    }), format: { unit: 's' } },
+  calendar: { type: 'calendar', title: '近 18 周提交（贡献日历）',
+    dates: Array.from({ length: 126 }, function (_, i) {
+      const d = new Date(); d.setDate(d.getDate() - (125 - i));
+      return d.toISOString().slice(0, 10);
+    }),
+    values: Array.from({ length: 126 }, function (_, i) {
+      return Math.max(0, Math.round(Math.abs(Math.sin(i * 0.61)) * 7 + (i % 17 === 0 ? 6 : 0) - (i % 11 === 0 ? 9 : 0)));
+    }) },
+  donut: { type: 'donut', title: '工时分布（环形占比）',
+    segments: [{ label: '研发', value: 48 }, { label: '设计', value: 32 }, { label: '测试', value: 20 }] },
+};
+
+let handle = null;
+function show(key) {
+  if (!uni) return;
+  if (handle) handle.update(SPECS[key]);
+  else handle = M.renderChart(uni, SPECS[key]);
+}
+show('line');
+document.querySelectorAll('[data-chart-spec]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    show(btn.getAttribute('data-chart-spec'));
+    document.querySelectorAll('[data-chart-spec]').forEach(function (b) { b.classList.toggle('btn-primary', b === btn); });
+  });
+});
+if (uni && handle) {
+  const brief = function (d) {
+    const where = d.seriesName ? d.seriesName + ' · ' : '';
+    return where + (d.label ?? '') + ' = ' + d.value;
+  };
+  handle.on('hover', function (d) { if (d.phase === 'enter') log('hover · ' + brief(d)); });
+  handle.on('click', function (d) { log('click · ' + brief(d)); });
+  handle.on('dblclick', function (d) { log('dblclick · ' + brief(d)); });
+  handle.on('contextmenu', function (d) { log('contextmenu · ' + brief(d) + '（默认菜单已拦，可接 context-menu 组件）'); });
+  uni.addEventListener('icen:chart-legend-toggle', function (e) {
+    log('legend-toggle · ' + e.detail.key + (e.detail.hidden ? ' 已隐藏' : ' 已显示'));
+  });
+}
+
+/* ── 底层渲染器总览 ── */
+on('chart-vbar', (el) => M.renderVBar(el, { labels: ['一月', '二月', '三月', '四月', '五月', '六月'], values: [12, 19, 8, 24, 16, 28] }));
+on('chart-hbar', (el) => M.renderHBar(el, { labels: ['搜索', '推荐', '分享', '直接访问'], values: [320, 240, 160, 80], tone: 'success' }));
+on('chart-stack', (el) => M.renderStack(el, { segments: [{ label: '已完成', value: 45, tone: 'success' }, { label: '进行中', value: 30 }, { label: '待处理', value: 25, tone: 'warning' }] }));
+on('chart-donut', (el) => M.renderDonut(el, { segments: [{ label: '研发', value: 48 }, { label: '设计', value: 32, tone: 'success' }, { label: '测试', value: 20, tone: 'warning' }] }));
+on('chart-line', (el) => M.renderLine(el, { labels: DAYS, values: [8, 14, 9, 18, 22, 16, 25] }));
+on('chart-gauge', (el) => M.renderGauge(el, { value: 64, label: '完成率' }));
+on('chart-spark', (el) => M.renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19] }));
 on('chart-heatmap', (el) => {
-  // 确定性伪随机（sin 模式），近 26 周 × 7 天
   const values = Array.from({ length: 182 }, (_, i) => {
     const base = Math.abs(Math.sin(i * 0.61)) * 7;
     const spike = i % 17 === 0 ? 8 : 0;
-    const rest = i % 11 === 0 ? -99 : 0; // 周期性休息日
+    const rest = i % 11 === 0 ? -99 : 0;
     return Math.max(0, Math.round(base + spike + rest));
   });
-  renderHeatmap(el, { values, weeks: 26 });
+  M.renderHeatmap(el, { values, weeks: 26 });
 });`,
   },
   {
     slug: 'chart-line',
     name: '折线图',
     group: '图表',
-    desc: '面积渐变 + 网格 + 数据点的折线趋势图。独立安装：只引这一份 CSS + renderLine。',
+    desc: '面积渐变 + 网格 + 数据点的折线趋势图；series 多系列走调色盘 + 可切换图例（点击图例行显隐系列）。独立安装：只引这一份 CSS + renderLine。',
     demo: `<div class="chart-grid">
   <div style="grid-column:1/-1">
-    <p class="chart-cap">一周活跃用户趋势</p>
+    <p class="chart-cap">一周活跃用户趋势（多系列 · 点图例切换）</p>
     <div class="chart" id="line-demo"></div>
   </div>
 </div>`,
     usage: `import '@icen.ai/ui/kit/chart-line';
 import { renderLine } from '@icen.ai/ui/kit/chart-line';
 
-renderLine(el, { labels: ['周一','周二','周三','周四','周五','周六','周日'], values: [8, 14, 9, 18, 22, 16, 25] });`,
+renderLine(el, { labels: ['周一','周二','周三','周四','周五','周六','周日'], values: [8, 14, 9, 18, 22, 16, 25] });
+
+// 多系列（调色盘自动分配 + 可切换图例）
+renderLine(el, {
+  labels: ['周一', '周日…'],
+  series: [
+    { name: 'Web', values: [8, /* … */] },
+    { name: 'CLI', values: [3, /* … */] },
+  ],
+});`,
     behaviors: ['charts'],
     script: `const renderLine = chartsMod.renderLine;
 const el = document.getElementById('line-demo');
-if (el) renderLine(el, { labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], values: [8, 14, 9, 18, 22, 16, 25] });`,
+if (el) renderLine(el, {
+  labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+  series: [
+    { name: 'Web', values: [8, 14, 9, 18, 22, 16, 25] },
+    { name: 'CLI', values: [3, 5, 4, 8, 6, 11, 9] },
+    { name: 'API', values: [12, 11, 15, 13, 17, 14, 19] },
+  ],
+});`,
   },
   {
     slug: 'chart-bar',
@@ -2260,6 +2379,71 @@ renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15] });`,
     script: `const renderSparkline = chartsMod.renderSparkline;
 const el = document.getElementById('spark-demo');
 if (el) renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17, 14, 19] });`,
+  },
+  {
+    slug: 'chart-scatter',
+    name: '散点气泡',
+    group: '图表',
+    desc: '散点/气泡图（renderScatter）：坐标域自动 nice 取整 + 边界刻度；points 的 size 为第三维时映射气泡半径 3–10。数据点带交互标记（hover/单击/双击/右键走 renderChart 通用层）。',
+    demo: `<div class="chart-grid">
+  <div style="grid-column:1/-1">
+    <p class="chart-cap">构建时长 × 包体积（气泡 = 测试数）</p>
+    <div class="chart" id="scatter-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderScatter } from '@icen.ai/ui/kit/chart-scatter';
+
+renderScatter(el, {
+  points: [
+    { x: 3.2, y: 48, size: 12, label: 'web' },
+    { x: 5.1, y: 72, size: 30, label: 'cli' },
+  ],
+  tone: 'accent',
+});
+// 交互：配 renderChart 走通用层（tooltip + icen:chart-* 事件族）
+import { renderChart } from '@icen.ai/ui/behaviors/charts';
+renderChart(el, { type: 'scatter', points: [/* 同上 */] }).on('click', (d) => { /* d.label / d.value */ });`,
+    behaviors: ['charts'],
+    script: `const el = document.getElementById('scatter-demo');
+if (el && chartsMod.renderScatter) {
+  chartsMod.renderScatter(el, {
+    points: Array.from({ length: 26 }, function (_, i) {
+      return { x: Math.round((2 + i * 0.4) * 10) / 10, y: Math.round((30 + Math.sin(i * 0.7) * 22 + i * 1.6) * 10) / 10, size: 4 + (i % 5) * 9, label: '构建 #' + (i + 1) };
+    }),
+  });
+}`,
+  },
+  {
+    slug: 'chart-calendar',
+    name: '贡献日历',
+    group: '图表',
+    desc: '贡献日历（renderCalendar，GitHub 提交图同款）：dates + values 自动按周布局，月份标签 + 星期列 + 5 档色阶图例。周格热力（renderHeatmap）的日历完整形态。',
+    demo: `<div class="chart-grid">
+  <div style="grid-column:1/-1">
+    <p class="chart-cap">近 18 周提交</p>
+    <div class="chart" id="calendar-demo"></div>
+  </div>
+</div>`,
+    usage: `import { renderCalendar } from '@icen.ai/ui/kit/chart-calendar';
+
+renderCalendar(el, {
+  dates: ['2026-06-01', '2026-06-02', /* … */],   // ISO 日期（旧 → 新）
+  values: [5, 12, /* … */],                        // 与 dates 配对
+});
+// 或精确形态 data: [{ date, value }[]]；色阶 tone 可覆盖
+// 交互：配 renderChart({ type: 'calendar', dates, values }) 走通用层`,
+    behaviors: ['charts'],
+    script: `const el = document.getElementById('calendar-demo');
+if (el && chartsMod.renderCalendar) {
+  const dates = Array.from({ length: 126 }, function (_, i) {
+    const d = new Date(); d.setDate(d.getDate() - (125 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const values = dates.map(function (_, i) {
+    return Math.max(0, Math.round(Math.abs(Math.sin(i * 0.61)) * 7 + (i % 17 === 0 ? 6 : 0) - (i % 11 === 0 ? 9 : 0)));
+  });
+  chartsMod.renderCalendar(el, { dates: dates, values: values });
+}`,
   },
   {
     slug: 'table',

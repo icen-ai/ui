@@ -50,3 +50,43 @@
 }
 .chart-heatmap-legend > span:first-child { margin-right: 2px; }
 .chart-heatmap-legend > span:last-child { margin-left: 2px; }
+
+/* ── 贡献日历（renderCalendar）：月份标签 + 星期列 + 周格 ──
+ * 布局 grid：左列星期标签（一/三/五/日），右列自上而下 月份行 / 周格 / 图例。
+ * 月份标签按周列定位：left = col / columns * 100%。 */
+.chart-calendar {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  grid-template-rows: 14px auto auto;
+  column-gap: 4px;
+  row-gap: 3px;
+}
+.chart-calendar-months {
+  grid-column: 2;
+  position: relative;
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+}
+.chart-calendar-month {
+  position: absolute;
+  top: 0;
+  left: calc(var(--col, 0) / var(--columns, 1) * 100%);
+  white-space: nowrap;
+}
+.chart-calendar-weekdays {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+  line-height: 1;
+}
+.chart-calendar .chart-heatmap-grid {
+  grid-column: 2;
+  grid-row: 2;
+}
+.chart-calendar .chart-heatmap-legend {
+  grid-column: 2;
+  grid-row: 3;
+}

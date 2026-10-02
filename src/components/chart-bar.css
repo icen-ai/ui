@@ -77,3 +77,13 @@
 @media (prefers-reduced-motion: reduce) {
   .chart-vbar-bar, .chart-hbar-bar { transition: none; }
 }
+
+/* ── 多系列：分组（簇内并排）与堆叠（列内向上叠）── */
+.chart-vbar-track--multi { gap: 2px; }
+.chart-vbar-track--multi > .chart-vbar-bar { flex: 1; min-width: 0; width: auto; }
+.chart-vbar-track--multi.chart-vbar-track--stacked {
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0;
+}
+.chart-vbar-track--multi.chart-vbar-track--stacked > .chart-vbar-bar { flex: none; width: 100%; }

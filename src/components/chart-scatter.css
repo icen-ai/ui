@@ -1,0 +1,24 @@
+/*
+ * @icen.ai/ui — Component: chart-scatter（散点/气泡图专属样式）
+ * 依赖：charts.css（基座 .chart / tooltip / [data-chart-mark] 交互态）
+ *
+ * DOM 由 behaviors/charts.ts 的 renderScatter 构建：
+ *   .chart-scatter > svg（360×220 viewBox，网格 + 刻度 + circle[data-chart-mark]）
+ * 气泡第三维：points[].size 映射半径 3–10；hover/点击/右键走通用层委托。
+ */
+
+.chart-scatter svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chart-scatter circle[data-chart-mark] {
+  transition: fill-opacity var(--icen-tx-fast);
+}
+.chart-scatter circle[data-chart-mark]:hover {
+  fill-opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-scatter circle[data-chart-mark] { transition: none; }
+}
