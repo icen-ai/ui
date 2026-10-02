@@ -140,6 +140,10 @@
   border-radius: var(--radius-xs);
   padding: 1px 5px;
   background: var(--token-surface);
+  white-space: nowrap; /* ⌘ 与 K 不分行 */
+}
+.nav-search kbd {
+  white-space: nowrap;
 }
 
 /* 紧凑 select（自家组件）：导航栏里无边框，hover 才显形；面板右对齐防溢出 */

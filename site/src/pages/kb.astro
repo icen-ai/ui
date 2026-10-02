@@ -1,0 +1,1105 @@
+---
+import Base from '../layouts/Base.astro';
+import pkg from '../../../package.json';
+
+/* tokens 三件 + base（site.css 由 Base 带入） */
+import '../../../src/tokens/colors.css';
+import '../../../src/tokens/style-profiles.css';
+import '../../../src/tokens/typography.css';
+import '../../../src/base.css';
+/* kb 族：共享基座 + 六域 */
+import '../../../src/components/kb.css';
+import '../../../src/components/kb-ground.css';
+import '../../../src/components/kb-ingest.css';
+import '../../../src/components/kb-search.css';
+import '../../../src/components/kb-data.css';
+import '../../../src/components/kb-ops.css';
+import '../../../src/components/kb-agent.css';
+/* AI 族增强（消息 / 反馈条 / diff / 工具） */
+import '../../../src/components/ai-chat.css';
+import '../../../src/components/ai-panel.css';
+import '../../../src/components/ai-diff.css';
+import '../../../src/components/ai-tool.css';
+/* 引用 hover 卡走 popover portal */
+import '../../../src/components/popover.css';
+/* 图表：基座 + kb-answer 用到的三种形态 + graph/map */
+import '../../../src/components/charts.css';
+import '../../../src/components/chart-line.css';
+import '../../../src/components/chart-bar.css';
+import '../../../src/components/chart-pie.css';
+import '../../../src/components/chart-graph.css';
+/* 通用件 */
+import '../../../src/components/panel.css';
+import '../../../src/components/btn.css';
+import '../../../src/components/empty.css';
+import '../../../src/components/tabs.css';
+---
+
+<Base
+  title="知识库工作台 · ICEN UI"
+  description="企业级 AI 知识库最佳实践工作台——引用可溯源、过程可观测、答案可验证：kb 族组件的真实接线整页演示。"
+>
+  <!-- ═══ 小 hero（非营销式：定位一句话 + 版本徽标） ═══ -->
+  <section class="kbws-hero">
+    <div class="kbws-hero-head">
+      <h1 class="kbws-hero-title">知识库工作台</h1>
+      <span class="kbws-ver">{pkg.version}</span>
+    </div>
+    <p class="kbws-hero-sub">引用可溯源 · 过程可观测 · 答案可验证——kb 族组件最佳实践</p>
+  </section>
+
+  <!-- ═══ app 级工作台容器：六标签 ═══ -->
+  <div class="kbws" id="kbws">
+    <div class="kbws-tabs" role="tablist" aria-label="工作台视图">
+      <button class="kbws-tab is-active" type="button" role="tab" aria-selected="true" data-tab="qa">问答</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="ingest">摄取</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="search">检索</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="data">问数</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="ops">观测</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="agent">Agent</button>
+    </div>
+
+    <div class="kbws-body">
+      <!-- ── 问答 ── -->
+      <section class="kbws-panel" data-panel="qa" role="tabpanel" aria-label="问答">
+        <div class="kbws-split">
+          <div class="kbws-main">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">问答链路</span>
+              <span class="kb-meta">kb-chain · 检索 → 重排 → 生成，运行时逐步推进</span>
+            </div>
+            <div id="qa-chain" class="kbws-chain"></div>
+
+            <div class="kbws-ask">
+              <input id="qa-input" class="kb-input kbws-ask-input" type="text"
+                placeholder="向知识库提问，Enter 运行…" aria-label="知识库提问" />
+              <button id="qa-run" class="btn btn-primary btn-sm kbws-run" type="button">运行</button>
+            </div>
+            <div class="kbws-chips" id="qa-presets" role="group" aria-label="预置问题"></div>
+
+            <div id="qa-answer" class="kbws-answer">
+              <div class="kb-empty">点击预置问题或自由输入——答案、[n] 角标、来源与反馈条将出现在这里</div>
+            </div>
+          </div>
+
+          <aside class="kbws-rail">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">来源与权限</span>
+              <span class="kb-meta">kb-sources rail</span>
+            </div>
+            <div id="qa-rail-sources"></div>
+            <div id="qa-note" class="kbws-note" hidden></div>
+            <div id="qa-passage" class="kbws-passage-host"></div>
+            <p class="kbws-hint">点击正文角标或来源卡打开原文抽屉（kb-passage，命中词高亮）；受限来源打码展示并可申请访问。</p>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ── 摄取 ── -->
+      <section class="kbws-panel" data-panel="ingest" role="tabpanel" aria-label="摄取" hidden>
+        <div class="kbws-sec-h">
+          <span class="kbws-sec-title">数据源连接器</span>
+          <span class="kb-meta">kb-connector · 健康 4 信号（点击「立即同步 / 重新授权」真实改变健康判定）</span>
+        </div>
+        <div id="ing-connectors"></div>
+        <div id="ing-conn-note" class="kbws-note" hidden></div>
+
+        <div class="kbws-sec-h">
+          <span class="kbws-sec-title">解析管线</span>
+          <span class="kb-meta">kb-pipeline · 失败可单文档重跑（点击失败卡的「重跑」）</span>
+        </div>
+        <div id="ing-pipeline"></div>
+
+        <div class="kbws-sec-h kbws-sec-h--row">
+          <span class="kbws-sec-title">分段策略</span>
+          <button id="ing-chunks-toggle" class="kbws-mini-btn" type="button">查看分段</button>
+        </div>
+        <div id="ing-segment"></div>
+
+        <div id="ing-chunks-wrap" hidden>
+          <div class="kbws-sec-h">
+            <span class="kbws-sec-title">chunk 编辑器</span>
+            <span class="kb-meta">kb-chunks · 行内编辑 / 启停 / 关键词 / 全文搜索</span>
+          </div>
+          <div id="ing-chunks"></div>
+          <div id="ing-chunks-note" class="kbws-note" hidden></div>
+        </div>
+      </section>
+
+      <!-- ── 检索 ── -->
+      <section class="kbws-panel" data-panel="search" role="tabpanel" aria-label="检索" hidden>
+        <div class="kbws-split kbws-split--lg">
+          <div class="kbws-main">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">检索 playground</span>
+              <span class="kb-meta">kb-retrieval · mock 打分器：语料分词重合度 → 0–1 分</span>
+            </div>
+            <div id="rt-playground"></div>
+          </div>
+          <aside class="kbws-rail">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">过滤器</span>
+              <span class="kb-meta">kb-filter</span>
+            </div>
+            <div id="rt-filter"></div>
+            <div id="rt-filter-echo" class="kbws-mono"></div>
+            <div id="rt-note" class="kbws-note" hidden></div>
+
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">重排对比</span>
+              <span class="kb-meta">kb-rerank</span>
+            </div>
+            <div id="rt-rerank"></div>
+
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">召回测试</span>
+              <span class="kb-meta">kb-hittest · 3 题</span>
+            </div>
+            <div id="rt-hittest"></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ── 问数 ── -->
+      <section class="kbws-panel" data-panel="data" role="tabpanel" aria-label="问数" hidden>
+        <div class="kbws-sec-h kbws-sec-h--row">
+          <div class="kbws-sec-h--main">
+            <span class="kbws-sec-title">问题</span>
+            <span class="kb-meta">Chat-with-Data · 全槽组合</span>
+          </div>
+          <button id="dt-run" class="kbws-mini-btn" type="button">重新生成</button>
+        </div>
+        <div class="kbws-question">
+          <span class="kbws-qmark" aria-hidden="true">Q</span>
+          <span class="kbws-qtext">上一季度各区域毛利率</span>
+        </div>
+
+        <div id="dt-answer" class="kbws-data-answer"></div>
+        <div id="dt-note" class="kbws-note" hidden></div>
+        <p class="kbws-hint">导出钮在宿主未接 onExport 回调时保持禁用——不给假按钮；「已截断：显示 5/31 行」是契约声明，不是瑕疵。</p>
+
+        <div class="kbws-sec-h">
+          <span class="kbws-sec-title">生成 SQL</span>
+          <span class="kb-meta">kb-sql · 着色 + 修正 diff + 编辑重跑</span>
+        </div>
+        <div id="dt-sql"></div>
+        <div id="dt-sql-note" class="kbws-note" hidden></div>
+      </section>
+
+      <!-- ── 观测 ── -->
+      <section class="kbws-panel" data-panel="ops" role="tabpanel" aria-label="观测" hidden>
+        <div class="kbws-split">
+          <div class="kbws-main">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">调用链</span>
+              <span class="kb-meta">kb-trace · 一次完整问答的 span 树（展开检索看命中）</span>
+            </div>
+            <div id="op-trace"></div>
+
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">标注队列</span>
+              <span class="kb-meta">kb-review · 键盘可用（←/→ 切条目 · 1–9 打分 · ⌘↵ 提交 · ? 帮助）</span>
+            </div>
+            <div id="op-review"></div>
+          </div>
+          <aside class="kbws-rail">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">无答案治理</span>
+              <span class="kb-meta">kb-gap · 零点击 ≠ 失败</span>
+            </div>
+            <div id="op-gap"></div>
+            <div id="op-note" class="kbws-note" hidden></div>
+          </aside>
+        </div>
+
+        <div class="kbws-sec-h">
+          <span class="kbws-sec-title">评估 run 对比</span>
+          <span class="kb-meta">kb-eval · 点击行展开字符级 diff（含一条回归行）</span>
+        </div>
+        <div id="op-eval"></div>
+      </section>
+
+      <!-- ── Agent ── -->
+      <section class="kbws-panel" data-panel="agent" role="tabpanel" aria-label="Agent" hidden>
+        <div class="kbws-sec-h">
+          <span class="kbws-sec-title">双栏画布</span>
+          <span class="kb-meta">kb-canvas · 拖动分隔条调比例；在右栏划词浮出工具条，点击后左栏追加指令消息</span>
+        </div>
+        <div id="ag-canvas"></div>
+
+        <div class="kbws-split">
+          <div class="kbws-main">
+            <div class="kbws-sec-h kbws-sec-h--row">
+              <div class="kbws-sec-h--main">
+                <span class="kbws-sec-title">流式链路</span>
+                <span class="kb-meta">kb-chain</span>
+              </div>
+              <button id="ag-chain-run" class="kbws-mini-btn" type="button">运行链路</button>
+            </div>
+            <div id="ag-chain"></div>
+            <div id="ag-chain-note" class="kbws-note" hidden></div>
+
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">检查点</span>
+              <span class="kb-meta">kb-checkpoint · 点击弹恢复菜单（默认仅内容、保留对话）</span>
+            </div>
+            <div id="ag-checkpoints"></div>
+            <div id="ag-cp-note" class="kbws-note" hidden></div>
+          </div>
+          <aside class="kbws-rail">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">MCP 沙箱</span>
+              <span class="kb-meta">kb-sandbox · ui:// 解析器 → app.ready → call('echo')</span>
+            </div>
+            <div id="ag-sandbox"></div>
+            <div id="ag-sandbox-log" class="kbws-mono kbws-sandbox-log"></div>
+          </aside>
+        </div>
+
+        <div class="kbws-sec-h">
+          <span class="kbws-sec-title">知识结构视图</span>
+          <span class="kb-meta">renderGraph 实体图（三簇）+ renderMap 投影点图</span>
+        </div>
+        <div class="kbws-duo">
+          <div id="ag-graph" class="chart"></div>
+          <div id="ag-map" class="chart"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    /* ═══ /kb 工作台接线：全部 behavior 直连 import（bundled module，整页只执行一次） ═══ */
+    import { onIcen } from '../../../src/behaviors/events.ts';
+    import { h, segmentText, collectCitationNumbers } from '../../../src/behaviors/kb-core.ts';
+    import { renderKbChain, initKbChain } from '../../../src/behaviors/kb-chain.ts';
+    import { renderCitationText, initKbCitation } from '../../../src/behaviors/kb-citation.ts';
+    import { renderKbSources, initKbSources } from '../../../src/behaviors/kb-sources.ts';
+    import { createKbPassage } from '../../../src/behaviors/kb-passage.ts';
+    import { renderKbConnectors, initKbConnectors } from '../../../src/behaviors/kb-connector.ts';
+    import { renderKbPipeline, initKbPipeline } from '../../../src/behaviors/kb-pipeline.ts';
+    import { createKbSegment } from '../../../src/behaviors/kb-segment.ts';
+    import { renderKbChunks, initKbChunks } from '../../../src/behaviors/kb-chunks.ts';
+    import { createKbRetrieval } from '../../../src/behaviors/kb-retrieval.ts';
+    import { createKbFilter } from '../../../src/behaviors/kb-filter.ts';
+    import { renderKbRerankCompare } from '../../../src/behaviors/kb-rerank.ts';
+    import { createKbHitTest } from '../../../src/behaviors/kb-hittest.ts';
+    import { renderKbSql, initKbSql } from '../../../src/behaviors/kb-sql.ts';
+    import { renderKbAnswer } from '../../../src/behaviors/kb-answer.ts';
+    import { renderKbTrace, initKbTrace } from '../../../src/behaviors/kb-trace.ts';
+    import { createKbReview } from '../../../src/behaviors/kb-review.ts';
+    import { renderKbGap, initKbGap } from '../../../src/behaviors/kb-gap.ts';
+    import { renderKbEvalCompare } from '../../../src/behaviors/kb-eval.ts';
+    import { createKbCanvas } from '../../../src/behaviors/kb-canvas.ts';
+    import { renderKbCheckpoints, initKbCheckpoint } from '../../../src/behaviors/kb-checkpoint.ts';
+    import { createKbSandbox } from '../../../src/behaviors/kb-sandbox.ts';
+    import { parseUnifiedDiff, initAiDiff } from '../../../src/behaviors/ai-diff.ts';
+    import { renderAiFeedback, initAiFeedback } from '../../../src/behaviors/ai-feedback.ts';
+    import { renderAiMessage } from '../../../src/behaviors/ai-chat.ts';
+    import { renderGraph, renderMap } from '../../../src/behaviors/charts.ts';
+    import type { KbCitation } from '../../../src/behaviors/kb-core.ts';
+    import * as K from '../lib/kb-showcase.ts';
+
+    /* ── 小工具 ── */
+    const $ = <T extends HTMLElement = HTMLElement>(id: string): T | null => document.getElementById(id) as T | null;
+    const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+    const clip = (s: string, max = 24): string => (s.length > max ? `${s.slice(0, max)}…` : s);
+
+    /** 行内提示条：淡入展示，超时自动淡出（同一元素复用计时器） */
+    const noteTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+    function note(id: string, text: string, ms = 2800): void {
+      const el = $(id);
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove('is-fading');
+      el.hidden = false;
+      const prev = noteTimers.get(el);
+      if (prev) clearTimeout(prev);
+      noteTimers.set(el, setTimeout(() => {
+        el.classList.add('is-fading');
+        noteTimers.set(el, setTimeout(() => { el.hidden = true; el.classList.remove('is-fading'); }, 240));
+      }, ms));
+    }
+
+    /* ══════════ 标签切换（纯 JS 显隐，不改 URL） ══════════ */
+    const tabBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('.kbws-tab'));
+    function activateTab(key: string): void {
+      tabBtns.forEach((b) => {
+        const on = b.dataset.tab === key;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-selected', String(on));
+      });
+      document.querySelectorAll<HTMLElement>('.kbws-panel').forEach((p) => {
+        p.hidden = p.dataset.panel !== key;
+      });
+    }
+    tabBtns.forEach((b) => b.addEventListener('click', () => activateTab(b.dataset.tab ?? 'qa')));
+
+    /* ══════════ ① 问答 ══════════ */
+    const QA_CHAIN_DEFS = [
+      { key: 'retrieval', label: '检索', detail: 'hybrid · topK=4' },
+      { key: 'rerank', label: '重排', detail: 'bge-reranker-v2' },
+      { key: 'generation', label: '生成', detail: 'glm-5.3' },
+    ];
+    const qaChainEl = $('qa-chain')!;
+    let qaBusy = false;
+    let lastQuery = '';
+    const chainSnapshot = (status: 'pending' | 'running' | 'done', i: number, detail?: string) =>
+      QA_CHAIN_DEFS.map((s, idx) => ({
+        key: s.key,
+        label: s.label,
+        status: idx < i ? ('done' as const) : idx === i ? status : ('pending' as const),
+        detail: idx === i && detail ? detail : s.detail,
+      }));
+    renderKbChain(qaChainEl, chainSnapshot('pending', -1));
+    initKbChain(document);
+
+    /* 引用与来源：一次 init，事件全局委托 */
+    initKbCitation(document, { hoverDelay: 300 });
+    initKbSources(document);
+    const passage = createKbPassage($('qa-passage')!, {
+      getDocument: (cite) => K.PASSAGE_DOCS[cite.documentId ?? ''] ?? null,
+    });
+
+    /** 打开原文抽屉并高亮命中词（query 分词轮转三色） */
+    function openPassage(cite: KbCitation): void {
+      const full = K.CORPUS_CITATIONS.find((c) => c.id === cite.id) ?? cite;
+      passage.open(full);
+      const terms = K.tokenizeZh(lastQuery || full.title).slice(0, 6);
+      if (terms.length) passage.highlight(terms);
+    }
+
+    onIcen('icen:kb-citation-open', (e) => openPassage(e.detail.citation));
+    onIcen('icen:kb-source-open', (e) => {
+      const src = e.detail.source;
+      if (src.permission !== 'readable') {
+        /* 受限来源：打码正文 + 申请访问（申请动作给出可见反馈） */
+        const btn = document.querySelector<HTMLButtonElement>('[data-kb-source-request]');
+        if (btn && !btn.disabled) {
+          btn.disabled = true;
+          btn.textContent = '已申请';
+        }
+        note('qa-note', `已对《${src.title}》发起访问申请——等待 ${src.owner ?? '文档责任人'} 审批（演示）`, 3600);
+        return;
+      }
+      openPassage(src);
+    });
+
+    /* 右栏：来源与权限（含一张 restricted 打码卡；点击经全局事件通道统一处理） */
+    renderKbSources($('qa-rail-sources')!, [K.CORPUS_CITATIONS[3]!, K.CORPUS_CITATIONS[4]!], {
+      variant: 'rail',
+    });
+
+    /* 预置问题 chips */
+    const presetBox = $('qa-presets')!;
+    K.QA_PRESETS.forEach((p) => {
+      const chip = h('button', 'kbws-chip', p.q);
+      chip.type = 'button';
+      chip.addEventListener('click', () => void runQa(p.q));
+      presetBox.appendChild(chip);
+    });
+
+    /* 回答区渲染：[n] 角标流 + 来源横排 + 反馈条 */
+    function renderAnswer(q: string, text: string, citeIds: string[]): void {
+      const box = $('qa-answer')!;
+      box.textContent = '';
+      const used = collectCitationNumbers(text);
+      const cites: KbCitation[] = citeIds
+        .map((id) => K.CORPUS_CITATIONS.find((c) => c.id === id))
+        .filter((c): c is KbCitation => !!c)
+        .map((c, i) => ({
+          ...c,
+          index: i + 1,
+          useCount: used.filter((n) => n === i + 1).length || undefined,
+        }));
+
+      const echo = h('div', 'kbws-qecho');
+      echo.appendChild(h('span', 'kbws-qmark', 'Q'));
+      echo.appendChild(h('span', 'kbws-qtext', q));
+      box.appendChild(echo);
+
+      const body = h('div', 'kbws-answer-text');
+      renderCitationText(body, text, cites);
+      box.appendChild(body);
+
+      const sourcesTitle = h('div', 'kbws-sec-h');
+      sourcesTitle.appendChild(h('span', 'kbws-sec-title', '来源'));
+      sourcesTitle.appendChild(h('span', 'kb-meta', 'kb-sources · 点击打开原文'));
+      box.appendChild(sourcesTitle);
+      const sourcesEl = h('div');
+      renderKbSources(sourcesEl, cites, { variant: 'row' });
+      box.appendChild(sourcesEl);
+
+      const fb = h('div', 'kbws-feedback');
+      renderAiFeedback(fb, {
+        reasons: ['答案有误', '引用不符', '内容过时', '无引用依据'],
+        onFeedback: (d) => note('qa-feedback-note', d.value === 1 ? '感谢反馈（演示）' : d.reason ? `已记录踩因：${d.reason}（演示）` : '已收到反馈（演示）'),
+      });
+      box.appendChild(fb);
+      const fbNote = h('div', 'kbws-note');
+      fbNote.hidden = true;
+      fbNote.id = 'qa-feedback-note';
+      box.appendChild(fbNote);
+    }
+
+    /* 运行：链路逐步推进 → 答案落地 */
+    const qaRunBtn = $('qa-run')!;
+    const qaInput = $('qa-input') as HTMLInputElement;
+    async function runQa(q: string): Promise<void> {
+      if (qaBusy) return;
+      qaBusy = true;
+      lastQuery = q;
+      qaInput.value = q;
+      qaRunBtn.disabled = true;
+      qaRunBtn.textContent = '生成中…';
+      const box = $('qa-answer')!;
+      box.textContent = '';
+      box.appendChild(h('div', 'kbws-answer-busy', '检索 → 重排 → 生成…'));
+
+      const stageDetails = ['命中 4 段（1 条受限无分）', '4 → 3，阈值 0.35 淘汰 1', '引用 2 处 · 320 tok'];
+      for (let i = 0; i < QA_CHAIN_DEFS.length; i++) {
+        renderKbChain(qaChainEl, chainSnapshot('running', i));
+        await sleep(260 + i * 40);
+        renderKbChain(qaChainEl, chainSnapshot('done', i, stageDetails[i]));
+      }
+      const preset = K.QA_PRESETS.find((p) => p.q === q);
+      if (preset) renderAnswer(q, preset.a, preset.cites);
+      else {
+        const free = K.buildFreeAnswer(q);
+        renderAnswer(q, free.text, free.cites);
+      }
+      qaBusy = false;
+      qaRunBtn.disabled = false;
+      qaRunBtn.textContent = '运行';
+    }
+    qaRunBtn.addEventListener('click', () => void runQa(qaInput.value.trim() || K.QA_PRESETS[0]!.q));
+    qaInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+        void runQa(qaInput.value.trim() || K.QA_PRESETS[0]!.q);
+      }
+    });
+    initAiFeedback(document);
+
+    /* 首屏自动运行：初始化完成后约 600ms 走与点击预置 chip 完全相同的问答路径，
+       首屏即呈现答案 + [n] 角标 + 来源 + 反馈条（空态只在重置时短暂出现） */
+    setTimeout(() => void runQa(K.QA_PRESETS[0]!.q), 600);
+
+    /* ══════════ ② 摄取 ══════════ */
+    let connectors = K.CONNECTORS.map((c) => ({ ...c }));
+    const renderConn = (): void => renderKbConnectors($('ing-connectors')!, connectors);
+    renderConn();
+    initKbConnectors(document);
+
+    onIcen('icen:kb-connector-sync', (e) => {
+      const c = connectors.find((x) => x.id === e.detail.connectorId);
+      if (!c) return;
+      if (c.credential === 'expired') {
+        note('ing-conn-note', `${c.name} 同步失败：凭证已过期——请先「重新授权」（演示）`, 3600);
+        return;
+      }
+      note('ing-conn-note', `${c.name} 同步中…`);
+      setTimeout(() => {
+        const i = connectors.findIndex((x) => x.id === c.id);
+        if (i < 0) return;
+        connectors[i] = {
+          ...connectors[i]!,
+          lastSyncAt: new Date().toISOString(),
+          lastCrawlStatus: 'ok',
+          crawlRate: Math.max(6, connectors[i]!.crawlRate ?? 6),
+          changeRate: Math.max(2, connectors[i]!.changeRate ?? 2),
+        };
+        renderConn();
+        note('ing-conn-note', `${c.name} 已同步——健康信号恢复为正常（connectorHealth 重新判定）`, 3600);
+      }, 520);
+    });
+    onIcen('icen:kb-connector-reauth', (e) => {
+      const c = connectors.find((x) => x.id === e.detail.connectorId);
+      if (!c) return;
+      note('ing-conn-note', `${c.name} 重新授权中…`);
+      setTimeout(() => {
+        const i = connectors.findIndex((x) => x.id === c.id);
+        if (i < 0) return;
+        connectors[i] = {
+          ...connectors[i]!,
+          credential: 'ok',
+          lastSyncAt: new Date().toISOString(),
+          lastCrawlStatus: 'ok',
+        };
+        renderConn();
+        note('ing-conn-note', `${c.name} 授权恢复——failing → healthy（演示）`, 3600);
+      }, 480);
+    });
+    onIcen('icen:kb-connector-schedule', (e) => {
+      const c = connectors.find((x) => x.id === e.detail.connectorId);
+      note('ing-conn-note', `${c?.name ?? e.detail.connectorId} 当前计划 ${e.detail.schedule || '（未设置）'}——编辑计划面板未接（演示）`, 3600);
+    });
+
+    /* 解析管线：重跑真实改写快照 */
+    let pipelineRuns = K.PIPELINE_RUNS.map((r) => ({ ...r, steps: r.steps.map((s) => ({ ...s })) }));
+    const renderPipe = (): void => renderKbPipeline($('ing-pipeline')!, pipelineRuns);
+    renderPipe();
+    initKbPipeline(document);
+    onIcen('icen:kb-pipeline-rerun', (e) => {
+      const docId = e.detail.documentId;
+      const idx = pipelineRuns.findIndex((r) => r.documentId === docId);
+      if (idx < 0) return;
+      const base = pipelineRuns[idx]!;
+      pipelineRuns[idx] = {
+        ...base,
+        status: 'running',
+        progress: 30,
+        chunkCount: undefined,
+        elapsedMs: undefined,
+        error: undefined,
+        steps: base.steps.map((s, i) => ({
+          ...s,
+          status: i < 2 ? ('done' as const) : i === 2 ? ('running' as const) : ('unstart' as const),
+          detail: i === 0 ? 'OCR 版已就绪' : s.detail,
+          elapsedMs: i < 2 ? s.elapsedMs : undefined,
+          count: undefined,
+        })),
+      };
+      renderPipe();
+      setTimeout(() => {
+        pipelineRuns[idx] = K.pipelineRerunResult(docId);
+        renderPipe();
+      }, 720);
+    });
+
+    /* 分段策略：真实切分预览 + 「查看分段」联动 chunk 数 */
+    const chunksToggle = $('ing-chunks-toggle')!;
+    const segmentHandle = createKbSegment($('ing-segment')!, {
+      config: K.SEGMENT_CONFIG,
+      sample: K.SEGMENT_SAMPLE,
+      onChange: (cfg) => {
+        const n = segmentText(K.SEGMENT_SAMPLE, cfg).length;
+        chunksToggle.textContent = `查看分段（${n}）`;
+      },
+    });
+    {
+      const n = segmentText(K.SEGMENT_SAMPLE, segmentHandle.getConfig()).length;
+      chunksToggle.textContent = `查看分段（${n}）`;
+    }
+    const chunksWrap = $('ing-chunks-wrap')!;
+    chunksToggle.addEventListener('click', () => {
+      chunksWrap.hidden = !chunksWrap.hidden;
+      chunksToggle.textContent = chunksWrap.hidden
+        ? `查看分段（${segmentText(K.SEGMENT_SAMPLE, segmentHandle.getConfig()).length}）`
+        : '收起编辑器';
+    });
+
+    /* chunk 编辑器 */
+    let editorChunks = K.EDITOR_CHUNKS.map((c) => ({ ...c }));
+    let chunkSeq = 0;
+    const renderChunks = (): void => renderKbChunks($('ing-chunks')!, editorChunks, { documentId: 'doc-vendor' });
+    renderChunks();
+    initKbChunks(document);
+    onIcen('icen:kb-chunk-remove', (e) => {
+      editorChunks = editorChunks.filter((c) => c.id !== e.detail.chunkId);
+      renderChunks();
+      note('ing-chunks-note', `chunk ${e.detail.chunkId} 已删除（演示：真实环境需二次确认）`);
+    });
+    onIcen('icen:kb-chunk-add', () => {
+      chunkSeq += 1;
+      editorChunks = [
+        ...editorChunks,
+        {
+          id: `chk-new-${chunkSeq}`,
+          documentId: 'doc-vendor',
+          content: '（新增空白分段——点击正文即可行内编辑，Enter 添加关键词）',
+          keywords: [],
+          available: true,
+        },
+      ];
+      renderChunks();
+      note('ing-chunks-note', '已新增 chunk（演示）');
+    });
+    onIcen('icen:kb-chunk-edit', (e) => note('ing-chunks-note', `chunk ${e.detail.chunkId} 已保存（行内编辑 · 演示）`));
+    onIcen('icen:kb-chunk-toggle', (e) =>
+      note('ing-chunks-note', `${e.detail.chunkId} ${e.detail.available ? '已启用' : '已停用——不删除，仅排除出检索'}`),
+    );
+
+    /* ══════════ ③ 检索 ══════════ */
+    const rtHost = $('rt-playground')!;
+    const retrieval = createKbRetrieval(rtHost, {
+      params: { topK: 5, mode: 'hybrid', alpha: 0.6, rerank: true, rerankModel: 'bge-reranker-v2', threshold: 0.35 },
+      onRun: (query) => {
+        retrieval.setBusy(true);
+        setTimeout(() => {
+          retrieval.renderHits(K.scoreQuery(query.query, query.params));
+          retrieval.setBusy(false);
+        }, 320);
+      },
+    });
+    /* 预填一个能命中受限块的问题并自动跑一次（演示 score:null 的「—」态） */
+    const rtQueryInput = rtHost.querySelector<HTMLInputElement>('.kb-retrieval-query');
+    if (rtQueryInput) rtQueryInput.value = '经营 毛利率 目标';
+    retrieval.setBusy(true);
+    setTimeout(() => {
+      retrieval.renderHits(K.scoreQuery('经营 毛利率 目标', retrieval.getParams()));
+      retrieval.setBusy(false);
+    }, 360);
+
+    /* 过滤器：serialize 双表示 + OData live 回显行（长表达式在 and/or 处折行缩进，窄栏不截断） */
+    const filterEcho = $('rt-filter-echo')!;
+    const fmtOdata = (s: string): string => (s.length > 52 ? s.replace(/ (and|or) /g, '\n  $1 ') : s);
+    const kbFilter = createKbFilter($('rt-filter')!, {
+      node: K.FILTER_DEMO,
+      fields: ['kind', 'owner', 'updated', 'department', 'confidentiality'],
+      onChange: (node, valid) => {
+        filterEcho.textContent = valid
+          ? `odata $filter → ${fmtOdata(kbFilter.serialize('odata') || '（无过滤）')}`
+          : '存在未填字段——DSL 仅镜像可发送的规则';
+      },
+    });
+    filterEcho.textContent = `odata $filter → ${fmtOdata(kbFilter.serialize('odata'))}`;
+
+    /* 重排对比 */
+    renderKbRerankCompare($('rt-rerank')!, K.buildRerankDemo());
+    onIcen('icen:kb-rerank-toggle', (e) =>
+      note('rt-note', `重排对比已${e.detail.enabled ? '开启' : '关闭——重排后列压淡不隐藏（显式禁用纪律）'}`, 2600),
+    );
+
+    /* 召回测试：运行全部 → 打分器回填 lastHits → 命中率统计 */
+    const hittest = createKbHitTest($('rt-hittest')!, {
+      cases: K.HIT_CASES.map((c) => ({ ...c })),
+      onRun: (cases) => {
+        note('rt-note', '召回测试运行中——打分器逐题回填 lastHits…', 2000);
+        setTimeout(() => {
+          hittest.setCases(
+            cases.map((c) => {
+              const hits = K.scoreQuery(c.question, { topK: 5, mode: 'hybrid', alpha: 0.6, rerank: false, threshold: null })
+                .map((hh, i) => ({ chunkId: hh.chunkId, score: hh.score, rank: i + 1 }));
+              return { ...c, lastHits: hits };
+            }),
+          );
+          const pass = hittest.getCases().filter((c) => c.passed === true).length;
+          note('rt-note', `召回测试完成：${pass}/${cases.length} 通过（命中率统计见上方）`, 3200);
+        }, 380);
+      },
+    });
+
+    /* ══════════ ④ 问数 ══════════ */
+    initKbSql(document);
+    function renderData(): void {
+      renderKbAnswer($('dt-answer')!, K.ANSWER_MODEL, {
+        onFollowUp: (text) => note('dt-note', `演示环境：已收到追问「${text}」`),
+        onVerifiedOpen: (assetId) => note('dt-note', `打开认证资产 ${assetId}（参数化查询 · 参数可改重跑 · 演示）`),
+      });
+      renderKbSql($('dt-sql')!, K.SQL_QUERY, {
+        onRerun: () => note('dt-sql-note', '已按该 SQL 重跑（演示）——结果表与图表不变'),
+      });
+    }
+    renderData();
+    onIcen('icen:kb-clarify-answer', (e) =>
+      note('dt-note', `口径已解析：${e.detail.label}（演示：重算需重新生成）`, 3600),
+    );
+    const dtRun = $('dt-run')!;
+    dtRun.addEventListener('click', () => {
+      if (dtRun.disabled) return;
+      dtRun.disabled = true;
+      dtRun.textContent = '生成中…';
+      setTimeout(() => {
+        renderData();
+        dtRun.disabled = false;
+        dtRun.textContent = '重新生成';
+        note('dt-note', '已重新生成（246 ms · 演示）');
+      }, 420);
+    });
+
+    /* ══════════ ⑤ 观测 ══════════ */
+    renderKbTrace($('op-trace')!, K.TRACE_SPANS);
+    initKbTrace(document);
+
+    createKbReview($('op-review')!, {
+      queue: K.REVIEW_QUEUE,
+      configs: K.REVIEW_CONFIGS,
+      assignees: ['李航', '沈以宁', '顾清'],
+      onAction: (a) => {
+        if (a.type === 'submit') note('op-note', `任务 ${a.taskId} 审查完成——已自动进入下一条（⌘↵ 同效）`, 3600);
+        else if (a.type === 'score') note('op-note', `打分：${a.name} = ${String(a.value)}（任务 ${a.taskId}）`, 2000);
+        else if (a.type === 'assign') note('op-note', `已分配给 ${a.value || '未分配'}（任务 ${a.taskId}）`, 2000);
+      },
+    });
+
+    renderKbGap($('op-gap')!, { queries: K.GAP_QUERIES, trend: K.GAP_TREND });
+    initKbGap(document);
+    onIcen('icen:kb-gap-action', (e) => {
+      const btn = e.target instanceof HTMLElement ? e.target : null;
+      const row = btn?.closest<HTMLElement>('.kb-gap-row');
+      const actions = row?.querySelector<HTMLElement>('.kb-gap-actions');
+      if (actions) {
+        actions.textContent = '';
+        const badge = h('span', 'kb-chip kbws-gap-done', e.detail.action === 'create-doc' ? '已建单 ✓' : '已加同义词 ✓');
+        actions.appendChild(badge);
+      }
+      note('op-note', `「${clip(e.detail.query)}」${e.detail.action === 'create-doc' ? '已建文档工单' : '已加入同义词表'}（演示）`, 3600);
+    });
+
+    renderKbEvalCompare($('op-eval')!, { runs: K.EVAL_RUNS, rows: K.EVAL_ROWS });
+    onIcen('icen:kb-eval-compare', () =>
+      note('op-note', '演示数据仅预置一组 run 对比——生产环境此处重取数据重渲', 2600),
+    );
+
+    /* ══════════ ⑥ Agent ══════════ */
+    const canvasEl = $('ag-canvas')!;
+    const canvas = createKbCanvas(canvasEl, {
+      onAI: (d) => {
+        appendAgentMsg('assistant', `已收到指令：${d.instruction}${d.selection?.text ? ` ——「${clip(d.selection.text, 28)}」` : ''}（演示：右栏 diff 已生成待审阅）`);
+        canvas.addVersion({ id: `v-${Date.now()}`, label: `v · ${d.instruction}`, at: Date.now(), current: true });
+      },
+      onVersion: (d) => note('ag-chain-note', `已定位到 ${d.versionId}（演示：版本快照不变）`, 2600),
+    });
+
+    /* 左栏对话流：3 条种子消息（ai-chat 渲染） */
+    function appendAgentMsg(role: 'user' | 'assistant', content: string, meta?: string): void {
+      const chatCol = canvasEl.querySelector<HTMLElement>('.kb-canvas-chat');
+      if (!chatCol) return;
+      const host = document.createElement('div');
+      renderAiMessage(host, { role, content, meta, model: role === 'assistant' ? 'glm-5.3' : undefined });
+      while (host.firstElementChild) chatCol.appendChild(host.firstElementChild);
+      chatCol.scrollTop = chatCol.scrollHeight;
+    }
+    {
+      const frag = document.createDocumentFragment();
+      const tmp = document.createElement('div');
+      K.AGENT_CHAT_SEED.forEach((m) => {
+        renderAiMessage(tmp, { role: m.role, content: m.content, meta: m.meta, model: m.role === 'assistant' ? 'glm-5.3' : undefined });
+      });
+      while (tmp.firstElementChild) frag.appendChild(tmp.firstElementChild);
+      canvas.setChat(frag);
+    }
+
+    /* 右栏：文档片段 + 两文件 diff（可接受/拒绝）+ 版本轴 */
+    {
+      const frag = document.createDocumentFragment();
+      const card = h('div', 'kbws-docfrag');
+      card.appendChild(h('h4', 'kbws-docfrag-title', K.AGENT_DOC_FRAGMENT.title));
+      K.AGENT_DOC_FRAGMENT.paragraphs.forEach((p) => card.appendChild(h('p', 'kbws-docfrag-p', p)));
+      const tip = h('p', 'kbws-docfrag-tip', '↑ 试着选中一段文字——浮出的工具条可以直接下达改写指令');
+      card.appendChild(tip);
+      frag.appendChild(card);
+      canvas.setDoc(frag);
+      canvas.addDiff(parseUnifiedDiff(K.AGENT_DIFF));
+      K.AGENT_VERSIONS.forEach((v) => canvas.addVersion(v));
+      canvas.setSelectionTools([
+        { label: '改写', instruction: '改写' },
+        { label: '扩写', instruction: '扩写' },
+        { label: '引用来源', instruction: '引用来源' },
+      ]);
+    }
+    initAiDiff(document);
+
+    /* 流式链路：按钮逐步推进 */
+    const agChainEl = $('ag-chain')!;
+    let agChainBusy = false;
+    const agChainReset = (): Array<{ key: string; label: string; status: 'pending'; detail: string }> =>
+      K.AGENT_CHAIN_STEPS.map((s) => ({ ...s, status: 'pending' as const }));
+    let agChainSteps = agChainReset();
+    renderKbChain(agChainEl, agChainSteps);
+    const agChainRunBtn = $('ag-chain-run')!;
+    agChainRunBtn.addEventListener('click', async () => {
+      if (agChainBusy) return;
+      agChainBusy = true;
+      agChainRunBtn.disabled = true;
+      agChainSteps = agChainReset();
+      for (let i = 0; i < agChainSteps.length; i++) {
+        agChainSteps[i] = { ...agChainSteps[i]!, status: 'running' };
+        renderKbChain(agChainEl, agChainSteps);
+        await sleep(240);
+        agChainSteps[i] = { ...agChainSteps[i]!, status: 'done' };
+        renderKbChain(agChainEl, agChainSteps);
+      }
+      note('ag-chain-note', '链路完成——右栏 diff 等待接受 / 拒绝（演示）', 3200);
+      agChainBusy = false;
+      agChainRunBtn.disabled = false;
+    });
+    onIcen('icen:kb-chain-step', (e) =>
+      note('ag-chain-note', `步骤「${e.detail.step.label}」——${e.detail.step.detail ?? '无详情'}（可点已完成的步骤回看）`, 2400),
+    );
+
+    /* 检查点 */
+    renderKbCheckpoints($('ag-checkpoints')!, K.AGENT_CHECKPOINTS);
+    initKbCheckpoint(document);
+    onIcen('icen:kb-checkpoint-restore', (e) => {
+      const scopeLabel = e.detail.scope === 'content' ? '仅内容（保留对话）' : e.detail.scope === 'conversation' ? '仅对话' : '内容与对话';
+      note('ag-cp-note', `已恢复 ${e.detail.checkpointId} · ${scopeLabel}（Cursor 语义 · 演示）`, 3600);
+    });
+
+    /* MCP 沙箱：ui:// 解析 → app.ready → call('echo') 回包上屏 */
+    const sandboxLog = $('ag-sandbox-log')!;
+    const sandboxLines: string[] = [];
+    function sandboxLogLine(text: string): void {
+      sandboxLines.push(text);
+      if (sandboxLines.length > 6) sandboxLines.shift();
+      sandboxLog.textContent = sandboxLines.join('\n');
+    }
+    const sandbox = createKbSandbox($('ag-sandbox')!, {
+      resolve: (uri) => (uri === 'ui://echo' ? K.SANDBOX_HTML : null),
+      onMessage: (msg) => {
+        if (msg.channel === 'in' && msg.payload.method === 'app.ready') {
+          sandboxLogLine('← app.ready（沙箱就绪）');
+          setTimeout(() => {
+            sandboxLogLine('→ call echo {text:"来自宿主的调用"}');
+            sandbox
+              .call('echo', { text: '来自宿主的调用' })
+              .then((r) => sandboxLogLine(`← 回包 ${JSON.stringify(r)}`))
+              .catch((err: Error) => sandboxLogLine(`← 调用失败：${err.message}`));
+          }, 260);
+        } else if (msg.channel === 'out') {
+          /* 出站请求已在上方手动记录，避免双写 */
+        }
+      },
+    });
+    sandboxLogLine('load ui://echo …');
+    sandbox.load('ui://echo');
+
+    /* 图谱：实体图 + 投影点图 */
+    renderGraph($('ag-graph')!, K.GRAPH_SPEC);
+    renderMap($('ag-map')!, K.MAP_SPEC);
+  </script>
+
+  <style is:global>
+    /* ═══ 小 hero：定位一句话，不营销 ═══ */
+    .kbws-hero { padding: 36px 0 20px; }
+    .kbws-hero-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .kbws-hero-title {
+      font-family: var(--font-heading);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin: 0;
+    }
+    .kbws-ver {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--token-accent);
+      border: 1px solid color-mix(in srgb, var(--token-accent) 45%, transparent);
+      border-radius: var(--radius-full);
+      padding: 2px 9px;
+    }
+    .kbws-hero-sub { margin: 8px 0 0; font-size: 13.5px; color: var(--token-text-muted); }
+
+    /* ═══ 工作台容器（app 级 chrome） ═══ */
+    .kbws {
+      max-width: 1280px;
+      border: 1px solid var(--token-line-soft);
+      border-radius: var(--radius-md);
+      background: var(--token-bg-soft);
+      overflow: clip;
+    }
+    .kbws-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px 16px 0;
+      border-bottom: 1px solid var(--token-line-soft);
+      background: color-mix(in srgb, var(--token-surface) 55%, transparent);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .kbws-tabs::-webkit-scrollbar { display: none; }
+    .kbws-tab {
+      appearance: none;
+      background: none;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      padding: 11px 14px;
+      font: inherit;
+      font-size: 13px;
+      white-space: nowrap;
+      color: var(--token-text-muted);
+      cursor: pointer;
+      transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+    }
+    .kbws-tab:hover { color: var(--token-text); }
+    .kbws-tab.is-active { color: var(--token-text); font-weight: 600; border-bottom-color: var(--token-accent); }
+    .kbws-tab:focus-visible { outline: 2px solid var(--token-accent); outline-offset: -2px; }
+
+    .kbws-body { padding: 4px 24px 32px; }
+    .kbws-panel[hidden] { display: none; }
+
+    /* ═══ 小节标题（12px 600，上边距 24） ═══ */
+    .kbws-sec-h {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 24px 0 10px;
+    }
+    .kbws-panel > .kbws-sec-h:first-child,
+    .kbws-main > .kbws-sec-h:first-child,
+    .kbws-rail > .kbws-sec-h:first-child { margin-top: 20px; }
+    .kbws-sec-title { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: var(--token-text); }
+    .kbws-sec-h--row { justify-content: space-between; align-items: center; }
+    .kbws-sec-h--main { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+
+    /* ═══ 双栏 rail 布局 ═══ */
+    .kbws-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 24px;
+      align-items: start;
+    }
+    .kbws-split--lg { grid-template-columns: minmax(0, 1fr) 400px; }
+    .kbws-main { min-width: 0; }
+    .kbws-rail { min-width: 0; }
+    @media (max-width: 1080px) {
+      .kbws-split, .kbws-split--lg { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    /* ═══ 问答区 ═══ */
+    .kbws-chain { margin-bottom: 0; }
+    /* chain 步骤字号 12.5px（kb-agent.css 基础上收紧一档） */
+    .kbws-chain .kb-chain-step { font-size: 12.5px; }
+    .kbws-ask { display: flex; gap: 8px; margin: 12px 0 8px; }
+    .kbws-ask-input { flex: 1 1 auto; }
+    .kbws-run { flex: none; }
+    .kbws-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .kbws-chip {
+      appearance: none;
+      border: 1px solid var(--token-line-soft);
+      border-radius: var(--radius-full);
+      background: var(--token-surface);
+      padding: 3px 11px;
+      font: inherit;
+      font-size: 12px;
+      color: var(--token-text-muted);
+      cursor: pointer;
+      transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+    }
+    .kbws-chip:hover { border-color: var(--token-accent); color: var(--token-text); }
+
+    .kbws-answer { margin-top: 6px; }
+    /* 空态收敛：约 200px 垂直居中（首屏自动运行后空态只在重置时短暂出现） */
+    .kbws-answer:has(> .kb-empty) {
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .kbws-answer-busy {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--token-text-faint);
+      padding: 6px 0;
+    }
+    .kbws-answer-busy::before {
+      content: '';
+      width: 12px; height: 12px;
+      flex: none;
+      border-radius: 50%;
+      border: 2px solid var(--token-line-soft);
+      border-top-color: var(--token-accent);
+      animation: kbws-spin 0.8s linear infinite;
+    }
+    @keyframes kbws-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .kbws-answer-busy::before { animation: none; }
+    }
+
+    .kbws-qecho { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .kbws-qmark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      width: 22px; height: 22px;
+      border-radius: var(--radius-sm);
+      background: var(--token-accent-subtle);
+      color: var(--token-accent);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .kbws-question { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
+    .kbws-question .kbws-qmark { width: 24px; height: 24px; }
+    .kbws-qtext { font-size: 14.5px; font-weight: 600; color: var(--token-text); }
+    .kbws-answer-text { font-size: 14px; line-height: 1.95; color: var(--token-text); }
+    .kbws-feedback { margin-top: 14px; }
+    .kbws-passage-host:empty { display: none; }
+
+    .kbws-hint { margin: 10px 0 0; font-size: 12px; line-height: 1.7; color: var(--token-text-faint); }
+
+    /* ═══ 行内提示条（note） ═══ */
+    .kbws-note {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-left: 2px solid var(--token-accent);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: color-mix(in srgb, var(--token-accent) 6%, transparent);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--token-text-muted);
+      opacity: 1;
+      transition: opacity 0.24s var(--ease-out);
+    }
+    .kbws-note[hidden] { display: none; }
+    .kbws-note.is-fading { opacity: 0; }
+
+    /* ═══ 摄取 ═══ */
+    .kbws-mini-btn {
+      appearance: none;
+      border: 1px solid var(--token-line-soft);
+      border-radius: var(--radius-sm);
+      background: var(--token-surface);
+      padding: 3px 10px;
+      font: inherit;
+      font-size: 11.5px;
+      color: var(--token-text-muted);
+      cursor: pointer;
+      transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+    }
+    .kbws-mini-btn:hover:not(:disabled) { border-color: var(--token-accent); color: var(--token-text); }
+    .kbws-mini-btn:disabled { opacity: 0.55; cursor: default; }
+
+    /* ═══ 检索 ═══ */
+    .kbws-mono {
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.7;
+      letter-spacing: 0.3px;
+      color: var(--token-text-faint);
+      /* DSL 回显行：不换行不断词，横向滚动（杜绝 2026-07-0 1 之类断词） */
+      white-space: pre;
+      word-break: normal;
+      overflow-x: auto;
+    }
+    .kbws-gap-done { border-color: color-mix(in srgb, var(--token-success) 55%, transparent); color: var(--token-success); }
+
+    /* ═══ 问数 ═══ */
+    .kbws-data-answer { margin-top: 2px; }
+
+    /* ═══ Agent ═══ */
+    .kbws-docfrag-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--token-text); }
+    .kbws-docfrag-p { margin: 0 0 10px; font-size: 13px; line-height: 1.85; color: var(--token-text-muted); }
+    .kbws-docfrag-tip {
+      margin: 14px 0 0;
+      padding: 8px 10px;
+      border: 1px dashed var(--token-line-dashed, var(--token-line-soft));
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--token-text-faint);
+    }
+    .kbws-sandbox-log { min-height: 76px; }
+    .kbws-duo {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+    @media (max-width: 860px) {
+      .kbws-duo { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    /* ai-diff / ai-chat 在画布两栏内的密度微调 */
+    .kb-canvas-doc .ai-diff-file { margin-bottom: 10px; }
+    .kb-canvas-chat .ai-msg + .ai-msg { margin-top: 10px; }
+
+    /* kb-eval 在面板内的横向滚动兜底 */
+    .kbws-panel .kb-eval-tablewrap { max-width: 100%; }
+  </style>
+</Base>

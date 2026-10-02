@@ -1035,3 +1035,298 @@
 .ai-composer-todo.is-error svg { color: var(--token-warning); }
 .ai-composer-todo-pop { min-width: 240px; max-width: 320px; }
 .ai-composer-todo-pop .ai-todo { padding: 0; }
+
+/* ══════════════ ai-threads · 会话列表侧栏（§5.27，behaviors/ai-threads.ts） ══════════════ */
+
+/*
+ *   <div class="ai-threads">                                     ← 240px 侧栏形态（--ai-threads-width 可调）
+ *     <div class="ai-threads-group" data-group="今天" [.is-collapsed]>
+ *       <button class="ai-threads-group-head" aria-expanded="true">今天</button>
+ *       <div class="ai-threads-group-list">
+ *         <div class="ai-thread [.is-active|.is-archived]" role="button" tabindex="0" data-key="…">
+ *           <span class="ai-thread-icon">…svg…</span>
+ *           <span class="ai-thread-label">…</span>
+ *           <button class="ai-thread-action">···</button>        ← 动作菜单挂载点（宿主实现）
+ *         </div>…
+ *       </div>
+ *     </div>…                                                     ← 「已归档」组由 behavior 沉底
+ *   </div>
+ *   .is-active：左 2px accent；.is-archived：降透明；组头 11px faint。
+ */
+
+.ai-threads {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-space-xs);
+  width: var(--ai-threads-width, 240px);
+  min-width: 0;
+  align-self: stretch; /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
+  font-size: var(--density-font-size-sm);
+}
+
+.ai-threads-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* 组头：11px faint 小标，可折叠（aria-expanded 驱动 CSS 三角，与 .ai-reasoning-head 同款） */
+.ai-threads-group-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--density-space-xs) 2px;
+  border: 0;
+  background: none;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--token-text-faint);
+  letter-spacing: 0.02em;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast);
+}
+.ai-threads-group-head:hover {
+  color: var(--token-text-muted);
+}
+.ai-threads-group-head:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+  border-radius: var(--radius-xs);
+}
+.ai-threads-group-head::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--icen-tx-fast);
+}
+.ai-threads-group-head[aria-expanded='true']::before {
+  transform: rotate(45deg);
+}
+.ai-threads-group.is-collapsed .ai-threads-group-list {
+  display: none;
+}
+
+.ai-threads-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+/* 会话行：激活左 2px accent 线；归档降透明 */
+.ai-thread {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--density-space-xs);
+  min-width: 0;
+  padding: var(--density-space-xs) var(--density-space-sm);
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-muted);
+  font-size: var(--density-font-size-sm);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    opacity var(--icen-tx-fast);
+}
+.ai-thread:hover {
+  background: var(--token-fill-1);
+  color: var(--token-text);
+}
+.ai-thread:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-thread.is-active {
+  border-left-color: var(--token-accent);
+  background: var(--token-fill-1);
+  color: var(--token-text);
+}
+.ai-thread.is-archived {
+  opacity: 0.55;
+}
+.ai-thread-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--token-text-faint);
+}
+.ai-thread-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.ai-thread.is-active .ai-thread-icon {
+  color: var(--token-accent);
+}
+.ai-thread-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 动作钮「···」：hover/聚焦/激活才出现（菜单本体由宿主经 icen:ai-thread-action 实现） */
+.ai-thread-action {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-faint);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-thread:hover .ai-thread-action,
+.ai-thread:focus-within .ai-thread-action,
+.ai-thread.is-active .ai-thread-action {
+  display: inline-flex;
+}
+.ai-thread-action:hover {
+  color: var(--token-accent);
+  background: var(--token-fill-2);
+}
+.ai-thread-action:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+/* ══════════════ ai-branch · 分支版本切换器（§5.27，behaviors/ai-branch.ts） ══════════════ */
+
+/*
+ *   <div class="ai-branch" data-index data-count role="group">
+ *     <button class="ai-branch-prev" [disabled]>‹</button>
+ *     <span class="ai-branch-page">2/3</span>     ← mono 数字（当前从 1 计）
+ *     <button class="ai-branch-next" [disabled]>›</button>
+ *   </div>
+ *   count ≤ 1 时挂载容器由 behavior 置空 + hidden/aria-hidden（此处无额外规则）。
+ */
+
+.ai-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--token-text-muted);
+}
+.ai-branch-prev,
+.ai-branch-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--token-text-muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-branch-prev:hover,
+.ai-branch-next:hover {
+  color: var(--token-text);
+  background: var(--token-fill-1);
+}
+.ai-branch-prev:focus-visible,
+.ai-branch-next:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-branch-prev:disabled,
+.ai-branch-next:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: transparent;
+}
+.ai-branch-page {
+  min-width: 2.5em;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--density-font-size-xs);
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+/* ══════════════ ai-msg-continue · aborted「继续生成」槽（§5.27，createAiStream fail/cancel） ══════════════ */
+
+/* ghost 小钮右浮：挂在 .ai-msg-body 尾部（消息尾），点按 → icen:ai-retry {el} */
+.ai-msg-continue {
+  display: inline-flex;
+  align-items: center;
+  float: right;
+  margin: var(--density-space-2xs, 2px) 0 0 var(--density-space-xs);
+  padding: 2px 10px;
+  border: 1px solid var(--token-line);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--token-text-muted);
+  font-size: var(--density-font-size-xs);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-msg-continue:hover {
+  color: var(--token-accent);
+  border-color: var(--icen-hover-border);
+  background: var(--token-fill-1);
+}
+.ai-msg-continue:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+/* §5.27 reasoning 自动收起无新样式：复用 .ai-reasoning 既有折叠/耗时规则 */
+
+/* ── 动效守卫（§5.27 新增段） ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-thread,
+  .ai-thread-action,
+  .ai-threads-group-head,
+  .ai-threads-group-head::before,
+  .ai-branch-prev,
+  .ai-branch-next,
+  .ai-msg-continue {
+    transition: none;
+  }
+}
+
+/* 触屏无 hover：动作钮常显（否则不可达） */
+@media (pointer: coarse) {
+  .ai-thread .ai-thread-action {
+    display: inline-flex;
+  }
+}

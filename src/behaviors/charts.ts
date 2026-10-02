@@ -2012,3 +2012,1051 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
     },
   };
 }
+
+/* ══════════════════════════════════════════════════════════════
+   知识图谱（GraphRAG / 实体关系）＋ 嵌入地图（embedding 2D 投影）
+   ————————————————————————————————————————————————————————————————
+   renderGraph(el, spec)：SVG 力导向 node-link——确定性布局（id 升序环初始化，
+   迭代松弛 ~300 轮：成对斥力 + 边弹簧 + 中心引力，无 Math.random，同数据
+   同布局），簇着色走既有调色盘，节点可拖拽（局部松弛 20 轮 / rAF 批处理）。
+   renderMap(el, spec)：renderScatter 的去轴变体——坐标为预投影值（本库不算
+   投影），无轴刻度只留细网格，点 4px 半透明。
+   两者事件走既有 icen:chart-* 通道（bindChartEvents 同款语义：hover
+   enter/move/leave + click/dblclick/contextmenu + 内置 tooltip），detail
+   对齐 ChartEventDetail 并扩展 datum（{id, label, cluster?, meta?}，
+   点击节点/点回实体卡数据）。本 section 纯追加：不改上方任何已发布函数/
+   导出（'graph'/'map' 不进已发布联合 ChartType，detail.chart 经断言携带）。
+   ══════════════════════════════════════════════════════════════ */
+
+/** 图谱节点（GraphRAG 实体）。weight 缺省以度中心性（邻边数）参与定尺寸 */
+export interface GraphNodeSpec {
+  id: string;
+  label?: string;
+  /** 簇 key（社区/Leiden id 等）：配色按簇索引走既有调色盘 */
+  cluster?: string;
+  /** 节点权重（映射半径 6–18px）；缺省用度数 */
+  weight?: number;
+  /** 原始元数据：事件 datum 原样回传（实体卡数据源） */
+  meta?: Record<string, unknown>;
+}
+
+/** 图谱边（默认无向；directed 时带箭头）。weight 映射线宽 0.6–2.5px */
+export interface GraphEdgeSpec {
+  source: string;
+  target: string;
+  weight?: number;
+}
+
+export interface GraphSpec extends ChartSpec {
+  type: 'graph';
+  nodes: GraphNodeSpec[];
+  edges: GraphEdgeSpec[];
+  /** 有向图：边带箭头（默认无向） */
+  directed?: boolean;
+  /** 簇 key → 显示名（图例 / tooltip） */
+  clusterLabels?: Record<string, string>;
+}
+
+/** 嵌入地图点：x/y 为预投影 2D 坐标（UMAP/t-SNE 产物；本组件只做视口缩放，不算投影） */
+export interface MapPointSpec {
+  id: string;
+  x: number;
+  y: number;
+  cluster?: string;
+  label?: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface MapSpec extends ChartSpec {
+  type: 'map';
+  points: MapPointSpec[];
+  /** 簇 key → 显示名（图例） */
+  clusters?: Record<string, string>;
+}
+
+/** icen:chart-* 的 datum 负载：graph 命中节点 / map 命中点（meta 原样回传） */
+export interface ChartDatum {
+  id: string;
+  label: string;
+  cluster?: string;
+  meta?: Record<string, unknown>;
+}
+
+/** graph / map 的事件 detail：既有 ChartEventDetail + datum */
+export interface ChartDatumDetail extends ChartEventDetail {
+  datum?: ChartDatum;
+}
+
+/** graph / map 句柄（对齐 ChartHandle 形状；事件 detail 换 ChartDatumDetail） */
+export interface DatumChartHandle<S extends GraphSpec | MapSpec = GraphSpec | MapSpec> {
+  el: HTMLElement;
+  /** 归一后的当前规格 */
+  spec: S;
+  /** 原地重渲染（graph 重新布局；保留事件委托与句柄） */
+  update(next: S | unknown): void;
+  /** icen:chart-<name> 监听糖（hover/click/dblclick/contextmenu）；返回解绑函数 */
+  on(name: ChartEventName, listener: (detail: ChartDatumDetail, event: Event) => void): () => void;
+  /** 清空渲染并解绑委托（destroy 后可重新渲染） */
+  destroy(): void;
+}
+
+/** 图型登记：'graph' / 'map' 不进已发布联合 ChartType（追加区不动既有导出），detail.chart 按字面量携带 */
+const GRAPH_CHART_TYPE = 'graph' as unknown as ChartType;
+const MAP_CHART_TYPE = 'map' as unknown as ChartType;
+
+/* ── 确定性力导向布局（纯函数；导出便于单测）── */
+
+export interface GraphLayoutOptions {
+  /** 布局域宽（默认 320） */
+  width?: number;
+  /** 布局域高（默认 200） */
+  height?: number;
+  /** 松弛轮数（默认 300） */
+  iterations?: number;
+  /** 初始环相位偏移（度，默认 0）。无随机源——同输入 + 同 seed 必同布局 */
+  seed?: number;
+}
+
+/** 布局内部态：buildLayoutState 构造；relaxLayout / fitLayout 消费；renderGraph 拖拽期复用 */
+interface LayoutState {
+  ids: string[];
+  index: Map<string, number>;
+  x: Float64Array;
+  y: Float64Array;
+  /** 无向边端点索引对（自环与未知端点已在构造期剔除） */
+  pairs: Array<[number, number]>;
+  width: number;
+  height: number;
+  /** FR 理想间距 sqrt(area/n)：斥力/弹簧系数随 n 收敛（k/√n 族） */
+  k: number;
+}
+
+function buildLayoutState(
+  nodes: Array<{ id: unknown }>,
+  edges: Array<{ source: unknown; target: unknown }>,
+  width: number,
+  height: number,
+): LayoutState {
+  const ids: string[] = [];
+  const index = new Map<string, number>();
+  for (const node of nodes) {
+    const id = String(node?.id ?? '').trim();
+    if (!id || index.has(id)) continue;
+    index.set(id, ids.length);
+    ids.push(id);
+  }
+  const pairs: Array<[number, number]> = [];
+  for (const edge of edges) {
+    const a = index.get(String(edge?.source ?? '').trim());
+    const b = index.get(String(edge?.target ?? '').trim());
+    if (a == null || b == null || a === b) continue;
+    pairs.push([a, b]);
+  }
+  const n = ids.length;
+  return {
+    ids,
+    index,
+    x: new Float64Array(n),
+    y: new Float64Array(n),
+    pairs,
+    width,
+    height,
+    k: n > 0 ? Math.sqrt((width * height) / n) : 1,
+  };
+}
+
+/** 迭代松弛：成对斥力（k²/d）+ 边弹簧（d²/k，封顶 3k）+ 中心引力；温度线性冷却限幅，位移 clamp 进布局域 */
+function relaxLayout(state: LayoutState, rounds: number, pinned = -1, tempScale = 1): void {
+  const { x, y, pairs, width, height, k } = state;
+  const n = x.length;
+  if (n <= 1 || rounds <= 0) return;
+  const cx = width / 2;
+  const cy = height / 2;
+  const gravity = 0.015;
+  const tempStart = (Math.min(width, height) / 6) * tempScale;
+  const dx = new Float64Array(n);
+  const dy = new Float64Array(n);
+  for (let round = 0; round < rounds; round++) {
+    dx.fill(0);
+    dy.fill(0);
+    const temp = Math.max(0.5, tempStart * (1 - round / rounds));
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        let vx = x[j] - x[i];
+        let vy = y[j] - y[i];
+        let d2 = vx * vx + vy * vy;
+        if (d2 < 0.01) {
+          /* 完全重合：按索引做确定性分离（无随机源） */
+          vx = 0.5 + ((j - i) % 7) * 0.25;
+          vy = ((i * 3 + j) % 5) * 0.3 - 0.6;
+          d2 = vx * vx + vy * vy;
+        }
+        const d = Math.sqrt(d2);
+        const f = (k * k) / d;
+        const ux = (vx / d) * f;
+        const uy = (vy / d) * f;
+        dx[i] -= ux;
+        dy[i] -= uy;
+        dx[j] += ux;
+        dy[j] += uy;
+      }
+    }
+    for (const [a, b] of pairs) {
+      let vx = x[b] - x[a];
+      let vy = y[b] - y[a];
+      let d = Math.sqrt(vx * vx + vy * vy);
+      if (d < 0.01) {
+        vx = 1;
+        vy = 0;
+        d = 1;
+      }
+      const f = Math.min((d * d) / k, k * 3);
+      const ux = (vx / d) * f;
+      const uy = (vy / d) * f;
+      dx[a] += ux;
+      dy[a] += uy;
+      dx[b] -= ux;
+      dy[b] -= uy;
+    }
+    for (let i = 0; i < n; i++) {
+      if (i === pinned) continue;
+      dx[i] += (cx - x[i]) * gravity;
+      dy[i] += (cy - y[i]) * gravity;
+      const dm = Math.sqrt(dx[i] * dx[i] + dy[i] * dy[i]);
+      if (dm <= 0) continue;
+      const v = Math.min(dm, temp) / dm;
+      x[i] = Math.min(width, Math.max(0, x[i] + dx[i] * v));
+      y[i] = Math.min(height, Math.max(0, y[i] + dy[i] * v));
+    }
+  }
+}
+
+/** 视口归一 fit：bbox 等比缩放进 [margin, 尺寸-margin] 并居中（防畸变，scale 封顶 4） */
+function fitLayout(state: LayoutState, margin: number): void {
+  const { x, y, width, height } = state;
+  const n = x.length;
+  if (n === 0) return;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < n; i++) {
+    if (x[i] < minX) minX = x[i];
+    if (x[i] > maxX) maxX = x[i];
+    if (y[i] < minY) minY = y[i];
+    if (y[i] > maxY) maxY = y[i];
+  }
+  const spanX = Math.max(1e-6, maxX - minX);
+  const spanY = Math.max(1e-6, maxY - minY);
+  const scale = Math.min((width - margin * 2) / spanX, (height - margin * 2) / spanY, 4);
+  const offX = (width - spanX * scale) / 2 - minX * scale;
+  const offY = (height - spanY * scale) / 2 - minY * scale;
+  for (let i = 0; i < n; i++) {
+    x[i] = x[i] * scale + offX;
+    y[i] = y[i] * scale + offY;
+  }
+}
+
+/** 确定性初始布局：id 升序沿圆环排布（首节点正上方；seed 旋转相位） */
+function initRingLayout(state: LayoutState, seed = 0): void {
+  const { ids, index, x, y, width, height } = state;
+  const n = ids.length;
+  if (n === 0) return;
+  if (n === 1) {
+    x[0] = width / 2;
+    y[0] = height / 2;
+    return;
+  }
+  const order = [...ids].sort();
+  const radius = (Math.min(width, height) / 2) * 0.76;
+  const deg = ((seed % 360) + 360) % 360;
+  const seedAngle = (deg * Math.PI) / 180;
+  for (let rank = 0; rank < n; rank++) {
+    const i = index.get(order[rank] ?? '') ?? -1;
+    if (i < 0) continue;
+    const angle = seedAngle - Math.PI / 2 + (rank * 2 * Math.PI) / n;
+    x[i] = width / 2 + radius * Math.cos(angle);
+    y[i] = height / 2 + radius * Math.sin(angle);
+  }
+}
+
+/** 确定性力导向布局（纯函数，导出便于测试）：环初始化 → 松弛 → fit → id → {x, y} */
+export function layoutGraph(
+  nodes: Array<{ id: unknown }>,
+  edges: Array<{ source: unknown; target: unknown }>,
+  opts?: GraphLayoutOptions,
+): Map<string, { x: number; y: number }> {
+  const width = Math.max(16, opts?.width ?? 320);
+  const height = Math.max(16, opts?.height ?? 200);
+  const state = buildLayoutState(nodes, edges, width, height);
+  if (state.ids.length === 0) return new Map();
+  initRingLayout(state, opts?.seed ?? 0);
+  relaxLayout(state, Math.max(1, Math.round(opts?.iterations ?? 300)));
+  fitLayout(state, Math.max(8, Math.min(width, height) * 0.08));
+  const out = new Map<string, { x: number; y: number }>();
+  state.ids.forEach((id, i) => out.set(id, { x: state.x[i], y: state.y[i] }));
+  return out;
+}
+
+/* ── datum 标记 + 事件委托（graph / map 共用；bindChartEvents 同款语义，detail 多携带 datum）── */
+
+const datumMarkInfo = new WeakMap<Element, { datum: ChartDatum; tip: string }>();
+const datumEventControl = new WeakMap<HTMLElement, { unbind(): void; suppressNextClick(): void }>();
+
+function dispatchDatumEvent(
+  root: HTMLElement,
+  type: ChartEventName,
+  mark: Element,
+  phase?: 'enter' | 'move' | 'leave',
+  pointer?: { x: number; y: number },
+): void {
+  const numOr = (v: string | null): number | undefined => (v == null ? undefined : Number(v));
+  const detail: ChartDatumDetail = {
+    type,
+    phase,
+    chart: chartDelegateMeta.get(root)?.type() ?? 'vbar',
+    index: numOr(mark.getAttribute('data-chart-index')),
+    seriesIndex: numOr(mark.getAttribute('data-chart-series')),
+    seriesName: mark.getAttribute('data-chart-series-name') ?? undefined,
+    label: mark.getAttribute('data-chart-label') ?? undefined,
+    value: numOr(mark.getAttribute('data-chart-value')),
+    target: mark,
+    pointerX: pointer?.x,
+    pointerY: pointer?.y,
+    datum: datumMarkInfo.get(mark)?.datum,
+  };
+  emitIcen(root, `icen:chart-${type}`, detail);
+}
+
+/**
+ * graph / map 交互委托（幂等，挂 el 存活跨 update）：pointer / click / dblclick /
+ * contextmenu 归一到 [data-chart-mark] 标记 → icen:chart-hover（enter/move/leave）/
+ * click / dblclick / contextmenu（detail 携带 datum + 指针坐标；右键默认
+ * preventDefault），内置 tooltip portal 跟随指针。与 bindChartEvents 互为同款
+ * 语义（图型/开关经 chartDelegateMeta 动态读取）；suppressNextClick 供拖拽
+ * 释放后吞掉误触 click。
+ */
+function bindDatumEvents(root: HTMLElement): { unbind(): void; suppressNextClick(): void } {
+  const existing = datumEventControl.get(root);
+  if (existing) return existing;
+  const tipEnabled = (): boolean => chartDelegateMeta.get(root)?.tooltip() ?? true;
+  const markOf = (e: Event): Element | null => {
+    const t = e.target;
+    return t instanceof Element ? t.closest('[data-chart-mark]') : null;
+  };
+  let hoverMark: Element | null = null;
+  let suppressClick = false;
+  const bindings: Array<[string, EventListener]> = [];
+  const on = <T extends Event>(type: string, fn: (e: T) => void): void => {
+    const listener: EventListener = (evt) => fn(evt as T);
+    root.addEventListener(type, listener);
+    bindings.push([type, listener]);
+  };
+  const enterMark = (mark: Element, px: number, py: number): void => {
+    hoverMark = mark;
+    mark.classList.add('is-hover');
+    dispatchDatumEvent(root, 'hover', mark, 'enter', { x: px, y: py });
+    if (tipEnabled()) {
+      const tip = chartTooltip();
+      tip.textContent = datumMarkInfo.get(mark)?.tip ?? tooltipText(mark);
+      applyTooltipSizing(mark);
+      tip.hidden = false;
+      moveTooltip(px, py);
+    }
+  };
+  const leaveMark = (pointer?: { x: number; y: number }): void => {
+    if (!hoverMark) return;
+    hoverMark.classList.remove('is-hover');
+    dispatchDatumEvent(root, 'hover', hoverMark, 'leave', pointer);
+    hoverMark = null;
+    chartTooltip().hidden = true;
+  };
+  on<PointerEvent>('pointerover', (e) => {
+    const mark = markOf(e);
+    if (!mark || mark === hoverMark) return;
+    leaveMark({ x: e.clientX, y: e.clientY });
+    enterMark(mark, e.clientX, e.clientY);
+  });
+  on<PointerEvent>('pointermove', (e) => {
+    if (!hoverMark) return;
+    dispatchDatumEvent(root, 'hover', hoverMark, 'move', { x: e.clientX, y: e.clientY });
+    if (tipEnabled()) moveTooltip(e.clientX, e.clientY);
+  });
+  on<PointerEvent>('pointerout', (e) => {
+    const mark = markOf(e);
+    if (mark && mark === hoverMark) leaveMark({ x: e.clientX, y: e.clientY });
+  });
+  on<Event>('pointerleave', () => leaveMark());
+  on<MouseEvent>('click', (e) => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
+    const mark = markOf(e);
+    if (mark) dispatchDatumEvent(root, 'click', mark, undefined, { x: e.clientX, y: e.clientY });
+  });
+  on<MouseEvent>('dblclick', (e) => {
+    const mark = markOf(e);
+    if (mark) dispatchDatumEvent(root, 'dblclick', mark, undefined, { x: e.clientX, y: e.clientY });
+  });
+  on<MouseEvent>('contextmenu', (e) => {
+    const mark = markOf(e);
+    if (!mark) return;
+    e.preventDefault();
+    dispatchDatumEvent(root, 'contextmenu', mark, undefined, { x: e.clientX, y: e.clientY });
+  });
+  const control = {
+    unbind(): void {
+      for (const [type, listener] of bindings) root.removeEventListener(type, listener);
+      bindings.length = 0;
+      if (hoverMark) {
+        hoverMark.classList.remove('is-hover');
+        hoverMark = null;
+      }
+      chartTooltip().hidden = true;
+      datumEventControl.delete(root);
+    },
+    suppressNextClick(): void {
+      suppressClick = true;
+    },
+  };
+  datumEventControl.set(root, control);
+  return control;
+}
+
+/* ── 簇模型（graph / map 共用）：确定性簇序（key 升序）→ 调色盘取色 + 图例名 ── */
+
+interface ClusterModel {
+  keys: string[];
+  indexOf: Map<string, number>;
+  label(key: string): string;
+  /** 簇索引 → 调色盘色（paletteVar 1..6 循环） */
+  color(index: number): string;
+}
+
+function buildClusterModel(keys: Array<string | undefined>, labels?: Record<string, string>): ClusterModel | null {
+  const seen = new Set<string>();
+  for (const key of keys) {
+    if (typeof key === 'string' && key !== '') seen.add(key);
+  }
+  if (seen.size === 0) return null;
+  const list = [...seen].sort();
+  return {
+    keys: list,
+    indexOf: new Map(list.map((k, i) => [k, i])),
+    label: (key) => labels?.[key] ?? key,
+    color: (index) => paletteVar(index + 1),
+  };
+}
+
+/** datum 标记注册（bindDatumEvents 派发与内置 tooltip 取用） */
+function registerDatumMark(mark: Element, datum: ChartDatum, tip: string): void {
+  datumMarkInfo.set(mark, { datum, tip });
+}
+
+/** hover 文案截断（默认 8 字补 …；按码点切，不劈代理对） */
+function truncateText(text: string, max = 8): string {
+  const chars = Array.from(text);
+  return chars.length > max ? `${chars.slice(0, max).join('')}…` : text;
+}
+
+/** 指针视口坐标 → SVG viewBox 坐标（xMidYMid meet letterbox 补偿；rect 退化回中心） */
+function svgClientPoint(
+  svg: SVGSVGElement,
+  clientX: number,
+  clientY: number,
+  viewBoxWidth: number,
+  viewBoxHeight: number,
+): { x: number; y: number } {
+  const rect = svg.getBoundingClientRect();
+  const scale = Math.min(rect.width / viewBoxWidth, rect.height / viewBoxHeight);
+  if (!Number.isFinite(scale) || scale <= 0) {
+    return { x: viewBoxWidth / 2, y: viewBoxHeight / 2 };
+  }
+  return {
+    x: (clientX - rect.left - (rect.width - viewBoxWidth * scale) / 2) / scale,
+    y: (clientY - rect.top - (rect.height - viewBoxHeight * scale) / 2) / scale,
+  };
+}
+
+/* ── spec 归一（不抛异常：字符串 JSON.parse / 数值容错 / 未知端点边与自环剔除 / id 去重）── */
+
+function normalizeGraphSpec(raw: unknown): GraphSpec {
+  let src: unknown = raw;
+  if (typeof src === 'string') {
+    try {
+      src = JSON.parse(src);
+    } catch {
+      src = {};
+    }
+  }
+  if (!src || typeof src !== 'object' || Array.isArray(src)) src = {};
+  const s = src as Record<string, unknown>;
+  const spec: GraphSpec = { ...normalizeChartSpec(s), type: 'graph', nodes: [], edges: [] };
+  if (Array.isArray(s.nodes)) {
+    const seen = new Set<string>();
+    for (const v of s.nodes) {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+      const r = v as Record<string, unknown>;
+      const id = String(r.id ?? '').trim();
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const node: GraphNodeSpec = { id };
+      if (r.label != null) node.label = String(r.label);
+      if (typeof r.cluster === 'string' && r.cluster !== '') node.cluster = r.cluster;
+      const weight = toNum(r.weight);
+      if (weight != null) node.weight = weight;
+      if (r.meta && typeof r.meta === 'object' && !Array.isArray(r.meta)) {
+        node.meta = { ...(r.meta as Record<string, unknown>) };
+      }
+      spec.nodes.push(node);
+    }
+  }
+  const known = new Set(spec.nodes.map((n) => n.id));
+  if (Array.isArray(s.edges)) {
+    for (const v of s.edges) {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+      const r = v as Record<string, unknown>;
+      const source = String(r.source ?? '').trim();
+      const target = String(r.target ?? '').trim();
+      if (!known.has(source) || !known.has(target) || source === target) continue;
+      const edge: GraphEdgeSpec = { source, target };
+      const weight = toNum(r.weight);
+      if (weight != null) edge.weight = weight;
+      spec.edges.push(edge);
+    }
+  }
+  if (s.directed === true) spec.directed = true;
+  if (s.clusterLabels && typeof s.clusterLabels === 'object' && !Array.isArray(s.clusterLabels)) {
+    const labels: Record<string, string> = {};
+    for (const [key, value] of Object.entries(s.clusterLabels)) {
+      if (typeof value === 'string' && value !== '') labels[key] = value;
+    }
+    spec.clusterLabels = labels;
+  }
+  return spec;
+}
+
+function normalizeMapSpec(raw: unknown): MapSpec {
+  let src: unknown = raw;
+  if (typeof src === 'string') {
+    try {
+      src = JSON.parse(src);
+    } catch {
+      src = {};
+    }
+  }
+  if (!src || typeof src !== 'object' || Array.isArray(src)) src = {};
+  const s = src as Record<string, unknown>;
+  const spec: MapSpec = { ...normalizeChartSpec(s), type: 'map', points: [] };
+  if (Array.isArray(s.points)) {
+    const seen = new Set<string>();
+    for (const v of s.points) {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+      const r = v as Record<string, unknown>;
+      const id = String(r.id ?? '').trim();
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const point: MapPointSpec = { id, x: toNum(r.x) ?? 0, y: toNum(r.y) ?? 0 };
+      if (typeof r.cluster === 'string' && r.cluster !== '') point.cluster = r.cluster;
+      if (r.label != null) point.label = String(r.label);
+      if (r.meta && typeof r.meta === 'object' && !Array.isArray(r.meta)) {
+        point.meta = { ...(r.meta as Record<string, unknown>) };
+      }
+      spec.points.push(point);
+    }
+  }
+  if (s.clusters && typeof s.clusters === 'object' && !Array.isArray(s.clusters)) {
+    const labels: Record<string, string> = {};
+    for (const [key, value] of Object.entries(s.clusters)) {
+      if (typeof value === 'string' && value !== '') labels[key] = value;
+    }
+    spec.clusters = labels;
+  }
+  return spec;
+}
+
+/* ═══ 知识图谱：renderGraph ═══ */
+
+const GRAPH_W = 360;
+const GRAPH_H = 260;
+const GRAPH_PAD = 28;
+const GRAPH_LW = GRAPH_W - GRAPH_PAD * 2;
+const GRAPH_LH = GRAPH_H - GRAPH_PAD * 2;
+
+/* 有向图箭头 marker id 计数器（同页多图唯一） */
+let graphMarkerSeq = 0;
+
+/**
+ * 力导向知识图谱（GraphRAG 实体关系）。确定性布局（同数据同布局，无随机源）；
+ * 节点半径 6–18px（weight 归一，缺省用度中心性）、边宽 0.6–2.5px（line-soft）、
+ * 簇着色走既有调色盘（无 cluster 单色 tone）；节点拖拽 = pointer + 局部松弛
+ * 20 轮（rAF 批处理）；hover 显示节点 label（≤8 字截断）+ 内置 tooltip；
+ * 事件走既有通道 icen:chart-hover/click/dblclick/contextmenu，detail.datum =
+ * {id, label, cluster?, meta?}（点击节点回实体卡数据）。图例可点击隐藏簇
+ * （icen:chart-legend-toggle；边随任一端簇隐藏淡化）。
+ */
+export function renderGraph(el: HTMLElement, raw: GraphSpec | unknown): DatumChartHandle<GraphSpec> {
+  const noop = (): void => undefined;
+  let current = normalizeGraphSpec(raw);
+  if (typeof document === 'undefined') {
+    return { el, spec: current, update: noop, on: () => noop, destroy: noop };
+  }
+  const legendState: ChartLegendState = { hidden: null };
+
+  /* 渲染态（每次 paint 重建；拖拽松弛复用 layout） */
+  let layout: LayoutState | null = null;
+  let svgRef: SVGSVGElement | null = null;
+  let nodeEls: Element[] = [];
+  let edgeList: Array<{ el: SVGLineElement; from: number; to: number }> = [];
+  let nodeRadii: number[] = [];
+  let directed = false;
+  let arrowId = '';
+
+  /** 边端点（有向：目标端缩短 r+4，箭头贴节点外缘不钻圆心） */
+  const edgeEnds = (from: number, to: number): { x1: string; y1: string; x2: string; y2: string } => {
+    const ax = GRAPH_PAD + (layout ? layout.x[from] : 0);
+    const ay = GRAPH_PAD + (layout ? layout.y[from] : 0);
+    const bx = GRAPH_PAD + (layout ? layout.x[to] : 0);
+    const by = GRAPH_PAD + (layout ? layout.y[to] : 0);
+    if (!directed) {
+      return { x1: ax.toFixed(1), y1: ay.toFixed(1), x2: bx.toFixed(1), y2: by.toFixed(1) };
+    }
+    const dx = bx - ax;
+    const dy = by - ay;
+    const d = Math.hypot(dx, dy) || 1;
+    const cut = (nodeRadii[to] ?? 6) + 4;
+    return {
+      x1: ax.toFixed(1),
+      y1: ay.toFixed(1),
+      x2: (bx - (dx / d) * cut).toFixed(1),
+      y2: (by - (dy / d) * cut).toFixed(1),
+    };
+  };
+
+  const paint = (body: HTMLElement): void => {
+    directed = current.directed === true;
+    layout = null;
+    svgRef = null;
+    nodeEls = [];
+    edgeList = [];
+    arrowId = '';
+    const nodes = current.nodes;
+    if (nodes.length === 0) {
+      nodeRadii = [];
+      renderEmpty(body, current.emptyLabel);
+      return;
+    }
+
+    const clusters = buildClusterModel(nodes.map((n) => n.cluster), current.clusterLabels);
+    const tone = toneVar(current.tone);
+    const idOf = new Map(nodes.map((n, i) => [n.id, i]));
+
+    /* 度中心性（weight 缺省用邻边数）→ 半径 6 + 归一×12（6–18px；等权取中位） */
+    const degree = nodes.map(() => 0);
+    for (const e of current.edges) {
+      const a = idOf.get(e.source);
+      const b = idOf.get(e.target);
+      if (a == null || b == null || a === b) continue;
+      degree[a] += 1;
+      degree[b] += 1;
+    }
+    const weights = nodes.map((n, i) => n.weight ?? degree[i]);
+    let wMin = Infinity;
+    let wMax = -Infinity;
+    for (const w of weights) {
+      if (w < wMin) wMin = w;
+      if (w > wMax) wMax = w;
+    }
+    nodeRadii = weights.map((w) => 6 + (wMax > wMin ? (w - wMin) / (wMax - wMin) : 0.5) * 12);
+
+    /* 边宽 0.6–2.5px（weight 归一；全缺省/等值 → 统一 1px） */
+    let eMin = Infinity;
+    let eMax = -Infinity;
+    for (const e of current.edges) {
+      if (e.weight == null) continue;
+      if (e.weight < eMin) eMin = e.weight;
+      if (e.weight > eMax) eMax = e.weight;
+    }
+    const edgeWidth = (e: GraphEdgeSpec): number =>
+      e.weight == null ? 1 : 0.6 + (eMax > eMin ? (e.weight - eMin) / (eMax - eMin) : 0.5) * 1.9;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'chart-graph';
+    if (current.tone) wrap.style.setProperty('--chart-tone', toneVar(current.tone));
+    const svg = svgEl('svg', { viewBox: `0 0 ${GRAPH_W} ${GRAPH_H}`, role: 'img' });
+    svgRef = svg;
+    svg.addEventListener('pointerdown', onNodePointerDown);
+
+    const defs = svgEl('defs', {});
+    if (directed) {
+      arrowId = `icen-chart-graph-arrow-${++graphMarkerSeq}`;
+      const marker = svgEl('marker', {
+        id: arrowId,
+        viewBox: '0 0 8 8',
+        refX: '7',
+        refY: '4',
+        markerWidth: '6',
+        markerHeight: '6',
+        orient: 'auto',
+      });
+      marker.appendChild(svgEl('path', { d: 'M0.5,0.8 L7.5,4 L0.5,7.2 Z', fill: 'var(--token-text-faint)' }));
+      defs.appendChild(marker);
+    }
+
+    /* 确定性布局：环初始化 + 300 轮松弛 + fit（PAD 内缩的布局域） */
+    layout = buildLayoutState(nodes, current.edges, GRAPH_LW, GRAPH_LH);
+    initRingLayout(layout, 0);
+    relaxLayout(layout, 300);
+    fitLayout(layout, 20);
+
+    const edgeLayer = svgEl('g', { class: 'chart-graph-edges' });
+    const nodeLayer = svgEl('g', { class: 'chart-graph-nodes' });
+
+    for (const e of current.edges) {
+      const from = idOf.get(e.source);
+      const to = idOf.get(e.target);
+      if (from == null || to == null || from === to) continue;
+      const line = svgEl('line', {
+        ...edgeEnds(from, to),
+        stroke: 'var(--token-line-soft)',
+        'stroke-width': edgeWidth(e).toFixed(2),
+        ...(directed ? { 'marker-end': `url(#${arrowId})` } : {}),
+      });
+      line.classList.add('chart-graph-edge');
+      /* 簇隐藏联动数据：任一端所在簇隐藏 → 边淡化（图例切换后重算） */
+      const fromKey = nodes[from]?.cluster;
+      const toKey = nodes[to]?.cluster;
+      if (fromKey) line.setAttribute('data-edge-cluster-from', fromKey);
+      if (toKey) line.setAttribute('data-edge-cluster-to', toKey);
+      edgeList.push({ el: line, from, to });
+      edgeLayer.appendChild(line);
+    }
+
+    nodes.forEach((node, i) => {
+      const clusterKey = node.cluster;
+      const ci = clusterKey != null && clusters ? clusters.indexOf.get(clusterKey) : undefined;
+      const clusterName = ci != null && clusters && clusterKey != null ? clusters.label(clusterKey) : undefined;
+      const fill = clusters ? (ci != null ? clusters.color(ci) : 'var(--token-text-faint)') : tone;
+      const pos = { x: GRAPH_PAD + layout!.x[i], y: GRAPH_PAD + layout!.y[i] };
+      const g = svgEl('g', {
+        class: 'chart-graph-node',
+        transform: `translate(${pos.x.toFixed(1)},${pos.y.toFixed(1)})`,
+      });
+      g.setAttribute('data-chart-node-id', node.id);
+      setMarkData(g, {
+        index: i,
+        seriesIndex: ci,
+        seriesName: clusterName,
+        label: node.label ?? node.id,
+        value: weights[i],
+      });
+      const dot = svgEl('circle', {
+        class: 'chart-graph-dot',
+        r: (nodeRadii[i] ?? 6).toFixed(1),
+        fill,
+        'fill-opacity': '0.92',
+        stroke: 'var(--token-card)',
+        'stroke-width': '1.5',
+      });
+      /* 透明命中圆：小节点（r=6）也有 ≥11px 的 hover/点击/拖拽手感 */
+      const hit = svgEl('circle', {
+        class: 'chart-graph-hit',
+        r: String(Math.max((nodeRadii[i] ?? 6) + 4, 11)),
+        fill: 'transparent',
+        'data-chart-hit': '1',
+      });
+      const labelText = truncateText(node.label ?? node.id);
+      const head = clusterName ? `${clusterName} · ${labelText}` : labelText;
+      const tip = weights[i] > 0 ? `${head}：${weights[i]}` : head;
+      const title = svgEl('title', {});
+      title.textContent = tip;
+      g.append(dot, hit, title);
+      registerDatumMark(g, { id: node.id, label: node.label ?? node.id, cluster: clusterKey, meta: node.meta }, tip);
+      nodeEls.push(g);
+      nodeLayer.appendChild(g);
+    });
+
+    svg.append(defs, edgeLayer, nodeLayer);
+    wrap.appendChild(svg);
+    body.appendChild(wrap);
+
+    if (clusters) {
+      const legend = toggleLegend(
+        clusters.keys.map((key, ci) => ({ key, label: clusters.label(key), tone: ci + 1, si: ci })),
+        wrap,
+      );
+      body.appendChild(legend);
+      /* toggleLegend 按单 key 淡化标记（节点经 data-chart-series 对位）；边需
+         「任一端簇隐藏即淡化」→ 图例切换（click / Enter/Space）后重算全部边 */
+      const syncEdges = (): void => {
+        const hiddenOf = (key: string | null): boolean =>
+          key != null &&
+          legend.querySelector(`[data-chart-key="${CSS.escape(key)}"]`)?.classList.contains('is-off') === true;
+        for (const edge of edgeList) {
+          edge.el.classList.toggle(
+            'is-off',
+            hiddenOf(edge.el.getAttribute('data-edge-cluster-from')) ||
+              hiddenOf(edge.el.getAttribute('data-edge-cluster-to')),
+          );
+        }
+      };
+      legend.addEventListener('click', syncEdges);
+      legend.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') syncEdges();
+      });
+    }
+  };
+
+  /** 拖拽松弛后的轻量重绘：只写节点 transform 与边端点（不重建 DOM） */
+  const paintPositions = (): void => {
+    if (!layout) return;
+    for (let i = 0; i < nodeEls.length; i++) {
+      nodeEls[i]?.setAttribute(
+        'transform',
+        `translate(${(GRAPH_PAD + layout.x[i]).toFixed(1)},${(GRAPH_PAD + layout.y[i]).toFixed(1)})`,
+      );
+    }
+    for (const edge of edgeList) {
+      const ends = edgeEnds(edge.from, edge.to);
+      edge.el.setAttribute('x1', ends.x1);
+      edge.el.setAttribute('y1', ends.y1);
+      edge.el.setAttribute('x2', ends.x2);
+      edge.el.setAttribute('y2', ends.y2);
+    }
+  };
+
+  /* ── 节点拖拽：pointerdown（委托 svg）→ window pointermove/up；每帧局部松弛 20 轮 ── */
+  let drag: { i: number; moved: boolean; raf: number; px: number; py: number } | null = null;
+
+  const applyDragFrame = (): void => {
+    if (!drag || !layout || !svgRef) return;
+    const p = svgClientPoint(svgRef, drag.px, drag.py, GRAPH_W, GRAPH_H);
+    const i = drag.i;
+    layout.x[i] = Math.min(GRAPH_LW, Math.max(0, p.x - GRAPH_PAD));
+    layout.y[i] = Math.min(GRAPH_LH, Math.max(0, p.y - GRAPH_PAD));
+    relaxLayout(layout, 20, i, 0.4);
+    paintPositions();
+    drag.raf = 0;
+  };
+
+  const onDragMove = (e: PointerEvent): void => {
+    if (!drag) return;
+    if (Math.abs(e.clientX - drag.px) + Math.abs(e.clientY - drag.py) > 2) drag.moved = true;
+    drag.px = e.clientX;
+    drag.py = e.clientY;
+    if (drag.raf === 0) drag.raf = requestAnimationFrame(applyDragFrame);
+  };
+
+  const endDrag = (): void => {
+    if (!drag) return;
+    if (drag.raf !== 0) cancelAnimationFrame(drag.raf);
+    nodeEls[drag.i]?.classList.remove('is-drag');
+    svgRef?.classList.remove('is-dragging');
+    if (drag.moved) eventsControl.suppressNextClick();
+    drag = null;
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', endDrag);
+    window.removeEventListener('pointercancel', endDrag);
+  };
+
+  const onNodePointerDown = (e: PointerEvent): void => {
+    if (e.button !== 0 || !layout) return;
+    const target = e.target;
+    const g = target instanceof Element ? target.closest('.chart-graph-node') : null;
+    if (!g) return;
+    const i = layout.index.get(g.getAttribute('data-chart-node-id') ?? '');
+    if (i == null) return;
+    e.preventDefault();
+    endDrag();
+    drag = { i, moved: false, raf: 0, px: e.clientX, py: e.clientY };
+    g.classList.add('is-drag');
+    svgRef?.classList.add('is-dragging');
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+  };
+
+  chartDelegateMeta.set(el, { type: () => GRAPH_CHART_TYPE, tooltip: () => current.tooltip !== false });
+  const eventsControl = bindDatumEvents(el);
+
+  const render = (): void => {
+    if (drag) endDrag();
+    const clusters = buildClusterModel(current.nodes.map((n) => n.cluster), current.clusterLabels);
+    if (current.legend !== undefined) legendState.hidden = current.legend === false;
+    withChrome(el, current, clusters != null, paint, legendState);
+  };
+  render();
+
+  return {
+    el,
+    spec: current,
+    update(next: GraphSpec | unknown): void {
+      current = normalizeGraphSpec(next);
+      render();
+    },
+    on(name: ChartEventName, listener: (detail: ChartDatumDetail, event: Event) => void): () => void {
+      const handler = (event: Event): void => {
+        listener((event as CustomEvent<ChartDatumDetail>).detail, event);
+      };
+      el.addEventListener(`icen:chart-${name}`, handler as EventListener);
+      return () => el.removeEventListener(`icen:chart-${name}`, handler as EventListener);
+    },
+    destroy(): void {
+      if (drag) endDrag();
+      el.textContent = '';
+      eventsControl.unbind();
+      chartTooltip().hidden = true;
+    },
+  };
+}
+
+/* ═══ 嵌入地图：renderMap（renderScatter 去轴变体）═══ */
+
+const MAP_W = 360;
+const MAP_H = 220;
+const MAP_PAD = 14;
+
+/**
+ * embedding 2D 散点地图：坐标为预投影值（UMAP/t-SNE 产物，本函数只做视口
+ * min-max 缩放，不算投影）；无轴刻度只留细虚线网格；点 4px 半透明
+ * （fill-opacity .7，高密度层叠可辨）；簇着色走既有调色盘 + 可点击图例。
+ * 点击点 → icen:chart-click（detail.datum = {id, label, cluster?, meta?}，
+ * 点选回 chunk）。TODO: lasso 框选（icen:chart-select + 命中列表），暂不做。
+ */
+export function renderMap(el: HTMLElement, raw: MapSpec | unknown): DatumChartHandle<MapSpec> {
+  const noop = (): void => undefined;
+  let current = normalizeMapSpec(raw);
+  if (typeof document === 'undefined') {
+    return { el, spec: current, update: noop, on: () => noop, destroy: noop };
+  }
+  const legendState: ChartLegendState = { hidden: null };
+
+  const paint = (body: HTMLElement): void => {
+    const points = current.points.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+    if (points.length === 0) {
+      renderEmpty(body, current.emptyLabel);
+      return;
+    }
+    const clusters = buildClusterModel(points.map((p) => p.cluster), current.clusters);
+    const tone = toneVar(current.tone);
+
+    let xMin = Infinity;
+    let xMax = -Infinity;
+    let yMin = Infinity;
+    let yMax = -Infinity;
+    for (const p of points) {
+      if (p.x < xMin) xMin = p.x;
+      if (p.x > xMax) xMax = p.x;
+      if (p.y < yMin) yMin = p.y;
+      if (p.y > yMax) yMax = p.y;
+    }
+    if (xMax === xMin) xMax = xMin + 1;
+    if (yMax === yMin) yMax = yMin + 1;
+    const xAt = (x: number): number => MAP_PAD + ((x - xMin) / (xMax - xMin)) * (MAP_W - MAP_PAD * 2);
+    const yAt = (y: number): number => MAP_H - MAP_PAD - ((y - yMin) / (yMax - yMin)) * (MAP_H - MAP_PAD * 2);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'chart-map';
+    if (current.tone) wrap.style.setProperty('--chart-tone', toneVar(current.tone));
+    const svg = svgEl('svg', { viewBox: `0 0 ${MAP_W} ${MAP_H}`, role: 'img' });
+
+    /* 细网格（去轴：预投影坐标的刻度无意义，只留参考线） */
+    for (let i = 0; i <= 3; i++) {
+      const y = MAP_PAD + (i * (MAP_H - MAP_PAD * 2)) / 3;
+      svg.appendChild(svgEl('line', {
+        x1: String(MAP_PAD),
+        x2: String(MAP_W - MAP_PAD),
+        y1: String(y),
+        y2: String(y),
+        stroke: 'var(--token-line-soft)',
+        'stroke-width': '0.75',
+        'stroke-dasharray': '2 4',
+      }));
+    }
+    for (let i = 0; i <= 4; i++) {
+      const x = MAP_PAD + (i * (MAP_W - MAP_PAD * 2)) / 4;
+      svg.appendChild(svgEl('line', {
+        x1: String(x),
+        x2: String(x),
+        y1: String(MAP_PAD),
+        y2: String(MAP_H - MAP_PAD),
+        stroke: 'var(--token-line-soft)',
+        'stroke-width': '0.75',
+        'stroke-dasharray': '2 4',
+      }));
+    }
+    /* TODO: lasso 框选（icen:chart-select + 命中 datum 列表回传），暂不做 */
+
+    points.forEach((p, i) => {
+      const ci = p.cluster != null && clusters ? clusters.indexOf.get(p.cluster) : undefined;
+      const clusterName = ci != null && clusters && p.cluster != null ? clusters.label(p.cluster) : undefined;
+      const color = clusters ? (ci != null ? clusters.color(ci) : 'var(--token-text-faint)') : tone;
+      const label = p.label ?? p.id;
+      const labelText = truncateText(label);
+      const tip = clusterName ? `${clusterName} · ${labelText}` : labelText;
+      const g = svgEl('g', {
+        class: 'chart-map-point',
+        transform: `translate(${xAt(p.x).toFixed(1)},${yAt(p.y).toFixed(1)})`,
+      });
+      g.setAttribute('data-chart-point-id', p.id);
+      setMarkData(g, { index: i, seriesIndex: ci, seriesName: clusterName, label });
+      const dot = svgEl('circle', {
+        class: 'chart-map-dot',
+        r: '4',
+        fill: color,
+        'fill-opacity': '0.7',
+        stroke: color,
+        'stroke-width': '1',
+      });
+      const hit = svgEl('circle', { class: 'chart-map-hit', r: '9', fill: 'transparent', 'data-chart-hit': '1' });
+      const title = svgEl('title', {});
+      title.textContent = tip;
+      g.append(dot, hit, title);
+      registerDatumMark(g, { id: p.id, label, cluster: p.cluster, meta: p.meta }, tip);
+      svg.appendChild(g);
+    });
+
+    wrap.appendChild(svg);
+    body.appendChild(wrap);
+    if (clusters) {
+      body.appendChild(
+        toggleLegend(
+          clusters.keys.map((key, ci) => ({ key, label: clusters.label(key), tone: ci + 1, si: ci })),
+          wrap,
+        ),
+      );
+    }
+  };
+
+  chartDelegateMeta.set(el, { type: () => MAP_CHART_TYPE, tooltip: () => current.tooltip !== false });
+  const eventsControl = bindDatumEvents(el);
+
+  const render = (): void => {
+    const clusters = buildClusterModel(current.points.map((p) => p.cluster), current.clusters);
+    if (current.legend !== undefined) legendState.hidden = current.legend === false;
+    withChrome(el, current, clusters != null, paint, legendState);
+  };
+  render();
+
+  return {
+    el,
+    spec: current,
+    update(next: MapSpec | unknown): void {
+      current = normalizeMapSpec(next);
+      render();
+    },
+    on(name: ChartEventName, listener: (detail: ChartDatumDetail, event: Event) => void): () => void {
+      const handler = (event: Event): void => {
+        listener((event as CustomEvent<ChartDatumDetail>).detail, event);
+      };
+      el.addEventListener(`icen:chart-${name}`, handler as EventListener);
+      return () => el.removeEventListener(`icen:chart-${name}`, handler as EventListener);
+    },
+    destroy(): void {
+      el.textContent = '';
+      eventsControl.unbind();
+      chartTooltip().hidden = true;
+    },
+  };
+}

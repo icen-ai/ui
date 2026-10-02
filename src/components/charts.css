@@ -170,3 +170,35 @@ svg circle[data-chart-mark].is-hover { stroke-width: 3; }
   text-decoration: line-through;
 }
 .chart-legend--toggle .is-off .chart-legend-dot { opacity: 0.3; }
+
+/* ═══ 知识图谱 / 嵌入地图追加区（graph 专属在独立 chart-graph.css；此处为 map 变体）═══ */
+
+/*
+ * chart-map：embedding 2D 散点（renderMap）—— renderScatter 的去轴变体：
+ * 无刻度文字、只留细虚线网格（预投影坐标的刻度无意义）；点 4px 半透明
+ * （fill-opacity .7，高密度层叠可辨）。DOM 由 behaviors/charts.ts 的
+ * renderMap 构建（.chart-map > svg > g.chart-map-point > dot + hit + title）。
+ * 样式并入基座（map 无独立 css，与 chart-calendar 并入 chart-heatmap 同策略）。
+ */
+.chart-map svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chart-map .chart-map-point {
+  cursor: pointer;
+}
+.chart-map-dot {
+  transition: transform var(--icen-tx-fast);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.chart-map-point.is-hover .chart-map-dot {
+  transform: scale(1.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-map-dot {
+    transition: none;
+  }
+}

@@ -1,0 +1,898 @@
+/*
+ * @icen.ai/ui — kb-ingest.css（摄取域：kb-pipeline / kb-chunks / kb-segment / kb-connector / kb-metadata / kb-qa）
+ *
+ * 共享原语在 kb.css（.kb-row/.kb-dot/.kb-fold-head/.kb-chip/.kb-num/.kb-meta/.kb-badge/.kb-empty/.kb-notice…），
+ * 本文件只做本域专属结构。DOM 契约见 docs/spec/kb-family.md §5.5–5.10 与各 behavior 头注释。
+ *
+ * 域内纪律（spec §2）：
+ *   - 摄取域＝中性行 + 状态色只给状态点与徽标（连线/边框一律层级色）
+ *   - 数字 .kb-num；元信息 .kb-meta；材料 bg → bg-soft 两档；圆角 --radius-md（容器）/ --radius-sm（行内）
+ *   - 动效 ≤240ms ease-out；运行脉冲交给 kb.css .kb-dot.is-live；reduced-motion 全退化为瞬时
+ *   - 域自持控件基元：.kb-btn（钮）/ .kb-input（输入）/ .kb-seg（mini segmented），不依赖库内其他 css
+ *   - 只消费 --token-* / --radius-* / --font-mono，附缺省回退，可独立安装
+ */
+
+/* ══════════════ 域自持控件基元（.kb-btn / .kb-input / .kb-seg） ══════════════ */
+
+.kb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-bg-soft);
+  color: var(--token-text-muted);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.16s ease-out,
+    border-color 0.16s ease-out,
+    background-color 0.16s ease-out;
+}
+.kb-btn:hover {
+  color: var(--token-text);
+  border-color: var(--token-line);
+}
+.kb-btn:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+.kb-btn:disabled,
+.kb-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.kb-btn svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+.kb-input {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-bg);
+  color: var(--token-text);
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  transition: border-color 0.16s ease-out;
+}
+.kb-input::placeholder {
+  color: var(--token-text-faint);
+}
+.kb-input:focus {
+  outline: none;
+  border-color: var(--token-accent);
+}
+.kb-input[aria-invalid='true'] {
+  border-color: var(--token-danger, var(--token-error));
+}
+.kb-input--mono {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 12px;
+}
+
+.kb-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-bg-soft);
+}
+.kb-seg-item {
+  border: none;
+  background: none;
+  padding: 2px 10px;
+  border-radius: calc(var(--radius-sm, 6px) - 2px);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  transition:
+    color 0.16s ease-out,
+    background-color 0.16s ease-out;
+}
+.kb-seg-item:hover {
+  color: var(--token-text);
+}
+.kb-seg-item.is-active {
+  background: var(--token-bg);
+  color: var(--token-text);
+  box-shadow: 0 0 0 1px var(--token-line-soft);
+}
+.kb-seg-item:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+.kb-seg-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ══════════════ kb-pipeline · 解析管线时间线（§5.5） ══════════════ */
+
+.kb-pipeline {
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md, 10px);
+  background: var(--token-bg-soft);
+  padding: 6px 8px;
+  min-width: 0;
+}
+.kb-pipeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.kb-pipeline-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.kb-pipeline-head > .kb-pipeline-toggle {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.kb-pipeline-head > .kb-pipeline-rerun {
+  flex: 0 0 auto;
+}
+
+/* 头部状态徽章：状态色只落在徽章（点由 .kb-dot 承担） */
+.kb-pipeline-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+}
+.kb-pipeline-state.is-running .kb-pipeline-state-label { color: var(--token-accent); }
+.kb-pipeline-state.is-done .kb-pipeline-state-label { color: var(--token-success); }
+.kb-pipeline-state.is-fail .kb-pipeline-state-label { color: var(--token-danger, var(--token-error)); }
+.kb-pipeline-state.is-cancel .kb-pipeline-state-label { color: var(--token-text-muted); }
+
+.kb-pipeline-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--token-text);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 可选细粒度进度条（run.progress 定义时出现）：3px 细线，与上下内容各留 8px */
+.kb-pipeline-progress {
+  height: 3px;
+  margin: 8px;
+  border-radius: 2px;
+  background: var(--token-line-soft);
+  overflow: hidden;
+}
+.kb-pipeline-progress > i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--token-accent);
+  opacity: 0.7;
+  transition: width 0.24s ease-out;
+}
+
+/* 步骤时间线：纵向连线（层级色，不给状态色） */
+.kb-pipeline-steps {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0 0 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.kb-pipeline-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  padding: 1px 2px;
+  border-radius: var(--radius-sm, 6px);
+}
+.kb-pipeline-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 6.5px;
+  top: 15px;
+  bottom: -5px;
+  width: 1px;
+  background: var(--token-line-soft);
+}
+.kb-pipeline-step > .kb-dot {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+.kb-pipeline-step-label {
+  font-size: 12.5px;
+  color: var(--token-text);
+  white-space: nowrap;
+}
+.kb-step-detail {
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+/* 状态映射：未开始/排队/取消 中性弱化；进行中 accent；完成 muted；失败 danger */
+.kb-pipeline-step.is-unstart .kb-pipeline-step-label,
+.kb-pipeline-step.is-queued .kb-pipeline-step-label { color: var(--token-text-faint); }
+.kb-pipeline-step.is-running .kb-pipeline-step-label { color: var(--token-accent); }
+.kb-pipeline-step.is-done .kb-pipeline-step-label { color: var(--token-text-muted); }
+.kb-pipeline-step.is-cancel .kb-pipeline-step-label {
+  color: var(--token-text-faint);
+  text-decoration: line-through;
+}
+.kb-pipeline-step.is-fail .kb-pipeline-step-label { color: var(--token-danger, var(--token-error)); }
+.kb-pipeline-step-elapsed {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* 失败错误区：阶段定位 + 原因（fail 时随 body 展开） */
+.kb-pipeline-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 6px);
+  background: color-mix(in srgb, var(--token-danger, var(--token-error)) 7%, transparent);
+}
+.kb-pipeline-error > svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  color: var(--token-danger, var(--token-error));
+  margin-top: 2px;
+}
+.kb-pipeline-error-stage {
+  flex: 0 0 auto;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--token-danger, var(--token-error));
+}
+.kb-pipeline-error-msg {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--token-text-muted);
+}
+
+/* ══════════════ kb-chunks · chunk 编辑器（§5.6） ══════════════ */
+
+.kb-chunks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.kb-chunks-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.kb-chunks-bar .kb-chunks-mode {
+  flex: 0 0 auto;
+}
+.kb-chunks-bar .kb-chunks-search {
+  flex: 1 1 auto;
+  min-width: 140px;
+}
+.kb-chunks-bar .kb-chunks-add {
+  flex: 0 0 auto;
+}
+
+.kb-chunk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.kb-chunk {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md, 10px);
+  background: var(--token-bg-soft);
+  transition: opacity 0.16s ease-out;
+}
+/* available=false：不删除但排除出检索 → 整体降透明度 */
+.kb-chunk.is-off {
+  opacity: 0.55;
+}
+
+/* 启用开关（kb 域自持，无 switch.css 依赖） */
+.kb-chunk-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+  cursor: pointer;
+  user-select: none;
+}
+.kb-chunk-switch input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+.kb-chunk-switch-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 15px;
+  border-radius: 999px;
+  background: var(--token-line-soft);
+  transition: background-color 0.16s ease-out;
+}
+.kb-chunk-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--token-bg);
+  box-shadow: 0 0 0 1px var(--token-line-soft);
+  transition: transform 0.16s ease-out;
+}
+.kb-chunk-switch input:checked + .kb-chunk-switch-track {
+  background: var(--token-success);
+}
+.kb-chunk-switch input:checked + .kb-chunk-switch-track > .kb-chunk-switch-thumb {
+  transform: translateX(11px);
+}
+.kb-chunk-switch input:focus-visible + .kb-chunk-switch-track {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+
+.kb-chunk-main {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+/* 行内编辑：静默无边，编辑态（focus）边框 accent */
+.kb-chunk-content {
+  padding: 2px 6px;
+  margin: 0 -6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--token-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  transition: border-color 0.16s ease-out, background-color 0.16s ease-out;
+}
+.kb-chunk-content:focus {
+  outline: none;
+  border-color: var(--token-accent);
+  background: var(--token-bg);
+}
+
+.kb-chunk-keywords {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+.kb-chunk-keyword-x {
+  border: none;
+  background: none;
+  padding: 0 0 0 3px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--token-text-faint);
+  cursor: pointer;
+}
+.kb-chunk-keyword-x:hover {
+  color: var(--token-danger, var(--token-error));
+}
+.kb-chunk-keyword-x:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+.kb-chunk-keyword-input {
+  border: none;
+  background: none;
+  outline: none;
+  padding: 2px 4px;
+  width: 96px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--token-text);
+}
+.kb-chunk-keyword-input::placeholder {
+  color: var(--token-text-faint);
+}
+
+.kb-chunk-meta {
+  color: var(--token-text-faint);
+}
+.kb-chunk-edited-flag {
+  color: var(--token-warning);
+}
+
+/* ══════════════ kb-segment · 分段策略 + 实时预览（§5.7） ══════════════ */
+
+.kb-segment-host {
+  min-width: 0;
+}
+.kb-segment {
+  display: grid;
+  grid-template-columns: minmax(260px, 5fr) minmax(0, 7fr);
+  gap: 16px;
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .kb-segment {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.kb-segment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.kb-segment-locked {
+  color: var(--token-warning);
+}
+.kb-segment-locked svg {
+  color: var(--token-warning);
+}
+.kb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.kb-field > .kb-field-label {
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+}
+.kb-field > .kb-input {
+  width: 100%;
+}
+.kb-segment-overlap-error {
+  margin-top: -4px;
+  color: var(--token-danger, var(--token-error));
+}
+.kb-segment-clean {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.kb-segment-clean-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.kb-segment-clean-item input {
+  accent-color: var(--token-accent);
+  margin: 0;
+}
+
+.kb-segment-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md, 10px);
+  background: var(--token-bg);
+  min-width: 0;
+  min-height: 0;
+}
+.kb-segment-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.kb-segment-stat {
+  font-size: 12.5px;
+  color: var(--token-text);
+}
+.kb-segment-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+  max-height: 480px;
+  overflow-y: auto;
+}
+.kb-segment-block {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-bg-soft);
+}
+.kb-segment-block-no {
+  color: var(--token-text-faint);
+}
+/* 内容截断 200px，点击展开（渐进披露） */
+.kb-segment-block-text {
+  max-height: 200px;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--token-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: pointer;
+  transition: max-height 0.16s ease-out;
+}
+.kb-segment-block-text.is-open {
+  max-height: none;
+}
+.kb-segment-block-text:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+
+/* ══════════════ kb-connector · 连接器卡（§5.8） ══════════════ */
+
+.kb-connector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.kb-connector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid var(--token-line-soft);
+  border-left: 2px solid var(--token-line-soft);
+  border-radius: var(--radius-md, 10px);
+  background: var(--token-bg-soft);
+  min-width: 0;
+}
+/* 健康左缘 2px 色条（connectorHealth 判定；色只在此与状态点上） */
+.kb-connector.is-healthy { border-left-color: var(--token-success); }
+.kb-connector.is-stale { border-left-color: var(--token-warning); }
+.kb-connector.is-failing { border-left-color: var(--token-danger, var(--token-error)); }
+.kb-connector.is-off { border-left-color: var(--token-line); }
+
+.kb-connector-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* .kb-source-icon 基元归 kb-ground.css；本域兜底一份最小骨架（同名同义，共存不冲突） */
+.kb-connector-head .kb-source-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  color: var(--token-text-muted);
+}
+.kb-connector-head .kb-source-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.kb-connector-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.kb-connector-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--token-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kb-connector-sub {
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 同步计划：mono 不换行（cron 原值包 .kb-chip；人类可读文本 .kb-meta）——绝不散点裸渲 */
+.kb-connector-schedule {
+  flex: 0 0 auto;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  white-space: nowrap;
+}
+
+/* 指标区：CSS grid 两列对齐（label 11px faint 左、value .kb-num 右，同列基线） */
+.kb-connector-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+}
+.kb-connector-signal {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  min-height: 22px;
+}
+/* 健康状态点与文字基线并排时垂直居中，避免点悬浮 */
+.kb-connector-signal .kb-dot {
+  align-self: center;
+}
+.kb-connector-signal-label {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--token-text-faint);
+}
+.kb-connector-signal-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--token-text);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 凭证与指标同排版（文字值右对齐同列），仅以颜色区分：过期 = error 红与 failing 一致，未配置 warning，正常 muted */
+.kb-connector-cred.is-expired {
+  color: var(--token-danger, var(--token-error));
+  font-weight: 500;
+}
+.kb-connector-cred.is-none {
+  color: var(--token-warning);
+}
+.kb-connector-cred.is-ok {
+  color: var(--token-text-muted);
+}
+
+.kb-connector-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--token-line-soft);
+  flex-wrap: wrap;
+}
+.kb-connector-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.kb-connector-actions .kb-btn {
+  padding: 2px 8px;
+  font-size: 11.5px;
+}
+
+/* ══════════════ kb-metadata · 元数据管理（§5.9） ══════════════ */
+
+.kb-metadata {
+  min-width: 0;
+}
+.kb-metadata-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.kb-metadata-th {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--token-line-soft);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--token-text-faint);
+  text-align: left;
+  white-space: nowrap;
+}
+.kb-metadata-th:nth-child(1) { width: 32%; }
+.kb-metadata-th:nth-child(2) { width: 84px; }
+.kb-metadata-th:nth-child(4) { width: 60px; }
+.kb-metadata-row > td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--token-line-soft);
+  font-size: 12.5px;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kb-metadata-row:hover > td {
+  background: var(--token-bg-soft);
+}
+.kb-metadata-key {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--token-text);
+}
+.kb-metadata-key-label {
+  font-size: 11px;
+  color: var(--token-text-faint);
+}
+.kb-metadata-builtin-flag {
+  margin-left: 6px;
+  font-size: 10.5px;
+  color: var(--token-text-faint);
+  border: 1px solid var(--token-line-soft);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+.kb-metadata-type {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.kb-metadata-readonly {
+  color: var(--token-text-muted);
+}
+.kb-metadata-value .kb-input {
+  width: 100%;
+}
+.kb-metadata-ops {
+  text-align: right;
+}
+.kb-metadata-ops .kb-btn {
+  padding: 1px 8px;
+  font-size: 11.5px;
+}
+.kb-metadata-empty {
+  padding: 18px 8px !important;
+  text-align: center;
+  color: var(--token-text-faint);
+  white-space: normal !important;
+}
+.kb-metadata-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.kb-metadata-new .kb-metadata-new-key {
+  width: 220px;
+}
+
+/* ══════════════ kb-qa · 认证问答对编辑器（§5.10） ══════════════ */
+
+.kb-qa {
+  min-width: 0;
+}
+.kb-qa-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.kb-qa-bar .kb-qa-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-qa-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.kb-qa-th {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--token-line-soft);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--token-text-faint);
+  text-align: left;
+  white-space: nowrap;
+}
+.kb-qa-th:nth-child(1) { width: 44%; }
+.kb-qa-th:nth-child(2) { width: 44%; }
+.kb-qa-th:nth-child(3) { width: 52px; }
+.kb-qa-row > td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--token-line-soft);
+  font-size: 12.5px;
+  vertical-align: top;
+}
+.kb-qa-row:hover > td {
+  background: var(--token-bg-soft);
+}
+/* 行内编辑格：静默，focus 内描边 accent */
+.kb-qa-q,
+.kb-qa-a {
+  outline: none;
+  border-radius: var(--radius-sm, 6px);
+  padding: 2px 4px;
+  margin: -2px -4px;
+  line-height: 1.7;
+  word-break: break-word;
+  transition: box-shadow 0.16s ease-out;
+}
+.kb-qa-q:focus,
+.kb-qa-a:focus {
+  box-shadow: inset 0 0 0 1px var(--token-accent);
+}
+.kb-qa-q:empty::before,
+.kb-qa-a:empty::before {
+  content: '…';
+  color: var(--token-text-faint);
+}
+.kb-qa-ops {
+  text-align: right;
+  vertical-align: middle;
+}
+.kb-qa-ops .kb-btn {
+  padding: 1px 8px;
+  font-size: 11.5px;
+}
+.kb-qa-empty {
+  padding: 18px 8px !important;
+  text-align: center;
+  color: var(--token-text-faint);
+}
+
+/* ══════════════ 密度 / 动效守卫 ══════════════ */
+
+[data-density='compact'] .kb-pipeline-step { min-height: 22px; }
+[data-density='compact'] .kb-chunk { padding: 5px 8px; gap: 8px; }
+[data-density='compact'] .kb-metadata-row > td,
+[data-density='compact'] .kb-qa-row > td { padding-top: 2px; padding-bottom: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-btn,
+  .kb-input,
+  .kb-seg-item,
+  .kb-chunk,
+  .kb-chunk-content,
+  .kb-chunk-switch-track,
+  .kb-chunk-switch-thumb,
+  .kb-pipeline-progress > i,
+  .kb-segment-block-text,
+  .kb-qa-q,
+  .kb-qa-a {
+    transition: none;
+  }
+}

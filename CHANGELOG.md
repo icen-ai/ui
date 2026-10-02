@@ -1,5 +1,38 @@
 # 更新日志
 
+## 0.9.0 - 2026-10-03
+
+> 知识库（kb）组件族全量落地：27 个新 slug（`kb` 总集 + 26 个组件，六域 + kb.css 基座 + kb-core 契约层），AI 族增强 3 件，图表 +2（图谱 / 地图）。业界模式逐条落地（Anthropic 引用三型 / Glean 连接器健康 / RAGFlow 分块审阅 / Cursor 检查点语义 / MCP Apps 沙箱 / Braintrust 评测分级）。无破坏性变更。
+
+### 新功能
+
+**知识库组件族（27 slug · 六域）**——ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）
+
+- **证据域**：kb-citation（行内角标 [n] + 三型定位 char/page/block，单位写死不猜）；kb-sources（来源清单 + rail 侧栏变体 + 权限打码与「申请访问」）；kb-passage（原文回看，命中高亮按命中级别分色）；kb-conflict（多源冲突并排声明）
+- **摄取域**：kb-pipeline（解析管线五态 + 步骤耗时 + 重跑）；kb-chunks（分块审阅 + 手工补块，分块是一等公民）；kb-segment（分段配置器 + 实时预览与统计）；kb-connector（数据源连接器卡：4 离散信号 + cron/人类排程 + 凭证态，enabled≠healthy）；kb-metadata（抽取字段审阅）；kb-qa（问答对管理，改动显式「仅本次会话生效 / 入库」）
+- **检索域**：kb-retrieval（playground：混合权重 α / 阈值 / topK + 存活计数随动）；kb-filter（过滤器构建器 → Mongo / OData 双 DSL 镜像，无效规则不镜像）；kb-rerank（A/B 重排对比 + Δ 箭头，关闭重排列压淡不隐藏）；kb-hittest（召回测试集 + 命中统计）
+- **问数域**：kb-sql（NL→SQL 编辑 / 回滚 / 重跑 + 只读声明）；kb-answer（查询结果 + 行数截断诚实声明）；kb-clarify（澄清追问，选择即消歧）
+- **治理域**：kb-explain（事实解释：命中原文 + 分数贡献，score null →「—」）；kb-trace（检索链路追踪，span 三态）；kb-review（人工评分任务流）；kb-gap（知识缺口队列，缺口可行动）；kb-eval（评测对比，improvement / regression / tradeoff / tie 四级）
+- **工作台域**：kb-canvas（可编辑画布 + AI 助手 + 版本栈）；kb-checkpoint（检查点回滚，范围显式——只回滚文件保留对话）；kb-sandbox（MCP Apps 沙箱：iframe `allow-scripts` 无 same-origin + postMessage JSON-RPC 2.0 + `ui://` 资源）；kb-chain（能力链路图）
+- **契约层 `kb-core.ts`**（无 UI 不占 slug）：引用 / 分数 / 分块 / 管线 / 连接器 / 分段 / 检索参数 / 过滤树 / 评测等 40+ normalize 与格式化函数——分数纪律（metric + higherIsBetter + l2 反转 + null→「—」）全族统一；`IcenEventMap` 新登记 45 个 `icen:kb-*` 事件
+- 规格：`docs/spec/kb-family.md`（顶层设计唯一事实源，类名 / 签名 / 事件以它为准）
+
+**AI 族增强（3 新 slug + 2 存量）**
+
+- 新增 ai-threads（会话线程树）/ ai-feedback（👍👎 + 理由弹层，事件带 el 定位）/ ai-branch（消息分支切换）
+- ai-chat：推理块流式展开 → 完成后 1s 自动折叠一次（用户手动展开过则不再折）；中止 / 取消出「继续」钮（`icen:ai-retry`）
+- ai-panel：AiUsageMetrics 指标行（TTFT / tokens-per-sec / finishReason）；todo 勾选描边动画
+
+**图表 +2**
+
+- chart-graph 关系图谱（`renderGraph` / `layoutGraph` 确定性布局，drag 局部松弛）与 chart-map 地理填色（`renderMap`）；charts 通用层增加 datum 明细（`ChartDatumDetail`）与聚类配色
+
+### 文档站
+
+- 新分组「知识库」（第三位，32 张新组件页，demo / 用法 / kit 三段齐全；文档数据在 `site/src/lib/kb-docs-*.ts` 三片段）
+- 旗舰页 **/kb 知识库工作台**：六标签全真接线——问答（mock 打分器全流程：链路 → 流式答案 → 角标 → 来源 → 反馈，首屏自动演示）/ 摄取（连接器「治疗」闭环：重授权 → 恢复健康）/ 检索（playground + 过滤器 + 重排 + 召回测试）/ 问数 / 观测 / Agent（画布选区 → 对话 → 版本栈；MCP 沙箱 echo 往返；受限权限链三组件贯通）
+- 视觉 QA 收敛：连接器 cron 裸串破版（→ mono chip / 人类可读排程）、指标两列网格对齐、来源卡标题挤压、检索分数条失真（flex 伸缩 → 定宽轨道）、滑杆数值回显、DSL 断词（`2026-07-0 1`）、重排表窄栏截断、过滤器日期值截字、凭证呈现混排、问答首屏空态
+
 ## 0.8.1 - 2026-10-03
 
 > 以重构与文档站为主：全仓库优雅轮（死代码 / 重复 / 契约漂移清扫）+ 文档站四件重设计与客户端换页，另含少量行为修复。无破坏性变更。

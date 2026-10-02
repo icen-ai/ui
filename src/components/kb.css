@@ -1,0 +1,232 @@
+/*
+ * @icen.ai/ui — kb 族共享视觉基座（与 docs/spec/kb-family.md §2 配套）
+ *
+ * 每个 kb-* 组件的 kit 入口经 EXTRA_CSS 引入本文件；六个域文件（kb-ground/kb-ingest/
+ * kb-search/kb-data/kb-ops/kb-agent.css）不再重复定义这里的原语。
+ *
+ * 设计纪律（族内一致性硬约束）：
+ *   - 数字一律 .kb-num（等宽 + tabular-nums）；元信息 .kb-meta（11.5px faint）
+ *   - 证据引用体 .kb-quote（左侧 2px 证据线，颜色只用层级色不用装饰色）
+ *   - 行基元 .kb-row（28px 节奏，data-density="compact" 收 24px）
+ *   - 分数条 .kb-score（序数呈现：条长=排序信号，不标榜比例语义）
+ *   - 状态点 .kb-dot（语义色，只此一处给状态上色）
+ *   - 徽标 .kb-badge（official 线框 accent / fresh·stale 中性+警示 / restricted 锁形）
+ *   - 折叠摘要行 .kb-fold-head（状态徽章 + 计数/时长，muted 内容体 .kb-fold-body）
+ *   - 动效 ≤240ms ease-out；流式脉冲 1.6s；reduced-motion 走全局规则
+ */
+
+.kb-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 6px);
+}
+.kb-row:hover { background: var(--token-bg-soft); }
+.kb-row-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.kb-row-title {
+  font-size: 13px;
+  color: var(--token-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-row-sub { font-size: 11.5px; color: var(--token-text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kb-row-side { display: inline-flex; align-items: center; gap: 8px; }
+
+/* 密度：compact 档（管理台/密集列表） */
+[data-density='compact'] .kb-row { min-height: 24px; gap: 8px; }
+
+/* 数字与元信息 */
+.kb-num {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--token-text-muted);
+  white-space: nowrap;
+}
+.kb-meta {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--token-text-faint);
+  white-space: nowrap;
+}
+
+/* 状态点（族内状态色的唯一入口） */
+.kb-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--token-text-faint);
+  opacity: 0.6;
+}
+.kb-dot.is-ok { background: var(--token-success); opacity: 1; }
+.kb-dot.is-warn { background: var(--token-warning); opacity: 1; }
+.kb-dot.is-err { background: var(--token-danger, var(--token-error)); opacity: 1; }
+.kb-dot.is-live { background: var(--token-accent); opacity: 1; animation: kb-pulse 1.6s ease-in-out infinite; }
+
+@keyframes kb-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--token-accent) 35%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--token-accent) 0%, transparent); }
+}
+
+/* 分数条（序数纪律：null 分数不渲染条） */
+.kb-score { display: inline-flex; align-items: center; gap: 6px; min-width: 88px; }
+.kb-score-bar {
+  flex: 1 1 auto;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--token-line-soft);
+  overflow: hidden;
+  min-width: 40px;
+}
+.kb-score-bar > i { display: block; height: 100%; border-radius: 2px; background: var(--token-accent); opacity: 0.75; }
+.kb-score-value { font-family: var(--font-mono, ui-monospace, monospace); font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--token-text-muted); min-width: 34px; text-align: right; }
+
+/* 证据引用体（原文摘录、citedText、chunk 预览） */
+.kb-quote {
+  position: relative;
+  padding: 2px 0 2px 12px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--token-text-muted);
+}
+.kb-quote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--token-line);
+}
+.kb-quote mark,
+.kb-passage-body mark,
+.kb-hit mark {
+  background: color-mix(in srgb, var(--token-accent) 18%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+/* 多命中分色（data-hit 轮转 3 色） */
+.kb-quote mark[data-hit='1'],
+.kb-passage-body mark[data-hit='1'] { background: color-mix(in srgb, var(--token-warning) 22%, transparent); }
+.kb-quote mark[data-hit='2'],
+.kb-passage-body mark[data-hit='2'] { background: color-mix(in srgb, var(--token-info, var(--token-accent)) 20%, transparent); }
+
+/* 徽标（来源元数据：官方/新鲜度/权限） */
+.kb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  line-height: 1;
+  letter-spacing: 0.3px;
+  color: var(--token-text-faint);
+  border: 1px solid var(--token-line-soft);
+  border-radius: 999px;
+  padding: 2.5px 7px;
+  white-space: nowrap;
+}
+.kb-badge svg { width: 10px; height: 10px; }
+.kb-badge--official {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+  background: var(--token-accent-subtle, transparent);
+}
+.kb-badge--stale { color: var(--token-warning); border-color: color-mix(in srgb, var(--token-warning) 40%, transparent); }
+.kb-badge--restricted { color: var(--token-text-faint); }
+.kb-badge--trusted {
+  color: var(--token-success);
+  border-color: color-mix(in srgb, var(--token-success) 45%, transparent);
+  background: color-mix(in srgb, var(--token-success) 8%, transparent);
+}
+.kb-badge--admin { font-family: var(--font-mono, monospace); }
+
+/* 中性 chip（表名/关键词/过滤值；展示性标签用 tag.css 的 .tag，这里只做 kb 域自持变体） */
+.kb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--token-text-muted);
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  padding: 2px 7px;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 折叠两段式（摘要行 + muted 内容体；与 ai 族渐进披露同构） */
+.kb-fold-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 28px;
+  padding: 2px 8px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm, 6px);
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  text-align: left;
+}
+.kb-fold-head:hover { color: var(--token-text); background: var(--token-bg-soft); }
+.kb-fold-head:focus-visible { outline: 2px solid var(--token-accent); outline-offset: -2px; }
+.kb-fold-caret {
+  display: inline-block;
+  width: 1em;
+  color: var(--token-text-faint);
+  font-size: 10px;
+  transition: transform 0.16s ease-out;
+  flex: 0 0 auto;
+}
+.kb-fold-head[aria-expanded='true'] .kb-fold-caret { transform: rotate(90deg); }
+.kb-fold-count { margin-left: auto; }
+
+/* 键位提示（标注队列快捷键等） */
+.kb-key {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  color: var(--token-text-faint);
+  border: 1px solid var(--token-line-soft);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 5px;
+  background: var(--token-bg-soft);
+}
+
+/* 空态/无死路行动（组件空态的最小底座；复杂空态用 empty.css） */
+.kb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  color: var(--token-text-faint);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* 截断/边界声明（诚实呈现） */
+.kb-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+  padding: 4px 8px;
+}
+.kb-notice svg { width: 12px; height: 12px; flex: 0 0 auto; }

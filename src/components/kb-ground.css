@@ -1,0 +1,566 @@
+/*
+ * @icen.ai/ui — kb-ground.css（证据域：kb-citation / kb-sources / kb-passage / kb-conflict）
+ * 共享原语在 kb.css（.kb-row/.kb-quote/.kb-badge/.kb-num…），本文件只做本域专属结构。
+ * DOM 契约见 docs/spec/kb-family.md §5.1–5.4；behaviors/kb-citation.ts 等。
+ *
+ * 视觉音调（spec §2 硬约束）：
+ *   - 字号：标题 13px/600 · 正文 13px · 元信息 11.5px · 徽标 10.5px；数字一律 .kb-num
+ *   - 节奏：行 28px（data-density="compact" 收 24px）· 区块 16px · 组内 8px
+ *   - 圆角：容器 --radius-md · 行内（角标/chip）--radius-sm 或全圆
+ *   - 色彩：证据域主角是 accent，但角标默认 faint 弱化、hover/激活才点亮；
+ *     阴影只用 --token-shadow-overlay（不自造阴影层），z 尺只借 --z-* 标尺
+ *   - 动效：滑入 200ms / hover 反馈 --icen-tx-fast / 折叠 160ms；reduced-motion 全退化为瞬时
+ */
+
+/* ══════════════════════════════════════════════
+   §5.1 kb-citation 行内引用角标
+   ══════════════════════════════════════════════ */
+
+.kb-citation {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  margin: 0 1px;
+  padding: 0 3px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  color: var(--token-text-faint);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  line-height: 1;
+  vertical-align: 2px; /* 上标视感，与正文基线对齐 */
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), border-color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+/* hover 点亮 accent：引用是证据域主角，但默认弱化、悬停才给注意力 */
+.kb-citation:hover {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--token-accent) 8%, transparent);
+}
+.kb-citation:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+/* 无效编号：灰显不可点（不信任模型生成编号的降级态） */
+.kb-citation.is-dead {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.5;
+  border-color: transparent;
+  background: transparent;
+}
+
+/* ── hover 引用卡（openPopover portal 挂 body；left/top/width 由 popover 布局引擎内联） ── */
+
+.kb-citation-card {
+  position: fixed;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 340px;
+  padding: 10px 12px;
+  background: var(--token-surface);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--token-shadow-overlay);
+  animation: kb-ground-card-in var(--icen-tx-fast);
+}
+@keyframes kb-ground-card-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: none; }
+}
+.kb-citation-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.kb-citation-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: var(--token-text-muted);
+}
+.kb-citation-card-icon > svg { width: 14px; height: 14px; }
+.kb-citation-card-title {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--token-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-citation-card-domain {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--token-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 受限来源：citedText 视觉打码（原文未下发，blur 只是提示层） */
+.kb-citation-card-quote.kb-citation-card-masked {
+  filter: blur(4px);
+  user-select: none;
+}
+.kb-citation-card-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* ══════════════════════════════════════════════
+   §5.2 kb-sources 来源列表（--row 横排 / --rail 纵列）
+   ══════════════════════════════════════════════ */
+
+.kb-sources {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+/* 答案上方横排：内容宽、可换行 */
+.kb-sources--row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+/* 侧栏纵列：整行宽。side 收进 main（kb-sources.ts rail DOM）——标题独占两行、
+   meta 行与徽章行各自换行，绝不把标题挤成一行省略号再压徽章 */
+.kb-sources--rail {
+  flex-direction: column;
+}
+.kb-sources--rail .kb-source {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: flex-start;
+}
+.kb-sources--rail .kb-source-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  overflow: hidden;
+}
+.kb-sources--rail .kb-source-sub {
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
+  text-overflow: unset;
+}
+.kb-sources--rail .kb-source-main .kb-source-side {
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 3px;
+}
+
+.kb-source {
+  --kb-source-tint: var(--token-accent);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  padding: 4px 8px 4px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--icen-tx-fast), border-color var(--icen-tx-fast),
+    transform var(--icen-tx-fast);
+}
+.kb-sources--row .kb-source { width: auto; }
+.kb-sources--rail .kb-source { width: 100%; }
+/* hover 浮起（1px 上移 = 轻量层级暗示，不进阴影层） */
+.kb-source:hover {
+  background: var(--token-bg-soft);
+  border-color: var(--token-line-soft);
+  transform: translateY(-1px);
+}
+.kb-source:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+/* 当前阅读位：左侧 2px accent 证据线（宿主或 kb-passage 锚定驱动） */
+.kb-source.is-active {
+  background: var(--token-bg-soft);
+  border-color: color-mix(in srgb, var(--kb-source-tint) 30%, transparent);
+}
+.kb-source.is-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--kb-source-tint);
+}
+
+.kb-source-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--token-text-muted);
+}
+.kb-source-icon > svg { width: 14px; height: 14px; }
+.kb-source-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.kb-source-title {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--token-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-source-sub {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--token-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-source-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.kb-source-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.kb-source-badges .kb-dot { width: 6px; height: 6px; }
+
+/* 受限行内的申请访问按钮（行壳已降级为 role=button，嵌套合法） */
+.kb-source-request {
+  flex: 0 0 auto;
+  padding: 2.5px 7px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--token-text-muted);
+  font-size: 10.5px;
+  line-height: 1;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), border-color var(--icen-tx-fast);
+}
+.kb-source-request:hover {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+}
+.kb-source-request:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+/* 密度 compact：行高 28 → 24 */
+[data-density='compact'] .kb-source { min-height: 24px; gap: 8px; }
+
+/* ══════════════════════════════════════════════
+   §5.3 kb-passage 原文定位抽屉（右侧 340px）
+   ══════════════════════════════════════════════ */
+
+.kb-passage {
+  --kb-passage-duration: 200ms;
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(340px, 92vw);
+  z-index: var(--z-panel, var(--z-chrome));
+  display: flex;
+  flex-direction: column;
+  background: var(--token-surface);
+  border-left: 1px solid var(--token-line-soft);
+  box-shadow: var(--token-shadow-overlay);
+  transform: translateX(100%);
+  transition: transform var(--kb-passage-duration) var(--ease-out);
+}
+.kb-passage[hidden] { display: none; }
+.kb-passage.is-open { transform: translateX(0); }
+
+.kb-passage-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--token-line-soft);
+}
+.kb-passage-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--token-text-muted);
+}
+.kb-passage-icon > svg { width: 16px; height: 16px; }
+.kb-passage-titlewrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kb-passage-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--token-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-passage-loc {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--token-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-passage-close {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  color: var(--token-text-faint);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.kb-passage-close:hover { color: var(--token-text); background: var(--token-bg-soft); }
+.kb-passage-close:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+
+.kb-passage-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--token-text);
+}
+.kb-passage-text { min-width: 0; word-break: break-word; white-space: pre-wrap; }
+/* 多命中分色 mark（.kb-passage-hit）与基础 mark 底色均由 kb.css 统一供给 */
+
+/* 上下文（默认隐藏，expand 展开；弱化为 faint 引导体） */
+.kb-passage-context {
+  position: relative;
+  padding: 2px 0 2px 12px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--token-text-faint);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.kb-passage-context::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--token-line-soft);
+}
+.kb-passage-context[hidden] { display: none; }
+.kb-passage.is-expanded .kb-passage-context { animation: kb-ground-card-in var(--icen-tx-fast); }
+
+.kb-passage-expand {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  color: var(--token-text-muted);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.kb-passage-expand:hover { color: var(--token-text); background: var(--token-bg-soft); }
+.kb-passage-expand:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+
+/* 受限正文：citedText 打码 + 申请访问 */
+.kb-passage-masked {
+  filter: blur(4px);
+  user-select: none;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--token-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.kb-passage-request {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--token-accent) 45%, transparent);
+  border-radius: 999px;
+  background: var(--token-accent-subtle, transparent);
+  color: var(--token-accent);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: background-color var(--icen-tx-fast), border-color var(--icen-tx-fast);
+}
+.kb-passage-request > svg { width: 12px; height: 12px; }
+.kb-passage-request:hover {
+  border-color: var(--token-accent);
+}
+.kb-passage-request:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+
+/* 跳转锚定宿主（[data-kb-loc]）：命中项 .is-current 高亮 */
+[data-kb-loc].is-current {
+  background: color-mix(in srgb, var(--token-accent) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--token-accent);
+  border-radius: var(--radius-sm, 6px);
+}
+
+/* ══════════════════════════════════════════════
+   §5.4 kb-conflict 来源冲突组
+   ══════════════════════════════════════════════ */
+
+.kb-conflict {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  background: var(--token-bg-soft);
+}
+.kb-conflict + .kb-conflict { margin-top: 16px; } /* 区块间距纪律 */
+.kb-conflict-claim {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--token-text);
+}
+.kb-conflict-claim .kb-dot { align-self: center; }
+.kb-conflict-versions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kb-conflict-ver {
+  flex: 1 1 160px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md);
+  background: var(--token-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+/* is-current：最新/官方版本，accent 高亮（唯一主角） */
+.kb-conflict-ver.is-current {
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--token-accent) 6%, var(--token-surface));
+}
+/* 其余版本：faded 退后 */
+.kb-conflict-ver.is-older { opacity: 0.62; }
+.kb-conflict-ver:hover {
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+}
+.kb-conflict-ver.is-older:hover { opacity: 1; }
+.kb-conflict-ver:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+
+.kb-conflict-ver-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.kb-conflict-ver-date { font-size: 11px; }
+.kb-conflict-ver-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.kb-conflict-ver-badges .kb-dot { width: 6px; height: 6px; }
+.kb-conflict-ver-title {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--token-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-conflict-ver-sub {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--token-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ══════════════════════════════════════════════
+   动效守卫（reduced-motion：全退化为瞬时）
+   ══════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-citation,
+  .kb-source,
+  .kb-source-request,
+  .kb-passage,
+  .kb-passage-close,
+  .kb-passage-expand,
+  .kb-passage-request,
+  .kb-conflict-ver {
+    transition: none;
+  }
+  .kb-citation-card,
+  .kb-passage.is-expanded .kb-passage-context {
+    animation: none;
+  }
+}

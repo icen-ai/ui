@@ -680,3 +680,220 @@
   .ai-context { transition: none; }
   .ai-item-status { animation: none; }
 }
+
+/* ══════════════ ai-feedback · 回答反馈（§5.27，behaviors/ai-feedback.ts） ══════════════ */
+
+/*
+ *   <div class="ai-feedback [.is-done]">
+ *     <div class="ai-feedback-votes">
+ *       <button class="ai-feedback-vote is-up [.is-picked]" aria-pressed>svg</button>
+ *       <button class="ai-feedback-vote is-down [.is-picked]" aria-pressed>svg</button>
+ *     </div>
+ *     <div class="ai-feedback-reasons" hidden>
+ *       <button class="ai-feedback-chip [.is-picked]">答案有误</button>…
+ *       <button class="ai-feedback-submit">提交</button>
+ *     </div>
+ *     <div class="ai-feedback-done" hidden>感谢反馈，已关联到该条回答的追踪记录</div>
+ *   </div>
+ *   双钮 28px；is-picked accent 边；.is-done 终态隐藏控件只留小字感谢文案。
+ */
+
+.ai-feedback {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--density-space-sm);
+  min-width: 0;
+}
+
+.ai-feedback-votes {
+  display: inline-flex;
+  gap: 4px;
+}
+
+/* 双钮：28px 方形图标钮 */
+.ai-feedback-vote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast),
+    opacity var(--icen-tx-fast);
+}
+.ai-feedback-vote svg {
+  width: 14px;
+  height: 14px;
+}
+.ai-feedback-vote:hover {
+  color: var(--token-text);
+  border-color: var(--icen-hover-border);
+  background: var(--token-fill-1);
+}
+.ai-feedback-vote:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+/* 锁定：对侧禁用降透明；选中侧 accent 边 + 浅 accent 底 */
+.ai-feedback-vote:disabled {
+  opacity: 0.45;
+  cursor: default;
+  background: transparent;
+  border-color: var(--token-line-soft);
+}
+.ai-feedback-vote.is-picked {
+  color: var(--token-accent);
+  border-color: var(--token-accent);
+  background: color-mix(in srgb, var(--token-accent) 10%, transparent);
+}
+
+/* 踩因枚举 chips + 提交（点 👎 展开） */
+.ai-feedback-reasons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--density-space-xs);
+  min-width: 0;
+}
+.ai-feedback-reasons[hidden] {
+  display: none;
+}
+.ai-feedback-chip {
+  padding: 2px 10px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--token-text-muted);
+  font-size: var(--density-font-size-xs);
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-feedback-chip:hover {
+  color: var(--token-text);
+  border-color: var(--icen-hover-border);
+}
+.ai-feedback-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.ai-feedback-chip.is-picked {
+  color: var(--token-accent);
+  border-color: var(--token-accent);
+  background: color-mix(in srgb, var(--token-accent) 10%, transparent);
+}
+
+/* 提交钮：小号 ghost（accent 留给状态，非主行动不铺实底） */
+.ai-feedback-submit {
+  padding: 2px 12px;
+  border: 1px solid var(--token-line);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--token-text);
+  font-size: var(--density-font-size-xs);
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.ai-feedback-submit:hover {
+  color: var(--token-accent);
+  border-color: var(--token-accent);
+  background: color-mix(in srgb, var(--token-accent) 8%, transparent);
+}
+.ai-feedback-submit:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+/* 已提交终态：小字感谢文案，控件隐藏 */
+.ai-feedback-done {
+  font-size: var(--density-font-size-2xs);
+  color: var(--token-text-faint);
+}
+.ai-feedback-done[hidden] {
+  display: none;
+}
+.ai-feedback.is-done .ai-feedback-votes,
+.ai-feedback.is-done .ai-feedback-reasons {
+  display: none;
+}
+
+/* ══════════════ ai-usage-metrics · 派生指标明细行（§5.27，renderAiUsage） ══════════════ */
+
+/* 图例下 mono 一行：TTFT 0.8s · 42 tok/s · finish: stop */
+.ai-usage-metrics {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* ══════════════ ai-todo-check · done 描边勾（§5.27，renderAiTodo） ══════════════ */
+
+/* 与 .ai-item-status 同位替换：done 时显勾隐点（:has 守卫——静态手写 DOM 无勾时保留状态点）；
+ * pathLength=1 → stroke-dasharray 1，.is-anim 做 stroke-dashoffset 描边动画（480ms 一次不循环） */
+.ai-todo-check {
+  position: relative;
+  display: none;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  color: var(--token-success);
+}
+.ai-todo-check svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 12px;
+  height: 12px;
+}
+.ai-todo-check path {
+  stroke-dasharray: 1;
+}
+.ai-todo-item.is-done .ai-todo-check {
+  display: inline-flex;
+}
+.ai-todo-item.is-done:has(.ai-todo-check) > .ai-item-status {
+  display: none;
+}
+.ai-todo-check.is-anim path {
+  animation: ai-todo-check-draw var(--ai-todo-check-duration, 480ms) var(--ease-out) 1 forwards;
+}
+@keyframes ai-todo-check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── 动效守卫（§5.27 新增段） ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-feedback-vote,
+  .ai-feedback-chip,
+  .ai-feedback-submit {
+    transition: none;
+  }
+  .ai-todo-check.is-anim path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

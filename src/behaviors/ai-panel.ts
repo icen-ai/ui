@@ -10,6 +10,7 @@
  *     </div>
  *     <div class="ai-todo-item is-pending|running|streaming|approval|done|error|cancelled" data-index="0">
  *       <span class="ai-item-status"></span>                       <!-- 状态点，纯 CSS 由 .is-* 驱动 -->
+ *       <span class="ai-todo-check is-anim">svg</span>             <!-- §5.27：done 描边勾（480ms 一次，纯 CSS 显隐） -->
  *       <span class="ai-todo-text">实现登录页</span>
  *       <span class="ai-todo-active">正在实现登录页…</span>       <!-- activeForm：is-running 时替换 text -->
  *     </div>
@@ -24,6 +25,7 @@
  *       <span class="ai-usage-legend-item"><i class="ai-usage-dot ai-usage-seg--input"></i>
  *         <span class="ai-usage-legend-label">输入</span> <span class="ai-usage-legend-value">35k</span></span>…
  *     </div>
+ *     <div class="ai-usage-metrics">TTFT 0.8s · 42 tok/s · finish: stop</div>  <!-- §5.27：metrics 给定时 -->
  *     <div class="ai-usage-total">82k / 200k · 41%</div>           <!-- opts.total 给上限才显示百分比 -->
  *   </div>
  *
@@ -49,7 +51,8 @@
  *     点击/Enter/Space 循环 pending→running→done→pending，更新状态类/进度/aria，
  *     派 icen:ai-todo-toggle {index, status}（bubbles）；默认只读。返回销毁函数
  *   - renderAiUsage(el, usage, opts?)：normalizeUsage 归一后分段条 + 图例 + 占比；
- *     input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint
+ *     input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint；
+ *     opts.metrics（或 usage 同级 ttftMs/tokensPerSec/finishReason）→ 图例下 .ai-usage-metrics 明细行
  *   - renderAiContext(el, model)：组合渲染，内部复用 renderAiUsage 与 ai-file-chip；
  *     model.audit（auditor 实例或条目数组）给定时自动出现「审计」节（紧凑形态）
  *   - initAiContext(root?)：幂等（__icenAiContextInit）；[data-ai-context-open] 委托开合
@@ -114,10 +117,21 @@ function buildTodoHead(done: number, total: number): HTMLElement {
   return head;
 }
 
+/* ── §5.27 plan 语义：done 描边勾（pathLength=1 作为 CSS stroke-dashoffset 动画基准） ── */
+const ICON_TODO_CHECK =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 12.5 5 5L20.5 6" pathLength="1"/></svg>';
+
 function buildTodoItem(item: AiTodoItem, index: number): HTMLElement {
   const row = h('div', `ai-todo-item is-${item.status}`);
   row.dataset.index = String(index);
   row.appendChild(h('span', 'ai-item-status'));
+  /* §5.27：done 描边勾（.ai-todo-check，纯 CSS 由 .is-done 显隐，动画 480ms 一次不循环；
+   * pending 空心 / running 脉冲已由 .ai-item-status 既有规则覆盖，此处只补缺的类） */
+  const check = h('span', 'ai-todo-check is-anim');
+  check.setAttribute('aria-hidden', 'true');
+  const checkSvg = svgIcon(ICON_TODO_CHECK);
+  if (checkSvg) check.appendChild(checkSvg);
+  row.appendChild(check);
   row.appendChild(h('span', 'ai-todo-text', item.content));
   /* activeForm 缺省时退化为 content，保证 is-running 替换后不空 */
   row.appendChild(h('span', 'ai-todo-active', item.activeForm ?? item.content));
@@ -126,6 +140,7 @@ function buildTodoItem(item: AiTodoItem, index: number): HTMLElement {
 
 /**
  * 渲染 todo 列表（DOM API，全 textContent）。全部完成时容器加 .is-complete。
+ * 每项附 .ai-todo-check 描边勾（§5.27：done 时 CSS 显隐 + 480ms 描边动画，一次不循环）。
  * 返回挂载容器 el（render* 返回挂载元素约定，SSR 下原样返回）。
  */
 export function renderAiTodo(el: HTMLElement, items: AiTodoItem[]): HTMLElement {
@@ -253,11 +268,23 @@ export function initAiTodo(root?: ParentNode): () => void {
 
 /* ══════════════ ai-usage（§4.9） ══════════════ */
 
+/** 用量派生指标（§5.27）：opts.metrics 给出，或直接挂在 usage 对象同级字段上 */
+export interface AiUsageMetrics {
+  /** 首 token 延迟（毫秒） */
+  ttftMs?: number;
+  /** 生成吞吐（tokens/秒） */
+  tokensPerSec?: number;
+  /** finish reason（stop / length / tool_calls…） */
+  finishReason?: string;
+}
+
 export interface AiUsageRenderOpts {
   /** 上下文上限（如 200k）：给出时 total 行显示 82k / 200k · 41% */
   total?: number;
   /** 成本（USD）：给出时追加到 total 行 */
   cost?: number;
+  /** 派生指标（§5.27）：任一字段给出时图例下补一行 mono 明细（TTFT 0.8s · 42 tok/s · finish: stop） */
+  metrics?: AiUsageMetrics;
 }
 
 interface UsageSeg {
@@ -267,9 +294,29 @@ interface UsageSeg {
   value: number;
 }
 
+/** 派生指标探针：usage 同级字段（wire 对象常带 ttftMs / tokensPerSec / finishReason） */
+function metricField(src: unknown, key: string): unknown {
+  return typeof src === 'object' && src !== null ? (src as Record<string, unknown>)[key] : undefined;
+}
+
+function metricNum(v: unknown): number | undefined {
+  return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+}
+
+function metricStr(v: unknown): string | undefined {
+  return typeof v === 'string' && v ? v : undefined;
+}
+
+/** 42 → "42"；42.5 → "42.5"（吞吐展示最多一位小数） */
+function trimNum(v: number): string {
+  return String(Math.round(v * 10) / 10);
+}
+
 /**
  * 渲染用量分段条 + 图例 + 占比。返回挂载容器 el（render* 返回挂载元素约定）。
  * 配色契约：input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint。
+ * opts.metrics（或 usage 同级 ttftMs/tokensPerSec/finishReason）存在时图例下补一行
+ * .ai-usage-metrics mono 明细（§5.27）。
  */
 export function renderAiUsage(
   el: HTMLElement,
@@ -323,6 +370,16 @@ export function renderAiUsage(
     }
     root.appendChild(legend);
   }
+
+  /* §5.27 派生指标明细行：图例下 mono 一行（opts.metrics 优先，回落 usage 同级字段） */
+  const ttft = metricNum(opts.metrics?.ttftMs) ?? metricNum(metricField(usage, 'ttftMs'));
+  const tps = metricNum(opts.metrics?.tokensPerSec) ?? metricNum(metricField(usage, 'tokensPerSec'));
+  const finish = metricStr(opts.metrics?.finishReason) ?? metricStr(metricField(usage, 'finishReason'));
+  const metricBits: string[] = [];
+  if (ttft != null) metricBits.push(`TTFT ${formatDuration(ttft)}`);
+  if (tps != null && tps > 0) metricBits.push(`${trimNum(tps)} tok/s`);
+  if (finish) metricBits.push(`finish: ${finish}`);
+  if (metricBits.length > 0) root.appendChild(h('div', 'ai-usage-metrics', metricBits.join(' · ')));
 
   /* 总量行：total 给上限时显示百分比 */
   const totalParts = [formatTokens(total)];

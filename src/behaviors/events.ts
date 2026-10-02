@@ -34,6 +34,10 @@ import type { ChartEventDetail } from './charts';
 import type { AiUsage } from './ai-core';
 import type { AiDoneEventDetail } from './ai-provider';
 import type { AiComposerRefSource } from './ai-composer';
+import type {
+  KbCitation, KbChainStep, KbCheckpointScope, KbFilterNode, KbRetrievalQuery,
+  KbSegmentConfig, KbSandboxMessage,
+} from './kb-core';
 
 export interface IcenGestureDetail {
   /** 手势命中源：最近的 [data-gestures] 宿主 */
@@ -162,6 +166,54 @@ export interface IcenEventMap {
   /* 广播（ai-provider 从 document 派发的全局生命周期，见文件头「广播事件」） */
   'icen:ai-usage': AiUsage;
   'icen:ai-done': AiDoneEventDetail;
+
+  /* AI 族扩展（ai-threads / ai-feedback / ai-branch，见 docs/spec/kb-family.md §5.27） */
+  'icen:ai-thread-select': { key: string };
+  'icen:ai-thread-action': { action: 'rename' | 'pin' | 'archive' | 'delete' | 'move'; key: string };
+  'icen:ai-feedback': { value: 1 | -1 | 0; reason?: string; el?: HTMLElement };
+  'icen:ai-branch-change': { index: number; count: number };
+
+  /* 知识库族（kb-*；契约源 docs/spec/kb-family.md §5–6，类型自 kb-core） */
+  'icen:kb-citation-open': { citation: KbCitation };
+  'icen:kb-source-open': { source: KbCitation };
+  'icen:kb-passage-jump': { citation: KbCitation };
+  'icen:kb-passage-close': Record<string, never>;
+  'icen:kb-pipeline-toggle': { el: HTMLElement; open: boolean };
+  'icen:kb-pipeline-rerun': { documentId: string };
+  'icen:kb-chunk-toggle': { chunkId: string; available: boolean };
+  'icen:kb-chunk-edit': { chunkId: string };
+  'icen:kb-chunk-remove': { chunkId: string };
+  'icen:kb-chunk-add': { documentId: string };
+  'icen:kb-chunk-search': { mode: 'text' | 'vector'; query: string };
+  'icen:kb-segment-change': { config: KbSegmentConfig };
+  'icen:kb-connector-sync': { connectorId: string };
+  'icen:kb-connector-reauth': { connectorId: string };
+  'icen:kb-connector-schedule': { connectorId: string; schedule: string };
+  'icen:kb-metadata-change': { action: 'define' | 'bind' | 'remove'; key: string };
+  'icen:kb-qa-change': { op: 'add' | 'edit' | 'remove'; index: number };
+  'icen:kb-qa-import': { source: string };
+  'icen:kb-retrieval-run': { query: KbRetrievalQuery };
+  'icen:kb-filter-change': { node: KbFilterNode | null; valid: boolean };
+  'icen:kb-rerank-toggle': { enabled: boolean; model?: string };
+  'icen:kb-hittest-add': { question: string };
+  'icen:kb-hittest-run': Record<string, never>;
+  'icen:kb-sql-edit': { sql: string };
+  'icen:kb-sql-rerun': { sql: string };
+  'icen:kb-clarify-answer': { id?: string; value: string; label: string };
+  'icen:kb-verified-open': { assetId: string };
+  'icen:kb-explain-toggle': { el: HTMLElement; open: boolean };
+  'icen:kb-trace-select': { spanId: string };
+  'icen:kb-trace-toggle': { spanId: string; open: boolean };
+  'icen:kb-review-assign': { taskId: string; assignee: string };
+  'icen:kb-review-score': { taskId: string; name: string; value: string | number };
+  'icen:kb-review-submit': { taskId: string };
+  'icen:kb-gap-action': { query: string; action: 'create-doc' | 'add-synonym' };
+  'icen:kb-eval-compare': { runA: string; runB: string };
+  'icen:kb-canvas-ai': { instruction: string; selection?: { text: string } };
+  'icen:kb-canvas-version': { versionId: string };
+  'icen:kb-checkpoint-restore': { checkpointId: string; scope: KbCheckpointScope };
+  'icen:kb-sandbox-message': { channel: 'in' | 'out'; payload: KbSandboxMessage };
+  'icen:kb-chain-step': { index: number; step: KbChainStep };
 
   /* 宿主自定义事件兜底 */
   [key: `icen:${string}`]: unknown;

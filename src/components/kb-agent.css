@@ -1,0 +1,481 @@
+/*
+ * @icen.ai/ui — kb-agent.css（工作台域：kb-canvas / kb-checkpoint / kb-sandbox / kb-chain）
+ * 共享原语在 kb.css（.kb-num/.kb-dot/.kb-key/kb-pulse 等，全部 kb-* slug 经 EXTRA_CSS 引入）；
+ * 本文件只做本域专属结构。DOM 契约见 docs/spec/kb-family.md §5.23–5.26 与各 behavior 头注释。
+ *
+ * 域纪律（spec §2）：工作台域的运动感来自动效（120–240ms ease-out），不来自颜色——
+ * 色只标语义（accent=进行中 / success=完成 / danger=失败），不做装饰。
+ * 动效预算：展开/浮层进场 160ms（icen-pop-in）；流式脉冲 1.6s（kb.css 的 kb-pulse）；
+ * prefers-reduced-motion 下全部退化为瞬时。
+ */
+
+/* ═══════════════ kb-canvas 双栏工作台（§5.23） ═══════════════ */
+
+.kb-canvas {
+  --kb-canvas-ratio: 0.42; /* JS 拖拽时原位覆写（0–1，无单位） */
+  position: relative; /* 划词工具条（.kb-canvas-selbar）的定位包含块 */
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+
+.kb-canvas-main {
+  display: grid;
+  grid-template-columns:
+    minmax(0, calc(var(--kb-canvas-ratio) * 100%))
+    6px
+    minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.kb-canvas-chat,
+.kb-canvas-doc {
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px 12px;
+}
+
+/* 分隔条：6px 命中区 + 中央 grip 视觉；hover/拖拽点亮 accent（唯一强调处） */
+.kb-canvas-divider {
+  position: relative;
+  margin: 0;
+  border: none;
+  border-radius: 2px;
+  background: var(--token-line-soft);
+  cursor: col-resize;
+  touch-action: none; /* 拖拽需接管触摸滚动（指针事件 preventDefault 的对偶） */
+  transition: background-color 0.16s ease-out;
+}
+.kb-canvas-divider::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 18px;
+  border-radius: 1px;
+  background: var(--token-line);
+  transition: background-color 0.16s ease-out;
+}
+.kb-canvas-divider:hover,
+.kb-canvas-divider.is-active {
+  background: color-mix(in srgb, var(--token-accent) 22%, transparent);
+}
+.kb-canvas-divider:hover::after,
+.kb-canvas-divider.is-active::after {
+  background: var(--token-accent);
+}
+.kb-canvas-divider:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+
+/* 拖拽中：禁文本选择（防划词误触）+ 冻结两栏 hover 抖动 */
+.kb-canvas.is-dragging {
+  user-select: none;
+}
+.kb-canvas.is-dragging .kb-canvas-chat,
+.kb-canvas.is-dragging .kb-canvas-doc {
+  pointer-events: none;
+}
+
+/* 右栏内联 diff 间距（渲染复用 ai-diff.css 的 .ai-diff） */
+.kb-canvas-diff {
+  margin-bottom: 12px;
+}
+.kb-canvas-diff:last-child {
+  margin-bottom: 0;
+}
+
+/* 底部版本时间轴：横向节点流；display:flex 会压掉 UA 的 [hidden]，须显式声明 */
+.kb-canvas-versions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-top: 1px solid var(--token-line-soft);
+  overflow-x: auto;
+}
+.kb-canvas-versions[hidden] {
+  display: none;
+}
+
+.kb-canvas-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 2px 9px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: 999px;
+  background: var(--token-bg-soft);
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  transition: color 0.16s ease-out, border-color 0.16s ease-out;
+}
+.kb-canvas-ver:hover {
+  color: var(--token-text);
+  border-color: var(--token-line);
+}
+.kb-canvas-ver:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+.kb-canvas-ver-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--token-text-faint);
+  transition: background-color 0.16s ease-out;
+}
+.kb-canvas-ver-label {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* current 高亮：点线同色 accent（语义=当前所在版本，非装饰） */
+.kb-canvas-ver.is-current {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+}
+.kb-canvas-ver.is-current .kb-canvas-ver-dot {
+  background: var(--token-accent);
+}
+
+/* 划词工具条：浮层三档材质（--z-panel 缺省回落 --z-popover）；1.5s 无操作由 JS 隐藏 */
+.kb-canvas-selbar {
+  position: absolute;
+  z-index: var(--z-panel, var(--z-popover));
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md, 10px);
+  background: color-mix(in srgb, var(--token-card-strong, var(--token-bg)) 94%, transparent);
+  border: 1px solid var(--token-outline, var(--token-line));
+  box-shadow: var(--token-shadow-overlay, 0 8px 24px rgba(0, 0, 0, 0.14));
+  animation: icen-pop-in var(--icen-tx-fast, 160ms) ease-out;
+  user-select: none;
+}
+.kb-canvas-selbar[hidden] {
+  display: none;
+}
+.kb-canvas-selbar-btn {
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm, 6px);
+  padding: 3px 9px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.16s ease-out, background-color 0.16s ease-out;
+}
+.kb-canvas-selbar-btn:hover {
+  color: var(--token-text);
+  background: var(--token-bg-soft);
+}
+.kb-canvas-selbar-btn:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+
+/* ═══════════════ kb-checkpoint 检查点（§5.24） ═══════════════ */
+
+.kb-checkpoints {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kb-checkpoint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 10px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-bg-soft);
+  font: inherit;
+  font-size: 12px;
+  color: var(--token-text-muted);
+  cursor: pointer;
+  transition: color 0.16s ease-out, border-color 0.16s ease-out;
+}
+.kb-checkpoint:hover {
+  color: var(--token-text);
+  border-color: var(--token-line);
+}
+.kb-checkpoint:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+.kb-checkpoint-icon {
+  display: inline-flex;
+  color: var(--token-text-faint);
+}
+.kb-checkpoint-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.kb-checkpoint-time {
+  font-size: 11px;
+}
+.kb-checkpoint-label {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 恢复菜单：fixed 浮层（body 挂载），160ms 进场；默认预选项带 ✓ 与审计说明 */
+.kb-checkpoint-menu {
+  position: fixed;
+  z-index: var(--z-popover);
+  min-width: 248px;
+  max-width: 320px;
+  margin: 0;
+  padding: 6px;
+  background: color-mix(in srgb, var(--token-card-strong, var(--token-bg)) 94%, transparent);
+  border: 1px solid var(--token-outline, var(--token-line));
+  box-shadow: var(--token-shadow-overlay);
+  border-radius: var(--radius-md, 10px);
+  animation: icen-pop-in var(--icen-tx-fast, 160ms) ease-out;
+}
+.kb-checkpoint-menu-title {
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+  padding: 4px 8px 6px;
+}
+.kb-checkpoint-menu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm, 6px);
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--token-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s ease-out;
+}
+.kb-checkpoint-menu-item:hover {
+  background: var(--token-bg-soft);
+}
+.kb-checkpoint-menu-item:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+.kb-checkpoint-menu-item.is-disabled,
+.kb-checkpoint-menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.kb-checkpoint-menu-item:disabled:hover {
+  background: none;
+}
+.kb-checkpoint-menu-check {
+  flex: 0 0 14px;
+  display: inline-flex;
+  justify-content: center;
+  color: var(--token-accent);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.kb-checkpoint-menu-item.is-checked .kb-checkpoint-menu-check::before {
+  content: '✓';
+}
+.kb-checkpoint-menu-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.kb-checkpoint-menu-note {
+  font-size: 11px;
+  color: var(--token-text-faint);
+}
+
+/* ═══════════════ kb-sandbox 沙箱工具容器（§5.25） ═══════════════ */
+
+.kb-sandbox {
+  position: relative;
+  display: block;
+}
+
+.kb-sandbox-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-height: 320px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+  background: var(--token-bg);
+}
+
+.kb-sandbox-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+.kb-sandbox[data-state='idle'] .kb-sandbox-frame {
+  display: none; /* 未 load 前不露空白帧 */
+}
+
+/* 三态由 data-state 驱动（纯 CSS 状态优先纪律）；loading 走共享 icen-spin */
+.kb-sandbox-loading,
+.kb-sandbox-err {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  padding: 16px;
+  background: var(--token-bg);
+}
+.kb-sandbox[data-state='loading'] .kb-sandbox-loading {
+  display: grid;
+}
+.kb-sandbox[data-state='error'] .kb-sandbox-err {
+  display: grid;
+}
+.kb-sandbox-spin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--token-line-soft);
+  border-top-color: var(--token-accent);
+  animation: icen-spin 0.8s linear infinite;
+}
+.kb-sandbox-err {
+  color: var(--token-danger, var(--token-error));
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* ═══════════════ kb-chain 工具链条（§5.26） ═══════════════ */
+
+.kb-chain {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 2px 0;
+  overflow-x: auto;
+}
+
+.kb-chain-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--token-text-muted);
+  transition: color 0.16s ease-out, background-color 0.16s ease-out;
+}
+/* 可点（running 及之前）：hover 提供可点暗示，仍走中性色 */
+.kb-chain-step[aria-disabled='false'] {
+  cursor: pointer;
+}
+.kb-chain-step[aria-disabled='false']:hover {
+  color: var(--token-text);
+  background: var(--token-bg-soft);
+}
+.kb-chain-step[aria-disabled='false']:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -2px;
+}
+.kb-chain-step[aria-disabled='true'] {
+  color: var(--token-text-faint);
+  cursor: default;
+}
+
+/* 状态点：空心灰（pending）/ accent 脉冲（running）/ 实心绿（done）/ 实心红（error） */
+.kb-chain-dot {
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
+}
+.kb-chain-step.is-pending .kb-chain-dot {
+  border: 1.5px solid var(--token-line);
+  background: transparent;
+}
+.kb-chain-step.is-running .kb-chain-dot {
+  background: var(--token-accent);
+  animation: kb-pulse 1.6s ease-in-out infinite; /* kb.css 共享脉冲 */
+}
+.kb-chain-step.is-done .kb-chain-dot {
+  background: var(--token-success);
+}
+.kb-chain-step.is-error .kb-chain-dot {
+  background: var(--token-danger, var(--token-error));
+}
+
+.kb-chain-label {
+  white-space: nowrap;
+}
+
+/* 步骤间箭头连线：基线 + 45° 折角箭头，中性层级色 */
+.kb-chain-link {
+  position: relative;
+  flex: 0 0 18px;
+  height: 1px;
+  margin: 0 2px;
+  background: var(--token-line-soft);
+}
+.kb-chain-link::after {
+  content: '';
+  position: absolute;
+  right: 1px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid var(--token-line);
+  border-right: 1px solid var(--token-line);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* ═══════════════ 动效纪律（reduced-motion 全退化） ═══════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-canvas-divider,
+  .kb-canvas-divider::after,
+  .kb-canvas-ver,
+  .kb-canvas-ver-dot,
+  .kb-canvas-selbar,
+  .kb-canvas-selbar-btn,
+  .kb-checkpoint,
+  .kb-checkpoint-menu,
+  .kb-checkpoint-menu-item,
+  .kb-chain-step,
+  .kb-chain-dot {
+    transition: none;
+    animation: none;
+  }
+  .kb-chain-step.is-running .kb-chain-dot {
+    animation: none; /* 脉冲退化为静态 accent 点 */
+  }
+  .kb-sandbox-spin {
+    animation-duration: 1.6s; /* 旋转保留但放慢，避免频闪不适 */
+  }
+}

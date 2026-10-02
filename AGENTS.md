@@ -6,7 +6,7 @@
 
 # 第一段 · 消费方速查（在用户项目里用 @icen.ai/ui）
 
-完整类型签名看包内 `dist/*.d.ts`；交互式文档 <https://ui.icen.ai>；AI 能力规格 `docs/spec/ai-native.md`；文档全文（喂模型）<https://ui.icen.ai/llms-full.txt>。
+完整类型签名看包内 `dist/*.d.ts`；交互式文档 <https://ui.icen.ai>；AI 能力规格 `docs/spec/ai-native.md`；知识库族规格 `docs/spec/kb-family.md`；最佳实践成品页 <https://ui.icen.ai/kb/>；文档全文（喂模型）<https://ui.icen.ai/llms-full.txt>。
 
 ## 形态约束（先读，避免生成跑不通的代码）
 
@@ -131,13 +131,35 @@ parseAiToolArgs('render_chart', raw);   // 模型回包解析（容错 JSON 字�
 
 自定义工具：`registerAiTool({ name, description, inputSchema, onCall })`；内置 `render_chart`。挂载区条目可折叠/移除，超限 LRU 自动回收。
 
+## 知识库族（kb-*）— 证据层组件
+
+**ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）**。27 个 slug 六域，CSS 根类 `.kb-*`，事件统一 `icen:kb-*`（45 个全类型登记）。
+
+```ts
+import { renderKbCitations, parseInlineCitations } from '@icen.ai/ui/behaviors/kb-citation';
+import { createKbRetrieval, scorePercent } from '@icen.ai/ui/behaviors/kb-retrieval';
+import { createKbFilter } from '@icen.ai/ui/behaviors/kb-filter';
+
+// 角标：文本里的 [1][2] → parseInlineCitations → renderKbCitations(el, citations, opts)
+// 引用三型定位（Anthropic 同款）：location: {type:'char',start,end,unit:'char'} | {type:'page',page} | {type:'block',blockId}——unit 写死不猜
+// 检索 playground：混合权重 / 阈值 / topK 即调即得，事件 icen:kb-retrieval-run
+// 过滤器：树形规则 → serialize('mongo'|'odata') 双 DSL；无效规则不镜像（诚实纪律）
+const filter = createKbFilter(el, { node, fields, onChange: (node, valid) => {...} });
+```
+
+- **分数纪律（全族统一）**：score 必带 metric 与 higherIsBetter（l2 距离自动反转）；null / 缺失渲染「—」不猜；条形轨道定宽，长度严格按 scorePercent 比例。
+- **诚实呈现**：行数截断要声明、权限缺失打码并给「申请访问」、重排关闭后列压淡不隐藏、检查点回滚范围显式（只回滚文件保留对话）。
+- 契约层 `kb-core.ts`（`import ... from '@icen.ai/ui/behaviors/kb-core'`）：KbCitation / KbChunk / KbRunStatus / KbConnector / KbRetrievalParams / KbFilterNode / KbEvalRow 等 40+ normalize 与格式化函数，业务数据一律先过 normalize 再喂组件。
+- 域文件映射：证据 kb-citation·kb-sources·kb-passage·kb-conflict → kb-ground.css；摄取 kb-pipeline·kb-chunks·kb-segment·kb-connector·kb-metadata·kb-qa → kb-ingest.css；检索 kb-retrieval·kb-filter·kb-rerank·kb-hittest → kb-search.css；问数 kb-sql·kb-answer·kb-clarify → kb-data.css；治理 kb-explain·kb-trace·kb-review·kb-gap·kb-eval → kb-ops.css；工作台 kb-canvas·kb-checkpoint·kb-sandbox·kb-chain → kb-agent.css；全部组件 kit 自动带 kb.css 基座。
+
 ## 深挖索引（复杂模块不设单独 AGENTS.md，类型真相在 .d.mts）
 
 每个 behavior 的完整接口/类型/字段约束都随包发布在 `dist/behaviors/<模块>.d.mts`（JSDoc 注释含行为约束，如「el 传容器或内部任意元素，就近解析 `[data-ai-composer]`」）。**不建议也不需要按组件再写深层 AGENTS.md**——复制必漂移；读类型面即读文档：
 
 | 深挖什么 | 去哪读 |
 | --- | --- |
-| AI 族全部签名与字段约束 | 包内 `dist/behaviors/ai-{core,chat,composer,tool,panel,diff,provider,tools}.d.mts` |
+| AI 族全部签名与字段约束 | 包内 `dist/behaviors/ai-{core,chat,composer,tool,panel,diff,provider,tools,threads,feedback,branch}.d.mts` |
+| 知识库族全部签名与字段约束 | 包内 `dist/behaviors/kb-*.d.mts`（契约层 `kb-core.d.mts`） |
 | 图表 ChartSpec 全字段 + 各类型 options | `dist/behaviors/charts.d.mts` |
 | 上述类型面 + JSDoc 的纯文本快照 | <https://ui.icen.ai/llms-full.txt>（「API 类型面」节，构建期自动内嵌） |
 | 设计动机 / 状态机语义 / 口径取舍 | `docs/spec/ai-native.md`（包内随发） |
@@ -173,9 +195,9 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 
 ## 规模
 
-- **56 个组件 CSS**（含 charts 基座 + 10 个细分图表 CSS（+v0.8 chart-scatter）+ 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel）
-- **35 个 behaviors TS**（v0.8.x：+events 统一事件体系 +controls 控件族 +ai-tools；charts 通用层见图表节）（theme/tabs/toast/copy/input/select/slider/tag-input/upload/modal/dropdown/popover/context-menu/accordion/tree/carousel/charts/nav/sidebar/datatable/notification/back-top/command-palette/date-picker/split-pane/events/controls + 8 个 AI 族：ai-core/ai-chat/ai-composer/ai-tool/ai-provider/ai-diff/ai-panel/ai-tools）
-- **77 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单）
+- **64 个组件 CSS**（charts 基座 + 13 个细分图表 CSS（+v0.9 chart-graph/map）+ 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel + v0.9：kb.css 基座 + 6 个 kb 域文件（ground/ingest/search/data/ops/agent））
+- **65 个 behaviors TS**（v0.9：+ai-threads/ai-feedback/ai-branch +kb-core 契约层 +26 个 kb-*；此前 35 个见历史）——KB 族：kb-core/kb-citation/kb-sources/kb-passage/kb-conflict/kb-pipeline/kb-chunks/kb-segment/kb-connector/kb-metadata/kb-qa/kb-retrieval/kb-filter/kb-rerank/kb-hittest/kb-sql/kb-answer/kb-clarify/kb-explain/kb-trace/kb-review/kb-gap/kb-eval/kb-canvas/kb-checkpoint/kb-sandbox/kb-chain
+- **109 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单；v0.9 新增 32：kb 总集 + 26 kb-* + ai-threads/ai-feedback/ai-branch + chart-graph/chart-map）
 - **4 个 token 文件**：colors.css（6 预设 × 明暗）、style-profiles.css（modern/retro/terminal）、typography.css、retro-effects.css（可选）
 
 ## 发布（OIDC Trusted Publishing，已配好）
@@ -217,7 +239,7 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 - 文档站字体体系（site.css 顶部）：prose/站壳 = `--site-font-sans`（系统无衬线），demo 区 = `--site-font-mono`（Plex Mono + CJK 无衬线回退），展示级大标题才用 `--font-heading` 宋体——小字号中文一律不走宋体/通用 monospace 回退。
 - CSS 产物由 `scripts/build-css.ts` 生成，**不要手改 dist/**。`tokensExtras`（如 retro-effects.css）单独拷贝、暴露 exports，**不**进 `tokens.css`/`ui.css` 默认拼合。
 - clay 的 12 基值 token 改动属于品牌级变更；新增色彩预设 = 在 colors.css 加 `.<name>` + `.<name>.dark` 两块完整 token 面（仿照现有 6 套），并注册到 `src/behaviors/theme.ts` 的 PRESETS 与文档站。
-- 文档分组（`site/src/lib/components.ts` 的 `GROUPS`）= 侧栏顺序 = 索引页分组顺序：基础 / AI 原生 / 表单 / 数据展示 / 图表 / 浮层 / 反馈 / 导航（v0.8 调整：AI 上移第二位做拉新门面；「表格」并入数据展示；AI 组更名「AI 原生」）。侧栏分组为 `<details>` 折叠（可多开，首访全开，localStorage `icen.docs.nav.groups` 记忆，深链自动展开当前组）。
+- 文档分组（`site/src/lib/components.ts` 的 `GROUPS`）= 侧栏顺序 = 索引页分组顺序：基础 / AI 原生 / 知识库 / 表单 / 数据展示 / 图表 / 浮层 / 反馈 / 导航（v0.9 调整：知识库上移第三位；v0.8：AI 上移第二位做拉新门面；「表格」并入数据展示；AI 组更名「AI 原生」）。侧栏分组为 `<details>` 折叠（可多开，首访全开，localStorage `icen.docs.nav.groups` 记忆，深链自动展开当前组）。kb 族文档数据在 `site/src/lib/kb-docs-{ground-ingest,search-data,ops-agent}.ts` 三片段（避免巨文件冲突），`components.ts` 统一 push 进 COMPONENTS。
 - **反馈三件正交**：`toast`（瞬时 2.6s 右下角）/ `alert`（内嵌页面流）/ `notification`（持久右上角栈，工程级——进度通知/confirm Promise/多按钮/hover 暂停/倒计时/优先级置顶/已读未读/持久化/多容器 createNotificationCenter）——三者各司其职不互相替代；`copy` 是原地按钮反馈（区别于 toast 的全局通知）。JS 词表已统一为 `toast.success/error`（ok/err 为 deprecated 别名，下大版本删）
 - **徽章三件正交**：`pill`（行内状态徽章，语义色）/ `tag`（中性展示标签，可选关闭按钮与选中态）/ `badge`（角标式数字/圆点，挂外层元素角上，外层需 `position: relative`）。
 - **组件 v2 增强（0.5.0 全量升级）**：所有基础组件已达到工程级深度——
@@ -260,3 +282,15 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 - **AI 工具体系（v0.8，`src/behaviors/ai-tools.ts`，不绑定 slug）**：UI 能力注册为模型可调用的 AiToolDef（内置 render_chart，inputSchema=ChartSpec）；createAiToolArea 挂载区三层控制（不 import=无 / 白名单+max FIFO 淘汰最旧挂载 / 运行时 setTools·setMax·clear）；`AiToolDef.present: 'mount'|'data'`（data=不占挂载位，记录与事件照常，run 返回值即结果）；注册面 `registerAiTool`·`unregisterAiTool`（联动摘除各区域已挂载卡）·`getAiTool`·`listAiTools`；模型侧导出 aiToolsToOpenAI/aiToolsToMcp/aiToolsManifest + parseAiToolArgs；工具回执内嵌图（**仅 output**；input 是机器参数保持 JSON）→ renderAiToolCall IO 区直接 renderChart；待办业界模式：TodoWrite 折叠卡（todo kind summarize x/y）+ `setComposerTodo` 输入区实时 chip（全完成/有失败图标反馈，点击弹层看清单）；事件 icen:ai-tool-call/-result/-evict。规格 §13。
 - **ai-core 不绑定任何 slug**：demo/消费方要用 `normalizeToolCall` 等时，在该页 behaviors 数组里显式加 `'ai-core'`（boot 的 glob 会加载并注入 `aiCoreMod` 参数）。
 - **宽度自稳定契约**：所有 AI 输出容器根（`.ai-chat/.ai-reasoning/.ai-composer/.ai-item/.ai-tool/.ai-subagent/.ai-diff/.ai-files/.ai-todo/.ai-usage`）声明 `align-self: stretch`——在 flex/grid 居中宿主（shrink-wrap 上下文，如文档站 `.demo-stage`）里不随内容多少改变宽度，流式内容只允许纵向生长。**禁用 `width: 100%`** 做这件事（在 shrink-wrap 父级下会塌成 min-content）。消费方给组件包一层自己的布局 wrapper 时，wrapper 的宽度由消费方负责（demo 里直接 `style="width:100%"`）。
+
+## 知识库族（v0.9 新增）
+
+规格唯一事实源：`docs/spec/kb-family.md`（顶层设计 / 类名 / 导出签名 / 事件名以它为准；调研底稿 `docs/research/2026-10-03-ai-kb-components.md`）。27 个 slug 在文档站侧栏「知识库」分组（第三位）；旗舰成品页 `/kb`（六标签工作台，全真接线）。
+
+- **心法**：ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）。CSS 根类 `.kb-*`，行为文件 `kb-*.ts`，事件 `icen:kb-*`（45 个全量登记 `IcenEventMap`，detail 契约编译期校验）。
+- **契约层 `kb-core.ts`（无 UI 不占 slug）**：KbCitation（三型定位 char/page/block，unit 写死）/ KB_SCORE_KINDS + scoreHigherIsBetter + scorePercent（l2 自动反转，null→「—」）/ KbChunk / KbRunStatus 管线五态 / normalizeConnector + connectorHealth（4 离散信号，enabled≠healthy）/ segmentText + segmentStats / normalizeRetrievalParams / KbFilterNode + filterToMongo/filterToOData / KbEvalRow + evalGrade（improvement/regression/tradeoff/tie）/ KbCheckpoint + scope / KbSandboxMessage 等 40+ normalize 与格式化函数。**业务数据一律先过 normalize 再喂组件**；demo / 消费方要用契约时在该页 behaviors 数组显式加 `'kb-core'`。
+- **CSS 布局**：共享基座 `kb.css`（.kb-row 28/24 双密度、.kb-num/.kb-meta、.kb-dot 四态、.kb-score bar、.kb-quote 证据线 + mark 分色 data-hit 0/1/2、.kb-badge 族、.kb-chip、.kb-fold、.kb-key、.kb-empty、.kb-notice）+ 六域文件 kb-{ground,ingest,search,data,ops,agent}.css。slugs.mjs 的 EXTRA_CSS 把每个 kb-* slug 映射到 `['kb.css', '<域>.css']`（kit 入口自动带上）；`kb` 总集 slug 带全部六域。新组件先进规格 §4 冻结 DOM 骨架再动手。
+- **诚实呈现纪律（kb 族特有，评审必查）**：分数 null →「—」不猜；行数截断必须声明（「前 200 行」）；权限缺失打码 + 「申请访问」入口；重排关闭后列压淡不隐藏（显式禁用 > 静默消失）；检查点回滚范围显式（只回滚文件保留对话）；DSL 镜像只镜像可发送规则（无效规则不进 DSL）；`仅本次会话生效 / 入库` 二选一显式承诺。
+- **分数条纪律**：`.kb-score-bar` 是定宽轨道（域 CSS 内 `flex: 0 0 64px` 量级）+ `i` inline width 百分比——禁止让轨道随数值文本伸缩（曾导致 0.49 与 0.13 等长的失真）。
+- **DOM 骨架与事件**：每个组件的冻结骨架与函数名在规格 §4/§5；`createX(el, opts) → handle`（含 destroy）、`renderX(el, data)` 快照渲染、`initX(root?)` document 委托幂等——与全库三契约（凹槽/尺寸/事件）同一心智。
+- **/kb 工作台**（`site/src/pages/kb.astro` + `site/src/lib/kb-showcase.ts`）：mock 数据与接线全在 showcase 模块；六标签 = 问答 / 摄取 / 检索 / 问数 / 观测 / Agent。改 mock 数据只动 kb-showcase.ts；页面脚本遵守 `astro:page-load` 驱动约定。

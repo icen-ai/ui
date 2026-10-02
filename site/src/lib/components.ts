@@ -6,6 +6,9 @@
  */
 
 import { cssOf } from '../../../scripts/slugs.mjs';
+import { KB_DOCS_GROUND_INGEST } from './kb-docs-ground-ingest';
+import { KB_DOCS_SEARCH_DATA } from './kb-docs-search-data';
+import { KB_DOCS_OPS_AGENT } from './kb-docs-ops-agent';
 
 export interface ComponentDoc {
   slug: string;
@@ -18,8 +21,9 @@ export interface ComponentDoc {
   behaviorInit?: Record<string, string | string[]>;
   script?: string;
 }
-/** 组件分组的展示名（顺序即侧栏顺序）。原「数据」已拆为三组：数据展示（含表格）/ 图表 / 反馈。 */
-export const GROUPS: string[] = ['基础', 'AI 原生', '表单', '数据展示', '图表', '浮层', '反馈', '导航'];
+/** 组件分组的展示名（顺序即侧栏顺序）。原「数据」已拆为三组：数据展示（含表格）/ 图表 / 反馈；
+ *  kb 族（知识库业务组件）紧随 AI 原生。 */
+export const GROUPS: string[] = ['基础', 'AI 原生', '知识库', '表单', '数据展示', '图表', '浮层', '反馈', '导航'];
 
 /** slug → 组件 css 文件名（单一事实源在 scripts/slugs.mjs，与 kit 入口/CLI 共享）。 */
 export function cssFor(slug: string): string {
@@ -4329,3 +4333,6 @@ if (host) {
 }`,
   },
 );
+
+/* ── 知识库族（kb-*）与 AI 族扩展组件文档：三个分片文件合并挂载（分片为并行产物，见 docs/spec/kb-family.md）── */
+COMPONENTS.push(...KB_DOCS_GROUND_INGEST, ...KB_DOCS_SEARCH_DATA, ...KB_DOCS_OPS_AGENT);

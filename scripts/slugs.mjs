@@ -27,6 +27,16 @@ export const SLUGS = [
   'nav', 'sidebar', 'breadcrumb', 'pagination', 'steps', 'back-top', 'layout',
   // AI 原生组件族（ai-*；CSS 合并为 4 文件，见 MERGED_CSS）
   'ai-chat', 'ai-message', 'ai-reasoning', 'ai-composer', 'ai-tool-call', 'ai-subagent', 'ai-diff', 'ai-files', 'ai-todo', 'ai-context', 'ai-usage',
+  'ai-threads', 'ai-feedback', 'ai-branch',
+  // 知识库族（kb-*；共享基座 kb.css + 六域合并文件，见 MERGED_CSS/EXTRA_CSS；规格 docs/spec/kb-family.md）
+  'kb',
+  'kb-citation', 'kb-sources', 'kb-passage', 'kb-conflict',
+  'kb-pipeline', 'kb-chunks', 'kb-segment', 'kb-connector', 'kb-metadata', 'kb-qa',
+  'kb-retrieval', 'kb-filter', 'kb-rerank', 'kb-hittest',
+  'kb-sql', 'kb-answer', 'kb-clarify', 'kb-explain',
+  'kb-trace', 'kb-review', 'kb-gap', 'kb-eval',
+  'kb-canvas', 'kb-checkpoint', 'kb-sandbox', 'kb-chain',
+  'chart-graph', 'chart-map',
 ];
 
 /** slug → css 文件名：多数同名，以下为合并文件的例外。 */
@@ -60,6 +70,39 @@ export const MERGED_CSS = {
   'ai-todo': 'ai-panel.css',
   'ai-context': 'ai-panel.css',
   'ai-usage': 'ai-panel.css',
+  // AI 族扩展：threads/branch 并入 ai-chat.css，feedback 并入 ai-panel.css（追加式）
+  'ai-threads': 'ai-chat.css',
+  'ai-branch': 'ai-chat.css',
+  'ai-feedback': 'ai-panel.css',
+  // 知识库族六域合并文件（共享基座 kb.css 由 EXTRA_CSS 附加引入；kb umbrella 主 css 即 kb.css）
+  'kb-citation': 'kb-ground.css',
+  'kb-sources': 'kb-ground.css',
+  'kb-passage': 'kb-ground.css',
+  'kb-conflict': 'kb-ground.css',
+  'kb-pipeline': 'kb-ingest.css',
+  'kb-chunks': 'kb-ingest.css',
+  'kb-segment': 'kb-ingest.css',
+  'kb-connector': 'kb-ingest.css',
+  'kb-metadata': 'kb-ingest.css',
+  'kb-qa': 'kb-ingest.css',
+  'kb-retrieval': 'kb-search.css',
+  'kb-filter': 'kb-search.css',
+  'kb-rerank': 'kb-search.css',
+  'kb-hittest': 'kb-search.css',
+  'kb-sql': 'kb-data.css',
+  'kb-answer': 'kb-data.css',
+  'kb-clarify': 'kb-data.css',
+  'kb-explain': 'kb-data.css',
+  'kb-trace': 'kb-ops.css',
+  'kb-review': 'kb-ops.css',
+  'kb-gap': 'kb-ops.css',
+  'kb-eval': 'kb-ops.css',
+  'kb-canvas': 'kb-agent.css',
+  'kb-checkpoint': 'kb-agent.css',
+  'kb-sandbox': 'kb-agent.css',
+  'kb-chain': 'kb-agent.css',
+  // chart-map 无独立 css，样式并入 charts.css 基座（.chart-map 变体）
+  'chart-map': 'charts.css',
 };
 
 /** slug → behavior 的 init 函数名（有 init 契约的组件）。 */
@@ -96,6 +139,23 @@ export const SLUG_INIT = {
   'tag-input': 'initTagInput',
   tree: 'initTree',
   upload: 'initUpload',
+  // AI 族扩展
+  'ai-threads': 'initAiThreads',
+  'ai-feedback': 'initAiFeedback',
+  'ai-branch': 'initAiBranch',
+  // 知识库族
+  'kb-citation': 'initKbCitation',
+  'kb-sources': 'initKbSources',
+  'kb-pipeline': 'initKbPipeline',
+  'kb-chunks': 'initKbChunks',
+  'kb-connector': 'initKbConnectors',
+  'kb-metadata': 'initKbMetadata',
+  'kb-qa': 'initKbQa',
+  'kb-sql': 'initKbSql',
+  'kb-trace': 'initKbTrace',
+  'kb-gap': 'initKbGap',
+  'kb-checkpoint': 'initKbCheckpoint',
+  'kb-chain': 'initKbChain',
 };
 
 /** 有 behavior 但无 init（函数式 API）的 slug → 导出函数提示（CLI 输出用）。 */
@@ -129,8 +189,11 @@ export const SLUG_EXPORTS = {
   'chart-stack': ['renderStack'],
   'chart-gauge': ['renderGauge'],
   'chart-sparkline': ['renderSparkline'],
-  'chart-scatter': ['renderScatter'],
+  'chart-scatter': ['renderScatter', 'renderMap'],
   'chart-calendar': ['renderCalendar'],
+  // ── 图谱（GraphRAG 实体关系 + 嵌入地图，behavior 在 charts.ts）──
+  'chart-graph': ['renderGraph', 'layoutGraph'],
+  'chart-map': ['renderMap'],
   // ── AI 族：behavior 挂到别模块的 slug，kit 入口按此 re-export ──
   'ai-message': ['renderAiMessage', 'createAiStream', 'initAiChat'],
   'ai-reasoning': ['createAiStream', 'initAiChat'],
@@ -173,6 +236,8 @@ export const SLUG_BEHAVIOR = {
   'chart-sparkline': 'charts',
   'chart-scatter': 'charts',
   'chart-calendar': 'charts',
+  'chart-graph': 'charts',
+  'chart-map': 'charts',
 };
 
 /** slug → kit 入口需附加引入的其他 CSS（如 datatable 右键菜单依赖 menu.css）。 */
@@ -182,7 +247,7 @@ export const EXTRA_CSS = {
   charts: [
     'chart-line.css', 'chart-bar.css', 'chart-pie.css', 'chart-radar.css',
     'chart-heatmap.css', 'chart-area.css', 'chart-stack.css',
-    'chart-gauge.css', 'chart-sparkline.css', 'chart-scatter.css',
+    'chart-gauge.css', 'chart-sparkline.css', 'chart-scatter.css', 'chart-graph.css',
   ],
   // 图表细分类型依赖共享基座 charts.css
   'chart-line': ['charts.css'],
@@ -197,4 +262,34 @@ export const EXTRA_CSS = {
   'chart-scatter': ['charts.css'],
   // 图表细分类型依赖共享基座 charts.css（calendar 主 css 已由 MERGED_CSS 指向 chart-heatmap.css）
   'chart-calendar': ['charts.css'],
+  'chart-graph': ['charts.css'],
+  // kb umbrella：一条 import 拿到知识库全家（基座 kb.css + 六域）
+  kb: ['kb-ground.css', 'kb-ingest.css', 'kb-search.css', 'kb-data.css', 'kb-ops.css', 'kb-agent.css'],
+  // kb 域组件全部依赖共享基座 kb.css（.kb-row/.kb-num/.kb-quote 等原语）
+  'kb-citation': ['kb.css'],
+  'kb-sources': ['kb.css'],
+  'kb-passage': ['kb.css'],
+  'kb-conflict': ['kb.css'],
+  'kb-pipeline': ['kb.css'],
+  'kb-chunks': ['kb.css'],
+  'kb-segment': ['kb.css'],
+  'kb-connector': ['kb.css'],
+  'kb-metadata': ['kb.css'],
+  'kb-qa': ['kb.css'],
+  'kb-retrieval': ['kb.css'],
+  'kb-filter': ['kb.css'],
+  'kb-rerank': ['kb.css'],
+  'kb-hittest': ['kb.css'],
+  'kb-sql': ['kb.css'],
+  'kb-answer': ['kb.css'],
+  'kb-clarify': ['kb.css'],
+  'kb-explain': ['kb.css'],
+  'kb-trace': ['kb.css'],
+  'kb-review': ['kb.css'],
+  'kb-gap': ['kb.css'],
+  'kb-eval': ['kb.css'],
+  'kb-canvas': ['kb.css'],
+  'kb-checkpoint': ['kb.css'],
+  'kb-sandbox': ['kb.css'],
+  'kb-chain': ['kb.css'],
 };

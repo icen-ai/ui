@@ -1,0 +1,57 @@
+/*
+ * @icen.ai/ui — Component: chart-graph（知识图谱 / 力导向 node-link 专属样式）
+ * 依赖：charts.css（基座 .chart / tooltip / [data-chart-mark] 交互态 / 可切换图例）
+ *
+ * DOM 由 behaviors/charts.ts 的 renderGraph 构建：
+ *   .chart-graph > svg（360×260 viewBox）
+ *     ├ g.chart-graph-edges > line.chart-graph-edge（line-soft，簇隐藏联动 .is-off）
+ *     └ g.chart-graph-nodes > g.chart-graph-node（transform 定位）
+ *         ├ circle.chart-graph-dot（簇调色；r = 6 + weight 归一 × 12）
+ *         ├ circle.chart-graph-hit（透明命中圆）＋ <title>
+ * 布局确定性（同数据同布局，无随机源）；拖拽 = pointer + 局部松弛（rAF，
+ * 拖拽节点 .is-drag 描边 accent）。
+ */
+
+.chart-graph svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 边：不参与命中（交互只留节点），任一端簇隐藏时淡化 */
+.chart-graph-edge {
+  pointer-events: none;
+  transition: opacity var(--icen-tx-fast);
+}
+.chart-graph-edge.is-off {
+  opacity: 0.1;
+}
+
+/* 节点：拖拽抓手（触屏禁默认手势，pointer 拖拽不滚动页面） */
+.chart-graph .chart-graph-node {
+  cursor: grab;
+  touch-action: none;
+}
+.chart-graph .chart-graph-node:active {
+  cursor: grabbing;
+}
+.chart-graph-dot {
+  transition: stroke var(--icen-tx-fast), stroke-width var(--icen-tx-fast);
+}
+/* hover：描边换前景色（bindDatumEvents 挂 .is-hover） */
+.chart-graph-node.is-hover .chart-graph-dot {
+  stroke: var(--token-text);
+  stroke-width: 2;
+}
+/* 拖拽态：accent 描边 */
+.chart-graph-node.is-drag .chart-graph-dot {
+  stroke: var(--token-accent);
+  stroke-width: 2.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-graph-edge,
+  .chart-graph-dot {
+    transition: none;
+  }
+}

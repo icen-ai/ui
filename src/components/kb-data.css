@@ -1,0 +1,649 @@
+/*
+ * @icen.ai/ui — kb-data.css（问数域：kb-sql / kb-answer / kb-clarify / kb-explain）
+ * 共享原语在 kb.css（.kb-row/.kb-num/.kb-chip/.kb-badge/.kb-fold-head/.kb-notice…），
+ * 本文件只做本域专属结构。DOM 契约见 docs/spec/kb-family.md §5.15–5.18 与各 behavior 头注释。
+ *
+ * 域内色彩纪律（spec §2 数字域）：
+ *   - 数字本身永远中性色（.kb-num / 结果表右对齐列），success 只表达「可信资产」（认证徽章）；
+ *   - SQL 着色是语法层级信号不是装饰：全部 color-mix 半透明降饱和（kw=accent /
+ *     str=success / num=warning / fn=info / cmt=faint）；
+ *   - 修正卡 = warning 边框（告警语义）；权限提示不可关闭（诚实呈现，无 dismiss 样式钩子）。
+ * 只消费 --token-* / --radius-* / --density-* / --font-mono；明暗自适应走 token 与 .dark 档。
+ */
+
+/* ═══════════════════ kb-sql · 生成 SQL 卡片 ═══════════════════ */
+
+.kb-sql {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-md, 10px);
+  background: var(--token-surface);
+}
+
+.kb-sql-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+
+.kb-sql-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--token-text);
+  white-space: nowrap;
+}
+
+.kb-sql-tables {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.kb-sql-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* ghost 图标钮（复制/编辑/应用/确认共用底座） */
+.kb-sql-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--token-text-muted);
+  background: transparent;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.kb-sql-btn:hover:not(:disabled) {
+  color: var(--token-text);
+  border-color: var(--token-line);
+  background: var(--token-bg-soft);
+}
+.kb-sql-btn:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+.kb-sql-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.kb-sql-btn-icon,
+.kb-sql-btn-icon svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+.kb-sql-btn--run {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+}
+.kb-sql-btn--run:hover:not(:disabled) {
+  color: var(--token-accent);
+  border-color: var(--token-accent);
+  background: var(--token-accent-subtle, transparent);
+}
+/* 修正卡内的主行动（一屏一个 accent 级操作：此处告警色承载） */
+.kb-sql-btn--apply {
+  color: var(--token-warning);
+  border-color: color-mix(in srgb, var(--token-warning) 45%, transparent);
+  background: var(--token-warning-muted, transparent);
+}
+.kb-sql-btn--apply:hover:not(:disabled) {
+  color: var(--token-warning);
+  border-color: var(--token-warning);
+}
+
+/* SQL 码块：浅色 bg-soft / 深色更深一档（.dark 类，与 tokens 同机制） */
+.kb-sql-code {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--token-text);
+  white-space: pre;
+  overflow: auto;
+  max-height: 320px;
+  tab-size: 2;
+}
+.dark .kb-sql-code {
+  background: color-mix(in srgb, var(--token-bg) 85%, black);
+  border-color: color-mix(in srgb, var(--token-line-soft) 70%, transparent);
+}
+
+/* 语法 token：color-mix 半透明降饱和（语法层级，非装饰） */
+.kb-sql-tok--kw  { color: color-mix(in srgb, var(--token-accent) 85%, transparent); }
+.kb-sql-tok--str { color: color-mix(in srgb, var(--token-success) 82%, transparent); }
+.kb-sql-tok--num { color: color-mix(in srgb, var(--token-warning) 85%, transparent); }
+.kb-sql-tok--fn  { color: color-mix(in srgb, var(--token-info) 88%, transparent); }
+.kb-sql-tok--cmt { color: color-mix(in srgb, var(--token-text-faint) 72%, transparent); font-style: italic; }
+
+/* 修正卡（warning 边框：「修复已就绪」心智） */
+.kb-sql-fix {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--token-warning) 45%, transparent);
+  border-radius: var(--radius-sm, 6px);
+  background: color-mix(in srgb, var(--token-warning) 5%, transparent);
+}
+.kb-sql-fix-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.kb-sql-fix-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--token-warning);
+}
+.kb-sql-fix-title svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+.kb-sql-fix-title + .kb-sql-btn,
+.kb-sql-fix-head .kb-sql-btn {
+  margin-left: auto;
+}
+.kb-sql-fix-diff {
+  min-width: 0;
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+}
+.kb-sql-fix-diff .ai-diff-file {
+  border: 1px solid var(--token-line-soft);
+}
+
+/* 编辑态：pre ↔ textarea 同尺寸心智（mono） */
+.kb-sql-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kb-sql-editor[hidden] {
+  display: none;
+}
+.kb-sql-textarea {
+  width: 100%;
+  min-height: 132px;
+  padding: 10px 12px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--token-text);
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line);
+  border-radius: var(--radius-sm, 6px);
+  resize: vertical;
+  tab-size: 2;
+}
+.kb-sql-textarea:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: -1px;
+}
+.kb-sql-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.kb-sql.is-editing .kb-sql-fix {
+  display: none; /* 编辑当前 SQL 时隐藏旧版修复对比，避免双修离心 */
+}
+
+/* ═══════════════════ kb-clarify · 澄清反问卡 ═══════════════════ */
+
+.kb-clarify {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px dashed var(--token-line-dashed, var(--token-line-soft));
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-bg-soft);
+}
+.kb-clarify.is-answered {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--token-accent) 30%, transparent);
+}
+.kb-clarify-q {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--token-text);
+  line-height: 1.6;
+}
+.kb-clarify-qicon,
+.kb-clarify-qicon svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--token-accent);
+}
+.kb-clarify-qtext {
+  min-width: 0;
+}
+.kb-clarify-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kb-clarify-opt {
+  font: inherit;
+  font-size: 12px;
+  min-height: 24px;
+  padding: 3px 12px;
+  color: var(--token-text-muted);
+  background: var(--token-surface);
+  border: 1px solid var(--token-line-soft);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.16s ease-out, border-color 0.16s ease-out, background 0.16s ease-out;
+}
+.kb-clarify-opt:hover:not(:disabled) {
+  color: var(--token-text);
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+}
+.kb-clarify-opt:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+.kb-clarify-opt.is-picked {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 55%, transparent);
+  background: var(--token-accent-subtle, transparent);
+}
+.kb-clarify-opt:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.kb-clarify-resolved {
+  font-size: 12px;
+  color: var(--token-text-muted);
+}
+.kb-clarify-picked {
+  font-weight: 600;
+  color: var(--token-text);
+}
+.kb-clarify-reason {
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+}
+
+/* ═══════════════════ kb-explain · 口径解释折叠 ═══════════════════ */
+
+.kb-explain {
+  min-width: 0;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-bg-soft);
+  overflow: hidden;
+}
+.kb-explain-head {
+  border-radius: 0;
+}
+.kb-explain-head:hover {
+  border-radius: var(--radius-sm, 6px);
+}
+.kb-explain-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-explain-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 10px 10px 28px;
+}
+.kb-explain-group {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.kb-explain-group-label {
+  flex: 0 0 auto;
+  min-width: 2.5em;
+  font-size: 11px;
+  color: var(--token-text-faint);
+}
+.kb-explain-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--token-line-dashed, var(--token-line-soft));
+}
+.kb-explain-metric {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+}
+.kb-explain-metric-name {
+  color: var(--token-text);
+  font-weight: 500;
+}
+.kb-explain-metric-ref {
+  font-size: 11.5px;
+  color: var(--token-accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--token-accent) 35%, transparent);
+}
+.kb-explain-metric-ref:hover {
+  border-bottom-color: var(--token-accent);
+}
+.kb-explain-count {
+  flex: 0 0 auto;
+}
+
+/* ═══════════════════ kb-answer · 答案组合容器 ═══════════════════ */
+
+.kb-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+/* 徽章区 */
+.kb-answer-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.kb-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0;
+  font: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.kb-verified:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm, 6px);
+}
+.kb-verified-via {
+  font-size: 11.5px;
+  color: var(--token-text-muted);
+}
+.kb-verified-note {
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+}
+.kb-verified-hint {
+  font-size: 11px;
+  color: var(--token-text-faint);
+  border-left: 2px solid var(--token-line-soft);
+  padding-left: 8px;
+}
+.kb-verified:hover .kb-verified-via {
+  color: var(--token-text);
+}
+
+/* 权限提示（行级过滤 + 脱敏列；不可关闭） */
+.kb-perm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-bg-soft);
+  font-size: 11.5px;
+  color: var(--token-text-muted);
+}
+.kb-perm-icon,
+.kb-perm-icon svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  color: var(--token-text-faint);
+}
+.kb-perm-mask {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.kb-perm-mask-label {
+  color: var(--token-text-faint);
+}
+.kb-perm-mask .kb-chip {
+  border-color: color-mix(in srgb, var(--token-warning) 35%, transparent);
+}
+
+/* 正文与简化引用角标（与 kb-ground 域 .kb-citation 类名一致；默认弱化，hover 点亮） */
+.kb-answer-body {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--token-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.kb-answer-body .kb-citation {
+  font-size: 10.5px;
+  line-height: 1;
+  margin: 0 1px;
+  padding: 1px 5px;
+  color: var(--token-text-faint);
+  background: var(--token-bg-soft);
+  border: 1px solid var(--token-line-soft);
+  border-radius: 999px;
+  cursor: default;
+  transition: color 0.16s ease-out, border-color 0.16s ease-out;
+}
+.kb-answer-body .kb-citation:hover {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+}
+
+/* 槽位 */
+.kb-answer-clarify,
+.kb-answer-explain {
+  min-width: 0;
+}
+
+/* 结果表：滚动容器 + sticky 表头 + 数字列右对齐（数字永远中性色） */
+.kb-answer-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.kb-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.kb-result-export {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.kb-result-export-btn {
+  font: inherit;
+  font-size: 11.5px;
+  min-height: 22px;
+  padding: 2px 8px;
+  color: var(--token-text-muted);
+  background: transparent;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+}
+.kb-result-export-btn:hover:not(:disabled) {
+  color: var(--token-text);
+  border-color: var(--token-line);
+  background: var(--token-bg-soft);
+}
+.kb-result-export-btn:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+.kb-result-export-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.kb-result-scroll {
+  overflow: auto;
+  max-height: 360px;
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--token-surface);
+}
+.kb-result-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12.5px;
+}
+.kb-result-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 6px 10px;
+  background: var(--token-bg-soft);
+  border-bottom: 1px solid var(--token-line-soft);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--token-text-muted);
+  text-align: left;
+  white-space: nowrap;
+}
+.kb-result-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--token-line-soft) 50%, transparent);
+  color: var(--token-text);
+  white-space: nowrap;
+}
+.kb-result-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.kb-result-table tbody tr:hover td {
+  background: var(--token-bg-soft);
+}
+/* 数字列：等宽 + tabular-nums + 右对齐（值本身中性色） */
+.kb-result-table th.kb-num,
+.kb-result-table td.kb-num {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.kb-result-null {
+  color: var(--token-text-faint);
+}
+.kb-result-truncated {
+  padding: 2px 8px;
+}
+
+/* 图表区（renderChart 复用；类型切换 chips） */
+.kb-answer-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.kb-chart-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kb-chart-chip {
+  font: inherit;
+  font-size: 11.5px;
+  min-height: 22px;
+  padding: 2px 10px;
+  color: var(--token-text-muted);
+  background: transparent;
+  border: 1px solid var(--token-line-soft);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.16s ease-out, border-color 0.16s ease-out, background 0.16s ease-out;
+}
+.kb-chart-chip:hover {
+  color: var(--token-text);
+  border-color: var(--token-line);
+}
+.kb-chart-chip:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+.kb-chart-chip.is-active {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 55%, transparent);
+  background: var(--token-accent-subtle, transparent);
+}
+.kb-chart-mount {
+  min-height: 0;
+}
+
+/* 追问建议 */
+.kb-answer-followups {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.kb-followups-label {
+  font-size: 11.5px;
+  color: var(--token-text-faint);
+}
+.kb-followup {
+  cursor: pointer;
+  transition: border-color 0.16s ease-out, color 0.16s ease-out;
+}
+.kb-followup:hover {
+  color: var(--token-text);
+  border-color: color-mix(in srgb, var(--token-accent) 45%, transparent);
+}
+.kb-followup:focus-visible {
+  outline: 2px solid var(--token-accent);
+  outline-offset: 1px;
+}
+
+/* ═══════════════════ 密度档 ═══════════════════ */
+
+[data-density='compact'] .kb-sql { padding: 8px 10px; gap: 6px; }
+[data-density='compact'] .kb-result-table th { padding: 4px 8px; }
+[data-density='compact'] .kb-result-table td { padding: 3px 8px; }
+[data-density='compact'] .kb-answer { gap: 8px; }
+[data-density='compact'] .kb-clarify { padding: 8px 10px; }
