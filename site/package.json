@@ -8,6 +8,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^5"
+    "astro": "^5",
+    "misans": "^5.0.0"
   }
 }

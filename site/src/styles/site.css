@@ -5,17 +5,20 @@
  */
 
 /* ═══════════ 文档站字体体系 ═══════════
-   三层分工：
-   - 站壳 / 正文 prose → --site-font-sans（系统无衬线，小字号中文清晰）
+   四层分工：
+   - 站壳 / 正文 prose → --site-font-sans（MiSans 自托管 webfont：Base.astro 引入 misans
+     VF 分包 CSS，56 片 unicode-range 按需懒加载、font-display swap；本机已装 MiSans
+     则零下载直取本地，未命中回退系统无衬线。小米官方无 webfont CDN，此为官方
+     「免费商用」字体 + 社区分包（npm misans）同源自托管）
    - 代码 / 数字       → --font-mono（IBM Plex Mono 栈，base.css 已负责 code/pre）
-   - 展示级标题        → --font-heading（宋体衬线，只用于大字，小标题一律 sans）
-   demo 区用 --site-font-mono：Latin 保持等宽精密感，CJK 显式回退无衬线，
-   避免落到通用 monospace 在 Windows 上解析成细宋体。 */
+   - 演示区等宽        → --site-font-mono（Latin 等宽精密感，CJK 显式回退 MiSans 无衬线，
+     避免落到通用 monospace 在 Windows 上解析成细宋体）
+   - 展示级标题        → --font-heading（宋体衬线，只用于大字，小标题一律 sans） */
 :root {
-  --site-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+  --site-font-sans: 'MiSans', 'MiSans VF', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
   --site-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, 'Courier New',
-    'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', monospace;
+    'MiSans', 'MiSans VF', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', monospace;
 }
 
 /* 站壳 + 正文默认无衬线 */
