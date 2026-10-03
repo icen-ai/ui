@@ -136,11 +136,12 @@ parseAiToolArgs('render_chart', raw);   // 模型回包解析（容错 JSON 字�
 **ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）；权限域呈现边界（谁能看到什么，以及为什么）**。32 个 slug 七域，CSS 根类 `.kb-*`，事件统一 `icen:kb-*`（56 个全类型登记）。规格唯一事实源 `docs/spec/kb-family.md`（§9 为权限域）；最佳实践成品页 <https://ui.icen.ai/kb/>（八标签工作台 + 参考文献锚点）。
 
 ```ts
-import { renderKbCitations, parseInlineCitations } from '@icen.ai/ui/behaviors/kb-citation';
+import { renderCitationText, initKbCitation } from '@icen.ai/ui/behaviors/kb-citation';
 import { createKbRetrieval, scorePercent } from '@icen.ai/ui/behaviors/kb-retrieval';
 import { createKbFilter } from '@icen.ai/ui/behaviors/kb-filter';
+import { parseInlineCitations } from '@icen.ai/ui/behaviors/kb-core';
 
-// 角标：文本里的 [1][2] → parseInlineCitations → renderKbCitations(el, citations, opts)
+// 角标：文本里的 [1][2] → renderCitationText(el, text, sources)（initKbCitation() 页面级事件委托）
 // 引用三型定位（Anthropic 同款）：location: {type:'char',start,end,unit:'char'} | {type:'page',page} | {type:'block',blockId}——unit 写死不猜
 // 检索 playground：混合权重 / 阈值 / topK 即调即得，事件 icen:kb-retrieval-run
 // 过滤器：树形规则 → serialize('mongo'|'odata') 双 DSL；无效规则不镜像（诚实纪律）
