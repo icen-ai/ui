@@ -35,8 +35,8 @@ import type { AiUsage } from './ai-core';
 import type { AiDoneEventDetail } from './ai-provider';
 import type { AiComposerRefSource } from './ai-composer';
 import type {
-  KbCitation, KbChainStep, KbCheckpointScope, KbFilterNode, KbRetrievalQuery,
-  KbSegmentConfig, KbSandboxMessage,
+  KbAccessRequest, KbAclDecision, KbAclEntry, KbAuditChannel, KbCitation, KbChainStep, KbCheckpointScope,
+  KbFilterNode, KbHygieneIssue, KbIdentity, KbRetrievalQuery, KbRole, KbSegmentConfig, KbSandboxMessage,
 } from './kb-core';
 
 export interface IcenGestureDetail {
@@ -214,6 +214,19 @@ export interface IcenEventMap {
   'icen:kb-checkpoint-restore': { checkpointId: string; scope: KbCheckpointScope };
   'icen:kb-sandbox-message': { channel: 'in' | 'out'; payload: KbSandboxMessage };
   'icen:kb-chain-step': { index: number; step: KbChainStep };
+  /* 权限域 kb-perm（spec §9.7） */
+  'icen:kb-acl-grant': {};
+  'icen:kb-acl-remove': { subject: KbAclEntry['subject'] };
+  'icen:kb-acl-inherit': { action: 'break' | 'restore' };
+  'icen:kb-whocan-check': { identity: KbIdentity; decision: KbAclDecision };
+  'icen:kb-access-request': { request: KbAccessRequest };
+  'icen:kb-access-decide': { id: string; decision: 'approve' | 'deny'; role?: KbRole };
+  'icen:kb-access-expire': { id: string };
+  'icen:kb-audit-filter': { channel: KbAuditChannel | 'all' };
+  'icen:kb-audit-export': { channel: KbAuditChannel | 'all' };
+  'icen:kb-hygiene-action': { issue: KbHygieneIssue };
+  'icen:kb-visibility-identity': { identity: KbIdentity };
+  'icen:kb-visibility-layer': { layer: 'pre' | 'post' | 'none' };
 
   /* 宿主自定义事件兜底 */
   [key: `icen:${string}`]: unknown;

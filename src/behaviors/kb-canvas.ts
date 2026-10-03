@@ -101,6 +101,11 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
   };
   if (typeof document === 'undefined' || !el) return stub; /* SSR：no-op 句柄 */
 
+  /* 同元素重复 create：先销毁旧实例并清空挂载点，杜绝整树翻倍与旧监听泄漏 */
+  const canvasHost = el as HTMLElement & { __icenKbCanvas?: { destroy(): void } };
+  canvasHost.__icenKbCanvas?.destroy();
+  el.textContent = '';
+
   const minR = clampNum(opts.minRatio, 0.2, 0.05, 0.5);
   const maxR = 1 - minR;
   let ratio = clampNum(DEFAULT_RATIO, DEFAULT_RATIO, minR, maxR);
@@ -375,7 +380,7 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
     el.textContent = '';
   };
 
-  return {
+  const handle: KbCanvasHandle = {
     setChat: (content) => {
       if (!destroyed) mountContent(chat, content);
     },
@@ -416,4 +421,7 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
     },
     destroy,
   };
+  /* 登记句柄：下一次同元素装配的入口销毁依赖它 */
+  canvasHost.__icenKbCanvas = handle;
+  return handle;
 }

@@ -2,11 +2,11 @@
 
 ## 0.9.0 - 2026-10-03
 
-> 知识库（kb）组件族全量落地：27 个新 slug（`kb` 总集 + 26 个组件，六域 + kb.css 基座 + kb-core 契约层），AI 族增强 3 件，图表 +2（图谱 / 地图）。业界模式逐条落地（Anthropic 引用三型 / Glean 连接器健康 / RAGFlow 分块审阅 / Cursor 检查点语义 / MCP Apps 沙箱 / Braintrust 评测分级）。无破坏性变更。
+> 知识库（kb）组件族全量落地：32 个新 slug（`kb` 总集 + 31 个组件，七域 + kb.css 基座 + kb-core 契约层），AI 族增强 3 件，图表 +2（图谱 / 地图）。业界模式逐条落地（Anthropic 引用三型 / Glean 连接器健康 / RAGFlow 分块审阅 / Cursor 检查点语义 / MCP Apps 沙箱 / Braintrust 评测分级 / Zanzibar 求值语义 / OWASP 检索前过滤铁律）。无破坏性变更。
 
 ### 新功能
 
-**知识库组件族（27 slug · 六域）**——ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）
+**知识库组件族（32 slug · 七域）**——ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）
 
 - **证据域**：kb-citation（行内角标 [n] + 三型定位 char/page/block，单位写死不猜）；kb-sources（来源清单 + rail 侧栏变体 + 权限打码与「申请访问」）；kb-passage（原文回看，命中高亮按命中级别分色）；kb-conflict（多源冲突并排声明）
 - **摄取域**：kb-pipeline（解析管线五态 + 步骤耗时 + 重跑）；kb-chunks（分块审阅 + 手工补块，分块是一等公民）；kb-segment（分段配置器 + 实时预览与统计）；kb-connector（数据源连接器卡：4 离散信号 + cron/人类排程 + 凭证态，enabled≠healthy）；kb-metadata（抽取字段审阅）；kb-qa（问答对管理，改动显式「仅本次会话生效 / 入库」）
@@ -14,8 +14,10 @@
 - **问数域**：kb-sql（NL→SQL 编辑 / 回滚 / 重跑 + 只读声明）；kb-answer（查询结果 + 行数截断诚实声明）；kb-clarify（澄清追问，选择即消歧）
 - **治理域**：kb-explain（事实解释：命中原文 + 分数贡献，score null →「—」）；kb-trace（检索链路追踪，span 三态）；kb-review（人工评分任务流）；kb-gap（知识缺口队列，缺口可行动）；kb-eval（评测对比，improvement / regression / tradeoff / tie 四级）
 - **工作台域**：kb-canvas（可编辑画布 + AI 助手 + 版本栈）；kb-checkpoint（检查点回滚，范围显式——只回滚文件保留对话）；kb-sandbox（MCP Apps 沙箱：iframe `allow-scripts` 无 same-origin + postMessage JSON-RPC 2.0 + `ui://` 资源）；kb-chain（能力链路图）
-- **契约层 `kb-core.ts`**（无 UI 不占 slug）：引用 / 分数 / 分块 / 管线 / 连接器 / 分段 / 检索参数 / 过滤树 / 评测等 40+ normalize 与格式化函数——分数纪律（metric + higherIsBetter + l2 反转 + null→「—」）全族统一；`IcenEventMap` 新登记 45 个 `icen:kb-*` 事件
-- 规格：`docs/spec/kb-family.md`（顶层设计唯一事实源，类名 / 签名 / 事件以它为准）
+- **权限域（kb-perm，第二轮调研落地）**：kb-acl（文档权限面板：继承四件套 / Direct 与 Links 双区 / deny 置顶 / 系统态不可删 / 对 N 人可见警示）；kb-who-can（有效权限检查器：view-as + 扁平原因链——SharePoint Check Permissions 是业界唯一全实现，此为差异化件）；kb-access（访问申请流：被拒五件套 + 9 态状态机 + 路由明示 + denied 中性呈现 + 到期倒计时/续期/重交）；kb-audit（权限审计时间线：三通道过滤 + actor 三态 + break-glass 警示行 + 6 类权限异味）；kb-visibility（检索可见性对照器：admin 专用——同查询多身份命中差异 + 过滤层三态徽标 pre✓/post⚠/none✕ + 安全计数 + 泄露教学段）
+- **权限安全纪律（spec §9.0，全族评审必查）**：检索期隔离唯一安全基线 = query-time pre-filter；**对授权侧诚实、对受限侧沉默**（被裁条数/标题/分数/「若权限不同」对照不出现在普通用户视图）；「不知道」与「不能说」不可区分；求值 = 先显式 deny → allow 并集 → 默认拒绝（fail-closed）；唯一允许的裁剪提示是与命中无关的恒定文案；引用只能生成自过滤后集合（revoked 历史引用呈中性「来源已不可用」）；每条 grant 可带 expiresAt；身份来自服务端固定身份集（不接受自由输入——Kendra 自报身份教训）
+- **契约层 `kb-core.ts`**（无 UI 不占 slug）：引用 / 分数 / 分块 / 管线 / 连接器 / 分段 / 检索参数 / 过滤树 / 评测 + 权限域（KbRole 四档 / KbVisibility 五级 / KbAclEntry / KbIdentity / `evaluateAcl` 纯函数 / KbAccessRequest 九态 / KbAuditEntry / KbHygieneIssue 六类异味）等 60+ normalize 与格式化函数——分数纪律（metric + higherIsBetter + l2 反转 + null→「—」）与求值语义全族统一；`IcenEventMap` 新登记 45+11 个 `icen:kb-*` 事件
+- 规格：`docs/spec/kb-family.md`（顶层设计唯一事实源，类名 / 签名 / 事件以它为准）；调研底稿 `docs/research/2026-10-03-ai-kb-components.md` + `2026-10-03-kb-permissions.md`（五路并发查证 100+ 来源，含事实更正记录）
 
 **AI 族增强（3 新 slug + 2 存量）**
 
@@ -27,10 +29,17 @@
 
 - chart-graph 关系图谱（`renderGraph` / `layoutGraph` 确定性布局，drag 局部松弛）与 chart-map 地理填色（`renderMap`）；charts 通用层增加 datum 明细（`ChartDatumDetail`）与聚类配色
 
+### 存量增强与修正（权限安全化）
+
+- kb-retrieval：参数栏新增「检索身份」（固定身份集）+ 过滤层徽标三态（pre ✓ 默认 / post ⚠「分数已可观察——缺陷层」/ none ✕「fail-open 危险」可切换教学）；存活计数去掉泄露分母（「存活 3」而非「3/6」）；admin 模式命中行附 ACL 可见性徽标
+- kb-sources：`permission==='hidden'` 的来源不渲染行（检索层不可见 = UI 不存在）；三级 permission 与五级 visibility 映射成文
+- kb-citation：引用白名单纪律入注；新增 `.is-revoked` 中性态（权限收回后的历史引用呈「来源已不可用」，faint 非红）
+- **泄露式文案修正**：trace 的 guard span「1 条 L4 块已剔除」→「pre-filter 已按检索身份裁剪候选集」（恒定事实）；「命中 5 块（4 有分 + 1 受限无分）」→「授权集合内命中 5 块」——差值计数即 volume leakage，全部清除
+
 ### 文档站
 
-- 新分组「知识库」（第三位，32 张新组件页，demo / 用法 / kit 三段齐全；文档数据在 `site/src/lib/kb-docs-*.ts` 三片段）
-- 旗舰页 **/kb 知识库工作台**：六标签全真接线——问答（mock 打分器全流程：链路 → 流式答案 → 角标 → 来源 → 反馈，首屏自动演示）/ 摄取（连接器「治疗」闭环：重授权 → 恢复健康）/ 检索（playground + 过滤器 + 重排 + 召回测试）/ 问数 / 观测 / Agent（画布选区 → 对话 → 版本栈；MCP 沙箱 echo 往返；受限权限链三组件贯通）
+- 新分组「知识库」（第三位，37 张新组件页，demo / 用法 / kit 三段齐全；文档数据在 `site/src/lib/kb-docs-*.ts` 四片段）
+- 旗舰页 **/kb 知识库工作台**：八标签全真接线——问答（mock 打分器全流程：链路 → 流式答案 → 角标 → 来源 → 反馈，首屏自动演示）/ 摄取（连接器「治疗」闭环：重授权 → 恢复健康）/ 检索（playground + 过滤器 + 重排 + 召回测试 + 身份/过滤层徽标）/ 问数 / 观测 / **权限**（可见性对照 + ACL 面板 + who-can 原因链 + 申请流状态机走查 + 审计时间线含 break-glass）/ Agent（画布选区 → 对话 → 版本栈；MCP 沙箱 echo 往返）/ **参考**（32 条文献锚点：官方规范/论文/旗舰文档 + 发表时间 + 「本库采纳了它的什么决策」，升级抉择的回归点）
 - 视觉 QA 收敛：连接器 cron 裸串破版（→ mono chip / 人类可读排程）、指标两列网格对齐、来源卡标题挤压、检索分数条失真（flex 伸缩 → 定宽轨道）、滑杆数值回显、DSL 断词（`2026-07-0 1`）、重排表窄栏截断、过滤器日期值截字、凭证呈现混排、问答首屏空态
 
 ## 0.8.1 - 2026-10-03

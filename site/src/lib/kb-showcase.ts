@@ -12,6 +12,9 @@
  */
 
 import type {
+  KbAccessRequest,
+  KbAclEntry,
+  KbAuditEntry,
   KbCitation,
   KbCheckpoint,
   KbChunk,
@@ -20,6 +23,8 @@ import type {
   KbFilterNode,
   KbGapQuery,
   KbHitTestCase,
+  KbHygieneIssue,
+  KbIdentity,
   KbPipelineRun,
   KbRetrievalHit,
   KbRetrievalParams,
@@ -27,6 +32,7 @@ import type {
   KbScoreConfig,
   KbSegmentConfig,
   KbSpan,
+  KbVisibility,
 } from '../../../src/behaviors/kb-core';
 import type { ChartSpec, GraphSpec, MapSpec } from '../../../src/behaviors/charts';
 
@@ -756,7 +762,7 @@ export const TRACE_SPANS: KbSpan[] = [
     name: 'hybrid 检索 · topK=6',
     status: 'done',
     elapsedMs: 212,
-    detail: 'α=0.6 · 命中 5 块（4 有分 + 1 受限无分）',
+    detail: 'α=0.6 · 授权集合内命中 5 块',
     hits: scoreQuery('供应商 准入 材料 流程 账期', { topK: 5, mode: 'hybrid', alpha: 0.6, rerank: false, threshold: null }),
   },
   { id: 'sp-embed', parentId: 'sp-retr', kind: 'embed', name: 'bge-m3 向量化', status: 'done', elapsedMs: 38, detail: 'query 24 tok' },
@@ -767,7 +773,8 @@ export const TRACE_SPANS: KbSpan[] = [
     name: '权限过滤',
     status: 'done',
     elapsedMs: 9,
-    detail: '行级策略：区域=华东；1 条 L4 块已剔除',
+    /* 呈现纪律（spec §9.0-2）：对受限侧沉默——只陈述恒定事实，不带被裁数量 */
+    detail: 'pre-filter 已按检索身份裁剪候选集',
   },
   { id: 'sp-rerank', kind: 'rerank', name: 'bge-reranker-v2', status: 'done', elapsedMs: 184, detail: '5 → 3，阈值 0.35 淘汰 2' },
   {
@@ -1008,3 +1015,212 @@ export const AGENT_CHAIN_STEPS = [
   { key: 'diff', label: '生成 diff', status: 'pending' as const, detail: '2 文件' },
   { key: 'review', label: '等待审阅', status: 'pending' as const, detail: '接受 / 拒绝' },
 ];
+
+/* ═══════════════ §8 权限域（kb-perm，spec §9）：身份 / ACL / 申请 / 审计 / 可见性对照 ═══════════════ */
+/*
+ * 安全纪律（§9.0）同步到 mock：身份是固定身份集（服务端 token 枚举，无自由输入）；
+ * deny 一票否决；到期一等公民；break-glass 审计粒度 ≥ 常规。演示数据围绕《2026 财务规划》
+ * （公司库 › 财务部空间 继承链）与三个身份展开，与 /kb「权限」标签接线一一对应。
+ */
+
+/**
+ * 固定身份集：张三 = 普通销售（仅组织基线授权）；王五 = 财务部（finance-team 继承 Editor）；
+ * 系统审计员 = 服务账号（auditors / compliance 组）。
+ */
+export const PERM_IDENTITIES: KbIdentity[] = [
+  { user: 'zhangsan', label: '张三 · 华东销售部', groups: ['sales-east', 'project-q3'] },
+  { user: 'wangwu', label: '王五 · 财务部', groups: ['finance-team', 'auditors'] },
+  { user: 'auditor', label: '系统审计员', groups: ['auditors', 'compliance'] },
+];
+
+/** 《2026 财务规划》的 ACL 面板模型（renderKbAcl 消费；结构对齐 spec §9.1 的 KbAclModel） */
+export const PERM_ACL_DEMO: {
+  resource: string;
+  parentChain: string[];
+  broken: boolean;
+  exceptions?: { label: string; count: number };
+  entries: KbAclEntry[];
+  links: KbAclEntry[];
+  exposureCount?: number;
+} = {
+  resource: '2026 财务规划',
+  parentChain: ['公司库', '财务部空间'],
+  /* 继承未断但有子项例外（banner 呈现「例外 1 项」的 is-partial 态） */
+  broken: false,
+  exceptions: { label: 'Q3 并购草案.docx', count: 1 },
+  entries: [
+    { subject: { kind: 'org', id: 'org-all', label: '全体员工' }, role: 'viewer', inheritedFrom: '公司库' },
+    {
+      subject: { kind: 'group', id: 'finance-team', label: 'finance-team', note: '24 成员 · 由 IT 管理' },
+      role: 'editor',
+      inheritedFrom: '财务部空间',
+    },
+    { subject: { kind: 'group', id: 'auditors', label: 'auditors', note: '6 成员' }, role: 'viewer' },
+    { subject: { kind: 'user', id: 'u-lisi', label: '李四' }, role: 'owner' },
+    { subject: { kind: 'user', id: 'u-rival', label: '竞对黑名单' }, role: 'viewer', deny: true },
+    { subject: { kind: 'org', id: 'sys-limited', label: 'Limited Access', note: '系统自动' }, role: 'viewer', system: true },
+  ],
+  links: [
+    {
+      subject: { kind: 'link', id: 'l-finplan-org', label: '组织内任何有链接者' },
+      role: 'viewer',
+      expiresAt: '2026-11-01T00:00:00.000Z',
+    },
+  ],
+  exposureCount: 1204,
+};
+
+/** 张三对《2026 财务规划》的访问申请（初始 idle；/kb 页由「演进按钮组」推进状态机） */
+export const PERM_REQUEST_DEMO: KbAccessRequest = {
+  id: 'req-2026-1101',
+  requester: '张三',
+  resource: '2026 财务规划',
+  role: 'viewer',
+  reason: 'Q4 区域预算对齐需要财务规划的口径',
+  state: 'idle',
+  submittedAt: iso(4 * HOUR),
+  approverNote: '内容负责人：李四（财务部）',
+};
+
+/** 权限审计时间线（新 → 旧；含一条 break-glass 与 system actor 的权限同步） */
+export const PERM_AUDIT_DEMO: KbAuditEntry[] = [
+  {
+    id: 'au-8',
+    at: iso(18 * 60_000),
+    actor: { kind: 'human', name: '李四' },
+    action: 'revoke',
+    resource: '2026 财务规划',
+    detail: '收回张三的 viewer 授权（Q3 项目结项，权限回收）',
+  },
+  {
+    id: 'au-7',
+    at: iso(46 * 60_000),
+    actor: { kind: 'app', name: '系统审计员' },
+    action: 'break_glass',
+    resource: 'Q3 并购草案.docx',
+    detail: '双人复核中',
+    breakGlass: true,
+  },
+  {
+    id: 'au-6',
+    at: iso(2 * HOUR),
+    actor: { kind: 'system', name: '权限服务' },
+    action: 'sync',
+    resource: '2026 财务规划',
+    detail: '与财务部空间对齐授权（3 条变更落库）',
+  },
+  {
+    id: 'au-5',
+    at: iso(3 * HOUR),
+    actor: { kind: 'human', name: '李四' },
+    action: 'approve',
+    resource: '2026 财务规划',
+    detail: '批准张三的申请：viewer（30 天到期）',
+  },
+  {
+    id: 'au-4',
+    at: iso(3 * HOUR + 9 * 60_000),
+    actor: { kind: 'human', name: '张三' },
+    action: 'request',
+    resource: '2026 财务规划',
+    detail: '申请 viewer：Q4 区域预算对齐需要口径',
+  },
+  {
+    id: 'au-3',
+    at: isoDay(1, 16),
+    actor: { kind: 'human', name: '李四' },
+    action: 'permission_change',
+    resource: '财务部空间',
+    detail: 'finance-team：Viewer → Editor（部门改版权限下放）',
+  },
+  {
+    id: 'au-2',
+    at: isoDay(1, 10),
+    actor: { kind: 'human', name: '王五' },
+    action: 'preview',
+    resource: '2026 财务规划',
+    detail: '预览摘要，未下载原文',
+  },
+  {
+    id: 'au-1',
+    at: isoDay(2, 9),
+    actor: { kind: 'human', name: '张三' },
+    action: 'read',
+    resource: '2026 财务规划',
+    detail: '全文读取（检索引用进入）',
+  },
+];
+
+/** 权限异味（治理发现，admin 视图）：源系统权限卫生问题——RAG 只是放大器 */
+export const PERM_HYGIENE_DEMO: KbHygieneIssue[] = [
+  {
+    id: 'hyg-1',
+    kind: 'overexposed',
+    resource: '2026 财务规划',
+    metric: '对 1,204 人可见',
+    hint: '继承链带来的宽授权——按「最小知悉」改为定向组',
+    severity: 'high',
+  },
+  {
+    id: 'hyg-2',
+    kind: 'org_wide_link',
+    resource: '供应商名录',
+    metric: '组织内链接 · 28 天',
+    hint: '组织级链接长期存在——改为指定人员并设短到期',
+    severity: 'high',
+  },
+  {
+    id: 'hyg-3',
+    kind: 'broken_inheritance',
+    resource: 'Q3 并购草案.docx',
+    metric: '1 个子项断继承',
+    hint: '断开后不随父容器收紧——复核是否必要',
+    severity: 'medium',
+  },
+  {
+    id: 'hyg-4',
+    kind: 'orphaned_owner',
+    resource: '离职交接清单',
+    metric: '负责人已禁用',
+    hint: '尽快移交 owner，避免审批无人路由',
+    severity: 'medium',
+  },
+];
+
+/** 可见性对照的 mock 命中（标题复用检索语料；summary = AI 摘要级命中的摘要文本） */
+export const PERM_HITS_DEMO: Array<{ id: string; title: string; snippet: string; summary?: string }> = [
+  { id: 'pv-h1', title: '供应商准入手册 v4.2', snippet: '第三章 准入材料清单。营业执照副本、近两年审计报告、质量体系认证……' },
+  { id: 'pv-h2', title: '准入材料清单', snippet: '五类材料：营业执照 / 审计报告 / 体系认证 / 检测报告 / 环保声明。' },
+  { id: 'pv-h3', title: '流程与账期', snippet: '在线提交 → 资质初审（5 个工作日）→ 现场审核 → 分级评定 → 签署框架协议。' },
+  {
+    id: 'pv-h4',
+    title: '2026 财务规划',
+    snippet: '含 Q4 预算缺口与降本目标的财务规划……',
+    summary: '财务规划要点的 AI 摘要：预算缺口 2.3%、供应链降本 3pct 由采购部牵头（原文受限）',
+  },
+  {
+    id: 'pv-h5',
+    title: '并购意向简报',
+    snippet: '拟收购标的与估值区间的董事会简报……',
+    summary: '并购意向简报的 AI 摘要：一家标的、估值区间待尽调收敛（原文受限）',
+  },
+  { id: 'pv-h6', title: 'Q3 目标', snippet: '华东大区 Q3 新签目标 1.2 亿，同比 +18%……' },
+];
+
+/**
+ * 可见性对照的演示求值规则（写死，供 renderKbVisibility 的 evaluateHit）：
+ * - 《2026 财务规划》/《并购意向简报》（受限财务文档）→ 王五 full、系统审计员 summary
+ *   （演示 summary 级：AI 摘要可见、原文受限）、张三 metadata（知道存在、可申请）、其余身份 full；
+ * - 《Q3 目标》→ project-q3 组 full，其他身份 metadata；
+ * - 其余文档 → 全部 full。
+ */
+export function permEvaluateHit(hit: { title?: string }, identity: KbIdentity): KbVisibility {
+  const t = hit.title ?? '';
+  if (t.includes('财务规划') || t.includes('并购')) {
+    if (identity.user === 'zhangsan') return 'metadata';
+    if (identity.user === 'auditor') return 'summary';
+    return 'full';
+  }
+  if (t.includes('Q3 目标')) return identity.groups.includes('project-q3') ? 'full' : 'metadata';
+  return 'full';
+}

@@ -77,3 +77,8 @@ export * from './behaviors/kb-canvas';
 export * from './behaviors/kb-checkpoint';
 export * from './behaviors/kb-sandbox';
 export * from './behaviors/kb-chain';
+export * from './behaviors/kb-acl';
+export * from './behaviors/kb-who-can';
+export * from './behaviors/kb-access';
+export * from './behaviors/kb-audit';
+export * from './behaviors/kb-visibility';

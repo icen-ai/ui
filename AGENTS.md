@@ -133,7 +133,7 @@ parseAiToolArgs('render_chart', raw);   // 模型回包解析（容错 JSON 字�
 
 ## 知识库族（kb-*）— 证据层组件
 
-**ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）**。27 个 slug 六域，CSS 根类 `.kb-*`，事件统一 `icen:kb-*`（45 个全类型登记）。
+**ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）；权限域呈现边界（谁能看到什么，以及为什么）**。32 个 slug 七域，CSS 根类 `.kb-*`，事件统一 `icen:kb-*`（56 个全类型登记）。规格唯一事实源 `docs/spec/kb-family.md`（§9 为权限域）；最佳实践成品页 <https://ui.icen.ai/kb/>（八标签工作台 + 参考文献锚点）。
 
 ```ts
 import { renderKbCitations, parseInlineCitations } from '@icen.ai/ui/behaviors/kb-citation';
@@ -150,7 +150,16 @@ const filter = createKbFilter(el, { node, fields, onChange: (node, valid) => {..
 - **分数纪律（全族统一）**：score 必带 metric 与 higherIsBetter（l2 距离自动反转）；null / 缺失渲染「—」不猜；条形轨道定宽，长度严格按 scorePercent 比例。
 - **诚实呈现**：行数截断要声明、权限缺失打码并给「申请访问」、重排关闭后列压淡不隐藏、检查点回滚范围显式（只回滚文件保留对话）。
 - 契约层 `kb-core.ts`（`import ... from '@icen.ai/ui/behaviors/kb-core'`）：KbCitation / KbChunk / KbRunStatus / KbConnector / KbRetrievalParams / KbFilterNode / KbEvalRow 等 40+ normalize 与格式化函数，业务数据一律先过 normalize 再喂组件。
-- 域文件映射：证据 kb-citation·kb-sources·kb-passage·kb-conflict → kb-ground.css；摄取 kb-pipeline·kb-chunks·kb-segment·kb-connector·kb-metadata·kb-qa → kb-ingest.css；检索 kb-retrieval·kb-filter·kb-rerank·kb-hittest → kb-search.css；问数 kb-sql·kb-answer·kb-clarify → kb-data.css；治理 kb-explain·kb-trace·kb-review·kb-gap·kb-eval → kb-ops.css；工作台 kb-canvas·kb-checkpoint·kb-sandbox·kb-chain → kb-agent.css；全部组件 kit 自动带 kb.css 基座。
+- 域文件映射：证据 kb-citation·kb-sources·kb-passage·kb-conflict → kb-ground.css；摄取 kb-pipeline·kb-chunks·kb-segment·kb-connector·kb-metadata·kb-qa → kb-ingest.css；检索 kb-retrieval·kb-filter·kb-rerank·kb-hittest → kb-search.css；问数 kb-sql·kb-answer·kb-clarify → kb-data.css；治理 kb-explain·kb-trace·kb-review·kb-gap·kb-eval → kb-ops.css；工作台 kb-canvas·kb-checkpoint·kb-sandbox·kb-chain → kb-agent.css；**权限 kb-acl·kb-who-can·kb-access·kb-audit·kb-visibility → kb-perm.css**；全部组件 kit 自动带 kb.css 基座。
+
+**权限域安全纪律（spec §9.0，评审必查）**：
+
+- 检索期隔离唯一安全基线 = **query-time pre-filter**（ANN 与 BM25 两侧）；post-filter / generation / presentation 都不是边界。
+- **对授权侧诚实，对受限侧沉默**：被裁条数 / 标题 / 分数 / 「若权限不同」对照不出现在普通用户视图（kb-visibility 的 admin 对照是唯一例外，组件自带警示条）。
+- 「不知道」与「不能说」不可区分：无权限文档在检索/列表/计数/引用中 = 不存在；唯一允许的裁剪提示是与命中无关的恒定文案。
+- 求值语义：`evaluateAcl(entries, identity)` 纯函数 = **先显式 deny → allow 并集 → 默认拒绝（fail-closed）**；身份来自服务端固定身份集，不接受自由输入。
+- 引用白名单：citation 只能生成自过滤后集合；revoked 历史引用呈中性 `.is-revoked`；每条 grant 可带 `expiresAt`（到期三态：永不过期 / 倒计时+续期 / 已过期+重交）。
+- 组件速用：`renderKbAcl(el, model)`（继承四件套 + Direct/Links 双区 + deny 置顶）；`renderKbWhoCan(el, {identities, entries})`（view-as 原因链，业界唯一全实现是 SharePoint Check Permissions——差异化件）；`createKbAccess(el, {request, mode})`（被拒五件套 + 九态状态机 + 路由明示）；`renderKbAudit(el, {entries, hygiene})` + `initKbAudit()`（三通道 + break-glass 警示 + 六类异味）；`renderKbVisibility(el, opts)`（admin 对照器 + 过滤层三态徽标 `.kb-layer-chip` pre✓/post⚠/none✕）。
 
 ## 深挖索引（复杂模块不设单独 AGENTS.md，类型真相在 .d.mts）
 
@@ -195,9 +204,9 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 
 ## 规模
 
-- **64 个组件 CSS**（charts 基座 + 13 个细分图表 CSS（+v0.9 chart-graph/map）+ 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel + v0.9：kb.css 基座 + 6 个 kb 域文件（ground/ingest/search/data/ops/agent））
-- **65 个 behaviors TS**（v0.9：+ai-threads/ai-feedback/ai-branch +kb-core 契约层 +26 个 kb-*；此前 35 个见历史）——KB 族：kb-core/kb-citation/kb-sources/kb-passage/kb-conflict/kb-pipeline/kb-chunks/kb-segment/kb-connector/kb-metadata/kb-qa/kb-retrieval/kb-filter/kb-rerank/kb-hittest/kb-sql/kb-answer/kb-clarify/kb-explain/kb-trace/kb-review/kb-gap/kb-eval/kb-canvas/kb-checkpoint/kb-sandbox/kb-chain
-- **109 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单；v0.9 新增 32：kb 总集 + 26 kb-* + ai-threads/ai-feedback/ai-branch + chart-graph/chart-map）
+- **65 个组件 CSS**（charts 基座 + 13 个细分图表 CSS（+v0.9 chart-graph/map）+ 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel + v0.9：kb.css 基座 + 7 个 kb 域文件（ground/ingest/search/data/ops/agent/perm））
+- **70 个 behaviors TS**（v0.9：+ai-threads/ai-feedback/ai-branch +kb-core 契约层 +31 个 kb-*——含权限域 kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility）
+- **114 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单；v0.9 新增 37：kb 总集 + 31 kb-* + ai-threads/ai-feedback/ai-branch + chart-graph/chart-map）
 - **4 个 token 文件**：colors.css（6 预设 × 明暗）、style-profiles.css（modern/retro/terminal）、typography.css、retro-effects.css（可选）
 
 ## 发布（OIDC Trusted Publishing，已配好）
@@ -239,7 +248,7 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 - 文档站字体体系（site.css 顶部）：prose/站壳 = `--site-font-sans`（系统无衬线），demo 区 = `--site-font-mono`（Plex Mono + CJK 无衬线回退），展示级大标题才用 `--font-heading` 宋体——小字号中文一律不走宋体/通用 monospace 回退。
 - CSS 产物由 `scripts/build-css.ts` 生成，**不要手改 dist/**。`tokensExtras`（如 retro-effects.css）单独拷贝、暴露 exports，**不**进 `tokens.css`/`ui.css` 默认拼合。
 - clay 的 12 基值 token 改动属于品牌级变更；新增色彩预设 = 在 colors.css 加 `.<name>` + `.<name>.dark` 两块完整 token 面（仿照现有 6 套），并注册到 `src/behaviors/theme.ts` 的 PRESETS 与文档站。
-- 文档分组（`site/src/lib/components.ts` 的 `GROUPS`）= 侧栏顺序 = 索引页分组顺序：基础 / AI 原生 / 知识库 / 表单 / 数据展示 / 图表 / 浮层 / 反馈 / 导航（v0.9 调整：知识库上移第三位；v0.8：AI 上移第二位做拉新门面；「表格」并入数据展示；AI 组更名「AI 原生」）。侧栏分组为 `<details>` 折叠（可多开，首访全开，localStorage `icen.docs.nav.groups` 记忆，深链自动展开当前组）。kb 族文档数据在 `site/src/lib/kb-docs-{ground-ingest,search-data,ops-agent}.ts` 三片段（避免巨文件冲突），`components.ts` 统一 push 进 COMPONENTS。
+- 文档分组（`site/src/lib/components.ts` 的 `GROUPS`）= 侧栏顺序 = 索引页分组顺序：基础 / AI 原生 / 知识库 / 表单 / 数据展示 / 图表 / 浮层 / 反馈 / 导航（v0.9 调整：知识库上移第三位；v0.8：AI 上移第二位做拉新门面；「表格」并入数据展示；AI 组更名「AI 原生」）。侧栏分组为 `<details>` 折叠（可多开，首访全开，localStorage `icen.docs.nav.groups` 记忆，深链自动展开当前组）。kb 族文档数据在 `site/src/lib/kb-docs-{ground-ingest,search-data,ops-agent,perm}.ts` 四片段（避免巨文件冲突），`components.ts` 统一 push 进 COMPONENTS；`/kb` 的参考标签数据在 `site/src/lib/kb-references.ts`（32 条文献锚点 + 发表时间——设计决策可回溯，升级时先回源头）。
 - **反馈三件正交**：`toast`（瞬时 2.6s 右下角）/ `alert`（内嵌页面流）/ `notification`（持久右上角栈，工程级——进度通知/confirm Promise/多按钮/hover 暂停/倒计时/优先级置顶/已读未读/持久化/多容器 createNotificationCenter）——三者各司其职不互相替代；`copy` 是原地按钮反馈（区别于 toast 的全局通知）。JS 词表已统一为 `toast.success/error`（ok/err 为 deprecated 别名，下大版本删）
 - **徽章三件正交**：`pill`（行内状态徽章，语义色）/ `tag`（中性展示标签，可选关闭按钮与选中态）/ `badge`（角标式数字/圆点，挂外层元素角上，外层需 `position: relative`）。
 - **组件 v2 增强（0.5.0 全量升级）**：所有基础组件已达到工程级深度——
@@ -285,12 +294,12 @@ bun run build     # tsup（src/behaviors/*.ts → dist/behaviors/*.mjs + index.m
 
 ## 知识库族（v0.9 新增）
 
-规格唯一事实源：`docs/spec/kb-family.md`（顶层设计 / 类名 / 导出签名 / 事件名以它为准；调研底稿 `docs/research/2026-10-03-ai-kb-components.md`）。27 个 slug 在文档站侧栏「知识库」分组（第三位）；旗舰成品页 `/kb`（六标签工作台，全真接线）。
+规格唯一事实源：`docs/spec/kb-family.md`（顶层设计 / 类名 / 导出签名 / 事件名以它为准；调研底稿 `docs/research/2026-10-03-ai-kb-components.md` + `2026-10-03-kb-permissions.md`）。32 个 slug 在文档站侧栏「知识库」分组（第三位）；旗舰成品页 `/kb`（八标签工作台全真接线 + 参考文献锚点）。
 
 - **心法**：ai 族描述思考（过程），kb 族呈现证据（知识从哪来 / 可信吗 / 怎么用）。CSS 根类 `.kb-*`，行为文件 `kb-*.ts`，事件 `icen:kb-*`（45 个全量登记 `IcenEventMap`，detail 契约编译期校验）。
 - **契约层 `kb-core.ts`（无 UI 不占 slug）**：KbCitation（三型定位 char/page/block，unit 写死）/ KB_SCORE_KINDS + scoreHigherIsBetter + scorePercent（l2 自动反转，null→「—」）/ KbChunk / KbRunStatus 管线五态 / normalizeConnector + connectorHealth（4 离散信号，enabled≠healthy）/ segmentText + segmentStats / normalizeRetrievalParams / KbFilterNode + filterToMongo/filterToOData / KbEvalRow + evalGrade（improvement/regression/tradeoff/tie）/ KbCheckpoint + scope / KbSandboxMessage 等 40+ normalize 与格式化函数。**业务数据一律先过 normalize 再喂组件**；demo / 消费方要用契约时在该页 behaviors 数组显式加 `'kb-core'`。
-- **CSS 布局**：共享基座 `kb.css`（.kb-row 28/24 双密度、.kb-num/.kb-meta、.kb-dot 四态、.kb-score bar、.kb-quote 证据线 + mark 分色 data-hit 0/1/2、.kb-badge 族、.kb-chip、.kb-fold、.kb-key、.kb-empty、.kb-notice）+ 六域文件 kb-{ground,ingest,search,data,ops,agent}.css。slugs.mjs 的 EXTRA_CSS 把每个 kb-* slug 映射到 `['kb.css', '<域>.css']`（kit 入口自动带上）；`kb` 总集 slug 带全部六域。新组件先进规格 §4 冻结 DOM 骨架再动手。
+- **CSS 布局**：共享基座 `kb.css`（.kb-row 28/24 双密度、.kb-num/.kb-meta、.kb-dot 四态、.kb-score bar、.kb-quote 证据线 + mark 分色 data-hit 0/1/2、.kb-badge 族、.kb-chip、.kb-fold、.kb-key、.kb-empty、.kb-notice、.kb-layer-chip 过滤层徽标三态）+ 七域文件 kb-{ground,ingest,search,data,ops,agent,perm}.css。slugs.mjs 的 EXTRA_CSS 把每个 kb-* slug 映射到 `['kb.css', '<域>.css']`（kit 入口自动带上）；`kb` 总集 slug 带全部七域。新组件先进规格冻结 DOM 骨架再动手（权限域冻结在 §9）。
 - **诚实呈现纪律（kb 族特有，评审必查）**：分数 null →「—」不猜；行数截断必须声明（「前 200 行」）；权限缺失打码 + 「申请访问」入口；重排关闭后列压淡不隐藏（显式禁用 > 静默消失）；检查点回滚范围显式（只回滚文件保留对话）；DSL 镜像只镜像可发送规则（无效规则不进 DSL）；`仅本次会话生效 / 入库` 二选一显式承诺。
 - **分数条纪律**：`.kb-score-bar` 是定宽轨道（域 CSS 内 `flex: 0 0 64px` 量级）+ `i` inline width 百分比——禁止让轨道随数值文本伸缩（曾导致 0.49 与 0.13 等长的失真）。
 - **DOM 骨架与事件**：每个组件的冻结骨架与函数名在规格 §4/§5；`createX(el, opts) → handle`（含 destroy）、`renderX(el, data)` 快照渲染、`initX(root?)` document 委托幂等——与全库三契约（凹槽/尺寸/事件）同一心智。
-- **/kb 工作台**（`site/src/pages/kb.astro` + `site/src/lib/kb-showcase.ts`）：mock 数据与接线全在 showcase 模块；六标签 = 问答 / 摄取 / 检索 / 问数 / 观测 / Agent。改 mock 数据只动 kb-showcase.ts；页面脚本遵守 `astro:page-load` 驱动约定。
+- **/kb 工作台**（`site/src/pages/kb.astro` + `site/src/lib/kb-showcase.ts`）：mock 数据与接线全在 showcase 模块；八标签 = 问答 / 摄取 / 检索 / 问数 / 观测 / 权限 / Agent / 参考（参考为静态 SSR，数据在 kb-references.ts）。改 mock 数据只动 kb-showcase.ts；页面脚本遵守 `astro:page-load` 驱动约定。

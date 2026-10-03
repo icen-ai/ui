@@ -363,6 +363,21 @@
   margin-left: auto;
 }
 
+/* 检索身份选择（权限域注入的控件，spec §9.7；固定身份集——服务端 token 语义，不接受自由输入） */
+.kb-retrieval-idn-group { display: inline-flex; align-items: center; gap: 6px; }
+.kb-retrieval-idn {
+  height: 28px;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--token-text);
+  background: var(--token-bg);
+  border: 1px solid var(--token-line-soft);
+  border-radius: var(--radius-sm, 6px);
+  transition: border-color 0.16s ease-out;
+}
+.kb-retrieval-idn:focus-visible { outline: none; border-color: var(--token-accent); }
+
 /* 可复制参数 JSON 行（.kb-meta mono；DSL 双表示纪律）：不换行不断词，横向滚动 */
 .kb-params {
   display: flex;

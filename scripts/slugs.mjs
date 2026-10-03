@@ -36,6 +36,8 @@ export const SLUGS = [
   'kb-sql', 'kb-answer', 'kb-clarify', 'kb-explain',
   'kb-trace', 'kb-review', 'kb-gap', 'kb-eval',
   'kb-canvas', 'kb-checkpoint', 'kb-sandbox', 'kb-chain',
+  // 权限域 kb-perm（v0.9.1；spec §9；安全纪律：调研 2026-10-03-kb-permissions）
+  'kb-acl', 'kb-who-can', 'kb-access', 'kb-audit', 'kb-visibility',
   'chart-graph', 'chart-map',
 ];
 
@@ -101,6 +103,12 @@ export const MERGED_CSS = {
   'kb-checkpoint': 'kb-agent.css',
   'kb-sandbox': 'kb-agent.css',
   'kb-chain': 'kb-agent.css',
+  // 权限域（第七域；共享基座 kb.css 由 EXTRA_CSS 附加引入）
+  'kb-acl': 'kb-perm.css',
+  'kb-who-can': 'kb-perm.css',
+  'kb-access': 'kb-perm.css',
+  'kb-audit': 'kb-perm.css',
+  'kb-visibility': 'kb-perm.css',
   // chart-map 无独立 css，样式并入 charts.css 基座（.chart-map 变体）
   'chart-map': 'charts.css',
 };
@@ -156,6 +164,8 @@ export const SLUG_INIT = {
   'kb-gap': 'initKbGap',
   'kb-checkpoint': 'initKbCheckpoint',
   'kb-chain': 'initKbChain',
+  'kb-audit': 'initKbAudit',
+  'kb-acl': 'initKbAcl',
 };
 
 /** 有 behavior 但无 init（函数式 API）的 slug → 导出函数提示（CLI 输出用）。 */
@@ -263,8 +273,8 @@ export const EXTRA_CSS = {
   // 图表细分类型依赖共享基座 charts.css（calendar 主 css 已由 MERGED_CSS 指向 chart-heatmap.css）
   'chart-calendar': ['charts.css'],
   'chart-graph': ['charts.css'],
-  // kb umbrella：一条 import 拿到知识库全家（基座 kb.css + 六域）
-  kb: ['kb-ground.css', 'kb-ingest.css', 'kb-search.css', 'kb-data.css', 'kb-ops.css', 'kb-agent.css'],
+  // kb umbrella：一条 import 拿到知识库全家（基座 kb.css + 七域）
+  kb: ['kb-ground.css', 'kb-ingest.css', 'kb-search.css', 'kb-data.css', 'kb-ops.css', 'kb-agent.css', 'kb-perm.css'],
   // kb 域组件全部依赖共享基座 kb.css（.kb-row/.kb-num/.kb-quote 等原语）
   'kb-citation': ['kb.css'],
   'kb-sources': ['kb.css'],
@@ -292,4 +302,10 @@ export const EXTRA_CSS = {
   'kb-checkpoint': ['kb.css'],
   'kb-sandbox': ['kb.css'],
   'kb-chain': ['kb.css'],
+  // 权限域组件同样依赖基座 kb.css
+  'kb-acl': ['kb.css'],
+  'kb-who-can': ['kb.css'],
+  'kb-access': ['kb.css'],
+  'kb-audit': ['kb.css'],
+  'kb-visibility': ['kb.css'],
 };

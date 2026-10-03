@@ -32,6 +32,12 @@
  *     openPopover 浮 .kb-citation-card（PanelSizing 契约；离开角标即收卡；点击角标也先收卡）
  *   - setKbCitationSources / getKbCitationSources：模块级来源注册表（答案区与来源列表共享数据源）
  *
+ * 引用白名单纪律（spec §9.0-6，评审必查）：citation 只能生成自过滤后检索集合——
+ *   禁止「LLM 见过、UI 滤引用」（制造可感知不一致 = citation leak：模型答案里出现过、
+ *   引用区却查无此源的错位本身就是泄露信号）。权限收回后的历史引用呈现中性
+ *   「来源已不可用」态（.is-revoked），不删不留裸链；hover 卡对 revoked 来源
+ *   （citation 上 revoked?: true，非 KbCitation 契约字段，局部窄化读取）不再渲染 citedText。
+ *
  * SSR 安全：无 document 时 render* 原样返回 el、init* 返回 no-op 销毁；
  * 渲染只写 textContent/createElement（禁 innerHTML），SVG 一律经 kb-core 转发的 svgIcon() 消毒。
  */
@@ -113,8 +119,9 @@ function clip(text: string, max: number): string {
 
 /* ── 角标构件 ── */
 
-/** 造一枚行内引用角标 `<button class="kb-citation" data-cite="{n}">`（有效性由渲染端对照来源数降级） */
-export function renderCitationMark(n: number): HTMLButtonElement {
+/** 造一枚行内引用角标 `<button class="kb-citation" data-cite="{n}">`（有效性由渲染端对照来源数降级）；SSR 无元素可造，返回 null */
+export function renderCitationMark(n: number): HTMLButtonElement | null {
+  if (typeof document === 'undefined') return null;
   const btn = h('button', 'kb-citation', String(n));
   btn.type = 'button';
   btn.dataset.cite = String(n);
@@ -130,7 +137,8 @@ function citationMark(n: number, pool: KbCitation[] | undefined): HTMLElement {
     sup.setAttribute('aria-hidden', 'true'); /* 无效编号是装饰残留，不进可读流 */
     return sup;
   }
-  return renderCitationMark(n);
+  /* SSR 下 renderCitationMark 返回 null：dead 分支的 sup 同样依赖 document，此处一并收敛为 sup 文本兜底 */
+  return renderCitationMark(n) ?? h('sup', 'kb-citation is-dead', String(n));
 }
 
 /**
@@ -171,10 +179,14 @@ function buildBadgeRow(citation: KbCitation, now: Date): HTMLElement {
   return row;
 }
 
-/** 组装 hover 引用卡（favicon 位用来源类型图标；受限时 citedText 打码） */
+/** 组装 hover 引用卡（favicon 位用来源类型图标；受限时 citedText 打码；
+ * revoked 来源（权限收回后的历史引用，spec §9.0-6）附中性「来源已不可用」chip，citedText 不渲染） */
 function buildCitationCard(citation: KbCitation, now: Date): HTMLElement {
   const card = h('div', 'kb-citation-card');
   card.setAttribute('role', 'tooltip');
+
+  /* revoked 非 KbCitation 契约字段：局部窄化读取，不扩 kb-core 类型（宿主数据侧自行标注） */
+  const revoked = (citation as { revoked?: boolean }).revoked === true;
 
   const head = h('div', 'kb-citation-card-head');
   const icon = h('span', 'kb-citation-card-icon');
@@ -182,16 +194,20 @@ function buildCitationCard(citation: KbCitation, now: Date): HTMLElement {
   if (svg) icon.appendChild(svg);
   head.appendChild(icon);
   head.appendChild(h('span', 'kb-citation-card-title', citation.title));
+  /* 中性 chip（faint，禁红）：「不知道」与「不能说」不可区分的呈现态——不删不留裸链 */
+  if (revoked) head.appendChild(h('span', 'kb-chip is-revoked', '来源已不可用'));
   card.appendChild(head);
 
   const domain = kbDomainOf(citation.url) || getKbSourceType(citation.kind).label;
   card.appendChild(h('div', 'kb-citation-card-domain', domain));
 
-  const quoteText = clip(citation.citedText ?? citation.snippet ?? '', CITE_TEXT_MAX);
-  if (quoteText) {
-    const quote = h('div', 'kb-quote kb-citation-card-quote', quoteText);
-    if (citation.permission !== 'readable') quote.classList.add('kb-citation-card-masked');
-    card.appendChild(quote);
+  if (!revoked) {
+    const quoteText = clip(citation.citedText ?? citation.snippet ?? '', CITE_TEXT_MAX);
+    if (quoteText) {
+      const quote = h('div', 'kb-quote kb-citation-card-quote', quoteText);
+      if (citation.permission !== 'readable') quote.classList.add('kb-citation-card-masked');
+      card.appendChild(quote);
+    }
   }
 
   const badges = buildBadgeRow(citation, now);

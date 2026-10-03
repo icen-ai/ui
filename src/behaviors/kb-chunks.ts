@@ -5,10 +5,10 @@
  * DOM 契约（docs/spec/kb-family.md §5.6；数据契约 kb-core KbChunk）：
  *   <div class="kb-chunks">
  *     <div class="kb-chunks-bar">
- *       <div class="segmented kb-chunks-mode" role="radiogroup">      ← kb 域自持（不依赖 controls.ts）
- *         <button type="button" class="segmented-item [is-active]" role="radio"
+ *       <div class="kb-seg kb-chunks-mode" role="radiogroup">         ← kb 域自持（不依赖 controls.ts）
+ *         <button type="button" class="kb-seg-item [is-active]" role="radio"
  *                 aria-checked="…" data-value="text">全文</button>
- *         <button type="button" class="segmented-item" role="radio" data-value="vector">语义</button>
+ *         <button type="button" class="kb-seg-item" role="radio" data-value="vector">语义</button>
  *       </div>
  *       <input class="kb-input kb-chunks-search" type="search" placeholder="搜索 chunk…" data-kb-chunk-search>
  *       <button type="button" class="kb-btn kb-chunks-add" data-kb-chunk-add>+ 新增</button>

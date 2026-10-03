@@ -230,3 +230,23 @@
   padding: 4px 8px;
 }
 .kb-notice svg { width: 12px; height: 12px; flex: 0 0 auto; }
+/* flex 容器内 hidden 会被 display 覆盖——notice 显隐必须显式归零 */
+.kb-notice[hidden] { display: none; }
+
+/* 检索过滤层徽标（权限域注入检索域的共享原语，放基座使 kit/kb-retrieval 与 kit/kb-* 均自持；
+   三态：pre ✓ 安全基线 / post ⚠ 缺陷层 / none ✕ fail-open 危险——spec §9.0-1/§9.7） */
+.kb-layer-chip {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  cursor: pointer;
+}
+.kb-layer-chip[data-layer='pre'] { color: var(--token-success); border-color: color-mix(in srgb, var(--token-success) 45%, transparent); }
+.kb-layer-chip[data-layer='post'] { color: var(--token-warning); border-color: color-mix(in srgb, var(--token-warning) 45%, transparent); }
+.kb-layer-chip[data-layer='none'] { color: var(--token-error, #c0392b); border-color: color-mix(in srgb, var(--token-error, #c0392b) 45%, transparent); }
+.kb-layer-chip:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 1px; }
+
+
+/* 动效守卫：kb-pulse（.kb-dot.is-live 的存活脉冲）在减少动效偏好下停帧（保持静态高亮，不隐状态） */
+@media (prefers-reduced-motion: reduce) {
+  .kb-dot.is-live { animation: none; }
+}

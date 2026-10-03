@@ -135,6 +135,11 @@ interface ReviewHost extends HTMLElement {
  * 键盘处理挂在组件容器上、仅当焦点位于审查卡内才生效；destroy 解绑。
  */
 export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHandle {
+  if (typeof document === 'undefined') {
+    /* SSR：静态句柄（方法 no-op，current 恒 null）——文档站契约自述对齐 */
+    const noop = (): void => undefined;
+    return { el, current: () => null, next: () => null, prev: () => null, submit: noop, destroy: noop };
+  }
   const host = el as ReviewHost;
   host.__icenKbReview?.destroy(); /* 同一 el 重复 create：先销毁旧实例 */
 

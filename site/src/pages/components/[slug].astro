@@ -19,11 +19,23 @@ interface Props {
 }
 const { doc, prev, next } = Astro.props;
 
-// kit 一行入口：CSS + behavior 自动带上；behaviorInit 的值（string | string[]）全部拍平依序调用
-const initFns = Object.values(doc.behaviorInit ?? {}).flatMap((v) => (Array.isArray(v) ? v : v ? [v] : []));
-const kitCode = initFns.length
-  ? `import { ${initFns.join(', ')} } from '@icen.ai/ui/kit/${doc.slug}';\n${initFns.map((f) => `${f}();`).join('\n')}`
-  : `import '@icen.ai/ui/kit/${doc.slug}';`;
+// kit 一行入口：CSS + behavior 自动带上。init 分两路：本组件模块的 init 走 kit 入口
+// （kit 对 behaviors/<slug>.mjs 是 export *，必然可导）；跨模块 init（如 kb-canvas 页的
+// ai-diff）只能从包根 import——拍平进 kit 行会生成复制即失败的 import
+const ownInitRaw = doc.behaviorInit?.[doc.slug];
+const ownInits = Array.isArray(ownInitRaw) ? ownInitRaw : ownInitRaw ? [ownInitRaw] : [];
+const otherInits = Object.entries(doc.behaviorInit ?? {})
+  .filter(([m]) => m !== doc.slug)
+  .flatMap(([, v]) => (Array.isArray(v) ? v : v ? [v] : []));
+const kitLines: string[] = [];
+kitLines.push(
+  ownInits.length
+    ? `import { ${ownInits.join(', ')} } from '@icen.ai/ui/kit/${doc.slug}';`
+    : `import '@icen.ai/ui/kit/${doc.slug}';`,
+);
+if (otherInits.length) kitLines.push(`import { ${otherInits.join(', ')} } from '@icen.ai/ui';`);
+for (const f of [...ownInits, ...otherInits]) kitLines.push(`${f}();`);
+const kitCode = kitLines.join('\n');
 const cliCode = `bunx --bun @icen.ai/ui add ${doc.slug}`;
 // 纯文档聚合页（如 ai-overview）不在 SLUGS——包内无 kit/<slug> 入口，安装三段不渲染
 const isKit = SLUGS.includes(doc.slug);

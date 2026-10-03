@@ -274,7 +274,7 @@ function mockHitsFor(c) {
 
 let runToken = 0;
 if (host) {
-  const handle = kbHitTestMod.createKbHitTest(host, {
+  const handle = kbHittestMod.createKbHitTest(host, {
     cases: CASES,
     onRun: function (cases) {
       const token = ++runToken;

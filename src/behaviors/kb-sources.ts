@@ -28,10 +28,17 @@
  *   - renderKbSources(el, sources, opts?)：useCount 降序（无计数按原序稳定排后）；
  *     徽标组：official → .kb-badge--official「官方」；date 距今 >90 天 → .kb-badge--stale
  *     + 相对时间 + warning 点；permission 非 readable → 锁形徽标 + 申请访问按钮；
- *     opts.onlyCited 只保留被引过的来源（useCount > 0）；空集/空数组渲染 .kb-empty 文案
+ *     opts.onlyCited 只保留被引过的来源（useCount > 0）；空集/空数组渲染 .kb-empty 文案；
+ *     原始输入 permission === 'hidden' 的来源不渲染行（数据兜底，见下方权限映射）
  *   - initKbSources(root?)：root 级委托（幂等 WeakSet + 销毁函数）：
  *     点击来源行 / 申请访问按钮 → icen:kb-source-open { source }（受限来源宿主据此弹
  *     申请流程）；role=button 行补 Enter/Space 键控等价；与 opts.onOpen 回调双通道
+ *
+ * 权限映射（spec §9.7）：本组件的 permission 是引用域三级 KbPermission
+ *   （readable/restricted/requestable），与权限域五级 KbVisibility 的对应关系：
+ *   requestable ≈ metadata + 申请通道、restricted ≈ metadata（锁+标题+打码）、
+ *   hidden（五级）来源不渲染该行——hidden = 检索层（security trimming）就不该出现，
+ *   UI 永远不应收到；renderKbSources 对原始输入先判 hidden 再归一，纯数据兜底。
  *
  * SSR 安全：无 document 时 render* 原样返回 el、init* 返回 no-op 销毁；
  * 渲染只写 textContent/createElement（禁 innerHTML），SVG 一律经 kb-core 转发的 svgIcon() 消毒。
@@ -148,7 +155,12 @@ export function renderKbSources(el: HTMLElement, sources: KbCitation[], opts?: K
   if (typeof document === 'undefined') return el;
   const now = opts?.now ?? new Date();
   const variant = opts?.variant === 'rail' ? 'rail' : 'row';
-  let list = (Array.isArray(sources) ? sources : []).map(normalizeCitation);
+  /* hidden 来源不渲染（spec §9.7）：hidden = 检索层就不该出现（security trimming），
+     正常永远不应流到 UI——此处对原始输入先判再过滤是数据兜底。必须放在 normalizeCitation
+     之前：归一会把未知 permission 值（含 'hidden'）收敛为 readable，判归一后的对象就晚了。 */
+  let list = (Array.isArray(sources) ? sources : [])
+    .filter((raw) => (raw as { permission?: string }).permission !== 'hidden')
+    .map((raw) => normalizeCitation(raw as KbCitation));
   if (opts?.onlyCited) list = list.filter((s) => (s.useCount ?? 0) > 0);
 
   el.textContent = '';

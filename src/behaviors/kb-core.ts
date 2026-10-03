@@ -901,6 +901,344 @@ export interface KbSandboxMessage {
   error?: { code: number; message: string };
 }
 
+/* ══════════════ 权限域契约（kb-perm，spec §9.6；调研 2026-10-03-kb-permissions）══════════════ */
+
+/** 角色四档（Drive 范式，权限序单调：viewer < commenter < editor < owner） */
+export type KbRole = 'viewer' | 'commenter' | 'editor' | 'owner';
+
+export const KB_ROLES: readonly KbRole[] = ['viewer', 'commenter', 'editor', 'owner'];
+
+export function kbRoleLabel(r: KbRole | null): string {
+  return r === 'viewer' ? '可查看' : r === 'commenter' ? '可评论' : r === 'editor' ? '可编辑' : r === 'owner' ? '负责人' : '无权限';
+}
+
+/** 权限序比较：roleA ⊇ roleB（owner 最大） */
+export function roleAtLeast(role: KbRole, floor: KbRole): boolean {
+  return KB_ROLES.indexOf(role) >= KB_ROLES.indexOf(floor);
+}
+
+/**
+ * 可见性五级（调研结论：四维授权求值后的「输出状态」，非独立开关）。
+ * hidden=检索/列表/计数都不出现（security trimming）｜metadata=知道存在（锁+标题）｜
+ * restricted=metadata+申请通道｜summary=AI 摘要可见原文受限（新一代层级）｜full=内容态
+ */
+export type KbVisibility = 'hidden' | 'metadata' | 'restricted' | 'summary' | 'full';
+
+export const KB_VISIBILITIES: readonly KbVisibility[] = ['hidden', 'metadata', 'restricted', 'summary', 'full'];
+
+export function kbVisibilityLabel(v: KbVisibility): string {
+  return v === 'hidden' ? '不可见' : v === 'metadata' ? '仅元数据' : v === 'restricted' ? '受限' : v === 'summary' ? '仅摘要' : '可见';
+}
+
+/** 授权主体（组是一等主体——部门树不当 ACL 用，业界共识） */
+export interface KbSubject {
+  kind: 'user' | 'group' | 'org' | 'anyone' | 'link';
+  id: string;
+  label: string;
+  /** 呈现注记：「24 成员 · 由 IT 管理」「系统自动」 */
+  note?: string;
+}
+
+export interface KbAclEntry {
+  subject: KbSubject;
+  role: KbRole;
+  /** 继承来源（容器名）；缺省 = 直接授权 */
+  inheritedFrom?: string;
+  /** 到期一等公民：ISO 时间；到期自动回收 */
+  expiresAt?: string;
+  /** 显式拒绝（一票否决，置顶呈现） */
+  deny?: boolean;
+  /** 系统自动态（Limited Access 类）：不可手工增删 */
+  system?: boolean;
+}
+
+export function normalizeAclEntry(raw: KbAclEntry | Record<string, unknown>): KbAclEntry {
+  const r = raw as Partial<KbAclEntry>;
+  const s = (r.subject ?? {}) as Partial<KbSubject>;
+  const kind: KbSubject['kind'] =
+    s.kind === 'user' || s.kind === 'group' || s.kind === 'org' || s.kind === 'anyone' || s.kind === 'link' ? s.kind : 'user';
+  return {
+    subject: { kind, id: String(s.id ?? ''), label: String(s.label ?? '未命名主体'), note: typeof s.note === 'string' ? s.note : undefined },
+    role: KB_ROLES.includes(r.role as KbRole) ? (r.role as KbRole) : 'viewer',
+    inheritedFrom: typeof r.inheritedFrom === 'string' && r.inheritedFrom ? r.inheritedFrom : undefined,
+    expiresAt: typeof r.expiresAt === 'string' && r.expiresAt ? r.expiresAt : undefined,
+    deny: r.deny === true,
+    system: r.system === true,
+  };
+}
+
+/** 请求身份（来自服务端验证 token 的固定身份集——不接受自由输入，Kendra 自报身份教训） */
+export interface KbIdentity {
+  user: string;
+  groups: string[];
+  label?: string;
+  note?: string;
+}
+
+export function normalizeIdentity(raw: KbIdentity | Record<string, unknown>): KbIdentity {
+  const r = raw as Partial<KbIdentity>;
+  return {
+    user: String(r.user ?? ''),
+    groups: Array.isArray(r.groups) ? r.groups.map(String) : [],
+    label: typeof r.label === 'string' ? r.label : undefined,
+    note: typeof r.note === 'string' ? r.note : undefined,
+  };
+}
+
+/** 可见性策略（文档级）：discoverable=无权限时是否可发现（Drive allowFileDiscovery；企业内部缺省可见存在） */
+export interface KbVisibilityPolicy {
+  discoverable?: boolean;
+  /** 无权限但 AI 摘要可见（L2.5，摘要权限 ≠ 原文权限） */
+  summaryAllowed?: boolean;
+}
+
+export function visibilityForRole(role: KbRole | null, policy?: KbVisibilityPolicy): KbVisibility {
+  if (role) return 'full';
+  if (policy?.summaryAllowed === true) return 'summary';
+  return policy?.discoverable === false ? 'hidden' : 'metadata';
+}
+
+/** 有效权限决策：结论 + 扁平原因链（SharePoint Check Permissions 范式） */
+export interface KbAclDecision {
+  role: KbRole | null;
+  visibility: KbVisibility;
+  /** 命中的授权来源（deny 置顶；via: direct|inherit|link） */
+  chain: Array<{ entry: KbAclEntry; via: 'direct' | 'inherit' | 'link' }>;
+  /** 显式 deny 的一票否决来源（最强信号，UI 置顶红） */
+  deniedBy?: KbSubject;
+  /** 本决策中最近的将来到期（倒计时/续期入口的数据源） */
+  expiresAt?: string;
+}
+
+function subjectMatches(subject: KbSubject, identity: KbIdentity): boolean {
+  if (subject.kind === 'user') return subject.id === identity.user || subject.label === identity.user;
+  if (subject.kind === 'group') return identity.groups.includes(subject.id) || identity.groups.includes(subject.label);
+  if (subject.kind === 'org' || subject.kind === 'anyone') return true;
+  return false; // link 不参与身份求值（独立呈现、独立可撤销）
+}
+
+/**
+ * 有效权限求值（纯函数）：先显式 deny（一票否决）→ 再 allow 并集（角色取权限序最大）→ 默认拒绝。
+ * 多角色叠加语义 = SharePoint/Azure/Zanzibar 主流范式；first-match 是 NTFS 反教材，禁止。
+ */
+export function evaluateAcl(
+  entries: Array<KbAclEntry | Record<string, unknown>>,
+  identity: KbIdentity | Record<string, unknown>,
+  policy?: KbVisibilityPolicy,
+): KbAclDecision {
+  const list = (Array.isArray(entries) ? entries : []).map((e) => normalizeAclEntry(e));
+  const id = normalizeIdentity(identity);
+  const matched = list.filter((e) => subjectMatches(e.subject, id));
+  const chain: KbAclDecision['chain'] = matched.map((entry) => ({
+    entry,
+    via: entry.subject.kind === 'link' ? 'link' : entry.inheritedFrom ? 'inherit' : 'direct',
+  }));
+  const deny = matched.find((e) => e.deny);
+  if (deny) {
+    return { role: null, visibility: visibilityForRole(null, { ...policy, summaryAllowed: false }), chain, deniedBy: deny.subject };
+  }
+  const grants = matched.filter((e) => !e.deny);
+  const role = grants.reduce<KbRole | null>((acc, e) => (acc && roleAtLeast(acc, e.role) ? acc : e.role), null);
+  const futureExpiry = grants
+    .map((e) => Date.parse(e.expiresAt ?? ''))
+    .filter((t) => Number.isFinite(t) && t > Date.now())
+    .sort((a, b) => a - b)[0];
+  return {
+    role,
+    visibility: visibilityForRole(role, policy),
+    chain,
+    expiresAt: Number.isFinite(futureExpiry) ? new Date(futureExpiry).toISOString() : undefined,
+  };
+}
+
+/** 访问申请状态机（Entra entitlement 收敛到 UI 需要的 9 态） */
+export type KbAccessState =
+  | 'idle'
+  | 'requested'
+  | 'pending_review'
+  | 'granted'
+  | 'expiring'
+  | 'expired'
+  | 'denied'
+  | 'revoked';
+
+export const KB_ACCESS_STATES: readonly KbAccessState[] = [
+  'idle', 'requested', 'pending_review', 'granted', 'expiring', 'expired', 'denied', 'revoked',
+];
+
+export function kbAccessStateLabel(s: KbAccessState): string {
+  return (
+    {
+      idle: '未申请',
+      requested: '已提交',
+      pending_review: '待审批',
+      granted: '已开通',
+      expiring: '即将到期',
+      expired: '已过期',
+      denied: '未通过',
+      revoked: '已收回',
+    } as Record<KbAccessState, string>
+  )[s] ?? s;
+}
+
+export interface KbAccessRequest {
+  id: string;
+  requester: string;
+  resource: string;
+  role: KbRole;
+  reason?: string;
+  state: KbAccessState;
+  submittedAt: string;
+  /** 路由明示：请求将发送给谁（页面级找 owner / 空间级找 admin——Confluence 十年踩坑） */
+  approverNote?: string;
+  decidedBy?: string;
+  decidedAt?: string;
+  /** granted 的到期（一等公民；缺省 = 永不过期） */
+  expiresAt?: string;
+}
+
+export function normalizeAccessRequest(raw: KbAccessRequest | Record<string, unknown>): KbAccessRequest {
+  const r = raw as Partial<KbAccessRequest>;
+  const state: KbAccessState = KB_ACCESS_STATES.includes(r.state as KbAccessState) ? (r.state as KbAccessState) : 'idle';
+  const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
+  return {
+    id: String(r.id ?? ''),
+    requester: String(r.requester ?? ''),
+    resource: String(r.resource ?? ''),
+    role: KB_ROLES.includes(r.role as KbRole) ? (r.role as KbRole) : 'viewer',
+    reason: str(r.reason),
+    state,
+    submittedAt: str(r.submittedAt) ?? new Date().toISOString(),
+    approverNote: str(r.approverNote),
+    decidedBy: str(r.decidedBy),
+    decidedAt: str(r.decidedAt),
+    expiresAt: str(r.expiresAt),
+  };
+}
+
+/** 审计动作（读取与预览分列是 Purview 范式；break_glass 审计粒度 ≥ 常规） */
+export type KbAuditAction =
+  | 'read'
+  | 'preview'
+  | 'permission_change'
+  | 'grant'
+  | 'revoke'
+  | 'request'
+  | 'approve'
+  | 'deny'
+  | 'delegation'
+  | 'break_glass'
+  | 'sync';
+
+export const KB_AUDIT_ACTIONS: readonly KbAuditAction[] = [
+  'read', 'preview', 'permission_change', 'grant', 'revoke', 'request', 'approve', 'deny', 'delegation', 'break_glass', 'sync',
+];
+
+export function kbAuditActionLabel(a: KbAuditAction): string {
+  return (
+    {
+      read: '读取',
+      preview: '预览',
+      permission_change: '权限变更',
+      grant: '授予',
+      revoke: '收回',
+      request: '申请',
+      approve: '批准',
+      deny: '拒绝',
+      delegation: '委派',
+      break_glass: '应急访问',
+      sync: '权限同步',
+    } as Record<KbAuditAction, string>
+  )[a] ?? a;
+}
+
+/** 审计通道（时间线过滤维度） */
+export type KbAuditChannel = 'read' | 'permission' | 'request' | 'system';
+
+export const KB_AUDIT_CHANNELS: readonly KbAuditChannel[] = ['read', 'permission', 'request', 'system'];
+
+export function auditChannelOf(a: KbAuditAction): KbAuditChannel {
+  if (a === 'read' || a === 'preview') return 'read';
+  if (a === 'permission_change' || a === 'grant' || a === 'revoke' || a === 'delegation' || a === 'sync') return 'permission';
+  if (a === 'request' || a === 'approve' || a === 'deny') return 'request';
+  return 'system';
+}
+
+export interface KbAuditEntry {
+  id: string;
+  at: string;
+  actor: { kind: 'human' | 'app' | 'system'; name: string };
+  action: KbAuditAction;
+  resource?: string;
+  detail: string;
+  /** 应急访问标记：行级警示 + 「实时告警已通知安全团队」 */
+  breakGlass?: boolean;
+}
+
+export function normalizeAuditEntry(raw: KbAuditEntry | Record<string, unknown>): KbAuditEntry {
+  const r = raw as Partial<KbAuditEntry>;
+  const actor = (r.actor ?? {}) as { kind?: string; name?: string };
+  const kind = actor.kind === 'app' || actor.kind === 'system' ? actor.kind : 'human';
+  return {
+    id: String(r.id ?? ''),
+    at: String(r.at ?? ''),
+    actor: { kind, name: String(actor.name ?? '未知') },
+    action: KB_AUDIT_ACTIONS.includes(r.action as KbAuditAction) ? (r.action as KbAuditAction) : 'read',
+    resource: typeof r.resource === 'string' && r.resource ? r.resource : undefined,
+    detail: String(r.detail ?? ''),
+    breakGlass: r.breakGlass === true,
+  };
+}
+
+/** 权限异味（治理发现）：6 种，均为「源系统权限卫生」问题——RAG 只是放大器 */
+export type KbHygieneKind =
+  | 'org_wide_link'
+  | 'broad_group'
+  | 'sensitive_mismatch'
+  | 'broken_inheritance'
+  | 'orphaned_owner'
+  | 'overexposed';
+
+export const KB_HYGIENE_KINDS: readonly KbHygieneKind[] = [
+  'org_wide_link', 'broad_group', 'sensitive_mismatch', 'broken_inheritance', 'orphaned_owner', 'overexposed',
+];
+
+export function kbHygieneLabel(k: KbHygieneKind): string {
+  return (
+    {
+      org_wide_link: '组织级链接',
+      broad_group: '过宽组授权',
+      sensitive_mismatch: '敏感度错配',
+      broken_inheritance: '断继承',
+      orphaned_owner: '负责人缺位',
+      overexposed: '过度暴露',
+    } as Record<KbHygieneKind, string>
+  )[k] ?? k;
+}
+
+export interface KbHygieneIssue {
+  id: string;
+  kind: KbHygieneKind;
+  resource: string;
+  /** 量化数字（不去重暴露面计数等） */
+  metric: string;
+  hint: string;
+  severity: 'high' | 'medium' | 'low';
+}
+
+export function normalizeHygieneIssue(raw: KbHygieneIssue | Record<string, unknown>): KbHygieneIssue {
+  const r = raw as Partial<KbHygieneIssue>;
+  const severity = r.severity === 'high' || r.severity === 'medium' || r.severity === 'low' ? r.severity : 'medium';
+  return {
+    id: String(r.id ?? ''),
+    kind: KB_HYGIENE_KINDS.includes(r.kind as KbHygieneKind) ? (r.kind as KbHygieneKind) : 'overexposed',
+    resource: String(r.resource ?? ''),
+    metric: String(r.metric ?? ''),
+    hint: String(r.hint ?? ''),
+    severity,
+  };
+}
+
 /* ═══════════════ 共享格式化 ═══════════════ */
 
 export function formatPercent(v: number | null | undefined, digits = 1): string {

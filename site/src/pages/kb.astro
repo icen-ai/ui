@@ -7,7 +7,7 @@ import '../../../src/tokens/colors.css';
 import '../../../src/tokens/style-profiles.css';
 import '../../../src/tokens/typography.css';
 import '../../../src/base.css';
-/* kb 族：共享基座 + 六域 */
+/* kb 族：共享基座 + 六域 + 权限域（v0.9.1 增补） */
 import '../../../src/components/kb.css';
 import '../../../src/components/kb-ground.css';
 import '../../../src/components/kb-ingest.css';
@@ -15,6 +15,9 @@ import '../../../src/components/kb-search.css';
 import '../../../src/components/kb-data.css';
 import '../../../src/components/kb-ops.css';
 import '../../../src/components/kb-agent.css';
+import '../../../src/components/kb-perm.css';
+/* 参考文献锚点数据（两轮调研查证记录的精选，docs/research/） */
+import { KB_REFERENCES } from '../lib/kb-references.ts';
 /* AI 族增强（消息 / 反馈条 / diff / 工具） */
 import '../../../src/components/ai-chat.css';
 import '../../../src/components/ai-panel.css';
@@ -33,6 +36,11 @@ import '../../../src/components/panel.css';
 import '../../../src/components/btn.css';
 import '../../../src/components/empty.css';
 import '../../../src/components/tabs.css';
+
+/* 参考文献锚点：全页连续编号（文献格式），静态渲染 */
+let refNo = 0;
+const refGroups = KB_REFERENCES.map((g) => ({ group: g.group, items: g.items.map((i) => ({ ...i, no: ++refNo })) }));
+const refTotal = refNo;
 ---
 
 <Base
@@ -48,7 +56,7 @@ import '../../../src/components/tabs.css';
     <p class="kbws-hero-sub">引用可溯源 · 过程可观测 · 答案可验证——kb 族组件最佳实践</p>
   </section>
 
-  <!-- ═══ app 级工作台容器：六标签 ═══ -->
+  <!-- ═══ app 级工作台容器：七标签 ═══ -->
   <div class="kbws" id="kbws">
     <div class="kbws-tabs" role="tablist" aria-label="工作台视图">
       <button class="kbws-tab is-active" type="button" role="tab" aria-selected="true" data-tab="qa">问答</button>
@@ -56,7 +64,15 @@ import '../../../src/components/tabs.css';
       <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="search">检索</button>
       <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="data">问数</button>
       <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="ops">观测</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="perm">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        权限
+      </button>
       <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="agent">Agent</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="refs">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+        参考
+      </button>
     </div>
 
     <div class="kbws-body">
@@ -219,6 +235,55 @@ import '../../../src/components/tabs.css';
         <div id="op-eval"></div>
       </section>
 
+      <!-- ── 权限 ── -->
+      <section class="kbws-panel" data-panel="perm" role="tabpanel" aria-label="权限" hidden>
+        <div class="kbws-split">
+          <div class="kbws-main">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">可见性对照 · admin 审计</span>
+              <span class="kb-meta">kb-visibility · 命中差异对照对普通用户构成泄露——仅限审计视图</span>
+            </div>
+            <div id="pv-visibility"></div>
+            <div id="pv-vis-note" class="kbws-note" hidden></div>
+
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">文档权限面板</span>
+              <span class="kb-meta">kb-acl · SharePoint 权限页范式（deny 一票否决置顶 · 继承链明示）</span>
+            </div>
+            <div id="pv-acl"></div>
+            <div id="pv-acl-note" class="kbws-note" hidden></div>
+          </div>
+
+          <aside class="kbws-rail">
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">有效权限检查器</span>
+              <span class="kb-meta">kb-who-can · Check Permissions 范式</span>
+            </div>
+            <div id="pv-whocan"></div>
+            <div id="pv-whocan-note" class="kbws-note" hidden></div>
+
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">访问申请流</span>
+              <span class="kb-meta">kb-access · 状态机走查</span>
+            </div>
+            <div id="pv-access"></div>
+            <div class="kbws-perm-steps">
+              <button id="pv-access-submit" class="kbws-mini-btn" type="button">提交申请 →</button>
+              <button id="pv-access-approve" class="kbws-mini-btn" type="button">批准 →</button>
+              <button id="pv-access-expire" class="kbws-mini-btn" type="button">30 天后 →</button>
+            </div>
+            <div id="pv-access-note" class="kbws-note" hidden></div>
+
+            <div class="kbws-sec-h">
+              <span class="kbws-sec-title">审计时间线</span>
+              <span class="kb-meta">kb-audit · 含 break-glass 警示行</span>
+            </div>
+            <div id="pv-audit"></div>
+            <div id="pv-audit-note" class="kbws-note" hidden></div>
+          </aside>
+        </div>
+      </section>
+
       <!-- ── Agent ── -->
       <section class="kbws-panel" data-panel="agent" role="tabpanel" aria-label="Agent" hidden>
         <div class="kbws-sec-h">
@@ -265,13 +330,40 @@ import '../../../src/components/tabs.css';
           <div id="ag-map" class="chart"></div>
         </div>
       </section>
+
+      <!-- ── 参考（设计决策的文献锚点，静态渲染无 JS）── -->
+      <section class="kbws-panel" data-panel="refs" role="tabpanel" aria-label="参考" hidden>
+        <p class="kbws-refs-intro">
+          本工作台每个设计决策的文献锚点：{refTotal} 条最权威出处（官方规范 / 论文 / 旗舰文档），
+          每条注明<b>本库采纳了它的什么决策</b>——后续升级或替换设计时，先回这些源头看业界是否已演进。
+          全部链接来自两轮调研的查证记录（<span class="mono">docs/research/</span>），无一杜撰。
+        </p>
+        {refGroups.map((g) => (
+          <div class="kbws-ref-group">
+            <h3 class="kbws-ref-group-title">{g.group}</h3>
+            <ol class="kbws-ref-list">
+              {g.items.map((item) => (
+                <li class="kbws-ref-item">
+                  <div class="kbws-ref-line">
+                    <span class="kbws-ref-no kb-num">[{item.no}]</span>
+                    <a class="kbws-ref-link" href={item.url} target="_blank" rel="noopener noreferrer">{item.title}<span class="kbws-ref-arrow" aria-hidden="true">↗</span></a>
+                    <span class="kbws-ref-source">{item.source}</span>
+                  </div>
+                  <div class="kbws-ref-date">{item.date}</div>
+                  <p class="kbws-ref-note">{item.note}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </section>
     </div>
   </div>
 
   <script>
     /* ═══ /kb 工作台接线：全部 behavior 直连 import（bundled module，整页只执行一次） ═══ */
     import { onIcen } from '../../../src/behaviors/events.ts';
-    import { h, segmentText, collectCitationNumbers } from '../../../src/behaviors/kb-core.ts';
+    import { h, segmentText, collectCitationNumbers, kbRoleLabel, kbVisibilityLabel } from '../../../src/behaviors/kb-core.ts';
     import { renderKbChain, initKbChain } from '../../../src/behaviors/kb-chain.ts';
     import { renderCitationText, initKbCitation } from '../../../src/behaviors/kb-citation.ts';
     import { renderKbSources, initKbSources } from '../../../src/behaviors/kb-sources.ts';
@@ -290,6 +382,11 @@ import '../../../src/components/tabs.css';
     import { createKbReview } from '../../../src/behaviors/kb-review.ts';
     import { renderKbGap, initKbGap } from '../../../src/behaviors/kb-gap.ts';
     import { renderKbEvalCompare } from '../../../src/behaviors/kb-eval.ts';
+    import { renderKbAcl } from '../../../src/behaviors/kb-acl.ts';
+    import { renderKbWhoCan } from '../../../src/behaviors/kb-who-can.ts';
+    import { createKbAccess } from '../../../src/behaviors/kb-access.ts';
+    import { renderKbAudit, initKbAudit } from '../../../src/behaviors/kb-audit.ts';
+    import { renderKbVisibility } from '../../../src/behaviors/kb-visibility.ts';
     import { createKbCanvas } from '../../../src/behaviors/kb-canvas.ts';
     import { renderKbCheckpoints, initKbCheckpoint } from '../../../src/behaviors/kb-checkpoint.ts';
     import { createKbSandbox } from '../../../src/behaviors/kb-sandbox.ts';
@@ -297,7 +394,7 @@ import '../../../src/components/tabs.css';
     import { renderAiFeedback, initAiFeedback } from '../../../src/behaviors/ai-feedback.ts';
     import { renderAiMessage } from '../../../src/behaviors/ai-chat.ts';
     import { renderGraph, renderMap } from '../../../src/behaviors/charts.ts';
-    import type { KbCitation } from '../../../src/behaviors/kb-core.ts';
+    import type { KbCitation, KbAccessRequest } from '../../../src/behaviors/kb-core.ts';
     import * as K from '../lib/kb-showcase.ts';
 
     /* ── 小工具 ── */
@@ -456,7 +553,8 @@ import '../../../src/components/tabs.css';
       box.textContent = '';
       box.appendChild(h('div', 'kbws-answer-busy', '检索 → 重排 → 生成…'));
 
-      const stageDetails = ['命中 4 段（1 条受限无分）', '4 → 3，阈值 0.35 淘汰 1', '引用 2 处 · 320 tok'];
+      /* 呈现纪律：命中数只说授权集合内的安全计数（spec §9.0-2） */
+      const stageDetails = ['授权集合内命中 4 段', '4 → 3，阈值 0.35 淘汰 1', '引用 2 处 · 320 tok'];
       for (let i = 0; i < QA_CHAIN_DEFS.length; i++) {
         renderKbChain(qaChainEl, chainSnapshot('running', i));
         await sleep(260 + i * 40);
@@ -624,6 +722,9 @@ import '../../../src/components/tabs.css';
     const rtHost = $('rt-playground')!;
     const retrieval = createKbRetrieval(rtHost, {
       params: { topK: 5, mode: 'hybrid', alpha: 0.6, rerank: true, rerankModel: 'bge-reranker-v2', threshold: 0.35 },
+      /* 检索身份（固定身份集，spec §9.0-8：服务端 token 语义，不接受自由输入）；
+         过滤层徽标三态可点击切换——none/post 态的警示文案即 Kendra fail-open / 分数可观察的现场教学 */
+      identities: K.PERM_IDENTITIES,
       onRun: (query) => {
         retrieval.setBusy(true);
         setTimeout(() => {
@@ -742,7 +843,95 @@ import '../../../src/components/tabs.css';
       note('op-note', '演示数据仅预置一组 run 对比——生产环境此处重取数据重渲', 2600),
     );
 
-    /* ══════════ ⑥ Agent ══════════ */
+    /* ══════════ ⑥ 权限（kb-perm；可见性对照器仅 admin 审计视图，普通用户界面不出现） ══════════ */
+    /* 可见性对照：固定身份集 × 同一查询，evaluateHit 规则见 kb-showcase.permEvaluateHit */
+    renderKbVisibility($('pv-visibility')!, {
+      query: 'Q3 目标 · 财务规划 · 供应商准入',
+      identities: K.PERM_IDENTITIES,
+      hits: K.PERM_HITS_DEMO,
+      evaluateHit: K.permEvaluateHit,
+    });
+    onIcen('icen:kb-visibility-identity', (e) =>
+      note('pv-vis-note', `身份列：${e.detail.identity.label ?? e.detail.identity.user}——hidden 不渲染、metadata 打码、summary 给 AI 摘要`, 2800),
+    );
+    onIcen('icen:kb-visibility-layer', (e) => {
+      const what =
+        e.detail.layer === 'pre'
+          ? 'pre-filter——唯一安全基线（ANN 与 BM25 两侧同时生效）'
+          : e.detail.layer === 'post'
+            ? 'post-filter——分数已可观察，缺陷层（仅对照演示）'
+            : '无过滤层——fail-open 危险（Kendra 教训，仅对照演示）';
+      note('pv-vis-note', `过滤层：${what}`, 3400);
+    });
+
+    /* 文档权限面板：《2026 财务规划》（公司库 › 财务部空间 继承链） */
+    renderKbAcl($('pv-acl')!, K.PERM_ACL_DEMO);
+    onIcen('icen:kb-acl-grant', () => note('pv-acl-note', '授予访问的主体选择器未接（演示）'));
+    onIcen('icen:kb-acl-remove', (e) =>
+      note('pv-acl-note', `已移除「${e.detail.subject.label}」的授权（演示：真实环境需二次确认）`, 3200),
+    );
+    onIcen('icen:kb-acl-inherit', (e) =>
+      note(
+        'pv-acl-note',
+        e.detail.action === 'break'
+          ? '已断开继承——本项转为独立权限（子项不再随父容器收紧）'
+          : '已恢复继承——重新跟随「公司库 › 财务部空间」',
+        3200,
+      ),
+    );
+
+    /* 有效权限检查器：默认 view-as 王五（演示并集：finance-team Editor ∪ auditors Viewer ∪ org Viewer） */
+    const whocan = renderKbWhoCan($('pv-whocan')!, {
+      identities: K.PERM_IDENTITIES,
+      entries: K.PERM_ACL_DEMO.entries,
+    });
+    whocan.setIdentity(K.PERM_IDENTITIES[1]!.user);
+    onIcen('icen:kb-whocan-check', (e) => {
+      const d = e.detail.decision;
+      const verdict = d.deniedBy
+        ? `被策略拒绝（${d.deniedBy.label}）——deny 一票否决置顶`
+        : `${kbRoleLabel(d.role)} · ${kbVisibilityLabel(d.visibility)}`;
+      note('pv-whocan-note', `检查 ${e.detail.identity.label ?? e.detail.identity.user}：${verdict}（原因链为扁平清单，不做树）`, 3200);
+    });
+
+    /* 访问申请流：三个 mini 按钮依次推进 idle → requested → granted(30 天到期) → expired */
+    const access = createKbAccess($('pv-access')!, { request: K.PERM_REQUEST_DEMO });
+    let accessReq: KbAccessRequest = { ...K.PERM_REQUEST_DEMO };
+    const pushAccess = (label: string): void => {
+      access.setState(accessReq);
+      note('pv-access-note', label, 3400);
+    };
+    $('pv-access-submit')!.addEventListener('click', () => {
+      accessReq = { ...accessReq, state: 'requested', submittedAt: new Date().toISOString() };
+      pushAccess('已提交——请求路由给内容负责人（approverNote 明示，Confluence 路由踩坑的解）');
+    });
+    $('pv-access-approve')!.addEventListener('click', () => {
+      accessReq = {
+        ...accessReq,
+        state: 'granted',
+        decidedBy: '李四',
+        decidedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+      };
+      pushAccess('已批准 viewer——到期一等公民：30 天后自动回收');
+    });
+    $('pv-access-expire')!.addEventListener('click', () => {
+      accessReq = { ...accessReq, state: 'expired' };
+      pushAccess('已过期——中性呈现「可重新申请」，不做刺眼终态');
+    });
+
+    /* 审计时间线：通道过滤 / 导出 / 异味处置走 initKbAudit 的 document 级委托 */
+    initKbAudit(document);
+    renderKbAudit($('pv-audit')!, { entries: K.PERM_AUDIT_DEMO, hygiene: K.PERM_HYGIENE_DEMO });
+    onIcen('icen:kb-audit-filter', (e) => note('pv-audit-note', `通道过滤：${e.detail.channel === 'all' ? '全部' : e.detail.channel}`, 2200));
+    onIcen('icen:kb-audit-export', (e) =>
+      note('pv-audit-note', `导出 CSV（通道：${e.detail.channel === 'all' ? '全部' : e.detail.channel}）——演示环境不生成文件`, 2800),
+    );
+    onIcen('icen:kb-hygiene-action', (e) =>
+      note('pv-audit-note', `异味处置：《${e.detail.issue.resource}》（${e.detail.issue.metric}）——演示`, 3200),
+    );
+
+    /* ══════════ ⑦ Agent ══════════ */
     const canvasEl = $('ag-canvas')!;
     const canvas = createKbCanvas(canvasEl, {
       onAI: (d) => {
@@ -1073,6 +1262,35 @@ import '../../../src/components/tabs.css';
 
     /* ═══ 问数 ═══ */
     .kbws-data-answer { margin-top: 2px; }
+
+    /* ═══ 权限 ═══ */
+    /* 标签图标与文字基线对齐（仅「权限」带锁图标，其余标签纯文本不受影响） */
+    .kbws-tab { display: inline-flex; align-items: center; gap: 6px; }
+    .kbws-tab svg { flex: none; }
+    /* 访问申请流的演进按钮组（状态机走查） */
+    .kbws-perm-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+    /* ═══ 参考（文献锚点，静态渲染）═══ */
+    .kbws-refs-intro { margin: 0 0 18px; font-size: 13px; line-height: 1.8; color: var(--token-text-muted); max-width: 760px; }
+    .kbws-refs-intro b { color: var(--token-text); font-weight: 600; }
+    .kbws-ref-group { margin-top: 20px; }
+    .kbws-ref-group-title {
+      margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--token-text);
+      padding-bottom: 6px; border-bottom: 1px solid var(--token-line-soft);
+    }
+    .kbws-ref-list { list-style: none; margin: 0; padding: 0; }
+    .kbws-ref-item { padding: 8px 0; border-bottom: 1px solid var(--token-line-soft); }
+    .kbws-ref-item:last-child { border-bottom: none; }
+    .kbws-ref-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .kbws-ref-no { flex: 0 0 auto; font-size: 11.5px; color: var(--token-text-faint); }
+    .kbws-ref-link { flex: 0 1 auto; min-width: 0; font-size: 13px; color: var(--token-accent); text-decoration: none; }
+    .kbws-ref-link:hover { text-decoration: underline; }
+    .kbws-ref-link:hover .kbws-ref-arrow { transform: translate(1px, -1px); }
+    .kbws-ref-arrow { margin-left: 2px; font-size: 11px; display: inline-block; transition: transform var(--duration-fast, 0.16s) ease-out; }
+    .kbws-ref-source { flex: 0 1 auto; margin-left: auto; font-size: 11.5px; color: var(--token-text-faint); }
+    /* 发表/更新时间：独立一行（官方文档标「持续更新」，论文给年月——时间本身也是锚点信息） */
+    .kbws-ref-date { margin: 2px 0 0 32px; font-size: 11px; color: var(--token-text-faint); font-family: var(--font-mono, ui-monospace, monospace); }
+    .kbws-ref-note { margin: 3px 0 0 32px; font-size: 12.5px; line-height: 1.7; color: var(--token-text-muted); max-width: 760px; }
 
     /* ═══ Agent ═══ */
     .kbws-docfrag-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--token-text); }

@@ -120,9 +120,13 @@ export function renderKbExplain(
       const row = h('div', 'kb-explain-metric');
       row.appendChild(h('span', 'kb-explain-metric-name', m.name));
       if (m.ref) {
-        const a = h('a', 'kb-explain-metric-ref', '查看口径');
-        a.href = m.ref;
-        row.appendChild(a);
+        /* 链接协议守卫：拒绝 javascript:/data:/vbscript: 注入，相对路径原样放行（对齐 ai-chat safeHref 纪律） */
+        if (!/^\s*(javascript|data|vbscript)\s*:/i.test(m.ref)) {
+          const a = h('a', 'kb-explain-metric-ref', '查看口径');
+          a.href = m.ref;
+          a.rel = 'noopener';
+          row.appendChild(a);
+        }
       }
       metrics.appendChild(row);
     }

@@ -9,6 +9,7 @@ import { cssOf } from '../../../scripts/slugs.mjs';
 import { KB_DOCS_GROUND_INGEST } from './kb-docs-ground-ingest';
 import { KB_DOCS_SEARCH_DATA } from './kb-docs-search-data';
 import { KB_DOCS_OPS_AGENT } from './kb-docs-ops-agent';
+import { KB_DOCS_PERM } from './kb-docs-perm';
 
 export interface ComponentDoc {
   slug: string;
@@ -4334,5 +4335,5 @@ if (host) {
   },
 );
 
-/* ── 知识库族（kb-*）与 AI 族扩展组件文档：三个分片文件合并挂载（分片为并行产物，见 docs/spec/kb-family.md）── */
-COMPONENTS.push(...KB_DOCS_GROUND_INGEST, ...KB_DOCS_SEARCH_DATA, ...KB_DOCS_OPS_AGENT);
+/* ── 知识库族（kb-*）与 AI 族扩展组件文档：四个分片文件合并挂载（分片为并行产物，见 docs/spec/kb-family.md）── */
+COMPONENTS.push(...KB_DOCS_GROUND_INGEST, ...KB_DOCS_SEARCH_DATA, ...KB_DOCS_OPS_AGENT, ...KB_DOCS_PERM);

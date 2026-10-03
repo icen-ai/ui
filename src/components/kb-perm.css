@@ -1,0 +1,444 @@
+/*
+ * @icen.ai/ui — kb-perm.css（权限域：kb-acl / kb-who-can / kb-access / kb-audit / kb-visibility）
+ *
+ * 安全纪律（spec §9.0，评审必查）：
+ *   - 对授权侧诚实（身份/过滤层徽标/安全计数/审批路由），对受限侧沉默（被裁数量/标题/分数一律不渲染）
+ *   - 「不知道」与「不能说」不可区分；deny 一票否决置顶；break-glass 行警示粒度 ≥ 常规
+ *
+ * 共享原语来自 kb.css（.kb-row/.kb-num/.kb-meta/.kb-dot/.kb-badge/.kb-chip/.kb-empty/.kb-notice）。
+ * 本文件三段分界，各组件作者只填自己的段。
+ */
+
+/* ══════════════ 段A · kb-acl + kb-who-can（文档权限面板 + 有效权限检查器）══════════════ */
+
+/* —— kb-acl：继承 banner / grants 双区 / deny 置顶 / system 不可删 —— */
+.kb-acl { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.kb-acl-inherit {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  font-size: 12px; color: var(--token-text-muted);
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  background: color-mix(in srgb, var(--token-bg) 55%, transparent);
+}
+.kb-acl-inherit .kb-acl-chain-link { color: var(--token-text-faint); }
+.kb-acl-inherit.is-broken {
+  color: var(--token-warning);
+  border-color: color-mix(in srgb, var(--token-warning) 45%, transparent);
+  background: color-mix(in srgb, var(--token-warning) 6%, transparent);
+}
+.kb-acl-inherit.is-partial { color: var(--token-info); }
+
+.kb-acl-grant {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 28px; padding: 2px 0;
+  border-bottom: 1px solid var(--token-line-soft);
+}
+.kb-acl-grant:last-child { border-bottom: none; }
+.kb-acl-grant.is-deny { order: -1; }
+.kb-acl-grant.is-deny .kb-acl-role { color: var(--token-error, #c0392b); border-color: color-mix(in srgb, var(--token-error, #c0392b) 45%, transparent); }
+.kb-acl-grant.is-expiring .kb-acl-meta { color: var(--token-warning); }
+.kb-acl-grant.is-system .kb-acl-remove { display: none; }
+
+.kb-acl-subject { display: inline-flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; font-size: 12.5px; color: var(--token-text); }
+.kb-acl-subject[data-kind='group']::before,
+.kb-acl-subject[data-kind='link']::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--token-text-faint);
+}
+.kb-acl-role { flex: 0 0 auto; }
+.kb-acl-meta { flex: 0 1 auto; margin-left: auto; font-size: 11.5px; color: var(--token-text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kb-acl-remove { flex: 0 0 auto; }
+.kb-acl-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; }
+
+/* —— kb-who-can：view-as 检查器（结论 + 扁平原因链）—— */
+.kb-whocan { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.kb-whocan-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kb-whocan-result { display: flex; flex-direction: column; gap: 8px; }
+.kb-whocan-verdict { font-size: 13px; font-weight: 600; color: var(--token-text); }
+.kb-whocan-result.is-denied .kb-whocan-verdict { color: var(--token-error, #c0392b); }
+.kb-whocan-deniedby {
+  padding: 6px 10px; font-size: 12px;
+  color: var(--token-error, #c0392b);
+  border-left: 2px solid var(--token-error, #c0392b);
+  background: color-mix(in srgb, var(--token-error, #c0392b) 6%, transparent);
+  border-radius: 0 var(--radius-sm, 6px) var(--radius-sm, 6px) 0;
+}
+.kb-whocan-chain { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.kb-whocan-reason { display: flex; align-items: baseline; gap: 8px; min-height: 26px; padding: 2px 0; border-bottom: 1px solid var(--token-line-soft); font-size: 12.5px; }
+.kb-whocan-reason:last-child { border-bottom: none; }
+.kb-whocan-reason .kb-meta { margin-left: auto; }
+.kb-whocan-rule { font-size: 11.5px; color: var(--token-text-faint); }
+
+/* —— 段A 装配件细化：kb-acl head / 区块标题 / 动作钮 / 移除钮 —— */
+.kb-acl-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.kb-acl-title {
+  display: inline-flex; align-items: center; gap: 6px;
+  flex: 1 1 auto; min-width: 0;
+  font-size: 13px; font-weight: 600; color: var(--token-text);
+}
+.kb-acl-title svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--token-text-faint); }
+.kb-acl-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-acl-act {
+  flex: 0 0 auto; height: 24px; padding: 0 10px;
+  font: inherit; font-size: 12px; line-height: 1;
+  color: var(--token-text-muted);
+  background: transparent;
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: color 0.16s ease-out, background-color 0.16s ease-out, border-color 0.16s ease-out;
+}
+.kb-acl-act:hover { color: var(--token-text); border-color: var(--token-line); }
+/* 恢复继承将丢弃本项自定义授权——破坏性动作用描边式 danger（克制，不做实底） */
+.kb-acl-act.is-danger {
+  color: var(--token-error, #c0392b);
+  border-color: color-mix(in srgb, var(--token-error, #c0392b) 45%, transparent);
+}
+.kb-acl-act.is-danger:hover {
+  background: color-mix(in srgb, var(--token-error, #c0392b) 6%, transparent);
+  border-color: color-mix(in srgb, var(--token-error, #c0392b) 60%, transparent);
+}
+/* 授权区容器走 flex 列：deny 行的 order:-1（骨架已置）真正生效，区块标题恒在其前 */
+.kb-acl-grants, .kb-acl-links { display: flex; flex-direction: column; }
+.kb-acl-sec { order: -2; font-size: 11.5px; letter-spacing: 0.3px; color: var(--token-text-faint); }
+.kb-acl-note { font-size: 11px; }
+.kb-acl-none { padding: 4px 0; }
+.kb-acl-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; padding: 0;
+  font: inherit; font-size: 13px; line-height: 1;
+  color: var(--token-text-faint);
+  background: transparent; border: none; border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: color 0.16s ease-out, background-color 0.16s ease-out;
+}
+.kb-acl-remove:hover { color: var(--token-error, #c0392b); background: color-mix(in srgb, var(--token-error, #c0392b) 7%, transparent); }
+/* 面板主行动（accent 线框——面板内唯一 accent 级操作） */
+.kb-acl-grant-btn {
+  flex: 0 0 auto; height: 26px; padding: 0 12px;
+  font: inherit; font-size: 12.5px; line-height: 1;
+  color: var(--token-accent);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--token-accent) 45%, transparent);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
+}
+.kb-acl-grant-btn:hover { background: color-mix(in srgb, var(--token-accent) 8%, transparent); }
+.kb-acl-remove:focus-visible, .kb-acl-act:focus-visible, .kb-acl-grant-btn:focus-visible {
+  outline: 2px solid var(--token-accent); outline-offset: -2px;
+}
+
+/* —— 段A 装配件细化：kb-who-can 身份下拉 / 检查钮 / 原因链徽标 —— */
+.kb-whocan-user {
+  height: 28px; max-width: 240px; padding: 0 8px;
+  font: inherit; font-size: 12.5px;
+  color: var(--token-text);
+  background: var(--token-bg);
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+}
+.kb-whocan-user:focus-visible { outline: none; border-color: var(--token-accent); }
+.kb-whocan-check {
+  height: 26px; padding: 0 12px;
+  font: inherit; font-size: 12.5px; line-height: 1;
+  color: var(--token-text-muted);
+  background: transparent;
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: color 0.16s ease-out, background-color 0.16s ease-out, border-color 0.16s ease-out;
+}
+.kb-whocan-check:hover:not(:disabled) { color: var(--token-text); background: var(--token-bg-soft); border-color: var(--token-line); }
+.kb-whocan-check:focus-visible { outline: 2px solid var(--token-accent); outline-offset: -2px; }
+.kb-whocan-user:disabled, .kb-whocan-check:disabled { opacity: var(--icen-disabled-opacity, 0.45); cursor: not-allowed; }
+.kb-whocan-source { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--token-text); }
+.kb-whocan-reason .kb-badge { flex: 0 0 auto; }
+/* deny 来源：红色 badge（克制——只落在徽标层），主体文本弱化 */
+.kb-whocan-reason.is-deny .kb-badge {
+  color: var(--token-error, #c0392b);
+  border-color: color-mix(in srgb, var(--token-error, #c0392b) 45%, transparent);
+}
+.kb-whocan-reason.is-deny .kb-whocan-source { color: var(--token-text-muted); }
+.kb-whocan-role { flex: 0 0 auto; }
+.kb-whocan-none { padding: 4px 0; }
+.kb-whocan-expires { font-size: 11px; }
+
+/* ══════════════ 段B · kb-access + kb-audit（访问申请流 + 审计时间线）══════════════ */
+
+/* —— kb-access：被拒五件套 + 状态机徽章族 —— */
+.kb-access { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.kb-access-denied { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--token-line-soft); border-radius: var(--radius-md, 10px); }
+.kb-access-title { font-size: 13.5px; font-weight: 600; color: var(--token-text); }
+.kb-access-why { margin: 0; font-size: 12.5px; line-height: 1.7; color: var(--token-text-muted); }
+.kb-access-owner { font-size: 12px; color: var(--token-text-faint); }
+.kb-access-actions { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.kb-access-form { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--token-line-soft); border-radius: var(--radius-md, 10px); }
+.kb-access-form[hidden] { display: none; }
+.kb-access-state { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--token-text-muted); }
+.kb-access-state .kb-chip[data-state='granted'] { color: var(--token-success); border-color: color-mix(in srgb, var(--token-success) 45%, transparent); }
+.kb-access-state .kb-chip[data-state='expiring'],
+.kb-access-state .kb-chip[data-state='expired'] { color: var(--token-warning); border-color: color-mix(in srgb, var(--token-warning) 45%, transparent); }
+.kb-access-state .kb-chip[data-state='revoked'] { color: var(--token-text-faint); }
+/* denied 不做刺眼红色终态（业界静默默契）——中性呈现 */
+.kb-access-queue { display: flex; flex-direction: column; gap: 8px; }
+.kb-access-req { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px); font-size: 12.5px; }
+.kb-access-req .kb-access-req-actions { margin-left: auto; display: inline-flex; gap: 6px; }
+
+/* —— kb-audit：通道过滤 + 异味节 + 时间线 —— */
+.kb-audit { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.kb-audit-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kb-audit-channels { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.kb-audit-channels .kb-chip[aria-pressed='true'] { color: var(--token-accent); border-color: var(--token-accent); }
+.kb-audit-hygiene { display: flex; flex-direction: column; gap: 6px; }
+.kb-hygiene { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 7px 10px; font-size: 12.5px; border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px); }
+.kb-hygiene.is-high { border-color: color-mix(in srgb, var(--token-error, #c0392b) 40%, transparent); background: color-mix(in srgb, var(--token-error, #c0392b) 5%, transparent); }
+.kb-hygiene.is-medium { border-color: color-mix(in srgb, var(--token-warning) 40%, transparent); }
+.kb-hygiene .kb-hygiene-act { margin-left: auto; }
+.kb-audit-list { list-style: none; margin: 0; padding: 0; }
+.kb-audit-entry { display: flex; align-items: baseline; gap: 8px; min-height: 28px; padding: 2px 0; border-bottom: 1px solid var(--token-line-soft); font-size: 12.5px; }
+.kb-audit-entry:last-child { border-bottom: none; }
+.kb-audit-entry .kb-audit-detail { flex: 1 1 auto; min-width: 0; color: var(--token-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* break-glass：审计粒度 ≥ 常规 + 常驻警示 */
+.kb-audit-entry.is-breakglass { padding: 4px 8px; border-radius: var(--radius-sm, 6px); background: color-mix(in srgb, var(--token-error, #c0392b) 7%, transparent); border-bottom-color: transparent; }
+.kb-audit-entry.is-breakglass .kb-audit-action { color: var(--token-error, #c0392b); border-color: color-mix(in srgb, var(--token-error, #c0392b) 45%, transparent); }
+.kb-audit-actor[data-kind='system'], .kb-audit-actor[data-kind='app'] { color: var(--token-text-faint); }
+
+/* —— 段B 细化 · kb-access 构件（按钮/表单/角色 chip/队列行）—— */
+
+/* 主作用（accent 稀缺资源：被拒五件套的「申请访问」/表单的「提交申请」各为其视图唯一 accent 钮） */
+.kb-access-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: inherit; font-size: 12.5px;
+  color: var(--token-on-accent, #fff);
+  background: var(--token-accent);
+  border: none; border-radius: var(--radius-sm, 6px);
+  padding: 6px 14px; cursor: pointer;
+}
+.kb-access-btn:hover { background: var(--token-accent-deep, var(--token-accent)); }
+.kb-access-btn:focus-visible, .kb-access-act:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 2px; }
+.kb-access-btn svg { width: 12px; height: 12px; flex: 0 0 auto; }
+/* 次作用 ghost（切换身份 / 批准 / 拒绝）：永不用 accent，避免与主行动争夺 */
+.kb-access-btn--ghost {
+  color: var(--token-text-muted);
+  background: transparent;
+  border: 1px solid var(--token-line-soft);
+}
+.kb-access-btn--ghost:hover {
+  color: var(--token-text);
+  border-color: var(--token-line);
+  background: var(--token-bg-soft);
+}
+/* 状态行文字钮（申请续期/重新申请）：链接级弱化，不用按钮盒子 */
+.kb-access-act {
+  font: inherit; font-size: 12px;
+  color: var(--token-accent);
+  background: none; border: none; padding: 0;
+  cursor: pointer; text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.kb-access-act:hover { color: var(--token-accent-deep, var(--token-accent)); }
+
+/* 表单控件：理由 / 角色三选 / 时长 */
+.kb-access-reason {
+  font: inherit; font-size: 12.5px; line-height: 1.6;
+  color: var(--token-text);
+  background: var(--token-bg);
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  padding: 7px 9px; resize: vertical; min-height: 56px;
+}
+.kb-access-reason:focus-visible, .kb-access-duration:focus-visible,
+.kb-access-approve-role:focus-visible, .kb-access-note:focus-visible {
+  outline: 2px solid var(--token-accent); outline-offset: 1px;
+}
+.kb-access-roles { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.kb-access-role {
+  display: inline-flex; align-items: center;
+  font: inherit; font-size: 12px;
+  color: var(--token-text-muted);
+  background: var(--token-bg);
+  border: 1px solid var(--token-line-soft);
+  border-radius: 999px;
+  padding: 3px 10px; cursor: pointer;
+}
+.kb-access-role:hover { border-color: var(--token-line); color: var(--token-text); }
+.kb-access-role.is-on {
+  color: var(--token-accent);
+  border-color: color-mix(in srgb, var(--token-accent) 50%, transparent);
+  background: var(--token-accent-subtle, transparent);
+}
+.kb-access-duration-row { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--token-text-muted); }
+.kb-access-duration {
+  font: inherit; font-size: 12px;
+  color: var(--token-text);
+  background: var(--token-bg);
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  padding: 3px 6px; cursor: pointer;
+}
+.kb-access-route { align-self: flex-start; }
+.kb-access-submit {
+  align-self: flex-start;
+  font: inherit; font-size: 12.5px;
+  color: var(--token-on-accent, #fff);
+  background: var(--token-accent);
+  border: none; border-radius: var(--radius-sm, 6px);
+  padding: 6px 14px; cursor: pointer;
+}
+.kb-access-submit:hover { background: var(--token-accent-deep, var(--token-accent)); }
+.kb-access-countdown { font-size: 11.5px; color: var(--token-text-muted); }
+
+/* 队列行（approver 视角） */
+.kb-access-req-user { font-weight: 600; color: var(--token-text); }
+.kb-access-req-resource { color: var(--token-text); }
+.kb-access-req-at { font-size: 11px; color: var(--token-text-faint); }
+.kb-access-req-reason { flex: 1 1 160px; min-width: 120px; }
+.kb-access-approve-role {
+  font: inherit; font-size: 12px;
+  color: var(--token-text);
+  background: var(--token-bg);
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  padding: 3px 6px; cursor: pointer;
+}
+.kb-access-note {
+  font: inherit; font-size: 12px;
+  color: var(--token-text);
+  background: var(--token-bg);
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  padding: 4px 8px; resize: none; min-width: 140px;
+}
+.kb-access-req-decided { color: var(--token-text-faint); }
+
+/* —— 段B 细化 · kb-audit 构件（chip 钮 / 导出钮 / 异味行 / 过滤断崖）—— */
+
+/* 通道 chip 是原生 button：补指针与过渡（激活态配色由上方 aria-pressed 规则承担） */
+.kb-audit-channels .kb-chip { cursor: pointer; transition: color 0.16s ease-out, border-color 0.16s ease-out; }
+.kb-audit-channels .kb-chip:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 1px; }
+.kb-audit-export {
+  font: inherit; font-size: 11.5px;
+  color: var(--token-text-muted);
+  background: transparent;
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  padding: 3px 10px; cursor: pointer;
+  margin-left: auto;
+}
+.kb-audit-export:hover { color: var(--token-text); border-color: var(--token-line); background: var(--token-bg-soft); }
+.kb-audit-export:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 1px; }
+/* 过滤显隐：行本身是 flex，hidden 属性会被 display 覆盖——必须显式归零 */
+.kb-audit-entry[hidden] { display: none; }
+.kb-audit-at { flex: 0 0 auto; font-size: 11px; color: var(--token-text-faint); }
+.kb-audit-actor { flex: 0 1 auto; min-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-audit-action { flex: 0 0 auto; }
+.kb-audit-alert { flex: 0 0 auto; }
+
+/* 权限异味行内件 */
+.kb-hygiene-kind { flex: 0 0 auto; }
+.kb-hygiene.is-high .kb-hygiene-kind { color: var(--token-error, #c0392b); border-color: color-mix(in srgb, var(--token-error, #c0392b) 45%, transparent); }
+.kb-hygiene.is-medium .kb-hygiene-kind { color: var(--token-warning); border-color: color-mix(in srgb, var(--token-warning) 45%, transparent); }
+.kb-hygiene-resource { font-weight: 600; color: var(--token-text); }
+.kb-hygiene-metric { flex: 0 0 auto; font-size: 11.5px; }
+.kb-hygiene-hint { flex: 1 1 140px; min-width: 100px; }
+.kb-hygiene-act {
+  font: inherit; font-size: 11.5px;
+  color: var(--token-text-muted);
+  background: transparent;
+  border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm, 6px);
+  padding: 2px 10px; cursor: pointer;
+}
+.kb-hygiene-act:hover { color: var(--token-text); border-color: var(--token-line); background: var(--token-bg-soft); }
+.kb-hygiene-act:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 1px; }
+
+/* ══════════════ 段C · kb-visibility（检索可见性对照器，admin 专用）══════════════ */
+
+.kb-visibility { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.kb-visibility-warn {
+  padding: 7px 10px; font-size: 12px;
+  color: var(--token-warning);
+  border-left: 2px solid var(--token-warning);
+  background: color-mix(in srgb, var(--token-warning) 6%, transparent);
+  border-radius: 0 var(--radius-sm, 6px) var(--radius-sm, 6px) 0;
+}
+.kb-visibility-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kb-visibility-bar .kb-chip[aria-pressed='true'] { color: var(--token-accent); border-color: var(--token-accent); }
+/* 过滤层徽标 .kb-layer-chip 三态定义在 kb.css 基座（检索域 kit 也消费，勿在此重复） */
+.kb-visibility-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.kb-visibility-col { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--token-line-soft); border-radius: var(--radius-md, 10px); min-width: 0; }
+.kb-visibility-col header { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--token-text); }
+.kb-visibility-count { font-size: 11.5px; color: var(--token-text-faint); }
+/* metadata 级：锁 + 标题 + 打码摘要 + 申请入口（知道存在，内容不可见） */
+.kb-visibility-hit { display: flex; flex-direction: column; gap: 3px; padding: 6px 0; border-bottom: 1px solid var(--token-line-soft); font-size: 12.5px; }
+.kb-visibility-hit:last-child { border-bottom: none; }
+.kb-visibility-hit[data-visibility='metadata'] .kb-visibility-snippet,
+.kb-visibility-hit[data-visibility='summary'] .kb-visibility-snippet {
+  display: block; height: 10px; border-radius: 3px;
+  background: color-mix(in srgb, var(--token-text-faint) 18%, transparent);
+}
+.kb-visibility-hit[data-visibility='summary'] .kb-visibility-summary { font-size: 12px; color: var(--token-text-muted); line-height: 1.6; }
+.kb-visibility-lesson { font-size: 12px; line-height: 1.8; color: var(--token-text-muted); padding-top: 6px; border-top: 1px solid var(--token-line-soft); }
+
+/* —— 段C 细化（实现补齐；上方骨架规则不动）—— */
+
+/* 身份 chip 是可点控件：补指针语义（kb-chip 基座不含 cursor；.kb-layer-chip 的已在 kb.css） */
+.kb-visibility-idn { cursor: pointer; }
+.kb-visibility-idn:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 1px; }
+
+/* 身份聚焦：点击 bar 内身份 chip 高亮对应列（accent 弱化底，不与警示条抢注意力） */
+.kb-visibility-col.is-focused {
+  border-color: color-mix(in srgb, var(--token-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--token-accent) 4%, transparent);
+}
+
+/* 列头：身份 label 主位 + note 弱化（只放身份，不放有效角色——角色求值属 kb-who-can 职责） */
+.kb-visibility-col header .kb-meta { font-weight: 400; }
+
+/* 命中行标题：锁图标（metadata/restricted 级）+ 标题单行省略 */
+.kb-visibility-hit-title { display: flex; align-items: center; gap: 5px; min-width: 0; color: var(--token-text); }
+.kb-visibility-hit-title svg { width: 12px; height: 12px; flex: 0 0 auto; color: var(--token-text-faint); }
+.kb-visibility-hit-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-visibility-hits { display: flex; flex-direction: column; }
+
+/* summary 级：「原文不可用」禁用钮——显式禁用不做可点假象（摘要权限 ≠ 原文权限） */
+.kb-visibility-origoff {
+  align-self: flex-start;
+  padding: 0; border: none; background: none;
+  font: inherit; font-size: 11.5px;
+  color: var(--token-text-faint);
+  cursor: not-allowed;
+}
+
+/* restricted 级：「申请访问」文字钮（展示件——真实申请流由宿主接 kb-access） */
+.kb-visibility-request {
+  align-self: flex-start;
+  padding: 0; border: none; background: none;
+  font: inherit; font-size: 11.5px;
+  color: var(--token-text-muted);
+  cursor: pointer;
+}
+.kb-visibility-request:hover { color: var(--token-text); text-decoration: underline; }
+.kb-visibility-request:focus-visible { outline: 2px solid var(--token-accent); outline-offset: 2px; }
+
+/* 教学段列表（三条安全课）+ 尾注 */
+.kb-visibility-lesson ul { list-style: disc; margin: 0 0 6px; padding-left: 18px; }
+
+/* 检索身份选择器 .kb-retrieval-idn(-group) 与 .kb-retrieval .kb-notice[hidden] 归 kb-search.css
+   （检索域 kit 自持；kit/kb-retrieval 只带 kb.css + kb-search.css，放这里会缺样式） */
+
+/* —— .is-revoked：权限收回后的历史引用中性态（spec §9.0-6；revoked 引用属权限呈现，故置于段C 尾。
+   faint 中性，禁红——「不知道」与「不能说」不可区分） —— */
+
+/* hover 卡内标题后的中性 chip */
+.kb-chip.is-revoked {
+  color: var(--token-text-faint);
+  border-color: var(--token-line-soft);
+  background: transparent;
+}
+
+/* 正文角标 revoked 态：虚线框弱化、hover 不点亮 accent（保持可点/可悬停看卡，不删不留裸链） */
+.kb-citation.is-revoked {
+  color: var(--token-text-faint);
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--token-text-faint) 45%, transparent);
+}
+.kb-citation.is-revoked:hover {
+  color: var(--token-text-faint);
+  border-color: color-mix(in srgb, var(--token-text-faint) 45%, transparent);
+  background: transparent;
+}

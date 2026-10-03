@@ -295,6 +295,149 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ## 8. 验收
 
-- `bun run build` 绿（tsc + tsup + dts-ext + build-css assertSrc）；`kit/kb-citation` 等 27 个新 kit 入口可独立安装。
-- 文档站：新增「知识库」分组（每组件 API + demo 页）+ `/kb` 最佳实践工作台页（问答+引用溯源 / 摄取管线 / 检索调试 / 问数 / 观测 / Agent 工作台 全流程演示）。
+- `bun run build` 绿（tsc + tsup + dts-ext + build-css assertSrc）；`kit/kb-citation` 等 32 个新 kit 入口可独立安装（v0.9.1 权限域 +5：kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility）。
+- 文档站：新增「知识库」分组（每组件 API + demo 页）+ `/kb` 最佳实践工作台页（问答+引用溯源 / 摄取管线 / 检索调试 / 问数 / 观测 / 权限 / Agent / 参考 八标签全流程演示）。
+- AGENTS.md / README / CHANGELOG 同步。
+
+## 9. 权限域 kb-perm（v0.9.1 增补；调研依据 docs/research/2026-10-03-kb-permissions.md）
+
+> 心法：**ai 族描述思考，kb 族呈现证据；权限域呈现边界**——知识从哪来、可信吗、怎么用之后第三问：**谁能看到什么，以及为什么**。
+> 五组件一域文件：`kb-perm.css`；slug：`kb-acl` / `kb-who-can` / `kb-access` / `kb-audit` / `kb-visibility`（EXTRA_CSS = kb.css + kb-perm.css；`kb` umbrella 追加 kb-perm.css）。
+
+### 9.0 安全纪律总纲（评审必查，违反即 bug）
+
+1. **检索期隔离唯一安全基线 = query-time pre-filter**（ANN 与 BM25 两侧同时生效，RRF 融合前）；index-time 只是数据准备（ACL 会过期）；post-filter（分数已可观察 + topK 被占）/ generation（paraphrase 即泄露）/ presentation（最弱）都不是安全边界。
+2. **呈现纪律：对授权侧诚实，对受限侧沉默。** 授权侧信号：检索身份、过滤层徽标、安全计数、ACL 新鲜度、审批路由明示。受限侧信号（被裁条数/标题/分数/排名位移/「若权限不同你会看到」对照）**一律不出现**在普通用户视图——admin 审计视图是唯一例外。
+3. **「不知道」与「不能说」不可区分**（GitHub 404 惯例）：无权限文档在检索/列表/计数/引用中 = 不存在。
+4. **求值语义：先显式 deny → 再 allow 并集 → 默认拒绝（fail-closed）**；权限服务不可用 = 拒绝检索并显式呈现，绝不静默退化为无过滤（Kendra 无 UserContext fail-open 教训）。
+5. 唯一允许的裁剪提示 = **与命中无关的恒定文案**「结果已按你的权限过滤」（零信息增量）；禁止数量、禁止条件分支（volume leakage 教科书场景；缓解只有 padding 取整）。
+6. **引用白名单**：citation 只能生成自过滤后集合；禁止「LLM 见过、UI 滤引用」（制造可感知不一致 = citation leak）；权限收回后历史引用呈现中性「来源已不可用」态（.is-revoked），不删不留裸链。
+7. **到期一等公民**：每条 grant 可带 `expiresAt`，三态呈现（永不过期 / 倒计时+续期 / 已过期+重交）；JIT 临时权限横幅带倒计时与「本次引用经临时权限」印记；break-glass 行审计粒度 ≥ 常规且置顶警示。
+8. 身份来自服务端验证 token 的固定身份集——**不接受自由输入身份/组**（Kendra 明示不校验自报身份）。
+
+### 9.1 kb-acl 文档权限面板（SharePoint 权限页范式）
+
+```
+<section class="kb-acl">
+  <header class="kb-acl-head">
+    <div class="kb-acl-title">资源名 + <span class="kb-badge kb-badge--restricted">受限</span></div>
+    <button class="kb-acl-act" data-acl-break|data-acl-restore>停止继承 / 恢复继承</button>
+  </header>
+  <div class="kb-acl-inherit [.is-broken|.is-partial]">   <!-- 继承 banner 三态：继承（含父链）/ 已断（警示）/ 例外 N 项 -->
+  </div>
+  <div class="kb-acl-grants">                              <!-- Direct access 区 -->
+    <div class="kb-acl-grant [.is-deny|.is-system|.is-expiring]">
+      <span class="kb-acl-subject" data-kind="user|group|org|anyone|link">主体（组带成员数/「由 IT 管理」note）</span>
+      <span class="kb-acl-role kb-chip">Viewer|Commenter|Editor|Owner|拒绝</span>
+      <span class="kb-acl-meta">继承自 X · 2026-11-01 到期 · 系统管理</span>
+      <button class="kb-acl-remove" data-acl-remove aria-label="移除">×</button>
+    </div>…
+  </div>
+  <div class="kb-acl-links">…同 grant 行，data-kind=link，带范围（特定人员/组织内/任何人）+ 过期…</div>
+  <footer class="kb-acl-foot"><button data-acl-grant>授予访问</button><span class="kb-meta">对 N 人可见</span></footer>
+</section>
+```
+- `renderKbAcl(el, model, opts?) → el`（快照）；`KbAclModel = { resource, parentChain: string[], broken, exceptions?, entries: KbAclEntry[], links: KbAclEntry[], exposureCount? }`；opts: onGrant/onRemove/onBreak/onRestore。
+- deny 行 `.is-deny` 置顶红；`.is-system` 不可删（Limited Access 类系统态）；exposureCount 过度授权警示（「对 1,204 人可见」，不去重计数）。
+- 事件：`icen:kb-acl-grant {}` / `icen:kb-acl-remove {subject}` / `icen:kb-acl-inherit {action:'break'|'restore'}`。
+
+### 9.2 kb-who-can 有效权限检查器（view-as，差异化组件）
+
+```
+<div class="kb-whocan">
+  <div class="kb-whocan-bar"><select class="kb-whocan-user">…固定身份集…</select><button data-whocan-check>检查</button></div>
+  <div class="kb-whocan-result [.is-allowed|.is-denied]">
+    <div class="kb-whocan-verdict">可编辑（Editor） / 无权限</div>
+    <div class="kb-whocan-deniedby">被策略拒绝：DLP-外发管控</div>      <!-- deny 一票否决置顶 -->
+    <ul class="kb-whocan-chain">
+      <li class="kb-whocan-reason [.is-inherit|.is-direct|.is-link|.is-deny]">
+        <span class="kb-badge">继承</span> 财务部空间 · finance-team · Editor
+        <span class="kb-meta">24 成员 · 由 IT 管理</span>
+      </li>…
+    </ul>
+    <div class="kb-whocan-rule">叠加规则：多来源并集 → Editor；无 Deny 生效</div>
+  </div>
+</div>
+```
+- `renderKbWhoCan(el, { identities, entries, evaluate? }) → handle { setIdentity(id), getResult() }`；evaluate 缺省 = kb-core `evaluateAcl`。
+- 原因链 = **扁平清单不做树**（SharePoint Check Permissions / Jira Permission Helper 范式；Confluence 连原因链都没做全——业界缺口即本组件定位）。
+- 事件：`icen:kb-whocan-check {identity, decision}`。
+
+### 9.3 kb-access 访问申请流（被拒五件套 + 状态机）
+
+```
+<div class="kb-access" data-state="idle|requested|granted|expiring|expired|revoked">
+  <div class="kb-access-denied">          <!-- 五件套：资源名 / 原因 / owner / 申请 / 切换身份 -->
+  <div class="kb-access-form" hidden>      <!-- 理由（可必填）+ 角色 + 时长 + 路由提示「请求将发送给：内容 owner 李四」 -->
+  <div class="kb-access-state">            <!-- 状态徽章族：.is-requested/.is-granted(+倒计时)/.is-expiring/.is-expired(重交)/.is-revoked -->
+  <div class="kb-access-queue" hidden?>    <!-- 审批方视角（mode='approver'）：请求卡 + 批准(选权限级)/拒绝(附留言) + 历史 -->
+</div>
+```
+- `createKbAccess(el, { request, mode?: 'requester'|'approver', onRequest?, onDecide? }) → handle { setState(next), getState() }`。
+- 状态机（kb-core `KbAccessState`）：idle→requested→pending_review→granted(expiresAt)→expiring→expired→(re-request)；revoked 审批侧撤销。**denied 呈现纪律**：不做刺眼红色终态（业界静默默契），主推中性「请求已过期，可重新申请」。
+- 事件：`icen:kb-access-request {request}` / `icen:kb-access-decide {id, decision:'approve'|'deny', role?}` / `icen:kb-access-expire {id}`。
+
+### 9.4 kb-audit 权限审计时间线（Box/Purview 骨架 + 权限异味）
+
+```
+<div class="kb-audit">
+  <div class="kb-audit-bar">
+    <div class="kb-audit-channels">全部/读取/权限变更/申请/系统（chip 组 data-channel）</div>
+    <button data-audit-export>导出 CSV</button>
+  </div>
+  <div class="kb-audit-hygiene">            <!-- 权限异味节（admin）：6 枚举见 kb-core -->
+    <div class="kb-hygiene [.is-high|.is-medium|.is-low]"><span class="kb-badge">过度共享</span>…<button data-hygiene-act>处置</button></div>
+  </div>
+  <ol class="kb-audit-list">
+    <li class="kb-audit-entry [.is-breakglass]">
+      <span class="kb-audit-at kb-num">10-03 14:22</span>
+      <span class="kb-audit-actor" data-kind="human|app|system">张三 / …系统</span>
+      <span class="kb-audit-action kb-chip">读取|权限变更|授予|收回|申请|批准|委派|应急</span>
+      <span class="kb-audit-detail">…</span>
+    </li>…
+  </ol>
+</div>
+```
+- `renderKbAudit(el, { entries, hygiene? }) → el`（快照）+ `initKbAudit(root?)`（委托：通道过滤 + 导出 + 异味处置）。
+- break-glass 行常驻警示色 + 说明「实时告警已通知安全团队」；读取事件同用户同资源 5 分钟去重为**数据侧纪律**（注释说明，UI 不重复渲染）。
+- 事件：`icen:kb-audit-filter {channel}` / `icen:kb-audit-export {channel}` / `icen:kb-hygiene-action {issue}`。
+
+### 9.5 kb-visibility 检索可见性对照器（admin/审计专用）
+
+> 组件头常驻警示条：命中差异对照对普通用户构成泄露（判据：任何随受限集合变化的可观察量都是侧信道），**仅 admin 审计/教学视图**。
+
+```
+<div class="kb-visibility">
+  <div class="kb-visibility-warn">admin 审计视图——勿嵌入终端用户界面</div>
+  <div class="kb-visibility-bar">身份 chip 组 · 查询回显 · 过滤层徽标（pre ✓ / post ⚠ / none ✕）</div>
+  <div class="kb-visibility-grid">          <!-- 每身份一列 -->
+    <div class="kb-visibility-col">
+      <header>身份 + 有效角色</header>
+      <div class="kb-visibility-count kb-num">安全计数 n</div>   <!-- 授权集合内 -->
+      <div class="kb-visibility-hits">
+        <!-- hidden 级不出现；metadata = 锁+标题+摘要打码+申请；summary = AI 摘要+原文不可用；full 正常 -->
+      </div>
+    </div>…
+  </div>
+  <div class="kb-visibility-lesson">        <!-- 教学段（admin）：fail-open 警告 / post-filter 分数可观察 / 计数差异=volume leakage（padding 缓解） -->
+</div>
+```
+- `renderKbVisibility(el, { query, identities, hits, evaluateHit }) → handle { setFilterLayer(l), getVisibility(id, hit) }`；evaluateHit = `(hit, identity) => KbVisibility`（缺省走宿主给的 visibility 字段）。
+- 事件：`icen:kb-visibility-identity {identity}` / `icen:kb-visibility-layer {layer}`。
+
+### 9.6 kb-core 契约增补（全部在此，域文件不重复定义）
+
+`KbRole`（viewer|commenter|editor|owner，权限序单调）/`KB_ROLES`/`kbRoleLabel`；`KbVisibility`（hidden|metadata|restricted|summary|full）/`KB_VISIBILITIES`/`kbVisibilityLabel`；`KbSubject`（kind: user|group|org|anyone|link + label + note）；`KbAclEntry`（subject+role+inheritedFrom?+expiresAt?+deny?+system?）；`KbIdentity`（user+groups[]+label?）；`KbVisibilityPolicy`（discoverable? 缺省 true=企业内部「知道存在」常态；summaryAllowed? 缺省 false）；`visibilityForRole(role, policy?)`；`KbAclDecision`（role|null、visibility、chain[]、deniedBy?、expiresAt?）；`evaluateAcl(entries, identity)`（先 deny→并集→默认拒绝，纯函数）；`KbAccessState`/`KB_ACCESS_STATES`/`kbAccessStateLabel`/`normalizeAccessRequest`；`KbAccessRequest`（含 approverNote 路由明示）；`KbAuditAction`/`KB_AUDIT_ACTIONS`/`KbAuditEntry`/`KbAuditChannel`/`auditChannelOf`/`normalizeAuditEntry`；`KbHygieneKind`（org_wide_link|broad_group|sensitive_mismatch|broken_inheritance|orphaned_owner|overexposed）/`KB_HYGIENE_KINDS`/`kbHygieneLabel`/`KbHygieneIssue`/`normalizeHygieneIssue`。
+
+### 9.7 存量增强与修正（v0.9.0 的泄露式文案修正）
+
+- **kb-retrieval**：参数栏加「检索身份」（固定身份集，见总纲 8）；过滤层徽标三态可切换（pre ✓ 默认 / post ⚠「分数已可观察——缺陷层」/ none ✕「fail-open 危险——Kendra 教训」）；命中计数只显示授权集合内安全计数；hit 的 ACL 元数据徽标行仅 `opts.admin` 模式。
+- **kb-trace / 工作台 mock**：guard span 文案改恒定事实「pre-filter 已按身份裁剪候选集」——删除一切被裁数量表述（v0.9.0 的「1 条 L4 块已剔除」「命中 5 块（4 有分+1 受限无分）」均为泄露式文案，全部修正；受限块 score:null 保留）。
+- **kb-sources**：`permission` 三级映射五级（requestable→metadata+申请通道；hidden=不渲染该行）；打码两形态（文档场景=锁+标题+申请；数据列场景=打码条），默认前者。
+- **kb-citation**：注释补引用白名单纪律；新增 `.is-revoked` 中性态（「来源已不可用」，权限收回后的历史引用）。
+
+### 9.8 验收增补
+
+- build 绿 + 5 个新 kit 独立安装；文档站 5 张新组件页 + `/kb` 新增「权限」标签（身份切换检索对照 / ACL 面板 / who-can 原因链 / 申请流状态机走查 / 审计时间线含 break-glass / 可见性对照器 admin 模式）。
+- **安全文案全局 grep**：`grep -rn "剔除\|被过滤.*条\|被隐藏.*条" src/ site/src/` 零残留（kb-visibility 教学段与 CHANGELOG 例外）。
 - AGENTS.md / README / CHANGELOG 同步。
