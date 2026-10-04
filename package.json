@@ -13,6 +13,7 @@
     "./behaviors/*": "./dist/behaviors/*.mjs",
     "./kit/*": "./dist/components/*.mjs",
     "./tokens.css": "./dist/tokens.css",
+    "./tokens/dtcg.json": "./dist/tokens/dtcg.json",
     "./ui.css": "./dist/ui.css",
     "./base.css": "./dist/base.css",
     "./retro-effects.css": "./dist/retro-effects.css",
@@ -37,6 +38,7 @@
   },
   "scripts": {
     "build": "tsup && bun scripts/dts-ext.mjs && bun scripts/build-css.ts",
+    "dtcg": "bun scripts/dtcg.mjs",
     "prepublishOnly": "bun run build"
   },
   "devDependencies": {

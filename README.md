@@ -95,6 +95,17 @@ bun run build   # tsup（behaviors → dist/*.mjs + .d.mts 类型面）+ scripts
 
 产物：`dist/tokens.css`（colors + style-profiles + typography 拼合）、`dist/ui.css`（tokens+base+组件）、`dist/base.css`、`dist/retro-effects.css`（按需）、`dist/tokens/*`、`dist/components/*`、`dist/behaviors/*.mjs` + `.d.mts`（66 个声明，JSDoc 约束注释存活）、`dist/index.mjs`、`dist/registry.json`（含 tokens/tokensExtras/base/components/behaviors 清单）。
 
+## DTCG 标准导出（设计 tokens 的互操作层）
+
+`bun run dtcg` → `dist/tokens/dtcg.json`（npm 子路径 `@icen.ai/ui/tokens/dtcg.json`）。把 6 预设 × 明暗的全部 token 导出为 **W3C DTCG 经典版**（第二版编辑草案 2022-06-14——Style Dictionary / Tokens Studio / Figma 插件等生态实际部署的版本；TR 2025.10 是预览草案，官方标注 *Do not attempt to implement*，`--dtcg-version` 参数留作升级门）：
+
+- **结构**：`{ $description, clay: { light: {…}, dark: {…} }, piano: {…}, … }`——每个 (预设, 明/暗) 是该组合下的**有效级联结果**（:root → .dark/.预设 → .预设.dark，按特异性分层、同层按源序）；子组按变量前缀划分并提升组级 `$type`（token 级 `$type` 恒最高优先）。
+- **经典版标量**：颜色 `#rrggbb[aa]`（rgba 自动换算）、尺寸 `"1rem"`/`"36px"`、时长 `"150ms"`、字体栈 string[]、缓动四元数组、行高 number；`var()` 引用导出为规范别名 `{clay.light.token.accent}`（引用目标保证在文件内，链式合法、无环）。
+- **类型只从变量名语义映射**（规范禁止工具从值猜类型），每个 token 保留 `$extensions['ai.icen.raw']` = 原始 CSS 自定义属性名。
+- **诚实失败**：`color-mix()` 派生色、box-shadow 值在经典版无对应标量，指向它们的桥接别名随之断链——一律**跳过并打印清单**（同时记录在顶层 `$extensions['ai.icen.skipped']`），不猜、不计算。`.style-modern/.retro/.terminal` 是与预设正交的风格层，`retro-effects.css` 是按需 extras，均不在 预设×明暗 矩阵内（按设计排除）。
+- **注意顺序**：tsup 会清空 dist，`dtcg` 必须在 `bun run build` **之后**运行（它不依赖 dist、只读 `src/tokens/`，但产物落在 dist 内）。脚本不并入默认 build，纯增量可选手动生成；若要随 npm 包分发，把 `bun run dtcg` 加进发布链（CI 或 prepublishOnly）即可。
+
+
 ## 目录
 
 ```
@@ -111,6 +122,7 @@ src/behaviors/*.ts            # 70 个 behaviors（AI 族 11 个 + kb 族 32 个
 docs/spec/kb-family.md        # 知识库族规格（顶层设计唯一事实源，§9 权限域）
 docs/research/                # 两轮调研归档（组件选型 + 权限安全，100+ 来源查证）
 scripts/build-css.ts           # CSS 产物构建（拼合 + registry.json）
+scripts/dtcg.mjs               # DTCG 经典版导出（bun run dtcg → dist/tokens/dtcg.json）
 site/                          # 文档站骨架（ui.icen.ai，独立 Astro 应用，含 /kb 工作台）
 ```
 
