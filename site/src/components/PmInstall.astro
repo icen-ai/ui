@@ -42,9 +42,13 @@ const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
 <script>
   import { initTabs } from '../../../src/behaviors/tabs.ts';
   import { initCopy } from '../../../src/behaviors/copy.ts';
-  // page-load 驱动：tabs 逐容器接线，ClientRouter 换页后的新 DOM 需重 init（幂等）
-  document.addEventListener('astro:page-load', () => {
+  // 立即初始化一次：首页走 Base 布局无 ClientRouter，astro:page-load 不会派发；
+  // astro:page-load 监听保留给 Docs 布局——ClientRouter 换页后的新 DOM 需重 init。
+  // initTabs/initCopy 均幂等，两处触发重复调用安全。
+  const init = (): void => {
     initTabs();
     initCopy();
-  });
+  };
+  init();
+  document.addEventListener('astro:page-load', init);
 </script>
