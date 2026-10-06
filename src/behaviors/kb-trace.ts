@@ -2,27 +2,27 @@
  * @icen.ai/ui — Behavior: kb-trace（RAG/LLM 调用链 span 树，观测治理域；与 components/kb-ops.css 配套）
  *
  * DOM 契约（类名固定，docs/spec/kb-family.md §5.19）：
- *   <div class="kb-trace">
- *     <div class="kb-span kb-span--child is-<kind> is-<status> [is-open]" data-span-id="…" data-parent-id="…"
+ *   <div class="icen-kb-trace">
+ *     <div class="icen-kb-span icen-kb-span--child is-<kind> is-<status> [is-open]" data-icen-span-id="…" data-icen-parent-id="…"
  *          style="--depth:1" tabindex="0" role="button" aria-expanded="false" aria-controls="kb-trace-body-N">
- *       <span class="kb-span-caret" aria-hidden="true"></span>   ← 有子 span 才显示（占位保持对齐）
- *       <span class="kb-span-kind">检索</span>                    ← kbSpanKindLabel；retrieval 为 accent 线框，其余中性
- *       <span class="kb-span-name">hybrid search</span>
- *       <i class="kb-span-bar" style="width:34%"></i>            ← 宽度 = elapsedMs / 同级最大；error 红 / running 脉冲
- *       <span class="kb-num">212ms</span>                        ← <1000 显 ms，否则秒保留 1 位；无值 '—'
+ *       <span class="icen-kb-span-caret" aria-hidden="true"></span>   ← 有子 span 才显示（占位保持对齐）
+ *       <span class="icen-kb-span-kind">检索</span>                    ← kbSpanKindLabel；retrieval 为 icen-accent 线框，其余中性
+ *       <span class="icen-kb-span-name">hybrid search</span>
+ *       <i class="icen-kb-span-bar" style="width:34%"></i>            ← 宽度 = elapsedMs / 同级最大；error 红 / running 脉冲
+ *       <span class="icen-kb-num">212ms</span>                        ← <1000 显 ms，否则秒保留 1 位；无值 '—'
  *     </div>
- *     <div class="kb-trace-body kb-fold-body" data-for="<spanId>" style="--depth:1" hidden>
- *       <div class="kb-trace-detail">detail 文本</div>
- *       <div class="kb-trace-usage"><span class="kb-num">↑ 1.2k tok</span>…<span class="kb-num">$0.0012</span></div>
- *       <div class="kb-trace-hits">
- *         <div class="kb-trace-hit">
- *           <span class="kb-trace-hit-rank kb-num">1</span>
- *           <span class="kb-trace-hit-title">标题</span>
- *           <span class="kb-score"><span class="kb-score-bar"><i style="width:87%"></i></span>
- *             <span class="kb-score-value">0.87</span></span>
+ *     <div class="icen-kb-trace-body kb-fold-body" data-icen-for="<spanId>" style="--depth:1" hidden>
+ *       <div class="icen-kb-trace-detail">detail 文本</div>
+ *       <div class="icen-kb-trace-usage"><span class="icen-kb-num">↑ 1.2k tok</span>…<span class="icen-kb-num">$0.0012</span></div>
+ *       <div class="icen-kb-trace-hits">
+ *         <div class="icen-kb-trace-hit">
+ *           <span class="icen-kb-trace-hit-rank icen-kb-num">1</span>
+ *           <span class="icen-kb-trace-hit-title">标题</span>
+ *           <span class="icen-kb-score"><span class="icen-kb-score-bar"><i style="width:87%"></i></span>
+ *             <span class="icen-kb-score-value">0.87</span></span>
  *         </div>…
  *       </div>
- *       <div class="kb-trace-error">错误文本（红）</div>
+ *       <div class="icen-kb-trace-error">错误文本（红）</div>
  *     </div>
  *     …
  *   </div>
@@ -38,7 +38,7 @@
  *   icen:kb-trace-toggle  { spanId, open }  — 折叠切换（click / Enter / Space）
  *
  * initKbTrace：document 级委托（click + keydown），幂等标记 + 销毁函数；委托挂
- * document，动态插入的 .kb-trace 免重跑 init（root 参数仅保持 kb 族 API 对称）。
+ * document，动态插入的 .icen-kb-trace 免重跑 init（root 参数仅保持 kb 族 API 对称）。
  * SSR 下 no-op；渲染只写 textContent/createElement（禁 innerHTML，本组件无 SVG）。
  */
 
@@ -52,6 +52,7 @@ import {
   type KbSpan,
 } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /** 顶层（含孤儿）分组的内部 key（不可能与真实 span id 冲突） */
 const ROOT_KEY = '\u0000root';
@@ -69,18 +70,21 @@ function depthOfSpan(span: KbSpan, byId: Map<string, KbSpan>, guard = 0): number
   return parent ? depthOfSpan(parent, byId, guard + 1) + 1 : 0;
 }
 
-/** 迷你命中行（复用 kb.css 的 .kb-score 序数条；分数 null → 不渲染条 + '—'） */
+/** 迷你命中行（复用 kb.css 的 .icen-kb-score 序数条；分数 null → 不渲染条 + '—'） */
 function buildHitRow(hit: KbRetrievalHit, rank: number): HTMLElement {
-  const row = h('div', 'kb-trace-hit');
-  row.append(h('span', 'kb-trace-hit-rank kb-num', String(rank)));
-  row.append(h('span', 'kb-trace-hit-title', hit.title || hit.snippet || hit.chunkId));
-  const score = h('span', 'kb-score');
-  const bar = h('span', 'kb-score-bar');
-  const fill = h('i'); /* 样式走 kb.css 的 .kb-score-bar > i */
+  const row = h('div', 'icen-kb-trace-hit');
+  row.append(h('span', 'icen-kb-trace-hit-rank icen-kb-num', String(rank)));
+  row.append(h('span', 'icen-kb-trace-hit-title', hit.title || hit.snippet || hit.chunkId));
+  const score = h('span', 'icen-kb-score');
   const pct = scorePercent(hit.score, hit.scoreKind);
-  fill.style.width = pct != null ? `${pct}%` : '0%';
-  bar.append(fill);
-  score.append(bar, h('span', 'kb-score-value', formatScore(hit.score)));
+  if (pct != null) {
+    const bar = h('span', 'icen-kb-score-bar');
+    const fill = h('i'); /* 样式走 kb.css 的 .icen-kb-score-bar > i */
+    fill.style.width = `${pct}%`;
+    bar.append(fill);
+    score.appendChild(bar);
+  }
+  score.append(h('span', 'icen-kb-score-value', formatScore(hit.score)));
   row.append(score);
   return row;
 }
@@ -91,34 +95,34 @@ function buildSpanBody(span: KbSpan): HTMLElement | null {
   const hasUsage = !!(usage && (usage.inputTokens != null || usage.outputTokens != null || usage.costUsd != null));
   const hasHits = span.kind === 'retrieval' && !!span.hits && span.hits.length > 0;
   if (!span.detail && !hasUsage && !hasHits && !span.error) return null;
-  const body = h('div', 'kb-trace-body kb-fold-body');
-  if (span.detail) body.append(h('div', 'kb-trace-detail', span.detail));
+  const body = h('div', 'icen-kb-trace-body kb-fold-body');
+  if (span.detail) body.append(h('div', 'icen-kb-trace-detail', span.detail));
   if (hasUsage && usage) {
-    const u = h('div', 'kb-trace-usage');
-    if (usage.inputTokens != null) u.append(h('span', 'kb-num', `↑ ${usage.inputTokens} tok`));
-    if (usage.outputTokens != null) u.append(h('span', 'kb-num', `↓ ${usage.outputTokens} tok`));
-    if (usage.costUsd != null) u.append(h('span', 'kb-num', `$${formatScore(usage.costUsd, 4)}`));
+    const u = h('div', 'icen-kb-trace-usage');
+    if (usage.inputTokens != null) u.append(h('span', 'icen-kb-num', `↑ ${usage.inputTokens} tok`));
+    if (usage.outputTokens != null) u.append(h('span', 'icen-kb-num', `↓ ${usage.outputTokens} tok`));
+    if (usage.costUsd != null) u.append(h('span', 'icen-kb-num', `$${formatScore(usage.costUsd, 4)}`));
     body.append(u);
   }
   if (hasHits && span.hits) {
-    const wrap = h('div', 'kb-trace-hits');
-    wrap.append(h('div', 'kb-trace-hits-label kb-meta', `命中 ${span.hits.length}`));
+    const wrap = h('div', 'icen-kb-trace-hits');
+    wrap.append(h('div', 'kb-trace-hits-label icen-kb-meta', t('kbTrace.hits', { p0: span.hits.length })));
     span.hits.forEach((hit, i) => wrap.append(buildHitRow(hit, i + 1)));
     body.append(wrap);
   }
-  if (span.error) body.append(h('div', 'kb-trace-error', span.error));
+  if (span.error) body.append(h('div', 'icen-kb-trace-error', span.error));
   return body;
 }
 
 /** 重算树可见性：行可见 = 祖先链全开；body 跟随所属行（行隐藏或自身折叠即隐藏） */
 function applyTraceVisibility(trace: HTMLElement): void {
-  const rows = Array.from(trace.querySelectorAll<HTMLElement>(':scope > .kb-span'));
-  const byId = new Map(rows.map((r) => [r.dataset.spanId ?? '', r] as const));
+  const rows = Array.from(trace.querySelectorAll<HTMLElement>(':scope > .icen-kb-span'));
+  const byId = new Map(rows.map((r) => [r.dataset.icenSpanId ?? '', r] as const));
   for (const row of rows) {
-    const parent = row.dataset.parentId ? byId.get(row.dataset.parentId) : undefined;
+    const parent = row.dataset.icenParentId ? byId.get(row.dataset.icenParentId) : undefined;
     row.hidden = parent ? parent.hidden || parent.getAttribute('aria-expanded') === 'false' : false;
     const next = row.nextElementSibling;
-    if (next instanceof HTMLElement && next.classList.contains('kb-trace-body')) {
+    if (next instanceof HTMLElement && next.classList.contains('icen-kb-trace-body')) {
       next.hidden = row.hidden || row.getAttribute('aria-expanded') === 'false';
     }
   }
@@ -131,7 +135,7 @@ function toggleSpanRow(trace: HTMLElement, row: HTMLElement): void {
   row.setAttribute('aria-expanded', String(open));
   row.classList.toggle('is-open', open);
   applyTraceVisibility(trace);
-  emitIcen(trace, 'icen:kb-trace-toggle', { spanId: row.dataset.spanId ?? '', open });
+  emitIcen(trace, 'icen:kb-trace-toggle', { spanId: row.dataset.icenSpanId ?? '', open });
 }
 
 /** span 序号发生器（aria-controls 唯一 id 用） */
@@ -144,10 +148,10 @@ let bodyUid = 0;
 export function renderKbTrace(el: HTMLElement, spans: KbSpan[]): HTMLElement {
   if (typeof document === 'undefined') return el;
   const list = normalizeSpans(spans as unknown as Array<Record<string, unknown>>);
-  el.className = 'kb-trace';
+  el.className = 'icen-kb-trace';
   el.replaceChildren();
   if (!list.length) {
-    el.append(h('div', 'kb-empty', '暂无调用链数据'));
+    el.append(h('div', 'icen-kb-empty', t('kbTrace.empty')));
     return el;
   }
 
@@ -172,28 +176,28 @@ export function renderKbTrace(el: HTMLElement, spans: KbSpan[]): HTMLElement {
     const expandable = hasKids || body != null;
     const open = expandable && (span.status === 'error' || span.status === 'running');
 
-    const row = h('div', `kb-span kb-span--${depth > 0 ? 'child' : 'root'} is-${span.kind} is-${span.status}`);
+    const row = h('div', `icen-kb-span icen-kb-span--${depth > 0 ? 'child' : 'root'} is-${span.kind} is-${span.status}`);
     if (open) row.classList.add('is-open');
-    row.dataset.spanId = span.id;
-    if (span.parentId) row.dataset.parentId = span.parentId;
+    row.dataset.icenSpanId = span.id;
+    if (span.parentId) row.dataset.icenParentId = span.parentId;
     row.style.setProperty('--depth', String(depth));
     row.tabIndex = 0;
     row.setAttribute('role', 'button');
     if (expandable) row.setAttribute('aria-expanded', String(open));
 
-    const caret = h('span', 'kb-span-caret');
+    const caret = h('span', 'icen-kb-span-caret');
     caret.setAttribute('aria-hidden', 'true');
     caret.hidden = !hasKids; /* 有子才显 */
     row.append(caret,
-      h('span', 'kb-span-kind', kbSpanKindLabel(span.kind)),
-      h('span', 'kb-span-name', span.name));
-    const bar = h('i', 'kb-span-bar');
+      h('span', 'icen-kb-span-kind', kbSpanKindLabel(span.kind)),
+      h('span', 'icen-kb-span-name', span.name));
+    const bar = h('i', 'icen-kb-span-bar');
     bar.style.width = `${width}%`;
-    row.append(bar, h('span', 'kb-num', fmtElapsed(span.elapsedMs)));
+    row.append(bar, h('span', 'icen-kb-num', fmtElapsed(span.elapsedMs)));
     el.append(row);
 
     if (body) {
-      body.dataset.for = span.id;
+      body.dataset.icenFor = span.id;
       body.style.setProperty('--depth', String(depth));
       if (expandable) {
         body.id = `kb-trace-body-${++bodyUid}`;
@@ -216,7 +220,7 @@ let traceTeardown: (() => void) | null = null;
 /**
  * 初始化 trace 树交互：document 级委托（click 选中+折叠；Enter/Space 展开聚焦行）。
  * 幂等（重复调用安全）；返回销毁函数（解绑委托并复位幂等标记，销毁后可重新 init）。
- * 委托挂 document 级：动态插入的 .kb-trace 自动接管，无需重跑 init（root 参数仅保持 kb 族 API 对称）。
+ * 委托挂 document 级：动态插入的 .icen-kb-trace 自动接管，无需重跑 init（root 参数仅保持 kb 族 API 对称）。
  */
 export function initKbTrace(root?: ParentNode): () => void {
   if (typeof document === 'undefined' || traceInit) return () => {};
@@ -225,16 +229,16 @@ export function initKbTrace(root?: ParentNode): () => void {
   const rowOf = (e: Event): { row: HTMLElement; trace: HTMLElement } | null => {
     const target = e.target;
     if (!(target instanceof Element)) return null;
-    const row = target.closest<HTMLElement>('.kb-span');
+    const row = target.closest<HTMLElement>('.icen-kb-span');
     if (!row) return null;
-    const trace = row.closest<HTMLElement>('.kb-trace');
+    const trace = row.closest<HTMLElement>('.icen-kb-trace');
     return trace ? { row, trace } : null;
   };
 
   const onClick = (e: MouseEvent): void => {
     const hit = rowOf(e);
     if (!hit) return;
-    emitIcen(hit.trace, 'icen:kb-trace-select', { spanId: hit.row.dataset.spanId ?? '' });
+    emitIcen(hit.trace, 'icen:kb-trace-select', { spanId: hit.row.dataset.icenSpanId ?? '' });
     toggleSpanRow(hit.trace, hit.row);
   };
   const onKey = (e: KeyboardEvent): void => {

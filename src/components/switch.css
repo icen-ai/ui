@@ -5,24 +5,24 @@
  * 不接线时亦可由使用方自行驱动状态。
  *
  * 完整契约：
- *   <button class="switch [--sm|--lg]" role="switch" aria-checked="true|false" [disabled]>
- *     <span class="switch-thumb"></span>
+ *   <button class="icen-switch [--sm|--lg]" role="switch" aria-checked="true|false" [disabled]>
+ *     <span class="icen-switch-thumb"></span>
  *   </button>
  *
- *   <button class="checkbox focus-ring [--sm|--lg]" role="checkbox"
+ *   <button class="icen-checkbox icen-focus-ring [--sm|--lg]" role="checkbox"
  *           aria-checked="true|false|mixed" [disabled]></button>
  *
- *   <div class="radio-group" role="radiogroup">
- *     <button class="radio-item motion [.is-selected]" role="radio"
+ *   <div class="icen-radio-group" role="radiogroup">
+ *     <button class="icen-radio-item icen-motion [.is-selected]" role="radio"
  *             aria-checked="true|false" [disabled]>
- *       <span class="radio-dot"></span>
+ *       <span class="icen-radio-dot"></span>
  *       <span>标签</span>
  *     </button>
  *   </div>
  */
 
 /* ── 开关 ── */
-.switch {
+.icen-switch {
   --switch-w: 44px;
   --switch-h: 24px;
   --switch-thumb: 20px;
@@ -33,48 +33,48 @@
   height: var(--switch-h);
   padding: 0;
   border: none;
-  border-radius: var(--radius-full);
-  background: var(--token-control-hover);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-control-hover);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color var(--icen-tx-normal);
 }
-.switch[aria-checked='true'] {
-  background: var(--token-accent);
+.icen-switch[aria-checked='true'] {
+  background: var(--icen-token-accent);
 }
-.switch:disabled,
-.switch[aria-disabled='true'],
-.switch[data-disabled] {
+.icen-switch:disabled,
+.icen-switch[aria-disabled='true'],
+.icen-switch[data-icen-disabled] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
-.switch:focus-visible {
+.icen-switch:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.switch-thumb {
+.icen-switch-thumb {
   position: absolute;
   top: 50%;
-  left: calc((var(--switch-h) - var(--switch-thumb)) / 2);
+  left: calc((var(--switch-h) - var(--switch-thumb)) / 2); /* guard:allow-physical 开关是物理隐喻控件（Material 惯例：RTL 下开/关方向保持物理，不镜像） */
   transform: translateY(-50%);
   width: var(--switch-thumb);
   height: var(--switch-thumb);
-  border-radius: var(--radius-full);
-  background: var(--token-on-accent);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--token-text) 15%, transparent);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-on-accent);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--icen-token-text) 15%, transparent);
   transition: transform var(--icen-tx-bounce);
 }
-.switch[aria-checked='true'] .switch-thumb {
-  transform: translateY(-50%) translateX(calc(var(--switch-w) - var(--switch-h)));
+.icen-switch[aria-checked='true'] .icen-switch-thumb {
+  transform: translateY(-50%) translateX(calc(var(--switch-w) - var(--switch-h))); /* guard:allow-physical translateX 位移属物理动画语义（开关不随 RTL 镜像） */
 }
 
 /* 尺寸变体 */
-.switch--sm { --switch-w: 36px; --switch-h: 20px; --switch-thumb: 16px; }
-.switch--lg { --switch-w: 56px; --switch-h: 28px; --switch-thumb: 24px; }
+.icen-switch--sm { --switch-w: 36px; --switch-h: 20px; --switch-thumb: 16px; }
+.icen-switch--lg { --switch-w: 56px; --switch-h: 28px; --switch-thumb: 24px; }
 
 /* ── 勾选框（✓ 与半选横条均 ::before 自绘） ── */
-.checkbox {
+.icen-checkbox {
   --checkbox-size: 16px;
   display: inline-flex;
   align-items: center;
@@ -83,10 +83,10 @@
   width: var(--checkbox-size);
   height: var(--checkbox-size);
   padding: 0;
-  background: var(--token-control);
+  background: var(--icen-token-control);
   color: transparent;
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-sm);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
@@ -95,16 +95,16 @@
     color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
 }
-.checkbox:hover:not([aria-checked='true']):not([aria-checked='mixed']):not(:disabled) {
-  border-color: color-mix(in srgb, var(--token-accent) 50%, transparent);
+.icen-checkbox:hover:not([aria-checked='true']):not([aria-checked='mixed']):not(:disabled) {
+  border-color: color-mix(in srgb, var(--icen-token-accent) 50%, transparent);
 }
-.checkbox[aria-checked='true'],
-.checkbox[aria-checked='mixed'] {
-  background: var(--token-accent);
-  border-color: var(--token-accent);
-  color: var(--token-on-accent);
+.icen-checkbox[aria-checked='true'],
+.icen-checkbox[aria-checked='mixed'] {
+  background: var(--icen-token-accent-strong);
+  border-color: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
 }
-.checkbox::before {
+.icen-checkbox::before {
   content: '';
   width: 60%;
   height: 60%;
@@ -112,47 +112,47 @@
   opacity: 0;
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
-.checkbox[aria-checked='true']::before { opacity: 1; }
-.checkbox[aria-checked='mixed']::before {
+.icen-checkbox[aria-checked='true']::before { opacity: 1; }
+.icen-checkbox[aria-checked='mixed']::before {
   opacity: 1;
   width: 60%;
   height: 2px;
   clip-path: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
 }
-.checkbox:disabled,
-.checkbox[aria-disabled='true'],
-.checkbox[data-disabled] {
+.icen-checkbox:disabled,
+.icen-checkbox[aria-disabled='true'],
+.icen-checkbox[data-icen-disabled] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
-.checkbox:focus-visible {
+.icen-checkbox:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.checkbox--sm { --checkbox-size: 14px; }
-.checkbox--lg { --checkbox-size: 20px; }
+.icen-checkbox--sm { --checkbox-size: 14px; }
+.icen-checkbox--lg { --checkbox-size: 20px; }
 
 /* ── 单选行（radio item：整行可点） ── */
-.radio-group {
+.icen-radio-group {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
 }
 
-.radio-item {
+.icen-radio-item {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   width: 100%;
-  padding: var(--density-space-sm) var(--density-space-md);
-  font-size: var(--density-font-size-md);
-  text-align: left;
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-md);
+  text-align: start;
   border: 1px solid transparent;
   background: transparent;
-  color: var(--token-text);
-  border-radius: var(--radius-md);
+  color: var(--icen-token-text);
+  border-radius: var(--icen-radius-md);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
@@ -160,125 +160,125 @@
     color var(--icen-tx-fast),
     border-color var(--icen-tx-fast);
 }
-.radio-item:hover:not(.is-disabled) {
-  background: var(--token-fill-1);
+.icen-radio-item:hover:not(.is-disabled) {
+  background: var(--icen-token-fill-1);
 }
-.radio-item.is-selected,
-.radio-item[aria-checked='true'] {
-  background: var(--token-accent-subtle);
-  color: var(--token-accent);
+.icen-radio-item.is-selected,
+.icen-radio-item[aria-checked='true'] {
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent);
   font-weight: 500;
-  border-color: color-mix(in srgb, var(--token-accent) 25%, transparent);
+  border-color: color-mix(in srgb, var(--icen-token-accent) 25%, transparent);
 }
-.radio-item:focus-visible {
+.icen-radio-item:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.radio-item:disabled,
-.radio-item.is-disabled,
-.radio-item[aria-disabled='true'] {
+.icen-radio-item:disabled,
+.icen-radio-item.is-disabled,
+.icen-radio-item[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
 
-.radio-dot {
+.icen-radio-dot {
   position: relative;
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-full);
-  background: var(--token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-control);
   transition: border-color var(--icen-tx-fast);
 }
-.radio-item.is-selected .radio-dot,
-.radio-item[aria-checked='true'] .radio-dot { border-color: var(--token-accent); }
-.radio-dot::after {
+.icen-radio-item.is-selected .icen-radio-dot,
+.icen-radio-item[aria-checked='true'] .icen-radio-dot { border-color: var(--icen-token-accent); }
+.icen-radio-dot::after {
   content: '';
   position: absolute;
-  top: 50%; left: 50%;
+  top: 50%; left: 50%; /* guard:allow-physical 圆心居中：left 50% + translate(-50%) 任意方向下均为圆心 */
   width: 8px;
   height: 8px;
-  border-radius: var(--radius-full);
-  background: var(--token-accent);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent);
   transform: translate(-50%, -50%) scale(0);
   transition: transform var(--icen-tx-bounce);
 }
-.radio-item.is-selected .radio-dot::after,
-.radio-item[aria-checked='true'] .radio-dot::after {
+.icen-radio-item.is-selected .icen-radio-dot::after,
+.icen-radio-item[aria-checked='true'] .icen-radio-dot::after {
   transform: translate(-50%, -50%) scale(1);
 }
 
 /* ── 开关色彩变体 ── */
-.switch--success[aria-checked='true'] { background: var(--token-success); }
-.switch--warning[aria-checked='true'] { background: var(--token-warning); }
-.switch--danger[aria-checked='true']  { background: var(--token-error); }
+.icen-switch--success[aria-checked='true'] { background: var(--icen-token-success); }
+.icen-switch--warning[aria-checked='true'] { background: var(--icen-token-warning); }
+.icen-switch--danger[aria-checked='true']  { background: var(--icen-token-error); }
 
 /* ── 开关带文字（on/off 文字嵌入） ── */
-.switch--text {
+.icen-switch--text {
   --switch-w: 52px;
 }
-.switch--text .switch-thumb {
+.icen-switch--text .icen-switch-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--density-font-size-2xs);
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 700;
   color: transparent;
 }
-.switch--text[aria-checked='true']::before {
+.icen-switch--text[aria-checked='true']::before {
   content: 'ON';
   position: absolute;
-  left: 6px;
+  left: 6px; /* guard:allow-physical ON 文案固定于物理左侧（与 thumb 关闭位同侧，开关不随 RTL 镜像） */
   top: 50%;
   transform: translateY(-50%);
-  font-size: var(--density-font-size-2xs);
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 700;
-  color: var(--token-on-accent);
+  color: var(--icen-token-on-accent);
 }
-.switch--text[aria-checked='false']::before {
+.icen-switch--text[aria-checked='false']::before {
   content: 'OFF';
   position: absolute;
-  right: 6px;
+  right: 6px; /* guard:allow-physical OFF 文案固定于物理右侧（与 thumb 开启位同侧，开关不随 RTL 镜像） */
   top: 50%;
   transform: translateY(-50%);
-  font-size: var(--density-font-size-2xs);
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 700;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
 
 /* ── 带标签的开关行 ── */
-.switch-row {
+.icen-switch-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-sm) 0;
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm) 0;
 }
-.switch-row-label {
+.icen-switch-row-label {
   display: flex;
   flex-direction: column;
   gap: 1px;
   flex: 1;
   min-width: 0;
 }
-.switch-row-title {
-  font-size: var(--density-font-size-md);
-  color: var(--token-text);
+.icen-switch-row-title {
+  font-size: var(--icen-density-font-size-md);
+  color: var(--icen-token-text);
 }
-.switch-row-desc {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-switch-row-desc {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
 }
 
 /* ── 勾选行（checkbox + label 组合） ── */
-.checkbox-row {
+.icen-checkbox-row {
   display: flex;
   align-items: flex-start;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   cursor: pointer;
 }
-.checkbox-row-label {
+.icen-checkbox-row-label {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -287,66 +287,66 @@
 }
 
 /* ── 单选卡片（富化版 radio-item，带描述与图标） ── */
-.radio-card {
+.icen-radio-card {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
-  padding: var(--density-space-md);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  background: var(--token-surface);
+  gap: var(--icen-density-space-xs);
+  padding: var(--icen-density-space-md);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-surface);
   cursor: pointer;
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast),
     background-color var(--icen-tx-fast);
 }
-.radio-card:hover {
+.icen-radio-card:hover {
   border-color: var(--icen-hover-border);
 }
-.radio-card-head {
+.icen-radio-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
 }
-.radio-card.is-selected,
-.radio-card[aria-checked='true'] {
-  border-color: var(--token-accent);
-  background: var(--token-accent-subtle);
+.icen-radio-card.is-selected,
+.icen-radio-card[aria-checked='true'] {
+  border-color: var(--icen-token-accent);
+  background: var(--icen-token-accent-subtle);
   box-shadow: var(--icen-ring-soft);
 }
-.radio-card:focus-visible {
+.icen-radio-card:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.radio-card-title {
-  font-size: var(--density-font-size-md);
+.icen-radio-card-title {
+  font-size: var(--icen-density-font-size-md);
   font-weight: 500;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
-.radio-card-desc {
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+.icen-radio-card-desc {
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
   line-height: 1.5;
 }
 
 /* 单选卡片网格 */
-.radio-card-grid {
+.icen-radio-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
 }
 
 /* ── 复选框组（多列网格） ── */
-.checkbox-grid {
+.icen-checkbox-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .switch-thumb { transition: none; }
-  .radio-dot::after { transition: none; }
-  .radio-card { transition: none; }
+  .icen-switch-thumb { transition: none; }
+  .icen-radio-dot::after { transition: none; }
+  .icen-radio-card { transition: none; }
 }

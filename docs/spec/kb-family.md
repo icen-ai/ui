@@ -6,9 +6,9 @@
 ## 0. 定位与心智模型
 
 ```
-通用原语（.btn/.table…）  →  造任何界面
-ai-*（.ai-chat/.ai-tool…） →  AI 的过程：「AI 在做什么」（消息/思考/工具/用量）
-kb-*（.kb-citation…）     →  知识的证据与资产：「知识从哪来、可信吗、怎么用」
+通用原语（.icen-btn/.icen-table…）  →  造任何界面
+ai-*（.icen-ai-chat/.icen-ai-tool…） →  AI 的过程：「AI 在做什么」（消息/思考/工具/用量）
+kb-*（.icen-kb-citation…）     →  知识的证据与资产：「知识从哪来、可信吗、怎么用」
 chart-*                    →  图形层（ChartSpec 纯 JSON）
 ```
 
@@ -17,19 +17,19 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 ## 1. 设计原则（Apple 式直觉 → 本库落地）
 
 1. **一屏一个主行动**：每个视图只有一个 accent 级操作（检索 playground 的「运行」、chunk 编辑器的「保存」）；其余动作沉为 ghost/图标钮。accent 是稀缺资源。
-2. **证据是一等视觉元素**：数字一律等宽字体（`.kb-num`，tabular-nums）；引文一律引用体（`.kb-quote`，左侧 2px 证据线）；来源/分数/日期永不用装饰色——只用语义色与层级色（text / muted / faint）。
+2. **证据是一等视觉元素**：数字一律等宽字体（`.icen-kb-num`，tabular-nums）；引文一律引用体（`.icen-kb-quote`，左侧 2px 证据线）；来源/分数/日期永不用装饰色——只用语义色与层级色（text / muted / faint）。
 3. **渐进披露**：一切次要细节走「摘要行（状态徽章 + 时长/计数）+ muted 折叠体」两段式；摘要行承担状态机可视化；流式时展开、完成即折叠、用户展开过则不再自动收（与 ai-reasoning 同契约）。
-4. **状态机先于样式**：每个组件先枚举状态（`.is-*` + `data-state`），UI 只是 state→(图标, 标签, 色阶, 动效) 的映射表。与 AI 族七态同构处直接复用语义。
-5. **材料层级只用三档**：`--token-bg`（页面）→ `--token-bg-soft`（卡/行）→ 浮层（复用 popover/modal 的 portal 与 z 尺）。kb 族不自造阴影层级。
+4. **状态机先于样式**：每个组件先枚举状态（`.is-*` + `data-icen-state`），UI 只是 state→(图标, 标签, 色阶, 动效) 的映射表。与 AI 族七态同构处直接复用语义。
+5. **材料层级只用三档**：`--icen-token-bg`（页面）→ `--icen-token-bg-soft`（卡/行）→ 浮层（复用 popover/modal 的 portal 与 z 尺）。kb 族不自造阴影层级。
 6. **直接操纵**：能拖就拖（分段边界、双栏比例）、能行内编辑就行内编辑（chunk/SQL/过滤值）、能悬停预览就悬停（引用卡 300ms 防抖）。点击做深度验证，悬停做即时判读。
 7. **无死路**：每个失败态带重试（管线单文档重跑、SQL 一键修复）、每个空态带行动（无答案→建文档/加同义词、passages 空态→「引用段落将出现在这里」）。
 8. **诚实呈现边界**：截断声明（结果表 LIMIT）、无分命中（score null → 「—」）、权限受限（chunk 打码 + 申请访问）、不可逆操作前置警告（换 embedding 需重建索引）。
 
 ## 2. 视觉音调（跨域一致性的硬约束）
 
-- 尺寸节奏：行高 28px（.kb-row 默认）、区块间距 16px、组内 8px；密度 `data-density="compact|normal"`（compact 行高 24px）。
-- 圆角：容器 `--radius-md`、行内元素（角标/chip）`--radius-sm` 或全圆。
-- 字号：标题 13px/600、正文 13px、元信息 11.5px、徽标 10.5px；数字全部 `.kb-num`。
+- 尺寸节奏：行高 28px（.icen-kb-row 默认）、区块间距 16px、组内 8px；密度 `data-icen-density="compact|normal"`（compact 行高 24px）。
+- 圆角：容器 `--icen-radius-md`、行内元素（角标/chip）`--icen-radius-sm` 或全圆。
+- 字号：标题 13px/600、正文 13px、元信息 11.5px、徽标 10.5px；数字全部 `.icen-kb-num`。
 - 色彩角色（族内纪律）：
   - 证据域（ground）＝accent（引用是主角，但角标默认弱化为 faint，hover/激活才点亮）；
   - 过程域（ingest/search）＝中性行 + 状态色只给状态点与徽标；
@@ -43,7 +43,7 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 | 域 | CSS（自持） | behavior |
 |---|---|---|
-| 共享基座 | `components/kb.css`（.kb-row/.kb-num/.kb-score/.kb-quote/.kb-chip/徽标等，全部 kb slug 经 EXTRA_CSS 引入） | `behaviors/kb-core.ts`（类型 + 纯函数 + 注册表，无 UI 无副作用） |
+| 共享基座 | `components/kb.css`（.icen-kb-row/.icen-kb-num/.icen-kb-score/.icen-kb-quote/.icen-kb-chip/徽标等，全部 kb slug 经 EXTRA_CSS 引入） | `behaviors/kb-core.ts`（类型 + 纯函数 + 注册表，无 UI 无副作用） |
 | 证据 ground | `components/kb-ground.css` | kb-citation.ts / kb-sources.ts / kb-passage.ts / kb-conflict.ts |
 | 摄取 ingest | `components/kb-ingest.css` | kb-pipeline.ts / kb-chunks.ts / kb-segment.ts / kb-connector.ts / kb-metadata.ts / kb-qa.ts |
 | 检索 search | `components/kb-search.css` | kb-retrieval.ts / kb-filter.ts / kb-rerank.ts / kb-hittest.ts |
@@ -64,19 +64,19 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.1 kb-citation 行内引用角标
 ```
-<button class="kb-citation" data-cite="3" aria-describedby?>3</button>
+<button class="icen-kb-citation" data-icen-cite="3" aria-describedby?>3</button>
 ```
 - `parseInlineCitations(text)`（kb-core）把 `[3]` 文本切成段落流；`renderCitationMark(n)` 造角标。
-- `initKbCitation(root?)`：委托 click → `icen:kb-citation-open {citation}`；hover ≥300ms 且配置了 `getCard`/sources 时经 popover portal 浮 `.kb-citation-card`（favicon/标题/域名/citedText≤150 字/日期/徽标/受限打码）。
+- `initKbCitation(root?)`：委托 click → `icen:kb-citation-open {citation}`；hover ≥300ms 且配置了 `getCard`/sources 时经 popover portal 浮 `.icen-kb-citation-card`（favicon/标题/域名/citedText≤150 字/日期/徽标/受限打码）。
 - 无效编号（>来源数）降级为纯文本角标（`.is-dead`，不可点）——「不信任模型生成编号」纪律。
 
 ### 5.2 kb-sources 来源列表
 ```
-<div class="kb-sources kb-sources--row|-rail">
-  <button class="kb-source" data-kb-source-id>
-    <span class="kb-source-icon">…svg…</span>
-    <span class="kb-source-main"><span class="kb-source-title">…</span><span class="kb-source-sub">域名/类型 · 日期</span></span>
-    <span class="kb-source-side">徽标组 + 被引 ×2</span>
+<div class="icen-kb-sources kb-sources--row|-rail">
+  <button class="icen-kb-source" data-icen-kb-source-id>
+    <span class="icen-kb-source-icon">…svg…</span>
+    <span class="icen-kb-source-main"><span class="icen-kb-source-title">…</span><span class="icen-kb-source-sub">域名/类型 · 日期</span></span>
+    <span class="icen-kb-source-side">徽标组 + 被引 ×2</span>
   </button>…
 </div>
 ```
@@ -86,30 +86,30 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.3 kb-passage 原文定位查看器
 ```
-<aside class="kb-passage" hidden>
-  <div class="kb-passage-head">标题 · 页码/位置 · <button data-kb-passage-close>×</button></div>
-  <div class="kb-passage-body">原文…<mark class="kb-passage-hit">命中</mark>…<button data-kb-passage-expand>展开上下文</button></div>
+<aside class="icen-kb-passage" hidden>
+  <div class="icen-kb-passage-head">标题 · 页码/位置 · <button data-icen-kb-passage-close>×</button></div>
+  <div class="icen-kb-passage-body">原文…<mark class="kb-passage-hit">命中</mark>…<button data-icen-kb-passage-expand>展开上下文</button></div>
 </aside>
 ```
 - `createKbPassage(el, opts)` → `{ open(citation|source), close(), highlight(terms), expand() }`。
-- 定位按 kb-core `KbLocation` 三分型（char/page/block）；侧栏打开不打断对话；多命中分色（`data-hit="0|1|2"`）。
+- 定位按 kb-core `KbLocation` 三分型（char/page/block）；侧栏打开不打断对话；多命中分色（`data-icen-hit="0|1|2"`）。
 - 事件：`icen:kb-passage-jump {citation}`、`icen:kb-passage-close {}`。
 
 ### 5.4 kb-conflict 来源冲突组
 ```
-<div class="kb-conflict"><div class="kb-conflict-claim">同一主张…</div>
-  <div class="kb-conflict-versions"><div class="kb-conflict-ver [is-current|is-older]">版本卡（日期/来源/official）</div>…</div></div>
+<div class="icen-kb-conflict"><div class="icen-kb-conflict-claim">同一主张…</div>
+  <div class="icen-kb-conflict-versions"><div class="icen-kb-conflict-ver [is-current|is-older]">版本卡（日期/来源/official）</div>…</div></div>
 ```
 - `renderKbConflict(el, groups)`；`is-current` 高亮最新/官方，其余 faded + stale 徽标。市场空白组件。
 
 ### 5.5 kb-pipeline 解析管线时间线
 ```
-<div class="kb-pipeline" data-document-id>
-  <div class="kb-pipeline-head">标题 · <span class="kb-pipeline-state is-done|is-running|is-fail">…</span> · N chunks · <button data-kb-pipeline-rerun>重跑</button></div>
-  <ol class="kb-pipeline-steps">
-    <li class="kb-pipeline-step is-done|is-running|is-fail|is-queued">icon · 解析 · 12s · <span class="kb-step-detail">3 页/2 表</span></li>…
+<div class="icen-kb-pipeline" data-icen-document-id>
+  <div class="icen-kb-pipeline-head">标题 · <span class="icen-kb-pipeline-state is-done|is-running|is-fail">…</span> · N chunks · <button data-icen-kb-pipeline-rerun>重跑</button></div>
+  <ol class="icen-kb-pipeline-steps">
+    <li class="icen-kb-pipeline-step is-done|is-running|is-fail|is-queued">icon · 解析 · 12s · <span class="icen-kb-step-detail">3 页/2 表</span></li>…
   </ol>
-  <div class="kb-pipeline-error">阶段定位 + 原因</div>
+  <div class="icen-kb-pipeline-error">阶段定位 + 原因</div>
 </div>
 ```
 - `renderKbPipeline(el, run|runs)`；`initKbPipeline(root?)` 委托展开（steps 折叠为摘要行）+ 重跑。
@@ -118,13 +118,13 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.6 kb-chunks chunk 编辑器
 ```
-<div class="kb-chunks">
-  <div class="kb-chunks-bar">搜索（全文|语义 segmented）+ 新增</div>
-  <div class="kb-chunk [is-off]">
-    <label class="kb-chunk-switch"><input type="checkbox">启用</label>
-    <div class="kb-chunk-content" contenteditable>…</div>
-    <div class="kb-chunk-keywords">tag-input 式 chips</div>
-    <div class="kb-chunk-meta">#3 · 第 2 页 · 向量就绪</div>
+<div class="icen-kb-chunks">
+  <div class="icen-kb-chunks-bar">搜索（全文|语义 segmented）+ 新增</div>
+  <div class="icen-kb-chunk [is-off]">
+    <label class="icen-kb-chunk-switch"><input type="checkbox">启用</label>
+    <div class="icen-kb-chunk-content" contenteditable>…</div>
+    <div class="icen-kb-chunk-keywords">tag-input 式 chips</div>
+    <div class="icen-kb-chunk-meta">#3 · 第 2 页 · 向量就绪</div>
     <div class="kb-chunk-actions">删除</div>
   </div>…
 </div>
@@ -134,9 +134,9 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.7 kb-segment 分段策略 + 实时预览
 ```
-<div class="kb-segment">
-  <div class="kb-segment-form">模式（auto/custom/parent-child）· 分隔符 · 最大长度 · 重叠 · 清洗勾选 · locked 警示</div>
-  <div class="kb-segment-preview"><div class="kb-segment-stats">N 段 · 均长 x · ≈y tokens</div><div class="kb-segment-block">…</div>…</div>
+<div class="icen-kb-segment">
+  <div class="icen-kb-segment-form">模式（auto/custom/parent-child）· 分隔符 · 最大长度 · 重叠 · 清洗勾选 · locked 警示</div>
+  <div class="icen-kb-segment-preview"><div class="icen-kb-segment-stats">N 段 · 均长 x · ≈y tokens</div><div class="icen-kb-segment-block">…</div>…</div>
 </div>
 ```
 - `createKbSegment(el, { config, sample, onChange })` → `{ getConfig(), setConfig(), refresh(sample?) }`；预览走 kb-core `segmentText` 纯函数（真实切分非估算）；模式锁定（locked）时表单禁用 + 提示。
@@ -144,7 +144,7 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.8 kb-connector 连接器卡
 ```
-<div class="kb-connector is-healthy|is-stale|is-failing|is-off">
+<div class="icen-kb-connector is-healthy|is-stale|is-failing|is-off">
   头：图标 · 名称 · scope · 同步计划
   信号行（4 离散信号）：状态点 · 已同步 N · 抓取率 · 变更率 · 凭证
   操作：立即同步 · 重新授权 · 编辑计划
@@ -164,10 +164,10 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.11 kb-retrieval 检索 playground
 ```
-<div class="kb-retrieval">
-  <div class="kb-retrieval-bar">query 输入 · 模式 segmented（向量|关键词|混合）· topK stepper · alpha 滑杆 · rerank 开关 · 运行(btn-primary)</div>
+<div class="icen-kb-retrieval">
+  <div class="icen-kb-retrieval-bar">query 输入 · 模式 segmented（向量|关键词|混合）· topK stepper · alpha 滑杆 · rerank 开关 · 运行(btn-primary)</div>
   <div class="kb-retrieval-params-text">可复制参数 JSON（DSL 双表示纪律）</div>
-  <div class="kb-hit"><div class="kb-hit-rank">1</div><div class="kb-hit-main">标题 · <mark>命中</mark>…</div>
+  <div class="icen-kb-hit"><div class="icen-kb-hit-rank">1</div><div class="icen-kb-hit-main">标题 · <mark>命中</mark>…</div>
     <div class="kb-hit-score">score bar + 值 + explain</div></div>…
 </div>
 ```
@@ -183,8 +183,8 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.13 kb-rerank rerank A/B 对比（市场空白）
 ```
-<div class="kb-rerank">
-  <div class="kb-rerank-col">before 列表</div><div class="kb-rerank-col">after 列表</div>
+<div class="icen-kb-rerank">
+  <div class="icen-kb-rerank-col">before 列表</div><div class="icen-kb-rerank-col">after 列表</div>
   每行：rank + ↑3/↓2/—（kb-rerank-delta is-up|is-down）+ 双分数
 </div>
 ```
@@ -197,10 +197,10 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.15 kb-sql 生成 SQL 卡片
 ```
-<div class="kb-sql">
-  <div class="kb-sql-head">标题 · 可见性徽章（admin）· 引用表 chips · 复制/编辑重跑</div>
-  <pre class="kb-sql-code">…highlightSql 生成的着色 token…</pre>
-  <div class="kb-sql-fix">v1↔v2 diff（复用 parseUnifiedDiff）+ 一键应用</div>
+<div class="icen-kb-sql">
+  <div class="icen-kb-sql-head">标题 · 可见性徽章（admin）· 引用表 chips · 复制/编辑重跑</div>
+  <pre class="icen-kb-sql-code">…highlightSql 生成的着色 token…</pre>
+  <div class="icen-kb-sql-fix">v1↔v2 diff（复用 parseUnifiedDiff）+ 一键应用</div>
 </div>
 ```
 - `renderKbSql(el, query, opts?)`；`initKbSql(root?)`；导出纯函数 `highlightSql(sql): Node`（零依赖关键词/字符串/注释着色）。
@@ -209,13 +209,13 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.16 kb-answer 问数答案容器
 ```
-<article class="kb-answer">
-  <div class="kb-answer-badges">认证徽章（trusted，命中资产说明 + 参数可改重跑）/ 权限提示</div>
-  <div class="kb-answer-body">答案（可含 kb-citation 角标）…</div>
-  <div class="kb-answer-clarify">…kb-clarify…</div>
-  <div class="kb-answer-explain">…kb-explain 折叠…</div>
-  <div class="kb-answer-results">结果表（datatable）+ 截断声明 + 导出</div>
-  <div class="kb-answer-chart">图表 + 类型切换 + 追问改图</div>
+<article class="icen-kb-answer">
+  <div class="icen-kb-answer-badges">认证徽章（trusted，命中资产说明 + 参数可改重跑）/ 权限提示</div>
+  <div class="icen-kb-answer-body">答案（可含 kb-citation 角标）…</div>
+  <div class="icen-kb-answer-clarify">…kb-clarify…</div>
+  <div class="icen-kb-answer-explain">…kb-explain 折叠…</div>
+  <div class="icen-kb-answer-results">结果表（datatable）+ 截断声明 + 导出</div>
+  <div class="icen-kb-answer-chart">图表 + 类型切换 + 追问改图</div>
 </article>
 ```
 - `renderKbAnswer(el, model)` 组合渲染；认证优先于生成的徽章逻辑；`permissionNotice` 行级/脱敏提示。
@@ -231,11 +231,11 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.19 kb-trace trace 树
 ```
-<div class="kb-trace"><div class="kb-span is-<kind> [is-open]" data-span-id style="--depth:1">
-  <span class="kb-span-caret"></span><span class="kb-span-kind">检索</span><span class="kb-span-name">hybrid search</span>
-  <i class="kb-span-bar" style="width:34%"></i><span class="kb-num">212ms</span></div>…</div>
+<div class="icen-kb-trace"><div class="kb-span is-<kind> [is-open]" data-icen-span-id style="--depth:1">
+  <span class="icen-kb-span-caret"></span><span class="icen-kb-span-kind">检索</span><span class="icen-kb-span-name">hybrid search</span>
+  <i class="icen-kb-span-bar" style="width:34%"></i><span class="icen-kb-num">212ms</span></div>…</div>
 ```
-- `renderKbTrace(el, spans)`；`initKbTrace(root?)`：嵌套缩进（--depth）、时长条按兄弟占比、retrieval span 内嵌 hits 迷你列表（复用 .kb-hit）、io 折叠。
+- `renderKbTrace(el, spans)`；`initKbTrace(root?)`：嵌套缩进（--depth）、时长条按兄弟占比、retrieval span 内嵌 hits 迷你列表（复用 .icen-kb-hit）、io 折叠。
 - 事件：`icen:kb-trace-select {spanId}`、`icen:kb-trace-toggle {spanId, open}`。
 
 ### 5.20 kb-review 标注队列
@@ -256,7 +256,7 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.24 kb-checkpoint 检查点（P2）
 ```
-<button class="kb-checkpoint" data-checkpoint-id>时钟icon · 14:32 · 批量改写前</button>
+<button class="icen-kb-checkpoint" data-icen-checkpoint-id>时钟icon · 14:32 · 批量改写前</button>
 ```
 - `renderKbCheckpoints(el, items)`；`initKbCheckpoint(root?)`：点击弹恢复菜单，scope 三选（内容/对话/两者）——默认「只回滚内容、保留对话」（Cursor 语义，审计友好）。
 - 事件：`icen:kb-checkpoint-restore {checkpointId, scope}`。
@@ -267,7 +267,7 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 5.26 kb-chain 工具链条
 ```
-<div class="kb-chain"><span class="kb-chain-step is-done">检索</span><i class="kb-chain-link"></i><span class="kb-chain-step is-running">重排</span>…</div>
+<div class="icen-kb-chain"><span class="icen-kb-chain-step is-done">检索</span><i class="icen-kb-chain-link"></i><span class="icen-kb-chain-step is-running">重排</span>…</div>
 ```
 - `renderKbChain(el, steps)`；横向摘要条（与 ai-tool-call 单卡互补）；点击 step → `icen:kb-chain-step {index, step}`。
 
@@ -290,7 +290,7 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 - 渲染：textContent-only；SVG 过 svgIcon；流式路径 append-only（不整树重建）；数据快照切换才允许整段重建。
 - 交互：init* 幂等 + 销毁函数；document 级委托；滚动/指针监听 passive；拖拽 rAF 批处理。
 - CSS：无 JS 依赖的纯样式状态优先（.is-* 驱动）；动效 ≤240ms；不引第三方字体/图标。
-- 自定义：`registerKbSourceType(kind, {label, icon})`（来源类型开放注册，镜像 registerAiKind）；每组件暴露 `--kb-*` 微调变量与 `data-density`；渲染槽位（opts.renderCard / renderHit 等）+ 事件/handle 双通道；浮层一律走 popover 的 PanelSizing。
+- 自定义：`registerKbSourceType(kind, {label, icon})`（来源类型开放注册，镜像 registerAiKind）；每组件暴露 `--kb-*` 微调变量与 `data-icen-density`；渲染槽位（opts.renderCard / renderHit 等）+ 事件/handle 双通道；浮层一律走 popover 的 PanelSizing。
 - kit：`bunx @icen.ai/ui add kb` 一条拿到全家；域级 slug 自持（EXTRA_CSS 只补 kb.css）。
 
 ## 8. 验收
@@ -318,23 +318,23 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 ### 9.1 kb-acl 文档权限面板（SharePoint 权限页范式）
 
 ```
-<section class="kb-acl">
-  <header class="kb-acl-head">
-    <div class="kb-acl-title">资源名 + <span class="kb-badge kb-badge--restricted">受限</span></div>
-    <button class="kb-acl-act" data-acl-break|data-acl-restore>停止继承 / 恢复继承</button>
+<section class="icen-kb-acl">
+  <header class="icen-kb-acl-head">
+    <div class="icen-kb-acl-title">资源名 + <span class="icen-kb-badge icen-kb-badge--restricted">受限</span></div>
+    <button class="icen-kb-acl-act" data-icen-acl-break|data-icen-acl-restore>停止继承 / 恢复继承</button>
   </header>
-  <div class="kb-acl-inherit [.is-broken|.is-partial]">   <!-- 继承 banner 三态：继承（含父链）/ 已断（警示）/ 例外 N 项 -->
+  <div class="icen-kb-acl-inherit [.is-broken|.is-partial]">   <!-- 继承 banner 三态：继承（含父链）/ 已断（警示）/ 例外 N 项 -->
   </div>
-  <div class="kb-acl-grants">                              <!-- Direct access 区 -->
-    <div class="kb-acl-grant [.is-deny|.is-system|.is-expiring]">
-      <span class="kb-acl-subject" data-kind="user|group|org|anyone|link">主体（组带成员数/「由 IT 管理」note）</span>
-      <span class="kb-acl-role kb-chip">Viewer|Commenter|Editor|Owner|拒绝</span>
-      <span class="kb-acl-meta">继承自 X · 2026-11-01 到期 · 系统管理</span>
-      <button class="kb-acl-remove" data-acl-remove aria-label="移除">×</button>
+  <div class="icen-kb-acl-grants">                              <!-- Direct access 区 -->
+    <div class="icen-kb-acl-grant [.is-deny|.is-system|.is-expiring]">
+      <span class="icen-kb-acl-subject" data-icen-kind="user|group|org|anyone|link">主体（组带成员数/「由 IT 管理」note）</span>
+      <span class="icen-kb-acl-role icen-kb-chip">Viewer|Commenter|Editor|Owner|拒绝</span>
+      <span class="icen-kb-acl-meta">继承自 X · 2026-11-01 到期 · 系统管理</span>
+      <button class="icen-kb-acl-remove" data-icen-acl-remove aria-label="移除">×</button>
     </div>…
   </div>
-  <div class="kb-acl-links">…同 grant 行，data-kind=link，带范围（特定人员/组织内/任何人）+ 过期…</div>
-  <footer class="kb-acl-foot"><button data-acl-grant>授予访问</button><span class="kb-meta">对 N 人可见</span></footer>
+  <div class="icen-kb-acl-links">…同 grant 行，data-icen-kind=link，带范围（特定人员/组织内/任何人）+ 过期…</div>
+  <footer class="icen-kb-acl-foot"><button data-icen-acl-grant>授予访问</button><span class="icen-kb-meta">对 N 人可见</span></footer>
 </section>
 ```
 - `renderKbAcl(el, model, opts?) → el`（快照）；`KbAclModel = { resource, parentChain: string[], broken, exceptions?, entries: KbAclEntry[], links: KbAclEntry[], exposureCount? }`；opts: onGrant/onRemove/onBreak/onRestore。
@@ -344,18 +344,18 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 ### 9.2 kb-who-can 有效权限检查器（view-as，差异化组件）
 
 ```
-<div class="kb-whocan">
-  <div class="kb-whocan-bar"><select class="kb-whocan-user">…固定身份集…</select><button data-whocan-check>检查</button></div>
-  <div class="kb-whocan-result [.is-allowed|.is-denied]">
-    <div class="kb-whocan-verdict">可编辑（Editor） / 无权限</div>
-    <div class="kb-whocan-deniedby">被策略拒绝：DLP-外发管控</div>      <!-- deny 一票否决置顶 -->
-    <ul class="kb-whocan-chain">
-      <li class="kb-whocan-reason [.is-inherit|.is-direct|.is-link|.is-deny]">
-        <span class="kb-badge">继承</span> 财务部空间 · finance-team · Editor
-        <span class="kb-meta">24 成员 · 由 IT 管理</span>
+<div class="icen-kb-whocan">
+  <div class="icen-kb-whocan-bar"><select class="icen-kb-whocan-user">…固定身份集…</select><button data-icen-whocan-check>检查</button></div>
+  <div class="icen-kb-whocan-result [.is-allowed|.is-denied]">
+    <div class="icen-kb-whocan-verdict">可编辑（Editor） / 无权限</div>
+    <div class="icen-kb-whocan-deniedby">被策略拒绝：DLP-外发管控</div>      <!-- deny 一票否决置顶 -->
+    <ul class="icen-kb-whocan-chain">
+      <li class="icen-kb-whocan-reason [.is-inherit|.is-direct|.is-link|.is-deny]">
+        <span class="icen-kb-badge">继承</span> 财务部空间 · finance-team · Editor
+        <span class="icen-kb-meta">24 成员 · 由 IT 管理</span>
       </li>…
     </ul>
-    <div class="kb-whocan-rule">叠加规则：多来源并集 → Editor；无 Deny 生效</div>
+    <div class="icen-kb-whocan-rule">叠加规则：多来源并集 → Editor；无 Deny 生效</div>
   </div>
 </div>
 ```
@@ -366,11 +366,11 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 ### 9.3 kb-access 访问申请流（被拒五件套 + 状态机）
 
 ```
-<div class="kb-access" data-state="idle|requested|granted|expiring|expired|revoked">
-  <div class="kb-access-denied">          <!-- 五件套：资源名 / 原因 / owner / 申请 / 切换身份 -->
-  <div class="kb-access-form" hidden>      <!-- 理由（可必填）+ 角色 + 时长 + 路由提示「请求将发送给：内容 owner 李四」 -->
-  <div class="kb-access-state">            <!-- 状态徽章族：.is-requested/.is-granted(+倒计时)/.is-expiring/.is-expired(重交)/.is-revoked -->
-  <div class="kb-access-queue" hidden?>    <!-- 审批方视角（mode='approver'）：请求卡 + 批准(选权限级)/拒绝(附留言) + 历史 -->
+<div class="icen-kb-access" data-icen-state="idle|requested|granted|expiring|expired|revoked">
+  <div class="icen-kb-access-denied">          <!-- 五件套：资源名 / 原因 / owner / 申请 / 切换身份 -->
+  <div class="icen-kb-access-form" hidden>      <!-- 理由（可必填）+ 角色 + 时长 + 路由提示「请求将发送给：内容 owner 李四」 -->
+  <div class="icen-kb-access-state">            <!-- 状态徽章族：.is-requested/.is-granted(+倒计时)/.is-expiring/.is-expired(重交)/.is-revoked -->
+  <div class="icen-kb-access-queue" hidden?>    <!-- 审批方视角（mode='approver'）：请求卡 + 批准(选权限级)/拒绝(附留言) + 历史 -->
 </div>
 ```
 - `createKbAccess(el, { request, mode?: 'requester'|'approver', onRequest?, onDecide? }) → handle { setState(next), getState() }`。
@@ -380,20 +380,20 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 ### 9.4 kb-audit 权限审计时间线（Box/Purview 骨架 + 权限异味）
 
 ```
-<div class="kb-audit">
-  <div class="kb-audit-bar">
-    <div class="kb-audit-channels">全部/读取/权限变更/申请/系统（chip 组 data-channel）</div>
-    <button data-audit-export>导出 CSV</button>
+<div class="icen-kb-audit">
+  <div class="icen-kb-audit-bar">
+    <div class="icen-kb-audit-channels">全部/读取/权限变更/申请/系统（chip 组 data-icen-channel）</div>
+    <button data-icen-audit-export>导出 CSV</button>
   </div>
-  <div class="kb-audit-hygiene">            <!-- 权限异味节（admin）：6 枚举见 kb-core -->
-    <div class="kb-hygiene [.is-high|.is-medium|.is-low]"><span class="kb-badge">过度共享</span>…<button data-hygiene-act>处置</button></div>
+  <div class="icen-kb-audit-hygiene">            <!-- 权限异味节（admin）：6 枚举见 kb-core -->
+    <div class="icen-kb-hygiene [.is-high|.is-medium|.is-low]"><span class="icen-kb-badge">过度共享</span>…<button data-icen-hygiene-act>处置</button></div>
   </div>
-  <ol class="kb-audit-list">
-    <li class="kb-audit-entry [.is-breakglass]">
-      <span class="kb-audit-at kb-num">10-03 14:22</span>
-      <span class="kb-audit-actor" data-kind="human|app|system">张三 / …系统</span>
-      <span class="kb-audit-action kb-chip">读取|权限变更|授予|收回|申请|批准|委派|应急</span>
-      <span class="kb-audit-detail">…</span>
+  <ol class="icen-kb-audit-list">
+    <li class="icen-kb-audit-entry [.is-breakglass]">
+      <span class="icen-kb-audit-at icen-kb-num">10-03 14:22</span>
+      <span class="icen-kb-audit-actor" data-icen-kind="human|app|system">张三 / …系统</span>
+      <span class="icen-kb-audit-action icen-kb-chip">读取|权限变更|授予|收回|申请|批准|委派|应急</span>
+      <span class="icen-kb-audit-detail">…</span>
     </li>…
   </ol>
 </div>
@@ -407,19 +407,19 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 > 组件头常驻警示条：命中差异对照对普通用户构成泄露（判据：任何随受限集合变化的可观察量都是侧信道），**仅 admin 审计/教学视图**。
 
 ```
-<div class="kb-visibility">
-  <div class="kb-visibility-warn">admin 审计视图——勿嵌入终端用户界面</div>
-  <div class="kb-visibility-bar">身份 chip 组 · 查询回显 · 过滤层徽标（pre ✓ / post ⚠ / none ✕）</div>
-  <div class="kb-visibility-grid">          <!-- 每身份一列 -->
-    <div class="kb-visibility-col">
+<div class="icen-kb-visibility">
+  <div class="icen-kb-visibility-warn">admin 审计视图——勿嵌入终端用户界面</div>
+  <div class="icen-kb-visibility-bar">身份 chip 组 · 查询回显 · 过滤层徽标（pre ✓ / post ⚠ / none ✕）</div>
+  <div class="icen-kb-visibility-grid">          <!-- 每身份一列 -->
+    <div class="icen-kb-visibility-col">
       <header>身份 + 有效角色</header>
-      <div class="kb-visibility-count kb-num">安全计数 n</div>   <!-- 授权集合内 -->
-      <div class="kb-visibility-hits">
+      <div class="icen-kb-visibility-count icen-kb-num">安全计数 n</div>   <!-- 授权集合内 -->
+      <div class="icen-kb-visibility-hits">
         <!-- hidden 级不出现；metadata = 锁+标题+摘要打码+申请；summary = AI 摘要+原文不可用；full 正常 -->
       </div>
     </div>…
   </div>
-  <div class="kb-visibility-lesson">        <!-- 教学段（admin）：fail-open 警告 / post-filter 分数可观察 / 计数差异=volume leakage（padding 缓解） -->
+  <div class="icen-kb-visibility-lesson">        <!-- 教学段（admin）：fail-open 警告 / post-filter 分数可观察 / 计数差异=volume leakage（padding 缓解） -->
 </div>
 ```
 - `renderKbVisibility(el, { query, identities, hits, evaluateHit }) → handle { setFilterLayer(l), getVisibility(id, hit) }`；evaluateHit = `(hit, identity) => KbVisibility`（缺省走宿主给的 visibility 字段）。
@@ -427,7 +427,7 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ### 9.6 kb-core 契约增补（全部在此，域文件不重复定义）
 
-`KbRole`（viewer|commenter|editor|owner，权限序单调）/`KB_ROLES`/`kbRoleLabel`；`KbVisibility`（hidden|metadata|restricted|summary|full）/`KB_VISIBILITIES`/`kbVisibilityLabel`；`KbSubject`（kind: user|group|org|anyone|link + label + note）；`KbAclEntry`（subject+role+inheritedFrom?+expiresAt?+deny?+system?）；`KbIdentity`（user+groups[]+label?）；`KbVisibilityPolicy`（discoverable? 缺省 true=企业内部「知道存在」常态；summaryAllowed? 缺省 false）；`visibilityForRole(role, policy?)`；`KbAclDecision`（role|null、visibility、chain[]、deniedBy?、expiresAt?）；`evaluateAcl(entries, identity)`（先 deny→并集→默认拒绝，纯函数）；`KbAccessState`/`KB_ACCESS_STATES`/`kbAccessStateLabel`/`normalizeAccessRequest`；`KbAccessRequest`（含 approverNote 路由明示）；`KbAuditAction`/`KB_AUDIT_ACTIONS`/`KbAuditEntry`/`KbAuditChannel`/`auditChannelOf`/`normalizeAuditEntry`；`KbHygieneKind`（org_wide_link|broad_group|sensitive_mismatch|broken_inheritance|orphaned_owner|overexposed）/`KB_HYGIENE_KINDS`/`kbHygieneLabel`/`KbHygieneIssue`/`normalizeHygieneIssue`。
+`KbRole`（viewer|commenter|editor|owner，权限序单调）/`KB_ROLES`/`kbRoleLabel`；`KbVisibility`（hidden|metadata|restricted|summary|full）/`KB_VISIBILITIES`/`kbVisibilityLabel`；`KbSubject`（kind: user|group|org|anyone|link + label + note）；`KbAclEntry`（subject+role+inheritedFrom?+expiresAt?+deny?+system?）；`KbIdentity`（user+groups[]+label?）；`KbVisibilityPolicy`（discoverable? 缺省 true=企业内部「知道存在」常态；summaryAllowed? 缺省 false）；`visibilityForRole(role, policy?)`；`KbAclDecision`（role|null、visibility、chain[]、deniedBy?、expiresAt?）；`evaluateAcl(entries, identity, policy?, now?)`（**先 deny→并集→默认拒绝，纯函数**——`now` 可注入（Date|number，缺省 `new Date()`）保证求值可复现可测试；**expiresAt 求值语义 = 到期自动回收**：已过期的条目不计入求值——deny/allow 并集/原因链全部视同不存在，全过期 = 无授权 → fail-closed；不可解析的 expiresAt 视为永不过期；decision.expiresAt 携带存活授权中最近的将来到期（倒计时呈现数据源），deny 分支无到期）；`KbAccessState`/`KB_ACCESS_STATES`/`kbAccessStateLabel`/`normalizeAccessRequest`；`KbAccessRequest`（含 approverNote 路由明示）；`KbAuditAction`/`KB_AUDIT_ACTIONS`/`KbAuditEntry`/`KbAuditChannel`/`auditChannelOf`/`normalizeAuditEntry`；`KbHygieneKind`（org_wide_link|broad_group|sensitive_mismatch|broken_inheritance|orphaned_owner|overexposed）/`KB_HYGIENE_KINDS`/`kbHygieneLabel`/`KbHygieneIssue`/`normalizeHygieneIssue`。
 
 ### 9.7 存量增强与修正（v0.9.0 的泄露式文案修正）
 
@@ -441,3 +441,35 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 - build 绿 + 5 个新 kit 独立安装；文档站 5 张新组件页 + `/kb` 新增「权限」标签（身份切换检索对照 / ACL 面板 / who-can 原因链 / 申请流状态机走查 / 审计时间线含 break-glass / 可见性对照器 admin 模式）。
 - **安全文案全局 grep**：`grep -rn "剔除\|被过滤.*条\|被隐藏.*条" src/ site/src/` 零残留（kb-visibility 教学段与 CHANGELOG 例外）。
 - AGENTS.md / README / CHANGELOG 同步。
+
+### 9.9 纪律即代码（v0.10 增补：从「文档纪律」到「测试强制执行的工程契约」）
+
+§9.0 的八条总纲不再只是评审清单——每一条都有自动化证明，**违规即 CI 红**（`bun test` / `bun run guard`）。本节是映射表的单一事实源；改组件行为必须先改测试预期，禁止反手放松断言。
+
+**八条总纲 → 自动化映射表**
+
+| # | 总纲（§9.0） | 自动化证明 | 位置 |
+| --- | --- | --- | --- |
+| 1 | 检索期隔离 = query-time pre-filter | 过滤层徽标三态（pre 默认 / post ⚠ / none ✕）渲染与警示 notice 快照测试 | kb-conformance「分数纪律」组同文件检索用例；呈现层由 kb-retrieval 徽标测试覆盖 |
+| 2 | 对授权侧诚实、对受限侧沉默 | 泄露文案守卫：3 组「被裁数量」模式（剔除 N 条 / 被过滤·隐藏·裁剪 N 条 / N 条无权限·受限）扫 `src/behaviors/kb-*` + `site/src/lib/kb-*`，命中即红（豁免：行尾 `guard:allow-honesty 理由`） | `scripts/guard/kb-honesty.ts` |
+| 3 | 「不知道」与「不能说」不可区分 | kb-sources `hidden` 整行不渲染且标题不出现在 DOM 任何文本节点；kb-visibility `hidden` 命中列内不渲染；kb-access 原因恒定文案零信息增量 | kb-conformance「打码纪律」「权限域呈现」组 |
+| 4 | 先 deny → allow 并集 → 默认拒绝（fail-closed） | evaluateAcl 语义矩阵：deny 优先于一切 allow（含 inherited）、多 allow 并集取最高角色（KB_ROLES 单调序）、无匹配 → null、空身份集 fail-closed | `tests/unit/kb-acl.test.ts` |
+| 5 | 唯一允许的裁剪提示 = 恒定文案 | 同 #2 守卫（条件分支文案属模式库覆盖面）；kb-answer 权限提示为「已按你的数据权限过滤」恒定文案（无计数分支） | kb-conformance「权限域呈现」组 |
+| 6 | 引用白名单 / revoked 中性态 | 无效编号降级 `.is-dead` 纯文本（非按钮、aria-hidden）；revoked hover 卡中性「来源已不可用」chip、无 href、无 citedText | kb-conformance「引用白名单」组 |
+| 7 | 到期一等公民 | expiresAt 求值语义锁定：过期条目（deny/allow/原因链）不计入、全过期视同无权限、过期 deny 不再否决、decision 携带最近将来到期、now 可注入复现；**纯函数形态钉死**（签名有 now 参数、函数体禁 Date.now 直读——守卫强制） | `tests/unit/kb-acl.test.ts` + `tests/unit/kb-core.test.ts` + `scripts/guard/kb-honesty.ts` 规则 2 |
+| 8 | 身份来自服务端固定身份集 | evaluateAcl 身份矩阵：groups 组匹配、org 全员、anyone 任意、link 不参与求值、user 不串他人；缺字段 normalize 诚实收敛；kb-who-can select 只给固定身份集（无自由输入） | `tests/unit/kb-acl.test.ts` + kb-conformance「权限域呈现」组 |
+
+**全族横向纪律（组件层 DOM 断言）**
+
+- **分数纪律**：score=null/缺失 → 「—」且不渲染 `.icen-kb-score-bar`（kb-retrieval / kb-rerank / kb-trace 全命中）；l2 距离自动反转呈现（0.1 → 条宽 90%）；轨道定宽（域 CSS `flex: 0 0 64px` + `width: 64px`，长度只经内联 i 宽度——静态断言钉死 kb-search.css / kb-ops.css）。kb-eval / kb-hittest 的 null 均分/命中率渲染「—」不是 0。
+- **截断声明**：kb-answer `truncated=true` 必须渲染 `.icen-kb-result-truncated`（显示 N/总数 + LIMIT），未截断不谎报。
+- **DSL 诚实**：kb-filter 无效规则（空字段）不进 mongo/odata 序列化输出，DOM 内 DSL 镜像同纪律。
+
+**新组件进权限域的评审 checklist**
+
+1. 受限侧零信号：无被裁条数/标题/分数/排名位移/「若权限不同」对照——文案先过 `scripts/guard/kb-honesty.ts` 模式库（新泄露句式先补进模式库再写组件）。
+2. 每个分数呈现点过 `scorePercent`（l2 反转/null→不渲染条），轨道进域 CSS 定宽清单。
+3. 每条 grant 呈现 expiresAt 三态之一（永不过期 / 倒计时+续期 / 已过期+重交）；求值一律走 `evaluateAcl(entries, identity, policy?, now)`，now 从宿主时钟注入。
+4. 引用只生成自过滤后集合；权限收回态走 `.is-revoked` 中性呈现（不删不留裸链）。
+5. admin 对照类组件（kb-visibility 范式）头常驻警示条，事件与呈现都标 admin-only。
+6. 新增 DOM 断言进 `tests/kb-conformance.test.ts`；求值语义进 `tests/unit/kb-acl.test.ts`——**先写测试再写组件**。

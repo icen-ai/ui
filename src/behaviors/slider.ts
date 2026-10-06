@@ -2,17 +2,17 @@
  * @icen.ai/ui — Behavior: slider（单值 / 双滑块，与 components/slider.css 配套）
  *
  * DOM 契约（单值）：
- *   <div class="slider">
- *     <div class="slider-track"></div>
- *     <div class="slider-fill"></div>
- *     <div class="slider-thumb"></div>
- *     <input class="slider-native" type="range" min="0" max="100" value="40" />
+ *   <div class="icen-slider">
+ *     <div class="icen-slider-track"></div>
+ *     <div class="icen-slider-fill"></div>
+ *     <div class="icen-slider-thumb"></div>
+ *     <icen-input class="icen-slider-native" type="range" min="0" max="100" value="40" />
  *   </div>
- * 双滑块：.slider--dual 内 .slider-range + .slider-thumb--lo / .slider-thumb--hi
- *   + 两个 .slider-native[data-thumb="lo"|"hi"]。
+ * 双滑块：.icen-slider--dual 内 .icen-slider-range + .slider-thumb--lo / .slider-thumb--hi
+ *   + 两个 .icen-slider-native[data-icen-thumb="lo"|"hi"]。
  *
- * 行为：监听 .slider-native 的 input 事件，按 (value-min)/(max-min) 同步
- * .slider-fill 的 width% 与 .slider-thumb 的 left%；双滑块更新 .slider-range 的
+ * 行为：监听 .icen-slider-native 的 input 事件，按 (value-min)/(max-min) 同步
+ * .icen-slider-fill 的 width% 与 .icen-slider-thumb 的 left%；双滑块更新 .icen-slider-range 的
  * left/right 与两个 thumb，并钳制 lo ≤ hi − step（反向同理 hi ≥ lo + step）。
  * 双滑块另按 lo/hi 位置给两个 native input 写 clip-path，把点击区域切成左右两半
  * （同 opengal DualRangeSlider，否则叠在上层的 input 会吞掉全部指针事件）。
@@ -42,8 +42,8 @@ function pct(input: HTMLInputElement): number {
 }
 
 function setupSingle(slider: Element, native: HTMLInputElement, bag: Array<() => void>): void {
-  const fill = slider.querySelector<HTMLElement>('.slider-fill');
-  const thumb = slider.querySelector<HTMLElement>('.slider-thumb');
+  const fill = slider.querySelector<HTMLElement>('.icen-slider-fill');
+  const thumb = slider.querySelector<HTMLElement>('.icen-slider-thumb');
   const sync = (): void => {
     const p = pct(native);
     if (fill) fill.style.width = `${p}%`;
@@ -62,10 +62,10 @@ function setupSingle(slider: Element, native: HTMLInputElement, bag: Array<() =>
 }
 
 function setupDual(slider: Element, natives: HTMLInputElement[], bag: Array<() => void>): void {
-  const lo = natives.find((n) => n.getAttribute('data-thumb') === 'lo') ?? natives[0];
-  const hi = natives.find((n) => n.getAttribute('data-thumb') === 'hi') ?? natives[1];
+  const lo = natives.find((n) => n.getAttribute('data-icen-thumb') === 'lo') ?? natives[0];
+  const hi = natives.find((n) => n.getAttribute('data-icen-thumb') === 'hi') ?? natives[1];
   if (!lo || !hi || lo === hi) return;
-  const range = slider.querySelector<HTMLElement>('.slider-range');
+  const range = slider.querySelector<HTMLElement>('.icen-slider-range');
   const thumbLo = slider.querySelector<HTMLElement>('.slider-thumb--lo');
   const thumbHi = slider.querySelector<HTMLElement>('.slider-thumb--hi');
 
@@ -109,13 +109,13 @@ function setup(slider: Element): (() => void) | undefined {
   const el = slider as MarkedSlider;
   if (el.__icenSliderInit) return undefined;
 
-  const natives = Array.from(slider.querySelectorAll<HTMLInputElement>('.slider-native'));
+  const natives = Array.from(slider.querySelectorAll<HTMLInputElement>('.icen-slider-native'));
   // 校验通过后再置位：natives 为空 = 结构不完整，不置位以便补全后重新 init 可重试
   if (natives.length === 0) return undefined;
   el.__icenSliderInit = true;
 
   const bag: Array<() => void> = [];
-  if (slider.classList.contains('slider--dual')) setupDual(slider, natives, bag);
+  if (slider.classList.contains('icen-slider--dual')) setupDual(slider, natives, bag);
   else setupSingle(slider, natives[0], bag);
 
   /* 销毁：摘掉 native input 上的全部监听并复位幂等标记（可重新 init） */
@@ -127,7 +127,7 @@ function setup(slider: Element): (() => void) | undefined {
 }
 
 /**
- * 为 root 下每个 .slider 容器初始化（root 自身是 .slider 也算）。
+ * 为 root 下每个 .icen-slider 容器初始化（root 自身是 .icen-slider 也算）。
  * 返回销毁函数：移除本次挂上的全部监听并复位幂等标记（销毁后可重新 init）。SSR 下返回 no-op。
  */
 export function initSlider(root?: ParentNode): () => void {
@@ -135,8 +135,8 @@ export function initSlider(root?: ParentNode): () => void {
   if (typeof document !== 'undefined') {
     const scope = root ?? document;
     const containers: Element[] = [];
-    if (scope instanceof Element && scope.matches('.slider')) containers.push(scope);
-    containers.push(...Array.from(scope.querySelectorAll('.slider')));
+    if (scope instanceof Element && scope.matches('.icen-slider')) containers.push(scope);
+    containers.push(...Array.from(scope.querySelectorAll('.icen-slider')));
     for (const c of containers) {
       const cleanup = setup(c);
       if (cleanup) cleanups.push(cleanup);

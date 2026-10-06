@@ -1,3 +1,5 @@
+import { t } from './i18n';
+import { parseSvg } from './svg-parse';
 /*
  * @icen.ai/ui — Behavior: notification（通知栈 v2，与 components/notification.css 配套）
  *
@@ -21,7 +23,7 @@
  * ── 全局便捷 API ──
  *   notify(title, opts?) → NotificationHandle | null
  *   notify.success / warn / error / info(title, opts?) → handle
- *   notify.progress(title, { progress: 0.5, progressLabel }) → handle（可 setProgress 更新）
+ *   notify.icen-progress(title, { progress: 0.5, progressLabel }) → handle（可 setProgress 更新）
  *   notify.confirm(title, { confirmLabel, cancelLabel }) → Promise<boolean>
  *   notify.dismiss(id?)                 关闭单条（id 缺省=全部）
  *   notify.clear()                      全清
@@ -79,7 +81,7 @@ export interface NotificationOptions {
   /** 兼容旧版单按钮 */
   actionLabel?: string;
   onAction?: () => void | Promise<void> | boolean;
-  /** 进度（0–1）；progress > 0 时显示进度条。推荐用 notify.progress() 返回的 handle.setProgress */
+  /** 进度（0–1）；progress > 0 时显示进度条。推荐用 notify.icen-progress() 返回的 handle.setProgress */
   progress?: number;
   /** 进度条下方文字（如「正在导出 64%」） */
   progressLabel?: string;
@@ -249,24 +251,24 @@ function genId(): string {
 /* ═══ 容器 ═══ */
 
 function ensureContainer(): HTMLElement {
-  const sel = `.notification-container[data-notif-default]`;
+  const sel = `.icen-notification-container[data-icen-notif-default]`;
   const existing = document.body.querySelector<HTMLElement>(sel);
   if (existing) {
     syncContainerPosition(existing);
     return existing;
   }
   const el = document.createElement('div');
-  el.className = 'notification-container';
+  el.className = 'icen-notification-container';
   el.setAttribute('role', 'region');
-  el.setAttribute('aria-label', '通知');
-  el.dataset.notifDefault = '';
+  el.setAttribute('aria-label', t('notification.ariaLabel'));
+  el.dataset.icenNotifDefault = '';
   syncContainerPosition(el);
   document.body.appendChild(el);
   return el;
 }
 
 function syncContainerPosition(el: HTMLElement): void {
-  el.dataset.position = cfg.position;
+  el.dataset.icenPosition = cfg.position;
 }
 
 /* ═══ 持久化 ═══ */
@@ -465,12 +467,12 @@ function sanitizeSvgIcon(source: string): Element | null {
 
 function buildIcon(record: NotificationRecord): HTMLElement {
   const wrap = document.createElement('span');
-  wrap.className = 'notification-icon';
+  wrap.className = 'icen-notification-icon';
   wrap.setAttribute('aria-hidden', 'true');
   const { icon, avatar } = record.opts;
   if (avatar) {
     const img = document.createElement('img');
-    img.className = 'notification-avatar';
+    img.className = 'icen-notification-avatar';
     img.src = avatar;
     img.alt = '';
     img.loading = 'lazy';
@@ -485,7 +487,7 @@ function buildIcon(record: NotificationRecord): HTMLElement {
     // SVG 字符串或图片 URL；其余按纯文本展示
     if (/^https?:\/\/|^data:image\//.test(icon) || icon.endsWith('.png') || icon.endsWith('.jpg') || icon.endsWith('.svg') || icon.endsWith('.webp')) {
       const img = document.createElement('img');
-      img.className = 'notification-avatar';
+      img.className = 'icen-notification-avatar';
       img.src = icon;
       img.alt = '';
       wrap.appendChild(img);
@@ -506,14 +508,14 @@ function buildIcon(record: NotificationRecord): HTMLElement {
 
 function buildTitle(title: string): HTMLElement {
   const el = document.createElement('p');
-  el.className = 'notification-title';
+  el.className = 'icen-notification-title';
   el.textContent = title;
   return el;
 }
 
 function buildDescription(text: string): HTMLElement {
   const el = document.createElement('p');
-  el.className = 'notification-message';
+  el.className = 'icen-notification-message';
   // 支持显式换行
   el.style.whiteSpace = 'pre-wrap';
   el.textContent = text;
@@ -529,13 +531,13 @@ function buildActions(record: NotificationRecord): HTMLElement | null {
   if (!actions || actions.length === 0) return null;
 
   const wrap = document.createElement('div');
-  wrap.className = 'notification-actions';
+  wrap.className = 'icen-notification-actions';
   for (const a of actions) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'notification-action';
-    if (a.type === 'primary') btn.classList.add('notification-action--primary');
-    else if (a.type === 'danger') btn.classList.add('notification-action--danger');
+    btn.className = 'icen-notification-action';
+    if (a.type === 'primary') btn.classList.add('icen-notification-action--primary');
+    else if (a.type === 'danger') btn.classList.add('icen-notification-action--danger');
     btn.textContent = a.label;
     btn.addEventListener('click', (ev) => {
       ev.stopPropagation();
@@ -555,11 +557,11 @@ function buildLink(record: NotificationRecord): HTMLElement | null {
   const { link, linkLabel } = record.opts;
   if (!link) return null;
   const wrap = document.createElement('div');
-  wrap.className = 'notification-link-wrap';
+  wrap.className = 'icen-notification-link-wrap';
   const a = document.createElement('a');
-  a.className = 'notification-link';
+  a.className = 'icen-notification-link';
   a.href = link;
-  a.textContent = linkLabel ?? '查看详情';
+  a.textContent = linkLabel ?? t('notification.viewDetails');
   a.addEventListener('click', (ev) => ev.stopPropagation());
   wrap.appendChild(a);
   return wrap;
@@ -569,23 +571,23 @@ function buildProgressBar(record: NotificationRecord): HTMLElement | null {
   const { progress, progressLabel } = record.opts;
   if (progress === undefined || progress < 0) return null;
   const wrap = document.createElement('div');
-  wrap.className = 'notification-progress';
+  wrap.className = 'icen-notification-progress';
   const track = document.createElement('div');
-  track.className = 'notification-progress-track';
+  track.className = 'icen-notification-progress-track';
   const fill = document.createElement('div');
-  fill.className = 'notification-progress-bar';
+  fill.className = 'icen-notification-progress-bar';
   const pct = Math.min(100, Math.max(0, progress * 100));
   fill.style.width = pct + '%';
   track.appendChild(fill);
   wrap.appendChild(track);
   if (progressLabel) {
     const lbl = document.createElement('span');
-    lbl.className = 'notification-progress-label';
+    lbl.className = 'icen-notification-progress-label';
     lbl.textContent = progressLabel;
     wrap.appendChild(lbl);
   } else if (progress > 0) {
     const lbl = document.createElement('span');
-    lbl.className = 'notification-progress-label';
+    lbl.className = 'icen-notification-progress-label';
     lbl.textContent = Math.round(pct) + '%';
     wrap.appendChild(lbl);
   }
@@ -596,10 +598,10 @@ function buildCountdownBar(record: NotificationRecord): HTMLElement | null {
   if (!record.duration || record.duration <= 0) return null;
   if (record.opts.showCountdown === false) return null;
   const bar = document.createElement('div');
-  bar.className = 'notification-countdown';
+  bar.className = 'icen-notification-countdown';
   bar.setAttribute('aria-hidden', 'true');
   const fill = document.createElement('div');
-  fill.className = 'notification-countdown-fill';
+  fill.className = 'icen-notification-countdown-fill';
   fill.style.animationDuration = record.duration + 'ms';
   fill.style.animationPlayState = 'running';
   bar.appendChild(fill);
@@ -610,19 +612,19 @@ function buildCountdownBar(record: NotificationRecord): HTMLElement | null {
 function syncCountdownBar(record: NotificationRecord): void {
   const el = record.el;
   if (!el) return;
-  const existing = el.querySelector('.notification-countdown');
+  const existing = el.querySelector('.icen-notification-countdown');
   if (record.duration <= 0 || record.opts.showCountdown === false) {
     existing?.remove();
     return;
   }
   let fill: HTMLElement | null;
   if (existing) {
-    fill = existing.querySelector<HTMLElement>('.notification-countdown-fill');
+    fill = existing.querySelector<HTMLElement>('.icen-notification-countdown-fill');
   } else {
     const bar = buildCountdownBar(record);
     if (!bar) return;
     el.appendChild(bar);
-    fill = bar.querySelector<HTMLElement>('.notification-countdown-fill');
+    fill = bar.querySelector<HTMLElement>('.icen-notification-countdown-fill');
   }
   if (fill) {
     // 重置动画以匹配新时长（清内联 animation 触发 reflow 后重放）
@@ -638,8 +640,8 @@ function buildClose(record: NotificationRecord): HTMLElement | null {
   if (record.opts.closable === false) return null;
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'notification-close';
-  btn.setAttribute('aria-label', '关闭');
+  btn.className = 'icen-notification-close';
+  btn.setAttribute('aria-label', t('common.close'));
   const svg = sanitizeSvgIcon(CLOSE_SVG);
   if (svg) btn.appendChild(svg);
   btn.addEventListener('click', (ev) => {
@@ -655,11 +657,11 @@ function renderNotification(
   getHandle: () => NotificationHandle,
 ): HTMLElement {
   const el = document.createElement('div');
-  let cls = record.kind === 'info' ? 'notification' : `notification notification--${record.kind}`;
+  let cls = record.kind === 'info' ? 'icen-notification' : `icen-notification icen-notification--${record.kind}`;
   if (record.opts.priority === 'high') cls += ' is-priority';
   if (record.opts.unread) cls += ' is-unread';
   if (record.opts.progress !== undefined && record.opts.progress >= 0) cls += ' is-progress';
-  if (record.opts.avatar) cls += ' has-avatar';
+  if (record.opts.avatar) cls += ' icen-has-avatar';
   if (record.opts.onClick) {
     cls += ' is-clickable';
     el.setAttribute('role', 'button');
@@ -674,7 +676,7 @@ function renderNotification(
   el.appendChild(icon);
 
   const content = document.createElement('div');
-  content.className = 'notification-content';
+  content.className = 'icen-notification-content';
   content.appendChild(buildTitle(record.title));
   if (record.opts.description) content.appendChild(buildDescription(record.opts.description));
 
@@ -759,7 +761,7 @@ function trimStack(
   remove: (id: string) => void,
 ): void {
   for (;;) {
-    const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > .notification'));
+    const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > .icen-notification'));
     if (items.length <= maxStack) return;
     // 优先折叠最早的、已读的、normal 优先级的
     const target = items.find((it) => !it.classList.contains('is-priority')) ?? items[0];
@@ -802,14 +804,14 @@ function attachTimer(record: NotificationRecord, handle: NotificationHandle): vo
     record.remaining = Math.max(0, record.remaining - (Date.now() - record.startedAt));
     record.paused = true;
     el.classList.add('is-paused');
-    const fill = el.querySelector<HTMLElement>('.notification-countdown-fill');
+    const fill = el.querySelector<HTMLElement>('.icen-notification-countdown-fill');
     if (fill) fill.style.animationPlayState = 'paused';
   };
   const resume = (): void => {
     if (!record.paused) return;
     record.paused = false;
     el.classList.remove('is-paused');
-    const fill = el.querySelector<HTMLElement>('.notification-countdown-fill');
+    const fill = el.querySelector<HTMLElement>('.icen-notification-countdown-fill');
     if (fill) fill.style.animationPlayState = 'running';
     if (record.remaining <= 0) {
       dismissRecord(record.id);
@@ -946,7 +948,7 @@ function dismissRecord(id: string): void {
   if (!record) {
     // 兜底：DOM 上找
     const el = document.getElementById(id);
-    if (el && el.classList.contains('notification')) removeOne(el);
+    if (el && el.classList.contains('icen-notification')) removeOne(el);
     return;
   }
   if (record.timer) window.clearTimeout(record.timer);
@@ -990,18 +992,18 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
     else if (patch.duration > 0) attachTimer(record, makeHandle(record));
   }
   if (patch.title !== undefined) {
-    const t = el.querySelector<HTMLElement>('.notification-title');
+    const t = el.querySelector<HTMLElement>('.icen-notification-title');
     if (t) t.textContent = patch.title;
   }
   if (patch.description !== undefined) {
-    let m = el.querySelector<HTMLElement>('.notification-message');
+    let m = el.querySelector<HTMLElement>('.icen-notification-message');
     if (patch.description) {
       if (!m) {
         m = document.createElement('p');
-        m.className = 'notification-message';
+        m.className = 'icen-notification-message';
         m.style.whiteSpace = 'pre-wrap';
-        const content = el.querySelector('.notification-content');
-        const titleEl = content?.querySelector('.notification-title');
+        const content = el.querySelector('.icen-notification-content');
+        const titleEl = content?.querySelector('.icen-notification-title');
         if (titleEl && titleEl.nextSibling) content?.insertBefore(m, titleEl.nextSibling);
         else content?.appendChild(m);
       }
@@ -1018,26 +1020,26 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
   }
   if (patch.progress !== undefined || patch.progressLabel !== undefined) {
     el.classList.add('is-progress');
-    let progWrap = el.querySelector<HTMLElement>('.notification-progress');
+    let progWrap = el.querySelector<HTMLElement>('.icen-notification-progress');
     const pct = Math.min(100, Math.max(0, (record.opts.progress ?? 0) * 100));
     if (!progWrap) {
       progWrap = document.createElement('div');
-      progWrap.className = 'notification-progress';
+      progWrap.className = 'icen-notification-progress';
       const track = document.createElement('div');
-      track.className = 'notification-progress-track';
+      track.className = 'icen-notification-progress-track';
       const fill = document.createElement('div');
-      fill.className = 'notification-progress-bar';
+      fill.className = 'icen-notification-progress-bar';
       track.appendChild(fill);
       progWrap.appendChild(track);
-      el.querySelector('.notification-content')?.appendChild(progWrap);
+      el.querySelector('.icen-notification-content')?.appendChild(progWrap);
     }
-    const fill = progWrap.querySelector<HTMLElement>('.notification-progress-bar');
+    const fill = progWrap.querySelector<HTMLElement>('.icen-notification-progress-bar');
     if (fill) fill.style.width = pct + '%';
-    let lbl = progWrap.querySelector<HTMLElement>('.notification-progress-label');
+    let lbl = progWrap.querySelector<HTMLElement>('.icen-notification-progress-label');
     const labelText = record.opts.progressLabel ?? Math.round(pct) + '%';
     if (!lbl) {
       lbl = document.createElement('span');
-      lbl.className = 'notification-progress-label';
+      lbl.className = 'icen-notification-progress-label';
       progWrap.appendChild(lbl);
     }
     lbl.textContent = labelText;
@@ -1062,8 +1064,8 @@ function confirmDialog(
       resolved = true;
       resolve(val);
     };
-    const confirmLabel = opts.confirmLabel ?? '确认';
-    const cancelLabel = opts.cancelLabel ?? '取消';
+    const confirmLabel = opts.confirmLabel ?? t('common.confirm');
+    const cancelLabel = opts.cancelLabel ?? t('common.cancel');
     const actions: NotificationAction[] = [
       {
         label: cancelLabel,
@@ -1140,10 +1142,10 @@ export function createNotificationCenter(
   };
 
   const container = document.createElement('div');
-  container.className = 'notification-container';
+  container.className = 'icen-notification-container';
   container.setAttribute('role', 'region');
-  container.setAttribute('aria-label', '通知');
-  container.dataset.position = local.position;
+  container.setAttribute('aria-label', t('notification.ariaLabel'));
+  container.dataset.icenPosition = local.position;
   mount.appendChild(container);
 
   const localStore = new Map<string, NotificationRecord>();
@@ -1222,7 +1224,7 @@ export function createNotificationCenter(
     get: (id) => localStore.get(id) ?? null,
     getAll: () => Array.from(localStore.values()),
     config: (next) => {
-      if (next.position) { local.position = next.position; container.dataset.position = next.position; }
+      if (next.position) { local.position = next.position; container.dataset.icenPosition = next.position; }
       if (typeof next.maxStack === 'number' && next.maxStack > 0) local.maxStack = next.maxStack;
       if (typeof next.pauseOnHover === 'boolean') local.pauseOnHover = next.pauseOnHover;
       if (next.persist !== undefined) {
@@ -1267,8 +1269,8 @@ export const notify: NotifyFn = Object.assign(
     config: (opts: NotificationConfig) => {
       if (opts.position) {
         cfg.position = opts.position;
-        const c = document.body.querySelector<HTMLElement>('.notification-container[data-notif-default]');
-        if (c) c.dataset.position = opts.position;
+        const c = document.body.querySelector<HTMLElement>('.icen-notification-container[data-icen-notif-default]');
+        if (c) c.dataset.icenPosition = opts.position;
       }
       if (typeof opts.maxStack === 'number' && opts.maxStack > 0) cfg.maxStack = opts.maxStack;
       if (typeof opts.pauseOnHover === 'boolean') cfg.pauseOnHover = opts.pauseOnHover;

@@ -2,85 +2,85 @@
  * @icen.ai/ui — Component: panel（白卡片容器 + 标题栏 + 可选 footer）
  *
  * 完整契约：
- *   <div class="panel [panel--flush] [panel--accent]
+ *   <div class="icen-panel [icen-panel--flush] [icen-panel--accent]
  *        [panel--collapsible] [.is-collapsed]">
- *     <div class="panel-title">
- *       <div class="panel-title-text">
+ *     <div class="icen-panel-title">
+ *       <div class="icen-panel-title-text">
  *         <span>标题</span>
- *         <span class="panel-subtitle">副标题描述</span>     ← 可选
+ *         <span class="icen-panel-subtitle">副标题描述</span>     ← 可选
  *       </div>
- *       <div class="panel-title-actions">
- *         <button class="btn btn-sm">…</button>
- *         <button class="panel-toggle" aria-expanded="true">  ← collapsible 模式
- *           <svg class="panel-toggle-icon">…chevron…</svg>
+ *       <div class="icen-panel-title-actions">
+ *         <button class="icen-btn icen-btn-sm">…</button>
+ *         <button class="icen-panel-toggle" aria-expanded="true">  ← collapsible 模式
+ *           <svg class="icen-panel-toggle-icon">…chevron…</svg>
  *         </button>
  *       </div>
  *     </div>
- *     <div class="panel-body">…</div>
- *     <div class="panel-foot">…可选底栏</div>
+ *     <div class="icen-panel-body">…</div>
+ *     <div class="icen-panel-foot">…可选底栏</div>
  *   </div>
  *
  * --flush：body 不留 padding，使用方自行处理内层布局。
  * --collapsible：标题栏出现展开/折叠钮（behavior 可选，也可靠纯 CSS details/summary）。
  * --accent：强调色标题边。
- * .panel-subtitle：标题下方的副标题/描述文字。
- * .panel.is-collapsed：折叠态——隐藏 body + foot。
+ * .icen-panel-subtitle：标题下方的副标题/描述文字。
+ * .icen-panel.is-collapsed：折叠态——隐藏 body + foot。
  */
 
-.panel {
-  background: var(--token-surface);
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--token-shadow-elevated);
-  margin-bottom: var(--density-space-lg);
+.icen-panel {
+  background: var(--icen-token-surface);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-lg);
+  box-shadow: var(--icen-token-shadow-elevated);
+  margin-bottom: var(--icen-density-space-lg);
   overflow: hidden;
 }
 
 /* ── 标题栏 ── */
-.panel-title {
+.icen-panel-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-sm) var(--density-space-md);
-  border-bottom: 1px solid var(--token-line-soft);
-  font-size: var(--density-font-size-xs);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  border-bottom: 1px solid var(--icen-token-line-soft);
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.08em;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
   text-transform: uppercase;
   font-weight: 600;
 }
-.panel-title-text {
+.icen-panel-title-text {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
-.panel-title-text > span:first-child {
+.icen-panel-title-text > span:first-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.panel-subtitle {
-  font-size: var(--density-font-size-xs);
+.icen-panel-subtitle {
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.panel-title-actions {
+.icen-panel-title-actions {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   flex-shrink: 0;
 }
 
 /* ── 可折叠钮 ── */
-.panel-toggle {
+.icen-panel-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -89,38 +89,38 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   cursor: pointer;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.panel-toggle:hover {
-  color: var(--token-text);
-  background: var(--token-fill-1);
+.icen-panel-toggle:hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-1);
 }
-.panel-toggle:focus-visible {
+.icen-panel-toggle:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.panel-toggle-icon {
+.icen-panel-toggle-icon {
   width: 14px;
   height: 14px;
   transition: transform var(--icen-tx-fast);
 }
-.panel.is-collapsed .panel-toggle-icon {
+.icen-panel.is-collapsed .icen-panel-toggle-icon {
   transform: rotate(-90deg);
 }
 
 /* ── 折叠态：隐藏 body + foot，去掉标题栏底边 ── */
-.panel.is-collapsed .panel-body,
-.panel.is-collapsed .panel-foot {
+.icen-panel.is-collapsed .icen-panel-body,
+.icen-panel.is-collapsed .icen-panel-foot {
   display: none;
 }
-.panel.is-collapsed .panel-title {
+.icen-panel.is-collapsed .icen-panel-title {
   border-bottom-color: transparent;
 }
-.panel--collapsible .panel-body {
-  animation: panel-expand var(--icen-tx-normal) var(--ease-out);
+.icen-panel--collapsible .icen-panel-body {
+  animation: panel-expand var(--icen-tx-normal) var(--icen-ease-out);
 }
 @keyframes panel-expand {
   from { opacity: 0; transform: translateY(-8px); }
@@ -128,42 +128,42 @@
 }
 
 /* ── body / foot ── */
-.panel-body {
-  padding: var(--density-space-md);
-  font-size: var(--density-font-size-md);
+.icen-panel-body {
+  padding: var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.6;
 }
-.panel--flush .panel-body { padding: 0; }
+.icen-panel--flush .icen-panel-body { padding: 0; }
 
-.panel-foot {
+.icen-panel-foot {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-sm) var(--density-space-md);
-  border-top: 1px solid var(--token-line-soft);
-  background: color-mix(in srgb, var(--token-bg-soft) 50%, transparent);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  border-top: 1px solid var(--icen-token-line-soft);
+  background: color-mix(in srgb, var(--icen-token-bg-soft) 50%, transparent);
 }
 
 /* ── 强调变体 ── */
-.panel--accent { border-color: color-mix(in srgb, var(--token-accent) 30%, transparent); }
-.panel--accent .panel-title {
-  color: var(--token-accent);
-  background: var(--token-accent-subtle);
+.icen-panel--accent { border-color: color-mix(in srgb, var(--icen-token-accent) 30%, transparent); }
+.icen-panel--accent .icen-panel-title {
+  color: var(--icen-token-accent);
+  background: var(--icen-token-accent-subtle);
 }
 
 /* ── 平面变体（无阴影，嵌套时用） ── */
-.panel--flat {
+.icen-panel--flat {
   box-shadow: none;
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
 }
 
 /* ── 可折叠模式：标题栏可点（纯 CSS 方案用 details/summary） ── */
-.panel--collapsible .panel-title {
+.icen-panel--collapsible .icen-panel-title {
   cursor: pointer;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .panel-toggle-icon { transition: none; }
-  .panel--collapsible .panel-body { animation: none; }
+  .icen-panel-toggle-icon { transition: none; }
+  .icen-panel--collapsible .icen-panel-body { animation: none; }
 }

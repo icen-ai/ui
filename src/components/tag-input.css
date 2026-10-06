@@ -3,85 +3,86 @@
  * 规格源自 opengal primitives/advanced-input.tsx 的 TagInput；与 behaviors/tag-input.ts 配套。
  *
  * 完整契约：
- *   <div class="tag-input control [.tag-input--sm|.tag-input--lg] [.is-disabled]"
- *        data-tags="初始,标签" data-max="5" data-duplicate="false|true">
- *     <input class="tag-input-field" placeholder="…" />
+ *   <div class="icen-tag-input icen-control [.icen-tag-input--sm|.icen-tag-input--lg] [.is-disabled]"
+ *        data-icen-tags="初始,标签" data-icen-max="5" data-icen-duplicate="false|true">
+ *     <icen-input class="icen-tag-input-field" placeholder="…" />
  *   </div>
  *
  * behavior 渲染：
- *   - 解析 data-tags → 渲染 .tag-chip（含 .tag-chip-x 删除钮），input 放在末尾
- *   - 达到 data-max 时容器加 .is-max（warning 色边框）并拒加
- *   - data-duplicate="false" 时重复值被拒绝（短暂 .is-shake 抖动反馈）
+ *   - 解析 data-icen-tags → 渲染 .icen-tag-chip（含 .icen-tag-chip-x 删除钮），input 放在末尾
+ *   - 达到 data-icen-max 时容器加 .is-max（warning 色边框）并拒加
+ *   - data-icen-duplicate="false" 时重复值被拒绝（短暂 .is-shake 抖动反馈）
  *   - 删除钮 Enter/Space 触发，删后 input 自动聚焦
  */
 
-.tag-input {
+.icen-tag-input {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--density-space-xs);
-  padding: var(--density-space-xs);
-  min-height: var(--density-input-height-md);
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-inset);
+  gap: var(--icen-density-space-xs);
+  padding: var(--icen-density-space-xs);
+  min-height: var(--icen-density-input-height-md);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
 }
-.tag-input:hover {
+.icen-tag-input:hover {
   border-color: var(--icen-hover-border);
 }
-.tag-input:focus-within {
+.icen-tag-input:focus-within {
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.tag-input.is-max,
-.tag-input.is-max:focus-within {
-  border-color: color-mix(in srgb, var(--token-warning) 60%, transparent);
+.icen-tag-input.is-max,
+.icen-tag-input.is-max:focus-within {
+  border-color: color-mix(in srgb, var(--icen-token-warning) 60%, transparent);
   box-shadow: var(--icen-ring-warning);
 }
-.tag-input.is-disabled,
-.tag-input[aria-disabled='true'],
-.tag-input[data-disabled] {
+.icen-tag-input.is-disabled,
+.icen-tag-input[aria-disabled='true'],
+.icen-tag-input[data-icen-disabled] {
   opacity: var(--icen-disabled-opacity);
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
   cursor: not-allowed;
   pointer-events: none;
 }
-.tag-input.is-disabled .tag-input-field { cursor: not-allowed; }
-.tag-input.is-disabled .tag-chip-x { pointer-events: none; }
+.icen-tag-input.is-disabled .icen-tag-input-field { cursor: not-allowed; }
+.icen-tag-input.is-disabled .icen-tag-chip-x { pointer-events: none; }
 
-.tag-input--sm { min-height: var(--density-input-height-sm); }
-.tag-input--lg { min-height: var(--density-input-height-lg); }
+.icen-tag-input--sm { min-height: var(--icen-density-input-height-sm); }
+.icen-tag-input--lg { min-height: var(--icen-density-input-height-lg); }
 
-.tag-chip {
+.icen-tag-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 4px 2px var(--density-space-xs);
-  border-radius: var(--radius-full);
-  background: var(--token-accent-subtle);
-  color: var(--token-accent);
-  font-size: var(--density-font-size-xs);
+  padding-block: 2px;
+  padding-inline: var(--icen-density-space-xs) 4px;
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent);
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 500;
   line-height: 1.4;
   max-width: 100%;
   animation: tag-pop var(--icen-tx-fast);
 }
 /* readonly 变体（消费方手写标记，behavior 不产出） */
-.tag-chip--readonly { background: var(--token-fill-2); color: var(--token-text-muted); }
+.icen-tag-chip--readonly { background: var(--icen-token-fill-2); color: var(--icen-token-text-muted); }
 
 @keyframes tag-pop {
   from { opacity: 0; transform: scale(0.85); }
   to { opacity: 1; transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tag-chip { animation: none; }
+  .icen-tag-chip { animation: none; }
 }
 
-.tag-chip-x {
+.icen-tag-chip-x {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -91,9 +92,9 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   color: inherit;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   opacity: 0.7;
   transition:
@@ -101,36 +102,36 @@
     opacity var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.tag-chip-x:hover {
+.icen-tag-chip-x:hover {
   opacity: 1;
   background: color-mix(in srgb, currentColor 18%, transparent);
-  color: var(--token-on-accent);
+  color: var(--icen-token-on-accent);
 }
-.tag-chip-x:focus-visible {
+.icen-tag-chip-x:focus-visible {
   outline: none;
   opacity: 1;
   box-shadow: var(--icen-ring);
 }
-.tag-chip-x svg { width: 10px; height: 10px; }
+.icen-tag-chip-x svg { width: 10px; height: 10px; }
 
-.tag-input-field {
+.icen-tag-input-field {
   flex: 1;
   min-width: 80px;
   padding: 2px;
   background: transparent;
   border: none;
   outline: none;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
 }
-.tag-input-field::placeholder {
-  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+.icen-tag-input-field::placeholder {
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
 }
 
 /* 重复值抖动反馈（behavior 短暂挂 is-shake） */
-.tag-input.is-shake {
-  animation: tag-shake var(--tag-shake-duration, 0.32s) var(--ease-out);
+.icen-tag-input.is-shake {
+  animation: tag-shake var(--tag-shake-duration, 0.32s) var(--icen-ease-out);
 }
 @keyframes tag-shake {
   0%, 100% { transform: translateX(0); }

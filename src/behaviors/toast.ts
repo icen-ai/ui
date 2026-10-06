@@ -1,10 +1,12 @@
+import { t } from './i18n';
+import { parseSvg } from './svg-parse';
 /*
  * @icen.ai/ui — Behavior: toast（轻提示，与 components/toast.css 配套）
  *
- * 容器固定在右下角（.toast-container，body 末尾唯一，自动 aria-live=polite）；
- * 语义类：.toast--success / .toast--error / .toast--warning / .toast--info；退场类 .is-leaving。
+ * 容器固定在右下角（.icen-toast-container，body 末尾唯一，自动 aria-live=polite）；
+ * 语义类：.icen-toast--success / .icen-toast--error / .icen-toast--warning / .icen-toast--info；退场类 .is-leaving。
  * 文本一律 textContent 赋值，禁 innerHTML；用户传入的 SVG 图标字符串经 DOMParser
- * 消毒（同 notification.ts 模式：仅接纳 <svg> 根，剥 on* 属性与 script/foreignObject）。
+ * 消毒（同 icen-notification.ts 模式：仅接纳 <svg> 根，剥 on* 属性与 script/foreignObject）。
  * SSR 下为 no-op（返回 dismiss 为 no-op 的哑句柄）。
  *
  * 完整 API（show 系全部返回单条句柄 { dismiss() }，可提前关闭本条）：
@@ -20,9 +22,9 @@
  *   toast.dismiss()                           清空所有
  *
  * 插槽 opts（默认全关）：
- *   icon      内联 SVG 字符串 → .toast-icon（消毒后渲染；非法 SVG 静默忽略）
- *   closable  右上角关闭钮 .toast-close（点击即 dismiss）
- *   progress  底部超时进度条 .toast-progress（时长 = 本条实际保留时长）
+ *   icon      内联 SVG 字符串 → .icen-toast-icon（消毒后渲染；非法 SVG 静默忽略）
+ *   closable  右上角关闭钮 .icen-toast-close（点击即 dismiss）
+ *   progress  底部超时进度条 .icen-toast-progress（时长 = 本条实际保留时长）
  *
  * 同屏最多 5 条（默认），超出移除最早的；可通过 toast.config({ maxStack }) 调整。
  */
@@ -36,11 +38,11 @@ export interface ToastOptions {
   actionLabel?: string;
   /** action 触发回调；返回 false 阻止 toast 关闭 */
   onAction?: () => void | Promise<void> | boolean;
-  /** 内联 SVG 字符串图标（消毒后渲染为 .toast-icon）；非 <svg> 开头或解析失败静默忽略 */
+  /** 内联 SVG 字符串图标（消毒后渲染为 .icen-toast-icon）；非 <svg> 开头或解析失败静默忽略 */
   icon?: string;
-  /** 显示右上角关闭按钮（.toast-close，点击即关闭本条），默认 false */
+  /** 显示右上角关闭按钮（.icen-toast-close，点击即关闭本条），默认 false */
   closable?: boolean;
-  /** 显示底部超时进度条（.toast-progress，动画时长 = 本条保留时长），默认 false */
+  /** 显示底部超时进度条（.icen-toast-progress，动画时长 = 本条保留时长），默认 false */
   progress?: boolean;
 }
 
@@ -56,17 +58,17 @@ export interface ToastConfig {
 
 interface ToastFn {
   (message: string, kind?: ToastKind, ms?: number): ToastHandle;
-  /** success 语义（.toast--success），规范词表入口 */
+  /** success 语义（.icen-toast--success），规范词表入口 */
   success(message: string, ms?: number): ToastHandle;
   /**
-   * success 语义（.toast--success）。
+   * success 语义（.icen-toast--success）。
    * @deprecated 词表统一：改用 toast.success()，本别名下个大版本删除。
    */
   ok(message: string, ms?: number): ToastHandle;
-  /** error 语义（.toast--error），规范词表入口 */
+  /** error 语义（.icen-toast--error），规范词表入口 */
   error(message: string, ms?: number): ToastHandle;
   /**
-   * error 语义（.toast--error）。
+   * error 语义（.icen-toast--error）。
    * @deprecated 词表统一：改用 toast.error()，本别名下个大版本删除。
    */
   err(message: string, ms?: number): ToastHandle;
@@ -86,10 +88,10 @@ function isBrowser(): boolean {
 }
 
 function ensureContainer(): HTMLElement {
-  const existing = document.body.querySelector<HTMLElement>('.toast-container');
+  const existing = document.body.querySelector<HTMLElement>('.icen-toast-container');
   if (existing) return existing;
   const el = document.createElement('div');
-  el.className = 'toast-container';
+  el.className = 'icen-toast-container';
   el.setAttribute('role', 'status');
   el.setAttribute('aria-live', 'polite');
   el.setAttribute('aria-atomic', 'false');
@@ -99,12 +101,12 @@ function ensureContainer(): HTMLElement {
 
 /** kind → 语义类名（ok/err 为兼容别名，success/error 为规范词表；均映射到现有语义类）。 */
 const KIND_CLASS: Record<ToastKind, string> = {
-  ok: 'toast--success',
-  success: 'toast--success',
-  err: 'toast--error',
-  error: 'toast--error',
-  warn: 'toast--warning',
-  info: 'toast--info',
+  ok: 'icen-toast--success',
+  success: 'icen-toast--success',
+  err: 'icen-toast--error',
+  error: 'icen-toast--error',
+  warn: 'icen-toast--warning',
+  info: 'icen-toast--info',
 };
 
 /** 关闭钮图标（库内静态常量，经同一消毒入口构建以守「禁 innerHTML」约定）。 */
@@ -161,7 +163,7 @@ function scheduleRemove(el: HTMLElement): void {
 function trimStack(container: HTMLElement): void {
   /* 重读真实 DOM 直到堆栈内不超 maxStack；NodeList 不可写，用循环重读 */
   for (;;) {
-    const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > .toast'));
+    const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > .icen-toast'));
     if (items.length <= maxStack) return;
     const oldest = items[0];
     if (!oldest) return;
@@ -183,7 +185,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   const container = ensureContainer();
 
   const el = document.createElement('div');
-  el.className = `toast ${KIND_CLASS[kind]}`;
+  el.className = `icen-toast ${KIND_CLASS[kind]}`;
   el.setAttribute('role', kind === 'err' || kind === 'error' ? 'alert' : 'status');
 
   /* 可选前置图标（消毒后的内联 SVG） */
@@ -191,7 +193,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
     const svg = sanitizeSvgIcon(icon);
     if (svg) {
       const iconWrap = document.createElement('span');
-      iconWrap.className = 'toast-icon';
+      iconWrap.className = 'icen-toast-icon';
       iconWrap.setAttribute('aria-hidden', 'true');
       iconWrap.appendChild(svg);
       el.appendChild(iconWrap);
@@ -200,7 +202,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
 
   /* 文本节点（必须用 textContent） */
   const msgNode = document.createElement('span');
-  msgNode.className = 'toast-msg';
+  msgNode.className = 'icen-toast-msg';
   msgNode.textContent = message;
   el.appendChild(msgNode);
 
@@ -209,7 +211,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   if (actionLabel) {
     actionBtn = document.createElement('button');
     actionBtn.type = 'button';
-    actionBtn.className = 'toast-action';
+    actionBtn.className = 'icen-toast-action';
     actionBtn.textContent = actionLabel;
     el.appendChild(actionBtn);
   }
@@ -230,8 +232,8 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   if (closable) {
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
-    closeBtn.className = 'toast-close';
-    closeBtn.setAttribute('aria-label', '关闭');
+    closeBtn.className = 'icen-toast-close';
+    closeBtn.setAttribute('aria-label', t('common.close'));
     const svg = closeSvg();
     if (svg) closeBtn.appendChild(svg);
     else closeBtn.textContent = '×';
@@ -242,10 +244,10 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   /* 可选超时进度条（animation-duration 内联 = 布局时序而非主题样式，同 notification 倒计时） */
   if (progress) {
     const bar = document.createElement('div');
-    bar.className = 'toast-progress';
+    bar.className = 'icen-toast-progress';
     bar.setAttribute('aria-hidden', 'true');
     const fill = document.createElement('div');
-    fill.className = 'toast-progress-fill';
+    fill.className = 'icen-toast-progress-fill';
     fill.style.animationDuration = `${duration}ms`;
     bar.appendChild(fill);
     el.appendChild(bar);
@@ -281,9 +283,9 @@ export const toast: ToastFn = Object.assign(
       show(message, 'info', { actionLabel, onAction, ms }),
     dismiss: (): void => {
       if (!isBrowser()) return;
-      const c = document.body.querySelector('.toast-container');
+      const c = document.body.querySelector('.icen-toast-container');
       if (!c) return;
-      c.querySelectorAll('.toast').forEach((t) => t.remove());
+      c.querySelectorAll('.icen-toast').forEach((t) => t.remove());
     },
     config: (opts: ToastConfig): void => {
       if (typeof opts.maxStack === 'number' && opts.maxStack > 0) maxStack = opts.maxStack;

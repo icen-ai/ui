@@ -1,0 +1,121 @@
+---
+import Docs from '../layouts/Docs.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<Docs title="React / Vue 接入 · ICEN UI" description="@icen.ai/ui/react 与 @icen.ai/ui/vue 薄封装层：声明式 props 进，同一个命令式行为内核出——只做生命周期接线、事件桥与类型面 re-export。">
+  <nav class="icen-breadcrumb" aria-label="面包屑">
+    <ol>
+      <li><a class="icen-breadcrumb-link" href="/">首页</a><span class="icen-breadcrumb-sep" aria-hidden="true"></span></li>
+      <li><span class="icen-breadcrumb-current" aria-current="page">框架接入</span></li>
+    </ol>
+  </nav>
+
+  <h1 class="page-title">React / Vue 接入（薄封装层）</h1>
+  <p class="page-desc">
+    <code>@icen.ai/ui/react</code> 与 <code>@icen.ai/ui/vue</code> 是官方薄封装层，设计哲学是<strong>薄如蝉翼</strong>：
+    不复制状态、不重新实现组件逻辑，只做三件事——<strong>生命周期接线</strong>（mount → create / props 变 → update /
+    unmount → destroy）、<strong>事件桥</strong>（onIcen ↔ 回调，卸载自动清理）、<strong>类型面 re-export</strong>。
+    底下仍是同一个命令式行为内核，行为层文档与事件契约对两个框架完全适用。
+  </p>
+
+  <section class="icen-panel">
+    <div class="icen-panel-title"><span>安装</span><span>install</span></div>
+    <div class="icen-panel-body">
+      <p class="icen-dim">
+        react / react-dom / vue 都是 <code>optional</code> peerDependencies（&gt;=18 / &gt;=3.3）——
+        只装你用的框架即可。CSS 不在封装层引入，照常先引 tokens 再引组件 CSS。
+      </p>
+      <CodeBlock code={`bun add @icen.ai/ui react react-dom    # Vue 项目：bun add @icen.ai/ui vue
+
+@import '@icen.ai/ui/tokens.css';    /* 先 tokens */
+@import '@icen.ai/ui/ui.css';        /* 全量；或按需单引组件 CSS */`} lang="bash" />
+    </div>
+  </section>
+
+  <section class="icen-panel">
+    <div class="icen-panel-title"><span>React</span><span>@icen.ai/ui/react</span></div>
+    <div class="icen-panel-body">
+      <CodeBlock code={`import { Chart, DataTable, AiMessage, AiComposer, useIcenEvent }
+  from '@icen.ai/ui/react';
+
+function Dashboard({ spec, rows }) {
+  return (
+    <main>
+      {/* opts 是纯 JSON 契约：变化经稳定比较 → handle.update（原地重渲，保留事件委托） */}
+      <Chart opts={spec} onEvent={(type, detail) => console.log(type, detail)} />
+
+      {/* 无 update 内核（createTable）→ opts 变化 destroy + 重建（同一容器） */}
+      <DataTable opts={{ columns, data: rows, pageSize: 10 }} />
+
+      <AiMessage opts={{ role: 'assistant', content: '结论如下', meta: '刚刚' }} />
+
+      {/* 纯状态绑定：onSend 接发送，消息流自己渲染；给 client + messagesRef 即全托管 */}
+      <AiComposer models={{ providers }} onSend={(text) => send(text)} />
+    </main>
+  );
+}
+
+// 事件钩：类型推断 + 自动解绑；within 限子树，缺省全局（广播事件只走全局形态）
+function useCopyToast() {
+  useIcenEvent('icen:copy-success', (detail) => toast.success(\`已复制 \${detail.text}\`));
+}`} lang="tsx" />
+      <p class="icen-dim" style="margin-top:14px">
+        需要命令式句柄（<code>handle.update / exportCSV / stream()</code>…）时传
+        <code>{'handleRef={ref}'}</code> 拿到 ChartHandle / TableHandle / AiToolCallHandle。
+        <code>'use client'</code> 指令已在入口 banner 打好——RSC 里直接 import 即落在客户端边界内。
+      </p>
+    </div>
+  </section>
+
+  <section class="icen-panel">
+    <div class="icen-panel-title"><span>Vue</span><span>@icen.ai/ui/vue</span></div>
+    <div class="icen-panel-body">
+      <CodeBlock code={`<\u0073cript setup lang="ts">
+import { ref } from 'vue';
+import { IcenChart, IcenDataTable, IcenAiMessage, IcenAiComposer }
+  from '@icen.ai/ui/vue';
+
+const spec = ref({ type: 'line', title: '趋势', labels, values });
+// spec deep watch → handle.update（原地重渲）；kebab 事件经 emits 透出
+</\u0073cript>
+
+<template>
+  <IcenChart :spec="spec" @chart-hover="onHover" @chart-click="onClick" />
+  <IcenDataTable :opts="{ columns, data: rows }" @table-row-click="openRow" />
+  <IcenAiMessage :opts="{ role: 'assistant', content: '结论如下' }" />
+  <IcenAiComposer :models="{ providers }" @ai-send="send" />
+</template>`} lang="vue" />
+      <p class="icen-dim" style="margin-top:14px">
+        组合式 API 对应物：<code>useIcenInit(init, deps)</code> / <code>useIcenEvent(type, handler)</code>
+        （onUnmounted 自动清理）。组件 expose <code>getHandle()</code> 取命令式句柄。
+      </p>
+    </div>
+  </section>
+
+  <section class="icen-panel">
+    <div class="icen-panel-title"><span>生命周期与 SSR 注意</span><span>notes</span></div>
+    <div class="icen-panel-body">
+      <ul class="icen-list">
+        <li><strong>SSR 安全</strong>：全部接线在 useEffect / onMounted 里，服务端不执行；行为内核本身也有 SSR 守卫（双保险）。</li>
+        <li><strong>StrictMode</strong>：React StrictMode 会双跑 effect（setup→cleanup→setup），封装层 create/destroy/create 闭环对得上；内核 init 全部幂等，事件不会重复。</li>
+        <li><strong>opts 比较</strong>：props.opts 用 JSON.stringify 稳定比较——库内 opts 是纯 JSON 契约；传函数回调（如 columns.render）时 identity 变化不影响，内容变化请换引用。</li>
+        <li><strong>事件广播</strong>：<code>icen:ai-done</code> / <code>icen:ai-usage</code> 从 document 派发（传播只经 [document, window]），子树监听收不到——要收广播，useIcenEvent 不传 within / onEvent 在组件上接。</li>
+        <li><strong>CSS 照旧</strong>：封装层零 CSS；kit 一行入口的 Astro 陷阱提示对框架项目同样有效（Astro 布局 frontmatter 引 CSS）。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="icen-panel">
+    <div class="icen-panel-title"><span>何时直接用行为层</span><span>escape hatch</span></div>
+    <div class="icen-panel-body">
+      <p class="icen-dim">封装层覆盖「声明式 props + 生命周期」主路径；以下场景请直接 import 行为模块
+        （<code>@icen.ai/ui/behaviors/*</code>，在框架的 effect / onMounted 里手动调用）：</p>
+      <ul class="icen-list">
+        <li>非 React/Vue 技术栈（Svelte / Solid / 原生 Web Components…）——行为层本来就不绑框架。</li>
+        <li>细粒度命令式控制：流式 <code>msg.stream().append()</code>、<code>handle.setData()</code> 外部喂数、remote 分页等 handle 高频操作。</li>
+        <li>极热路径（每帧 update 的图表/虚拟滚动）——跳过 props 比较直调 <code>handle.update(spec)</code>。</li>
+        <li>已有命令式代码库渐进迁移——bindComposer / renderAiMessage 等可直接与封装层组件混用（同一内核，同一事件协议）。</li>
+      </ul>
+    </div>
+  </section>
+</Docs>

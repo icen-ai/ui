@@ -1,0 +1,70 @@
+/*
+ * @icen.ai/ui — Component: autocomplete（自动补全面板）
+ * 与 behaviors/autocomplete.ts 配套（createAutocomplete(el, opts) → AutocompleteHandle）。
+ *
+ * 完整契约：
+ *   <input class="icen-input" />            ← createAutocomplete 直挂；behavior 挂
+ *     role="combobox" aria-autocomplete="list" aria-expanded aria-controls aria-activedescendant
+ *   （input 可挂 PanelSizing：data-icen-panel-width / -min / -max / -max-height）
+ *
+ * behavior 渲染（portal 到 document.body，勿手写）：
+ *   <div class="icen-autocomplete-panel" role="listbox" [hidden] [id] [data-icen-side="top|bottom"]
+ *        style="left/top/width/max-height: JS 按输入框 rect 写入">
+ *     <div class="icen-autocomplete-option [.is-active]" role="option"
+ *          id="{panelId}-opt-{i}" [aria-selected]>
+ *       展示文本（命中片段包 <mark>；renderItem 自定义时由宿主决定内容）
+ *     </div>
+ *     <div class="icen-autocomplete-empty" [hidden]>无匹配结果</div>   ← 空结果态
+ *   </div>
+ *
+ * 行为摘要：输入 ≥ minChars 防抖拉源；↑↓ 循环、Enter 选中（派 select + change）、
+ *   Esc 关层并还原显示值、Tab 走默认；freeSolo=true 失焦落定任意输入（只派 change），
+ *   false（默认）失焦无选中回退原值；异步只渲染最新 query 结果（加载期保留旧列表）。
+ */
+
+.icen-autocomplete-panel {
+  position: fixed;
+  z-index: var(--icen-z-popover);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  background: var(--icen-token-card-strong);
+  border: 1px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-overlay);
+  transform-origin: top center;
+  animation: icen-pop-in var(--icen-tx-fast);
+}
+.icen-autocomplete-panel[data-icen-side='top'] { transform-origin: bottom center; }
+
+.icen-autocomplete-option {
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-xs);
+  padding: 6px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text);
+  border-radius: var(--icen-radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
+}
+.icen-autocomplete-option:hover { background: var(--icen-token-fill-1); }
+.icen-autocomplete-option.is-active { background: var(--icen-token-fill-2); }
+
+/* 命中片段高亮（behavior 以 <mark> 包裹 query 命中，大小写不敏感） */
+.icen-autocomplete-option mark {
+  background: color-mix(in srgb, var(--icen-token-accent) 18%, transparent);
+  color: inherit;
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  padding: 0 1px;
+}
+
+/* 空结果态（behavior 按结果数切 [hidden]） */
+.icen-autocomplete-empty {
+  padding: var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-faint);
+  text-align: center;
+}

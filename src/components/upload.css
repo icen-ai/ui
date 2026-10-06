@@ -3,204 +3,209 @@
  * 规格源自 opengal primitives/advanced-input.tsx 的 Upload；与 behaviors/upload.ts 配套。
  *
  * 完整契约：
- *   <div class="upload control lift focus-ring [--compact] [.is-drag] [.is-disabled] [.is-loading]"
+ *   <div class="icen-upload icen-control icen-lift icen-focus-ring [--compact] [.is-drag] [.is-disabled] [.is-loading]"
  *        role="button" tabindex="0" aria-label="拖放或点击上传文件">
  *     <input type="file" multiple accept="…" />
- *     <div class="upload-icon">…svg…</div>
- *     <p class="upload-title">拖放文件到此处，或<span class="upload-link">点击选择</span></p>
- *     <p class="upload-desc">支持 PDF / PNG / JPG，单个 ≤ 5 MB</p>
- *     <p class="upload-error" hidden role="alert">文件超过 5 MB</p>
+ *     <div class="icen-upload-icon">…svg…</div>
+ *     <p class="icen-upload-title">拖放文件到此处，或<span class="icen-upload-link">点击选择</span></p>
+ *     <p class="icen-upload-desc">支持 PDF / PNG / JPG，单个 ≤ 5 MB</p>
+ *     <p class="icen-upload-error" hidden role="alert">文件超过 5 MB</p>
  *   </div>
  *
  * behavior 维护：
  *   - dragenter/dragover 加 .is-drag，dragleave/drop 移除
- *   - 校验 accept/size，错误写 .upload-error[hidden=false]
- *   - 文件列表（可选）渲染到 .upload + <ul class="upload-list">，behavior 提供
+ *   - 校验 accept/size，错误写 .icen-upload-error[hidden=false]
+ *   - 文件列表（可选）渲染到 .icen-upload + <ul class="icen-upload-list">，behavior 提供
  */
 
-.upload {
+.icen-upload {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: var(--density-space-lg) var(--density-space-md);
-  border: 2px dashed var(--token-outline-soft);
-  border-radius: var(--radius-lg);
-  background: var(--token-bg-soft);
+  padding: var(--icen-density-space-lg) var(--icen-density-space-md);
+  border: 2px dashed var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-lg);
+  background: var(--icen-token-bg-soft);
   cursor: pointer;
   transition:
     border-color var(--icen-tx-fast),
     background-color var(--icen-tx-fast),
     transform var(--icen-tx-fast);
 }
-.upload:hover:not(.is-disabled) {
-  border-color: color-mix(in srgb, var(--token-accent) 60%, transparent);
-  background: var(--token-control-hover);
+.icen-upload:hover:not(.is-disabled) {
+  border-color: color-mix(in srgb, var(--icen-token-accent) 60%, transparent);
+  background: var(--icen-token-control-hover);
 }
-.upload:focus-visible {
+.icen-upload:focus-visible {
   outline: none;
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.upload.is-drag {
-  border-color: var(--token-accent);
+.icen-upload.is-drag {
+  border-color: var(--icen-token-accent);
   border-style: solid;
-  background: var(--token-accent-subtle);
+  background: var(--icen-token-accent-subtle);
   transform: scale(1.005);
 }
-.upload.is-disabled,
-.upload[aria-disabled='true'],
-.upload[data-disabled] {
+.icen-upload.is-disabled,
+.icen-upload[aria-disabled='true'],
+.icen-upload[data-icen-disabled] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
   pointer-events: none;
 }
-.upload.is-loading,
-.upload[aria-busy='true'] {
+.icen-upload.is-loading,
+.icen-upload[aria-busy='true'] {
   cursor: progress;
   pointer-events: none;
 }
 
-.upload--compact { padding: var(--density-space-sm) var(--density-space-md); }
-.upload--compact .upload-icon { width: 28px; height: 28px; margin-bottom: 4px; }
+.icen-upload--compact { padding: var(--icen-density-space-sm) var(--icen-density-space-md); }
+.icen-upload--compact .icen-upload-icon { width: 28px; height: 28px; margin-bottom: 4px; }
 
-.upload input[type='file'] { display: none; }
+.icen-upload input[type='file'] { display: none; }
 
-.upload-icon {
+.icen-upload-icon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  margin-bottom: var(--density-space-sm);
-  border-radius: var(--radius-lg);
-  background: var(--token-accent-subtle);
-  color: var(--token-accent);
+  margin-bottom: var(--icen-density-space-sm);
+  border-radius: var(--icen-radius-lg);
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent);
   transition: transform var(--icen-tx-fast);
 }
-.upload:hover:not(.is-disabled) .upload-icon,
-.upload.is-drag .upload-icon {
+/* 图标放大反馈：拖拽态全设备生效；hover 仅可悬停设备（触屏关闭，AGENTS 动效守卫） */
+.icen-upload.is-drag .icen-upload-icon {
   transform: scale(1.08);
 }
-.upload-icon svg { width: 20px; height: 20px; }
-
-.upload-title {
-  margin: 0;
-  font-size: var(--density-font-size-md);
-  font-weight: 500;
-  color: var(--token-text);
+@media (hover: hover) and (pointer: fine) {
+  .icen-upload:hover:not(.is-disabled) .icen-upload-icon {
+    transform: scale(1.08);
+  }
 }
-.upload-link {
-  color: var(--token-accent);
+.icen-upload-icon svg { width: 20px; height: 20px; }
+
+.icen-upload-title {
+  margin: 0;
+  font-size: var(--icen-density-font-size-md);
+  font-weight: 500;
+  color: var(--icen-token-text);
+}
+.icen-upload-link {
+  color: var(--icen-token-accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.upload-desc {
+.icen-upload-desc {
   margin: 2px 0 0;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
 }
-.upload-error {
-  margin: var(--density-space-xs) 0 0;
+.icen-upload-error {
+  margin: var(--icen-density-space-xs) 0 0;
   padding: 6px 10px;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-error);
-  background: var(--token-error-muted);
-  border-radius: var(--radius-sm);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-error);
+  background: var(--icen-token-error-muted);
+  border-radius: var(--icen-radius-sm);
 }
 
 /* 文件列表（behavior 可选渲染） */
-.upload-list {
+.icen-upload-list {
   list-style: none;
   padding: 0;
-  margin: var(--density-space-sm) 0 0;
+  margin: var(--icen-density-space-sm) 0 0;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
 }
-.upload-list-item {
+.icen-upload-list-item {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-xs) var(--density-space-sm);
-  background: var(--token-surface);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-sm);
-  font-size: var(--density-font-size-sm);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  background: var(--icen-token-surface);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-sm);
+  font-size: var(--icen-density-font-size-sm);
   animation: upload-item-in var(--icen-tx-fast);
   transition: border-color var(--icen-tx-fast);
 }
-.upload-list-item:hover {
-  border-color: var(--token-outline);
+.icen-upload-list-item:hover {
+  border-color: var(--icen-token-outline);
 }
-.upload-list-item-thumb {
+.icen-upload-list-item-thumb {
   width: 32px;
   height: 32px;
   object-fit: cover;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   flex-shrink: 0;
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
 }
-.upload-list-item-icon {
+.icen-upload-list-item-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  border-radius: var(--radius-xs);
-  background: var(--token-fill-1);
-  color: var(--token-text-faint);
+  border-radius: var(--icen-radius-xs);
+  background: var(--icen-token-fill-1);
+  color: var(--icen-token-text-faint);
 }
-.upload-list-item-icon svg { width: 16px; height: 16px; }
-.upload-list-item-info {
+.icen-upload-list-item-icon svg { width: 16px; height: 16px; }
+.icen-upload-list-item-info {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
-.upload-list-item-name {
+.icen-upload-list-item-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
-.upload-list-item-size {
-  color: var(--token-text-faint);
+.icen-upload-list-item-size {
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
 }
-.upload-list-item-x {
+.icen-upload-list-item-x {
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   padding: 4px;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.upload-list-item-x:hover {
-  color: var(--token-error);
-  background: var(--token-error-muted);
+.icen-upload-list-item-x:hover {
+  color: var(--icen-token-error);
+  background: var(--icen-token-error-muted);
 }
-.upload-list-item-x:focus-visible {
+.icen-upload-list-item-x:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.upload-list-item.is-error {
-  border-color: var(--token-error);
+.icen-upload-list-item.is-error {
+  border-color: var(--icen-token-error);
 }
-.upload-list-item.is-error .upload-list-item-icon {
-  background: var(--token-error-muted);
-  color: var(--token-error);
+.icen-upload-list-item.is-error .icen-upload-list-item-icon {
+  background: var(--icen-token-error-muted);
+  color: var(--icen-token-error);
 }
 
 @keyframes upload-item-in {
@@ -208,5 +213,5 @@
   to { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .upload-list-item, .upload-icon { animation: none; transition: none; }
+  .icen-upload-list-item, .icen-upload-icon { animation: none; transition: none; }
 }

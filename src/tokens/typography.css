@@ -1,8 +1,8 @@
 /*
  * @icen.ai/ui — Typography Tokens（icen canonical）
  * 美学基调：等宽数字精密感 × 衬线书卷气（宋体标题）
- * 默认（:root）即 icen 品牌形态；.style-modern 显式回退 system-ui 栈（见 style-profiles.css）
- * 工具类：.font-math（数字密集区，"Numeric Math" 数学字体 + tabular-nums）
+ * 默认（:root）即 icen 品牌形态；[data-icen-style="modern"] 显式回退 system-ui 栈（见 style-profiles.css）
+ * 工具类：.icen-font-math（数字密集区，"Numeric Math" 数学字体 + tabular-nums）
  */
 
 /* ── 数学/等宽数字字体（数字密集区的精密感） ── */
@@ -20,19 +20,19 @@
   /* ── icen 品牌字体栈 ──
      body/mono：IBM Plex Mono（未安装时回退系统等宽，行为与 accounts 一致，不打包 webfont）
      heading：CJK 宋体系（页面标题/品牌名的书卷气） */
-  --font-body: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
-  --font-mono: var(--font-body);
-  --font-heading: 'Songti SC', 'STSong', 'Noto Serif SC', 'Source Han Serif SC', SimSun, serif;
-  --font-cjk: var(--font-heading);
-  --line-height-body: 1.7;
+  --icen-font-body: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
+  --icen-font-mono: var(--icen-font-body);
+  --icen-font-heading: 'Songti SC', 'STSong', 'Noto Serif SC', 'Source Han Serif SC', SimSun, serif;
+  --icen-font-cjk: var(--icen-font-heading);
+  --icen-line-height-body: 1.7;
   /* 独家定义（style-profiles.css 的 :root 不再重复；profile 差异化在各 .style-* 块覆盖） */
-  --line-height-heading: 1.2;
+  --icen-line-height-heading: 1.2;
 }
 
 /* ── 全局排版 ── */
 body {
-  font-family: "Numeric Math", var(--font-body);
-  line-height: var(--line-height-body);
+  font-family: "Numeric Math", var(--icen-font-body);
+  line-height: var(--icen-line-height-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "rlig" 1, "calt" 1;
@@ -40,12 +40,12 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  line-height: var(--line-height-heading);
+  font-family: var(--icen-font-heading);
+  line-height: var(--icen-line-height-heading);
 }
 
 /* ── 数字密集区工具类 ── */
-.font-math {
-  font-family: "Numeric Math", math, var(--font-body);
+.icen-font-math {
+  font-family: "Numeric Math", math, var(--icen-font-body);
   font-variant-numeric: lining-nums tabular-nums;
 }

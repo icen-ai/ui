@@ -7,95 +7,95 @@
  *   - toolbar   = 宽松的按钮/控件容器，可分组、可分隔、可换行
  *
  * 完整契约：
- *   <div class="toolbar [--sm|--lg] [--wrap] [--borderless]">
- *     <button class="btn btn-sm">…</button>
- *     <div class="toolbar-group">
- *       <button class="btn btn-sm">…</button>
- *       <button class="btn btn-sm">…</button>
+ *   <div class="icen-toolbar [--sm|--lg] [--wrap] [--borderless]">
+ *     <button class="icen-btn icen-btn-sm">…</button>
+ *     <div class="icen-toolbar-group">
+ *       <button class="icen-btn icen-btn-sm">…</button>
+ *       <button class="icen-btn icen-btn-sm">…</button>
  *     </div>
- *     <span class="toolbar-separator"></span>
- *     <div class="toolbar-spacer"></div>      ← 弹性占位，把右侧元素推到末尾
- *     <span class="toolbar-label">3 项</span>
+ *     <span class="icen-toolbar-separator"></span>
+ *     <div class="icen-toolbar-spacer"></div>      ← 弹性占位，把后续元素推到行内末尾（RTL 镜像到左侧）
+ *     <span class="icen-toolbar-label">3 项</span>
  *   </div>
  *
  *   编辑器顶栏（与 fixed 子项配套）：
- *   <div class="toolbar toolbar--elevated">
+ *   <div class="icen-toolbar icen-toolbar--elevated">
  *     …
  *   </div>
  */
 
-.toolbar {
+.icen-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   flex-wrap: nowrap;
-  padding: var(--density-space-sm);
-  background: var(--token-bg-soft);
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-md);
+  padding: var(--icen-density-space-sm);
+  background: var(--icen-token-bg-soft);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-md);
 }
-.toolbar--wrap { flex-wrap: wrap; }
-.toolbar--borderless {
+.icen-toolbar--wrap { flex-wrap: wrap; }
+.icen-toolbar--borderless {
   background: transparent;
   border-color: transparent;
   padding: 0;
 }
-.toolbar--elevated {
-  background: var(--token-card-strong);
-  border-color: var(--token-outline-soft);
-  box-shadow: var(--token-shadow-elevated);
+.icen-toolbar--elevated {
+  background: var(--icen-token-card-strong);
+  border-color: var(--icen-token-outline-soft);
+  box-shadow: var(--icen-token-shadow-elevated);
 }
 
 /* ── 尺寸 ── */
-.toolbar--sm { padding: 4px var(--density-space-xs); gap: var(--density-space-xs); }
-.toolbar--lg { padding: var(--density-space-md); gap: var(--density-space-md); }
+.icen-toolbar--sm { padding: 4px var(--icen-density-space-xs); gap: var(--icen-density-space-xs); }
+.icen-toolbar--lg { padding: var(--icen-density-space-md); gap: var(--icen-density-space-md); }
 
 /* ── 分组（紧贴一组按钮） ── */
-.toolbar-group {
+.icen-toolbar-group {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   padding: 2px;
-  background: var(--token-fill-1);
-  border-radius: var(--radius-sm);
+  background: var(--icen-token-fill-1);
+  border-radius: var(--icen-radius-sm);
 }
-.toolbar-group > .btn { border-color: transparent; background: transparent; }
-.toolbar-group > .btn:hover { background: var(--token-fill-2); }
+.icen-toolbar-group > .icen-btn { border-color: transparent; background: transparent; }
+.icen-toolbar-group > .icen-btn:hover { background: var(--icen-token-fill-2); }
 
 /* ── 分隔符 ── */
-.toolbar-separator {
+.icen-toolbar-separator {
   width: 1px;
   height: 20px;
-  background: var(--token-line-soft);
+  background: var(--icen-token-line-soft);
   flex-shrink: 0;
 }
-.toolbar--sm .toolbar-separator { height: 16px; }
-.toolbar--lg .toolbar-separator { height: 24px; }
+.icen-toolbar--sm .icen-toolbar-separator { height: 16px; }
+.icen-toolbar--lg .icen-toolbar-separator { height: 24px; }
 
 /* 水平工具条里的垂直分隔（用于纵向 toolbar） */
-.toolbar--vertical { flex-direction: column; align-items: stretch; }
-.toolbar--vertical .toolbar-separator {
+.icen-toolbar--vertical { flex-direction: column; align-items: stretch; }
+.icen-toolbar--vertical .icen-toolbar-separator {
   width: auto;
   height: 1px;
-  margin: var(--density-space-xs) 0;
+  margin: var(--icen-density-space-xs) 0;
 }
 
 /* ── 弹性占位 ── */
-.toolbar-spacer { flex: 1 1 auto; min-width: var(--density-space-xs); }
+.icen-toolbar-spacer { flex: 1 1 auto; min-width: var(--icen-density-space-xs); }
 
 /* ── 内嵌文字（计数 / 状态） ── */
-.toolbar-label {
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+.icen-toolbar-label {
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.toolbar-label.accent { color: var(--token-accent); }
+.icen-toolbar-label.icen-accent { color: var(--icen-token-accent); }
 
 @media (max-width: 480px) {
-  .toolbar { flex-wrap: wrap; }
+  .icen-toolbar { flex-wrap: wrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .toolbar * { transition: none !important; }
+  .icen-toolbar * { transition: none !important; /* guard:allow-important 动效守卫：降级媒体查询需压制组件动画 */ }
 }

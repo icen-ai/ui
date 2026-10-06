@@ -2,21 +2,22 @@
  * @icen.ai/ui — Behavior: tag-input（多值标签编辑，与 components/tag-input.css 配套）
  *
  * DOM 契约：
- *   <div class="tag-input" data-tags="初始,标签" data-max="5">
- *     <input class="tag-input-field" placeholder="…" />
+ *   <div class="icen-tag-input" data-icen-tags="初始,标签" data-icen-max="5">
+ *     <icen-input class="icen-tag-input-field" placeholder="…" />
  *   </div>
  *
- * 行为：初始化按 data-tags（逗号分隔）渲染 .tag-chip（文本用 textContent，× 为
- * button.tag-chip-x）；Enter / 逗号提交草稿（trim；重复值被拒绝——清空草稿并短暂
- * .is-shake 抖动反馈；达到 data-max 拒加并保留草稿）；空草稿 Backspace 删尾 chip；blur 提交草稿；chip × mousedown
- * preventDefault 防 blur 抢跑、click 删除；达到 data-max 容器加 .is-max。
- * 每次变化把最新 tags 回写容器 data-tags 并派发 icen:tags-change { tags }；
+ * 行为：初始化按 data-icen-tags（逗号分隔）渲染 .icen-tag-chip（文本用 textContent，× 为
+ * button.icen-tag-chip-x）；Enter / 逗号提交草稿（trim；重复值被拒绝——清空草稿并短暂
+ * .is-shake 抖动反馈；达到 data-icen-max 拒加并保留草稿）；空草稿 Backspace 删尾 chip；blur 提交草稿；chip × mousedown
+ * preventDefault 防 blur 抢跑、click 删除；达到 data-icen-max 容器加 .is-max。
+ * 每次变化把最新 tags 回写容器 data-icen-tags 并派发 icen:tags-change { tags }；
  * tags 非空时清空 placeholder。
  * 同一容器重复 init 幂等；initTagInput 返回销毁函数（移除 field 全部监听并复位
  * 幂等标记，销毁后可重新 init；销毁至重 init 之间残留 chip 的点击不派发）。SSR 下返回 no-op。
  */
 
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 interface MarkedTagInput extends HTMLElement {
   __icenTagInit?: boolean;
@@ -27,11 +28,11 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
   if (el.__icenTagInit) return undefined;
   el.__icenTagInit = true;
 
-  const fieldEl = wrap.querySelector<HTMLInputElement>('.tag-input-field');
+  const fieldEl = wrap.querySelector<HTMLInputElement>('.icen-tag-input-field');
   if (!fieldEl) return undefined;
   const field = fieldEl; // 闭包内不保留 narrowing，转为非空常量
-  const maxAttr = wrap.getAttribute('data-max');
-  // data-max="0" / 非法值视为不限（落到 Infinity）：保持现行为，仅声明语义
+  const maxAttr = wrap.getAttribute('data-icen-max');
+  // data-icen-max="0" / 非法值视为不限（落到 Infinity）：保持现行为，仅声明语义
   const max = maxAttr ? Number(maxAttr) || Infinity : Infinity;
   const placeholder = field.placeholder;
 
@@ -44,7 +45,7 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
   const onCompositionStart = (): void => { isComposing = true; };
   const onCompositionEnd = (): void => { isComposing = false; };
 
-  let tags: string[] = (wrap.getAttribute('data-tags') ?? '')
+  let tags: string[] = (wrap.getAttribute('data-icen-tags') ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
@@ -54,10 +55,10 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
   const autoLabel = !wrap.hasAttribute('aria-label');
 
   function sync(): void {
-    wrap.setAttribute('data-tags', tags.join(','));
+    wrap.setAttribute('data-icen-tags', tags.join(','));
     wrap.classList.toggle('is-max', tags.length >= max);
     field.placeholder = tags.length === 0 ? placeholder : '';
-    if (autoLabel) wrap.setAttribute('aria-label', `标签输入，共 ${tags.length} 个`);
+    if (autoLabel) wrap.setAttribute('aria-label', t('tagInput.ariaLabel', { p0: tags.length }));
   }
 
   function emit(): void {
@@ -89,14 +90,14 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
 
   function chip(tag: string, index: number): HTMLSpanElement {
     const el = document.createElement('span');
-    el.className = 'tag-chip';
+    el.className = 'icen-tag-chip';
     const label = document.createElement('span');
     label.textContent = tag;
     const x = document.createElement('button');
     x.type = 'button';
-    x.className = 'tag-chip-x focus-ring';
+    x.className = 'icen-tag-chip-x icen-focus-ring';
     x.textContent = '×';
-    x.setAttribute('aria-label', `移除 ${tag}`);
+    x.setAttribute('aria-label', t('tagInput.remove', { p0: tag }));
     // 防 input blur 抢跑：blur 会先提交草稿，再轮到 remove，顺序会乱
     x.addEventListener('mousedown', (ev) => ev.preventDefault());
     x.addEventListener('click', () => remove(index));
@@ -105,7 +106,7 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
   }
 
   function render(): void {
-    wrap.querySelectorAll('.tag-chip').forEach((c) => c.remove());
+    wrap.querySelectorAll('.icen-tag-chip').forEach((c) => c.remove());
     tags.forEach((t, i) => wrap.insertBefore(chip(t, i), field));
     sync();
   }
@@ -157,7 +158,7 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
 }
 
 /**
- * 为 root 下每个 .tag-input 容器初始化（root 自身匹配也算；data-tags 为可选初始值配置）。
+ * 为 root 下每个 .icen-tag-input 容器初始化（root 自身匹配也算；data-icen-tags 为可选初始值配置）。
  * 返回销毁函数：移除本次挂上的全部监听并复位幂等标记（销毁后可重新 init）。SSR 下返回 no-op。
  */
 export function initTagInput(root?: ParentNode): () => void {
@@ -165,8 +166,8 @@ export function initTagInput(root?: ParentNode): () => void {
   if (typeof document !== 'undefined') {
     const scope = root ?? document;
     const containers: HTMLElement[] = [];
-    if (scope instanceof HTMLElement && scope.matches('.tag-input')) containers.push(scope);
-    containers.push(...Array.from(scope.querySelectorAll<HTMLElement>('.tag-input')));
+    if (scope instanceof HTMLElement && scope.matches('.icen-tag-input')) containers.push(scope);
+    containers.push(...Array.from(scope.querySelectorAll<HTMLElement>('.icen-tag-input')));
     for (const c of containers) {
       const cleanup = setup(c);
       if (cleanup) cleanups.push(cleanup);

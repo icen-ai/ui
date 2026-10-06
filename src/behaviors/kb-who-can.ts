@@ -4,30 +4,30 @@
  * 权限域 kb-perm，spec docs/spec/kb-family.md §9.2；样式 components/kb-perm.css 段A）
  *
  * DOM 契约（renderKbWhoCan 装配，返回可操作句柄）：
- *   <div class="kb-whocan">
- *     <div class="kb-whocan-bar">
- *       <select class="kb-whocan-user" aria-label="检查身份">…固定身份集（option=value user）…</select>
- *       <button class="kb-whocan-check" data-whocan-check>检查</button>
+ *   <div class="icen-kb-whocan">
+ *     <div class="icen-kb-whocan-bar">
+ *       <icen-select class="icen-kb-whocan-user" aria-label="检查身份">…固定身份集（option=value user）…</icen-select>
+ *       <button class="icen-kb-whocan-check" data-icen-whocan-check>检查</button>
  *     </div>
- *     <div class="kb-whocan-result [.is-allowed|.is-denied]">
- *       <div class="kb-whocan-verdict">可编辑 / 无权限</div>                  ← kbRoleLabel(decision.role)
- *       [<div class="kb-whocan-deniedby">被策略拒绝：DLP-外发管控</div>]      ← deny 一票否决置顶红条
- *       <ul class="kb-whocan-chain">
- *         <li class="kb-whocan-reason [.is-inherit|.is-direct|.is-link|.is-deny]">
- *           <span class="kb-badge">继承|直接|链接|拒绝</span>
- *           <span class="kb-whocan-source">finance-team</span>
- *           <span class="kb-whocan-role kb-chip">可编辑</span>
- *           [<span class="kb-meta">24 成员 · 由 IT 管理</span>]               ← subject.note
+ *     <div class="icen-kb-whocan-result [.is-allowed|.is-denied]">
+ *       <div class="icen-kb-whocan-verdict">可编辑 / 无权限</div>                  ← kbRoleLabel(decision.role)
+ *       [<div class="icen-kb-whocan-deniedby">被策略拒绝：DLP-外发管控</div>]      ← deny 一票否决置顶红条
+ *       <ul class="icen-kb-whocan-chain">
+ *         <li class="icen-kb-whocan-reason [.is-inherit|.is-direct|.is-link|.is-deny]">
+ *           <span class="icen-kb-badge">继承|直接|链接|拒绝</span>
+ *           <span class="icen-kb-whocan-source">finance-team</span>
+ *           <span class="icen-kb-whocan-role icen-kb-chip">可编辑</span>
+ *           [<span class="icen-kb-meta">24 成员 · 由 IT 管理</span>]               ← subject.note
  *         </li>…   （空链：未命中任何授权——默认拒绝 fail-closed）
  *       </ul>
- *       <div class="kb-whocan-rule">叠加规则：多来源并集 → 可编辑；无 Deny 生效</div>
- *       [<div class="kb-whocan-expires kb-meta">最近到期 29 天后</div>]
+ *       <div class="icen-kb-whocan-rule">叠加规则：多来源并集 → 可编辑；无 Deny 生效</div>
+ *       [<div class="icen-kb-whocan-expires icen-kb-meta">最近到期 29 天后</div>]
  *     </div>
  *   </div>
  *
  * 行为：
  *   - 身份来自服务端验证 token 的固定身份集（spec §9.0 纪律 8：不接受自由输入身份/组）——
- *     select 变更即重算；「检查」钮（data-whocan-check）显式重算；setIdentity 只接受集合内 id
+ *     select 变更即重算；「检查」钮（data-icen-whocan-check）显式重算；setIdentity 只接受集合内 id
  *   - evaluate 缺省 = kb-core evaluateAcl（先显式 deny → allow 并集 → 默认拒绝，fail-closed）
  *   - 每次重算派 icen:kb-whocan-check { identity, decision }（与 opts.onCheck 双通道）
  *   - 句柄（create* 约定）：setIdentity(id) / getResult() / destroy()；同元素重复 render 先拆旧装配
@@ -66,6 +66,7 @@ import {
   type KbIdentity,
 } from './kb-core';
 import { emitIcen } from './events';
+import { t as icenT } from './i18n';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -98,9 +99,9 @@ interface MarkedWhoCanEl extends HTMLElement {
 /* ══════════════ 内部工具 ══════════════ */
 
 const VIA_LABEL: Record<KbAclDecision['chain'][number]['via'], string> = {
-  direct: '直接',
-  inherit: '继承',
-  link: '链接',
+  direct: icenT('kbWhoCan.direct'),
+  inherit: icenT('kbWhoCan.inherit'),
+  link: icenT('kbWhoCan.link'),
 };
 
 /** 倒计时文案：未来 → 「N 天后 / N 小时后 / 即将到期」；过去 → relativeTime（N 天前） */
@@ -110,10 +111,10 @@ function untilLabel(input: string, now: Date): string {
   const diff = t - now.getTime();
   if (diff <= 0) return relativeTime(t, now);
   const days = Math.floor(diff / 86_400_000);
-  if (days >= 1) return `${days} 天后`;
+  if (days >= 1) return icenT('kbWhoCan.daysUntil', { p0: days });
   const hours = Math.floor(diff / 3_600_000);
-  if (hours >= 1) return `${hours} 小时后`;
-  return '即将到期';
+  if (hours >= 1) return icenT('kbWhoCan.hoursUntil', { p0: hours });
+  return icenT('kbCore.accessExpiring');
 }
 
 /* ══════════════ 装配 ══════════════ */
@@ -154,24 +155,24 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
   let decision: KbAclDecision | null = null;
 
   el.textContent = '';
-  el.classList.add('kb-whocan');
+  el.classList.add('icen-kb-whocan');
 
   /* —— bar：固定身份集下拉 + 检查钮 —— */
-  const select = h('select', 'kb-whocan-user') as HTMLSelectElement;
-  select.setAttribute('aria-label', '检查身份');
+  const select = h('select', 'icen-kb-whocan-user') as HTMLSelectElement;
+  select.setAttribute('aria-label', icenT('kbWhoCan.checkIdentity'));
   for (const identity of identities) {
     const option = h('option', undefined, identity.label ?? identity.user);
     option.value = identity.user;
     select.appendChild(option);
   }
-  const checkBtn = h('button', 'kb-whocan-check', '检查');
+  const checkBtn = h('button', 'icen-kb-whocan-check', icenT('kbWhoCan.check'));
   checkBtn.type = 'button';
-  checkBtn.dataset.whocanCheck = '';
-  checkBtn.setAttribute('aria-label', '重新检查当前身份的有效权限');
-  const bar = h('div', 'kb-whocan-bar');
+  checkBtn.dataset.icenWhocanCheck = '';
+  checkBtn.setAttribute('aria-label', icenT('kbWhoCan.recheckTip'));
+  const bar = h('div', 'icen-kb-whocan-bar');
   bar.append(select, checkBtn);
 
-  const result = h('div', 'kb-whocan-result');
+  const result = h('div', 'icen-kb-whocan-result');
   el.append(bar, result);
 
   /* —— 结论区快照渲染 —— */
@@ -181,25 +182,25 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
     const allowed = d.role != null;
     result.classList.add(allowed ? 'is-allowed' : 'is-denied');
 
-    result.appendChild(h('div', 'kb-whocan-verdict', kbRoleLabel(d.role)));
+    result.appendChild(h('div', 'icen-kb-whocan-verdict', kbRoleLabel(d.role)));
 
     /* deny 一票否决置顶红条（最强信号优先呈现） */
     if (d.deniedBy) {
-      result.appendChild(h('div', 'kb-whocan-deniedby', `被策略拒绝：${d.deniedBy.label}`));
+      result.appendChild(h('div', 'icen-kb-whocan-deniedby', icenT('kbWhoCan.deniedBy', { p0: d.deniedBy.label })));
     }
 
     /* 扁平原因链（不做树）：badge 来源 + 主体 + 角色 + 组 meta */
-    const chain = h('ul', 'kb-whocan-chain');
+    const chain = h('ul', 'icen-kb-whocan-chain');
     if (!d.chain.length) {
-      chain.appendChild(h('li', 'kb-whocan-none kb-meta', '未命中任何授权——默认拒绝'));
+      chain.appendChild(h('li', 'icen-kb-whocan-none icen-kb-meta', icenT('kbWhoCan.none')));
     } else {
       for (const link of d.chain) {
-        const li = h('li', 'kb-whocan-reason');
+        const li = h('li', 'icen-kb-whocan-reason');
         li.classList.add(link.entry.deny ? 'is-deny' : `is-${link.via}`);
-        li.appendChild(h('span', 'kb-badge', link.entry.deny ? '拒绝' : VIA_LABEL[link.via]));
-        li.appendChild(h('span', 'kb-whocan-source', link.entry.subject.label));
-        li.appendChild(h('span', 'kb-whocan-role kb-chip', kbRoleLabel(link.entry.role)));
-        if (link.entry.subject.note) li.appendChild(h('span', 'kb-meta', link.entry.subject.note));
+        li.appendChild(h('span', 'icen-kb-badge', link.entry.deny ? icenT('common.reject') : VIA_LABEL[link.via]));
+        li.appendChild(h('span', 'icen-kb-whocan-source', link.entry.subject.label));
+        li.appendChild(h('span', 'icen-kb-whocan-role icen-kb-chip', kbRoleLabel(link.entry.role)));
+        if (link.entry.subject.note) li.appendChild(h('span', 'icen-kb-meta', link.entry.subject.note));
         chain.appendChild(li);
       }
     }
@@ -208,13 +209,13 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
     result.appendChild(
       h(
         'div',
-        'kb-whocan-rule',
-        `叠加规则：多来源并集 → ${kbRoleLabel(d.role)}；${d.deniedBy ? '被 Deny 一票否决' : '无 Deny 生效'}`,
+        'icen-kb-whocan-rule',
+        icenT('kbWhoCan.stackRule', { p0: kbRoleLabel(d.role), p1: d.deniedBy ? icenT('kbWhoCan.denyVeto') : icenT('kbWhoCan.noDeny') }),
       ),
     );
 
     if (d.expiresAt) {
-      result.appendChild(h('div', 'kb-whocan-expires kb-meta', `最近到期 ${untilLabel(d.expiresAt, new Date())}`));
+      result.appendChild(h('div', 'icen-kb-whocan-expires icen-kb-meta', icenT('kbWhoCan.expiresSoon', { p0: untilLabel(d.expiresAt, new Date()) })));
     }
   }
 
@@ -240,14 +241,14 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
   });
   listen('click', (ev) => {
     const t = ev.target;
-    if (t instanceof Element && t.closest('[data-whocan-check]')) run();
+    if (t instanceof Element && t.closest('[data-icen-whocan-check]')) run();
   });
 
   /* 空身份集：控件禁用 + 空态文案（固定集纪律下无身份 = 不可检查，不猜测） */
   if (!identities.length) {
     select.disabled = true;
     checkBtn.disabled = true;
-    result.appendChild(h('div', 'kb-empty', '未提供可检查的身份'));
+    result.appendChild(h('div', 'icen-kb-empty', icenT('kbWhoCan.noIdentity')));
   } else {
     run(); /* 初始身份立即给出基线结论 */
   }
@@ -267,7 +268,7 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
       if (destroyed) return;
       destroyed = true;
       ctrl.abort();
-      el.classList.remove('kb-whocan');
+      el.classList.remove('icen-kb-whocan');
       el.textContent = '';
       delete (el as MarkedWhoCanEl).__icenKbWhoCan;
     },

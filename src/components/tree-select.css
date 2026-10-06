@@ -1,0 +1,385 @@
+/*
+ * @icen.ai/ui — Component: tree-select（树选择）
+ * 与 behaviors/tree-select.ts 配套（函数式 API：createTreeSelect(el, opts) → handle）。
+ * 视觉语言复用 content.css 的 .icen-tree（chevron / 缩进 / 选中态），面板形态与 select 对齐。
+ *
+ * 完整契约（createTreeSelect 渲染进宿主 el；面板打开时 portal 到 document.body）：
+ *   <div class="icen-tree-select [.is-open] [.icen-tree-select--lined]" data-icen-tree-select
+ *        [data-icen-disabled]>
+ *     <button class="icen-tree-select-trigger" role="combobox" aria-haspopup="tree"
+ *             aria-expanded="false" aria-controls="<panelId>" [disabled]>
+ *       <span class="icen-tree-select-value [.is-empty]">请选择</span>
+ *       <span class="icen-tree-select-chips" [hidden]>          ← multiple 时 behavior 渲染
+ *         <span class="icen-tree-select-chip">前端
+ *           <span class="icen-tree-select-chip-x" role="button" tabindex="-1" aria-label="移除">×</span>
+ *         </span>
+ *         <span class="icen-tree-select-chip icen-tree-select-chip--more">+2</span>
+ *       </span>
+ *       <svg class="icen-tree-select-chevron">…</svg>
+ *     </button>
+ *     <button class="icen-tree-select-clear" aria-label="清除" [hidden]>×</button>  ← clearable
+ *     <div class="icen-tree-select-panel" id="<panelId>" [hidden] data-icen-side="top|bottom">
+ *       <div class="icen-tree-select-search">          ← opts.searchable 时渲染
+ *         <input class="icen-tree-select-search-input" type="search" placeholder="搜索" />
+ *       </div>
+ *       <div class="icen-tree-select-tree" role="tree">  ← 平铺行（--depth 缩进），非嵌套 ul
+ *         <div class="icen-tree-select-row [.is-selected|.is-checked|.is-mixed|.is-disabled|
+ *              .is-branch|.is-focused]" role="treeitem" tabindex="-1" data-icen-value="fe"
+ *              style="--depth:1" aria-level="2" aria-posinset="1" aria-setsize="3"
+ *              [aria-expanded="true"] [aria-selected="true"] [aria-checked="true|false|mixed"]>
+ *           <span class="icen-tree-select-toggle [.is-collapsed|.is-leaf]"><svg>…</svg></span>
+ *           <span class="icen-tree-select-check"></span>                ← checkable 时
+ *           <span class="icen-tree-select-label">前端</span>            ← 命中词 <mark>
+ *         </div>
+ *       </div>
+ *       <div class="icen-tree-select-empty" [hidden]>无匹配</div>       ← opts.emptyLabel
+ *     </div>
+ *   </div>
+ *
+ * behavior 维护：
+ *   - .icen-tree-select.is-open ↔ aria-expanded；panel portal 到 body（inline left/top/width/
+ *     max-height + data-icen-side）；外点 / Esc 关闭；window scroll/resize 跟随重定位
+ *   - 面板尺寸走全库统一 PanelSizing 契约（behaviors/popover.ts）：根 el 挂
+ *     data-icen-panel-width（固定宽，最高优先）/ data-icen-panel-min / data-icen-panel-max /
+ *     data-icen-panel-max-height（默认 280）
+ *   - multiple：trigger chips 渲染（超过 3 个收 +N）；checkable：三态勾选（.is-checked/
+ *     .is-mixed 驱动 .icen-tree-select-check）；单选：.is-selected 行
+ *   - 搜索态：.icen-tree-select-label mark 高亮命中词；无命中显示 .icen-tree-select-empty
+ *   - 连接线变体：根挂 .icen-tree-select--lined（行首竖向引导线 + 横向连接线）
+ *   - 键盘：↑↓ 行间移动 / → 展开（已展开进首子）/ ← 折叠（已折叠回父行）/ Enter 激活；
+ *     RTL 下树向 inline-start 侧生长（缩进为逻辑属性，自动镜像），→/← 由 behavior 镜像
+ *   - 事件 icen:tree-select-change { value: string[]; labels: string[] }
+ */
+
+.icen-tree-select {
+  position: relative;
+  inline-size: 100%;
+}
+
+.icen-tree-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-xs);
+  inline-size: 100%;
+  min-height: var(--icen-density-input-height-md);
+  height: auto;
+  padding: 4px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-md);
+  text-align: start;
+  flex-wrap: wrap;
+  background: var(--icen-token-control);
+  color: var(--icen-token-text);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
+  cursor: pointer;
+  transition:
+    border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
+}
+.icen-tree-select-trigger:hover:not(:disabled) {
+  border-color: var(--icen-hover-border);
+}
+.icen-tree-select-trigger:focus-visible {
+  outline: none;
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+.icen-tree-select-trigger:disabled,
+.icen-tree-select[data-icen-disabled] .icen-tree-select-trigger,
+.icen-tree-select[aria-disabled='true'] .icen-tree-select-trigger {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.icen-tree-select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.icen-tree-select-value.is-empty {
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+}
+
+.icen-tree-select-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--icen-token-text-faint);
+  transition: transform var(--icen-tx-fast);
+}
+.icen-tree-select.is-open .icen-tree-select-chevron { transform: rotate(180deg); }
+
+/* 清除钮（与 trigger 同级，绝对定位叠进 trigger 行内末端侧、chevron 内侧） */
+.icen-tree-select-clear {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: calc(var(--icen-density-space-sm) + 20px);
+  transform: translateY(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--icen-radius-xs);
+  background: transparent;
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.icen-tree-select-clear:hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-1);
+}
+.icen-tree-select:has(.icen-tree-select-clear) .icen-tree-select-trigger { padding-inline-end: 52px; }
+
+/* ── 多选 chips（tag 式展示；× 仅 hover 对应 chip 时出现）── */
+.icen-tree-select-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.icen-tree-select-chip {
+  display: inline-flex;
+  align-items: center;
+  max-inline-size: 100%;
+  font-size: var(--icen-density-font-size-xs);
+  line-height: 1.6;
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-2);
+  border-radius: var(--icen-radius-sm);
+  padding: 0 7px;
+  white-space: nowrap;
+}
+.icen-tree-select-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-inline-start: 0;
+  color: var(--icen-token-text-faint);
+  border-radius: var(--icen-radius-full);
+  font-size: var(--icen-density-font-size-md);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    width var(--icen-tx-fast),
+    opacity var(--icen-tx-fast),
+    margin-inline-start var(--icen-tx-fast),
+    color var(--icen-tx-fast);
+}
+.icen-tree-select-chip:hover .icen-tree-select-chip-x,
+.icen-tree-select-chip-x:focus-visible { width: 12px; opacity: 1; margin-inline-start: 4px; }
+.icen-tree-select-chip-x:hover { color: var(--icen-token-error); }
+.icen-tree-select-chip--more { color: var(--icen-token-text-muted); background: var(--icen-token-fill-1); }
+
+/* 面板由 behavior portal 到 body：left/top/width/max-height 由 JS 按 trigger rect inline 写入；
+   data-icen-side="top|bottom" 标记翻侧方向。 */
+.icen-tree-select-panel {
+  position: absolute;
+  z-index: var(--icen-z-popover);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  background: var(--icen-token-card-strong);
+  border: 1px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-overlay);
+  transform-origin: top center;
+  animation: icen-pop-in var(--icen-tx-fast);
+}
+.icen-tree-select-panel[data-icen-side='top'] { transform-origin: bottom center; }
+
+/* ── 搜索框 ── */
+.icen-tree-select-search {
+  padding: 4px 4px 6px;
+  border-bottom: 1px solid var(--icen-token-outline-soft);
+  margin-bottom: 4px;
+  position: sticky;
+  top: 0;
+  background: var(--icen-token-card-strong);
+  z-index: 1;
+}
+.icen-tree-select-search-input {
+  inline-size: 100%;
+  height: 30px;
+  padding: 0 var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-sm);
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
+}
+.icen-tree-select-search-input:focus {
+  outline: none;
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+
+/* ── 树（平铺行；--depth 缩进沿 inline-start，RTL 自动镜像）── */
+.icen-tree-select-tree {
+  user-select: none;
+}
+.icen-tree-select-row {
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-xs);
+  padding-block: var(--icen-density-space-xs);
+  padding-inline: calc(4px + var(--depth, 0) * 18px) var(--icen-density-space-sm);
+  border-radius: var(--icen-radius-sm);
+  font-size: var(--icen-density-font-size-md);
+  color: var(--icen-token-text);
+  cursor: pointer;
+  transition: background-color var(--icen-tx-fast);
+}
+.icen-tree-select-row:hover:not(.is-disabled) { background: var(--icen-token-control-hover); }
+.icen-tree-select-row:focus-visible,
+.icen-tree-select-row.is-focused {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.icen-tree-select-row.is-selected {
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent);
+  font-weight: 500;
+}
+.icen-tree-select-row.is-disabled,
+.icen-tree-select-row[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+}
+.icen-tree-select-row.is-disabled .icen-tree-select-toggle,
+.icen-tree-select-row.is-disabled .icen-tree-select-check,
+.icen-tree-select-row.is-disabled .icen-tree-select-label {
+  pointer-events: none;
+}
+
+/* 展开 toggle（叶子为占位空壳，保持缩进对齐） */
+.icen-tree-select-toggle {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icen-token-text-muted);
+  cursor: pointer;
+  border-radius: var(--icen-radius-xs);
+}
+.icen-tree-select-toggle:hover { color: var(--icen-token-text); }
+.icen-tree-select-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+.icen-tree-select-toggle svg {
+  width: 13px;
+  height: 13px;
+  transition: transform var(--icen-tx-fast);
+}
+.icen-tree-select-toggle.is-collapsed svg { transform: rotate(-90deg); }
+.icen-tree-select-toggle.is-leaf { visibility: hidden; pointer-events: none; }
+
+/* RTL：折叠 chevron 镜像（展开方向随书写方向） */
+[dir='rtl'] .icen-tree-select-toggle.is-collapsed svg { transform: rotate(90deg); }
+
+/* 三态勾选框（checkable 时渲染；.is-checked/.is-mixed 由 behavior 求值挂行） */
+.icen-tree-select-check {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-xs);
+  transition:
+    background-color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast);
+}
+.icen-tree-select-row.is-checked .icen-tree-select-check {
+  background: var(--icen-token-accent);
+  border-color: var(--icen-token-accent);
+}
+.icen-tree-select-row.is-checked .icen-tree-select-check::after {
+  content: '✓';
+  font-size: var(--icen-density-font-size-2xs);
+  line-height: 1;
+  color: var(--icen-token-on-accent);
+}
+.icen-tree-select-row.is-mixed .icen-tree-select-check {
+  background: var(--icen-token-accent);
+  border-color: var(--icen-token-accent);
+}
+.icen-tree-select-row.is-mixed .icen-tree-select-check::after {
+  content: '–';
+  font-size: var(--icen-density-font-size-2xs);
+  line-height: 1;
+  color: var(--icen-token-on-accent);
+}
+
+.icen-tree-select-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.icen-tree-select-label mark {
+  background: color-mix(in srgb, var(--icen-token-warning) 30%, transparent);
+  color: inherit;
+}
+
+/* ── 连接线变体（根挂 .icen-tree-select--lined）──
+   平铺行按 --depth 在行首画竖向引导线 + 横向连接线（视觉对齐 content.css 的
+   .icen-tree--lined，沿 inline-start，RTL 自动镜像）。 */
+.icen-tree-select--lined .icen-tree-select-row {
+  position: relative;
+}
+.icen-tree-select--lined .icen-tree-select-row::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(4px + var(--depth, 0) * 18px + 8px);
+  inset-block: 0;
+  border-inline-start: 1px solid var(--icen-token-outline-soft);
+}
+.icen-tree-select--lined .icen-tree-select-row::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(4px + var(--depth, 0) * 18px + 8px);
+  inset-block-start: 50%;
+  inline-size: 9px;
+  border-block-start: 1px solid var(--icen-token-outline-soft);
+}
+
+/* 空状态（搜索无命中） */
+.icen-tree-select-empty {
+  padding: var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-faint);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-tree-select-panel { animation: none; }
+  .icen-tree-select-trigger,
+  .icen-tree-select-chevron,
+  .icen-tree-select-clear,
+  .icen-tree-select-chip-x,
+  .icen-tree-select-row,
+  .icen-tree-select-toggle svg,
+  .icen-tree-select-check,
+  .icen-tree-select-search-input { transition: none; }
+}

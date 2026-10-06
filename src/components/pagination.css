@@ -2,35 +2,35 @@
  * @icen.ai/ui — Component: pagination（分页）
  *
  * 完整契约：
- *   <nav class="pagination [pagination--sm]" aria-label="分页">
- *     <button class="page-btn motion [.is-disabled]" aria-label="上一页" aria-disabled="true">‹</button>
- *     <button class="page-btn motion [.is-active]" aria-current="page">1</button>
- *     <span class="page-ellipsis" aria-hidden="true">…</span>
- *     <button class="page-btn motion">5</button>
- *     <button class="page-btn motion" aria-label="下一页">›</button>
- *   </nav>
+ *   <icen-nav class="icen-pagination [icen-pagination--sm]" aria-label="分页">
+ *     <button class="icen-page-btn icen-motion [.is-disabled]" aria-label="上一页" aria-disabled="true">‹</button>
+ *     <button class="icen-page-btn icen-motion [.is-active]" aria-current="page">1</button>
+ *     <span class="icen-page-ellipsis" aria-hidden="true">…</span>
+ *     <button class="icen-page-btn icen-motion">5</button>
+ *     <button class="icen-page-btn icen-motion" aria-label="下一页">›</button>
+ *   </icen-nav>
  *
- * 点击接线由 behaviors/controls.ts 的 initPagination() 提供（.page-btn 激活位移 +
- * icen:page-change，上下页按钮按 aria-label / data-dir 推断方向）；总页数与省略号
+ * 点击接线由 behaviors/controls.ts 的 initPagination() 提供（.icen-page-btn 激活位移 +
+ * icen:page-change，上下页按钮按 aria-label / data-icen-dir 推断方向）；总页数与省略号
  * 折叠策略由消费方维护，这里只提供样式契约。
  */
 
-.pagination {
+.icen-pagination {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
 }
 
-.page-btn {
+.icen-page-btn {
   min-width: 28px;
   height: 28px;
-  padding: 0 var(--density-space-xs);
-  border-radius: var(--radius-sm);
-  font-size: var(--density-font-size-sm);
+  padding: 0 var(--icen-density-space-xs);
+  border-radius: var(--icen-radius-sm);
+  font-size: var(--icen-density-font-size-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
   background: none;
   border: 0;
   cursor: pointer;
@@ -39,82 +39,82 @@
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.page-btn:not(.is-active):hover {
-  background: var(--token-control-hover);
-  color: var(--token-text);
+.icen-page-btn:not(.is-active):hover {
+  background: var(--icen-token-control-hover);
+  color: var(--icen-token-text);
 }
-.page-btn:focus-visible {
+.icen-page-btn:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.page-btn.is-active,
-.page-btn[aria-current='page'] {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
+.icen-page-btn.is-active,
+.icen-page-btn[aria-current='page'] {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
   font-weight: 500;
-  box-shadow: var(--token-shadow-elevated);
+  box-shadow: var(--icen-token-shadow-elevated);
 }
-.page-btn.is-disabled,
-.page-btn:disabled,
-.page-btn[aria-disabled='true'] {
+.icen-page-btn.is-disabled,
+.icen-page-btn:disabled,
+.icen-page-btn[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   pointer-events: none;
 }
 
-.page-ellipsis {
+.icen-page-ellipsis {
   min-width: 28px;
   height: 28px;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   user-select: none;
 }
 
 /* 尺寸变体 */
-.pagination--sm .page-btn,
-.pagination--sm .page-ellipsis {
+.icen-pagination--sm .icen-page-btn,
+.icen-pagination--sm .icen-page-ellipsis {
   min-width: 22px;
   height: 22px;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
 }
 
 /* 带总数/跳页输入的复合体（behavior 可选渲染） */
-.pagination-info {
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-faint);
+.icen-pagination-info {
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
-  margin-left: var(--density-space-sm);
+  margin-inline-start: var(--icen-density-space-sm);
 }
-.pagination-jump {
+.icen-pagination-jump {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  margin-left: var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+  gap: var(--icen-density-space-xs);
+  margin-inline-start: var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
 }
-.pagination-jump-input {
+.icen-pagination-jump-input {
   width: 56px;
   height: 28px;
-  padding: 0 var(--density-space-xs);
+  padding: 0 var(--icen-density-space-xs);
   text-align: center;
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-sm);
-  color: var(--token-text);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-sm);
+  color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
   transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
-.pagination-jump-input:hover { border-color: var(--icen-hover-border); }
-.pagination-jump-input:focus-visible {
+.icen-pagination-jump-input:hover { border-color: var(--icen-hover-border); }
+.icen-pagination-jump-input:focus-visible {
   outline: none;
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-btn { transition: none; }
+  .icen-page-btn { transition: none; }
 }

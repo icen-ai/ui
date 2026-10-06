@@ -74,7 +74,7 @@ ai-usage 已领先市场（**无任何主流库有标准化 usage 组件**），
 ### R1.5 【P1】流式 markdown / 代码块行为
 ai-chat 声明「markdown 是消费方职责」，但知识库正文是文档式排版（业界已从气泡转向全宽文档流），需要官方容器方案：流式安全的 markdown + 代码高亮行为 + incomplete markdown 修复。
 - 最佳：llm-ui（https://llm-ui.com）— incomplete markdown 修复 + 块级 throttle 平滑 + 原生帧率渲染，流式渲染唯一专业户。AntD X 已内置 Markdown/Mermaid/CodeHighlighter（React）。
-- 底座：`.code-block` 静态样式已有，缺高亮行为与流式容器规范（零依赖方案：推荐消费方接 marked/markdown-it + 我们提供容器样式契约与锚点协议）。
+- 底座：`.icen-code-block` 静态样式已有，缺高亮行为与流式容器规范（零依赖方案：推荐消费方接 marked/markdown-it + 我们提供容器样式契约与锚点协议）。
 
 ### R1.6 【P2】消息分支 branch-picker
 同一消息位点多候选导航 ‹ 2/3 ›（编辑/重生成产生分支）。
@@ -222,7 +222,7 @@ URL 种子/层级（0-3）/窗口/包含排除 pattern/定时更新（1h~1 月�
 语法高亮、折叠、复制、**按角色显隐（visibility 是权限问题而非展示问题）**、编辑后重跑。
 - 最佳：Vanna 2.0（https://github.com/vanna-ai/vanna）— `vn.ask()` 一次返回 SQL→表→图三联；SQL 可见性按角色分层（默认仅 admin）；流式返回顺序：进度→SQL→交互表→图→摘要。Genie 只让 CAN EDIT 者看查询；SQL 函数型资产逻辑不可见。
 - 契约：`generatedQuery{sql, dialect, referencedTables[], editable, visibility: 'all'|'admin'}`。
-- 底座：`.code-block` 静态样式已有，需补高亮行为。
+- 底座：`.icen-code-block` 静态样式已有，需补高亮行为。
 
 ### R5.2 【P0】SQL 修正循环 diff sql-fix-diff
 报错时 v1 vs v2 diff + 逐行解释改了什么 + 一键应用重跑。**市场空白**（Hex 在 cell 级做到，对话式产品全无）。

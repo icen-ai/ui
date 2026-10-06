@@ -3,46 +3,46 @@
  * spec docs/spec/kb-family.md §9.1；样式 components/kb-perm.css 段A）
  *
  * DOM 契约（renderKbAcl 快照装配；骨架冻结于 spec §9.1）：
- *   <section class="kb-acl">
- *     <header class="kb-acl-head">
- *       <div class="kb-acl-title">[lock svg]<span class="kb-acl-title-text">资源名</span></div>
- *       <button class="kb-acl-act [.is-danger]" data-acl-break | data-acl-restore>
+ *   <section class="icen-kb-acl">
+ *     <header class="icen-kb-acl-head">
+ *       <div class="icen-kb-acl-title">[lock svg]<span class="icen-kb-acl-title-text">资源名</span></div>
+ *       <button class="icen-kb-acl-act [.is-danger]" data-icen-acl-break | data-icen-acl-restore>
  *         停止继承（默认，中性 ghost）/ 恢复继承（broken 时；恢复将丢弃本项自定义授权 →
  *         is-danger 克制描边，不做实底）
  *       </button>
  *     </header>
- *     <div class="kb-acl-inherit [.is-broken|.is-partial]">          ← 继承 banner 三态
- *       默认态：继承自 财务部空间 <span class="kb-acl-chain-link">/</span> 公司库（parentChain 面包式）
+ *     <div class="icen-kb-acl-inherit [.is-broken|.is-partial]">          ← 继承 banner 三态
+ *       默认态：继承自 财务部空间 <span class="icen-kb-acl-chain-link">/</span> 公司库（parentChain 面包式）
  *       is-broken：已停止继承——本项权限独立于父级
- *       is-partial（默认态叠加）：… <span class="kb-acl-chain-link">·</span> {label}：N 个子项已脱离
+ *       is-partial（默认态叠加）：… <span class="icen-kb-acl-chain-link">·</span> {label}：N 个子项已脱离
  *       parentChain 为空：根级资源——无父级继承
  *     </div>
- *     <div class="kb-acl-grants">                                    ← 直接访问区
- *       <div class="kb-acl-sec">直接访问</div>
- *       <div class="kb-acl-grant [.is-deny|.is-system|.is-expiring]">
- *         <span class="kb-acl-subject" data-kind="user|group|org|anyone|link">
+ *     <div class="icen-kb-acl-grants">                                    ← 直接访问区
+ *       <div class="icen-kb-acl-sec">直接访问</div>
+ *       <div class="icen-kb-acl-grant [.is-deny|.is-system|.is-expiring]">
+ *         <span class="icen-kb-acl-subject" data-icen-kind="user|group|org|anyone|link">
  *           <span class="kb-acl-subject-label">主体</span>
- *           [<span class="kb-acl-note kb-meta">24 成员 · 由 IT 管理 | 系统自动，不可手工移除</span>]
+ *           [<span class="icen-kb-acl-note icen-kb-meta">24 成员 · 由 IT 管理 | 系统自动，不可手工移除</span>]
  *         </span>
- *         <span class="kb-acl-role kb-chip">可查看|可评论|可编辑|负责人|拒绝(deny 行)</span>
- *         <span class="kb-acl-meta">继承自 X · 2026-11-01 到期 · 系统管理</span>
- *         <button class="kb-acl-remove" data-acl-remove aria-label="移除 主体">×</button>
+ *         <span class="icen-kb-acl-role icen-kb-chip">可查看|可评论|可编辑|负责人|拒绝(deny 行)</span>
+ *         <span class="icen-kb-acl-meta">继承自 X · 2026-11-01 到期 · 系统管理</span>
+ *         <button class="icen-kb-acl-remove" data-icen-acl-remove aria-label="移除 主体">×</button>
  *       </div>…                                                       ← deny 行 DOM 上即置顶
- *       （空集：<div class="kb-acl-none kb-meta">暂无直接授权</div>）
+ *       （空集：<div class="icen-kb-acl-none icen-kb-meta">暂无直接授权</div>）
  *     </div>
- *     <div class="kb-acl-links">                                     ← 链接访问区（同 grant 行构造）
- *       <div class="kb-acl-sec">链接访问</div>…（空集：无链接 muted 行）
+ *     <div class="icen-kb-acl-links">                                     ← 链接访问区（同 grant 行构造）
+ *       <div class="icen-kb-acl-sec">链接访问</div>…（空集：无链接 muted 行）
  *     </div>
- *     <footer class="kb-acl-foot">
- *       <button class="kb-acl-grant-btn" data-acl-grant>授予访问</button>
- *       [<span class="kb-meta">对 1,204 人可见</span>]                ← exposureCount 缺省不渲染该句
+ *     <footer class="icen-kb-acl-foot">
+ *       <button class="icen-kb-acl-grant-btn" data-icen-acl-grant>授予访问</button>
+ *       [<span class="icen-kb-meta">对 1,204 人可见</span>]                ← exposureCount 缺省不渲染该句
  *     </footer>
  *   </section>
  *
  * 事件（initKbAcl 委托派发，与 opts 回调双通道；detail 契约登记于 events.ts）：
- *   icen:kb-acl-grant   {}                              ← data-acl-grant
- *   icen:kb-acl-remove  { subject }                     ← data-acl-remove（is-system 行 CSS 隐藏 + 委托二次拒绝）
- *   icen:kb-acl-inherit { action: 'break'|'restore' }   ← data-acl-break / data-acl-restore
+ *   icen:kb-acl-grant   {}                              ← data-icen-acl-grant
+ *   icen:kb-acl-remove  { subject }                     ← data-icen-acl-remove（is-system 行 CSS 隐藏 + 委托二次拒绝）
+ *   icen:kb-acl-inherit { action: 'break'|'restore' }   ← data-icen-acl-break / data-icen-acl-restore
  *
  * mock 示例（文档站/联调直接可用）：
  *   renderKbAcl(el, {
@@ -89,6 +89,7 @@ import {
 } from './kb-core';
 import { emitIcen } from './events';
 import { KB_ICON_LOCK } from './kb-citation';
+import { t as icenT } from './i18n';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -112,13 +113,13 @@ export interface KbAclModel {
 
 /** renderKbAcl 的回调通道（与 icen:kb-acl-* 事件双通道） */
 export interface KbAclRenderOptions {
-  /** 「授予访问」点击（data-acl-grant） */
+  /** 「授予访问」点击（data-icen-acl-grant） */
   onGrant?: () => void;
-  /** 行移除点击（data-acl-remove；system 行 CSS 隐藏 + 委托二次拒绝，不会触发） */
+  /** 行移除点击（data-icen-acl-remove；system 行 CSS 隐藏 + 委托二次拒绝，不会触发） */
   onRemove?: (subject: KbSubject) => void;
-  /** 「停止继承」（data-acl-break） */
+  /** 「停止继承」（data-icen-acl-break） */
   onBreak?: () => void;
-  /** 「恢复继承」（data-acl-restore） */
+  /** 「恢复继承」（data-icen-acl-restore） */
   onRestore?: () => void;
 }
 
@@ -127,12 +128,12 @@ export function normalizeAclModel(raw: KbAclModel | Record<string, unknown>): Kb
   const r = raw as Partial<KbAclModel>;
   const ex = r.exceptions;
   return {
-    resource: String(r.resource ?? '未命名资源'),
+    resource: String(r.resource ?? icenT('kbAcl.unnamedResource')),
     parentChain: Array.isArray(r.parentChain) ? r.parentChain.map(String).filter(Boolean) : [],
     broken: r.broken === true,
     exceptions:
       ex && typeof ex === 'object'
-        ? { label: String(ex.label ?? '例外'), count: Number.isFinite(ex.count) ? ex.count : 0 }
+        ? { label: String(ex.label ?? icenT('kbAcl.exception')), count: Number.isFinite(ex.count) ? ex.count : 0 }
         : null,
     entries: Array.isArray(r.entries) ? r.entries.map((e) => normalizeAclEntry(e)) : [],
     links: Array.isArray(r.links) ? r.links.map((e) => normalizeAclEntry(e)) : [],
@@ -144,7 +145,7 @@ export function normalizeAclModel(raw: KbAclModel | Record<string, unknown>): Kb
 
 /** 面板 → opts 回调查表（render 时登记，init 委托命中时取用） */
 const aclPanelMap = new WeakMap<HTMLElement, KbAclRenderOptions | undefined>();
-/** 行 → ACL 条目查表（data-acl-remove 命中行后取 subject） */
+/** 行 → ACL 条目查表（data-icen-acl-remove 命中行后取 subject） */
 const aclRowMap = new WeakMap<HTMLElement, KbAclEntry>();
 
 const DAY_MS = 86_400_000;
@@ -162,8 +163,8 @@ function expiryMeta(expiresAt: string | undefined, now: Date): { text: string; s
   if (!expiresAt) return { text: '', soon: false };
   const t = Date.parse(expiresAt);
   if (!Number.isFinite(t)) return { text: '', soon: false };
-  if (t <= now.getTime()) return { text: `已过期（${relativeTime(t, now)}）`, soon: false };
-  return { text: `${ymdOf(t)} 到期`, soon: t - now.getTime() <= EXPIRING_SOON_MS };
+  if (t <= now.getTime()) return { text: icenT('kbAcl.expiredOn', { p0: relativeTime(t, now) }), soon: false };
+  return { text: icenT('kbAcl.expiresIn', { p0: ymdOf(t) }), soon: t - now.getTime() <= EXPIRING_SOON_MS };
 }
 
 /** deny 行置顶（稳定排序：deny 在前，组内保持原序） */
@@ -171,39 +172,39 @@ function denyFirst(entries: KbAclEntry[]): KbAclEntry[] {
   return [...entries].sort((a, b) => Number(b.deny === true) - Number(a.deny === true));
 }
 
-/** 单条授权行（grants 与 links 区共用；data-kind 由 CSS 决定组/链接前圆点） */
+/** 单条授权行（grants 与 links 区共用；data-icen-kind 由 CSS 决定组/链接前圆点） */
 function buildAclRow(entry: KbAclEntry, now: Date): HTMLElement {
-  const row = h('div', 'kb-acl-grant');
+  const row = h('div', 'icen-kb-acl-grant');
   if (entry.deny) row.classList.add('is-deny');
   if (entry.system) row.classList.add('is-system');
   aclRowMap.set(row, entry);
 
-  const subject = h('span', 'kb-acl-subject');
-  subject.dataset.kind = entry.subject.kind;
+  const subject = h('span', 'icen-kb-acl-subject');
+  subject.dataset.icenKind = entry.subject.kind;
   subject.appendChild(h('span', 'kb-acl-subject-label', entry.subject.label));
   /* system 行固定呈现系统注记（不可手工移除的明示）；其余行用主体自带 note（成员数/管理方） */
-  const note = entry.system ? '系统自动，不可手工移除' : entry.subject.note;
-  if (note) subject.appendChild(h('span', 'kb-acl-note kb-meta', note));
+  const note = entry.system ? icenT('kbAcl.systemNote') : entry.subject.note;
+  if (note) subject.appendChild(h('span', 'icen-kb-acl-note icen-kb-meta', note));
 
-  const role = h('span', 'kb-acl-role kb-chip', entry.deny ? '拒绝' : kbRoleLabel(entry.role));
+  const role = h('span', 'icen-kb-acl-role icen-kb-chip', entry.deny ? icenT('common.reject') : kbRoleLabel(entry.role));
 
   const metaBits: string[] = [];
-  if (entry.inheritedFrom) metaBits.push(`继承自 ${entry.inheritedFrom}`);
+  if (entry.inheritedFrom) metaBits.push(icenT('kbAcl.inheritedFrom', { p0: entry.inheritedFrom }));
   const expiry = expiryMeta(entry.expiresAt, now);
   if (expiry.text) {
     metaBits.push(expiry.text);
     if (expiry.soon) row.classList.add('is-expiring');
   }
-  if (entry.system) metaBits.push('系统管理');
+  if (entry.system) metaBits.push(icenT('kbAcl.systemBadge'));
 
-  const remove = h('button', 'kb-acl-remove', '×');
+  const remove = h('button', 'icen-kb-acl-remove', '×');
   remove.type = 'button';
-  remove.dataset.aclRemove = '';
-  remove.setAttribute('aria-label', `移除 ${entry.subject.label}`);
-  remove.title = `移除 ${entry.subject.label}`;
+  remove.dataset.icenAclRemove = '';
+  remove.setAttribute('aria-label', icenT('kbAcl.removeEntry', { p0: entry.subject.label }));
+  remove.title = icenT('kbAcl.removeEntry', { p0: entry.subject.label });
 
   row.append(subject, role);
-  if (metaBits.length) row.appendChild(h('span', 'kb-acl-meta', metaBits.join(' · ')));
+  if (metaBits.length) row.appendChild(h('span', 'icen-kb-acl-meta', metaBits.join(' · ')));
   row.appendChild(remove);
   return row;
 }
@@ -224,80 +225,80 @@ export function renderKbAcl(
   const now = new Date();
 
   el.textContent = '';
-  el.classList.add('kb-acl');
+  el.classList.add('icen-kb-acl');
   aclPanelMap.set(el, opts);
 
   /* —— 头：资源名 + 继承开关（恢复继承丢弃自定义授权 → 破坏性，danger 克制描边） —— */
-  const title = h('div', 'kb-acl-title');
+  const title = h('div', 'icen-kb-acl-title');
   const lock = svgIcon(KB_ICON_LOCK);
   if (lock) title.appendChild(lock);
-  title.appendChild(h('span', 'kb-acl-title-text', m.resource));
+  title.appendChild(h('span', 'icen-kb-acl-title-text', m.resource));
 
   const inheritBtn = h(
     'button',
-    m.broken ? 'kb-acl-act is-danger' : 'kb-acl-act',
-    m.broken ? '恢复继承' : '停止继承',
+    m.broken ? 'icen-kb-acl-act is-danger' : 'icen-kb-acl-act',
+    m.broken ? icenT('kbAcl.restoreInheritance') : icenT('kbAcl.breakInheritance'),
   );
   inheritBtn.type = 'button';
   if (m.broken) {
-    inheritBtn.dataset.aclRestore = '';
-    inheritBtn.title = '恢复继承将丢弃本项自定义的权限';
+    inheritBtn.dataset.icenAclRestore = '';
+    inheritBtn.title = icenT('kbAcl.restoreHint');
   } else {
-    inheritBtn.dataset.aclBreak = '';
-    inheritBtn.title = '停止从父级继承，改为独立管理本项权限';
+    inheritBtn.dataset.icenAclBreak = '';
+    inheritBtn.title = icenT('kbAcl.breakHint');
   }
 
-  const head = h('header', 'kb-acl-head');
+  const head = h('header', 'icen-kb-acl-head');
   head.append(title, inheritBtn);
   el.appendChild(head);
 
   /* —— 继承 banner 三态 —— */
-  const banner = h('div', 'kb-acl-inherit');
+  const banner = h('div', 'icen-kb-acl-inherit');
   if (m.broken) {
     banner.classList.add('is-broken');
-    banner.appendChild(h('span', 'kb-acl-inherit-text', '已停止继承——本项权限独立于父级'));
+    banner.appendChild(h('span', 'kb-acl-inherit-text', icenT('kbAcl.brokenNotice')));
   } else {
     if (m.parentChain.length) {
-      banner.appendChild(h('span', 'kb-acl-inherit-label', '继承自'));
+      banner.appendChild(h('span', 'kb-acl-inherit-label', icenT('kbAcl.inheritedFromLabel')));
       m.parentChain.forEach((name, i) => {
-        if (i > 0) banner.appendChild(h('span', 'kb-acl-chain-link', '/'));
+        if (i > 0) banner.appendChild(h('span', 'icen-kb-acl-chain-link', '/'));
         banner.appendChild(h('span', 'kb-acl-chain-node', name));
       });
     } else {
-      banner.appendChild(h('span', 'kb-acl-inherit-label', '根级资源——无父级继承'));
+      banner.appendChild(h('span', 'kb-acl-inherit-label', icenT('kbAcl.rootNotice')));
     }
     if (m.exceptions) {
       banner.classList.add('is-partial');
-      banner.appendChild(h('span', 'kb-acl-chain-link', '·'));
-      banner.appendChild(h('span', 'kb-acl-exceptions', `${m.exceptions.label}：${m.exceptions.count} 个子项已脱离`));
+      banner.appendChild(h('span', 'icen-kb-acl-chain-link', '·'));
+      banner.appendChild(h('span', 'kb-acl-exceptions', icenT('kbAcl.detachedChildren', { p0: m.exceptions.label, p1: m.exceptions.count })));
     }
   }
   el.appendChild(banner);
 
   /* —— 直接访问区（deny 置顶） —— */
-  const grants = h('div', 'kb-acl-grants');
-  grants.appendChild(h('div', 'kb-acl-sec', '直接访问'));
+  const grants = h('div', 'icen-kb-acl-grants');
+  grants.appendChild(h('div', 'icen-kb-acl-sec', icenT('kbAcl.directAccess')));
   const orderedEntries = denyFirst(m.entries);
-  if (!orderedEntries.length) grants.appendChild(h('div', 'kb-acl-none kb-meta', '暂无直接授权'));
+  if (!orderedEntries.length) grants.appendChild(h('div', 'icen-kb-acl-none icen-kb-meta', icenT('kbAcl.noDirect')));
   for (const entry of orderedEntries) grants.appendChild(buildAclRow(entry, now));
   el.appendChild(grants);
 
   /* —— 链接访问区（同 grant 行；无链接是常态，muted 呈现） —— */
-  const links = h('div', 'kb-acl-links');
-  links.appendChild(h('div', 'kb-acl-sec', '链接访问'));
+  const links = h('div', 'icen-kb-acl-links');
+  links.appendChild(h('div', 'icen-kb-acl-sec', icenT('kbAcl.linkAccess')));
   const orderedLinks = denyFirst(m.links);
-  if (!orderedLinks.length) links.appendChild(h('div', 'kb-acl-none kb-meta', '无链接'));
+  if (!orderedLinks.length) links.appendChild(h('div', 'icen-kb-acl-none icen-kb-meta', icenT('kbAcl.noLinks')));
   for (const entry of orderedLinks) links.appendChild(buildAclRow(entry, now));
   el.appendChild(links);
 
   /* —— foot：授予访问（面板唯一 accent 级主行动）+ 暴露面计数（缺省沉默） —— */
-  const foot = h('footer', 'kb-acl-foot');
-  const grantBtn = h('button', 'kb-acl-grant-btn', '授予访问');
+  const foot = h('footer', 'icen-kb-acl-foot');
+  const grantBtn = h('button', 'icen-kb-acl-grant-btn', icenT('kbAcl.grantAccess'));
   grantBtn.type = 'button';
-  grantBtn.dataset.aclGrant = '';
+  grantBtn.dataset.icenAclGrant = '';
   foot.appendChild(grantBtn);
   if (m.exposureCount != null) {
-    foot.appendChild(h('span', 'kb-meta', `对 ${formatCount(m.exposureCount)} 人可见`));
+    foot.appendChild(h('span', 'icen-kb-meta', icenT('kbAcl.visibleToCount', { p0: formatCount(m.exposureCount) })));
   }
   el.appendChild(foot);
 
@@ -312,8 +313,8 @@ interface MarkedAclScope extends ParentNode {
 
 /**
  * 初始化 kb-acl 面板交互（root 级 click 委托，默认 document；幂等标记 __icenKbAclInit，
- * 返回销毁函数，销毁后可重新 init）。命中 data-acl-grant / data-acl-remove /
- * data-acl-break / data-acl-restore 时派 icen:kb-acl-* 事件并回调 renderKbAcl 登记的 opts
+ * 返回销毁函数，销毁后可重新 init）。命中 data-icen-acl-grant / data-icen-acl-remove /
+ * data-icen-acl-break / data-icen-acl-restore 时派 icen:kb-acl-* 事件并回调 renderKbAcl 登记的 opts
  * （双通道）。is-system 行的移除钮在委托层二次拒绝（CSS 隐藏是第一重）。
  */
 export function initKbAcl(root?: ParentNode): () => void {
@@ -327,15 +328,15 @@ export function initKbAcl(root?: ParentNode): () => void {
   const onClick = (e: Event): void => {
     const t = e.target instanceof Element ? e.target : null;
     if (!t) return;
-    const panel = t.closest<HTMLElement>('.kb-acl');
+    const panel = t.closest<HTMLElement>('.icen-kb-acl');
     if (!panel) return;
     const opts = aclPanelMap.get(panel);
     if (opts === undefined && !aclPanelMap.has(panel)) return; /* 非 renderKbAcl 装配的静态面板不派发 */
 
     /* 行移除：命中行 → 弱表取 entry → 派发（system 行二次拒绝） */
-    const removeBtn = t.closest<HTMLElement>('[data-acl-remove]');
+    const removeBtn = t.closest<HTMLElement>('[data-icen-acl-remove]');
     if (removeBtn) {
-      const row = removeBtn.closest<HTMLElement>('.kb-acl-grant');
+      const row = removeBtn.closest<HTMLElement>('.icen-kb-acl-grant');
       const entry = row ? aclRowMap.get(row) : undefined;
       if (!entry || row?.classList.contains('is-system')) return;
       emitIcen(row ?? panel, 'icen:kb-acl-remove', { subject: entry.subject });
@@ -344,16 +345,16 @@ export function initKbAcl(root?: ParentNode): () => void {
     }
 
     /* 授予访问 */
-    if (t.closest('[data-acl-grant]')) {
+    if (t.closest('[data-icen-acl-grant]')) {
       emitIcen(panel, 'icen:kb-acl-grant', {});
       opts?.onGrant?.();
       return;
     }
 
     /* 停止/恢复继承 */
-    const inheritBtn = t.closest<HTMLElement>('[data-acl-break], [data-acl-restore]');
+    const inheritBtn = t.closest<HTMLElement>('[data-icen-acl-break], [data-icen-acl-restore]');
     if (inheritBtn) {
-      const action: 'break' | 'restore' = inheritBtn.hasAttribute('data-acl-restore') ? 'restore' : 'break';
+      const action: 'break' | 'restore' = inheritBtn.hasAttribute('data-icen-acl-restore') ? 'restore' : 'break';
       emitIcen(panel, 'icen:kb-acl-inherit', { action });
       if (action === 'break') opts?.onBreak?.();
       else opts?.onRestore?.();

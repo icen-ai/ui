@@ -59,17 +59,17 @@ const refTotal = refNo;
   <!-- ═══ app 级工作台容器：七标签 ═══ -->
   <div class="kbws" id="kbws">
     <div class="kbws-tabs" role="tablist" aria-label="工作台视图">
-      <button class="kbws-tab is-active" type="button" role="tab" aria-selected="true" data-tab="qa">问答</button>
-      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="ingest">摄取</button>
-      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="search">检索</button>
-      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="data">问数</button>
-      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="ops">观测</button>
-      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="perm">
+      <button class="kbws-tab is-active" type="button" role="tab" aria-selected="true" data-icen-tab="qa">问答</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-icen-tab="ingest">摄取</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-icen-tab="search">检索</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-icen-tab="data">问数</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-icen-tab="ops">观测</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-icen-tab="perm">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         权限
       </button>
-      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="agent">Agent</button>
-      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-tab="refs">
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-icen-tab="agent">Agent</button>
+      <button class="kbws-tab" type="button" role="tab" aria-selected="false" data-icen-tab="refs">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
         参考
       </button>
@@ -77,31 +77,31 @@ const refTotal = refNo;
 
     <div class="kbws-body">
       <!-- ── 问答 ── -->
-      <section class="kbws-panel" data-panel="qa" role="tabpanel" aria-label="问答">
+      <section class="kbws-panel" data-icen-panel="qa" role="tabpanel" aria-label="问答">
         <div class="kbws-split">
           <div class="kbws-main">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">问答链路</span>
-              <span class="kb-meta">kb-chain · 检索 → 重排 → 生成，运行时逐步推进</span>
+              <span class="icen-kb-meta">kb-chain · 检索 → 重排 → 生成，运行时逐步推进</span>
             </div>
             <div id="qa-chain" class="kbws-chain"></div>
 
             <div class="kbws-ask">
-              <input id="qa-input" class="kb-input kbws-ask-input" type="text"
+              <input id="qa-input" class="icen-kb-input kbws-ask-input" type="text"
                 placeholder="向知识库提问，Enter 运行…" aria-label="知识库提问" />
-              <button id="qa-run" class="btn btn-primary btn-sm kbws-run" type="button">运行</button>
+              <button id="qa-run" class="icen-btn icen-btn-primary icen-btn-sm kbws-run" type="button">运行</button>
             </div>
             <div class="kbws-chips" id="qa-presets" role="group" aria-label="预置问题"></div>
 
             <div id="qa-answer" class="kbws-answer">
-              <div class="kb-empty">点击预置问题或自由输入——答案、[n] 角标、来源与反馈条将出现在这里</div>
+              <div class="icen-kb-empty">点击预置问题或自由输入——答案、[n] 角标、来源与反馈条将出现在这里</div>
             </div>
           </div>
 
           <aside class="kbws-rail">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">来源与权限</span>
-              <span class="kb-meta">kb-sources rail</span>
+              <span class="icen-kb-meta">kb-sources rail</span>
             </div>
             <div id="qa-rail-sources"></div>
             <div id="qa-note" class="kbws-note" hidden></div>
@@ -112,17 +112,17 @@ const refTotal = refNo;
       </section>
 
       <!-- ── 摄取 ── -->
-      <section class="kbws-panel" data-panel="ingest" role="tabpanel" aria-label="摄取" hidden>
+      <section class="kbws-panel" data-icen-panel="ingest" role="tabpanel" aria-label="摄取" hidden>
         <div class="kbws-sec-h">
           <span class="kbws-sec-title">数据源连接器</span>
-          <span class="kb-meta">kb-connector · 健康 4 信号（点击「立即同步 / 重新授权」真实改变健康判定）</span>
+          <span class="icen-kb-meta">kb-connector · 健康 4 信号（点击「立即同步 / 重新授权」真实改变健康判定）</span>
         </div>
         <div id="ing-connectors"></div>
         <div id="ing-conn-note" class="kbws-note" hidden></div>
 
         <div class="kbws-sec-h">
           <span class="kbws-sec-title">解析管线</span>
-          <span class="kb-meta">kb-pipeline · 失败可单文档重跑（点击失败卡的「重跑」）</span>
+          <span class="icen-kb-meta">kb-pipeline · 失败可单文档重跑（点击失败卡的「重跑」）</span>
         </div>
         <div id="ing-pipeline"></div>
 
@@ -135,7 +135,7 @@ const refTotal = refNo;
         <div id="ing-chunks-wrap" hidden>
           <div class="kbws-sec-h">
             <span class="kbws-sec-title">chunk 编辑器</span>
-            <span class="kb-meta">kb-chunks · 行内编辑 / 启停 / 关键词 / 全文搜索</span>
+            <span class="icen-kb-meta">kb-chunks · 行内编辑 / 启停 / 关键词 / 全文搜索</span>
           </div>
           <div id="ing-chunks"></div>
           <div id="ing-chunks-note" class="kbws-note" hidden></div>
@@ -143,19 +143,19 @@ const refTotal = refNo;
       </section>
 
       <!-- ── 检索 ── -->
-      <section class="kbws-panel" data-panel="search" role="tabpanel" aria-label="检索" hidden>
+      <section class="kbws-panel" data-icen-panel="search" role="tabpanel" aria-label="检索" hidden>
         <div class="kbws-split kbws-split--lg">
           <div class="kbws-main">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">检索 playground</span>
-              <span class="kb-meta">kb-retrieval · mock 打分器：语料分词重合度 → 0–1 分</span>
+              <span class="icen-kb-meta">kb-retrieval · mock 打分器：语料分词重合度 → 0–1 分</span>
             </div>
             <div id="rt-playground"></div>
           </div>
           <aside class="kbws-rail">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">过滤器</span>
-              <span class="kb-meta">kb-filter</span>
+              <span class="icen-kb-meta">kb-filter</span>
             </div>
             <div id="rt-filter"></div>
             <div id="rt-filter-echo" class="kbws-mono"></div>
@@ -163,13 +163,13 @@ const refTotal = refNo;
 
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">重排对比</span>
-              <span class="kb-meta">kb-rerank</span>
+              <span class="icen-kb-meta">kb-rerank</span>
             </div>
             <div id="rt-rerank"></div>
 
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">召回测试</span>
-              <span class="kb-meta">kb-hittest · 3 题</span>
+              <span class="icen-kb-meta">kb-hittest · 3 题</span>
             </div>
             <div id="rt-hittest"></div>
           </aside>
@@ -177,11 +177,11 @@ const refTotal = refNo;
       </section>
 
       <!-- ── 问数 ── -->
-      <section class="kbws-panel" data-panel="data" role="tabpanel" aria-label="问数" hidden>
+      <section class="kbws-panel" data-icen-panel="data" role="tabpanel" aria-label="问数" hidden>
         <div class="kbws-sec-h kbws-sec-h--row">
           <div class="kbws-sec-h--main">
             <span class="kbws-sec-title">问题</span>
-            <span class="kb-meta">Chat-with-Data · 全槽组合</span>
+            <span class="icen-kb-meta">Chat-with-Data · 全槽组合</span>
           </div>
           <button id="dt-run" class="kbws-mini-btn" type="button">重新生成</button>
         </div>
@@ -196,32 +196,32 @@ const refTotal = refNo;
 
         <div class="kbws-sec-h">
           <span class="kbws-sec-title">生成 SQL</span>
-          <span class="kb-meta">kb-sql · 着色 + 修正 diff + 编辑重跑</span>
+          <span class="icen-kb-meta">kb-sql · 着色 + 修正 diff + 编辑重跑</span>
         </div>
         <div id="dt-sql"></div>
         <div id="dt-sql-note" class="kbws-note" hidden></div>
       </section>
 
       <!-- ── 观测 ── -->
-      <section class="kbws-panel" data-panel="ops" role="tabpanel" aria-label="观测" hidden>
+      <section class="kbws-panel" data-icen-panel="ops" role="tabpanel" aria-label="观测" hidden>
         <div class="kbws-split">
           <div class="kbws-main">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">调用链</span>
-              <span class="kb-meta">kb-trace · 一次完整问答的 span 树（展开检索看命中）</span>
+              <span class="icen-kb-meta">kb-trace · 一次完整问答的 span 树（展开检索看命中）</span>
             </div>
             <div id="op-trace"></div>
 
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">标注队列</span>
-              <span class="kb-meta">kb-review · 键盘可用（←/→ 切条目 · 1–9 打分 · ⌘↵ 提交 · ? 帮助）</span>
+              <span class="icen-kb-meta">kb-review · 键盘可用（←/→ 切条目 · 1–9 打分 · ⌘↵ 提交 · ? 帮助）</span>
             </div>
             <div id="op-review"></div>
           </div>
           <aside class="kbws-rail">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">无答案治理</span>
-              <span class="kb-meta">kb-gap · 零点击 ≠ 失败</span>
+              <span class="icen-kb-meta">kb-gap · 零点击 ≠ 失败</span>
             </div>
             <div id="op-gap"></div>
             <div id="op-note" class="kbws-note" hidden></div>
@@ -230,25 +230,25 @@ const refTotal = refNo;
 
         <div class="kbws-sec-h">
           <span class="kbws-sec-title">评估 run 对比</span>
-          <span class="kb-meta">kb-eval · 点击行展开字符级 diff（含一条回归行）</span>
+          <span class="icen-kb-meta">kb-eval · 点击行展开字符级 diff（含一条回归行）</span>
         </div>
         <div id="op-eval"></div>
       </section>
 
       <!-- ── 权限 ── -->
-      <section class="kbws-panel" data-panel="perm" role="tabpanel" aria-label="权限" hidden>
+      <section class="kbws-panel" data-icen-panel="perm" role="tabpanel" aria-label="权限" hidden>
         <div class="kbws-split">
           <div class="kbws-main">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">可见性对照 · admin 审计</span>
-              <span class="kb-meta">kb-visibility · 命中差异对照对普通用户构成泄露——仅限审计视图</span>
+              <span class="icen-kb-meta">kb-visibility · 命中差异对照对普通用户构成泄露——仅限审计视图</span>
             </div>
             <div id="pv-visibility"></div>
             <div id="pv-vis-note" class="kbws-note" hidden></div>
 
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">文档权限面板</span>
-              <span class="kb-meta">kb-acl · SharePoint 权限页范式（deny 一票否决置顶 · 继承链明示）</span>
+              <span class="icen-kb-meta">kb-acl · SharePoint 权限页范式（deny 一票否决置顶 · 继承链明示）</span>
             </div>
             <div id="pv-acl"></div>
             <div id="pv-acl-note" class="kbws-note" hidden></div>
@@ -257,14 +257,14 @@ const refTotal = refNo;
           <aside class="kbws-rail">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">有效权限检查器</span>
-              <span class="kb-meta">kb-who-can · Check Permissions 范式</span>
+              <span class="icen-kb-meta">kb-who-can · Check Permissions 范式</span>
             </div>
             <div id="pv-whocan"></div>
             <div id="pv-whocan-note" class="kbws-note" hidden></div>
 
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">访问申请流</span>
-              <span class="kb-meta">kb-access · 状态机走查</span>
+              <span class="icen-kb-meta">kb-access · 状态机走查</span>
             </div>
             <div id="pv-access"></div>
             <div class="kbws-perm-steps">
@@ -276,7 +276,7 @@ const refTotal = refNo;
 
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">审计时间线</span>
-              <span class="kb-meta">kb-audit · 含 break-glass 警示行</span>
+              <span class="icen-kb-meta">kb-audit · 含 break-glass 警示行</span>
             </div>
             <div id="pv-audit"></div>
             <div id="pv-audit-note" class="kbws-note" hidden></div>
@@ -285,10 +285,10 @@ const refTotal = refNo;
       </section>
 
       <!-- ── Agent ── -->
-      <section class="kbws-panel" data-panel="agent" role="tabpanel" aria-label="Agent" hidden>
+      <section class="kbws-panel" data-icen-panel="agent" role="tabpanel" aria-label="Agent" hidden>
         <div class="kbws-sec-h">
           <span class="kbws-sec-title">双栏画布</span>
-          <span class="kb-meta">kb-canvas · 拖动分隔条调比例；在右栏划词浮出工具条，点击后左栏追加指令消息</span>
+          <span class="icen-kb-meta">kb-canvas · 拖动分隔条调比例；在右栏划词浮出工具条，点击后左栏追加指令消息</span>
         </div>
         <div id="ag-canvas"></div>
 
@@ -297,7 +297,7 @@ const refTotal = refNo;
             <div class="kbws-sec-h kbws-sec-h--row">
               <div class="kbws-sec-h--main">
                 <span class="kbws-sec-title">流式链路</span>
-                <span class="kb-meta">kb-chain</span>
+                <span class="icen-kb-meta">kb-chain</span>
               </div>
               <button id="ag-chain-run" class="kbws-mini-btn" type="button">运行链路</button>
             </div>
@@ -306,7 +306,7 @@ const refTotal = refNo;
 
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">检查点</span>
-              <span class="kb-meta">kb-checkpoint · 点击弹恢复菜单（默认仅内容、保留对话）</span>
+              <span class="icen-kb-meta">kb-checkpoint · 点击弹恢复菜单（默认仅内容、保留对话）</span>
             </div>
             <div id="ag-checkpoints"></div>
             <div id="ag-cp-note" class="kbws-note" hidden></div>
@@ -314,7 +314,7 @@ const refTotal = refNo;
           <aside class="kbws-rail">
             <div class="kbws-sec-h">
               <span class="kbws-sec-title">MCP 沙箱</span>
-              <span class="kb-meta">kb-sandbox · ui:// 解析器 → app.ready → call('echo')</span>
+              <span class="icen-kb-meta">kb-sandbox · ui:// 解析器 → app.ready → call('echo')</span>
             </div>
             <div id="ag-sandbox"></div>
             <div id="ag-sandbox-log" class="kbws-mono kbws-sandbox-log"></div>
@@ -323,20 +323,20 @@ const refTotal = refNo;
 
         <div class="kbws-sec-h">
           <span class="kbws-sec-title">知识结构视图</span>
-          <span class="kb-meta">renderGraph 实体图（三簇）+ renderMap 投影点图</span>
+          <span class="icen-kb-meta">renderGraph 实体图（三簇）+ renderMap 投影点图</span>
         </div>
         <div class="kbws-duo">
-          <div id="ag-graph" class="chart"></div>
-          <div id="ag-map" class="chart"></div>
+          <div id="ag-graph" class="icen-chart"></div>
+          <div id="ag-map" class="icen-chart"></div>
         </div>
       </section>
 
       <!-- ── 参考（设计决策的文献锚点，静态渲染无 JS）── -->
-      <section class="kbws-panel" data-panel="refs" role="tabpanel" aria-label="参考" hidden>
+      <section class="kbws-panel" data-icen-panel="refs" role="tabpanel" aria-label="参考" hidden>
         <p class="kbws-refs-intro">
           本工作台每个设计决策的文献锚点：{refTotal} 条最权威出处（官方规范 / 论文 / 旗舰文档），
           每条注明<b>本库采纳了它的什么决策</b>——后续升级或替换设计时，先回这些源头看业界是否已演进。
-          全部链接来自两轮调研的查证记录（<span class="mono">docs/research/</span>），无一杜撰。
+          全部链接来自两轮调研的查证记录（<span class="icen-mono">docs/research/</span>），无一杜撰。
         </p>
         {refGroups.map((g) => (
           <div class="kbws-ref-group">
@@ -345,7 +345,7 @@ const refTotal = refNo;
               {g.items.map((item) => (
                 <li class="kbws-ref-item">
                   <div class="kbws-ref-line">
-                    <span class="kbws-ref-no kb-num">[{item.no}]</span>
+                    <span class="kbws-ref-no icen-kb-num">[{item.no}]</span>
                     <a class="kbws-ref-link" href={item.url} target="_blank" rel="noopener noreferrer">{item.title}<span class="kbws-ref-arrow" aria-hidden="true">↗</span></a>
                     <span class="kbws-ref-source">{item.source}</span>
                   </div>
@@ -422,15 +422,15 @@ const refTotal = refNo;
     const tabBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('.kbws-tab'));
     function activateTab(key: string): void {
       tabBtns.forEach((b) => {
-        const on = b.dataset.tab === key;
+        const on = b.dataset.icenTab === key;
         b.classList.toggle('is-active', on);
         b.setAttribute('aria-selected', String(on));
       });
       document.querySelectorAll<HTMLElement>('.kbws-panel').forEach((p) => {
-        p.hidden = p.dataset.panel !== key;
+        p.hidden = p.dataset.icenPanel !== key;
       });
     }
-    tabBtns.forEach((b) => b.addEventListener('click', () => activateTab(b.dataset.tab ?? 'qa')));
+    tabBtns.forEach((b) => b.addEventListener('click', () => activateTab(b.dataset.icenTab ?? 'qa')));
 
     /* ══════════ ① 问答 ══════════ */
     const QA_CHAIN_DEFS = [
@@ -471,7 +471,7 @@ const refTotal = refNo;
       const src = e.detail.source;
       if (src.permission !== 'readable') {
         /* 受限来源：打码正文 + 申请访问（申请动作给出可见反馈） */
-        const btn = document.querySelector<HTMLButtonElement>('[data-kb-source-request]');
+        const btn = document.querySelector<HTMLButtonElement>('[data-icen-kb-source-request]');
         if (btn && !btn.disabled) {
           btn.disabled = true;
           btn.textContent = '已申请';
@@ -521,7 +521,7 @@ const refTotal = refNo;
 
       const sourcesTitle = h('div', 'kbws-sec-h');
       sourcesTitle.appendChild(h('span', 'kbws-sec-title', '来源'));
-      sourcesTitle.appendChild(h('span', 'kb-meta', 'kb-sources · 点击打开原文'));
+      sourcesTitle.appendChild(h('span', 'icen-kb-meta', 'kb-sources · 点击打开原文'));
       box.appendChild(sourcesTitle);
       const sourcesEl = h('div');
       renderKbSources(sourcesEl, cites, { variant: 'row' });
@@ -734,7 +734,7 @@ const refTotal = refNo;
       },
     });
     /* 预填一个能命中受限块的问题并自动跑一次（演示 score:null 的「—」态） */
-    const rtQueryInput = rtHost.querySelector<HTMLInputElement>('.kb-retrieval-query');
+    const rtQueryInput = rtHost.querySelector<HTMLInputElement>('.icen-kb-retrieval-query');
     if (rtQueryInput) rtQueryInput.value = '经营 毛利率 目标';
     retrieval.setBusy(true);
     setTimeout(() => {
@@ -828,11 +828,11 @@ const refTotal = refNo;
     initKbGap(document);
     onIcen('icen:kb-gap-action', (e) => {
       const btn = e.target instanceof HTMLElement ? e.target : null;
-      const row = btn?.closest<HTMLElement>('.kb-gap-row');
-      const actions = row?.querySelector<HTMLElement>('.kb-gap-actions');
+      const row = btn?.closest<HTMLElement>('.icen-kb-gap-row');
+      const actions = row?.querySelector<HTMLElement>('.icen-kb-gap-actions');
       if (actions) {
         actions.textContent = '';
-        const badge = h('span', 'kb-chip kbws-gap-done', e.detail.action === 'create-doc' ? '已建单 ✓' : '已加同义词 ✓');
+        const badge = h('span', 'icen-kb-chip kbws-gap-done', e.detail.action === 'create-doc' ? '已建单 ✓' : '已加同义词 ✓');
         actions.appendChild(badge);
       }
       note('op-note', `「${clip(e.detail.query)}」${e.detail.action === 'create-doc' ? '已建文档工单' : '已加入同义词表'}（演示）`, 3600);
@@ -943,7 +943,7 @@ const refTotal = refNo;
 
     /* 左栏对话流：3 条种子消息（ai-chat 渲染） */
     function appendAgentMsg(role: 'user' | 'assistant', content: string, meta?: string): void {
-      const chatCol = canvasEl.querySelector<HTMLElement>('.kb-canvas-chat');
+      const chatCol = canvasEl.querySelector<HTMLElement>('.icen-kb-canvas-chat');
       if (!chatCol) return;
       const host = document.createElement('div');
       renderAiMessage(host, { role, content, meta, model: role === 'assistant' ? 'glm-5.3' : undefined });
@@ -1054,36 +1054,36 @@ const refTotal = refNo;
     .kbws-hero { padding: 36px 0 20px; }
     .kbws-hero-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
     .kbws-hero-title {
-      font-family: var(--font-heading);
+      font-family: var(--icen-font-heading);
       font-size: 26px;
       font-weight: 700;
       letter-spacing: 1.5px;
       margin: 0;
     }
     .kbws-ver {
-      font-family: var(--font-mono);
+      font-family: var(--icen-font-mono);
       font-size: 11px;
-      color: var(--token-accent);
-      border: 1px solid color-mix(in srgb, var(--token-accent) 45%, transparent);
-      border-radius: var(--radius-full);
+      color: var(--icen-token-accent);
+      border: 1px solid color-mix(in srgb, var(--icen-token-accent) 45%, transparent);
+      border-radius: var(--icen-radius-full);
       padding: 2px 9px;
     }
-    .kbws-hero-sub { margin: 8px 0 0; font-size: 13.5px; color: var(--token-text-muted); }
+    .kbws-hero-sub { margin: 8px 0 0; font-size: 13.5px; color: var(--icen-token-text-muted); }
 
     /* ═══ 工作台容器（app 级 chrome） ═══ */
     .kbws {
       max-width: 1280px;
-      border: 1px solid var(--token-line-soft);
-      border-radius: var(--radius-md);
-      background: var(--token-bg-soft);
+      border: 1px solid var(--icen-token-line-soft);
+      border-radius: var(--icen-radius-md);
+      background: var(--icen-token-bg-soft);
       overflow: clip;
     }
     .kbws-tabs {
       display: flex;
       gap: 4px;
       padding: 4px 16px 0;
-      border-bottom: 1px solid var(--token-line-soft);
-      background: color-mix(in srgb, var(--token-surface) 55%, transparent);
+      border-bottom: 1px solid var(--icen-token-line-soft);
+      background: color-mix(in srgb, var(--icen-token-surface) 55%, transparent);
       overflow-x: auto;
       scrollbar-width: none;
     }
@@ -1098,13 +1098,13 @@ const refTotal = refNo;
       font: inherit;
       font-size: 13px;
       white-space: nowrap;
-      color: var(--token-text-muted);
+      color: var(--icen-token-text-muted);
       cursor: pointer;
-      transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+      transition: color var(--icen-duration-fast) var(--icen-ease-out), border-color var(--icen-duration-fast) var(--icen-ease-out);
     }
-    .kbws-tab:hover { color: var(--token-text); }
-    .kbws-tab.is-active { color: var(--token-text); font-weight: 600; border-bottom-color: var(--token-accent); }
-    .kbws-tab:focus-visible { outline: 2px solid var(--token-accent); outline-offset: -2px; }
+    .kbws-tab:hover { color: var(--icen-token-text); }
+    .kbws-tab.is-active { color: var(--icen-token-text); font-weight: 600; border-bottom-color: var(--icen-token-accent); }
+    .kbws-tab:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: -2px; }
 
     .kbws-body { padding: 4px 24px 32px; }
     .kbws-panel[hidden] { display: none; }
@@ -1120,7 +1120,7 @@ const refTotal = refNo;
     .kbws-panel > .kbws-sec-h:first-child,
     .kbws-main > .kbws-sec-h:first-child,
     .kbws-rail > .kbws-sec-h:first-child { margin-top: 20px; }
-    .kbws-sec-title { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: var(--token-text); }
+    .kbws-sec-title { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: var(--icen-token-text); }
     .kbws-sec-h--row { justify-content: space-between; align-items: center; }
     .kbws-sec-h--main { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
 
@@ -1141,28 +1141,28 @@ const refTotal = refNo;
     /* ═══ 问答区 ═══ */
     .kbws-chain { margin-bottom: 0; }
     /* chain 步骤字号 12.5px（kb-agent.css 基础上收紧一档） */
-    .kbws-chain .kb-chain-step { font-size: 12.5px; }
+    .kbws-chain .icen-kb-chain-step { font-size: 12.5px; }
     .kbws-ask { display: flex; gap: 8px; margin: 12px 0 8px; }
     .kbws-ask-input { flex: 1 1 auto; }
     .kbws-run { flex: none; }
     .kbws-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .kbws-chip {
       appearance: none;
-      border: 1px solid var(--token-line-soft);
-      border-radius: var(--radius-full);
-      background: var(--token-surface);
+      border: 1px solid var(--icen-token-line-soft);
+      border-radius: var(--icen-radius-full);
+      background: var(--icen-token-surface);
       padding: 3px 11px;
       font: inherit;
       font-size: 12px;
-      color: var(--token-text-muted);
+      color: var(--icen-token-text-muted);
       cursor: pointer;
-      transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+      transition: border-color var(--icen-duration-fast) var(--icen-ease-out), color var(--icen-duration-fast) var(--icen-ease-out);
     }
-    .kbws-chip:hover { border-color: var(--token-accent); color: var(--token-text); }
+    .kbws-chip:hover { border-color: var(--icen-token-accent); color: var(--icen-token-text); }
 
     .kbws-answer { margin-top: 6px; }
     /* 空态收敛：约 200px 垂直居中（首屏自动运行后空态只在重置时短暂出现） */
-    .kbws-answer:has(> .kb-empty) {
+    .kbws-answer:has(> .icen-kb-empty) {
       min-height: 200px;
       display: flex;
       flex-direction: column;
@@ -1173,7 +1173,7 @@ const refTotal = refNo;
       align-items: center;
       gap: 8px;
       font-size: 13px;
-      color: var(--token-text-faint);
+      color: var(--icen-token-text-faint);
       padding: 6px 0;
     }
     .kbws-answer-busy::before {
@@ -1181,8 +1181,8 @@ const refTotal = refNo;
       width: 12px; height: 12px;
       flex: none;
       border-radius: 50%;
-      border: 2px solid var(--token-line-soft);
-      border-top-color: var(--token-accent);
+      border: 2px solid var(--icen-token-line-soft);
+      border-top-color: var(--icen-token-accent);
       animation: kbws-spin 0.8s linear infinite;
     }
     @keyframes kbws-spin { to { transform: rotate(360deg); } }
@@ -1197,34 +1197,34 @@ const refTotal = refNo;
       justify-content: center;
       flex: none;
       width: 22px; height: 22px;
-      border-radius: var(--radius-sm);
-      background: var(--token-accent-subtle);
-      color: var(--token-accent);
-      font-family: var(--font-mono);
+      border-radius: var(--icen-radius-sm);
+      background: var(--icen-token-accent-subtle);
+      color: var(--icen-token-accent);
+      font-family: var(--icen-font-mono);
       font-size: 12px;
       font-weight: 700;
     }
     .kbws-question { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
     .kbws-question .kbws-qmark { width: 24px; height: 24px; }
-    .kbws-qtext { font-size: 14.5px; font-weight: 600; color: var(--token-text); }
-    .kbws-answer-text { font-size: 14px; line-height: 1.95; color: var(--token-text); }
+    .kbws-qtext { font-size: 14.5px; font-weight: 600; color: var(--icen-token-text); }
+    .kbws-answer-text { font-size: 14px; line-height: 1.95; color: var(--icen-token-text); }
     .kbws-feedback { margin-top: 14px; }
     .kbws-passage-host:empty { display: none; }
 
-    .kbws-hint { margin: 10px 0 0; font-size: 12px; line-height: 1.7; color: var(--token-text-faint); }
+    .kbws-hint { margin: 10px 0 0; font-size: 12px; line-height: 1.7; color: var(--icen-token-text-faint); }
 
     /* ═══ 行内提示条（note） ═══ */
     .kbws-note {
       margin-top: 10px;
       padding: 6px 10px;
-      border-left: 2px solid var(--token-accent);
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      background: color-mix(in srgb, var(--token-accent) 6%, transparent);
+      border-left: 2px solid var(--icen-token-accent);
+      border-radius: 0 var(--icen-radius-sm) var(--icen-radius-sm) 0;
+      background: color-mix(in srgb, var(--icen-token-accent) 6%, transparent);
       font-size: 12px;
       line-height: 1.6;
-      color: var(--token-text-muted);
+      color: var(--icen-token-text-muted);
       opacity: 1;
-      transition: opacity 0.24s var(--ease-out);
+      transition: opacity 0.24s var(--icen-ease-out);
     }
     .kbws-note[hidden] { display: none; }
     .kbws-note.is-fading { opacity: 0; }
@@ -1232,33 +1232,33 @@ const refTotal = refNo;
     /* ═══ 摄取 ═══ */
     .kbws-mini-btn {
       appearance: none;
-      border: 1px solid var(--token-line-soft);
-      border-radius: var(--radius-sm);
-      background: var(--token-surface);
+      border: 1px solid var(--icen-token-line-soft);
+      border-radius: var(--icen-radius-sm);
+      background: var(--icen-token-surface);
       padding: 3px 10px;
       font: inherit;
       font-size: 11.5px;
-      color: var(--token-text-muted);
+      color: var(--icen-token-text-muted);
       cursor: pointer;
-      transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+      transition: border-color var(--icen-duration-fast) var(--icen-ease-out), color var(--icen-duration-fast) var(--icen-ease-out);
     }
-    .kbws-mini-btn:hover:not(:disabled) { border-color: var(--token-accent); color: var(--token-text); }
+    .kbws-mini-btn:hover:not(:disabled) { border-color: var(--icen-token-accent); color: var(--icen-token-text); }
     .kbws-mini-btn:disabled { opacity: 0.55; cursor: default; }
 
     /* ═══ 检索 ═══ */
     .kbws-mono {
       margin-top: 8px;
-      font-family: var(--font-mono);
+      font-family: var(--icen-font-mono);
       font-size: 11px;
       line-height: 1.7;
       letter-spacing: 0.3px;
-      color: var(--token-text-faint);
+      color: var(--icen-token-text-faint);
       /* DSL 回显行：不换行不断词，横向滚动（杜绝 2026-07-0 1 之类断词） */
       white-space: pre;
       word-break: normal;
       overflow-x: auto;
     }
-    .kbws-gap-done { border-color: color-mix(in srgb, var(--token-success) 55%, transparent); color: var(--token-success); }
+    .kbws-gap-done { border-color: color-mix(in srgb, var(--icen-token-success) 55%, transparent); color: var(--icen-token-success); }
 
     /* ═══ 问数 ═══ */
     .kbws-data-answer { margin-top: 2px; }
@@ -1271,37 +1271,37 @@ const refTotal = refNo;
     .kbws-perm-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
     /* ═══ 参考（文献锚点，静态渲染）═══ */
-    .kbws-refs-intro { margin: 0 0 18px; font-size: 13px; line-height: 1.8; color: var(--token-text-muted); max-width: 760px; }
-    .kbws-refs-intro b { color: var(--token-text); font-weight: 600; }
+    .kbws-refs-intro { margin: 0 0 18px; font-size: 13px; line-height: 1.8; color: var(--icen-token-text-muted); max-width: 760px; }
+    .kbws-refs-intro b { color: var(--icen-token-text); font-weight: 600; }
     .kbws-ref-group { margin-top: 20px; }
     .kbws-ref-group-title {
-      margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--token-text);
-      padding-bottom: 6px; border-bottom: 1px solid var(--token-line-soft);
+      margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--icen-token-text);
+      padding-bottom: 6px; border-bottom: 1px solid var(--icen-token-line-soft);
     }
     .kbws-ref-list { list-style: none; margin: 0; padding: 0; }
-    .kbws-ref-item { padding: 8px 0; border-bottom: 1px solid var(--token-line-soft); }
+    .kbws-ref-item { padding: 8px 0; border-bottom: 1px solid var(--icen-token-line-soft); }
     .kbws-ref-item:last-child { border-bottom: none; }
     .kbws-ref-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-    .kbws-ref-no { flex: 0 0 auto; font-size: 11.5px; color: var(--token-text-faint); }
-    .kbws-ref-link { flex: 0 1 auto; min-width: 0; font-size: 13px; color: var(--token-accent); text-decoration: none; }
+    .kbws-ref-no { flex: 0 0 auto; font-size: 11.5px; color: var(--icen-token-text-faint); }
+    .kbws-ref-link { flex: 0 1 auto; min-width: 0; font-size: 13px; color: var(--icen-token-accent); text-decoration: none; }
     .kbws-ref-link:hover { text-decoration: underline; }
     .kbws-ref-link:hover .kbws-ref-arrow { transform: translate(1px, -1px); }
-    .kbws-ref-arrow { margin-left: 2px; font-size: 11px; display: inline-block; transition: transform var(--duration-fast, 0.16s) ease-out; }
-    .kbws-ref-source { flex: 0 1 auto; margin-left: auto; font-size: 11.5px; color: var(--token-text-faint); }
+    .kbws-ref-arrow { margin-left: 2px; font-size: 11px; display: inline-block; transition: transform var(--icen-duration-fast, 0.16s) ease-out; }
+    .kbws-ref-source { flex: 0 1 auto; margin-left: auto; font-size: 11.5px; color: var(--icen-token-text-faint); }
     /* 发表/更新时间：独立一行（官方文档标「持续更新」，论文给年月——时间本身也是锚点信息） */
-    .kbws-ref-date { margin: 2px 0 0 32px; font-size: 11px; color: var(--token-text-faint); font-family: var(--font-mono, ui-monospace, monospace); }
-    .kbws-ref-note { margin: 3px 0 0 32px; font-size: 12.5px; line-height: 1.7; color: var(--token-text-muted); max-width: 760px; }
+    .kbws-ref-date { margin: 2px 0 0 32px; font-size: 11px; color: var(--icen-token-text-faint); font-family: var(--icen-font-mono, ui-monospace, monospace); }
+    .kbws-ref-note { margin: 3px 0 0 32px; font-size: 12.5px; line-height: 1.7; color: var(--icen-token-text-muted); max-width: 760px; }
 
     /* ═══ Agent ═══ */
-    .kbws-docfrag-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--token-text); }
-    .kbws-docfrag-p { margin: 0 0 10px; font-size: 13px; line-height: 1.85; color: var(--token-text-muted); }
+    .kbws-docfrag-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--icen-token-text); }
+    .kbws-docfrag-p { margin: 0 0 10px; font-size: 13px; line-height: 1.85; color: var(--icen-token-text-muted); }
     .kbws-docfrag-tip {
       margin: 14px 0 0;
       padding: 8px 10px;
-      border: 1px dashed var(--token-line-dashed, var(--token-line-soft));
-      border-radius: var(--radius-sm);
+      border: 1px dashed var(--icen-token-line-dashed, var(--icen-token-line-soft));
+      border-radius: var(--icen-radius-sm);
       font-size: 12px;
-      color: var(--token-text-faint);
+      color: var(--icen-token-text-faint);
     }
     .kbws-sandbox-log { min-height: 76px; }
     .kbws-duo {
@@ -1314,10 +1314,10 @@ const refTotal = refNo;
     }
 
     /* ai-diff / ai-chat 在画布两栏内的密度微调 */
-    .kb-canvas-doc .ai-diff-file { margin-bottom: 10px; }
-    .kb-canvas-chat .ai-msg + .ai-msg { margin-top: 10px; }
+    .icen-kb-canvas-doc .icen-ai-diff-file { margin-bottom: 10px; }
+    .icen-kb-canvas-chat .icen-ai-msg + .icen-ai-msg { margin-top: 10px; }
 
     /* kb-eval 在面板内的横向滚动兜底 */
-    .kbws-panel .kb-eval-tablewrap { max-width: 100%; }
+    .kbws-panel .icen-kb-eval-tablewrap { max-width: 100%; }
   </style>
 </Base>

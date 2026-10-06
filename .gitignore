@@ -4,5 +4,9 @@ dist/
 .wrangler/
 *.log
 
+# Playwright e2e 产物（报告/临时结果；基线 __screenshots__ 必须提交，勿忽略）
+playwright-report/
+test-results/
+
 # llms.txt/llms-full.txt 由 scripts/llms.mjs 构建期生成（bun run build 前置）
 site/public/llms*.txt

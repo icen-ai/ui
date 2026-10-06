@@ -1,3 +1,5 @@
+import { t } from './i18n';
+import { parseSvg } from './svg-parse';
 /*
  * @icen.ai/ui — Behavior: ai-core（AI 原生组件族核心：状态机 / kind 注册表 / 协议适配器 / 格式化 / svgIcon）
  *
@@ -63,13 +65,13 @@ function isAiStatus(v: string): v is AiStatus {
 /** 中文状态标签：等待/执行中/流式中/待确认/完成/失败/已取消 */
 export function aiStatusLabel(s: AiStatus): string {
   const labels: Record<AiStatus, string> = {
-    pending: '等待',
-    running: '执行中',
-    streaming: '流式中',
-    approval: '待确认',
-    done: '完成',
-    error: '失败',
-    cancelled: '已取消',
+    pending: t('aiCore.statusPending'),
+    running: t('aiCore.statusRunning'),
+    streaming: t('aiCore.statusStreaming'),
+    approval: t('aiCore.statusApproval'),
+    done: t('aiCore.statusDone'),
+    error: t('aiCore.statusError'),
+    cancelled: t('aiCore.statusCancelled'),
   };
   return labels[s] ?? s;
 }
@@ -250,31 +252,31 @@ const sum = (fn: (input: unknown) => string | undefined): ((input: unknown) => s
 /* ── 内置 kinds（spec §4.4 清单）── */
 
 const BUILTIN_KINDS: Record<string, AiKindDef> = {
-  shell: { label: '命令', icon: ICON_TERMINAL, tint: 'accent', summarize: sum(summarizeShell) },
-  read: { label: '读取', icon: ICON_FILE, tint: 'info', summarize: sum(summarizeRead) },
-  edit: { label: '编辑', icon: ICON_FILE_PEN, tint: 'warning', summarize: sum(summarizePath) },
-  write: { label: '写入', icon: ICON_FILE_PLUS, tint: 'warning', summarize: sum(summarizePath) },
-  rm: { label: '删除', icon: ICON_TRASH, tint: 'error', summarize: sum(summarizePath) },
-  grep: { label: '搜索', icon: ICON_SEARCH, tint: 'info', summarize: sum(summarizeGrep) },
-  glob: { label: '匹配', icon: ICON_FOLDER_SEARCH, tint: 'info', summarize: sum((i) => pickStr(i, ['pattern', 'glob', 'path'])) },
-  browser: { label: '浏览', icon: ICON_GLOBE, tint: 'accent', summarize: sum((i) => pickStr(i, ['url', 'uri', 'target'])) },
-  search: { label: '检索', icon: ICON_SCAN_SEARCH, tint: 'accent', summarize: sum((i) => pickStr(i, ['query', 'q', 'pattern'])) },
-  fetch: { label: '请求', icon: ICON_DOWNLOAD, tint: 'info', summarize: sum((i) => pickStr(i, ['url', 'uri', 'endpoint'])) },
+  shell: { label: t('aiCore.kindShell'), icon: ICON_TERMINAL, tint: 'accent', summarize: sum(summarizeShell) },
+  read: { label: t('aiCore.kindRead'), icon: ICON_FILE, tint: 'info', summarize: sum(summarizeRead) },
+  edit: { label: t('aiCore.kindEdit'), icon: ICON_FILE_PEN, tint: 'warning', summarize: sum(summarizePath) },
+  write: { label: t('aiCore.kindWrite'), icon: ICON_FILE_PLUS, tint: 'warning', summarize: sum(summarizePath) },
+  rm: { label: t('aiCore.kindDelete'), icon: ICON_TRASH, tint: 'error', summarize: sum(summarizePath) },
+  grep: { label: t('aiCore.kindGrep'), icon: ICON_SEARCH, tint: 'info', summarize: sum(summarizeGrep) },
+  glob: { label: t('aiCore.kindGlob'), icon: ICON_FOLDER_SEARCH, tint: 'info', summarize: sum((i) => pickStr(i, ['pattern', 'glob', 'path'])) },
+  browser: { label: t('aiCore.kindBrowser'), icon: ICON_GLOBE, tint: 'accent', summarize: sum((i) => pickStr(i, ['url', 'uri', 'target'])) },
+  search: { label: t('aiCore.kindSearch'), icon: ICON_SCAN_SEARCH, tint: 'accent', summarize: sum((i) => pickStr(i, ['query', 'q', 'pattern'])) },
+  fetch: { label: t('aiCore.kindFetch'), icon: ICON_DOWNLOAD, tint: 'info', summarize: sum((i) => pickStr(i, ['url', 'uri', 'endpoint'])) },
   mcp: { label: 'MCP', icon: ICON_BLOCKS, tint: 'muted', summarize: sum((i) => pickStr(i, ['tool', 'method', 'name'])) },
-  skill: { label: '技能', icon: ICON_ZAP, tint: 'accent', summarize: sum((i) => pickStr(i, ['skill', 'name', 'command'])) },
+  skill: { label: t('aiCore.kindSkill'), icon: ICON_ZAP, tint: 'accent', summarize: sum((i) => pickStr(i, ['skill', 'name', 'command'])) },
   todo: {
-    label: '待办', icon: ICON_LIST, tint: 'info',
+    label: t('aiCore.kindTodo'), icon: ICON_LIST, tint: 'info',
     summarize: sum((input) => {
       const items = input && typeof input === 'object' && Array.isArray((input as Record<string, unknown>).items)
         ? ((input as Record<string, unknown>).items as unknown[]) : Array.isArray(input) ? input : [];
       const done = items.filter((it) => (it as Record<string, unknown>)?.status === 'done').length;
-      return items.length > 0 ? `${done}/${items.length} 完成` : '';
+      return items.length > 0 ? t('aiCore.todoProgress', { p0: done, p1: items.length }) : '';
     }),
   },
-  plan: { label: '计划', icon: ICON_LIST_CHECKS, tint: 'info' },
-  subagent: { label: '子代理', icon: ICON_BOT, tint: 'accent', summarize: sum((i) => pickStr(i, ['task', 'description', 'prompt', 'message', 'subagent_type'])) },
-  note: { label: '笔记', icon: ICON_FILE_TEXT, tint: 'muted' },
-  chart: { label: '图表', icon: ICON_CHART, tint: 'info', summarize: sum((i) => pickStr(i, ['title', 'name'])) },
+  plan: { label: t('aiCore.kindPlan'), icon: ICON_LIST_CHECKS, tint: 'info' },
+  subagent: { label: t('aiCore.kindSubagent'), icon: ICON_BOT, tint: 'accent', summarize: sum((i) => pickStr(i, ['task', 'description', 'prompt', 'message', 'subagent_type'])) },
+  note: { label: t('aiCore.kindNote'), icon: ICON_FILE_TEXT, tint: 'muted' },
+  chart: { label: t('aiCore.kindChart'), icon: ICON_CHART, tint: 'info', summarize: sum((i) => pickStr(i, ['title', 'name'])) },
 };
 
 const kindRegistry = new Map<string, AiKindDef>(Object.entries(BUILTIN_KINDS));
@@ -773,6 +775,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   className?: string,
   text?: string,
 ): HTMLElementTagNameMap[K] {
+  if (typeof document === 'undefined') throw new Error('h() 仅浏览器环境可用（SSR 时由调用方守卫，见模块头注释）');
   const node = document.createElement(tag);
   if (className) node.className = className;
   if (text != null) node.textContent = text;
@@ -790,36 +793,6 @@ export function h<K extends keyof HTMLElementTagNameMap>(
  *   - SSR（无 document / DOMParser）返回 null
  */
 export function svgIcon(svg: string): SVGElement | null {
-  if (typeof document === 'undefined' || typeof DOMParser === 'undefined') return null;
-  let parsed: Document;
-  try {
-    parsed = new DOMParser().parseFromString(svg, 'image/svg+xml');
-  } catch {
-    return null;
-  }
-  const root = parsed.documentElement;
-  if (!root || root.tagName.toLowerCase() !== 'svg' || parsed.querySelector('parsererror')) {
-    return null;
-  }
-
-  const sanitize = (el: Element): void => {
-    for (const attr of Array.from(el.attributes)) {
-      const name = attr.name.toLowerCase();
-      if (name.startsWith('on')) el.removeAttribute(attr.name);
-      if ((name === 'href' || name === 'xlink:href') && attr.value.trim().toLowerCase().startsWith('javascript:')) {
-        el.removeAttribute(attr.name);
-      }
-    }
-    for (const child of Array.from(el.children)) {
-      const tag = child.tagName.toLowerCase();
-      if (tag === 'script' || tag === 'foreignobject') {
-        child.remove();
-        continue;
-      }
-      sanitize(child);
-    }
-  };
-  sanitize(root);
-
-  return document.importNode(root, true) as unknown as SVGElement;
+  /* 实现收敛到 svg-parse 单点（xmlns 归一 + 消毒 + importNode） */
+  return parseSvg(svg);
 }

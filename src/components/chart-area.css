@@ -3,11 +3,14 @@
  * 依赖：charts.css（基座）
  *
  * DOM 由 behaviors/charts.ts 的 renderArea 构建：
- *   .chart-area > svg[viewBox="0 0 360 150"]
+ *   .icen-chart-area > svg[viewBox="0 0 360 150"]
  * 与折线同族，但以面积填充为视觉主体（渐变更浓、描边更细）。
+ * v0.10 追加：renderChart 的 area 走 renderLine（.icen-chart-line 容器），spec.marks 的
+ * SVG 标记（.icen-chart-mark-line / .icen-chart-mark-point / .icen-chart-mark-label）
+ * 同样追加进 svg（样式属性直出，挡指针事件在基座 charts.css）。
  */
 
-.chart-area > svg {
+.icen-chart-area > svg {
   display: block;
   width: 100%;
   height: 150px;

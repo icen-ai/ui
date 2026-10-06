@@ -2,22 +2,22 @@
  * @icen.ai/ui — Behavior: date-picker（日期选择，与 components/date-picker.css 配套）
  *
  * 契约：
- *   <div class="date-picker" data-date-picker>
- *     <button class="date-picker-trigger" type="button">
- *       <span class="date-picker-value">2026-07-29</span>
- *       <svg class="date-picker-icon">…</svg>
+ *   <div class="icen-date-picker" data-icen-date-picker>
+ *     <button class="icen-date-picker-trigger" type="button">
+ *       <span class="icen-date-picker-value">2026-07-29</span>
+ *       <svg class="icen-date-picker-icon">…</svg>
  *     </button>
  *     <input type="hidden" name="date" value="2026-07-29" />
  *   </div>
  *
  * 可选 data-*：
- *   data-date-picker-format="yyyy-mm-dd"  显示格式（默认 yyyy-mm-dd）
- *   data-date-picker-min="2026-01-01"     最小可选日期
- *   data-date-picker-max="2026-12-31"     最大可选日期
- *   data-date-picker-week-start="0"       周首日（0=周日，1=周一，默认 1）
- *   data-date-picker-placeholder="选择日期" 空值占位文本
- *   面板尺寸走全库统一 PanelSizing 契约：data-panel-width 覆盖默认 280 宽，
- *   data-panel-min / -max / -max-height 同理（面板为跨实例单例）。
+ *   data-icen-date-picker-format="yyyy-mm-dd"  显示格式（默认 yyyy-mm-dd）
+ *   data-icen-date-picker-min="2026-01-01"     最小可选日期
+ *   data-icen-date-picker-max="2026-12-31"     最大可选日期
+ *   data-icen-date-picker-week-start="0"       周首日（0=周日，1=周一，默认 1）
+ *   data-icen-date-picker-placeholder="选择日期" 空值占位文本
+ *   面板尺寸走全库统一 PanelSizing 契约：data-icen-panel-width 覆盖默认 280 宽，
+ *   data-icen-panel-min / -max / -max-height 同理（面板为跨实例单例）。
  *
  * behavior 渲染日历面板（portal 到 body，DOM API 构建，禁 innerHTML），
  * 点选后更新 hidden input + 触发 change 事件。外点 / Esc 关闭；
@@ -26,6 +26,7 @@
 
 import { applyPanelSizing, computePopoverLayout, readPanelSizing } from './popover';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 let openPicker: HTMLElement | null = null;
 let panelEl: HTMLElement | null = null;
@@ -62,9 +63,9 @@ function format(d: Date | null, fmt: string): string {
 function ensurePanel(): HTMLElement {
   if (panelEl && panelEl.isConnected) return panelEl;
   const el = document.createElement('div');
-  el.className = 'date-picker-panel';
+  el.className = 'icen-date-picker-panel';
   el.setAttribute('role', 'dialog');
-  el.setAttribute('aria-label', '选择日期');
+  el.setAttribute('aria-label', t('datePicker.selectDate'));
   el.hidden = true;
   document.body.appendChild(el);
   panelEl = el;
@@ -75,7 +76,7 @@ function positionPanel(panel: HTMLElement, trigger: HTMLElement): void {
   const r = trigger.getBoundingClientRect();
   /* 面板尺寸契约（PanelSizing）：根上 data-panel-* 可覆盖默认 280 宽与高度上限；
      面板是跨实例单例，未指定的字段必须清空内联，避免串味 */
-  const sizing = readPanelSizing(trigger.closest('[data-date-picker]'));
+  const sizing = readPanelSizing(trigger.closest('[data-icen-date-picker]'));
   /* 面板是跨实例单例：先复位全部内联尺寸再按本次契约应用（applyPanelSizing(null) 复位语义）。
      min 提升为固定宽：日历网格固定 7 列不随宽自适应，min 语义落空，故提升为固定宽 */
   applyPanelSizing(panel, null);
@@ -132,8 +133,8 @@ function buildCalIcon(): SVGSVGElement {
   return svg;
 }
 
-const WEEK_LABELS_ZH = ['一', '二', '三', '四', '五', '六', '日'];
-const WEEK_LABELS_SUN = ['日', '一', '二', '三', '四', '五', '六'];
+const WEEK_LABELS_ZH = t('datePicker.weekdays');
+const WEEK_LABELS_SUN = t('datePicker.weekdaysSunFirst');
 
 function renderCalendar(
   panel: HTMLElement,
@@ -169,24 +170,24 @@ function renderCalendar(
   panel.textContent = '';
 
   const head = document.createElement('div');
-  head.className = 'date-picker-head';
+  head.className = 'icen-date-picker-head';
   const prevBtn = document.createElement('button');
   prevBtn.type = 'button';
-  prevBtn.className = 'date-picker-nav';
-  prevBtn.setAttribute('aria-label', '上一月');
+  prevBtn.className = 'icen-date-picker-nav';
+  prevBtn.setAttribute('aria-label', t('datePicker.prevMonth'));
   prevBtn.textContent = '‹';
   const title = document.createElement('span');
-  title.className = 'date-picker-title';
-  title.textContent = `${year} 年 ${month + 1} 月`;
+  title.className = 'icen-date-picker-title';
+  title.textContent = t('datePicker.yearMonth', { p0: year, p1: month + 1 });
   const nextBtn = document.createElement('button');
   nextBtn.type = 'button';
-  nextBtn.className = 'date-picker-nav';
-  nextBtn.setAttribute('aria-label', '下一月');
+  nextBtn.className = 'icen-date-picker-nav';
+  nextBtn.setAttribute('aria-label', t('datePicker.nextMonth'));
   nextBtn.textContent = '›';
   head.append(prevBtn, title, nextBtn);
 
   const weekdays = document.createElement('div');
-  weekdays.className = 'date-picker-weekdays';
+  weekdays.className = 'icen-date-picker-weekdays';
   for (const label of labels) {
     const s = document.createElement('span');
     s.textContent = label;
@@ -194,13 +195,13 @@ function renderCalendar(
   }
 
   const grid = document.createElement('div');
-  grid.className = 'date-picker-grid';
+  grid.className = 'icen-date-picker-grid';
   for (const d of cells) {
     const isOutside = d.getMonth() !== month;
     const isToday = d.getTime() === today.getTime();
     const isSelected = selected !== null && toDateStr(d) === toDateStr(selected);
     const disabled = (min !== null && d < min) || (max !== null && d > max);
-    const classes = ['date-picker-cell'];
+    const classes = ['icen-date-picker-cell'];
     if (isOutside) classes.push('is-outside');
     if (isToday) classes.push('is-today');
     if (isSelected) classes.push('is-selected');
@@ -215,15 +216,15 @@ function renderCalendar(
   }
 
   const foot = document.createElement('div');
-  foot.className = 'date-picker-foot';
+  foot.className = 'icen-date-picker-foot';
   const todayBtn = document.createElement('button');
   todayBtn.type = 'button';
-  todayBtn.className = 'date-picker-today';
-  todayBtn.textContent = '今天';
+  todayBtn.className = 'icen-date-picker-today';
+  todayBtn.textContent = t('datePicker.today');
   const clearBtn = document.createElement('button');
   clearBtn.type = 'button';
-  clearBtn.className = 'date-picker-clear';
-  clearBtn.textContent = '清除';
+  clearBtn.className = 'icen-date-picker-clear';
+  clearBtn.textContent = t('datePicker.clear');
   foot.append(todayBtn, clearBtn);
 
   panel.append(head, weekdays, grid, foot);
@@ -246,7 +247,7 @@ function renderCalendar(
 function closePanel(): void {
   if (!panelEl) return;
   panelEl.hidden = true;
-  openPicker?.querySelector('.date-picker-trigger')?.classList.remove('is-open');
+  openPicker?.querySelector('.icen-date-picker-trigger')?.classList.remove('is-open');
   openPicker = null;
   if (outsideHandler) {
     document.removeEventListener('mousedown', outsideHandler);
@@ -283,36 +284,36 @@ function setupPicker(container: HTMLElement): () => void {
     },
   ];
 
-  const fmt = el.dataset.datePickerFormat ?? 'yyyy-mm-dd';
-  const minStr = el.dataset.datePickerMin;
-  const maxStr = el.dataset.datePickerMax;
-  const weekStart = Number(el.dataset.datePickerWeekStart ?? '1');
-  const placeholder = el.dataset.datePickerPlaceholder ?? '选择日期';
+  const fmt = el.dataset.icenDatePickerFormat ?? 'yyyy-mm-dd';
+  const minStr = el.dataset.icenDatePickerMin;
+  const maxStr = el.dataset.icenDatePickerMax;
+  const weekStart = Number(el.dataset.icenDatePickerWeekStart ?? '1');
+  const placeholder = el.dataset.icenDatePickerPlaceholder ?? t('datePicker.selectDate');
   const min = minStr ? parseDateStr(minStr) : null;
   const max = maxStr ? parseDateStr(maxStr) : null;
 
   // 找到 hidden input
-  const hidden = el.querySelector<HTMLInputElement>('input[type="hidden"]');
+  const hidden = el.querySelector<HTMLInputElement>('icen-input[type="hidden"]');
   const initialStr = hidden?.value ?? '';
   const initialDate = initialStr ? parseDateStr(initialStr) : null;
 
   // 找或构建触发器
-  let trigger = el.querySelector<HTMLButtonElement>('.date-picker-trigger');
+  let trigger = el.querySelector<HTMLButtonElement>('.icen-date-picker-trigger');
   if (!trigger) {
     trigger = document.createElement('button');
     trigger.type = 'button';
-    trigger.className = 'date-picker-trigger';
+    trigger.className = 'icen-date-picker-trigger';
     const value = document.createElement('span');
-    value.className = initialDate ? 'date-picker-value' : 'date-picker-value is-empty';
+    value.className = initialDate ? 'icen-date-picker-value' : 'icen-date-picker-value is-empty';
     const icon = document.createElement('span');
-    icon.className = 'date-picker-icon';
+    icon.className = 'icen-date-picker-icon';
     icon.appendChild(buildCalIcon());
     trigger.append(value, icon);
     el.prepend(trigger);
   }
   trigger.setAttribute('aria-haspopup', 'dialog');
 
-  const valueEl = trigger.querySelector<HTMLElement>('.date-picker-value');
+  const valueEl = trigger.querySelector<HTMLElement>('.icen-date-picker-value');
   function paint(): void {
     const v = hidden?.value ?? '';
     const d = v ? parseDateStr(v) : null;
@@ -401,8 +402,8 @@ export function initDatePicker(root?: ParentNode): () => void {
   if (typeof window === 'undefined') return () => {};
   const scope = root ?? document;
   const pickers: Element[] = [];
-  if (scope instanceof Element && scope.matches('.date-picker[data-date-picker]')) pickers.push(scope);
-  pickers.push(...Array.from(scope.querySelectorAll('.date-picker[data-date-picker]')));
+  if (scope instanceof Element && scope.matches('.icen-date-picker[data-icen-date-picker]')) pickers.push(scope);
+  pickers.push(...Array.from(scope.querySelectorAll('.icen-date-picker[data-icen-date-picker]')));
   const disposers: Array<() => void> = [];
   for (const p of pickers) disposers.push(setupPicker(p as HTMLElement));
   return (): void => {

@@ -3,11 +3,11 @@
  * JSON-RPC 2.0 双向桥，与 components/kb-agent.css 配套；规格 docs/spec/kb-family.md §5.25）
  *
  * DOM 契约（createKbSandbox 构建）：
- *   <div class="kb-sandbox" data-state="idle|loading|ready|error">
- *     <div class="kb-sandbox-stage">
- *       <iframe class="kb-sandbox-frame" sandbox="allow-scripts" title="…"></iframe>
- *       <div class="kb-sandbox-loading"><i class="kb-sandbox-spin"></i></div>
- *       <div class="kb-sandbox-err"><span class="kb-sandbox-err-msg">宿主未提供 ui:// 解析器</span></div>
+ *   <div class="icen-kb-sandbox" data-icen-state="idle|loading|ready|error">
+ *     <div class="icen-kb-sandbox-stage">
+ *       <iframe class="icen-kb-sandbox-frame" sandbox="allow-scripts" title="…"></iframe>
+ *       <div class="icen-kb-sandbox-loading"><i class="icen-kb-sandbox-spin"></i></div>
+ *       <div class="icen-kb-sandbox-err"><span class="kb-sandbox-err-msg">宿主未提供 ui:// 解析器</span></div>
  *     </div>
  *   </div>
  *
@@ -34,7 +34,7 @@
  *       });
  *       parent.postMessage({ jsonrpc: '2.0', method: 'app.ready' }, '*');
  *     </script>
- *   宿主侧：createKbSandbox(el, {…}).call('app.callServerTool', args) → Promise<result>；
+ *   宿主侧：createKbSandbox(el, {…}).call('app.callServerTool', args) → Promise<icen-result>；
  *   调用默认 8000ms 超时（timeoutMs 可调）；全部出入站信封以
  *   icen:kb-sandbox-message {channel:'in'|'out', payload} 事件 + opts.onMessage 双通道可观测。
  *
@@ -50,6 +50,7 @@
 import { h } from './kb-core';
 import type { KbSandboxMessage } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 export interface KbSandboxOptions {
   /** 通信观测双通道（与 icen:kb-sandbox-message 事件同 payload） */
@@ -93,26 +94,26 @@ function isSandboxMessage(data: unknown): data is KbSandboxMessage {
 
 /**
  * 创建 MCP App 沙箱容器：iframe sandbox="allow-scripts" + JSON-RPC 2.0 双向桥。
- * 三态样式（idle/loading/ready/error）由 data-state 驱动（纯 CSS，见 kb-agent.css）。
+ * 三态样式（idle/loading/ready/error）由 data-icen-state 驱动（纯 CSS，见 kb-agent.css）。
  */
 export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): KbSandboxHandle {
-  const stub: KbSandboxHandle = { load: () => undefined, call: () => Promise.reject(new Error('kb-sandbox: SSR')), destroy: () => undefined };
+  const stub: KbSandboxHandle = { load: () => undefined, call: () => Promise.reject(new Error('icen-kb-sandbox: SSR')), destroy: () => undefined };
   if (typeof document === 'undefined' || !el) return stub; /* SSR：no-op 句柄 */
 
   const timeoutMs = typeof opts.timeoutMs === 'number' && opts.timeoutMs > 0 ? opts.timeoutMs : DEFAULT_TIMEOUT_MS;
   const allowedOrigins = Array.isArray(opts.allowedOrigins) ? opts.allowedOrigins.filter((o) => typeof o === 'string') : null;
 
-  el.classList.add('kb-sandbox');
-  el.dataset.state = 'idle';
+  el.classList.add('icen-kb-sandbox');
+  el.dataset.icenState = 'idle';
 
-  const stage = h('div', 'kb-sandbox-stage');
+  const stage = h('div', 'icen-kb-sandbox-stage');
   const frame = document.createElement('iframe');
-  frame.className = 'kb-sandbox-frame';
+  frame.className = 'icen-kb-sandbox-frame';
   frame.setAttribute('sandbox', 'allow-scripts'); /* 严禁 allow-same-origin */
-  frame.title = 'MCP App 沙箱';
-  const loading = h('div', 'kb-sandbox-loading');
-  loading.appendChild(h('i', 'kb-sandbox-spin'));
-  const err = h('div', 'kb-sandbox-err');
+  frame.title = t('kbSandbox.title');
+  const loading = h('div', 'icen-kb-sandbox-loading');
+  loading.appendChild(h('i', 'icen-kb-sandbox-spin'));
+  const err = h('div', 'icen-kb-sandbox-err');
   const errMsg = h('span', 'kb-sandbox-err-msg');
   err.appendChild(errMsg);
   stage.append(frame, loading, err);
@@ -129,7 +130,7 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
 
   const setState = (s: SandboxState): void => {
     state = s;
-    el.dataset.state = s;
+    el.dataset.icenState = s;
   };
 
   const notify = (channel: 'in' | 'out', payload: KbSandboxMessage): void => {
@@ -145,7 +146,7 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
   const failPending = (message: string): void => {
     for (const [, p] of pending) {
       clearTimeout(p.timer);
-      p.reject(new Error(`kb-sandbox: ${message}`));
+      p.reject(new Error(`icen-kb-sandbox: ${message}`));
     }
     pending.clear();
   };
@@ -167,7 +168,7 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
       if (!p) return;
       pending.delete(payload.id);
       clearTimeout(p.timer);
-      if (payload.error) p.reject(new Error(`kb-sandbox: ${payload.error.message}`));
+      if (payload.error) p.reject(new Error(`icen-kb-sandbox: ${payload.error.message}`));
       else p.resolve(payload.result);
     }
   };
@@ -198,14 +199,14 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
 
     if (s.startsWith('ui://')) {
       if (typeof opts.resolve !== 'function') {
-        showError('宿主未提供 ui:// 解析器');
+        showError(t('kbSandbox.noResolver'));
         return;
       }
       let resolved: string | null | Promise<string | null>;
       try {
         resolved = opts.resolve(s);
       } catch (e) {
-        showError(`ui:// 解析失败：${e instanceof Error ? e.message : String(e)}`);
+        showError(t('kbSandbox.resolveFailed', { p0: e instanceof Error ? e.message : String(e) }));
         return;
       }
       if (resolved != null && typeof (resolved as Promise<string | null>).then === 'function') {
@@ -214,11 +215,11 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
           (html) => {
             if (destroyed || mySeq !== loadSeq) return; /* 已被更新的 load 取代 */
             if (typeof html === 'string' && html) mountSrcdoc(html);
-            else showError('宿主未提供 ui:// 解析器');
+            else showError(t('kbSandbox.noResolver'));
           },
           (e: unknown) => {
             if (destroyed || mySeq !== loadSeq) return;
-            showError(`ui:// 解析失败：${e instanceof Error ? e.message : String(e)}`);
+            showError(t('kbSandbox.resolveFailed', { p0: e instanceof Error ? e.message : String(e) }));
           },
         );
         return;
@@ -227,7 +228,7 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
         mountSrcdoc(resolved);
         return;
       }
-      showError('宿主未提供 ui:// 解析器');
+      showError(t('kbSandbox.noResolver'));
       return;
     }
 
@@ -242,18 +243,18 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
   const call = (name: string, args?: unknown): Promise<unknown> =>
     new Promise((resolve, reject) => {
       if (destroyed) {
-        reject(new Error('kb-sandbox: destroyed'));
+        reject(new Error('icen-kb-sandbox: destroyed'));
         return;
       }
       if (state === 'idle' || state === 'error' || !frame.contentWindow) {
-        reject(new Error('kb-sandbox: 应用未就绪'));
+        reject(new Error(t('kbSandbox.notReady')));
         return;
       }
       const id = ++seq;
       const payload: KbSandboxMessage = { jsonrpc: '2.0', id, method: name, params: args };
       const timer = setTimeout(() => {
         pending.delete(id);
-        reject(new Error(`kb-sandbox: 调用超时（${timeoutMs}ms）`));
+        reject(new Error(t('kbSandbox.timeout', { p0: timeoutMs })));
       }, timeoutMs);
       pending.set(id, { resolve, reject, timer });
       frame.contentWindow.postMessage(payload, '*'); /* 沙箱帧 origin 为 'null'，target 只能 '*' */
@@ -266,8 +267,8 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
     ac.abort();
     failPending('destroyed');
     frame.remove();
-    el.classList.remove('kb-sandbox');
-    delete el.dataset.state;
+    el.classList.remove('icen-kb-sandbox');
+    delete el.dataset.icenState;
     el.textContent = '';
   };
 

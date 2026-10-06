@@ -5,20 +5,20 @@ import { COMPONENTS, GROUPS } from '../../lib/components';
 <Docs title="组件 · ICEN UI" description={`ICEN UI 组件总览：${GROUPS.join(' / ')}共 ${GROUPS.length} 个分组，每个组件一页文档。`}>
   <h1 class="page-title">组件</h1>
   <p class="page-desc">
-    {COMPONENTS.length} 个无框架组件，按 {GROUPS.join(' / ')} 分为 {GROUPS.length} 组，全部消费 <code>--token-*</code> 设计变量——切换右上角预设 / 明暗 / 风格可实时预览效果。点任意卡片进入该组件的文档页。
+    {COMPONENTS.length} 个无框架组件，按 {GROUPS.join(' / ')} 分为 {GROUPS.length} 组，全部消费 <code>--icen-token-*</code> 设计变量——切换右上角预设 / 明暗 / 风格可实时预览效果。点任意卡片进入该组件的文档页。
   </p>
 
   {GROUPS.map((g) => {
     const items = COMPONENTS.filter((c) => c.group === g);
     return (
-      <section class="panel">
-        <div class="panel-title"><span>{g}</span><span>{items.length} 个</span></div>
-        <div class="panel-body">
+      <section class="icen-panel">
+        <div class="icen-panel-title"><span>{g}</span><span>{items.length} 个</span></div>
+        <div class="icen-panel-body">
           <div class="comp-grid">
             {items.map((c) => (
               <a class="comp-card" href={`/components/${c.slug}/`}>
                 <span class="comp-card-name">{c.name}</span>
-                <span class="comp-card-slug mono">{c.slug}</span>
+                <span class="comp-card-slug icen-mono">{c.slug}</span>
                 <span class="comp-card-desc">{c.desc}</span>
               </a>
             ))}
@@ -30,8 +30,8 @@ import { COMPONENTS, GROUPS } from '../../lib/components';
 </Docs>
 
 <style is:global>
-  .page-title { font-family: var(--font-heading); font-size: 30px; font-weight: 700; letter-spacing: 1px; margin: 0 0 10px; }
-  .page-desc { color: var(--token-text-muted); font-size: 14px; line-height: 1.7; margin: 0 0 32px; max-width: 640px; }
+  .page-title { font-family: var(--icen-font-heading); font-size: 30px; font-weight: 700; letter-spacing: 1px; margin: 0 0 10px; }
+  .page-desc { color: var(--icen-token-text-muted); font-size: 14px; line-height: 1.7; margin: 0 0 32px; max-width: 640px; }
   .comp-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -42,22 +42,22 @@ import { COMPONENTS, GROUPS } from '../../lib/components';
     flex-direction: column;
     gap: 4px;
     padding: 14px 16px;
-    border: 1px solid var(--token-line-soft);
-    border-radius: var(--radius-lg);
-    background: var(--token-surface);
-    transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+    border: 1px solid var(--icen-token-line-soft);
+    border-radius: var(--icen-radius-lg);
+    background: var(--icen-token-surface);
+    transition: transform var(--icen-duration-fast) var(--icen-ease-out), box-shadow var(--icen-duration-fast) var(--icen-ease-out), border-color var(--icen-duration-fast) var(--icen-ease-out);
   }
   .comp-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--token-shadow-card);
-    border-color: var(--token-accent);
+    box-shadow: var(--icen-token-shadow-card);
+    border-color: var(--icen-token-accent);
     text-decoration: none;
   }
-  .comp-card-name { font-size: 15px; font-weight: 600; color: var(--token-text); }
-  .comp-card-slug { font-size: 11px; color: var(--token-text-faint); }
+  .comp-card-name { font-size: 15px; font-weight: 600; color: var(--icen-token-text); }
+  .comp-card-slug { font-size: 11px; color: var(--icen-token-text-faint); }
   .comp-card-desc {
     font-size: 12px;
-    color: var(--token-text-muted);
+    color: var(--icen-token-text-muted);
     line-height: 1.6;
     display: -webkit-box;
     -webkit-line-clamp: 2;

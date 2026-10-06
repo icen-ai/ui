@@ -2,228 +2,227 @@
  * @icen.ai/ui — Component: command-palette（命令面板 ⌘K，与 behaviors/command-palette 配套）
  *
  * 契约：
- *   <div class="command-palette-backdrop" data-command-palette="id" hidden>
- *     <div class="command-palette">
- *       <div class="command-palette-search">
- *         <span class="command-palette-search-icon">…放大镜 svg…</span>
- *         <input class="command-palette-input" placeholder="搜索命令…" />
- *         <kbd class="command-palette-esc">ESC</kbd>
+ *   <div class="icen-command-palette-backdrop" data-icen-command-palette="id" hidden>
+ *     <div class="icen-command-palette">
+ *       <div class="icen-command-palette-search">
+ *         <span class="icen-command-palette-search-icon">…放大镜 svg…</span>
+ *         <icen-input class="icen-command-palette-input" placeholder="搜索命令…" />
+ *         <icen-kbd class="icen-command-palette-esc">ESC</icen-kbd>
  *       </div>
- *       <div class="command-palette-body">
- *         <div class="command-palette-group">
- *           <p class="command-palette-group-label">分组名</p>
- *           <button class="command-palette-item [.is-active]" type="button">
- *             <span class="command-palette-item-icon">…svg…</span>
- *             <span class="command-palette-item-label">命令名</span>
- *             <span class="command-palette-item-hint">副标题</span>
- *             <kbd class="command-palette-item-kbd">⌘S</kbd>
+ *       <div class="icen-command-palette-body">
+ *         <div class="icen-command-palette-group">
+ *           <p class="icen-command-palette-group-label">分组名</p>
+ *           <button class="icen-command-palette-item [.is-active]" type="button">
+ *             <span class="icen-command-palette-item-icon">…svg…</span>
+ *             <span class="icen-command-palette-item-label">命令名</span>
+ *             <span class="icen-command-palette-item-hint">副标题</span>
+ *             <icen-kbd class="icen-command-palette-item-kbd">⌘S</icen-kbd>
  *           </button>
  *         </div>
- *         <div class="command-palette-empty" hidden>无匹配命令</div>
+ *         <div class="icen-command-palette-empty" hidden>无匹配命令</div>
  *       </div>
- *       <div class="command-palette-foot">
- *         <span class="command-palette-foot-hint">
- *           <kbd>↑↓</kbd> 导航 <kbd>↵</kbd> 执行 <kbd>esc</kbd> 关闭
+ *       <div class="icen-command-palette-foot">
+ *         <span class="icen-command-palette-foot-hint">
+ *           <icen-kbd>↑↓</icen-kbd> 导航 <icen-kbd>↵</icen-kbd> 执行 <icen-kbd>esc</icen-kbd> 关闭
  *         </span>
  *       </div>
  *     </div>
  *   </div>
  *
  * behavior 接管：搜索过滤、↑↓ 导航、Enter 执行、ESC / 外点 / backdrop 关闭、
- * 焦点陷阱、按 ⌘K / Ctrl+K 全局打开（可选 data-command-palette-key）。
+ * 焦点陷阱、按 ⌘K / Ctrl+K 全局打开（可选 data-icen-command-palette-key）。
  */
 
-.command-palette-backdrop {
+.icen-command-palette-backdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--z-dialog);
+  z-index: var(--icen-z-dialog);
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding-top: 12vh;
-  padding-left: var(--density-space-md);
-  padding-right: var(--density-space-md);
-  background: color-mix(in srgb, var(--token-text) 40%, transparent);
+  padding-inline: var(--icen-density-space-md);
+  background: color-mix(in srgb, var(--icen-token-text) 40%, transparent);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: icen-cp-fade-in var(--icen-tx-normal);
 }
-.command-palette-backdrop[hidden] { display: none; }
+.icen-command-palette-backdrop[hidden] { display: none; }
 
-.command-palette {
+.icen-command-palette {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 560px;
-  max-height: 70vh;
+  inline-size: 100%;
+  max-inline-size: 560px;
+  max-block-size: 70vh;
   overflow: hidden;
-  background: var(--token-card-strong);
-  border: 1px solid var(--token-outline);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--token-shadow-overlay);
+  background: var(--icen-token-card-strong);
+  border: 1px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-lg);
+  box-shadow: var(--icen-token-shadow-overlay);
   animation: icen-cp-scale-in var(--icen-tx-slow);
 }
-.command-palette:focus { outline: none; }
+.icen-command-palette:focus { outline: none; }
 
 /* ── 搜索栏 ── */
-.command-palette-search {
+.icen-command-palette-search {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-md);
-  border-bottom: 1px solid var(--token-line-soft);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-md);
+  border-bottom: 1px solid var(--icen-token-line-soft);
 }
-.command-palette-search-icon {
+.icen-command-palette-search-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   flex-shrink: 0;
 }
-.command-palette-search-icon svg { width: 16px; height: 16px; }
-.command-palette-input {
+.icen-command-palette-search-icon svg { width: 16px; height: 16px; }
+.icen-command-palette-input {
   flex: 1;
   min-width: 0;
   border: 0;
   outline: none;
   background: transparent;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--density-font-size-md);
+  font-size: var(--icen-density-font-size-md);
 }
-.command-palette-input::placeholder {
-  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+.icen-command-palette-input::placeholder {
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
 }
-.command-palette-esc {
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-command-palette-esc {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   padding: 2px 6px;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-xs);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-xs);
   flex-shrink: 0;
 }
 
 /* ── 列表区 ── */
-.command-palette-body {
+.icen-command-palette-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--density-space-xs);
+  padding: var(--icen-density-space-xs);
 }
 
-.command-palette-group {
+.icen-command-palette-group {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  margin-bottom: var(--density-space-sm);
+  margin-bottom: var(--icen-density-space-sm);
 }
-.command-palette-group:last-child { margin-bottom: 0; }
-.command-palette-group-label {
-  margin: var(--density-space-sm) var(--density-space-sm) var(--density-space-xs);
-  font-size: var(--density-font-size-xs);
+.icen-command-palette-group:last-child { margin-bottom: 0; }
+.icen-command-palette-group-label {
+  margin: var(--icen-density-space-sm) var(--icen-density-space-sm) var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 600;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.command-palette-group:first-child .command-palette-group-label { margin-top: 0; }
+.icen-command-palette-group:first-child .icen-command-palette-group-label { margin-top: 0; }
 
-.command-palette-item {
+.icen-command-palette-item {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   width: 100%;
-  padding: 8px var(--density-space-sm);
+  padding: 8px var(--icen-density-space-sm);
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--icen-radius-sm);
   background: transparent;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--density-font-size-md);
-  text-align: left;
+  font-size: var(--icen-density-font-size-md);
+  text-align: start;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color var(--icen-tx-fast);
 }
-.command-palette-item:hover { background: var(--token-fill-1); }
-.command-palette-item.is-active {
-  background: var(--token-accent-subtle);
-  color: var(--token-accent-deep, var(--token-accent));
+.icen-command-palette-item:hover { background: var(--icen-token-fill-1); }
+.icen-command-palette-item.is-active {
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent-deep, var(--icen-token-accent));
 }
-.command-palette-item:focus-visible {
+.icen-command-palette-item:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.command-palette-item-icon {
+.icen-command-palette-item-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   width: 18px;
   height: 18px;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
-.command-palette-item.is-active .command-palette-item-icon { color: var(--token-accent); }
-.command-palette-item-icon svg { width: 16px; height: 16px; }
+.icen-command-palette-item.is-active .icen-command-palette-item-icon { color: var(--icen-token-accent); }
+.icen-command-palette-item-icon svg { width: 16px; height: 16px; }
 
-.command-palette-item-label {
+.icen-command-palette-item-label {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.command-palette-item-hint {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
-  margin-left: var(--density-space-xs);
+.icen-command-palette-item-hint {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
+  margin-inline-start: var(--icen-density-space-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.command-palette-item.is-active .command-palette-item-hint { color: color-mix(in srgb, var(--token-accent) 70%, var(--token-text-faint)); }
+.icen-command-palette-item.is-active .icen-command-palette-item-hint { color: color-mix(in srgb, var(--icen-token-accent) 70%, var(--icen-token-text-faint)); }
 
-.command-palette-item-kbd {
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text-faint);
+.icen-command-palette-item-kbd {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
   padding: 1px 5px;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-xs);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-xs);
   flex-shrink: 0;
 }
 
 /* ── 空态 ── */
-.command-palette-empty {
-  padding: 32px var(--density-space-md);
+.icen-command-palette-empty {
+  padding: 32px var(--icen-density-space-md);
   text-align: center;
-  color: var(--token-text-faint);
-  font-size: var(--density-font-size-sm);
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-sm);
 }
 
 /* ── 底栏 ── */
-.command-palette-foot {
-  padding: var(--density-space-xs) var(--density-space-md);
-  border-top: 1px solid var(--token-line-soft);
-  background: var(--token-bg-soft);
+.icen-command-palette-foot {
+  padding: var(--icen-density-space-xs) var(--icen-density-space-md);
+  border-top: 1px solid var(--icen-token-line-soft);
+  background: var(--icen-token-bg-soft);
 }
-.command-palette-foot-hint {
+.icen-command-palette-foot-hint {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  gap: var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
 }
-.command-palette-foot-hint kbd {
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-2xs);
+.icen-command-palette-foot-hint kbd {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
   padding: 1px 4px;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-xs);
-  background: var(--token-surface);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-xs);
+  background: var(--icen-token-surface);
 }
 
 @keyframes icen-cp-fade-in {
@@ -236,11 +235,11 @@
 }
 
 @media (max-width: 480px) {
-  .command-palette-backdrop { padding-top: 6vh; }
-  .command-palette { max-height: 80vh; }
+  .icen-command-palette-backdrop { padding-top: 6vh; }
+  .icen-command-palette { max-height: 80vh; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .command-palette-backdrop { animation: none; }
-  .command-palette { animation: none; }
+  .icen-command-palette-backdrop { animation: none; }
+  .icen-command-palette { animation: none; }
 }

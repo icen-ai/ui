@@ -3,11 +3,13 @@
  * 依赖：charts.css（基座）
  *
  * DOM 由 behaviors/charts.ts 的 renderLine 构建：
- *   .chart-line > svg[viewBox="0 0 360 150"]
- * 含面积渐变 + 网格线 + 数据点 + 底部 .chart-labels。
+ *   .icen-chart-line > svg[viewBox="0 0 360 150"]
+ * 含面积渐变 + 网格线 + 数据点 + 底部 .icen-chart-labels。
+ * v0.10 追加：spec.marks 的 SVG 标记（.icen-chart-mark-line 参考线 / .icen-chart-mark-point
+ * 标记点 + .icen-chart-mark-label 标注）直接追加进本 svg，样式属性直出（挡指针事件在基座）。
  */
 
-.chart-line > svg {
+.icen-chart-line > svg {
   display: block;
   width: 100%;
   height: 150px;

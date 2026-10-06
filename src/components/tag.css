@@ -7,29 +7,29 @@
  *            常用于：分类、筛选条件、属性标记、邮件标签、文件 tag
  *
  * 完整契约：
- *   <span class="tag [.tag--sm|.tag--lg] [.is-selected] [.is-disabled]
- *        [.tag--accent|.tag--success|.tag--warning|.tag--error|.tag--info]">
- *     <span class="tag-icon">…svg…</span>           <!-- 可选左图标 -->
- *     <span class="tag-label">标签文本</span>
- *     <button class="tag-close" type="button" aria-label="移除">×</button>  <!-- 可选 -->
+ *   <span class="icen-tag [.icen-tag--sm|.icen-tag--lg] [.is-selected] [.is-disabled]
+ *        [.icen-tag--accent|.icen-tag--success|.icen-tag--warning|.icen-tag--error|.icen-tag--info]">
+ *     <span class="icen-tag-icon">…svg…</span>           <!-- 可选左图标 -->
+ *     <span class="icen-tag-label">标签文本</span>
+ *     <button class="icen-tag-close" type="button" aria-label="移除">×</button>  <!-- 可选 -->
  *   </span>
  *
  *   选中态 .is-selected 由消费方驱动（用于筛选条件等）；
- *   .tag-close 点击后消费方决定是否从 DOM 移除本节点（本组件不自动删除）。
+ *   .icen-tag-close 点击后消费方决定是否从 DOM 移除本节点（本组件不自动删除）。
  */
 
-.tag {
+.icen-tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 0 var(--density-space-sm);
+  padding: 0 var(--icen-density-space-sm);
   height: 24px;
-  background: var(--token-fill-1);
-  color: var(--token-text-muted);
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-sm);
+  background: var(--icen-token-fill-1);
+  color: var(--icen-token-text-muted);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-sm);
   font: inherit;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
   letter-spacing: 0.01em;
   white-space: nowrap;
   vertical-align: middle;
@@ -38,54 +38,54 @@
     border-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.tag:hover {
-  background: var(--token-fill-2);
-  color: var(--token-text);
+.icen-tag:hover {
+  background: var(--icen-token-fill-2);
+  color: var(--icen-token-text);
 }
 
 /* 尺寸变体 */
-.tag--sm {
+.icen-tag--sm {
   height: 20px;
   padding: 0 6px;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
   gap: 3px;
 }
-.tag--lg {
+.icen-tag--lg {
   height: 28px;
   padding: 0 10px;
-  font-size: var(--density-font-size-md);
+  font-size: var(--icen-density-font-size-md);
   gap: 6px;
 }
 
 /* ── 图标 ── */
-.tag-icon {
+.icen-tag-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
-.tag-icon svg { width: 12px; height: 12px; }
-.tag--sm .tag-icon svg { width: 10px; height: 10px; }
-.tag--lg .tag-icon svg { width: 14px; height: 14px; }
-.tag-label {
+.icen-tag-icon svg { width: 12px; height: 12px; }
+.icen-tag--sm .icen-tag-icon svg { width: 10px; height: 10px; }
+.icen-tag--lg .icen-tag-icon svg { width: 14px; height: 14px; }
+.icen-tag-label {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 240px;
 }
 
 /* ── 关闭按钮（消费方点击后自行决定是否从 DOM 移除） ── */
-.tag-close {
+.icen-tag-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
   padding: 0;
-  margin-right: -4px;
-  margin-left: 2px;
+  margin-inline-end: -4px;
+  margin-inline-start: 2px;
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   background: transparent;
   color: inherit;
   opacity: 0.6;
@@ -93,72 +93,72 @@
   -webkit-tap-highlight-color: transparent;
   transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.tag-close:hover {
+.icen-tag-close:hover {
   opacity: 1;
-  background: color-mix(in srgb, var(--token-text-faint) 22%, transparent);
+  background: color-mix(in srgb, var(--icen-token-text-faint) 22%, transparent);
 }
-.tag-close:focus-visible {
+.icen-tag-close:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.tag-close svg { width: 10px; height: 10px; }
-.tag--sm .tag-close { width: 14px; height: 14px; margin-right: -2px; }
-.tag--lg .tag-close { width: 18px; height: 18px; margin-right: -6px; }
+.icen-tag-close svg { width: 10px; height: 10px; }
+.icen-tag--sm .icen-tag-close { width: 14px; height: 14px; margin-inline-end: -2px; }
+.icen-tag--lg .icen-tag-close { width: 18px; height: 18px; margin-inline-end: -6px; }
 
 /* ── 选中态（用于筛选条件等）── */
-.tag.is-selected {
-  background: var(--token-accent-subtle);
-  color: var(--token-accent-deep, var(--token-accent));
-  border-color: color-mix(in srgb, var(--token-accent) 40%, transparent);
+.icen-tag.is-selected {
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent-deep, var(--icen-token-accent));
+  border-color: color-mix(in srgb, var(--icen-token-accent) 40%, transparent);
 }
-.tag.is-selected .tag-icon { color: var(--token-accent); }
+.icen-tag.is-selected .icen-tag-icon { color: var(--icen-token-accent); }
 
 /* ── 语义色变体（与 pill 对齐，但底色更淡，作分类着色用）── */
-.tag--accent {
-  background: color-mix(in srgb, var(--token-accent) 10%, transparent);
-  color: var(--token-accent-deep, var(--token-accent));
-  border-color: color-mix(in srgb, var(--token-accent) 30%, transparent);
+.icen-tag--accent {
+  background: color-mix(in srgb, var(--icen-token-accent) 10%, transparent);
+  color: var(--icen-token-accent-deep, var(--icen-token-accent));
+  border-color: color-mix(in srgb, var(--icen-token-accent) 30%, transparent);
 }
-.tag--success {
-  background: color-mix(in srgb, var(--token-success) 10%, transparent);
-  color: var(--token-success);
-  border-color: color-mix(in srgb, var(--token-success) 30%, transparent);
+.icen-tag--success {
+  background: color-mix(in srgb, var(--icen-token-success) 10%, transparent);
+  color: var(--icen-token-success);
+  border-color: color-mix(in srgb, var(--icen-token-success) 30%, transparent);
 }
-.tag--warning {
-  background: color-mix(in srgb, var(--token-warning) 10%, transparent);
-  color: var(--token-warning);
-  border-color: color-mix(in srgb, var(--token-warning) 30%, transparent);
+.icen-tag--warning {
+  background: color-mix(in srgb, var(--icen-token-warning) 10%, transparent);
+  color: var(--icen-token-warning);
+  border-color: color-mix(in srgb, var(--icen-token-warning) 30%, transparent);
 }
-.tag--error {
-  background: color-mix(in srgb, var(--token-error) 10%, transparent);
-  color: var(--token-error);
-  border-color: color-mix(in srgb, var(--token-error) 30%, transparent);
+.icen-tag--error {
+  background: color-mix(in srgb, var(--icen-token-error) 10%, transparent);
+  color: var(--icen-token-error);
+  border-color: color-mix(in srgb, var(--icen-token-error) 30%, transparent);
 }
-.tag--info {
-  background: color-mix(in srgb, var(--token-info) 10%, transparent);
-  color: var(--token-info);
-  border-color: color-mix(in srgb, var(--token-info) 30%, transparent);
+.icen-tag--info {
+  background: color-mix(in srgb, var(--icen-token-info) 10%, transparent);
+  color: var(--icen-token-info);
+  border-color: color-mix(in srgb, var(--icen-token-info) 30%, transparent);
 }
 
 /* ── 禁用态 ── */
-.tag.is-disabled,
-.tag[aria-disabled='true'] {
+.icen-tag.is-disabled,
+.icen-tag[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
   pointer-events: none;
 }
 
 /* ── 可点击（用于可筛选 tag） ── */
-button.tag,
-.tag[role='button'] {
+button.icen-tag,
+.icen-tag[role='button'] {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.tag:where(button, [role='button']):focus-visible {
+.icen-tag:where(button, [role='button']):focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tag, .tag-close { transition: none; }
+  .icen-tag, .icen-tag-close { transition: none; }
 }

@@ -2,15 +2,15 @@
  * @icen.ai/ui — Behavior: modal（对话框/Sheet，与 components/modal.css 配套）
  *
  * 契约：
- *   <div class="modal-backdrop" data-modal="id" hidden>
- *     <div class="modal">…<button data-modal-close>×</button>…</div>
+ *   <div class="icen-modal-backdrop" data-icen-modal="id" hidden>
+ *     <div class="icen-modal">…<button data-icen-modal-close>×</button>…</div>
  *   </div>
- *   <button data-modal-open="id">打开</button>
+ *   <button data-icen-modal-open="id">打开</button>
  *
  * 功能：hidden 切换 + body 滚动锁（恢复旧值）+ 焦点陷阱（Tab 循环，
  * 跳过不可见元素）+ 打开聚焦第一个可聚焦元素 + 关闭焦点还原 +
- * Esc/backdrop 点击关闭（data-close-on-escape="false" /
- * data-close-on-overlay="false" 可禁用）。同时只开一个；打开时 backdrop
+ * Esc/backdrop 点击关闭（data-icen-close-on-escape="false" /
+ * data-icen-close-on-overlay="false" 可禁用）。同时只开一个；打开时 backdrop
  * 被 portal 到 document.body。backdrop 被外部移除时关闭路径仍复位
  * 滚动锁/监听/焦点。SSR 下为 no-op。
  * 事件：打开成功派 icen:modal-open { id }、关闭派 icen:modal-close { id }
@@ -22,7 +22,7 @@ import { emitIcen } from './events';
 
 /** 焦点陷阱的可聚焦元素选择器（modal / command-palette 焦点陷阱全库共用）。 */
 export const FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), audio, video, details>summary';
+  'button:not([disabled]), [href], icen-input:not([disabled]), icen-select:not([disabled]), icen-textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), audio, video, details>summary';
 
 /** openModal 可选项。 */
 export interface ModalOpenOptions {
@@ -40,7 +40,7 @@ let keyHandler: ((e: KeyboardEvent) => void) | null = null;
 let initialized = false;
 
 function findBackdrop(id: string): HTMLElement | null {
-  return document.querySelector<HTMLElement>(`.modal-backdrop[data-modal="${CSS.escape(id)}"]`);
+  return document.querySelector<HTMLElement>(`.icen-modal-backdrop[data-icen-modal="${CSS.escape(id)}"]`);
 }
 
 function portal(backdrop: HTMLElement): void {
@@ -59,13 +59,13 @@ export function openModal(id: string, opts?: ModalOpenOptions): void {
 
   const backdrop = findBackdrop(id);
   if (!backdrop) {
-    console.warn(`[@icen.ai/ui] modal: 未找到 data-modal="${id}" 的 .modal-backdrop，已跳过打开`);
+    console.warn(`[@icen.ai/ui] modal: 未找到 data-icen-modal="${id}" 的 .modal-backdrop，已跳过打开`);
     return;
   }
-  const panel = backdrop.querySelector<HTMLElement>('.modal');
+  const panel = backdrop.querySelector<HTMLElement>('.icen-modal');
   if (!panel) return;
 
-  /* 面板尺寸契约（PanelSizing）：backdrop 上 data-panel-width / -max-height 等覆盖 CSS 类修饰 */
+  /* 面板尺寸契约（PanelSizing）：backdrop 上 data-icen-panel-width / -max-height 等覆盖 CSS 类修饰 */
   applyPanelSizing(panel, readPanelSizing(backdrop));
 
   portal(backdrop);
@@ -81,25 +81,25 @@ export function openModal(id: string, opts?: ModalOpenOptions): void {
   panel.setAttribute('aria-modal', 'true');
   if (!panel.hasAttribute('tabindex')) panel.tabIndex = -1;
 
-  /* 自动 aria-labelledby：若面板内有 .modal-title 且未显式声明，绑定过去。
+  /* 自动 aria-labelledby：若面板内有 .icen-modal-title 且未显式声明，绑定过去。
      id 铸造用去非法字符而非 CSS.escape（escape 会产出含反斜杠的串，如 "a.b"→"a\.b"，
      作为 id 值非法）；下方 findBackdrop 的 CSS.escape 是选择器转义，属正确用途，保留 */
   if (!panel.hasAttribute('aria-labelledby')) {
-    const title = panel.querySelector<HTMLElement>('.modal-title');
+    const title = panel.querySelector<HTMLElement>('.icen-modal-title');
     if (title) {
       if (!title.id) title.id = `modal-title-${id.replace(/[^\w-]/g, '-')}`;
       panel.setAttribute('aria-labelledby', title.id);
     }
   }
   if (!panel.hasAttribute('aria-describedby')) {
-    const desc = panel.querySelector<HTMLElement>('.modal-description');
+    const desc = panel.querySelector<HTMLElement>('.icen-modal-description');
     if (desc) {
       if (!desc.id) desc.id = `modal-desc-${id.replace(/[^\w-]/g, '-')}`;
       panel.setAttribute('aria-describedby', desc.id);
     }
   }
 
-  const closeOnEscape = backdrop.dataset.closeOnEscape !== 'false';
+  const closeOnEscape = backdrop.dataset.icenCloseOnEscape !== 'false';
   keyHandler = (e: KeyboardEvent): void => {
     if (e.key === 'Escape') {
       if (closeOnEscape) {
@@ -169,7 +169,7 @@ export function closeModal(id: string): void {
 
 /**
  * 绑定触发器/关闭钮/backdrop 点击（document 级事件委托，重复调用安全）。
- * root 用于扫描 [data-modal-open] 补 aria-haspopup=dialog。
+ * root 用于扫描 [data-icen-modal-open] 补 aria-haspopup=dialog。
  * 返回销毁函数：摘除 document 委托并复位幂等标记（销毁后可重新 init）；
  * 销毁时若有 modal 开着会顺带关闭（复位滚动锁/监听/焦点）。SSR 下返回 no-op。
  */
@@ -178,7 +178,7 @@ export function initModal(root?: ParentNode): () => void {
   const scope = root ?? document;
 
   scope
-    .querySelectorAll<HTMLElement>('[data-modal-open]')
+    .querySelectorAll<HTMLElement>('[data-icen-modal-open]')
     .forEach((el) => el.setAttribute('aria-haspopup', 'dialog'));
 
   if (initialized) return () => {};
@@ -188,28 +188,28 @@ export function initModal(root?: ParentNode): () => void {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
 
-    const opener = target.closest<HTMLElement>('[data-modal-open]');
-    if (opener?.dataset.modalOpen) {
+    const opener = target.closest<HTMLElement>('[data-icen-modal-open]');
+    if (opener?.dataset.icenModalOpen) {
       opener.setAttribute('aria-haspopup', 'dialog');
-      openModal(opener.dataset.modalOpen);
+      openModal(opener.dataset.icenModalOpen);
       return;
     }
 
-    const closer = target.closest<HTMLElement>('[data-modal-close]');
+    const closer = target.closest<HTMLElement>('[data-icen-modal-close]');
     if (closer) {
-      const backdrop = closer.closest<HTMLElement>('[data-modal]');
-      if (backdrop?.dataset.modal) closeModal(backdrop.dataset.modal);
+      const backdrop = closer.closest<HTMLElement>('[data-icen-modal]');
+      if (backdrop?.dataset.icenModal) closeModal(backdrop.dataset.icenModal);
       return;
     }
 
     // backdrop 点击：仅当点中的就是 backdrop 本身（而非面板内部）
     if (
       target instanceof HTMLElement &&
-      target.classList.contains('modal-backdrop') &&
-      target.dataset.modal &&
-      target.dataset.closeOnOverlay !== 'false'
+      target.classList.contains('icen-modal-backdrop') &&
+      target.dataset.icenModal &&
+      target.dataset.icenCloseOnOverlay !== 'false'
     ) {
-      closeModal(target.dataset.modal);
+      closeModal(target.dataset.icenModal);
     }
   };
   document.addEventListener('click', onClick);

@@ -58,12 +58,12 @@ const bootData = JSON.stringify({
 <Docs title={`${doc.name} · 组件 · ICEN UI`} description={doc.desc}>
   <div class="doc-head">
     <div class="doc-head-main">
-      <nav class="doc-crumb">组件 / {doc.group} / <span class="mono">{doc.slug}</span></nav>
+      <nav class="doc-crumb">组件 / {doc.group} / <span class="icen-mono">{doc.slug}</span></nav>
       <h1 class="doc-title">{doc.name}</h1>
       <p class="doc-desc">{doc.desc}</p>
     </div>
     <div class="doc-actions">
-      <button class="doc-copy-page copy-btn" type="button" data-copy={pageLink} data-copy-icon>
+      <button class="doc-copy-page icen-copy-btn" type="button" data-icen-copy={pageLink} data-icen-copy-icon>
         <Fragment set:html={copySvg + checkSvg} />
         <span>复制当前页</span>
       </button>
@@ -188,12 +188,12 @@ const bootData = JSON.stringify({
 </Docs>
 
 <style is:global>
-  .doc-note { font-size: 13px; color: var(--token-text-muted); margin: 14px 0 10px; }
+  .doc-note { font-size: 13px; color: var(--icen-token-text-muted); margin: 14px 0 10px; }
   .doc-note--warn {
     padding: 10px 14px;
-    border-left: 2px solid var(--token-warning);
-    background: color-mix(in srgb, var(--token-warning) 6%, transparent);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    border-left: 2px solid var(--icen-token-warning);
+    background: color-mix(in srgb, var(--icen-token-warning) 6%, transparent);
+    border-radius: 0 var(--icen-radius-sm) var(--icen-radius-sm) 0;
     line-height: 1.7;
   }
 
@@ -203,12 +203,12 @@ const bootData = JSON.stringify({
     gap: 12px;
     margin-top: 48px;
     padding-top: 24px;
-    border-top: 1px solid var(--token-line-soft);
+    border-top: 1px solid var(--icen-token-line-soft);
   }
   .doc-pager-link { display: flex; flex-direction: column; gap: 2px; }
   .doc-pager-link:hover { text-decoration: none; }
-  .doc-pager-link:hover .doc-pager-name { color: var(--token-accent-deep, var(--token-accent)); }
+  .doc-pager-link:hover .doc-pager-name { color: var(--icen-token-accent-deep, var(--icen-token-accent)); }
   .doc-pager-next { margin-left: auto; text-align: right; }
-  .doc-pager-label { font-size: 11px; color: var(--token-text-faint); letter-spacing: 1px; }
-  .doc-pager-name { font-size: 14px; color: var(--token-accent); font-weight: 500; }
+  .doc-pager-label { font-size: 11px; color: var(--icen-token-text-faint); letter-spacing: 1px; }
+  .doc-pager-name { font-size: 14px; color: var(--icen-token-accent-text, var(--icen-token-accent)); font-weight: 500; }
 </style>

@@ -1,0 +1,117 @@
+/*
+ * form-validate.css — 表单校验呈现层（与 behaviors/form-validate.ts 配套）
+ *
+ * DOM 契约（行为层写入；本文件只负责呈现，不驱动逻辑）：
+ *   <form data-icen-validate [data-icen-validate-summary] [data-icen-validate-show-valid]>
+ *     字段 = form 内有 name 的 input / textarea / select；initFormValidate() 自动挂 novalidate。
+ *     校验态落在「最近的 .icen-field / .icen-form-field 包装器」上：
+ *       .is-error + data-icen-invalid="true"   未过：控件 aria-invalid="true"，
+ *         自动创建 <p class="icen-field-error" role="alert" data-icen-fv-auto>（id 自动生成，
+ *         控件 aria-describedby 接线；手写错误节点不带 data-icen-fv-auto，清空后保留）
+ *       .is-valid + data-icen-valid="true"     通过（仅 form/字段带 data-icen-validate-show-valid 时挂）
+ *       .is-validating                          异步校验中（控件 aria-busy="true"）
+ *     提交失败且 form 带 data-icen-validate-summary → 表单顶部渲染错误清单：
+ *       <div class="icen-form-validate-summary" role="alert">
+ *         <p class="icen-form-validate-summary-title">…</p>
+ *         <ul class="icen-form-validate-summary-list">
+ *           <li><a class="icen-form-validate-summary-item" href="#字段 id">…</a></li>…
+ *         </ul></div>
+ *     AI 工具 show_form 挂载体（import behaviors/form-validate.ts 即注册）：
+ *       <div class="icen-ai-form"><p class="icen-ai-form-title">…</p>
+ *         <form class="icen-form icen-ai-form-fields" data-icen-validate data-icen-validate-summary>
+ *           <div class="icen-field"><label class="icen-field-label">…<span class="icen-req">*</span></label>
+ *             <input|icen-textarea|select class="icen-form-input|icen-form-textarea">…
+ *             [<span class="icen-field-hint">…</span>]</div>…
+ *           <div class="icen-ai-form-actions"><button class="icen-btn icen-btn-primary">提交</button>
+ *             <button class="icen-btn icen-btn-ghost" data-icen-ai-form-cancel>取消</button></div>
+ *         </form></div>
+ *
+ * 样式策略：控件本身的错误边框/焦点环归 form.css（:invalid / [data-icen-invalid] 同已支持），
+ *   本文件只补包装器态（.is-error/.is-valid/.is-validating）、字段级错误/提示文案、
+ *   提交失败汇总清单与 show_form 挂载体布局——全部消费 --icen-token-*。
+ */
+
+/* ── 字段包装器校验态（控件视觉归 form.css，这里只挂状态色与动效提示） ── */
+
+.icen-field.is-error > .icen-field-label,
+.icen-field.is-error > .icen-form-label { color: var(--icen-token-error); }
+
+.icen-field.is-valid > .icen-field-label,
+.icen-field.is-valid > .icen-form-label { color: var(--icen-token-success-text, color-mix(in srgb, var(--icen-token-success) 90%, black)); }
+[data-icen-theme='dark'] .icen-field.is-valid > .icen-field-label,
+[data-icen-theme='dark'] .icen-field.is-valid > .icen-form-label { color: var(--icen-token-success-text, var(--icen-token-success)); }
+
+.icen-field.is-validating { cursor: progress; }
+.icen-field.is-validating > :is(input, textarea, select) { opacity: var(--icen-disabled-opacity); }
+
+/* ── 字段级文案 ── */
+
+.icen-field-label {
+  display: block;
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text);
+  margin-bottom: var(--icen-density-space-xs);
+}
+.icen-field-label .icen-req { color: var(--icen-token-error); margin-inline-start: 2px; }
+
+.icen-field-hint {
+  display: block;
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
+  line-height: 1.4;
+  margin-top: var(--icen-density-space-xs);
+}
+
+.icen-field-error {
+  margin: var(--icen-density-space-xs) 0 0;
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-error);
+  line-height: 1.4;
+}
+
+/* ── 提交失败汇总清单（form[data-icen-validate-summary]，表单顶部，锚点聚焦字段） ── */
+
+.icen-form-validate-summary {
+  border: 1px solid var(--icen-token-error);
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-error-soft, var(--icen-token-bg-soft));
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  margin-bottom: var(--icen-density-space-md);
+}
+
+.icen-form-validate-summary-title {
+  margin: 0 0 var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-sm);
+  font-weight: 600;
+  color: var(--icen-token-error);
+}
+
+.icen-form-validate-summary-list {
+  margin: 0;
+  padding-inline-start: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.icen-form-validate-summary-item { color: var(--icen-token-error); text-decoration: none; }
+.icen-form-validate-summary-item:hover { text-decoration: underline; }
+
+/* ── AI 工具 show_form 挂载体（嵌在 ai-tool 卡的 IO 区，窄宽单列） ── */
+
+.icen-ai-form { display: flex; flex-direction: column; gap: var(--icen-density-space-sm); }
+
+.icen-ai-form-title {
+  margin: 0;
+  font-size: var(--icen-density-font-size-md);
+  font-weight: 600;
+  color: var(--icen-token-text);
+}
+
+.icen-ai-form-fields { gap: var(--icen-density-space-sm); }
+
+.icen-ai-form-actions {
+  display: flex;
+  gap: var(--icen-density-space-sm);
+  justify-content: flex-end;
+}

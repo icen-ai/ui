@@ -2,16 +2,16 @@
  * @icen.ai/ui — Behavior: kb-clarify（问数域 · 澄清反问卡，与 components/kb-data.css 配套）
  *
  * DOM 契约（renderKbClarify 构建，规格 docs/spec/kb-family.md §5.17）：
- *   <div class="kb-clarify [.is-answered]" data-clarify-id? >
- *     <div class="kb-clarify-q">
- *       <span class="kb-clarify-qicon">…svg…</span>
- *       <span class="kb-clarify-qtext">「销售额」指含税还是不含税？</span>
+ *   <div class="icen-kb-clarify [.is-answered]" data-icen-clarify-id? >
+ *     <div class="icen-kb-clarify-q">
+ *       <span class="icen-kb-clarify-qicon">…svg…</span>
+ *       <span class="icen-kb-clarify-qtext">「销售额」指含税还是不含税？</span>
  *     </div>
- *     <div class="kb-clarify-opts">
- *       <button type="button" class="kb-clarify-opt [.is-picked]" data-value data-label>含税口径</button>…
+ *     <div class="icen-kb-clarify-opts">
+ *       <button type="button" class="icen-kb-clarify-opt [.is-picked]" data-icen-value data-icen-label>含税口径</button>…
  *     </div>
- *     <div class="kb-clarify-resolved" hidden>已解析：<b class="kb-clarify-picked">含税口径</b></div>
- *     <div class="kb-clarify-reason">检测到口径歧义，先确认再生成 SQL</div>   <!-- reason 有才渲 -->
+ *     <div class="icen-kb-clarify-resolved" hidden>已解析：<b class="icen-kb-clarify-picked">含税口径</b></div>
+ *     <div class="icen-kb-clarify-reason">检测到口径歧义，先确认再生成 SQL</div>   <!-- reason 有才渲 -->
  *   </div>
  *
  * 行为：
@@ -24,6 +24,7 @@
 
 import { h, svgIcon, type KbClarification } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 const ICON_HELP =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.4-3 4"/><path d="M12 17.5h.01"/></svg>';
@@ -65,44 +66,44 @@ export function renderKbClarify(
   const clar = toClarification(c);
   el.textContent = '';
 
-  const root = h('div', 'kb-clarify');
-  if (clar.id) root.dataset.clarifyId = clar.id;
+  const root = h('div', 'icen-kb-clarify');
+  if (clar.id) root.dataset.icenClarifyId = clar.id;
 
   /* 问题行 */
-  const q = h('div', 'kb-clarify-q');
-  const iconBox = h('span', 'kb-clarify-qicon');
+  const q = h('div', 'icen-kb-clarify-q');
+  const iconBox = h('span', 'icen-kb-clarify-qicon');
   const svg = svgIcon(ICON_HELP);
   if (svg) iconBox.appendChild(svg);
   q.appendChild(iconBox);
-  q.appendChild(h('span', 'kb-clarify-qtext', clar.question));
+  q.appendChild(h('span', 'icen-kb-clarify-qtext', clar.question));
   root.appendChild(q);
 
   /* 选项 chips（空选项不渲 —— 问题本身仍可见，由消费方决定追问渠道） */
-  const optsWrap = h('div', 'kb-clarify-opts');
-  const resolved = h('div', 'kb-clarify-resolved');
+  const optsWrap = h('div', 'icen-kb-clarify-opts');
+  const resolved = h('div', 'icen-kb-clarify-resolved');
   resolved.hidden = true;
 
   const pick = (btn: HTMLButtonElement): void => {
     if (root.classList.contains('is-answered')) return;
     root.classList.add('is-answered');
     btn.classList.add('is-picked');
-    Array.from(optsWrap.querySelectorAll<HTMLButtonElement>('.kb-clarify-opt')).forEach((b) => {
+    Array.from(optsWrap.querySelectorAll<HTMLButtonElement>('.icen-kb-clarify-opt')).forEach((b) => {
       if (b !== btn) b.disabled = true;
     });
     resolved.textContent = '';
-    resolved.appendChild(document.createTextNode('已解析：'));
-    resolved.appendChild(h('b', 'kb-clarify-picked', btn.dataset.label ?? ''));
+    resolved.appendChild(document.createTextNode(t('kbClarify.parsedPrefix')));
+    resolved.appendChild(h('b', 'icen-kb-clarify-picked', btn.dataset.icenLabel ?? ''));
     resolved.hidden = false;
-    const answer = { id: clar.id, value: btn.dataset.value ?? '', label: btn.dataset.label ?? '' };
+    const answer = { id: clar.id, value: btn.dataset.icenValue ?? '', label: btn.dataset.icenLabel ?? '' };
     emitIcen(btn, 'icen:kb-clarify-answer', answer);
     opts?.onAnswer?.(answer);
   };
 
   for (const o of clar.options) {
-    const btn = h('button', 'kb-clarify-opt', o.label);
+    const btn = h('button', 'icen-kb-clarify-opt', o.label);
     btn.type = 'button';
-    btn.dataset.value = o.value;
-    btn.dataset.label = o.label;
+    btn.dataset.icenValue = o.value;
+    btn.dataset.icenLabel = o.label;
     btn.addEventListener('click', () => pick(btn));
     optsWrap.appendChild(btn);
   }
@@ -110,7 +111,7 @@ export function renderKbClarify(
   root.appendChild(resolved);
 
   /* 弱化说明：为什么反问（口径歧义/缺时间范围…） */
-  if (clar.reason) root.appendChild(h('div', 'kb-clarify-reason', clar.reason));
+  if (clar.reason) root.appendChild(h('div', 'icen-kb-clarify-reason', clar.reason));
 
   el.appendChild(root);
   return el;

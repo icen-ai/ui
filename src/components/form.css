@@ -6,261 +6,261 @@
  *   - form.css 处理"字段→label→hint 的纵向布局"和"页面级结果横幅"
  *
  * 契约：
- *   <form class="form">
- *     <fieldset class="form-field">
- *       <label class="form-label" for="x">姓名</label>
- *       <span class="control"><input id="x" class="form-input" /></span>
- *       <span class="form-hint">必填，3-20 个字符</span>     <!-- 可选 -->
- *       <span class="form-error">姓名长度不足</span>          <!-- 可选，aria-live=polite -->
+ *   <icen-form class="icen-form">
+ *     <fieldset class="icen-form-field">
+ *       <label class="icen-form-label" for="x">姓名</label>
+ *       <span class="icen-control"><icen-input id="x" class="icen-form-input" /></span>
+ *       <span class="icen-form-hint">必填，3-20 个字符</span>     <!-- 可选 -->
+ *       <span class="icen-form-error">姓名长度不足</span>          <!-- 可选，aria-live=polite -->
  *     </fieldset>
- *   </form>
+ *   </icen-form>
  *
- *   <div class="banner-ok [.banner-block]">已保存</div>
- *   <div class="banner-err [.banner-block]">提交失败：网络错误</div>
+ *   <div class="icen-banner-ok [.icen-banner-block]">已保存</div>
+ *   <div class="icen-banner-err [.icen-banner-block]">提交失败：网络错误</div>
  *
- * form-input 同时支持 :invalid 与 [data-invalid=true]，behavior 二选一驱动。
+ * form-input 同时支持 :invalid 与 [data-icen-invalid=true]，behavior 二选一驱动。
  */
 
-.form { display: flex; flex-direction: column; gap: var(--density-space-md); }
+.icen-form { display: flex; flex-direction: column; gap: var(--icen-density-space-md); }
 
-.form-field {
+.icen-form-field {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   margin: 0;
   padding: 0;
   border: 0;
 }
 
-.form-label {
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+.icen-form-label {
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
   letter-spacing: 0.02em;
   font-weight: 500;
 }
-.form-label .req { color: var(--token-error); margin-left: 2px; }
+.icen-form-label .icen-req { color: var(--icen-token-error); margin-inline-start: 2px; }
 
-/* 裸 input（非 .control wrapper 用法） */
-.form-input,
-.form-textarea {
-  width: 100%;
-  padding: 0 var(--density-space-md);
-  height: var(--density-input-height-md);
-  background: var(--token-control);
-  color: var(--token-text);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  font-family: var(--font-body);
-  font-size: var(--density-font-size-md);
+/* 裸 input（非 .icen-control wrapper 用法） */
+.icen-form-input,
+.icen-form-textarea {
+  inline-size: 100%;
+  padding: 0 var(--icen-density-space-md);
+  height: var(--icen-density-input-height-md);
+  background: var(--icen-token-control);
+  color: var(--icen-token-text);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  font-family: var(--icen-font-body);
+  font-size: var(--icen-density-font-size-md);
   outline: none;
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast),
     background-color var(--icen-tx-fast);
 }
-.form-textarea {
+.icen-form-textarea {
   height: auto;
   min-height: calc(4 * 1.5em + 24px);
-  padding: var(--density-space-sm) var(--density-space-md);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
   line-height: 1.5;
   resize: vertical;
 }
-.form-input::placeholder,
-.form-textarea::placeholder {
-  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+.icen-form-input::placeholder,
+.icen-form-textarea::placeholder {
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
 }
-.form-input:hover,
-.form-textarea:hover {
+.icen-form-input:hover,
+.icen-form-textarea:hover {
   border-color: var(--icen-hover-border);
 }
-.form-input:focus-visible,
-.form-textarea:focus-visible {
+.icen-form-input:focus-visible,
+.icen-form-textarea:focus-visible {
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.form-input:disabled,
-.form-textarea:disabled,
-.form-input[aria-disabled='true'],
-.form-textarea[aria-disabled='true'] {
+.icen-form-input:disabled,
+.icen-form-textarea:disabled,
+.icen-form-input[aria-disabled='true'],
+.icen-form-textarea[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
 }
 
-/* 校验态：原生 :invalid 与显式 [data-invalid] 同时支持 */
-.form-input:where(:invalid:not(:placeholder-shown), [data-invalid='true']),
-.form-textarea:where(:invalid:not(:placeholder-shown), [data-invalid='true']) {
-  border-color: var(--token-error);
+/* 校验态：原生 :invalid 与显式 [data-icen-invalid] 同时支持 */
+.icen-form-input:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']),
+.icen-form-textarea:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']) {
+  border-color: var(--icen-token-error);
 }
-.form-input:where(:invalid:not(:placeholder-shown), [data-invalid='true']):focus-visible,
-.form-textarea:where(:invalid:not(:placeholder-shown), [data-invalid='true']):focus-visible {
-  border-color: var(--token-error);
+.icen-form-input:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']):focus-visible,
+.icen-form-textarea:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']):focus-visible {
+  border-color: var(--icen-token-error);
   box-shadow: var(--icen-control-error-shadow);
 }
 
 /* 尺寸变体 */
-.form-input--sm, .form-textarea--sm { height: var(--density-input-height-sm); font-size: var(--density-font-size-sm); }
-.form-input--lg, .form-textarea--lg { height: var(--density-input-height-lg); font-size: var(--density-font-size-lg); }
+.icen-form-input--sm, .icen-form-textarea--sm { height: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-form-input--lg, .icen-form-textarea--lg { height: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }
 
-.form-hint {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-form-hint {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   line-height: 1.4;
 }
-.form-error {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-error);
+.icen-form-error {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-error);
   line-height: 1.4;
 }
-.form-field[data-invalid='true'] .form-label { color: var(--token-error); }
+.icen-form-field[data-icen-invalid='true'] .icen-form-label { color: var(--icen-token-error); }
 
 /* ── 表单增强 ── */
 
 /* 水平布局（label 与控件同行） */
-.form-field--horizontal {
+.icen-form-field--horizontal {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: var(--density-space-md);
+  gap: var(--icen-density-space-md);
 }
-.form-field--horizontal .form-label {
+.icen-form-field--horizontal .icen-form-label {
   flex-shrink: 0;
-  width: 120px;
-  text-align: right;
-  padding-top: calc((var(--density-input-height-md) - 1lh) / 2);
+  inline-size: 120px;
+  text-align: end;
+  padding-top: calc((var(--icen-density-input-height-md) - 1lh) / 2);
 }
-.form-field--horizontal .form-field-control {
+.icen-form-field--horizontal .icen-form-field-control {
   flex: 1;
   min-width: 0;
 }
 
 /* label 带帮助提示图标 */
-.form-label-help {
+.icen-form-label-help {
   display: inline-flex;
   align-items: center;
-  margin-left: 4px;
+  margin-inline-start: 4px;
   width: 14px;
   height: 14px;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   cursor: help;
 }
-.form-label-help svg { width: 12px; height: 12px; }
+.icen-form-label-help svg { width: 12px; height: 12px; }
 
 /* label 带可选标记 */
-.form-label-optional {
-  font-size: var(--density-font-size-2xs);
+.icen-form-label-optional {
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 400;
-  color: var(--token-text-faint);
-  margin-left: 4px;
+  color: var(--icen-token-text-faint);
+  margin-inline-start: 4px;
 }
 
 /* 表单区块标题 */
-.form-section {
-  padding: var(--density-space-sm) 0;
+.icen-form-section {
+  padding: var(--icen-density-space-sm) 0;
 }
-.form-section-title {
-  font-size: var(--density-font-size-md);
+.icen-form-section-title {
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
-  color: var(--token-text);
-  margin: 0 0 var(--density-space-sm);
-  padding-bottom: var(--density-space-xs);
-  border-bottom: 1px solid var(--token-outline-soft);
+  color: var(--icen-token-text);
+  margin: 0 0 var(--icen-density-space-sm);
+  padding-bottom: var(--icen-density-space-xs);
+  border-bottom: 1px solid var(--icen-token-outline-soft);
 }
-.form-section-desc {
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
-  margin: calc(-1 * var(--density-space-xs)) 0 var(--density-space-sm);
+.icen-form-section-desc {
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
+  margin: calc(-1 * var(--icen-density-space-xs)) 0 var(--icen-density-space-sm);
 }
 
 /* 表单操作区（底部按钮行） */
-.form-actions {
+.icen-form-actions {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding-top: var(--density-space-sm);
-  border-top: 1px solid var(--token-outline-soft);
+  gap: var(--icen-density-space-sm);
+  padding-top: var(--icen-density-space-sm);
+  border-top: 1px solid var(--icen-token-outline-soft);
 }
-.form-actions--right { justify-content: flex-end; }
-.form-actions--center { justify-content: center; }
-.form-actions--split { justify-content: space-between; }
+.icen-form-actions--right { justify-content: flex-end; }
+.icen-form-actions--center { justify-content: center; }
+.icen-form-actions--split { justify-content: space-between; }
 
 /* 行内表单（紧凑，单行多字段） */
-.form--inline {
+.icen-form--inline {
   flex-direction: row;
   align-items: flex-end;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   flex-wrap: wrap;
 }
-.form--inline .form-field {
+.icen-form--inline .icen-form-field {
   flex: 1;
   min-width: 160px;
 }
 
 /* 字段网格（多列布局） */
-.form-grid {
+.icen-form-grid {
   display: grid;
   grid-template-columns: repeat(var(--form-cols, 2), 1fr);
-  gap: var(--density-space-md);
+  gap: var(--icen-density-space-md);
 }
-.form-grid .form-field--full { grid-column: 1 / -1; }
+.icen-form-grid .icen-form-field--full { grid-column: 1 / -1; }
 
 /* 字段成功态 */
-.form-field[data-valid='true'] .form-label::after {
+.icen-form-field[data-icen-valid='true'] .icen-form-label::after {
   content: '✓';
-  margin-left: 4px;
-  color: var(--token-success);
+  margin-inline-start: 4px;
+  color: var(--icen-token-success);
   font-weight: 700;
 }
 
 /* 表单加载遮罩 */
-.form-loading {
+.icen-form-loading {
   position: relative;
   pointer-events: none;
   opacity: 0.6;
 }
-.form-loading::after {
+.icen-form-loading::after {
   content: '';
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 50%; /* guard:allow-physical 圆心居中：left 50% + 负边距 任意方向下均为中心 */
   width: 24px;
   height: 24px;
-  margin: -12px 0 0 -12px;
-  border: 2px solid color-mix(in srgb, var(--token-accent) 30%, transparent);
-  border-top-color: var(--token-accent);
+  margin: -12px 0 0 -12px; /* guard:allow-physical 居中负边距与 left 50% 配套（物理坐标对），RTL 下同样居中 */
+  border: 2px solid color-mix(in srgb, var(--icen-token-accent) 30%, transparent);
+  border-top-color: var(--icen-token-accent);
   border-radius: 50%;
   animation: icen-spin var(--form-loading-duration, 0.8s) linear infinite;
 }
 
 /* ── 页面级横幅：操作结果 / 引导提示 ──
    与 feedback.css 的 alert 共享同一套视觉 token（--banner-* 仅在底色/文字/描边上分流） */
-.banner-ok,
-.banner-err {
+.icen-banner-ok,
+.icen-banner-err {
   display: flex;
   align-items: flex-start;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-sm) var(--density-space-md);
-  margin-bottom: var(--density-space-md);
-  border-radius: var(--radius-md);
-  font-size: var(--density-font-size-sm);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  margin-bottom: var(--icen-density-space-md);
+  border-radius: var(--icen-radius-md);
+  font-size: var(--icen-density-font-size-sm);
   line-height: 1.5;
   border: 1px solid transparent;
   background: var(--banner-bg);
   color: var(--banner-fg);
   border-color: var(--banner-border);
 }
-.banner-ok {
-  --banner-bg: var(--token-success-muted);
-  --banner-fg: var(--token-success);
-  --banner-border: color-mix(in srgb, var(--token-success) 25%, transparent);
+.icen-banner-ok {
+  --banner-bg: var(--icen-token-success-muted);
+  --banner-fg: var(--icen-token-success);
+  --banner-border: color-mix(in srgb, var(--icen-token-success) 25%, transparent);
 }
-.banner-err {
-  --banner-bg: var(--token-error-muted);
-  --banner-fg: var(--token-error);
-  --banner-border: color-mix(in srgb, var(--token-error) 25%, transparent);
+.icen-banner-err {
+  --banner-bg: var(--icen-token-error-muted);
+  --banner-fg: var(--icen-token-error);
+  --banner-border: color-mix(in srgb, var(--icen-token-error) 25%, transparent);
 }
 /* block 模式：横向占满，带图标位 */
-.banner-block {
+.icen-banner-block {
   align-items: center;
-  padding: var(--density-space-md);
+  padding: var(--icen-density-space-md);
 }

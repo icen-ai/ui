@@ -2,43 +2,43 @@
  * @icen.ai/ui — Component: btn（按钮）
  *
  * 完整契约：
- *   <button class="btn [.btn-primary|.btn-danger|.btn-ghost|.btn-link] [.btn-sm|.btn-lg] [.btn-block] [.btn-icon]
- *           [.is-loading] [.is-error] [disabled]|[aria-disabled=true]|[data-disabled]>
- *     [<svg class="btn-icon-start">…</svg>]    可选前置图标（与 .btn-icon 不同：.btn-icon 是纯图标钮）
+ *   <button class="icen-btn [.icen-btn-primary|.icen-btn-danger|.icen-btn-ghost|.icen-btn-link] [.icen-btn-sm|.icen-btn-lg] [.icen-btn-block] [.icen-btn-icon]
+ *           [.is-loading] [.is-error] [disabled]|[aria-disabled=true]|[data-icen-disabled]>
+ *     [<svg class="icen-btn-icon-start">…</svg>]    可选前置图标（与 .icen-btn-icon 不同：.icen-btn-icon 是纯图标钮）
  *     <span class="btn-text">文本</span>
- *     [<svg class="btn-icon-end">…</svg>]      可选后置图标
+ *     [<svg class="icen-btn-icon-end">…</svg>]      可选后置图标
  *   </button>
  *
  * 变体：
- *   .btn          默认（surface 底 + outline-soft 描边）
- *   .btn-primary  实心 accent
- *   .btn-danger   透明底 + error 描边（hover 实心）
- *   .btn-ghost    全透明，hover 浮起 fill-2
- *   .btn-link     link 文本按钮（无背景、underline on hover）
+ *   .icen-btn          默认（surface 底 + outline-soft 描边）
+ *   .icen-btn-primary  实心 accent
+ *   .icen-btn-danger   透明底 + error 描边（hover 实心）
+ *   .icen-btn-ghost    全透明，hover 浮起 fill-2
+ *   .icen-btn-link     link 文本按钮（无背景、underline on hover）
  *
- * 尺寸：默认 / .btn-sm / .btn-lg / .btn-icon（正方形）
- * 状态：.is-loading 加 spinner + aria-busy；.is-error error 边；disabled/aria-disabled/data-disabled
+ * 尺寸：默认 / .icen-btn-sm / .icen-btn-lg / .icen-btn-icon（正方形）
+ * 状态：.is-loading 加 spinner + aria-busy；.is-error error 边；disabled/aria-disabled/data-icen-disabled
  */
 
-.btn {
-  --btn-bg: var(--token-surface);
-  --btn-fg: var(--token-text);
-  --btn-border: var(--token-line-soft);
-  --btn-bg-hover: var(--token-surface-hover);
-  --btn-border-hover: var(--token-accent);
+.icen-btn {
+  --btn-bg: var(--icen-token-surface);
+  --btn-fg: var(--icen-token-text);
+  --btn-border: var(--icen-token-line-soft);
+  --btn-bg-hover: var(--icen-token-surface-hover);
+  --btn-border-hover: var(--icen-token-accent);
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 var(--density-space-md);
-  height: var(--density-input-height-md);
+  padding: 0 var(--icen-density-space-md);
+  height: var(--icen-density-input-height-md);
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 1px solid var(--btn-border);
-  border-radius: var(--radius-md);
-  font-family: var(--font-body);
-  font-size: var(--density-font-size-md);
+  border-radius: var(--icen-radius-md);
+  font-family: var(--icen-font-body);
+  font-size: var(--icen-density-font-size-md);
   font-weight: 500;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -53,19 +53,19 @@
     box-shadow var(--icen-tx-fast),
     transform var(--icen-tx-fast);
 }
-.btn:hover {
+.icen-btn:hover {
   background: var(--btn-bg-hover);
   border-color: var(--btn-border-hover);
 }
-.btn:active { transform: var(--icen-press-soft); }
-.btn:focus-visible {
+.icen-btn:active { transform: var(--icen-press-soft); }
+.icen-btn:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.btn:disabled,
-.btn[aria-disabled='true'],
-.btn[data-disabled],
-.btn.is-loading {
+.icen-btn:disabled,
+.icen-btn[aria-disabled='true'],
+.icen-btn[data-icen-disabled],
+.icen-btn.is-loading {
   cursor: not-allowed;
   opacity: var(--icen-disabled-opacity);
   transform: none;
@@ -73,37 +73,40 @@
 }
 
 /* ── 变体 ── */
-.btn-primary {
-  --btn-bg: var(--token-accent);
-  --btn-fg: var(--token-on-accent);
-  --btn-border: var(--token-accent);
-  --btn-bg-hover: var(--token-accent-deep, color-mix(in srgb, var(--token-accent) 85%, black));
-  --btn-border-hover: var(--token-accent-deep, var(--token-accent));
+.icen-btn-primary {
+  --btn-bg: var(--icen-token-accent-strong);
+  --btn-fg: var(--icen-token-on-accent);
+  --btn-border: var(--icen-token-accent-strong);
+  --btn-bg-hover: color-mix(in srgb, var(--icen-token-accent-strong) 88%, black);
+  --btn-border-hover: color-mix(in srgb, var(--icen-token-accent-strong) 88%, black);
 }
-.btn-primary:hover {
-  box-shadow: var(--token-shadow-elevated);
+/* hover 阴影抬升仅可悬停设备生效（触屏关闭，AGENTS 动效守卫） */
+@media (hover: hover) and (pointer: fine) {
+  .icen-btn-primary:hover {
+    box-shadow: var(--icen-token-shadow-elevated);
+  }
 }
 
-.btn-danger {
-  --btn-fg: var(--token-error);
-  --btn-border: color-mix(in srgb, var(--token-error) 35%, transparent);
+.icen-btn-danger {
+  --btn-fg: var(--icen-token-error);
+  --btn-border: color-mix(in srgb, var(--icen-token-error) 35%, transparent);
   --btn-bg: transparent;
-  --btn-bg-hover: var(--token-error);
-  --btn-border-hover: var(--token-error);
+  --btn-bg-hover: var(--icen-token-error);
+  --btn-border-hover: var(--icen-token-error);
 }
-.btn-danger:hover { color: var(--token-on-accent); }
+.icen-btn-danger:hover { color: var(--icen-token-on-accent); }
 
-.btn-ghost {
+.icen-btn-ghost {
   --btn-bg: transparent;
   --btn-border: transparent;
-  --btn-bg-hover: var(--token-fill-2);
+  --btn-bg-hover: var(--icen-token-fill-2);
   --btn-border-hover: transparent;
 }
 
-.btn-link {
+.icen-btn-link {
   --btn-bg: transparent;
   --btn-border: transparent;
-  --btn-fg: var(--token-accent);
+  --btn-fg: var(--icen-token-accent);
   --btn-bg-hover: transparent;
   --btn-border-hover: transparent;
   height: auto;
@@ -112,69 +115,69 @@
   border-radius: 0;
   text-decoration: none;
 }
-.btn-link:hover {
+.icen-btn-link:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
   background: transparent;
 }
 
 /* ── 尺寸 ── */
-.btn-sm {
-  height: var(--density-input-height-sm);
-  padding: 0 var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
+.icen-btn-sm {
+  height: var(--icen-density-input-height-sm);
+  padding: 0 var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
   gap: 4px;
 }
-.btn-lg {
-  height: var(--density-input-height-lg);
-  padding: 0 var(--density-space-lg);
-  font-size: var(--density-font-size-lg);
+.icen-btn-lg {
+  height: var(--icen-density-input-height-lg);
+  padding: 0 var(--icen-density-space-lg);
+  font-size: var(--icen-density-font-size-lg);
   gap: 8px;
 }
-.btn-icon {
-  width: var(--density-input-height-md);
+.icen-btn-icon {
+  width: var(--icen-density-input-height-md);
   padding: 0;
   gap: 0;
 }
-.btn-icon.btn-sm { width: var(--density-input-height-sm); }
-.btn-icon.btn-lg { width: var(--density-input-height-lg); }
+.icen-btn-icon.icen-btn-sm { width: var(--icen-density-input-height-sm); }
+.icen-btn-icon.icen-btn-lg { width: var(--icen-density-input-height-lg); }
 
-.btn-block {
+.icen-btn-block {
   display: flex;
   width: 100%;
 }
 
 /* ── 状态 ── */
-.btn.is-error {
-  --btn-border: var(--token-error);
-  --btn-border-hover: var(--token-error);
+.icen-btn.is-error {
+  --btn-border: var(--icen-token-error);
+  --btn-border-hover: var(--icen-token-error);
 }
 
-/* 加载态：左侧 spinner 占位 + 文本保留（避免重排）。
+/* 加载态：居中 spinner 占位 + 文本保留（避免重排）。
    behavior 在挂 .is-loading 时把 [aria-busy=true] 也挂上。 */
-.btn.is-loading { position: relative; color: transparent; }
-.btn.is-loading::after {
+.icen-btn.is-loading { position: relative; color: transparent; }
+.icen-btn.is-loading::after {
   content: '';
   position: absolute;
-  top: 50%; left: 50%;
+  top: 50%; left: 50%; /* guard:allow-physical 圆心居中：left 50% + 负边距 任意方向下均为中心 */
   width: 14px; height: 14px;
-  margin: -7px 0 0 -7px;
+  margin: -7px 0 0 -7px; /* guard:allow-physical 居中负边距与 left 50% 配套（物理坐标对），RTL 下同样居中 */
   border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
   border-top-color: currentColor;
   border-radius: 50%;
-  animation: icen-spin var(--btn-spin-duration, var(--duration-slow)) linear infinite;
-  opacity: 1; /* 覆盖 .pressable::after 渐变（若与 .pressable 同用） */
+  animation: icen-spin var(--btn-spin-duration, var(--icen-duration-slow)) linear infinite;
+  opacity: 1; /* 覆盖 .icen-pressable::after 渐变（若与 .icen-pressable 同用） */
   background: none;
   pointer-events: none;
 }
 
 /* 图标按钮内部 svg 默认尺寸对齐字号 */
-.btn-icon-start, .btn-icon-end {
+.icen-btn-icon-start, .icen-btn-icon-end {
   width: 1.1em;
   height: 1.1em;
   flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn.is-loading::after { --btn-spin-duration: 1.2s; }
+  .icen-btn.is-loading::after { --btn-spin-duration: 1.2s; }
 }

@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 /*
- * @icen.ai/ui — CLI：按需引入脚手架
+ * @icen.ai/ui — CLI：按需引入脚手架 + 命名空间迁移 codemod
  * 不做 shadcn 式源码拷贝（本包是单一事实源，消费侧一律引包内产物），
  * 只解析 slug → 打印正确的一行引入（kit 入口已自动带上 CSS 与 behavior）。
  *
  * 用法：
- *   bunx --bun @icen.ai/ui add <slug...>   打印引入行（多个 slug 空格分隔）
- *   bunx --bun @icen.ai/ui list            列出全部组件 slug
- * 数据源：同目录 registry.json（构建期由 scripts/build-css.ts 写入，映射数据源为 scripts/slugs.mjs）。
+ *   bunx --bun @icen.ai/ui add <slug...>     打印引入行（多个 slug 空格分隔）
+ *   bunx --bun @icen.ai/ui list              列出全部组件 slug
+ *   bunx --bun @icen.ai/ui migrate <paths...> [--write]
+ *       v0.9 → v0.10 命名空间迁移：.icen-btn→.icen-btn、data-icen-tabs→data-icen-tabs、
+ *       --icen-token-*→--icen-token-*、主题类→data-icen-*（缺省 dry-run 报告，--write 落盘）
+ * 数据源：同目录 registry.json / migrate-map.json（构建期由 scripts/build-css.ts 写入）。
  */
 import { readFileSync } from 'node:fs';
+import { migratePaths } from './migrate-engine.mjs';
 
 const registry = JSON.parse(readFileSync(new URL('./registry.json', import.meta.url), 'utf8'));
 const SLUGS = registry.slugs ?? {};
@@ -19,12 +23,15 @@ const slugs = rest.filter((a) => !a.startsWith('-'));
 
 const HELP = `@icen.ai/ui — 按需引入脚手架
 
-  add <slug...>   打印组件的一行引入（CSS + behavior 自动带上）
-  list            列出全部 ${Object.keys(SLUGS).length} 个组件 slug
+  add <slug...>             打印组件的一行引入（CSS + behavior 自动带上）
+  list                      列出全部 ${Object.keys(SLUGS).length} 个组件 slug
+  migrate <paths...>        v0.9 → v0.10 命名空间迁移（dry-run 报告）
+  migrate <paths...> --write  落盘执行迁移
 
 示例：
   bunx --bun @icen.ai/ui add breadcrumb
-  bunx --bun @icen.ai/ui add accordion tabs
+  bunx --bun @icen.ai/ui migrate src
+  bunx --bun @icen.ai/ui migrate src layouts --write
 
 前提：已安装本包（bun add @icen.ai/ui），并在入口引入 tokens：
   import '@icen.ai/ui/tokens.css';`;
@@ -62,6 +69,24 @@ if (cmd === 'add' && slugs.length > 0) {
   }
   console.log('');
   process.exit(failed ? 1 : 0);
+} else if (cmd === 'migrate') {
+  const write = rest.includes('--write');
+  const paths = slugs;
+  if (paths.length === 0) {
+    console.error('✗ migrate 需要至少一个路径（文件或目录），如：migrate src --write');
+    process.exit(1);
+  }
+  const map = JSON.parse(readFileSync(new URL('./migrate-map.json', import.meta.url), 'utf8'));
+  const { changed, warnings, scanned } = migratePaths(paths, map, { write });
+  console.log(`\n@icen.ai/ui migrate：扫描 ${scanned} 个文件，${write ? '已改写' : '将改写'} ${changed.length} 个`);
+  for (const c of changed) console.log(`  ${c.file}  ±${c.replacements} 行`);
+  const uniqWarnings = [...new Set(warnings)];
+  if (uniqWarnings.length) {
+    console.log(`\n⚠ ${uniqWarnings.length} 处需人工确认（歧义 token 未自动转换，保守跳过）：`);
+    for (const w of uniqWarnings) console.log(`  ${w}`);
+  }
+  if (!write && changed.length) console.log('\n（dry-run，加 --write 落盘；迁移后请跑项目自身的类型检查/构建验证）');
+  process.exit(0);
 } else if (cmd === 'list') {
   for (const [slug, meta] of Object.entries(SLUGS)) {
     const bits = [meta.css.replace(/\.css$/, '')];

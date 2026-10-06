@@ -3,21 +3,21 @@
  * 依赖：charts.css（基座 --chart-tone）
  *
  * DOM 由 behaviors/charts.ts 的 renderGauge 构建：
- *   .chart-gauge > svg[viewBox="0 0 120 120"]（-90° 起笔，环形单值）
- *                > .chart-gauge-center > .chart-gauge-value + .chart-gauge-label
+ *   .icen-chart-gauge > svg[viewBox="0 0 120 120"]（-90° 起笔，环形单值）
+ *                > .icen-chart-gauge-center > .icen-chart-gauge-value + .icen-chart-gauge-label
  */
 
-.chart-gauge {
+.icen-chart-gauge {
   position: relative;
   width: 132px;
   flex-shrink: 0;
 }
-.chart-gauge > svg {
+.icen-chart-gauge > svg {
   display: block;
   width: 132px;
   height: 132px;
 }
-.chart-gauge-center {
+.icen-chart-gauge-center {
   position: absolute;
   inset: 0;
   display: flex;
@@ -26,13 +26,13 @@
   justify-content: center;
   gap: 1px;
 }
-.chart-gauge-value {
-  font-size: var(--density-font-size-2xl);
+.icen-chart-gauge-value {
+  font-size: var(--icen-density-font-size-2xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
-.chart-gauge-label {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-chart-gauge-label {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
 }

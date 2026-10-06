@@ -2,14 +2,14 @@
  * @icen.ai/ui — Behavior: dropdown（下拉菜单，与 components/menu.css 配套）
  *
  * 契约：
- *   <div class="dropdown" data-dropdown>
- *     <button class="dropdown-trigger" data-dropdown-trigger aria-haspopup="menu">操作 ▾</button>
- *     <div data-dropdown-menu hidden>
- *       <button class="menu-item">…</button>   <!-- 模板节点，children 会被移入面板 -->
+ *   <div class="dropdown" data-icen-dropdown>
+ *     <button class="dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="icen-menu">操作 ▾</button>
+ *     <div data-icen-dropdown-menu hidden>
+ *       <button class="icen-menu-item">…</button>   <!-- 模板节点，children 会被移入面板 -->
  *     </div>
  *   </div>
  *
- * 面板为 JS 在 document.body 创建的 .menu（fixed 定位：trigger 下方 offset 4px，
+ * 面板为 JS 在 document.body 创建的 .icen-menu（fixed 定位：trigger 下方 offset 4px，
  * 视口 12px margin 内 clamp，下方空间不足翻上）。trigger click/ArrowDown 打开；
  * ↑↓ 循环高亮（跳过 disabled/separator）、Enter 激活并关闭、Esc 关闭还原焦点、
  * 外点/滚动（捕获）关闭；trigger aria-expanded 同步。SSR 下为 no-op。
@@ -19,8 +19,8 @@
  * ——与 context-menu / command-palette 共用同一事件（统一菜单选中流）。
  *
  * 面板尺寸走全库统一 PanelSizing 契约（见 behaviors/popover.ts）：
- * 根上 data-panel-width（固定）/ data-panel-min / data-panel-max /
- * data-panel-max-height → 创建面板时内联应用（宽度默认内容驱动，CSS min 180/max 320）。
+ * 根上 data-icen-panel-width（固定）/ data-icen-panel-min / data-icen-panel-max /
+ * data-icen-panel-max-height → 创建面板时内联应用（宽度默认内容驱动，CSS min 180/max 320）。
  */
 
 import { applyPanelSizing, computePopoverLayout, readPanelSizing } from './popover';
@@ -43,7 +43,7 @@ let active: ActiveDropdown | null = null;
 let initialized = false;
 
 function menuItems(panel: HTMLElement): HTMLElement[] {
-  return Array.from(panel.querySelectorAll<HTMLElement>('.menu-item:not(.is-disabled):not(:disabled)'));
+  return Array.from(panel.querySelectorAll<HTMLElement>('.icen-menu-item:not(.is-disabled):not(:disabled)'));
 }
 
 function setHighlight(next: number): void {
@@ -67,24 +67,24 @@ function place(): void {
   );
   panel.style.left = `${layout.left}px`;
   panel.style.top = `${layout.top}px`;
-  panel.dataset.side = layout.side;
+  panel.dataset.icenSide = layout.side;
 }
 
 function openDropdown(trigger: HTMLElement, highlightFirst = false): void {
   closeDropdown();
 
-  const root = trigger.closest<HTMLElement>('[data-dropdown]');
-  const template = root?.querySelector<HTMLElement>('[data-dropdown-menu]');
+  const root = trigger.closest<HTMLElement>('[data-icen-dropdown]');
+  const template = root?.querySelector<HTMLElement>('[data-icen-dropdown-menu]');
   if (!root || !template) return;
 
   const panel = document.createElement('div');
-  panel.className = 'menu';
+  panel.className = 'icen-menu';
   panel.setAttribute('role', 'menu');
   panel.style.visibility = 'hidden';
   applyPanelSizing(panel, readPanelSizing(root));
   while (template.firstChild) panel.appendChild(template.firstChild);
   panel
-    .querySelectorAll<HTMLElement>('.menu-item')
+    .querySelectorAll<HTMLElement>('.icen-menu-item')
     .forEach((el) => el.setAttribute('role', 'menuitem'));
   document.body.appendChild(panel);
 
@@ -164,7 +164,7 @@ function onKeyDown(e: KeyboardEvent): void {
 }
 
 /**
- * 绑定全部 [data-dropdown-trigger]（document 级委托，重复调用安全）。
+ * 绑定全部 [data-icen-dropdown-trigger]（document 级委托，重复调用安全）。
  * 返回销毁函数：摘除 document 委托并复位幂等标记（销毁后可重新 init）；
  * 销毁时若有面板开着会顺带收起。SSR 下返回 no-op。
  */
@@ -173,7 +173,7 @@ export function initDropdown(root?: ParentNode): () => void {
   const scope = root ?? document;
 
   scope
-    .querySelectorAll<HTMLElement>('[data-dropdown-trigger]')
+    .querySelectorAll<HTMLElement>('[data-icen-dropdown-trigger]')
     .forEach((el) => el.setAttribute('aria-expanded', 'false'));
 
   if (initialized) return () => {};
@@ -184,8 +184,8 @@ export function initDropdown(root?: ParentNode): () => void {
     if (!target) return;
 
     // 面板内点击菜单项：派 menu-select 后关闭（item 自身的 click 监听照常执行）
-    if (active && target.closest('.menu-item') && active.panel.contains(target)) {
-      const item = target.closest<HTMLElement>('.menu-item');
+    if (active && target.closest('.icen-menu-item') && active.panel.contains(target)) {
+      const item = target.closest<HTMLElement>('.icen-menu-item');
       if (item) {
         /* 与 Enter 路径一致：不可选项（.is-disabled/:disabled）不派选中事件 */
         if (!item.matches('.is-disabled') && !item.matches(':disabled')) {
@@ -196,7 +196,7 @@ export function initDropdown(root?: ParentNode): () => void {
       }
     }
 
-    const trigger = target.closest<HTMLElement>('[data-dropdown-trigger]');
+    const trigger = target.closest<HTMLElement>('[data-icen-dropdown-trigger]');
     if (!trigger) return;
     if (active && active.trigger === trigger) closeDropdown();
     else openDropdown(trigger);
@@ -207,7 +207,7 @@ export function initDropdown(root?: ParentNode): () => void {
     if (e.key !== 'ArrowDown') return;
     if (active) return;
     const target = e.target instanceof Element ? e.target : null;
-    const trigger = target?.closest<HTMLElement>('[data-dropdown-trigger]');
+    const trigger = target?.closest<HTMLElement>('[data-icen-dropdown-trigger]');
     if (!trigger) return;
     e.preventDefault();
     openDropdown(trigger, true);

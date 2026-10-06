@@ -3,17 +3,20 @@
  * 依赖：charts.css（基座 --chart-tone）
  *
  * DOM 由 behaviors/charts.ts 的 renderHeatmap 构建：
- *   .chart-heatmap > .chart-heatmap-grid > .chart-heatmap-cell[data-level=0-4][.is-blank]
- *                  > .chart-heatmap-legend
- * 7 行（周一→周日）× N 周列，5 档色阶（data-level 0-4）。
+ *   .icen-chart-heatmap > .icen-chart-heatmap-grid > .icen-chart-heatmap-cell[data-icen-level=0-4][.is-blank]
+ *                  > .icen-chart-heatmap-legend
+ * 7 行（周一→周日）× N 周列，5 档色阶（data-icen-level 0-4）。
+ *
+ * RTL 豁免（guard 文件级白名单 scripts/guard/rtl.ts）：热力图格子按列号物理百分比定位
+ * （贡献图坐标系），RTL 不镜像。
  */
 
-.chart-heatmap {
+.icen-chart-heatmap {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
 }
-.chart-heatmap-grid {
+.icen-chart-heatmap-grid {
   display: grid;
   grid-template-rows: repeat(7, 1fr);
   grid-auto-flow: column;
@@ -21,72 +24,72 @@
   gap: 3px;
   width: 100%;
 }
-.chart-heatmap-cell {
+.icen-chart-heatmap-cell {
   aspect-ratio: 1;
-  border-radius: 2px;
-  background: var(--token-fill-2);
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  background: var(--icen-token-fill-2);
 }
-.chart-heatmap-cell.is-blank { background: transparent; }
-.chart-heatmap-cell[data-level='1'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 28%, var(--token-fill-2)); }
-.chart-heatmap-cell[data-level='2'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 50%, var(--token-fill-2)); }
-.chart-heatmap-cell[data-level='3'] { background: color-mix(in srgb, var(--chart-tone, var(--token-accent)) 74%, var(--token-fill-2)); }
-.chart-heatmap-cell[data-level='4'] { background: var(--chart-tone, var(--token-accent)); }
-.chart-heatmap-cell:not(.is-blank):hover {
-  outline: 1px solid var(--chart-tone, var(--token-accent));
+.icen-chart-heatmap-cell.is-blank { background: transparent; }
+.icen-chart-heatmap-cell[data-icen-level='1'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 28%, var(--icen-token-fill-2)); }
+.icen-chart-heatmap-cell[data-icen-level='2'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 50%, var(--icen-token-fill-2)); }
+.icen-chart-heatmap-cell[data-icen-level='3'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 74%, var(--icen-token-fill-2)); }
+.icen-chart-heatmap-cell[data-icen-level='4'] { background: var(--chart-tone, var(--icen-token-accent)); }
+.icen-chart-heatmap-cell:not(.is-blank):hover {
+  outline: 1px solid var(--chart-tone, var(--icen-token-accent));
   outline-offset: 0;
 }
-.chart-heatmap-legend {
+.icen-chart-heatmap-legend {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 3px;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
 }
-.chart-heatmap-legend .chart-heatmap-cell {
+.icen-chart-heatmap-legend .icen-chart-heatmap-cell {
   width: 10px;
   height: 10px;
   aspect-ratio: auto;
 }
-.chart-heatmap-legend > span:first-child { margin-right: 2px; }
-.chart-heatmap-legend > span:last-child { margin-left: 2px; }
+.icen-chart-heatmap-legend > span:first-child { margin-right: 2px; }
+.icen-chart-heatmap-legend > span:last-child { margin-left: 2px; }
 
 /* ── 贡献日历（renderCalendar）：月份标签 + 星期列 + 周格 ──
  * 布局 grid：左列星期标签（一/三/五/日），右列自上而下 月份行 / 周格 / 图例。
  * 月份标签按周列定位：left = col / columns * 100%。 */
-.chart-calendar {
+.icen-chart-calendar {
   display: grid;
   grid-template-columns: 14px 1fr;
   grid-template-rows: 14px auto auto;
   column-gap: 4px;
   row-gap: 3px;
 }
-.chart-calendar-months {
+.icen-chart-calendar-months {
   grid-column: 2;
   position: relative;
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
 }
-.chart-calendar-month {
+.icen-chart-calendar-month {
   position: absolute;
   top: 0;
   left: calc(var(--col, 0) / var(--columns, 1) * 100%);
   white-space: nowrap;
 }
-.chart-calendar-weekdays {
+.icen-chart-calendar-weekdays {
   grid-column: 1;
   grid-row: 2;
   display: grid;
   grid-template-rows: repeat(7, 1fr);
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
   line-height: 1;
 }
-.chart-calendar .chart-heatmap-grid {
+.icen-chart-calendar .icen-chart-heatmap-grid {
   grid-column: 2;
   grid-row: 2;
 }
-.chart-calendar .chart-heatmap-legend {
+.icen-chart-calendar .icen-chart-heatmap-legend {
   grid-column: 2;
   grid-row: 3;
 }

@@ -50,7 +50,7 @@ package itself — read them there, do not rely on memory:
 
 - Zero dependency, ESM + TypeScript. Components = CSS + behavior JS; no framework binding — call behavior
   functions in React `useEffect` / Vue `onMounted`.
-- ALWAYS `@import '@icen.ai/ui/tokens.css';` before any component CSS (everything consumes `--token-*`).
+- ALWAYS `@import '@icen.ai/ui/tokens.css';` before any component CSS (everything consumes `--icen-token-*`).
 - **Astro trap**: css imports inside kit entries get tree-shaken in page `<script>` — import component CSS in
   the layout frontmatter instead. Vite SPA / webpack unaffected.
 - Behaviors are idempotent and SSR-safe; rendering writes `textContent` only — never `innerHTML`.
@@ -59,8 +59,8 @@ package itself — read them there, do not rely on memory:
 ## 1. Install the right granularity
 
 ```bash
-bun add @icen.ai/ui && bunx @icen.ai/ui list   # all 114 slugs
-bunx @icen.ai/ui add btn charts kb             # per-slug import lines; kb = whole evidence family in one slug
+bun add @icen.ai/ui && bunx @icen.ai/ui icen-list   # all 114 slugs
+bunx @icen.ai/ui add icen-btn charts kb             # per-slug import lines; kb = whole evidence family in one slug
 ```
 
 - Whole library: `@import '@icen.ai/ui/ui.css';`
@@ -114,7 +114,7 @@ from `behaviors/ai-tools`; export schemas to the model with `aiToolsToOpenAI() /
    Session UX: `ai-threads` (thread tree), `ai-branch` (message branch switcher), `ai-feedback`
    (👍👎 + reason popover, event carries the anchor el).
 5. **Context drawer**: `renderAiContext(el, { usage, audit, files, mcpServers, skills })` + trigger
-   `data-ai-context-open`; multimodal messages pass parts arrays (`text|image|audio|video|file|resource_link`),
+   `data-icen-ai-context-open`; multimodal messages pass parts arrays (`text|image|audio|video|file|resource_link`),
    normalized from OpenAI/Anthropic/MCP wire formats by `normalizeContentParts`.
 
 ## 4. KB playbook — RAG / knowledge-base evidence UI
@@ -141,7 +141,7 @@ import { createKbFilter } from '@icen.ai/ui/behaviors/kb-filter';
 
 renderCitationText(el, text, sources);                  // [1][2] in text → interactive marks
 initKbCitation();                                       // page-wide delegation (idempotent)
-const filter = createKbFilter(el, { node, fields, onChange });  // tree → serialize('mongo'|'odata') dual DSL
+const filter = createKbFilter(el, { node, fields, onChange });  // icen-tree → serialize('mongo'|'odata') dual DSL
 ```
 
 - Business data ALWAYS passes kb-core normalize first (`normalizeCitation` / `normalizeChunk` / …, 60+ in
@@ -159,7 +159,7 @@ const filter = createKbFilter(el, { node, fields, onChange });  // tree → seri
 - ONE listener entry: `onIcen(el, 'icen:chart-click', fn)` — typed `IcenEventMap`, selector delegation,
   `{ within, signal, once }` options; emitting goes through `emitIcen` only; `setEventPolicy` overrides
   default browser actions for gesture events.
-- Declarative gestures on any container: `data-gestures="click dblclick contextmenu longpress text-select"`
+- Declarative gestures on any container: `data-icen-gestures="click dblclick contextmenu longpress text-select"`
   (space-separated; movement guard + disambiguation built in). Call `initGestures()` once per page.
 - Pure-CSS controls get behavior from `behaviors/controls`: `initSwitch` (switch / tri-state / radio group),
   `initStepper`, `initSegmented`, `initSteps`, `initRating`, `initPagination`, `initTableSort` — each emits
@@ -168,9 +168,9 @@ const filter = createKbFilter(el, { node, fields, onChange });  // tree → seri
 ## 6. Theme / dark mode / density
 
 - Presets are classes on `<html>`: `clay` (default) / `piano` / `art` / `vangogh` / `ink` / `retro`; pair with
-  `dark` (`class="piano dark"`). Style profiles: `.style-modern / .style-retro / .style-terminal`
-  (retro-effects.css activates pixel chrome under `.style-retro` only).
-- Density per container: `data-density` attribute. Never hardcode colors/radii/motion — consume `--token-*`.
+  `dark` (`class="piano dark"`). Style profiles: `[data-icen-style="modern"] / [data-icen-style="retro"] / [data-icen-style="terminal"]`
+  (retro-effects.css activates pixel chrome under `[data-icen-style="retro"]` only).
+- Density per container: `data-icen-density` attribute. Never hardcode colors/radii/motion — consume `--icen-token-*`.
 
 ## 7. Pitfalls checklist
 

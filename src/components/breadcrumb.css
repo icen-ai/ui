@@ -2,49 +2,49 @@
  * @icen.ai/ui — Component: breadcrumb（面包屑）
  *
  * 完整契约：
- *   <nav class="breadcrumb" aria-label="面包屑">
+ *   <icen-nav class="icen-breadcrumb" aria-label="面包屑">
  *     <ol>
  *       <li>
- *         <a class="breadcrumb-link" href="…"><svg>…</svg> 首页</a>
- *         <span class="breadcrumb-sep" aria-hidden="true"></span>
+ *         <a class="icen-breadcrumb-link" href="…"><svg>…</svg> 首页</a>
+ *         <span class="icen-breadcrumb-sep" aria-hidden="true"></span>
  *       </li>
  *       <li>
- *         <span class="breadcrumb-ellipsis" aria-hidden="true">…</span>
- *         <span class="breadcrumb-sep" aria-hidden="true"></span>
+ *         <span class="icen-breadcrumb-ellipsis" aria-hidden="true">…</span>
+ *         <span class="icen-breadcrumb-sep" aria-hidden="true"></span>
  *       </li>
- *       <li><span class="breadcrumb-current" aria-current="page">当前页</span></li>
+ *       <li><span class="icen-breadcrumb-current" aria-current="page">当前页</span></li>
  *     </ol>
- *   </nav>
+ *   </icen-nav>
  *
- * 分隔符是 .breadcrumb-sep::after（›）；超长折叠用 .breadcrumb-ellipsis。
+ * 分隔符是 .icen-breadcrumb-sep::after（›）；超长折叠用 .icen-breadcrumb-ellipsis。
  */
 
-.breadcrumb {
+.icen-breadcrumb {
   display: flex;
   align-items: center;
-  font-size: var(--density-font-size-md);
+  font-size: var(--icen-density-font-size-md);
 }
-.breadcrumb ol {
+.icen-breadcrumb ol {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.breadcrumb li {
+.icen-breadcrumb li {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   min-width: 0;
 }
 
-.breadcrumb-link {
+.icen-breadcrumb-link {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  color: var(--token-text-muted);
+  gap: var(--icen-density-space-xs);
+  color: var(--icen-token-text-muted);
   text-decoration: none;
   max-width: 200px;
   overflow: hidden;
@@ -52,74 +52,78 @@
   white-space: nowrap;
   transition: color var(--icen-tx-fast);
 }
-.breadcrumb-link:hover {
-  color: var(--token-accent);
+.icen-breadcrumb-link:hover {
+  color: var(--icen-token-accent);
   text-decoration: none;
 }
-.breadcrumb-link:focus-visible {
+.icen-breadcrumb-link:focus-visible {
   outline: none;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   box-shadow: var(--icen-ring);
 }
-.breadcrumb-link > svg {
+.icen-breadcrumb-link > svg {
   width: 13px;
   height: 13px;
   flex-shrink: 0;
 }
 
-.breadcrumb-sep {
-  color: var(--token-text-faint);
-  font-size: var(--density-font-size-md);
+.icen-breadcrumb-sep {
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-md);
   line-height: 1;
   user-select: none;
 }
-.breadcrumb-sep::after { content: '›'; }
+.icen-breadcrumb-sep::after { content: '›'; }
 
-.breadcrumb-current {
+.icen-breadcrumb-current {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  color: var(--token-text);
+  gap: var(--icen-density-space-xs);
+  color: var(--icen-token-text);
   font-weight: 500;
   max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.breadcrumb-current > svg {
+.icen-breadcrumb-current > svg {
   width: 13px;
   height: 13px;
   flex-shrink: 0;
 }
 
-.breadcrumb-ellipsis {
+.icen-breadcrumb-ellipsis {
   padding: 0 2px;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   user-select: none;
   cursor: pointer;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.breadcrumb-ellipsis:hover {
-  color: var(--token-accent);
-  background: var(--token-fill-1);
+.icen-breadcrumb-ellipsis:hover {
+  color: var(--icen-token-accent);
+  background: var(--icen-token-fill-1);
 }
 
 /* ── 面包屑分隔符变体 ── */
-.breadcrumb--slash .breadcrumb-sep::after { content: '/'; }
-.breadcrumb--arrow .breadcrumb-sep::after { content: '→'; }
-.breadcrumb--dot .breadcrumb-sep::after { content: '·'; font-size: 1.2em; }
+.icen-breadcrumb--slash .icen-breadcrumb-sep::after { content: '/'; }
+.icen-breadcrumb--arrow .icen-breadcrumb-sep::after { content: '→'; }
+.icen-breadcrumb--dot .icen-breadcrumb-sep::after { content: '·'; font-size: 1.2em; }
 
 /* ── 面包屑尺寸变体 ── */
-.breadcrumb--sm {
-  font-size: var(--density-font-size-sm);
+.icen-breadcrumb--sm {
+  font-size: var(--icen-density-font-size-sm);
 }
-.breadcrumb--sm .breadcrumb-link,
-.breadcrumb--sm .breadcrumb-current {
-  max-width: 140px;
+.icen-breadcrumb--sm .icen-breadcrumb-link,
+.icen-breadcrumb--sm .icen-breadcrumb-current {
+  max-inline-size: 140px;
 }
 
 @media (max-width: 480px) {
-  .breadcrumb-link { max-width: 100px; }
-  .breadcrumb-current { max-width: 120px; }
+  .icen-breadcrumb-link { max-inline-size: 100px; }
+  .icen-breadcrumb-current { max-inline-size: 120px; }
 }
+
+/* ── RTL：分隔符方向镜像（› / → 指向行进方向，RTL 下行进朝左）── */
+:is([dir='rtl']) .icen-breadcrumb-sep::after { content: '‹'; }
+:is([dir='rtl']) .icen-breadcrumb--arrow .icen-breadcrumb-sep::after { content: '←'; }

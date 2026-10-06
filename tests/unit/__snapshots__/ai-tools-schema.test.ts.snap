@@ -1,0 +1,185 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`模型侧导出（四族共享同一归一管线） OpenAI：function.parameters 形态 1`] = `
+[
+  {
+    "function": {
+      "description": "回声工具：返回输入（单测用）",
+      "name": "unit_echo",
+      "parameters": {
+        "properties": {
+          "loud": {
+            "type": "boolean",
+          },
+          "text": {
+            "description": "任意文本",
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+    },
+    "type": "function",
+  },
+  {
+    "function": {
+      "description": "拉取表格行（单测用）",
+      "name": "unit_fetch_rows",
+      "parameters": {
+        "properties": {
+          "limit": {
+            "maximum": 500,
+            "minimum": 1,
+            "type": "number",
+          },
+          "table": {
+            "enum": [
+              "users",
+              "orders",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "table",
+        ],
+        "type": "object",
+      },
+    },
+    "type": "function",
+  },
+]
+`;
+
+exports[`模型侧导出（四族共享同一归一管线） Anthropic：input_schema 形态 1`] = `
+[
+  {
+    "description": "回声工具：返回输入（单测用）",
+    "input_schema": {
+      "properties": {
+        "loud": {
+          "type": "boolean",
+        },
+        "text": {
+          "description": "任意文本",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "unit_echo",
+  },
+  {
+    "description": "拉取表格行（单测用）",
+    "input_schema": {
+      "properties": {
+        "limit": {
+          "maximum": 500,
+          "minimum": 1,
+          "type": "number",
+        },
+        "table": {
+          "enum": [
+            "users",
+            "orders",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "table",
+      ],
+      "type": "object",
+    },
+    "name": "unit_fetch_rows",
+  },
+]
+`;
+
+exports[`模型侧导出（四族共享同一归一管线） MCP：inputSchema 形态 1`] = `
+[
+  {
+    "description": "回声工具：返回输入（单测用）",
+    "inputSchema": {
+      "properties": {
+        "loud": {
+          "type": "boolean",
+        },
+        "text": {
+          "description": "任意文本",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "unit_echo",
+  },
+  {
+    "description": "拉取表格行（单测用）",
+    "inputSchema": {
+      "properties": {
+        "limit": {
+          "maximum": 500,
+          "minimum": 1,
+          "type": "number",
+        },
+        "table": {
+          "enum": [
+            "users",
+            "orders",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "table",
+      ],
+      "type": "object",
+    },
+    "name": "unit_fetch_rows",
+  },
+]
+`;
+
+exports[`模型侧导出（四族共享同一归一管线） Vercel AI SDK：name → { description, inputSchema } 描述表，不携带 execute 1`] = `
+{
+  "unit_echo": {
+    "description": "回声工具：返回输入（单测用）",
+    "inputSchema": {
+      "properties": {
+        "loud": {
+          "type": "boolean",
+        },
+        "text": {
+          "description": "任意文本",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+  },
+  "unit_fetch_rows": {
+    "description": "拉取表格行（单测用）",
+    "inputSchema": {
+      "properties": {
+        "limit": {
+          "maximum": 500,
+          "minimum": 1,
+          "type": "number",
+        },
+        "table": {
+          "enum": [
+            "users",
+            "orders",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "table",
+      ],
+      "type": "object",
+    },
+  },
+}
+`;

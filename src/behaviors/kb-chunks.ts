@@ -3,37 +3,37 @@
  * 与 components/kb-ingest.css 配套。
  *
  * DOM 契约（docs/spec/kb-family.md §5.6；数据契约 kb-core KbChunk）：
- *   <div class="kb-chunks">
- *     <div class="kb-chunks-bar">
- *       <div class="kb-seg kb-chunks-mode" role="radiogroup">         ← kb 域自持（不依赖 controls.ts）
- *         <button type="button" class="kb-seg-item [is-active]" role="radio"
- *                 aria-checked="…" data-value="text">全文</button>
- *         <button type="button" class="kb-seg-item" role="radio" data-value="vector">语义</button>
+ *   <div class="icen-kb-chunks">
+ *     <div class="icen-kb-chunks-bar">
+ *       <div class="icen-kb-seg icen-kb-chunks-mode" role="radiogroup">         ← kb 域自持（不依赖 controls.ts）
+ *         <button type="button" class="icen-kb-seg-item [is-active]" role="radio"
+ *                 aria-checked="…" data-icen-value="text">全文</button>
+ *         <button type="button" class="icen-kb-seg-item" role="radio" data-icen-value="vector">语义</button>
  *       </div>
- *       <input class="kb-input kb-chunks-search" type="search" placeholder="搜索 chunk…" data-kb-chunk-search>
- *       <button type="button" class="kb-btn kb-chunks-add" data-kb-chunk-add>+ 新增</button>
+ *       <icen-input class="icen-kb-input icen-kb-chunks-search" type="search" placeholder="搜索 chunk…" data-icen-kb-chunk-search>
+ *       <button type="button" class="icen-kb-btn icen-kb-chunks-add" data-icen-kb-chunk-add>+ 新增</button>
  *     </div>
- *     <div class="kb-chunk-list">
- *       <div class="kb-chunk [is-off] [is-edited]" data-chunk-id="…">
- *         <label class="kb-chunk-switch" title="available=false：不删除但排除出检索">
- *           <input type="checkbox" [checked] data-kb-chunk-toggle>
- *           <i class="kb-chunk-switch-track"><i class="kb-chunk-switch-thumb"></i></i>
+ *     <div class="icen-kb-chunk-list">
+ *       <div class="icen-kb-chunk [is-off] [is-edited]" data-icen-chunk-id="…">
+ *         <label class="icen-kb-chunk-switch" title="available=false：不删除但排除出检索">
+ *           <input type="checkbox" [checked] data-icen-kb-chunk-toggle>
+ *           <i class="icen-kb-chunk-switch-track"><i class="icen-kb-chunk-switch-thumb"></i></i>
  *           <span class="kb-chunk-switch-label">启用</span>
  *         </label>
- *         <div class="kb-chunk-main">
- *           <div class="kb-chunk-content" contenteditable="true" data-kb-chunk-content
- *                data-original="…原文…">…content…</div>
- *           <div class="kb-chunk-keywords" data-kb-chunk-keywords>
- *             <span class="kb-chip kb-chunk-keyword">tag
- *               <button type="button" class="kb-chunk-keyword-x" data-kb-chunk-keyword-remove aria-label="移除关键词">×</button>
+ *         <div class="icen-kb-chunk-main">
+ *           <div class="icen-kb-chunk-content" contenteditable="true" data-icen-kb-chunk-content
+ *                data-icen-original="…原文…">…content…</div>
+ *           <div class="icen-kb-chunk-keywords" data-icen-kb-chunk-keywords>
+ *             <span class="icen-kb-chip kb-chunk-keyword">icen-tag
+ *               <button type="button" class="icen-kb-chunk-keyword-x" data-icen-kb-chunk-keyword-remove aria-label="移除关键词">×</button>
  *             </span>…
- *             <input class="kb-chunk-keyword-input" placeholder="+ 关键词" data-kb-chunk-keyword-input>
+ *             <icen-input class="icen-kb-chunk-keyword-input" placeholder="+ 关键词" data-icen-kb-chunk-keyword-input>
  *           </div>
- *           <div class="kb-chunk-meta kb-meta">#3 · 第 2 页 · <span class="kb-chunk-edited-flag">已编辑</span></div>
+ *           <div class="icen-kb-chunk-meta icen-kb-meta">#3 · 第 2 页 · <span class="icen-kb-chunk-edited-flag">已编辑</span></div>
  *         </div>
- *         <button type="button" class="kb-btn kb-chunk-remove" data-kb-chunk-remove>删除</button>
+ *         <button type="button" class="icen-kb-btn kb-chunk-remove" data-icen-kb-chunk-remove>删除</button>
  *       </div>…
- *       [空态 .kb-empty]
+ *       [空态 .icen-kb-empty]
  *     </div>
  *   </div>
  *
@@ -61,6 +61,7 @@ import {
   type KbChunk,
 } from './kb-core';
 import { emitIcen } from './events';
+import { t as icenT } from './i18n';
 
 /* ── 域内小工具 ── */
 
@@ -91,104 +92,104 @@ export interface KbChunksOpts {
   emptyText?: string;
 }
 
-const MODE_LABELS: Record<KbChunkSearchMode, string> = { text: '全文', vector: '语义' };
+const MODE_LABELS: Record<KbChunkSearchMode, string> = { text: icenT('kbChunks.modeFull'), vector: icenT('kbChunks.modeVector') };
 
 /* ── 构建 ── */
 
 function buildSearchBar(opts: KbChunksOpts): HTMLElement {
-  const bar = h('div', 'kb-chunks-bar');
+  const bar = h('div', 'icen-kb-chunks-bar');
   const mode = opts.searchMode === 'vector' ? 'vector' : 'text';
-  const seg = h('div', 'kb-seg kb-chunks-mode');
+  const seg = h('div', 'icen-kb-seg icen-kb-chunks-mode');
   seg.setAttribute('role', 'radiogroup');
-  seg.setAttribute('aria-label', '搜索模式');
+  seg.setAttribute('aria-label', icenT('kbChunks.modeLabel'));
   (['text', 'vector'] as KbChunkSearchMode[]).forEach((m) => {
-    const item = h('button', `kb-seg-item kb-chunks-mode-item${m === mode ? ' is-active' : ''}`);
+    const item = h('button', `icen-kb-seg-item kb-chunks-mode-item${m === mode ? ' is-active' : ''}`);
     item.type = 'button';
     item.setAttribute('role', 'radio');
     item.setAttribute('aria-checked', String(m === mode));
-    item.dataset.value = m;
+    item.dataset.icenValue = m;
     item.textContent = MODE_LABELS[m];
     seg.appendChild(item);
   });
   bar.appendChild(seg);
 
-  const input = h('input', 'kb-input kb-chunks-search');
+  const input = h('input', 'icen-kb-input icen-kb-chunks-search');
   input.type = 'search';
-  input.placeholder = opts.placeholder ?? (mode === 'text' ? '全文搜索 chunk…' : '语义搜索 chunk…');
+  input.placeholder = opts.placeholder ?? (mode === 'text' ? icenT('kbChunks.searchFullPlaceholder') : icenT('kbChunks.searchVectorPlaceholder'));
   input.value = opts.query ?? '';
-  input.dataset.kbChunkSearch = '';
-  input.setAttribute('aria-label', '搜索 chunk');
+  input.dataset.icenKbChunkSearch = '';
+  input.setAttribute('aria-label', icenT('kbChunks.searchAria'));
   bar.appendChild(input);
 
-  const add = h('button', 'kb-btn kb-chunks-add');
+  const add = h('button', 'icen-kb-btn icen-kb-chunks-add');
   add.type = 'button';
-  add.dataset.kbChunkAdd = '';
+  add.dataset.icenKbChunkAdd = '';
   icon(add, ICON_PLUS);
-  add.appendChild(document.createTextNode('新增'));
+  add.appendChild(document.createTextNode(icenT('common.add')));
   bar.appendChild(add);
   return bar;
 }
 
 function buildKeywordChip(word: string): HTMLElement {
-  const chip = h('span', 'kb-chip kb-chunk-keyword');
+  const chip = h('span', 'icen-kb-chip kb-chunk-keyword');
   chip.appendChild(document.createTextNode(word));
-  const x = h('button', 'kb-chunk-keyword-x');
+  const x = h('button', 'icen-kb-chunk-keyword-x');
   x.type = 'button';
-  x.dataset.kbChunkKeywordRemove = '';
-  x.setAttribute('aria-label', `移除关键词 ${word}`);
+  x.dataset.icenKbChunkKeywordRemove = '';
+  x.setAttribute('aria-label', icenT('kbChunks.removeKeyword', { p0: word }));
   x.textContent = '×';
   chip.appendChild(x);
   return chip;
 }
 
 function buildChunkRow(chunk: KbChunk, index: number): HTMLElement {
-  const row = h('div', `kb-chunk${chunk.available ? '' : ' is-off'}${chunk.edited ? ' is-edited' : ''}`);
-  row.dataset.chunkId = chunk.id;
+  const row = h('div', `icen-kb-chunk${chunk.available ? '' : ' is-off'}${chunk.edited ? ' is-edited' : ''}`);
+  row.dataset.icenChunkId = chunk.id;
 
-  const sw = h('label', 'kb-chunk-switch');
-  sw.title = '关闭后不删除，仅排除出检索';
+  const sw = h('label', 'icen-kb-chunk-switch');
+  sw.title = icenT('kbChunks.disableNote');
   const cb = document.createElement('input');
   cb.type = 'checkbox';
   cb.checked = chunk.available;
-  cb.dataset.kbChunkToggle = '';
-  cb.setAttribute('aria-label', `chunk ${index + 1} 启用`);
+  cb.dataset.icenKbChunkToggle = '';
+  cb.setAttribute('aria-label', icenT('kbChunks.chunkEnableAria', { p0: index + 1 }));
   sw.appendChild(cb);
-  sw.appendChild(h('i', 'kb-chunk-switch-track', '')).appendChild(h('i', 'kb-chunk-switch-thumb'));
-  sw.appendChild(h('span', 'kb-chunk-switch-label', '启用'));
+  sw.appendChild(h('i', 'icen-kb-chunk-switch-track', '')).appendChild(h('i', 'icen-kb-chunk-switch-thumb'));
+  sw.appendChild(h('span', 'kb-chunk-switch-label', icenT('common.enable')));
   row.appendChild(sw);
 
-  const main = h('div', 'kb-chunk-main');
-  const content = h('div', 'kb-chunk-content', chunk.content);
+  const main = h('div', 'icen-kb-chunk-main');
+  const content = h('div', 'icen-kb-chunk-content', chunk.content);
   content.contentEditable = 'true';
-  content.dataset.kbChunkContent = '';
-  content.dataset.original = chunk.content;
+  content.dataset.icenKbChunkContent = '';
+  content.dataset.icenOriginal = chunk.content;
   content.setAttribute('role', 'textbox');
   content.setAttribute('aria-multiline', 'true');
-  content.setAttribute('aria-label', `chunk ${index + 1} 内容`);
+  content.setAttribute('aria-label', icenT('kbChunks.chunkContentAria', { p0: index + 1 }));
   main.appendChild(content);
 
-  const kw = h('div', 'kb-chunk-keywords');
-  kw.dataset.kbChunkKeywords = '';
+  const kw = h('div', 'icen-kb-chunk-keywords');
+  kw.dataset.icenKbChunkKeywords = '';
   (chunk.keywords ?? []).forEach((word) => kw.appendChild(buildKeywordChip(word)));
-  const kwInput = h('input', 'kb-chunk-keyword-input');
+  const kwInput = h('input', 'icen-kb-chunk-keyword-input');
   kwInput.type = 'text';
-  kwInput.placeholder = '+ 关键词';
-  kwInput.dataset.kbChunkKeywordInput = '';
-  kwInput.setAttribute('aria-label', `chunk ${index + 1} 新增关键词`);
+  kwInput.placeholder = icenT('kbChunks.addKeyword');
+  kwInput.dataset.icenKbChunkKeywordInput = '';
+  kwInput.setAttribute('aria-label', icenT('kbChunks.chunkAddKeywordAria', { p0: index + 1 }));
   kw.appendChild(kwInput);
   main.appendChild(kw);
 
   const metaBits = [`#${index + 1}`];
-  if (typeof chunk.page === 'number') metaBits.push(`第 ${chunk.page} 页`);
-  if (chunk.edited) metaBits.push('已编辑');
-  main.appendChild(h('div', 'kb-chunk-meta kb-meta', metaBits.join(' · ')));
+  if (typeof chunk.page === 'number') metaBits.push(icenT('common.page', { p0: chunk.page }));
+  if (chunk.edited) metaBits.push(icenT('kbChunks.edited'));
+  main.appendChild(h('div', 'icen-kb-chunk-meta icen-kb-meta', metaBits.join(' · ')));
   row.appendChild(main);
 
-  const remove = h('button', 'kb-btn kb-chunk-remove');
+  const remove = h('button', 'icen-kb-btn kb-chunk-remove');
   remove.type = 'button';
-  remove.dataset.kbChunkRemove = '';
-  remove.textContent = '删除';
-  remove.setAttribute('aria-label', `删除 chunk ${index + 1}`);
+  remove.dataset.icenKbChunkRemove = '';
+  remove.textContent = icenT('common.delete');
+  remove.setAttribute('aria-label', icenT('kbChunks.deleteChunkAria', { p0: index + 1 }));
   row.appendChild(remove);
   return row;
 }
@@ -210,12 +211,12 @@ export function renderKbChunks(
     (c) => normalizeChunk(c as unknown as Record<string, unknown>),
   );
   el.textContent = '';
-  const root = h('div', 'kb-chunks');
-  root.dataset.documentId = o.documentId ?? list[0]?.documentId ?? '';
+  const root = h('div', 'icen-kb-chunks');
+  root.dataset.icenDocumentId = o.documentId ?? list[0]?.documentId ?? '';
   root.appendChild(buildSearchBar(o));
-  const listBox = h('div', 'kb-chunk-list');
+  const listBox = h('div', 'icen-kb-chunk-list');
   if (!list.length) {
-    listBox.appendChild(h('div', 'kb-empty', o.emptyText ?? '暂无 chunk'));
+    listBox.appendChild(h('div', 'icen-kb-empty', o.emptyText ?? icenT('kbChunks.empty')));
   } else {
     list.forEach((c, i) => listBox.appendChild(buildChunkRow(c, i)));
   }
@@ -236,12 +237,12 @@ const searchTimers = new WeakMap<HTMLInputElement, ReturnType<typeof setTimeout>
 /** 全文本地过滤：内容或任一关键词包含即命中（大小写不敏感） */
 function filterRowsLocally(root: HTMLElement, query: string): void {
   const q = query.trim().toLowerCase();
-  root.querySelectorAll<HTMLElement>('.kb-chunk[data-chunk-id]').forEach((row) => {
+  root.querySelectorAll<HTMLElement>('.icen-kb-chunk[data-icen-chunk-id]').forEach((row) => {
     if (!q) {
       row.style.removeProperty('display');
       return;
     }
-    const content = row.querySelector<HTMLElement>('[data-kb-chunk-content]')?.textContent ?? '';
+    const content = row.querySelector<HTMLElement>('[data-icen-kb-chunk-content]')?.textContent ?? '';
     const keywords = Array.from(row.querySelectorAll<HTMLElement>('.kb-chunk-keyword'))
       .map((k) => k.firstChild?.textContent ?? '')
       .join('\n');
@@ -253,23 +254,23 @@ function filterRowsLocally(root: HTMLElement, query: string): void {
 /** 当前搜索模式（从 segmented 激活项读，缺省 text） */
 function currentSearchMode(root: HTMLElement): KbChunkSearchMode {
   const active = root.querySelector<HTMLElement>('.kb-chunks-mode-item.is-active');
-  return active?.dataset.value === 'vector' ? 'vector' : 'text';
+  return active?.dataset.icenValue === 'vector' ? 'vector' : 'text';
 }
 
 /** meta 行追加「已编辑」标记（幂等：已存在则跳过） */
 function markEdited(row: HTMLElement): void {
   row.classList.add('is-edited');
-  const meta = row.querySelector<HTMLElement>('.kb-chunk-meta');
-  if (meta && !meta.querySelector('.kb-chunk-edited-flag')) {
+  const meta = row.querySelector<HTMLElement>('.icen-kb-chunk-meta');
+  if (meta && !meta.querySelector('.icen-kb-chunk-edited-flag')) {
     meta.appendChild(document.createTextNode(' · '));
-    meta.appendChild(h('span', 'kb-chunk-edited-flag', '已编辑'));
+    meta.appendChild(h('span', 'icen-kb-chunk-edited-flag', icenT('kbChunks.edited')));
   }
 }
 
 /** chunk 行内变更统一出口：标记 + 派 icen:kb-chunk-edit */
 function emitEdit(row: HTMLElement): void {
   markEdited(row);
-  emitIcen(row, 'icen:kb-chunk-edit', { chunkId: row.dataset.chunkId ?? '' });
+  emitIcen(row, 'icen:kb-chunk-edit', { chunkId: row.dataset.icenChunkId ?? '' });
 }
 
 /**
@@ -286,9 +287,9 @@ export function initKbChunks(root?: ParentNode): () => void {
   const target = scope as ParentNode & EventTarget;
 
   const chunkRootOf = (node: HTMLElement): HTMLElement | null =>
-    node.closest<HTMLElement>('.kb-chunks');
+    node.closest<HTMLElement>('.icen-kb-chunks');
   const rowOf = (node: HTMLElement): HTMLElement | null =>
-    node.closest<HTMLElement>('.kb-chunk[data-chunk-id]');
+    node.closest<HTMLElement>('.icen-kb-chunk[data-icen-chunk-id]');
 
   const onClick = (e: Event): void => {
     const t = e.target instanceof Element ? e.target : null;
@@ -297,21 +298,21 @@ export function initKbChunks(root?: ParentNode): () => void {
     if (!el) return;
 
     /* 新增 */
-    const addBtn = el.closest<HTMLElement>('[data-kb-chunk-add]');
+    const addBtn = el.closest<HTMLElement>('[data-icen-kb-chunk-add]');
     if (addBtn) {
       const wrap = chunkRootOf(addBtn);
-      emitIcen(addBtn, 'icen:kb-chunk-add', { documentId: wrap?.dataset.documentId ?? '' });
+      emitIcen(addBtn, 'icen:kb-chunk-add', { documentId: wrap?.dataset.icenDocumentId ?? '' });
       return;
     }
     /* 删除（只派事件：不可逆操作交消费方确认后重渲染） */
-    const rmBtn = el.closest<HTMLElement>('[data-kb-chunk-remove]');
+    const rmBtn = el.closest<HTMLElement>('[data-icen-kb-chunk-remove]');
     if (rmBtn) {
       const row = rowOf(rmBtn);
-      if (row) emitIcen(row, 'icen:kb-chunk-remove', { chunkId: row.dataset.chunkId ?? '' });
+      if (row) emitIcen(row, 'icen:kb-chunk-remove', { chunkId: row.dataset.icenChunkId ?? '' });
       return;
     }
     /* 关键词 chip 删除 */
-    const kwX = el.closest<HTMLElement>('[data-kb-chunk-keyword-remove]');
+    const kwX = el.closest<HTMLElement>('[data-icen-kb-chunk-keyword-remove]');
     if (kwX) {
       const row = rowOf(kwX);
       const chip = kwX.closest<HTMLElement>('.kb-chunk-keyword');
@@ -322,7 +323,7 @@ export function initKbChunks(root?: ParentNode): () => void {
     /* 搜索模式切换（kb 域自持 segmented：互斥 + aria 同步 + 重新过滤/派发） */
     const modeItem = el.closest<HTMLElement>('.kb-chunks-mode-item');
     if (modeItem) {
-      const seg = modeItem.closest<HTMLElement>('.kb-chunks-mode');
+      const seg = modeItem.closest<HTMLElement>('.icen-kb-chunks-mode');
       if (!seg || modeItem.classList.contains('is-active')) return;
       seg.querySelectorAll<HTMLElement>('.kb-chunks-mode-item').forEach((it) => {
         const on = it === modeItem;
@@ -330,12 +331,12 @@ export function initKbChunks(root?: ParentNode): () => void {
         it.setAttribute('aria-checked', String(on));
       });
       const wrap = chunkRootOf(modeItem);
-      const search = wrap?.querySelector<HTMLInputElement>('[data-kb-chunk-search]') ?? null;
+      const search = wrap?.querySelector<HTMLInputElement>('[data-icen-kb-chunk-search]') ?? null;
       const mode = currentSearchMode(wrap ?? seg);
-      if (search) search.placeholder = mode === 'text' ? '全文搜索 chunk…' : '语义搜索 chunk…';
+      if (search) search.placeholder = mode === 'text' ? icenT('kbChunks.searchFullPlaceholder') : icenT('kbChunks.searchVectorPlaceholder');
       if (wrap) {
         if (mode === 'text') filterRowsLocally(wrap, search?.value ?? '');
-        else wrap.querySelectorAll<HTMLElement>('.kb-chunk[data-chunk-id]').forEach((r) => r.style.removeProperty('display'));
+        else wrap.querySelectorAll<HTMLElement>('.icen-kb-chunk[data-icen-chunk-id]').forEach((r) => r.style.removeProperty('display'));
         emitIcen(wrap, 'icen:kb-chunk-search', { mode, query: search?.value ?? '' });
       }
     }
@@ -345,11 +346,11 @@ export function initKbChunks(root?: ParentNode): () => void {
     const t = e.target;
     if (!(t instanceof HTMLInputElement)) return;
     /* available 开关 */
-    if (t.hasAttribute('data-kb-chunk-toggle')) {
+    if (t.hasAttribute('data-icen-kb-chunk-toggle')) {
       const row = rowOf(t);
       if (!row) return;
       row.classList.toggle('is-off', !t.checked);
-      emitIcen(row, 'icen:kb-chunk-toggle', { chunkId: row.dataset.chunkId ?? '', available: t.checked });
+      emitIcen(row, 'icen:kb-chunk-toggle', { chunkId: row.dataset.icenChunkId ?? '', available: t.checked });
     }
   };
 
@@ -359,12 +360,12 @@ export function initKbChunks(root?: ParentNode): () => void {
     const t = ke.target;
     if (!(t instanceof HTMLInputElement)) return;
     /* 关键词新增（Enter 提交；空值忽略） */
-    if (t.hasAttribute('data-kb-chunk-keyword-input')) {
+    if (t.hasAttribute('data-icen-kb-chunk-keyword-input')) {
       ke.preventDefault();
       const word = t.value.trim();
       const row = rowOf(t);
       if (!word || !row) return;
-      const kw = t.closest<HTMLElement>('[data-kb-chunk-keywords]');
+      const kw = t.closest<HTMLElement>('[data-icen-kb-chunk-keywords]');
       if (kw) kw.insertBefore(buildKeywordChip(word), t);
       t.value = '';
       emitEdit(row);
@@ -375,19 +376,19 @@ export function initKbChunks(root?: ParentNode): () => void {
   const onFocusOut = (e: Event): void => {
     const t = e.target;
     if (!(t instanceof HTMLElement)) return;
-    if (!t.hasAttribute('data-kb-chunk-content')) return;
+    if (!t.hasAttribute('data-icen-kb-chunk-content')) return;
     const row = rowOf(t);
     if (!row) return;
     const next = t.textContent ?? '';
-    if (next === (t.dataset.original ?? '')) return;
-    t.dataset.original = next;
+    if (next === (t.dataset.icenOriginal ?? '')) return;
+    t.dataset.icenOriginal = next;
     emitEdit(row);
   };
 
   /* 搜索输入（200ms 防抖：本地过滤 + 事件双通道） */
   const onInput = (e: Event): void => {
     const t = e.target;
-    if (!(t instanceof HTMLInputElement) || !t.hasAttribute('data-kb-chunk-search')) return;
+    if (!(t instanceof HTMLInputElement) || !t.hasAttribute('data-icen-kb-chunk-search')) return;
     const wrap = chunkRootOf(t);
     if (!wrap) return;
     const prev = searchTimers.get(t);

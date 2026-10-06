@@ -1,89 +1,148 @@
 /*
  * @icen.ai/ui — Component: chart-bar（柱状/条形图专属样式）
- * 依赖：charts.css（基座 .chart / .chart-labels / --chart-tone）
+ * 依赖：charts.css（基座 .icen-chart / .icen-chart-labels / --chart-tone）
  *
  * DOM 由 behaviors/charts.ts 的 renderVBar / renderHBar 构建：
- *   .chart-vbar > .chart-vbar-track > .chart-vbar-bar
- *   .chart-hbar > .chart-hbar-row > .chart-hbar-label + .chart-hbar-track > .chart-hbar-bar + .chart-hbar-value
+ *   .icen-chart-vbar > .icen-chart-vbar-track > .icen-chart-vbar-bar
+ *   .icen-chart-hbar > .icen-chart-hbar-row > .icen-chart-hbar-label + .icen-chart-hbar-track > .icen-chart-hbar-bar + .icen-chart-hbar-value
+ *
+ * v0.10 追加契约（renderChart spec.marks 的 vbar DOM 变体；百分比绝对定位于 plot 内，
+ * 标记色经 --chart-mark-tone 注入，缺省 faint 参考线 / accent 标记点）：
+ *   .icen-chart-vbar > .icen-chart-mark-line--h（水平参考线）/ .icen-chart-mark-line--v（垂直参考线）
+ *     > .icen-chart-mark-label（尾部标注，视口内夹取）
+ *   .icen-chart-vbar > .icen-chart-mark-point（标记点）> .icen-chart-mark-label
+ *
+ * RTL 豁免（guard 文件级白名单 scripts/guard/rtl.ts）：图表是物理坐标系——
+ * plot 内百分比定位 / 参考线 / 值标签对齐全部按物理 left/right 计算，RTL 不镜像。
  */
 
 /* ── vbar · 垂直柱状 ── */
-.chart-vbar {
+.icen-chart-vbar {
+  position: relative;
   display: flex;
   align-items: flex-end;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   height: 112px;
 }
-.chart-vbar-track {
+.icen-chart-vbar-track {
   flex: 1;
   height: 100%;
   min-width: 0;
   display: flex;
   align-items: flex-end;
-  background: color-mix(in srgb, var(--token-fill-2) 45%, transparent);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--icen-token-fill-2) 45%, transparent);
+  border-radius: var(--icen-radius-sm);
   overflow: hidden;
 }
-.chart-vbar-bar {
+.icen-chart-vbar-bar {
   width: 100%;
-  border-radius: var(--radius-sm);
-  background: var(--chart-tone, var(--token-accent));
+  border-radius: var(--icen-radius-sm);
+  background: var(--chart-tone, var(--icen-token-accent));
   transition: height var(--icen-tx-slow);
 }
-.chart-vbar-bar:hover {
+.icen-chart-vbar-bar:hover {
   filter: brightness(1.08);
 }
 
 /* ── hbar · 水平条形 ── */
-.chart-hbar {
+.icen-chart-hbar {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
 }
-.chart-hbar-row {
+.icen-chart-hbar-row {
   display: grid;
   grid-template-columns: minmax(72px, 1fr) minmax(90px, 2fr) 52px;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   align-items: center;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
 }
-.chart-hbar-label {
+.icen-chart-hbar-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
 }
-.chart-hbar-track {
+.icen-chart-hbar-track {
   height: 10px;
   overflow: hidden;
-  border-radius: var(--radius-full);
-  background: var(--token-fill-2);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-fill-2);
 }
-.chart-hbar-bar {
+.icen-chart-hbar-bar {
   height: 100%;
-  border-radius: var(--radius-full);
-  background: var(--chart-tone, var(--token-accent));
+  border-radius: var(--icen-radius-full);
+  background: var(--chart-tone, var(--icen-token-accent));
   transition: width var(--icen-tx-slow);
 }
-.chart-hbar-bar:hover {
+.icen-chart-hbar-bar:hover {
   filter: brightness(1.08);
 }
-.chart-hbar-value {
+.icen-chart-hbar-value {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chart-vbar-bar, .chart-hbar-bar { transition: none; }
+  .icen-chart-vbar-bar, .icen-chart-hbar-bar { transition: none; }
 }
 
 /* ── 多系列：分组（簇内并排）与堆叠（列内向上叠）── */
-.chart-vbar-track--multi { gap: 2px; }
-.chart-vbar-track--multi > .chart-vbar-bar { flex: 1; min-width: 0; width: auto; }
-.chart-vbar-track--multi.chart-vbar-track--stacked {
+.icen-chart-vbar-track--multi { gap: 2px; }
+.icen-chart-vbar-track--multi > .icen-chart-vbar-bar { flex: 1; min-width: 0; width: auto; }
+.icen-chart-vbar-track--multi.icen-chart-vbar-track--stacked {
   flex-direction: column;
   justify-content: flex-end;
   gap: 0;
 }
-.chart-vbar-track--multi.chart-vbar-track--stacked > .chart-vbar-bar { flex: none; width: 100%; }
+.icen-chart-vbar-track--multi.icen-chart-vbar-track--stacked > .icen-chart-vbar-bar { flex: none; width: 100%; }
+
+/* ── 标记线/标记点（spec.marks 的 vbar DOM 变体；--chart-mark-tone 注入标记色；
+     绝对定位元素无 z-index 也高于同容器内的静态条/轨，保持 DOM 顺序即叠放正确）── */
+.icen-chart-vbar .icen-chart-mark-line {
+  position: absolute;
+  pointer-events: none;
+}
+.icen-chart-vbar .icen-chart-mark-line--h {
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--chart-mark-tone, var(--icen-token-text-faint));
+}
+.icen-chart-vbar .icen-chart-mark-line--v {
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--chart-mark-tone, var(--icen-token-text-faint));
+  transform: translateX(-0.5px);
+}
+.icen-chart-vbar .icen-chart-mark-label {
+  position: absolute;
+  font-size: var(--icen-density-font-size-2xs);
+  line-height: 1.2;
+  color: var(--chart-mark-tone, var(--icen-token-text-muted));
+  white-space: nowrap;
+}
+.icen-chart-vbar .icen-chart-mark-line--h > .icen-chart-mark-label {
+  right: 4px;
+  top: -2px;
+  transform: translateY(-100%);
+}
+.icen-chart-vbar .icen-chart-mark-line--v > .icen-chart-mark-label {
+  top: 2px;
+  left: 3px;
+}
+.icen-chart-vbar .icen-chart-mark-point {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-card);
+  border: 2px solid var(--chart-mark-tone, var(--icen-token-accent));
+  transform: translate(-50%, 50%);
+  pointer-events: none;
+}
+.icen-chart-vbar .icen-chart-mark-point > .icen-chart-mark-label {
+  bottom: 13px;
+  left: 50%;
+  transform: translateX(-50%);
+}

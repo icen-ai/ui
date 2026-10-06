@@ -3,55 +3,55 @@
  * 与 components/kb-perm.css 段B 配套；spec docs/spec/kb-family.md §9.3）
  *
  * DOM 契约（requester 模式）：
- *   <div class="kb-access" data-state="idle|requested|pending_review|granted|expiring|expired|denied|revoked">
- *     <div class="kb-access-denied">                        ← 被拒五件套（未获权状态才呈现）
- *       <div class="kb-access-title">🔒 资源名</div>          ← 资源名（锁形 svg 经 svgIcon 消毒）
- *       <p class="kb-access-why">此内容仅对授权者开放…</p>     ← 原因文案（opts.deniedHint 缺省模板）
- *       <div class="kb-access-owner">负责人：内容 owner 李四</div>
- *       <div class="kb-access-actions">
- *         <button class="kb-access-btn" data-access-request>申请访问</button>      ← 主作用（accent）
- *         <button class="kb-access-btn--ghost" data-access-switch>切换身份</button> ← 次作用（宿主回调，
+ *   <div class="icen-kb-access" data-icen-state="idle|requested|pending_review|granted|expiring|expired|denied|revoked">
+ *     <div class="icen-kb-access-denied">                        ← 被拒五件套（未获权状态才呈现）
+ *       <div class="icen-kb-access-title">🔒 资源名</div>          ← 资源名（锁形 svg 经 svgIcon 消毒）
+ *       <p class="icen-kb-access-why">此内容仅对授权者开放…</p>     ← 原因文案（opts.deniedHint 缺省模板）
+ *       <div class="icen-kb-access-owner">负责人：内容 owner 李四</div>
+ *       <div class="icen-kb-access-actions">
+ *         <button class="icen-kb-access-btn" data-icen-access-request>申请访问</button>      ← 主作用（icen-accent）
+ *         <button class="icen-kb-access-btn--ghost" data-icen-access-switch>切换身份</button> ← 次作用（宿主回调，
  *                                                                            不派库事件——身份切换是宿主关注）
  *       </div>
  *     </div>
- *     <form class="kb-access-form" hidden>                  ← data-access-request 点开（再点收起）
- *       <textarea class="kb-access-reason" placeholder="说明业务原因（审批人可见）"></textarea>
- *       <div class="kb-access-roles">
- *         <button class="kb-access-role [is-on]" data-role="viewer|commenter|editor">可查看…</button>×3
+ *     <icen-form class="icen-kb-access-form" hidden>                  ← data-icen-access-request 点开（再点收起）
+ *       <icen-textarea class="icen-kb-access-reason" placeholder="说明业务原因（审批人可见）"></icen-textarea>
+ *       <div class="icen-kb-access-roles">
+ *         <button class="icen-kb-access-role [is-on]" data-icen-role="viewer|commenter|editor">可查看…</button>×3
  *       </div>                                              ← 角色三选（请求方不可申请 owner）
- *       <label class="kb-access-duration-row">访问时长
- *         <select class="kb-access-duration"><option value="">永久</option>
- *           <option value="7">7 天</option><option value="30">30 天</option></select>
+ *       <label class="icen-kb-access-duration-row">访问时长
+ *         <icen-select class="icen-kb-access-duration"><option value="">永久</option>
+ *           <option value="7">7 天</option><option value="30">30 天</option></icen-select>
  *       </label>
- *       <div class="kb-meta kb-access-route">请求将发送给：内容 owner 李四</div>   ← 路由明示（§9.0.2 审批路由）
- *       <button class="kb-access-submit" data-access-submit>提交申请</button>
- *     </form>
- *     <div class="kb-access-state">                         ← 状态徽章族（kbAccessStateLabel）
- *       <span class="kb-chip" data-state="granted">已开通</span>
- *       <span class="kb-num kb-access-countdown">7 天后到期</span>                ← granted/expiring 附倒计时
- *       <button class="kb-access-act" data-access-renew>申请续期</button>         ← expiring（warning）
- *       <button class="kb-access-act" data-access-reapply>重新申请</button>       ← expired/denied/revoked 回表单
+ *       <div class="icen-kb-meta icen-kb-access-route">请求将发送给：内容 owner 李四</div>   ← 路由明示（§9.0.2 审批路由）
+ *       <button class="icen-kb-access-submit" data-icen-access-submit>提交申请</button>
+ *     </icen-form>
+ *     <div class="icen-kb-access-state">                         ← 状态徽章族（kbAccessStateLabel）
+ *       <span class="icen-kb-chip" data-icen-state="granted">已开通</span>
+ *       <span class="icen-kb-num icen-kb-access-countdown">7 天后到期</span>                ← granted/expiring 附倒计时
+ *       <button class="icen-kb-access-act" data-icen-access-renew>申请续期</button>         ← expiring（warning）
+ *       <button class="icen-kb-access-act" data-icen-access-reapply>重新申请</button>       ← expired/denied/revoked 回表单
  *     </div>
  *   </div>
  *
  * DOM 契约（approver 模式）：
- *   <div class="kb-access kb-access--approver" data-state="requested">
- *     <div class="kb-access-queue">
- *       <div class="kb-access-req">
- *         <span class="kb-access-req-user">张三</span>
- *         <span class="kb-access-req-resource">Q3 财报</span>
- *         <span class="kb-chip">可查看</span>               ← 申请角色 chip
- *         <span class="kb-meta">接入财务系统做对账</span>      ← 理由（无则不渲染）
- *         <span class="kb-num">3 分钟前</span>               ← relativeTime(submittedAt)
- *         <span class="kb-access-req-actions">
- *           <select class="kb-access-approve-role">viewer|commenter|editor</select>
- *           <button class="kb-access-btn--ghost" data-access-approve>批准</button>
- *           <textarea class="kb-access-note" placeholder="给请求人的留言（可选）"></textarea>
- *           <button class="kb-access-btn--ghost" data-access-deny>拒绝</button>
+ *   <div class="icen-kb-access icen-kb-access--approver" data-icen-state="requested">
+ *     <div class="icen-kb-access-queue">
+ *       <div class="icen-kb-access-req">
+ *         <span class="icen-kb-access-req-user">张三</span>
+ *         <span class="icen-kb-access-req-resource">Q3 财报</span>
+ *         <span class="icen-kb-chip">可查看</span>               ← 申请角色 chip
+ *         <span class="icen-kb-meta">接入财务系统做对账</span>      ← 理由（无则不渲染）
+ *         <span class="icen-kb-num">3 分钟前</span>               ← relativeTime(submittedAt)
+ *         <span class="icen-kb-access-req-actions">
+ *           <icen-select class="icen-kb-access-approve-role">viewer|commenter|editor</icen-select>
+ *           <button class="icen-kb-access-btn--ghost" data-icen-access-approve>批准</button>
+ *           <icen-textarea class="icen-kb-access-note" placeholder="给请求人的留言（可选）"></icen-textarea>
+ *           <button class="icen-kb-access-btn--ghost" data-icen-access-deny>拒绝</button>
  *         </span>
  *       </div>
  *     </div>
- *     <div class="kb-access-state">…决定后回显（已批准 · 可编辑 / 已拒绝）</div>
+ *     <div class="icen-kb-access-state">…决定后回显（已批准 · 可编辑 / 已拒绝）</div>
  *   </div>
  *
  * mock 示例：
@@ -79,7 +79,7 @@
  *   icen:kb-access-decide  { id, decision:'approve'|'deny', role? } — approver 批准（带最终角色）/ 拒绝
  *   icen:kb-access-expire  { id }                            — 渲染瞬间发现已过期（快照派生）
  *   拒绝留言：事件契约冻结不含留言字段；textarea 留言仅作 UI 便利，宿主需要时在
- *   onDecide 回调里读取 DOM（.kb-access-note 的 value）或走自有通道——不在库事件里私加字段。
+ *   onDecide 回调里读取 DOM（.icen-kb-access-note 的 value）或走自有通道——不在库事件里私加字段。
  *
  * 渲染只写 textContent/createElement（禁 innerHTML），SVG 一律经 svgIcon() 消毒；
  * SSR（无 document）返回静态句柄：setState/destroy no-op、getState 返回 normalize 后的请求副本。
@@ -98,6 +98,7 @@ import {
   type KbRole,
 } from './kb-core';
 import { emitIcen } from './events';
+import { t as icenT } from './i18n';
 
 /* ── 图标（单色线性 1.5px，一律经 svgIcon 消毒） ── */
 
@@ -152,10 +153,10 @@ function untilText(at: string | undefined, now: Date): string {
   const t = Date.parse(at);
   if (!Number.isFinite(t)) return '';
   const diff = t - now.getTime();
-  if (diff <= 0) return '已到期';
-  if (diff < HOUR_MS) return `${Math.max(1, Math.floor(diff / MIN_MS))} 分钟后`;
-  if (diff < DAY_MS) return `${Math.floor(diff / HOUR_MS)} 小时后`;
-  return `${Math.floor(diff / DAY_MS)} 天后`;
+  if (diff <= 0) return icenT('kbAccess.expired');
+  if (diff < HOUR_MS) return icenT('kbAccess.minutesLeft', { p0: Math.max(1, Math.floor(diff / MIN_MS)) });
+  if (diff < DAY_MS) return icenT('kbAccess.hoursLeft', { p0: Math.floor(diff / HOUR_MS) });
+  return icenT('kbAccess.daysLeft', { p0: Math.floor(diff / DAY_MS) });
 }
 
 /** expiresAt 是否为可解析时间 */
@@ -217,8 +218,8 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
 
   /* ── 表单提交：组请求 → requested → 派事件 + 回调 → 收起表单 ── */
   const submitForm = (form: HTMLFormElement): void => {
-    const reasonEl = form.querySelector<HTMLTextAreaElement>('.kb-access-reason');
-    const durationEl = form.querySelector<HTMLSelectElement>('.kb-access-duration');
+    const reasonEl = form.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason');
+    const durationEl = form.querySelector<HTMLSelectElement>('.icen-kb-access-duration');
     const reason = reasonEl?.value.trim() ?? '';
     const days = Number(durationEl?.value ?? '');
     const expiresAt =
@@ -259,7 +260,7 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
   /* ── 构件小件 ── */
 
   const ghostBtn = (label: string, attr: string, title?: string): HTMLButtonElement => {
-    const btn = h('button', 'kb-access-btn kb-access-btn--ghost', label);
+    const btn = h('button', 'icen-kb-access-btn icen-kb-access-btn--ghost', label);
     btn.type = 'button';
     btn.setAttribute(attr, '');
     if (title) btn.setAttribute('aria-label', title);
@@ -268,27 +269,27 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
 
   /** 被拒五件套卡（资源名 / 原因 / owner / 申请 / 切换身份） */
   const buildDeniedCard = (): HTMLElement => {
-    const card = h('div', 'kb-access-denied');
-    const title = h('div', 'kb-access-title');
+    const card = h('div', 'icen-kb-access-denied');
+    const title = h('div', 'icen-kb-access-title');
     const lock = svgIcon(ICON_LOCK);
     if (lock) title.appendChild(lock);
-    title.appendChild(h('span', undefined, req.resource || '受限内容'));
+    title.appendChild(h('span', undefined, req.resource || icenT('kbAccess.restrictedContent')));
     card.appendChild(title);
     /* 原因文案：deniedHint ?? 固定模板（模板零信息增量——不给受限侧任何可探测分支，§9.0.3） */
-    card.appendChild(h('p', 'kb-access-why', opts.deniedHint ?? '此内容仅对授权者开放'));
-    card.appendChild(h('div', 'kb-access-owner', `负责人：${req.approverNote || '内容负责人'}`));
+    card.appendChild(h('p', 'icen-kb-access-why', opts.deniedHint ?? icenT('kbAccess.restrictedHint')));
+    card.appendChild(h('div', 'icen-kb-access-owner', icenT('kbAccess.ownerPrefix', { p0: req.approverNote || icenT('kbAccess.ownerLabel') })));
 
-    const actions = h('div', 'kb-access-actions');
-    const primary = h('button', 'kb-access-btn', '申请访问');
+    const actions = h('div', 'icen-kb-access-actions');
+    const primary = h('button', 'icen-kb-access-btn', icenT('common.requestAccess'));
     primary.type = 'button';
-    primary.dataset.accessRequest = '';
-    primary.setAttribute('aria-label', `申请访问 ${req.resource || '该内容'}`);
+    primary.dataset.icenAccessRequest = '';
+    primary.setAttribute('aria-label', icenT('common.requestAccessFor', { p0: req.resource || icenT('kbAccess.defaultSubject') }));
     primary.addEventListener('click', () => {
       formOpen = !formOpen; /* 再点收起 = 免取消钮的关闭路径 */
       render();
     });
     actions.appendChild(primary);
-    const switchBtn = ghostBtn('切换身份', 'data-access-switch', '切换身份后重新检查权限');
+    const switchBtn = ghostBtn(icenT('kbAccess.switchIdentity'), 'data-icen-access-switch', icenT('kbAccess.switchIdentityTip'));
     const switchIcon = svgIcon(ICON_USER_SWITCH);
     if (switchIcon) switchBtn.prepend(switchIcon);
     /* 身份切换是宿主关注（固定身份集的哪一员），不派库事件——只走回调 */
@@ -300,24 +301,24 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
 
   /** 申请表单（理由 + 角色三选 + 时长 + 路由明示 + 提交） */
   const buildForm = (): HTMLFormElement => {
-    const form = h('form', 'kb-access-form');
+    const form = h('form', 'icen-kb-access-form');
     form.hidden = !formOpen;
 
     const reason = document.createElement('textarea');
-    reason.className = 'kb-access-reason';
+    reason.className = 'icen-kb-access-reason';
     reason.value = formReason;
-    reason.placeholder = '说明业务原因（审批人可见）';
-    reason.setAttribute('aria-label', '申请理由');
+    reason.placeholder = icenT('kbAccess.reasonPlaceholder');
+    reason.setAttribute('aria-label', icenT('kbAccess.reasonLabel'));
     reason.rows = 3;
     form.appendChild(reason);
 
-    const roles = h('div', 'kb-access-roles');
+    const roles = h('div', 'icen-kb-access-roles');
     roles.setAttribute('role', 'group');
-    roles.setAttribute('aria-label', '申请角色');
+    roles.setAttribute('aria-label', icenT('kbAccess.roleLabel'));
     for (const r of REQUESTABLE_ROLES) {
-      const chip = h('button', `kb-access-role${formRole === r ? ' is-on' : ''}`, kbRoleLabel(r));
+      const chip = h('button', `icen-kb-access-role${formRole === r ? ' is-on' : ''}`, kbRoleLabel(r));
       chip.type = 'button';
-      chip.dataset.role = r;
+      chip.dataset.icenRole = r;
       chip.setAttribute('aria-pressed', String(formRole === r));
       chip.addEventListener('click', () => {
         formRole = r;
@@ -327,29 +328,29 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
     }
     form.appendChild(roles);
 
-    const durationRow = h('label', 'kb-access-duration-row');
-    durationRow.appendChild(h('span', undefined, '访问时长'));
-    const duration = h('select', 'kb-access-duration');
+    const durationRow = h('label', 'icen-kb-access-duration-row');
+    durationRow.appendChild(h('span', undefined, icenT('kbAccess.durationLabel')));
+    const duration = h('select', 'icen-kb-access-duration');
     for (const [value, label] of [
-      ['', '永久'],
-      ['7', '7 天'],
-      ['30', '30 天'],
+      ['', icenT('kbAccess.durationForever')],
+      ['7', icenT('kbAccess.duration7d')],
+      ['30', icenT('kbAccess.duration30d')],
     ] as const) {
       const o = h('option', undefined, label);
       o.value = value;
       duration.appendChild(o);
     }
     duration.value = formDuration;
-    duration.setAttribute('aria-label', '访问时长');
+    duration.setAttribute('aria-label', icenT('kbAccess.durationLabel'));
     durationRow.appendChild(duration);
     form.appendChild(durationRow);
 
     /* 路由明示（Confluence 十年踩坑：请求发给谁必须写明，§9.0.2） */
-    form.appendChild(h('div', 'kb-meta kb-access-route', `请求将发送给：${req.approverNote || '内容负责人'}`));
+    form.appendChild(h('div', 'icen-kb-meta icen-kb-access-route', icenT('kbAccess.requestToPrefix', { p0: req.approverNote || icenT('kbAccess.ownerLabel') })));
 
-    const submit = h('button', 'kb-access-submit', '提交申请');
+    const submit = h('button', 'icen-kb-access-submit', icenT('kbAccess.submitRequest'));
     submit.type = 'submit';
-    submit.dataset.accessSubmit = '';
+    submit.dataset.icenAccessSubmit = '';
     form.appendChild(submit);
 
     form.addEventListener('submit', (e) => {
@@ -361,24 +362,24 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
 
   /** 状态徽章族：chip + 倒计时 + 续期/重申请文字钮（denied 中性化，revoked 弱化） */
   const buildStateRow = (): HTMLElement => {
-    const row = h('div', 'kb-access-state');
-    const chip = h('span', 'kb-chip', kbAccessStateLabel(req.state));
-    chip.dataset.state = req.state;
+    const row = h('div', 'icen-kb-access-state');
+    const chip = h('span', 'icen-kb-chip', kbAccessStateLabel(req.state));
+    chip.dataset.icenState = req.state;
     row.appendChild(chip);
 
     const countdown = untilText(req.expiresAt, new Date());
     if ((req.state === 'granted' || req.state === 'expiring') && countdown) {
-      row.appendChild(h('span', 'kb-num kb-access-countdown', `${countdown}到期`));
+      row.appendChild(h('span', 'icen-kb-num icen-kb-access-countdown', icenT('kbAccess.expiresAt', { p0: countdown })));
     }
 
     if (req.state === 'requested' || req.state === 'pending_review') {
-      row.appendChild(h('span', 'kb-meta', `等待 ${req.approverNote || '内容负责人'} 审批`));
+      row.appendChild(h('span', 'icen-kb-meta', icenT('kbAccess.waitingApproval', { p0: req.approverNote || icenT('kbAccess.ownerLabel') })));
       return row;
     }
     if (req.state === 'expiring') {
-      const renew = h('button', 'kb-access-act', '申请续期');
+      const renew = h('button', 'icen-kb-access-act', icenT('kbAccess.requestRenewal'));
       renew.type = 'button';
-      renew.dataset.accessRenew = '';
+      renew.dataset.icenAccessRenew = '';
       renew.addEventListener('click', () => {
         formOpen = true; /* 续期走同一表单/同一 request 事件，数据侧关联原授权 */
         render();
@@ -387,9 +388,9 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       return row;
     }
     if (req.state === 'expired') {
-      const reapply = h('button', 'kb-access-act', '重新申请');
+      const reapply = h('button', 'icen-kb-access-act', icenT('kbAccess.reapply'));
       reapply.type = 'button';
-      reapply.dataset.accessReapply = '';
+      reapply.dataset.icenAccessReapply = '';
       reapply.addEventListener('click', () => {
         formOpen = true;
         render();
@@ -399,10 +400,10 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
     }
     if (req.state === 'denied') {
       /* 不做刺眼红色终态（业界静默默契）：中性灰文案 + 可再次尝试，永不惩罚性断头 */
-      row.appendChild(h('span', 'kb-meta', '未通过——可调整理由后重新申请'));
-      const reapply = h('button', 'kb-access-act', '重新申请');
+      row.appendChild(h('span', 'icen-kb-meta', icenT('kbAccess.deniedHint')));
+      const reapply = h('button', 'icen-kb-access-act', icenT('kbAccess.reapply'));
       reapply.type = 'button';
-      reapply.dataset.accessReapply = '';
+      reapply.dataset.icenAccessReapply = '';
       reapply.addEventListener('click', () => {
         formOpen = true;
         render();
@@ -411,10 +412,10 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       return row;
     }
     if (req.state === 'revoked') {
-      row.appendChild(h('span', 'kb-meta', '访问已被收回'));
-      const reapply = h('button', 'kb-access-act', '重新申请');
+      row.appendChild(h('span', 'icen-kb-meta', icenT('kbAccess.revokedHint')));
+      const reapply = h('button', 'icen-kb-access-act', icenT('kbAccess.reapply'));
       reapply.type = 'button';
-      reapply.dataset.accessReapply = '';
+      reapply.dataset.icenAccessReapply = '';
       reapply.addEventListener('click', () => {
         formOpen = true;
         render();
@@ -426,51 +427,51 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
 
   /** approver 队列卡：请求人/资源/角色/理由/时间 + 批准（选档确认）/ 拒绝（附留言可选） */
   const buildQueue = (): HTMLElement => {
-    const queue = h('div', 'kb-access-queue');
-    const card = h('div', 'kb-access-req');
+    const queue = h('div', 'icen-kb-access-queue');
+    const card = h('div', 'icen-kb-access-req');
 
-    card.appendChild(h('span', 'kb-access-req-user', req.requester || '未知请求人'));
-    card.appendChild(h('span', 'kb-access-req-resource', req.resource || '受限内容'));
-    card.appendChild(h('span', 'kb-chip kb-access-req-role', kbRoleLabel(req.role)));
-    if (req.reason) card.appendChild(h('span', 'kb-meta kb-access-req-reason', req.reason));
-    card.appendChild(h('span', 'kb-num kb-access-req-at', relativeTime(req.submittedAt)));
+    card.appendChild(h('span', 'icen-kb-access-req-user', req.requester || icenT('kbAccess.unknownRequester')));
+    card.appendChild(h('span', 'icen-kb-access-req-resource', req.resource || icenT('kbAccess.restrictedContent')));
+    card.appendChild(h('span', 'icen-kb-chip kb-access-req-role', kbRoleLabel(req.role)));
+    if (req.reason) card.appendChild(h('span', 'icen-kb-meta icen-kb-access-req-reason', req.reason));
+    card.appendChild(h('span', 'icen-kb-num icen-kb-access-req-at', relativeTime(req.submittedAt)));
 
     const pending = req.state === 'idle' || req.state === 'requested' || req.state === 'pending_review';
     if (pending) {
-      const actions = h('span', 'kb-access-req-actions');
+      const actions = h('span', 'icen-kb-access-req-actions');
 
-      const roleSel = h('select', 'kb-access-approve-role');
-      roleSel.setAttribute('aria-label', '批准角色');
+      const roleSel = h('select', 'icen-kb-access-approve-role');
+      roleSel.setAttribute('aria-label', icenT('kbAccess.grantRoleLabel'));
       for (const r of REQUESTABLE_ROLES) {
-        const o = h('option', undefined, `批准为${kbRoleLabel(r)}`);
+        const o = h('option', undefined, icenT('kbAccess.grantAsPrefix', { p0: kbRoleLabel(r) }));
         o.value = r;
         roleSel.appendChild(o);
       }
       roleSel.value = REQUESTABLE_ROLES.includes(req.role) ? req.role : 'viewer';
       actions.appendChild(roleSel);
 
-      const approve = ghostBtn('批准', 'data-access-approve', '批准该访问申请');
+      const approve = ghostBtn(icenT('common.approve'), 'data-icen-access-approve', icenT('kbAccess.approveTip'));
       approve.addEventListener('click', () => decide('approve', roleSel.value as KbRole));
       actions.appendChild(approve);
 
       /* 拒绝留言：UI 便利；事件契约（冻结）不含留言字段，宿主经 onDecide 自行读取或走自有通道 */
       const note = document.createElement('textarea');
-      note.className = 'kb-access-note';
-      note.placeholder = '给请求人的留言（可选）';
+      note.className = 'icen-kb-access-note';
+      note.placeholder = icenT('kbAccess.approverNotePlaceholder');
       note.rows = 1;
-      note.setAttribute('aria-label', '拒绝留言（可选）');
+      note.setAttribute('aria-label', icenT('kbAccess.denyNoteLabel'));
       actions.appendChild(note);
 
-      const deny = ghostBtn('拒绝', 'data-access-deny', '拒绝该访问申请');
+      const deny = ghostBtn(icenT('common.reject'), 'data-icen-access-deny', icenT('kbAccess.rejectTip'));
       deny.addEventListener('click', () => decide('deny'));
       actions.appendChild(deny);
 
       card.appendChild(actions);
     } else {
       /* 已决定回显（决定人视角的时间与结论，对授权侧诚实） */
-      const decided = req.state === 'granted' || req.state === 'expiring' ? `已批准 · ${kbRoleLabel(req.role)}` : kbAccessStateLabel(req.state);
-      const echo = h('span', 'kb-meta kb-access-req-decided', decided);
-      if (req.decidedAt) echo.appendChild(h('span', 'kb-num', ` · ${relativeTime(req.decidedAt)}`));
+      const decided = req.state === 'granted' || req.state === 'expiring' ? icenT('kbAccess.approvedBadge', { p0: kbRoleLabel(req.role) }) : kbAccessStateLabel(req.state);
+      const echo = h('span', 'icen-kb-meta icen-kb-access-req-decided', decided);
+      if (req.decidedAt) echo.appendChild(h('span', 'icen-kb-num', ` · ${relativeTime(req.decidedAt)}`));
       card.appendChild(echo);
     }
 
@@ -486,16 +487,16 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
     const doc = host.ownerDocument;
     const active = doc.activeElement;
     const focusInForm =
-      active instanceof HTMLElement && host.contains(active) && active.closest('.kb-access-form') != null;
+      active instanceof HTMLElement && host.contains(active) && active.closest('.icen-kb-access-form') != null;
 
     /* 打断保护：宿主 setState 触发的重渲不吞掉用户已输入未提交的内容 */
-    const prevReason = host.querySelector<HTMLTextAreaElement>('.kb-access-reason');
+    const prevReason = host.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason');
     if (prevReason) formReason = prevReason.value;
-    const prevDuration = host.querySelector<HTMLSelectElement>('.kb-access-duration');
+    const prevDuration = host.querySelector<HTMLSelectElement>('.icen-kb-access-duration');
     if (prevDuration) formDuration = prevDuration.value;
 
-    host.className = mode === 'approver' ? 'kb-access kb-access--approver' : 'kb-access';
-    host.dataset.state = req.state;
+    host.className = mode === 'approver' ? 'icen-kb-access icen-kb-access--approver' : 'icen-kb-access';
+    host.dataset.icenState = req.state;
     host.replaceChildren();
 
     if (mode === 'approver') {
@@ -506,7 +507,7 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       const form = buildForm();
       host.appendChild(form);
       host.appendChild(buildStateRow());
-      if (formOpen && focusInForm) form.querySelector<HTMLTextAreaElement>('.kb-access-reason')?.focus();
+      if (formOpen && focusInForm) form.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason')?.focus();
     }
   };
 
@@ -520,8 +521,8 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
     if (destroyed) return;
     destroyed = true;
     host.replaceChildren();
-    host.classList.remove('kb-access', 'kb-access--approver');
-    delete host.dataset.state;
+    host.classList.remove('icen-kb-access', 'icen-kb-access--approver');
+    delete host.dataset.icenState;
     delete host.__icenKbAccess;
   };
   host.__icenKbAccess = { destroy };

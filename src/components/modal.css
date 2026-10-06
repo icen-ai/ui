@@ -2,19 +2,19 @@
  * @icen.ai/ui — Component: modal（对话框 + 贴边 Sheet，与 behaviors/modal 配套）
  *
  * 完整契约：
- *   <div class="modal-backdrop" data-modal="id" hidden>
- *     <div class="modal [--sm|--lg|--xl|--full] [role=dialog] aria-modal="true" aria-labelledby="title-id">
- *       <div class="modal-header">
+ *   <div class="icen-modal-backdrop" data-icen-modal="id" hidden>
+ *     <div class="icen-modal [--sm|--lg|--xl|--full] [role=dialog] aria-modal="true" aria-labelledby="title-id">
+ *       <div class="icen-modal-header">
  *         <div>
- *           <h2 class="modal-title" id="title-id">标题</h2>
- *           <p class="modal-description">副标题（可选）</p>
+ *           <h2 class="icen-modal-title" id="title-id">标题</h2>
+ *           <p class="icen-modal-description">副标题（可选）</p>
          </div>
- *         <button class="modal-close" aria-label="关闭">…</button>
+ *         <button class="icen-modal-close" aria-label="关闭">…</button>
  *       </div>
- *       <div class="modal-body">…</div>
- *       <div class="modal-footer [modal-footer--between|modal-footer--start|modal-footer--column]">
- *         <button class="btn">取消</button>
- *         <button class="btn btn-primary">确认</button>
+ *       <div class="icen-modal-body">…</div>
+ *       <div class="icen-modal-footer [icen-modal-footer--between|icen-modal-footer--start|icen-modal-footer--column]">
+ *         <button class="icen-btn">取消</button>
+ *         <button class="icen-btn icen-btn-primary">确认</button>
  *       </div>
  *     </div>
  *   </div>
@@ -23,74 +23,74 @@
  * behavior 维护：focus trap、ESC 关闭、点击 backdrop 关闭、scroll lock。
  */
 
-.modal-backdrop {
+.icen-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--z-dialog);
+  z-index: var(--icen-z-dialog);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--density-space-md);
-  background: color-mix(in srgb, var(--token-text) 45%, transparent);
+  padding: var(--icen-density-space-md);
+  background: color-mix(in srgb, var(--icen-token-text) 45%, transparent);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: icen-modal-fade-in var(--icen-tx-normal);
 }
-.modal-backdrop[hidden] { display: none; }
+.icen-modal-backdrop[hidden] { display: none; }
 
-.modal {
+.icen-modal {
   display: flex;
   flex-direction: column;
   overflow: hidden;
   width: 100%;
   max-width: 480px;
   max-height: calc(100vh - 32px);
-  background: var(--token-card-strong);
-  color: var(--token-text);
-  border: 1px solid var(--token-outline);
-  box-shadow: var(--token-shadow-overlay);
-  border-radius: var(--radius-xl);
+  background: var(--icen-token-card-strong);
+  color: var(--icen-token-text);
+  border: 1px solid var(--icen-token-outline);
+  box-shadow: var(--icen-token-shadow-overlay);
+  border-radius: var(--icen-radius-xl);
   animation: icen-modal-scale-in var(--icen-tx-slow);
 }
-.modal:focus { outline: none; }
-.modal:focus-visible {
-  box-shadow: var(--token-shadow-overlay), var(--icen-ring-soft);
+.icen-modal:focus { outline: none; }
+.icen-modal:focus-visible {
+  box-shadow: var(--icen-token-shadow-overlay), var(--icen-ring-soft);
 }
 
 /* ── 尺寸档 ── */
-.modal--sm { max-width: 360px; }
-.modal--lg { max-width: 640px; }
-.modal--xl { max-width: 800px; }
-.modal--full {
+.icen-modal--sm { max-width: 360px; }
+.icen-modal--lg { max-width: 640px; }
+.icen-modal--xl { max-width: 800px; }
+.icen-modal--full {
   width: calc(100vw - 32px);
   max-width: none;
   height: calc(100vh - 32px);
   max-height: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--icen-radius-lg);
 }
 
 /* ── 头部 / 主体 / 底栏 ── */
-.modal-header {
+.icen-modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--density-space-md);
-  padding: var(--density-space-lg) var(--density-space-lg) var(--density-space-sm);
+  gap: var(--icen-density-space-md);
+  padding: var(--icen-density-space-lg) var(--icen-density-space-lg) var(--icen-density-space-sm);
 }
-.modal-title {
+.icen-modal-title {
   margin: 0;
-  font-size: var(--density-font-size-lg);
+  font-size: var(--icen-density-font-size-lg);
   font-weight: 600;
   line-height: 1.3;
-  font-family: var(--font-heading);
+  font-family: var(--icen-font-heading);
 }
-.modal-description {
+.icen-modal-description {
   margin: 2px 0 0;
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
   line-height: 1.5;
 }
-.modal-close {
+.icen-modal-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -101,86 +101,86 @@
   background: none;
   border: 0;
   cursor: pointer;
-  color: var(--token-text-faint);
-  font-size: var(--density-font-size-lg);
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-lg);
   line-height: 1;
-  border-radius: var(--radius-sm);
+  border-radius: var(--icen-radius-sm);
   transition:
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.modal-close:hover {
-  background: var(--token-surface-hover);
-  color: var(--token-text);
+.icen-modal-close:hover {
+  background: var(--icen-token-surface-hover);
+  color: var(--icen-token-text);
 }
-.modal-close:focus-visible {
+.icen-modal-close:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.modal-body {
+.icen-modal-body {
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0 var(--density-space-lg) var(--density-space-md);
-  font-size: var(--density-font-size-md);
+  padding: 0 var(--icen-density-space-lg) var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.6;
 }
 
-.modal-footer {
+.icen-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-md) var(--density-space-lg);
-  border-top: 1px solid color-mix(in srgb, var(--token-line-soft) 40%, transparent);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-md) var(--icen-density-space-lg);
+  border-top: 1px solid color-mix(in srgb, var(--icen-token-line-soft) 40%, transparent);
 }
-.modal-footer--start { justify-content: flex-start; }
-.modal-footer--between { justify-content: space-between; }
-.modal-footer--column { flex-direction: column; }
-.modal-footer--column > * { width: 100%; }
+.icen-modal-footer--start { justify-content: flex-start; }
+.icen-modal-footer--between { justify-content: space-between; }
+.icen-modal-footer--column { flex-direction: column; }
+.icen-modal-footer--column > * { width: 100%; }
 
 /* ── Sheet 变体：面板 fixed 贴边，radius 只保留非贴边侧 ── */
-.modal--sheet-left,
-.modal--sheet-right,
-.modal--sheet-top,
-.modal--sheet-bottom {
+.icen-modal--sheet-left,
+.icen-modal--sheet-right,
+.icen-modal--sheet-top,
+.icen-modal--sheet-bottom {
   position: fixed;
   max-width: none;
   max-height: none;
   border-radius: 0;
 }
-.modal--sheet-left {
-  left: 0; top: 0; bottom: 0;
+.icen-modal--sheet-left {
+  left: 0; top: 0; bottom: 0; /* guard:allow-physical --sheet-left 是按物理侧边命名的变体（贴左缘抽屉），RTL 语义不变 */
   width: 360px;
   height: 100%;
-  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  border-radius: 0 var(--icen-radius-xl) var(--icen-radius-xl) 0; /* guard:allow-physical 圆角贴着物理左缘（sheet-left 变体），RTL 语义不变 */
   animation-name: icen-modal-slide-left;
 }
-.modal--sheet-right {
-  right: 0; top: 0; bottom: 0;
+.icen-modal--sheet-right {
+  right: 0; top: 0; bottom: 0; /* guard:allow-physical --sheet-right 是按物理侧边命名的变体（贴右缘抽屉），RTL 语义不变 */
   width: 360px;
   height: 100%;
-  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  border-radius: var(--icen-radius-xl) 0 0 var(--icen-radius-xl); /* guard:allow-physical 圆角贴着物理右缘（sheet-right 变体），RTL 语义不变 */
   animation-name: icen-modal-slide-right;
 }
-.modal--sheet-top {
-  top: 0; left: 0; right: 0;
+.icen-modal--sheet-top {
+  top: 0; inset-inline: 0;
   width: 100%;
   height: 300px;
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-radius: 0 0 var(--icen-radius-xl) var(--icen-radius-xl);
   animation-name: icen-modal-slide-top;
 }
-.modal--sheet-bottom {
-  bottom: 0; left: 0; right: 0;
+.icen-modal--sheet-bottom {
+  bottom: 0; inset-inline: 0;
   width: 100%;
   height: 300px;
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-radius: var(--icen-radius-xl) var(--icen-radius-xl) 0 0;
   animation-name: icen-modal-slide-bottom;
 }
-.modal--sheet-left.modal--sm, .modal--sheet-right.modal--sm { width: 280px; }
-.modal--sheet-left.modal--lg, .modal--sheet-right.modal--lg { width: 480px; }
-.modal--sheet-top.modal--sm, .modal--sheet-bottom.modal--sm { height: 200px; }
-.modal--sheet-top.modal--lg, .modal--sheet-bottom.modal--lg { height: 50vh; }
+.icen-modal--sheet-left.icen-modal--sm, .icen-modal--sheet-right.icen-modal--sm { width: 280px; }
+.icen-modal--sheet-left.icen-modal--lg, .icen-modal--sheet-right.icen-modal--lg { width: 480px; }
+.icen-modal--sheet-top.icen-modal--sm, .icen-modal--sheet-bottom.icen-modal--sm { height: 200px; }
+.icen-modal--sheet-top.icen-modal--lg, .icen-modal--sheet-bottom.icen-modal--lg { height: 50vh; }
 
 /* ── 进场动画 ── */
 @keyframes icen-modal-fade-in {
@@ -209,5 +209,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .modal-backdrop, .modal { animation: none; }
+  .icen-modal-backdrop, .icen-modal { animation: none; }
 }

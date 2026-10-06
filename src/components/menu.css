@@ -1,136 +1,136 @@
 /*
  * @icen.ai/ui — Component: menu（菜单面板，与 behaviors/dropdown、context-menu 配套）
  *
- * 面板由 JS portal 到 document.body 并按 fixed 定位；data-side 决定进场位移方向。
+ * 面板由 JS portal 到 document.body 并按 fixed 定位；data-icen-side 决定进场位移方向。
  * 规格源自 opengal overlay/dropdown + overlay/context-menu。
  *
  * 完整契约（dropdown）：
- *   <button class="menu-trigger pressable" data-menu-target="id" aria-haspopup="menu" aria-expanded="false">…</button>
- *   <div class="menu" id="id" role="menu" data-side="bottom" hidden>
- *     <div class="menu-label">组标题（可选）</div>
- *     <button class="menu-item [.is-highlighted] [.is-disabled] [.menu-item--danger]" role="menuitem">
- *       <span class="menu-item-icon">…svg…</span>
- *       <span class="menu-item-label">文本</span>
- *       <span class="menu-item-sub">副标题</span>
- *       <span class="menu-item-shortcut">⌘S</span>
+ *   <button class="menu-trigger icen-pressable" data-icen-menu-target="id" aria-haspopup="icen-menu" aria-expanded="false">…</button>
+ *   <div class="icen-menu" id="id" role="icen-menu" data-icen-side="bottom" hidden>
+ *     <div class="icen-menu-label">组标题（可选）</div>
+ *     <button class="icen-menu-item [.is-highlighted] [.is-disabled] [.icen-menu-item--danger]" role="menuitem">
+ *       <span class="icen-menu-item-icon">…svg…</span>
+ *       <span class="icen-menu-item-label">文本</span>
+ *       <span class="icen-menu-item-sub">副标题</span>
+ *       <span class="icen-menu-item-shortcut">⌘S</span>
  *     </button>
- *     <div class="menu-separator"></div>
- *     <button class="menu-item menu-item--checked">
- *       <span class="menu-item-check">✓</span>
- *       <span class="menu-item-label">已选项</span>
+ *     <div class="icen-menu-separator"></div>
+ *     <button class="icen-menu-item icen-menu-item--checked">
+ *       <span class="icen-menu-item-check">✓</span>
+ *       <span class="icen-menu-item-label">已选项</span>
  *     </button>
  *   </div>
  *
- * context-menu：附加 .menu--context（更窄宽度、更高 z-index）。
+ * context-menu：附加 .icen-menu--context（更窄宽度、更高 z-index）。
  * behavior 维护：键盘箭头导航 + .is-highlighted 跟随、Enter 触发、ESC 关闭、外部点击关闭。
  */
 
-.menu {
+.icen-menu {
   position: fixed;
-  z-index: var(--z-popover);
-  min-width: 180px;
-  max-width: 320px;
-  max-height: min(70vh, 420px);
+  z-index: var(--icen-z-popover);
+  min-inline-size: 180px;
+  max-inline-size: 320px;
+  max-block-size: min(70vh, 420px);
   overflow-y: auto;
   overscroll-behavior: contain;
   margin: 0;
-  padding: var(--density-space-xs);
-  background: color-mix(in srgb, var(--token-card-strong) 92%, transparent);
+  padding: var(--icen-density-space-xs);
+  background: color-mix(in srgb, var(--icen-token-card-strong) 92%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--token-outline);
-  box-shadow: var(--token-shadow-overlay);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--icen-token-outline);
+  box-shadow: var(--icen-token-shadow-overlay);
+  border-radius: var(--icen-radius-lg);
   animation: icen-menu-in var(--menu-in-duration, var(--icen-tx-fast));
 }
-.menu[data-side='top'] { animation-name: icen-menu-in-top; }
-.menu[data-side='left'] { animation-name: icen-menu-in-left; }
-.menu[data-side='right'] { animation-name: icen-menu-in-right; }
+.icen-menu[data-icen-side='top'] { animation-name: icen-menu-in-top; }
+.icen-menu[data-icen-side='left'] { animation-name: icen-menu-in-left; }
+.icen-menu[data-icen-side='right'] { animation-name: icen-menu-in-right; }
 
 /* 右键菜单：opengal context-menu 规格沿用 */
-.menu--context {
-  min-width: 218px;
-  max-width: 286px;
-  z-index: var(--z-tooltip); /* 上下文菜单高于普通 popover，与 tooltip 平齐 */
+.icen-menu--context {
+  min-inline-size: 218px;
+  max-inline-size: 286px;
+  z-index: var(--icen-z-tooltip); /* 上下文菜单高于普通 popover，与 tooltip 平齐 */
   --menu-in-duration: 100ms;
 }
 
 /* ── 分组标签 / 头（context-menu 的 header 项） ── */
-.menu-label {
-  padding: var(--density-space-xs) var(--density-space-sm);
-  font-size: var(--density-font-size-xs);
+.icen-menu-label {
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
-.menu-header {
-  padding: var(--density-space-sm) calc(var(--density-space-sm) + 2px) var(--density-space-xs);
+.icen-menu-header {
+  padding: var(--icen-density-space-sm) calc(var(--icen-density-space-sm) + 2px) var(--icen-density-space-xs);
 }
-.menu-header-label {
+.icen-menu-header-label {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
   font-weight: 500;
   line-height: 1.4;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
-.menu-header-desc {
+.icen-menu-header-desc {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
 
 /* ── 菜单项 ── */
-.menu-item {
+.icen-menu-item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   width: 100%;
-  padding: 6px var(--density-space-sm);
+  padding: 6px var(--icen-density-space-sm);
   background: none;
   border: 0;
   font: inherit;
-  font-size: var(--density-font-size-sm);
-  text-align: left;
-  color: var(--token-text);
-  border-radius: var(--radius-sm);
+  font-size: var(--icen-density-font-size-sm);
+  text-align: start;
+  color: var(--icen-token-text);
+  border-radius: var(--icen-radius-sm);
   cursor: pointer;
   user-select: none;
   transition:
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.menu-item:hover:not(.is-disabled) {
-  background: var(--token-fill-1);
+.icen-menu-item:hover:not(.is-disabled) {
+  background: var(--icen-token-fill-1);
 }
-.menu-item.is-highlighted,
-.menu-item:focus-visible {
-  background: var(--token-surface-hover);
-  color: var(--token-accent);
+.icen-menu-item.is-highlighted,
+.icen-menu-item:focus-visible {
+  background: var(--icen-token-surface-hover);
+  color: var(--icen-token-accent);
   outline: none;
 }
-.menu-item--danger { color: var(--token-error); }
-.menu-item--danger.is-highlighted,
-.menu-item--danger:focus-visible {
-  background: var(--token-error-muted);
-  color: var(--token-error);
+.icen-menu-item--danger { color: var(--icen-token-error); }
+.icen-menu-item--danger.is-highlighted,
+.icen-menu-item--danger:focus-visible {
+  background: var(--icen-token-error-muted);
+  color: var(--icen-token-error);
 }
-.menu-item.is-disabled,
-.menu-item:disabled,
-.menu-item[aria-disabled='true'] {
+.icen-menu-item.is-disabled,
+.icen-menu-item:disabled,
+.icen-menu-item[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   pointer-events: none;
 }
 
-.menu-item-icon {
+.icen-menu-item-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -138,50 +138,50 @@
   height: 14px;
   flex-shrink: 0;
 }
-.menu-item-icon:empty { width: 14px; height: auto; } /* 无图标时占位 */
-.menu-item-label {
+.icen-menu-item-icon:empty { width: 14px; height: auto; } /* 无图标时占位 */
+.icen-menu-item-label {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.menu-item-sub {
+.icen-menu-item-sub {
   display: block;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.3;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   margin-top: 2px;
 }
-.menu-item-shortcut {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
-  font-family: var(--font-mono);
-  margin-left: var(--density-space-sm);
+.icen-menu-item-shortcut {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
+  font-family: var(--icen-font-mono);
+  margin-inline-start: var(--icen-density-space-sm);
 }
-.menu-item-chevron {
+.icen-menu-item-chevron {
   width: 12px;
   height: 12px;
   flex-shrink: 0;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
 
-/* 勾选项：左勾 ✓ + 缩进 */
-.menu-item-check {
+/* 勾选项：起始缘 ✓ + 缩进 */
+.icen-menu-item-check {
   position: absolute;
-  left: var(--density-space-sm);
+  inset-inline-start: var(--icen-density-space-sm);
   top: 50%;
   transform: translateY(-50%);
-  color: var(--token-accent);
-  font-size: var(--density-font-size-md);
+  color: var(--icen-token-accent);
+  font-size: var(--icen-density-font-size-md);
   line-height: 1;
 }
-.menu-item--checked { padding-left: 28px; }
+.icen-menu-item--checked { padding-inline-start: 28px; }
 
-.menu-separator {
-  margin: var(--density-space-xs) calc(var(--density-space-sm) + 2px);
+.icen-menu-separator {
+  margin: var(--icen-density-space-xs) calc(var(--icen-density-space-sm) + 2px);
   height: 1px;
-  background: var(--token-line-soft);
+  background: var(--icen-token-line-soft);
 }
 
 /* ── 进场：fade + scale(.95→1)，按侧别反向位移 8px ── */
@@ -203,10 +203,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .menu, .menu--context { animation: none; }
+  .icen-menu, .icen-menu--context { animation: none; }
 }
 
 /* 触屏：hover 永久开启（替代 hover 设备的悬停反馈） */
 @media (hover: none) {
-  .menu-item:hover:not(.is-disabled) { background: transparent; }
+  .icen-menu-item:hover:not(.is-disabled) { background: transparent; }
 }

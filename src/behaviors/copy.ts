@@ -1,8 +1,8 @@
 /*
  * @icen.ai/ui — Behavior: copy（复制按钮，事件委托）
- * 命中最近的 .copy-btn[data-copy] → navigator.clipboard.writeText，
+ * 命中最近的 .icen-copy-btn[data-icen-copy] → navigator.clipboard.writeText，
  * 失败回退 textarea + execCommand；成功后按钮文本变「已复制」加 .is-done 类，1.4s 还原。
- * 图标按钮：按钮带 data-copy-icon 属性时不改文本，只加 .is-done 类（由 CSS 切换图标，如剪贴板→对勾）。
+ * 图标按钮：按钮带 data-icen-copy-icon 属性时不改文本，只加 .is-done 类（由 CSS 切换图标，如剪贴板→对勾）。
  *
  * 事件（从命中按钮派发，bubbles）：
  *   icen:copy-success { text }            复制成功（含 execCommand 回退成功）
@@ -13,6 +13,7 @@
  */
 
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /** root → 已挂的委托处理器（销毁时摘除用；存在性即幂等标记） */
 const handlers = new WeakMap<ParentNode, (ev: Event) => void>();
@@ -53,19 +54,19 @@ async function copyText(text: string): Promise<CopyOutcome> {
       const fallbackOk = legacyCopy(text);
       if (fallbackOk) return { ok: true };
       const reason = err instanceof Error ? err.message : String(err);
-      return { ok: false, reason: `clipboard API 被拒（${reason}）且回退 execCommand 失败` };
+      return { ok: false, reason: t('copy.denied', { p0: reason }) };
     }
   }
   if (legacyCopy(text)) return { ok: true };
-  return { ok: false, reason: '剪贴板不可用（无 clipboard API 且 execCommand 回退失败）' };
+  return { ok: false, reason: t('copy.unavailable') };
 }
 
 function flashDone(btn: HTMLElement): void {
   const prev = flashing.get(btn);
   if (prev) window.clearTimeout(prev.timer);
-  const iconOnly = btn.hasAttribute('data-copy-icon');
+  const iconOnly = btn.hasAttribute('data-icen-copy-icon');
   const original = prev ? prev.original : iconOnly ? null : btn.textContent;
-  if (!iconOnly) btn.textContent = '已复制';
+  if (!iconOnly) btn.textContent = t('copy.copied');
   btn.classList.add('is-done');
   const timer = window.setTimeout(() => {
     if (!iconOnly) btn.textContent = original;
@@ -78,16 +79,16 @@ function flashDone(btn: HTMLElement): void {
 function onClick(root: ParentNode, ev: Event): void {
   const target = ev.target;
   if (!(target instanceof Element)) return;
-  const btn = target.closest('.copy-btn[data-copy]');
+  const btn = target.closest('.icen-copy-btn[data-icen-copy]');
   // root 为 Element 时，closest 可能爬到 root 之外，需要兜住
   if (!btn || !(root as Node).contains(btn)) return;
-  const text = btn.getAttribute('data-copy') ?? '';
+  const text = btn.getAttribute('data-icen-copy') ?? '';
   void copyText(text).then((outcome) => {
     if (outcome.ok) {
       flashDone(btn as HTMLElement);
       emitIcen(btn, 'icen:copy-success', { text });
     } else {
-      emitIcen(btn, 'icen:copy-error', { text, reason: outcome.reason ?? '未知错误' });
+      emitIcen(btn, 'icen:copy-error', { text, reason: outcome.reason ?? t('copy.unknown') });
     }
   });
 }

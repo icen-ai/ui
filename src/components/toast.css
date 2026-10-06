@@ -1,103 +1,103 @@
 /*
  * @icen.ai/ui — Component: toast（轻提示，与 behaviors/toast 配套）
  *
- * 容器固定在右下角，左缘 3px 语义色条；滑入动画用 motion token。
+ * 容器固定在行内末端下角（LTR 右下 / RTL 镜像左下），起始缘 3px 语义色条；滑入动画用 motion token。
  *
  * 完整契约：
- *   <div class="toast-container" role="status" aria-live="polite">
- *     <div class="toast [toast--success|toast--error|toast--warning|toast--info]" role="status|alert">
- *       <span class="toast-msg">文本</span>
- *       <button class="toast-action">撤销</button>       ← 可选 action
+ *   <div class="icen-toast-container" role="status" aria-live="polite">
+ *     <div class="icen-toast [icen-toast--success|icen-toast--error|icen-toast--warning|icen-toast--info]" role="status|icen-alert">
+ *       <span class="icen-toast-msg">文本</span>
+ *       <button class="icen-toast-action">撤销</button>       ← 可选 action
  *     </div>
  *   </div>
  *
  * behavior 自动维护 role 与 aria-live。
  */
 
-.toast-container {
+.icen-toast-container {
   position: fixed;
-  right: var(--density-space-md);
-  bottom: var(--density-space-md);
-  z-index: var(--z-toast);
+  inset-inline-end: var(--icen-density-space-md);
+  bottom: var(--icen-density-space-md);
+  z-index: var(--icen-z-toast);
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   align-items: flex-end;
   pointer-events: none;
 }
 
-.toast {
+.icen-toast {
   pointer-events: auto;
   position: relative;
   overflow: hidden;
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  background: var(--token-surface);
-  color: var(--token-text);
-  border: 1px solid var(--token-line-soft);
-  border-left: 3px solid var(--token-line-strong);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--token-shadow-overlay);
-  padding: var(--density-space-sm) var(--density-space-md);
-  font-size: var(--density-font-size-md);
+  gap: var(--icen-density-space-sm);
+  background: var(--icen-token-surface);
+  color: var(--icen-token-text);
+  border: 1px solid var(--icen-token-line-soft);
+  border-inline-start: 3px solid var(--icen-token-line-strong);
+  border-radius: var(--icen-radius-sm);
+  box-shadow: var(--icen-token-shadow-overlay);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.4;
-  max-width: 380px;
+  max-inline-size: 380px;
   animation: icen-toast-in var(--icen-tx-slow);
 }
 
-/* 语义色：左缘 3px 强调 */
-.toast--success { border-left-color: var(--token-success); }
-.toast--error   { border-left-color: var(--token-error); }
-.toast--warning { border-left-color: var(--token-warning); }
-.toast--info    { border-left-color: var(--token-info); }
+/* 语义色：起始缘 3px 强调 */
+.icen-toast--success { border-inline-start-color: var(--icen-token-success); }
+.icen-toast--error   { border-inline-start-color: var(--icen-token-error); }
+.icen-toast--warning { border-inline-start-color: var(--icen-token-warning); }
+.icen-toast--info    { border-inline-start-color: var(--icen-token-info); }
 
-.toast-msg {
+.icen-toast-msg {
   flex: 1;
   min-width: 0;
   word-break: break-word;
 }
 
-.toast-action {
+.icen-toast-action {
   flex-shrink: 0;
   padding: 0;
   background: none;
   border: 0;
   cursor: pointer;
-  color: var(--token-accent);
+  color: var(--icen-token-accent);
   font: inherit;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 3px;
   -webkit-tap-highlight-color: transparent;
   transition: color var(--icen-tx-fast);
 }
-.toast-action:hover { color: var(--token-accent-deep, var(--token-accent)); }
-.toast-action:focus-visible {
+.icen-toast-action:hover { color: var(--icen-token-accent-deep, var(--icen-token-accent)); }
+.icen-toast-action:focus-visible {
   outline: none;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   box-shadow: var(--icen-ring);
 }
 
 /* ── 增强 ── */
 
 /* 语义图标 */
-.toast-icon {
+.icen-toast-icon {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
-.toast-icon svg { width: 16px; height: 16px; }
-.toast--success .toast-icon { color: var(--token-success); }
-.toast--error   .toast-icon { color: var(--token-error); }
-.toast--warning .toast-icon { color: var(--token-warning); }
-.toast--info    .toast-icon { color: var(--token-info); }
+.icen-toast-icon svg { width: 16px; height: 16px; }
+.icen-toast--success .icen-toast-icon { color: var(--icen-token-success); }
+.icen-toast--error   .icen-toast-icon { color: var(--icen-token-error); }
+.icen-toast--warning .icen-toast-icon { color: var(--icen-token-warning); }
+.icen-toast--info    .icen-toast-icon { color: var(--icen-token-info); }
 
 /* 关闭按钮 */
-.toast-close {
+.icen-toast-close {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -106,95 +106,94 @@
   height: 20px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   background: transparent;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.toast-close:hover {
-  color: var(--token-text);
-  background: var(--token-fill-1);
+.icen-toast-close:hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-1);
 }
-.toast-close svg { width: 12px; height: 12px; }
+.icen-toast-close svg { width: 12px; height: 12px; }
 
 /* 富内容（标题 + 正文） */
-.toast-content {
+.icen-toast-content {
   flex: 1;
   min-width: 0;
 }
-.toast-title {
-  font-size: var(--density-font-size-md);
+.icen-toast-title {
+  font-size: var(--icen-density-font-size-md);
   font-weight: 500;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   line-height: 1.4;
 }
-.toast-body {
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+.icen-toast-body {
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
   margin-top: 2px;
   line-height: 1.5;
 }
 
 /* 超时进度条 */
-.toast-progress {
+.icen-toast-progress {
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   height: 2px;
   background: transparent;
   overflow: hidden;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  border-radius: 0 0 var(--icen-radius-sm) var(--icen-radius-sm);
 }
-.toast-progress-fill {
+.icen-toast-progress-fill {
   height: 100%;
-  background: var(--token-accent);
-  transform-origin: left;
+  background: var(--icen-token-accent);
+  transform-origin: left; /* guard:allow-physical 倒计时压缩方向是动画语义（LTR 自左向右消减），RTL 下保持同一物理节奏 */
   animation: toast-countdown linear forwards;
 }
-.toast--success .toast-progress-fill { background: var(--token-success); }
-.toast--error   .toast-progress-fill { background: var(--token-error); }
-.toast--warning .toast-progress-fill { background: var(--token-warning); }
-.toast--info    .toast-progress-fill { background: var(--token-info); }
+.icen-toast--success .icen-toast-progress-fill { background: var(--icen-token-success); }
+.icen-toast--error   .icen-toast-progress-fill { background: var(--icen-token-error); }
+.icen-toast--warning .icen-toast-progress-fill { background: var(--icen-token-warning); }
+.icen-toast--info    .icen-toast-progress-fill { background: var(--icen-token-info); }
 @keyframes toast-countdown {
   from { transform: scaleX(1); }
   to   { transform: scaleX(0); }
 }
 
-/* 容器定位变体 */
-.toast-container[data-position='top-left'] {
-  right: auto;
+/* 容器定位变体（位置名为物理角契约，RTL 语义不变） */
+.icen-toast-container[data-icen-position='top-left'] {
+  right: auto; /* guard:allow-physical 物理角位置变体 top-left */
   bottom: auto;
-  top: var(--density-space-md);
-  left: var(--density-space-md);
+  top: var(--icen-density-space-md);
+  left: var(--icen-density-space-md); /* guard:allow-physical 物理角位置变体 top-left */
   align-items: flex-start;
 }
-.toast-container[data-position='top-right'] {
+.icen-toast-container[data-icen-position='top-right'] {
   bottom: auto;
-  top: var(--density-space-md);
+  top: var(--icen-density-space-md);
 }
-.toast-container[data-position='top-center'] {
-  right: auto;
+.icen-toast-container[data-icen-position='top-center'] {
+  right: auto; /* guard:allow-physical 物理角位置变体 top-center */
   bottom: auto;
-  top: var(--density-space-md);
-  left: 50%;
+  top: var(--icen-density-space-md);
+  left: 50%; /* guard:allow-physical 水平居中：left 50% + translateX(-50%) 任意方向下均为视口水平中心 */
   transform: translateX(-50%);
   align-items: center;
 }
-.toast-container[data-position='bottom-left'] {
-  right: auto;
-  left: var(--density-space-md);
+.icen-toast-container[data-icen-position='bottom-left'] {
+  right: auto; /* guard:allow-physical 物理角位置变体 bottom-left */
+  left: var(--icen-density-space-md); /* guard:allow-physical 物理角位置变体 bottom-left */
   align-items: flex-start;
 }
-.toast-container[data-position='bottom-center'] {
-  right: auto;
-  left: 50%;
+.icen-toast-container[data-icen-position='bottom-center'] {
+  right: auto; /* guard:allow-physical 物理角位置变体 bottom-center */
+  left: 50%; /* guard:allow-physical 水平居中：left 50% + translateX(-50%) 任意方向下均为视口水平中心 */
   transform: translateX(-50%);
   align-items: center;
 }
 
-.toast.is-leaving {
+.icen-toast.is-leaving {
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -208,10 +207,10 @@
 }
 
 @media (max-width: 480px) {
-  .toast-container { right: var(--density-space-sm); bottom: var(--density-space-sm); left: var(--density-space-sm); align-items: stretch; }
-  .toast { max-width: none; }
+  .icen-toast-container { inset-inline: var(--icen-density-space-sm); bottom: var(--icen-density-space-sm); align-items: stretch; }
+  .icen-toast { max-inline-size: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .toast { animation: none; }
+  .icen-toast { animation: none; }
 }

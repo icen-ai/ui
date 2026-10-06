@@ -1,0 +1,96 @@
+/*
+ * @icen.ai/ui — Component: mentions（@ 提及输入面板）
+ * 与 behaviors/mentions.ts 配套（createMentions(el, opts) → MentionsHandle）。
+ *
+ * 完整契约：
+ *   <div class="icen-mentions">                        ← 宿主包装容器（PanelSizing 挂这里）；
+ *                                                          也可以把 createMentions 直接传给 textarea
+ *     <textarea class="icen-input"></textarea>          ← 宿主渲染；behavior 挂
+ *       aria-haspopup="listbox" / aria-expanded / aria-controls / aria-activedescendant
+ *   </div>
+ *
+ * behavior 渲染（portal 到 document.body，全部 textContent，勿手写）：
+ *   <div class="icen-mentions-panel" role="listbox" [hidden] [id] [data-icen-side="top|bottom"]
+ *        style="left/top/width/max-height: JS 按 caret 镜像量坐标写入">
+ *     <div class="icen-mentions-status" role="status" [hidden]>加载中…</div>   ← 异步 source 期间显示
+ *     <div class="icen-mentions-option [.is-active|.is-disabled]" role="option"
+ *          id="{panelId}-opt-{i}" [aria-selected] [aria-disabled]>
+ *       <span class="icen-mentions-option-label">展示名</span>
+ *     </div>
+ *   </div>
+ *   空结果 = 直接关层（无空态元素）；加载态/面板显隐全靠 [hidden]（本文件不设 display）。
+ *
+ * 行为摘要：trigger（默认 @）出现在行首/空白后且查询字符数 ≥ minChars 时弹层；
+ *   ↑↓ 循环（跳过 .is-disabled）、Enter 选中（IME 组合态不拦）、Esc 关层、
+ *   外点/失焦关层；选中把 `@query` 替换为 `@label ` 并 track 进 mentions 数组，
+ *   文本里消失的标签自动从数组摘除。面板尺寸走 PanelSizing（data-icen-panel-*）。
+ */
+
+/* 宿主壳：输入框视觉自治（不套 .icen-input-wrap——那是单行固定高控件壳，多行 textarea 会被压爆） */
+.icen-mentions {
+  display: block;
+  width: 100%;
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
+  cursor: text;
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
+}
+.icen-mentions:hover { border-color: var(--icen-hover-border); }
+.icen-mentions:focus-within {
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+.icen-mentions > .icen-input { display: block; width: 100%; resize: vertical; }
+
+.icen-mentions-panel {
+  position: fixed;
+  z-index: var(--icen-z-popover);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  background: var(--icen-token-card-strong);
+  border: 1px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-overlay);
+  transform-origin: top center;
+  animation: icen-pop-in var(--icen-tx-fast);
+}
+.icen-mentions-panel[data-icen-side='top'] { transform-origin: bottom center; }
+
+/* 异步加载态（role=status，screen reader 播报） */
+.icen-mentions-status {
+  padding: var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-faint);
+}
+
+.icen-mentions-option {
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-xs);
+  padding: 6px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text);
+  border-radius: var(--icen-radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
+}
+.icen-mentions-option:hover:not(.is-disabled) { background: var(--icen-token-fill-1); }
+.icen-mentions-option.is-active { background: var(--icen-token-fill-2); }
+.icen-mentions-option.is-disabled {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.icen-mentions-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

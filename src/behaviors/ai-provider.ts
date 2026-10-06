@@ -14,7 +14,7 @@
  *   const client = createAiClient({ provider: 'deepseek', apiKey, baseURL?, model?, onAudit?, auditor?, fetch? });
  *   client.config                 → 只读 { provider, baseURL, model }
  *   await client.chat(req)        → { text, usage（归一）, cost?, parts?（多模态回执）, finishReason?, raw? }
- *   const s = client.stream(req)  → AsyncIterable<AiStreamChunk> + cancel() + done: Promise<AiChatResult>
+ *   const s = client.stream(icen-req)  → AsyncIterable<AiStreamChunk> + cancel() + done: Promise<AiChatResult>
  *     for await (const c of s)    → { type:'text', delta } | { type:'done' } | { type:'error', message }
  *   · AiChatMessage.content 支持 string | AiContentPart[]（ai-core 标准化内容，多模态）：
  *     openai 族映射 text/image_url/input_audio/file(file_id)；anthropic 族映射 text/image/audio/document(pdf)
@@ -54,6 +54,7 @@ import {
   type AiContentPart,
 } from './ai-core';
 import { emitIcen, type IcenEventMap } from './events';
+import { t } from './i18n';
 
 /* ════════════════════════════════════════════
    小工具（本地副本，与 ai-core 同语义）
@@ -202,7 +203,7 @@ const BUILTIN_PROVIDERS: readonly AiProviderDef[] = [
   },
   {
     id: 'glm',
-    label: 'GLM（智谱）',
+    label: t('aiProvider.glmLabel'),
     icon: letterBadge('G'),
     baseURL: 'https://open.bigmodel.cn/api/paas/v4',
     chatPath: '/chat/completions',
@@ -218,7 +219,7 @@ const BUILTIN_PROVIDERS: readonly AiProviderDef[] = [
   },
   {
     id: 'kimi',
-    label: 'Kimi（月之暗面）',
+    label: t('aiProvider.kimiLabel'),
     icon: letterBadge('K'),
     baseURL: 'https://api.moonshot.cn/v1',
     chatPath: '/chat/completions',
@@ -447,18 +448,18 @@ export function createAiAuditor(opts?: AiAuditorOptions): AiAuditor {
       save();
     },
     summary() {
-      const sum: AiUsage = {};
-      for (const e of entries) addUsage(sum, e.usage ?? {});
+      let sum: AiUsage = {};
+      for (const e of entries) sum = addUsage(sum, e.usage ?? {});
       return sum;
     },
     totals() {
-      const usage: AiUsage = {};
+      let usage: AiUsage = {};
       let cost = 0;
       let errors = 0;
       let ttftSum = 0;
       let ttftN = 0;
       for (const e of entries) {
-        addUsage(usage, e.usage ?? {});
+        usage = addUsage(usage, e.usage ?? {});
         if (typeof e.cost === 'number') cost += e.cost;
         if (e.status === 'error') errors++;
         if (typeof e.ttftMs === 'number') {
@@ -479,7 +480,7 @@ export function createAiAuditor(opts?: AiAuditorOptions): AiAuditor {
       const out: Record<string, AiUsage> = {};
       for (const e of entries) {
         const key = `${e.provider}/${e.model}`;
-        addUsage((out[key] ??= {}), e.usage ?? {});
+        out[key] = addUsage(out[key] ?? {}, e.usage ?? {});
       }
       return out;
     },
@@ -731,7 +732,7 @@ async function* parseAnthropicStream(res: Response, signal?: AbortSignal): Async
       yield {
         kind: 'error',
         type: pickStr(e, ['type']) ?? 'stream_error',
-        message: pickStr(e, ['message']) ?? '流式响应错误',
+        message: pickStr(e, ['message']) ?? t('aiProvider.streamError'),
       };
       return;
     }
@@ -748,7 +749,7 @@ function unsupported(provider: string, what: string): AiProviderError {
     provider,
     status: 0,
     type: 'unsupported',
-    message: `${provider} 线协议不支持 ${what}`,
+    message: t('aiProvider.unsupported', { p0: provider, p1: what }),
   });
 }
 
@@ -763,17 +764,17 @@ function toOpenAiContent(provider: string, content: AiContent): string | unknown
       const url = aiContentUrl(part);
       if (url) out.push({ type: 'image_url', image_url: { url } });
     } else if (part.type === 'audio') {
-      if (!part.data) throw unsupported(provider, '仅 URL 的音频（input_audio 需 base64，请先取回内联）');
+      if (!part.data) throw unsupported(provider, t('aiProvider.audioUrlOnly'));
       const format = (part.mimeType ?? 'audio/wav').split('/')[1] ?? 'wav';
       out.push({ type: 'input_audio', input_audio: { data: part.data, format } });
     } else if (part.type === 'video') {
-      throw unsupported(provider, 'video 输入（无主流 chat API 支持）');
+      throw unsupported(provider, t('aiProvider.videoUnsupported'));
     } else if (part.type === 'file') {
       /* url 槽承载 file_id（Files API 上传产物） */
-      if (!part.url) throw unsupported(provider, 'base64 文件（file 部件需 Files API file_id，请置于 url 槽）');
+      if (!part.url) throw unsupported(provider, t('aiProvider.base64File'));
       out.push({ type: 'file', file: { file_id: part.url } });
     } else {
-      out.push({ type: 'text', text: `[资源] ${part.name ?? ''} (${part.uri})`.trim() });
+      out.push({ type: 'text', text: t('aiProvider.resourceRef', { p0: part.name ?? '', p1: part.uri }).trim() });
     }
   }
   return out;
@@ -792,19 +793,19 @@ function toAnthropicBlocks(provider: string, content: AiContent): unknown[] {
         : { type: 'base64', media_type: part.mimeType ?? 'image/png', data: part.data ?? '' };
       out.push({ type: 'image', source });
     } else if (part.type === 'audio') {
-      if (!part.data) throw unsupported(provider, '仅 URL 的音频（audio 块需 base64 source）');
+      if (!part.data) throw unsupported(provider, t('aiProvider.audioUrlOnlyAnthropic'));
       out.push({ type: 'audio', source: { type: 'base64', media_type: part.mimeType ?? 'audio/wav', data: part.data } });
     } else if (part.type === 'video') {
-      throw unsupported(provider, 'video 输入');
+      throw unsupported(provider, t('aiProvider.videoUnsupportedAnthropic'));
     } else if (part.type === 'file') {
       const mime = part.mimeType ?? 'application/pdf';
-      if (mime !== 'application/pdf') throw unsupported(provider, `非 PDF 文件块（document 块为 application/pdf，收到 ${mime}）`);
+      if (mime !== 'application/pdf') throw unsupported(provider, t('aiProvider.nonPdfDocument', { p0: mime }));
       const source = part.url
         ? { type: 'url', url: part.url }
         : { type: 'base64', media_type: mime, data: part.data ?? '' };
       out.push({ type: 'document', source });
     } else {
-      out.push({ type: 'text', text: `[资源] ${part.name ?? ''} (${part.uri})`.trim() });
+      out.push({ type: 'text', text: t('aiProvider.resourceRef', { p0: part.name ?? '', p1: part.uri }).trim() });
     }
   }
   return out;
@@ -813,7 +814,7 @@ function toAnthropicBlocks(provider: string, content: AiContent): unknown[] {
 function buildOpenAiBody(provider: string, req: AiChatRequest, model: string, streaming: boolean): Record<string, unknown> {
   const messages = req.messages.map((m) => {
     if (m.role === 'tool') {
-      if (!m.toolCallId) throw unsupported(provider, "role 'tool' 且缺 toolCallId（openai 族需 tool_call_id）");
+      if (!m.toolCallId) throw unsupported(provider, t('aiProvider.toolRoleNoCallId'));
       return { role: 'tool', content: contentToText(m.content), tool_call_id: m.toolCallId };
     }
     return { role: m.role, content: toOpenAiContent(provider, m.content) };
@@ -835,7 +836,7 @@ function buildAnthropicBody(provider: string, req: AiChatRequest, model: string,
     .filter((m) => m.role !== 'system')
     .map((m) => {
       if (m.role === 'tool') {
-        if (!m.toolCallId) throw unsupported(provider, "role 'tool' 且缺 toolCallId（anthropic 族映射 tool_result 需 tool_use_id）");
+        if (!m.toolCallId) throw unsupported(provider, t('aiProvider.toolRoleNoUseId'));
         return { role: 'user', content: [{ type: 'tool_result', tool_use_id: m.toolCallId, content: toAnthropicBlocks(provider, m.content) }] };
       }
       const blocks = toAnthropicBlocks(provider, m.content) as Array<Record<string, unknown>>;
@@ -933,19 +934,19 @@ export function createAiClient(options: AiClientOptions): AiClient {
   const normalizeThrown = (err: unknown): AiProviderError => {
     if (err instanceof AiProviderError) return err;
     if (isAbortError(err)) {
-      return new AiProviderError({ provider: def.id, status: 0, type: 'cancelled', message: '请求已取消', raw: err });
+      return new AiProviderError({ provider: def.id, status: 0, type: 'cancelled', message: t('aiProvider.requestCancelled'), raw: err });
     }
     const msg = err instanceof Error ? err.message : String(err);
     /* CORS 诚实：浏览器直连失败（TypeError）且 provider 未承诺支持时，建议走代理 */
     const corsHint =
       err instanceof TypeError && def.browserDirect !== 'yes'
-        ? `；浏览器直连 ${def.label}（${def.baseURL}）很可能被 CORS 拦截，建议经代理/自建网关转发`
+        ? t('aiProvider.corsHint', { p0: def.label, p1: def.baseURL })
         : '';
     return new AiProviderError({
       provider: def.id,
       status: 0,
       type: 'network',
-      message: `网络请求失败：${msg}${corsHint}`,
+      message: t('aiProvider.networkFailed', { p0: msg, p1: corsHint }),
       raw: err,
     });
   };
@@ -1031,7 +1032,7 @@ export function createAiClient(options: AiClientOptions): AiClient {
       status === 'ok' ? 'ok' : 'error',
       usage,
       durationMs,
-      status === 'cancelled' ? '请求已取消' : error,
+      status === 'cancelled' ? t('aiProvider.requestCancelled') : error,
       ttftMs,
     );
     dispatchAiEvent('icen:ai-done', {
@@ -1057,10 +1058,10 @@ export function createAiClient(options: AiClientOptions): AiClient {
       try {
         j = text ? JSON.parse(text) : undefined;
       } catch {
-        throw new AiProviderError({ provider: def.id, status: res.status, type: 'parse', message: '响应不是合法 JSON', raw: text });
+        throw new AiProviderError({ provider: def.id, status: res.status, type: 'parse', message: t('aiProvider.invalidJson'), raw: text });
       }
       if (j === undefined) {
-        throw new AiProviderError({ provider: def.id, status: res.status, type: 'parse', message: '响应为空', raw: text });
+        throw new AiProviderError({ provider: def.id, status: res.status, type: 'parse', message: t('aiProvider.emptyResponse'), raw: text });
       }
 
       let outText = '';

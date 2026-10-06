@@ -3,227 +3,227 @@
  * 规格源自 opengal primitives/input.tsx 的 Select；与 behaviors/select.ts 配套。
  *
  * 完整契约：
- *   <div class="select [data-disabled] [.is-open]" data-select
- *        [data-select-search] [data-select-multiple] [data-select-max="3"]
- *        [data-panel-width="220"] [data-panel-min="200"]
- *        [data-panel-max="360"] [data-panel-max-height="320"]>
- *     <!-- 选项 .select-option 内支持任意 HTML（色卡 / 图标 / 多行）；
+ *   <div class="icen-select [data-icen-disabled] [.is-open]" data-icen-select
+ *        [data-icen-select-search] [data-icen-select-multiple] [data-icen-select-max="3"]
+ *        [data-icen-panel-width="220"] [data-icen-panel-min="200"]
+ *        [data-icen-panel-max="360"] [data-icen-panel-max-height="320"]>
+ *     <!-- 选项 .icen-select-option 内支持任意 HTML（色卡 / 图标 / 多行）；
  *          面板尺寸为全库统一 PanelSizing 契约（behaviors/popover.ts） -->
- *     <button class="select-trigger pressable focus-ring [--sm|--lg]" aria-haspopup="listbox"
+ *     <button class="icen-select-trigger icen-pressable icen-focus-ring [--sm|--lg]" aria-haspopup="listbox"
  *             aria-expanded="false" [disabled]>
- *       <span class="select-leading">…</span>           可选前缀
- *       <span class="select-value is-empty">占位</span>   多选有选中时 behavior 隐藏它
- *       <span class="select-chips">                     ← 多选选中态由 behavior 渲染（勿手写）
- *         <span class="select-chip">标签<span class="select-chip-x" role="button" tabindex="-1">×</span></span>
- *         <span class="select-chip select-chip--more">+2</span>
+ *       <span class="icen-select-leading">…</span>           可选前缀
+ *       <span class="icen-select-value is-empty">占位</span>   多选有选中时 behavior 隐藏它
+ *       <span class="icen-select-chips">                     ← 多选选中态由 behavior 渲染（勿手写）
+ *         <span class="icen-select-chip">标签<span class="icen-select-chip-x" role="button" tabindex="-1">×</span></span>
+ *         <span class="icen-select-chip icen-select-chip--more">+2</span>
  *       </span>
- *       <svg class="select-chevron">…</svg>
+ *       <svg class="icen-select-chevron">…</svg>
  *     </button>
- *     <button class="select-clear" aria-label="清除全部" hidden>×</button>  ← 多选可选：
- *         与 trigger 同级（不能嵌套在 button 内），绝对定位叠进 trigger 右侧；
+ *     <button class="icen-select-clear" aria-label="清除全部" hidden>×</button>  ← 多选可选：
+ *         与 trigger 同级（不能嵌套在 button 内），绝对定位叠进 trigger 行内末端侧（RTL 镜像左侧）；
  *         behavior 在有选中时自动显示
- *     <div class="select-panel" hidden role="listbox">
- *       <div class="select-search">                      ← data-select-search 时 behavior 自动注入
- *         <input class="select-search-input" placeholder="搜索…" />
+ *     <div class="icen-select-panel" hidden role="listbox">
+ *       <div class="icen-select-search">                      ← data-icen-select-search 时 behavior 自动注入
+ *         <icen-input class="icen-select-search-input" placeholder="搜索…" />
  *       </div>
- *       <div class="select-group">                       ← 可选分组
- *         <p class="select-group-label">组标题</p>
- *         <button class="select-option [.is-focused|.is-selected|.is-disabled]" data-value="x">…</button>
+ *       <div class="icen-select-group">                       ← 可选分组
+ *         <p class="icen-select-group-label">组标题</p>
+ *         <button class="icen-select-option [.is-focused|.is-selected|.is-disabled]" data-icen-value="x">…</button>
  *       </div>
- *       <div class="select-empty">无匹配项</div>         ← 搜索无结果时 behavior 显示
+ *       <div class="icen-select-empty">无匹配项</div>         ← 搜索无结果时 behavior 显示
  *     </div>
- *     <input type="hidden" data-select-value />     可选，behavior 同步 value
+ *     <input type="hidden" data-icen-select-value />     可选，behavior 同步 value
  *   </div>
  *
  * behavior 维护：
- *   - .select.is-open ↔ aria-expanded；panel portal 到 body（inline left/top/width/max-height，
- *     带 data-side="top|bottom"；多选时带 data-select-multiple）；ESC/外部点击关闭
- *   - 选项 .is-focused 跟随键盘箭头；Enter 选中 → 写回 .select-value / .is-selected
- *   - data-select-search：面板顶部自动插入搜索框，实时过滤（含 data-keywords），空分组自动隐藏
- *   - data-select-multiple：点击切选不关面板，trigger 显示计数，hidden input 同步逗号分隔值
+ *   - .icen-select.is-open ↔ aria-expanded；panel portal 到 body（inline left/top/width/max-height，
+ *     带 data-icen-side="top|bottom"；多选时带 data-icen-select-multiple）；ESC/外部点击关闭
+ *   - 选项 .is-focused 跟随键盘箭头；Enter 选中 → 写回 .icen-select-value / .is-selected
+ *   - data-icen-select-search：面板顶部自动插入搜索框，实时过滤（含 data-icen-keywords），空分组自动隐藏
+ *   - data-icen-select-multiple：点击切选不关面板，trigger 显示计数，hidden input 同步逗号分隔值
  */
 
-.select {
+.icen-select {
   position: relative;
-  width: 100%;
+  inline-size: 100%;
 }
 
-.select-trigger {
+.icen-select-trigger {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  width: 100%;
-  height: var(--density-input-height-md);
-  padding: 0 var(--density-space-sm);
-  font-size: var(--density-font-size-md);
-  text-align: left;
-  background: var(--token-control);
-  color: var(--token-text);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-inset);
+  gap: var(--icen-density-space-xs);
+  inline-size: 100%;
+  height: var(--icen-density-input-height-md);
+  padding: 0 var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-md);
+  text-align: start;
+  background: var(--icen-token-control);
+  color: var(--icen-token-text);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
   cursor: pointer;
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
 }
-.select-trigger:hover:not(:disabled) {
+.icen-select-trigger:hover:not(:disabled) {
   border-color: var(--icen-hover-border);
 }
-.select-trigger:focus-visible {
+.icen-select-trigger:focus-visible {
   outline: none;
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.select-trigger:disabled,
-.select[data-disabled] .select-trigger,
-.select[aria-disabled='true'] .select-trigger {
+.icen-select-trigger:disabled,
+.icen-select[data-icen-disabled] .icen-select-trigger,
+.icen-select[aria-disabled='true'] .icen-select-trigger {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
   pointer-events: none;
 }
 
 /* 尺寸变体（与 input-wrap 对齐） */
-.select-trigger--sm { height: var(--density-input-height-sm); padding: 0 10px; font-size: var(--density-font-size-sm); }
-.select-trigger--lg { height: var(--density-input-height-lg); padding: 0 var(--density-space-md); font-size: var(--density-font-size-lg); }
+.icen-select-trigger--sm { height: var(--icen-density-input-height-sm); padding: 0 10px; font-size: var(--icen-density-font-size-sm); }
+.icen-select-trigger--lg { height: var(--icen-density-input-height-lg); padding: 0 var(--icen-density-space-md); font-size: var(--icen-density-font-size-lg); }
 
-.select-leading {
+.icen-select-leading {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
-.select-leading svg { width: 14px; height: 14px; }
+.icen-select-leading svg { width: 14px; height: 14px; }
 
-.select-value {
+.icen-select-value {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.select-value.is-empty {
-  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+.icen-select-value.is-empty {
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
 }
 
-.select-chevron {
+.icen-select-chevron {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   transition: transform var(--icen-tx-fast);
 }
-.select.is-open .select-chevron { transform: rotate(180deg); }
+.icen-select.is-open .icen-select-chevron { transform: rotate(180deg); }
 
 /* 面板由 behavior portal 到 body：left/top/width/max-height 由 JS 按 trigger rect inline 写入；
-   data-side="top|bottom" 标记翻侧方向；多选时 panel 带 data-select-multiple 属性。 */
-.select-panel {
+   data-icen-side="top|bottom" 标记翻侧方向；多选时 panel 带 data-icen-select-multiple 属性。 */
+.icen-select-panel {
   position: absolute;
-  z-index: var(--z-popover);
+  z-index: var(--icen-z-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 4px;
-  background: var(--token-card-strong);
-  border: 1px solid var(--token-outline);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-overlay);
+  background: var(--icen-token-card-strong);
+  border: 1px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-overlay);
   transform-origin: top center;
   animation: icen-pop-in var(--icen-tx-fast);
 }
-.select-panel[data-side='top'] { transform-origin: bottom center; }
+.icen-select-panel[data-icen-side='top'] { transform-origin: bottom center; }
 
 /* 选项 */
-.select-option {
+.icen-select-option {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   width: 100%;
-  padding: 6px var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
-  text-align: left;
+  padding: 6px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  text-align: start;
   border: none;
   background: transparent;
-  color: var(--token-text);
-  border-radius: var(--radius-sm);
+  color: var(--icen-token-text);
+  border-radius: var(--icen-radius-sm);
   cursor: pointer;
   transition:
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.select-option:hover:not(.is-disabled) { background: var(--token-fill-1); }
-.select-option.is-focused {
-  background: var(--token-fill-2);
-  color: var(--token-text);
+.icen-select-option:hover:not(.is-disabled) { background: var(--icen-token-fill-1); }
+.icen-select-option.is-focused {
+  background: var(--icen-token-fill-2);
+  color: var(--icen-token-text);
 }
-.select-option.is-selected {
-  color: var(--token-accent);
+.icen-select-option.is-selected {
+  color: var(--icen-token-accent);
   font-weight: 500;
-  background: var(--token-accent-subtle);
+  background: var(--icen-token-accent-subtle);
 }
-.select-option.is-selected::after {
+.icen-select-option.is-selected::after {
   content: '✓';
-  margin-left: auto;
+  margin-inline-start: auto;
   flex-shrink: 0;
-  color: var(--token-accent);
+  color: var(--icen-token-accent);
 }
-.select-option.is-disabled {
+.icen-select-option.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
 /* 分组（行为可选渲染 optgroup） */
-.select-group {
+.icen-select-group {
   padding: 0 4px;
   margin-top: 4px;
 }
-.select-group-label {
-  padding: 6px var(--density-space-sm) 2px;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-select-group-label {
+  padding: 6px var(--icen-density-space-sm) 2px;
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 /* 空状态（behavior 渲染 no-match） */
-.select-empty {
-  padding: var(--density-space-md);
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-faint);
+.icen-select-empty {
+  padding: var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-faint);
   text-align: center;
 }
 
-/* ── 搜索框（data-select-search 时 behavior 自动注入） ── */
-.select-search {
+/* ── 搜索框（data-icen-select-search 时 behavior 自动注入） ── */
+.icen-select-search {
   padding: 4px 4px 6px;
-  border-bottom: 1px solid var(--token-outline-soft);
+  border-bottom: 1px solid var(--icen-token-outline-soft);
   margin-bottom: 4px;
   position: sticky;
   top: 0;
-  background: var(--token-card-strong);
+  background: var(--icen-token-card-strong);
   z-index: 1;
 }
-.select-search-input {
-  width: 100%;
+.icen-select-search-input {
+  inline-size: 100%;
   height: 30px;
-  padding: 0 var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text);
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-sm);
+  padding: 0 var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-sm);
   transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
-.select-search-input:focus {
+.icen-select-search-input:focus {
   outline: none;
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
 
-/* ── 多选清除按钮（与 trigger 同级，绝对定位叠进 trigger 右侧、chevron 左侧） ── */
-.select-clear {
+/* ── 多选清除按钮（与 trigger 同级，绝对定位叠进 trigger 行内末端侧、chevron 内侧） ── */
+.icen-select-clear {
   position: absolute;
   top: 50%;
-  right: calc(var(--density-space-sm) + 20px);
+  inset-inline-end: calc(var(--icen-density-space-sm) + 20px);
   transform: translateY(-50%);
   z-index: 1;
   display: inline-flex;
@@ -234,23 +234,23 @@
   height: 18px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   background: transparent;
-  color: var(--token-text-faint);
-  font-size: var(--density-font-size-lg);
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-lg);
   line-height: 1;
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.select-clear:hover {
-  color: var(--token-text);
-  background: var(--token-fill-1);
+.icen-select-clear:hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-1);
 }
-/* 有清除钮时 trigger 右侧让位（clear 18px + chevron 14px + 间距） */
-.select:has(.select-clear) .select-trigger { padding-right: 52px; }
+/* 有清除钮时 trigger 行内末端侧让位（clear 18px + chevron 14px + 间距） */
+.icen-select:has(.icen-select-clear) .icen-select-trigger { padding-inline-end: 52px; }
 
 /* ── 多选 chips（tag 式展示；× 仅 hover 对应 chip 时出现） ── */
-.select-chips {
+.icen-select-chips {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -258,73 +258,73 @@
   flex: 1;
   min-width: 0;
 }
-.select-chip {
+.icen-select-chip {
   display: inline-flex;
   align-items: center;
-  max-width: 100%;
-  font-size: var(--density-font-size-xs);
+  max-inline-size: 100%;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.6;
-  color: var(--token-text);
-  background: var(--token-fill-2);
-  border-radius: var(--radius-sm);
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-2);
+  border-radius: var(--icen-radius-sm);
   padding: 0 7px;
   white-space: nowrap;
 }
-.select-chip-x {
+.icen-select-chip-x {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 0;
   opacity: 0;
   overflow: hidden;
-  margin-left: 0;
-  color: var(--token-text-faint);
-  border-radius: var(--radius-full);
-  font-size: var(--density-font-size-md);
+  margin-inline-start: 0;
+  color: var(--icen-token-text-faint);
+  border-radius: var(--icen-radius-full);
+  font-size: var(--icen-density-font-size-md);
   line-height: 1;
   cursor: pointer;
   transition:
     width var(--icen-tx-fast),
     opacity var(--icen-tx-fast),
-    margin-left var(--icen-tx-fast),
+    margin-inline-start var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.select-chip:hover .select-chip-x,
-.select-chip-x:focus-visible { width: 12px; opacity: 1; margin-left: 4px; }
-.select-chip-x:hover { color: var(--token-error); }
-.select-chip--more { color: var(--token-text-muted); background: var(--token-fill-1); }
+.icen-select-chip:hover .icen-select-chip-x,
+.icen-select-chip-x:focus-visible { width: 12px; opacity: 1; margin-inline-start: 4px; }
+.icen-select-chip-x:hover { color: var(--icen-token-error); }
+.icen-select-chip--more { color: var(--icen-token-text-muted); background: var(--icen-token-fill-1); }
 
 /* ── 多选 trigger 高度自适应（chips 可能换行） ── */
-.select[data-select-multiple] .select-trigger {
-  min-height: var(--density-input-height-md);
+.icen-select[data-icen-select-multiple] .icen-select-trigger {
+  min-height: var(--icen-density-input-height-md);
   height: auto;
   padding-top: 4px;
   padding-bottom: 4px;
   flex-wrap: wrap;
 }
 
-/* 多选项 checkbox 指示器（选项左侧；panel portal 到 body，属性在 panel 上） */
-.select-panel[data-select-multiple] .select-option::before {
+/* 多选项 checkbox 指示器（选项起始缘侧；panel portal 到 body，属性在 panel 上） */
+.icen-select-panel[data-icen-select-multiple] .icen-select-option::before {
   content: '';
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  border: 1.5px solid var(--token-outline);
-  border-radius: var(--radius-xs);
+  border: 1.5px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-xs);
   transition: background-color var(--icen-tx-fast), border-color var(--icen-tx-fast);
 }
-.select-panel[data-select-multiple] .select-option.is-selected::before {
-  background: var(--token-accent);
-  border-color: var(--token-accent);
+.icen-select-panel[data-icen-select-multiple] .icen-select-option.is-selected::before {
+  background: var(--icen-token-accent);
+  border-color: var(--icen-token-accent);
 }
-.select-panel[data-select-multiple] .select-option.is-selected::after {
+.icen-select-panel[data-icen-select-multiple] .icen-select-option.is-selected::after {
   content: '✓';
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .select-panel { animation: none; }
-  .select-search-input,
-  .select-chip-x,
-  .select-clear { transition: none; }
+  .icen-select-panel { animation: none; }
+  .icen-select-search-input,
+  .icen-select-chip-x,
+  .icen-select-clear { transition: none; }
 }

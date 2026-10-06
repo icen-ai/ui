@@ -2,18 +2,18 @@
  * @icen.ai/ui — Behavior: accordion（手风琴，与 components/content.css 的 .accordion 配套）
  *
  * DOM 契约：
- *   <div class="accordion" data-single>
- *     <div class="accordion-item is-open">
- *       <button class="accordion-trigger" aria-expanded="true">
- *         标题 <svg class="accordion-chevron">…</svg>
+ *   <div class="accordion" data-icen-single>
+ *     <div class="icen-accordion-item is-open">
+ *       <button class="icen-accordion-trigger" aria-expanded="true">
+ *         标题 <svg class="icen-accordion-chevron">…</svg>
  *       </button>
- *       <div class="accordion-panel"><div class="accordion-panel-inner">内容</div></div>
+ *       <div class="icen-accordion-panel"><div class="icen-accordion-panel-inner">内容</div></div>
  *     </div>
  *   </div>
  *
- * 展开 = item 挂 .is-open + trigger aria-expanded 同步；容器带 data-single 时展开一项会收起其余。
+ * 展开 = item 挂 .is-open + trigger aria-expanded 同步；容器带 data-icen-single 时展开一项会收起其余。
  * 直接被切换的 item 派发 icen:accordion-toggle { item, index, open }
- * （index 为 item 在容器 .accordion-item 中的序号；data-single 连带收起的其余项不单独派发）。
+ * （index 为 item 在容器 .icen-accordion-item 中的序号；data-icen-single 连带收起的其余项不单独派发）。
  * 面板高度过渡纯 CSS（grid-template-rows 0fr→1fr）。同一容器重复 init 幂等；
  * initAccordion 返回销毁函数（移除容器监听并复位幂等标记，可重新 init）。SSR 下返回 no-op。
  */
@@ -29,29 +29,29 @@ function setup(container: Element): (() => void) | undefined {
   if (el.__icenAccordionInit) return undefined;
   el.__icenAccordionInit = true;
 
-  const single = container.hasAttribute('data-single');
+  const single = container.hasAttribute('data-icen-single');
 
   const onClick = (ev: Event): void => {
     const target = ev.target;
     if (!(target instanceof Element)) return;
-    const trigger = target.closest('.accordion-trigger');
+    const trigger = target.closest('.icen-accordion-trigger');
     if (!trigger) return;
     // 嵌套 accordion 时只处理直接属于本容器的 trigger
-    const item = trigger.closest<HTMLElement>('.accordion-item');
+    const item = trigger.closest<HTMLElement>('.icen-accordion-item');
     if (!item || trigger.closest('.accordion') !== container) return;
     if (item.classList.contains('is-disabled')) return;
 
     const open = item.classList.toggle('is-open');
     trigger.setAttribute('aria-expanded', String(open));
 
-    const index = Array.from(container.querySelectorAll('.accordion-item')).indexOf(item);
+    const index = Array.from(container.querySelectorAll('.icen-accordion-item')).indexOf(item);
     emitIcen(container, 'icen:accordion-toggle', { item, index, open });
 
     if (single && open) {
-      container.querySelectorAll('.accordion-item.is-open').forEach((other) => {
+      container.querySelectorAll('.icen-accordion-item.is-open').forEach((other) => {
         if (other === item) return;
         other.classList.remove('is-open');
-        other.querySelector('.accordion-trigger')?.setAttribute('aria-expanded', 'false');
+        other.querySelector('.icen-accordion-trigger')?.setAttribute('aria-expanded', 'false');
       });
     }
   };
@@ -61,11 +61,11 @@ function setup(container: Element): (() => void) | undefined {
     const kev = ev as KeyboardEvent;
     const target = kev.target;
     if (!(target instanceof Element)) return;
-    const trigger = target.closest('.accordion-trigger');
+    const trigger = target.closest('.icen-accordion-trigger');
     if (!trigger || trigger.closest('.accordion') !== container) return;
 
     const triggers = Array.from(
-      container.querySelectorAll<HTMLElement>('.accordion-item:not(.is-disabled) > .accordion-trigger'),
+      container.querySelectorAll<HTMLElement>('.icen-accordion-item:not(.is-disabled) > .icen-accordion-trigger'),
     );
     const idx = triggers.indexOf(trigger as HTMLElement);
     if (idx === -1) return;

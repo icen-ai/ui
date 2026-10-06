@@ -2,178 +2,178 @@
  * @icen.ai/ui — Component: table（数据表）
  *
  * 完整契约：
- *   <div class="table-wrap [table-wrap--bordered]">
- *     <table class="table [--zebra|--compact|--dense] [--sticky-col]">
- *       <caption class="table-caption">标题说明</caption>     ← 可选
+ *   <div class="icen-table-wrap [icen-table-wrap--bordered]">
+ *     <icen-table class="icen-table [--zebra|--compact|--dense] [--sticky-col]">
+ *       <caption class="icen-table-caption">标题说明</caption>     ← 可选
  *       <thead>
- *         <tr><th [colspan=rowspan] [data-sort]>列名</th>…</tr>
+ *         <tr><th [colspan=rowspan] [data-icen-sort]>列名</th>…</tr>
  *       </thead>
  *       <tbody>
- *         <tr class="row-link [.is-selected] [.is-expanded]>           ← 整行可点
- *           <td class="col-fixed">…</td>                                ← 固定列（sticky-col 模式）
+ *         <tr class="icen-row-link [.is-selected] [.is-expanded]>           ← 整行可点
+ *           <td class="icen-col-fixed">…</td>                                ← 固定列（sticky-col 模式）
  *           <td>…</td>
- *           <td class="ops"><button class="btn btn-sm">…</button></td>
+ *           <td class="icen-ops"><button class="icen-btn icen-btn-sm">…</button></td>
  *         </tr>
- *         <tr class="row-expand">                                       ← 展开行（配合 .is-expanded）
+ *         <tr class="icen-row-expand">                                       ← 展开行（配合 .is-expanded）
  *           <td colspan="99">…展开详情…</td>
  *         </tr>
  *       </tbody>
  *       <tfoot><tr><td>合计</td>…</tr></tfoot>
- *     </table>
+ *     </icen-table>
  *   </div>
  *
- * .table-wrap：窄屏横向滚动（滚动条样式见 base.css）；--bordered 加外边框。
- * .table--zebra：斑马纹（奇数行底色）。
- * .table--compact：紧凑（cell padding 缩小）；--dense：极紧凑（行高更紧）。
- * .table--sticky-col：首列水平粘滞（配合 td/th .col-fixed，长表横向滚动时保持可见）。
- * .row-expand[hidden]：配合 .row-link.is-expanded 控制展开行显隐。
+ * .icen-table-wrap：窄屏横向滚动（滚动条样式见 base.css）；--bordered 加外边框。
+ * .icen-table--zebra：斑马纹（奇数行底色）。
+ * .icen-table--compact：紧凑（cell padding 缩小）；--dense：极紧凑（行高更紧）。
+ * .icen-table--sticky-col：首列水平粘滞（配合 td/th .icen-col-fixed，长表横向滚动时保持可见）。
+ * .icen-row-expand[hidden]：配合 .icen-row-link.is-expanded 控制展开行显隐。
  */
 
-.table-wrap {
+.icen-table-wrap {
   overflow-x: auto;
   overscroll-behavior: contain;
-  border-radius: var(--radius-lg);
+  border-radius: var(--icen-radius-lg);
 }
-.table-wrap--bordered {
-  border: 1px solid var(--token-line-soft);
+.icen-table-wrap--bordered {
+  border: 1px solid var(--icen-token-line-soft);
 }
 
-.table {
-  width: 100%;
+.icen-table {
+  inline-size: 100%;
   border-collapse: collapse;
-  font-size: var(--density-font-size-md);
+  font-size: var(--icen-density-font-size-md);
   font-variant-numeric: tabular-nums;
 }
-.table th,
-.table td {
-  padding: var(--density-space-sm) calc(var(--density-space-md) + 2px);
-  text-align: left;
+.icen-table th,
+.icen-table td {
+  padding: var(--icen-density-space-sm) calc(var(--icen-density-space-md) + 2px);
+  text-align: start;
 }
-.table th {
+.icen-table th {
   font-weight: 600;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.05em;
-  color: var(--token-text-faint);
-  border-bottom: 1px solid var(--token-line);
+  color: var(--icen-token-text-faint);
+  border-bottom: 1px solid var(--icen-token-line);
   white-space: nowrap;
   text-transform: uppercase;
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
   position: sticky;
   top: 0;
-  z-index: var(--z-raised);
+  z-index: var(--icen-z-raised);
 }
-.table td {
-  border-bottom: 1px solid var(--token-line-soft);
+.icen-table td {
+  border-bottom: 1px solid var(--icen-token-line-soft);
   vertical-align: middle;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
-.table tbody tr:last-child td { border-bottom: 0; }
-.table tbody tr {
+.icen-table tbody tr:last-child td { border-bottom: 0; }
+.icen-table tbody tr {
   transition: background-color var(--icen-tx-fast);
 }
-.table tbody tr:hover {
-  background: var(--token-surface-strong);
+.icen-table tbody tr:hover {
+  background: var(--icen-token-surface-strong);
 }
-.table tbody tr.row-link {
+.icen-table tbody tr.icen-row-link {
   cursor: pointer;
 }
-.table tbody tr.is-selected {
-  background: var(--token-accent-subtle);
+.icen-table tbody tr.is-selected {
+  background: var(--icen-token-accent-subtle);
 }
-.table tfoot td {
-  border-top: 1px solid var(--token-line);
+.icen-table tfoot td {
+  border-top: 1px solid var(--icen-token-line);
   border-bottom: 0;
   font-weight: 500;
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
 }
 
 /* 紧凑变体 */
-.table--compact th,
-.table--compact td {
-  padding: var(--density-space-xs) var(--density-space-sm);
+.icen-table--compact th,
+.icen-table--compact td {
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
 }
-.table--dense th,
-.table--dense td {
-  padding: 4px var(--density-space-xs);
-  font-size: var(--density-font-size-sm);
+.icen-table--dense th,
+.icen-table--dense td {
+  padding: 4px var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-sm);
 }
 
-/* 右对齐数字列 */
-.table td.num {
-  text-align: right;
+/* 右对齐数字列（数字是 LTR 文种，业界惯例 RTL 下保持物理右对齐——Excel/Analytics 一致） */
+.icen-table td.icen-num {
+  text-align: right; /* guard:allow-physical 数字列物理右对齐惯例，RTL 不镜像 */
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* 操作列（.btn-sm 必伴 .btn，无需单独列） */
-.table .ops {
+/* 操作列（行内末端对齐，RTL 镜像到左侧；.icen-btn-sm 必伴 .icen-btn，无需单独列） */
+.icen-table .icen-ops {
   white-space: nowrap;
-  text-align: right;
+  text-align: end;
 }
-.table .ops .btn {
-  margin-left: var(--density-space-xs);
+.icen-table .icen-ops .icen-btn {
+  margin-inline-start: var(--icen-density-space-xs);
 }
 
-/* 可排序表头（使用方 data-sort 指示） */
-.table th[data-sort] {
+/* 可排序表头（使用方 data-icen-sort 指示） */
+.icen-table th[data-icen-sort] {
   cursor: pointer;
   user-select: none;
 }
-.table th[data-sort]::after {
+.icen-table th[data-icen-sort]::after {
   content: '↕';
-  margin-left: var(--density-space-xs);
-  color: var(--token-text-faint);
+  margin-inline-start: var(--icen-density-space-xs);
+  color: var(--icen-token-text-faint);
   opacity: 0.6;
 }
-.table th[data-sort='asc']::after { content: '↑'; opacity: 1; color: var(--token-accent); }
-.table th[data-sort='desc']::after { content: '↓'; opacity: 1; color: var(--token-accent); }
+.icen-table th[data-icen-sort='asc']::after { content: '↑'; opacity: 1; color: var(--icen-token-accent); }
+.icen-table th[data-icen-sort='desc']::after { content: '↓'; opacity: 1; color: var(--icen-token-accent); }
 
 /* ── 斑马纹 ── */
-.table--zebra tbody tr:nth-child(odd) {
-  background: color-mix(in srgb, var(--token-bg-soft) 50%, transparent);
+.icen-table--zebra tbody tr:nth-child(odd) {
+  background: color-mix(in srgb, var(--icen-token-bg-soft) 50%, transparent);
 }
-.table--zebra tbody tr:hover {
-  background: var(--token-surface-strong);
+.icen-table--zebra tbody tr:hover {
+  background: var(--icen-token-surface-strong);
 }
 
 /* ── 表格标题（caption） ── */
-.table-caption {
-  text-align: left;
-  padding: var(--density-space-sm) calc(var(--density-space-md) + 2px);
-  font-size: var(--density-font-size-md);
+.icen-table-caption {
+  text-align: start;
+  padding: var(--icen-density-space-sm) calc(var(--icen-density-space-md) + 2px);
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   caption-side: top;
 }
 
 /* ── 首列粘滞（长表横向滚动时保持可见） ── */
-.table--sticky-col th:first-child,
-.table--sticky-col .col-fixed {
+.icen-table--sticky-col th:first-child,
+.icen-table--sticky-col .icen-col-fixed {
   position: sticky;
-  left: 0;
-  z-index: calc(var(--z-raised) + 1);
-  background: var(--token-bg-soft);
-  box-shadow: 2px 0 4px color-mix(in srgb, var(--token-text) 5%, transparent);
+  inset-inline-start: 0;
+  z-index: calc(var(--icen-z-raised) + 1);
+  background: var(--icen-token-bg-soft);
+  box-shadow: 2px 0 4px color-mix(in srgb, var(--icen-token-text) 5%, transparent);
 }
-.table--sticky-col tbody td.col-fixed {
-  background: var(--token-surface);
+.icen-table--sticky-col tbody td.icen-col-fixed {
+  background: var(--icen-token-surface);
 }
-.table--sticky-col tbody tr:hover td.col-fixed {
-  background: var(--token-surface-strong);
+.icen-table--sticky-col tbody tr:hover td.icen-col-fixed {
+  background: var(--icen-token-surface-strong);
 }
 
 /* ── 展开行 ── */
-.table .row-expand > td {
-  padding: 0 var(--density-space-md);
-  background: var(--token-bg-soft);
-  border-bottom: 1px solid var(--token-line-soft);
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+.icen-table .icen-row-expand > td {
+  padding: 0 var(--icen-density-space-md);
+  background: var(--icen-token-bg-soft);
+  border-bottom: 1px solid var(--icen-token-line-soft);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
 }
-.table .row-expand[hidden] { display: none; }
+.icen-table .icen-row-expand[hidden] { display: none; }
 /* 展开行的内容容器（使用方可加 padding/动画） */
-.row-expand-content {
-  padding: var(--density-space-sm) 0;
-  animation: row-expand-in var(--icen-tx-fast) var(--ease-out);
+.icen-row-expand-content {
+  padding: var(--icen-density-space-sm) 0;
+  animation: row-expand-in var(--icen-tx-fast) var(--icen-ease-out);
 }
 @keyframes row-expand-in {
   from { opacity: 0; transform: translateY(-4px); }
@@ -181,23 +181,23 @@
 }
 
 /* ── 列宽工具类 ── */
-.table .col-narrow { width: 80px; }
-.table .col-wide { width: 240px; }
-.table .col-action { width: 1%; white-space: nowrap; }
+.icen-table .icen-col-narrow { width: 80px; }
+.icen-table .icen-col-wide { width: 240px; }
+.icen-table .icen-col-action { width: 1%; white-space: nowrap; }
 
 /* ── 行状态色 ── */
-.table tbody tr.row-success { background: color-mix(in srgb, var(--token-success) 6%, transparent); }
-.table tbody tr.row-warning { background: color-mix(in srgb, var(--token-warning) 6%, transparent); }
-.table tbody tr.row-error   { background: color-mix(in srgb, var(--token-error) 6%, transparent); }
+.icen-table tbody tr.icen-row-success { background: color-mix(in srgb, var(--icen-token-success) 6%, transparent); }
+.icen-table tbody tr.icen-row-warning { background: color-mix(in srgb, var(--icen-token-warning) 6%, transparent); }
+.icen-table tbody tr.icen-row-error   { background: color-mix(in srgb, var(--icen-token-error) 6%, transparent); }
 
 /* ── 粘滞表头阴影提示 ── */
-.table thead th {
-  box-shadow: 0 1px 0 var(--token-line);
+.icen-table thead th {
+  box-shadow: 0 1px 0 var(--icen-token-line);
 }
 
 /* ── 表头分组（rowspan/colspan 样式） ── */
-.table th[rowspan] { vertical-align: bottom; }
+.icen-table th[rowspan] { vertical-align: bottom; }
 
 @media (prefers-reduced-motion: reduce) {
-  .row-expand-content { animation: none; }
+  .icen-row-expand-content { animation: none; }
 }

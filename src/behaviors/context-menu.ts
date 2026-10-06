@@ -1,10 +1,10 @@
 /*
  * @icen.ai/ui — Behavior: context-menu（右键菜单，与 components/menu.css 配套）
  *
- * 全局单例：监听 document contextmenu，命中最近的 [data-context-menu]（值=菜单 id），
+ * 全局单例：监听 document contextmenu，命中最近的 [data-icen-context-menu]（值=菜单 id），
  * 用 registerContextMenu(id, items) 注册的 items 渲染；未注册/未命中时用默认菜单
  * （后退/前进/刷新/复制页面链接）。initContextMenu({ items }) 可替换默认菜单。
- * 触屏：长按 520ms 打开，移动容差 12px。面板为 body 下的 .menu.menu--context，
+ * 触屏：长按 520ms 打开，移动容差 12px。面板为 body 下的 .icen-menu.icen-menu--context，
  * fixed 定位鼠标点，量尺寸后翻转并 clamp ≥8px，z-index 9999（见 menu.css）。
  * 文本一律 textContent 赋值（icon 为调用方提供的可信 svg 字符串）。SSR 下为 no-op。
  *
@@ -43,9 +43,10 @@ export interface ContextMenuOptions {
 
 import { applyPanelSizing, readPanelSizing, type PanelSizing } from './popover';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /* 触屏长按阈值/移动容差：与 events.ts 的 LONGPRESS_MS / LONGPRESS_MOVE 同值——
-   右键菜单的触屏长按自带（不经 data-gestures 授权），故独立命名、各自演化 */
+   右键菜单的触屏长按自带（不经 data-icen-gestures 授权），故独立命名、各自演化 */
 const LONG_PRESS_DELAY = 520;
 const LONG_PRESS_MOVE_LIMIT = 12;
 const FLIP_MARGIN = 10;
@@ -57,9 +58,9 @@ export function emitMenuSelect(source: HTMLElement, item: HTMLElement): void {
   emitIcen(item, 'icen:menu-select', {
     source,
     item,
-    value: item.dataset.value ?? '',
+    value: item.dataset.icenValue ?? '',
     /* 优先专用 label 子元素（避开快捷键/图标文本混入），无则退整项文本 */
-    label: (item.querySelector('.menu-item-label, .command-item-label')?.textContent ?? item.textContent ?? '')
+    label: (item.querySelector('.icen-menu-item-label, .command-item-label')?.textContent ?? item.textContent ?? '')
       .trim()
       .slice(0, 80),
   });
@@ -74,7 +75,7 @@ let focusableItems: HTMLElement[] = [];
 let focusedIndex = -1;
 let longPress: { timer: number; x: number; y: number; target: Element | null } | null = null;
 
-/** 注册指定 id 的右键菜单项（对应 DOM 中的 [data-context-menu="id"]）。 */
+/** 注册指定 id 的右键菜单项（对应 DOM 中的 [data-icen-context-menu="id"]）。 */
 export function registerContextMenu(id: string, items: ContextMenuItem[]): void {
   registry.set(id, items);
 }
@@ -82,16 +83,16 @@ export function registerContextMenu(id: string, items: ContextMenuItem[]): void 
 function defaultItems(): ContextMenuItem[] {
   return [
     {
-      label: '后退',
+      label: t('contextMenu.back'),
       shortcut: 'Alt ←',
       disabled: window.history.length <= 1,
       onClick: () => window.history.back(),
     },
-    { label: '前进', shortcut: 'Alt →', onClick: () => window.history.forward() },
+    { label: t('contextMenu.forward'), shortcut: 'Alt →', onClick: () => window.history.forward() },
     { type: 'separator' },
-    { label: '刷新', shortcut: 'Ctrl R', onClick: () => window.location.reload() },
+    { label: t('contextMenu.refresh'), shortcut: 'Ctrl R', onClick: () => window.location.reload() },
     {
-      label: '复制页面链接',
+      label: t('contextMenu.copyPageLink'),
       onClick: () => {
         void navigator.clipboard?.writeText(window.location.href);
       },
@@ -100,8 +101,8 @@ function defaultItems(): ContextMenuItem[] {
 }
 
 function resolveItems(target: Element | null): ContextMenuItem[] {
-  const host = target?.closest<HTMLElement>('[data-context-menu]');
-  const id = host?.dataset.contextMenu;
+  const host = target?.closest<HTMLElement>('[data-icen-context-menu]');
+  const id = host?.dataset.icenContextMenu;
   if (id) {
     const items = registry.get(id);
     if (items) return items;
@@ -116,20 +117,20 @@ function isEditable(target: Element | null): boolean {
 function buildItem(item: ContextMenuItem, menuPanel: HTMLElement): HTMLElement {
   if ('type' in item && item.type === 'separator') {
     const sep = document.createElement('div');
-    sep.className = 'menu-separator';
+    sep.className = 'icen-menu-separator';
     sep.setAttribute('role', 'separator');
     return sep;
   }
   if ('type' in item && item.type === 'header') {
     const header = document.createElement('div');
-    header.className = 'menu-header';
+    header.className = 'icen-menu-header';
     const label = document.createElement('span');
-    label.className = 'menu-header-label';
+    label.className = 'icen-menu-header-label';
     label.textContent = item.label;
     header.appendChild(label);
     if (item.description) {
       const desc = document.createElement('span');
-      desc.className = 'menu-header-desc';
+      desc.className = 'icen-menu-header-desc';
       desc.textContent = item.description;
       header.appendChild(desc);
     }
@@ -139,22 +140,22 @@ function buildItem(item: ContextMenuItem, menuPanel: HTMLElement): HTMLElement {
   const entry = item;
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = entry.danger ? 'menu-item pressable menu-item--danger' : 'menu-item pressable';
+  btn.className = entry.danger ? 'icen-menu-item icen-pressable icen-menu-item--danger' : 'icen-menu-item icen-pressable';
   if (entry.disabled) btn.disabled = true;
   btn.setAttribute('role', 'menuitem');
   btn.tabIndex = -1;
 
   const icon = document.createElement('span');
-  icon.className = 'menu-item-icon';
+  icon.className = 'icen-menu-item-icon';
   if (entry.icon) icon.innerHTML = entry.icon;
   btn.appendChild(icon);
 
   const label = document.createElement('span');
-  label.className = 'menu-item-label';
+  label.className = 'icen-menu-item-label';
   label.textContent = entry.label;
   if (entry.subLabel) {
     const sub = document.createElement('span');
-    sub.className = 'menu-item-sub';
+    sub.className = 'icen-menu-item-sub';
     sub.textContent = entry.subLabel;
     label.appendChild(sub);
   }
@@ -162,7 +163,7 @@ function buildItem(item: ContextMenuItem, menuPanel: HTMLElement): HTMLElement {
 
   if (entry.shortcut) {
     const shortcut = document.createElement('span');
-    shortcut.className = 'menu-item-shortcut';
+    shortcut.className = 'icen-menu-item-shortcut';
     shortcut.textContent = entry.shortcut;
     btn.appendChild(shortcut);
   }
@@ -189,7 +190,7 @@ export function openContextMenu(
   closeContextMenu();
 
   panel = document.createElement('div');
-  panel.className = 'menu menu--context';
+  panel.className = 'icen-menu icen-menu--context';
   panel.setAttribute('role', 'menu');
   panel.style.visibility = 'hidden';
   applyPanelSizing(panel, opts?.sizing ?? {});
@@ -207,13 +208,13 @@ export function openContextMenu(
   if (y + rect.height > vh - FLIP_MARGIN) ny = y - rect.height;
   if (nx < CLAMP_MARGIN) nx = CLAMP_MARGIN;
   if (ny < CLAMP_MARGIN) ny = CLAMP_MARGIN;
-  /* data-side 写回（与 dropdown/select 同契约）：CSS 进场动画按方向区分 */
-  panel.dataset.side = ny < y ? 'top' : 'bottom';
+  /* data-icen-side 写回（与 dropdown/select 同契约）：CSS 进场动画按方向区分 */
+  panel.dataset.icenSide = ny < y ? 'top' : 'bottom';
   panel.style.left = `${nx}px`;
   panel.style.top = `${ny}px`;
   panel.style.visibility = '';
 
-  focusableItems = Array.from(panel.querySelectorAll<HTMLElement>('.menu-item:not(:disabled)'));
+  focusableItems = Array.from(panel.querySelectorAll<HTMLElement>('.icen-menu-item:not(:disabled)'));
   focusedIndex = -1;
   // rAF 聚焦首个非 disabled 项
   requestAnimationFrame(() => {
@@ -298,13 +299,13 @@ function clearLongPress(): void {
 
 function openForTarget(target: Element | null, x: number, y: number): void {
   /* 声明式区域的 data-panel-* 尺寸契约随区域元素读入。
-     target 是右键命中的最深子元素，data-panel-* 挂在 [data-context-menu] 区域根上——
+     target 是右键命中的最深子元素，data-panel-* 挂在 [data-icen-context-menu] 区域根上——
      直接读 target 会读空，需上溯到区域根；非 Element（null）或无区域根时退 target 本身 */
   openContextMenu(
     x,
     y,
     resolveItems(target),
-    { sizing: readPanelSizing(target instanceof Element ? (target.closest('[data-context-menu]') ?? target) : target) },
+    { sizing: readPanelSizing(target instanceof Element ? (target.closest('[data-icen-context-menu]') ?? target) : target) },
   );
 }
 

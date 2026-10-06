@@ -3,35 +3,35 @@
  *
  * DOM 契约（类名固定，规格 §4.4 / §4.5）：
  *   工具调用卡：
- *   <div class="ai-tool ai-tool--shell is-done" data-ai-id="…" data-ai-kind="shell">
- *     <button class="ai-tool-head" type="button" aria-expanded="false">
- *       <span class="ai-item-icon" aria-hidden="true">…svg…</span>
- *       <span class="ai-item-main">
- *         <span class="ai-item-title">Read</span>
- *         <span class="ai-item-sub">src/foo.ts:1-50</span>
+ *   <div class="icen-ai-tool icen-ai-tool--shell is-done" data-icen-ai-id="…" data-icen-ai-kind="shell">
+ *     <button class="icen-ai-tool-head" type="button" aria-expanded="false">
+ *       <span class="icen-ai-item-icon" aria-hidden="true">…svg…</span>
+ *       <span class="icen-ai-item-main">
+ *         <span class="icen-ai-item-title">Read</span>
+ *         <span class="icen-ai-item-sub">src/foo.ts:1-50</span>
  *       </span>
- *       <span class="ai-item-status" role="img" aria-label="完成"></span>
- *       <span class="ai-item-meta">0.4s</span>
+ *       <span class="icen-ai-item-status" role="img" aria-label="完成"></span>
+ *       <span class="icen-ai-item-meta">0.4s</span>
  *     </button>
- *     <div class="ai-tool-body" hidden>
- *       <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">…</pre></div>
- *       <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">…</pre></div>
- *       <div class="ai-tool-approval">            ← 仅 .is-approval 时显示（纯 CSS 驱动）
- *         <div class="ai-tool-approval-reason" hidden>审批原因</div>  ← 可选，model.approval.reason
- *         <button class="btn btn-sm btn-primary" data-ai-approve type="button">允许</button>
- *         <button class="btn btn-sm" data-ai-reject type="button">拒绝</button>
+ *     <div class="icen-ai-tool-body" hidden>
+ *       <div class="icen-ai-tool-io"><div class="icen-ai-tool-io-label">输入</div><pre class="icen-ai-tool-io-content">…</pre></div>
+ *       <div class="icen-ai-tool-io"><div class="icen-ai-tool-io-label">输出</div><pre class="icen-ai-tool-io-content">…</pre></div>
+ *       <div class="icen-ai-tool-approval">            ← 仅 .is-approval 时显示（纯 CSS 驱动）
+ *         <div class="icen-ai-tool-approval-reason" hidden>审批原因</div>  ← 可选，model.approval.reason
+ *         <button class="icen-btn icen-btn-sm icen-btn-primary" data-icen-ai-approve type="button">允许</button>
+ *         <button class="icen-btn icen-btn-sm" data-icen-ai-reject type="button">拒绝</button>
  *       </div>
  *     </div>
  *   </div>
  *
  *   子智能体卡：
- *   <div class="ai-subagent is-running" data-ai-id="…" data-ai-kind="subagent">
- *     <button class="ai-subagent-head" type="button" aria-expanded="false">…head 结构同上…</button>
- *     <div class="ai-subagent-body" hidden>
- *       <div class="ai-subagent-stream">          ← 嵌套 .ai-tool / .ai-subagent（行间 --ai-activity-index 驱动 stagger）
+ *   <div class="icen-ai-subagent is-running" data-icen-ai-id="…" data-icen-ai-kind="subagent">
+ *     <button class="icen-ai-subagent-head" type="button" aria-expanded="false">…head 结构同上…</button>
+ *     <div class="icen-ai-subagent-body" hidden>
+ *       <div class="icen-ai-subagent-stream">          ← 嵌套 .icen-ai-tool / .icen-ai-subagent（行间 --ai-activity-index 驱动 stagger）
  *         …
  *       </div>
- *       <div class="ai-subagent-result">完成回执摘要</div>
+ *       <div class="icen-ai-subagent-result">完成回执摘要</div>
  *     </div>
  *   </div>
  *
@@ -41,8 +41,8 @@
  *
  * 事件（全部 bubbles，规格 §5）：
  *   icen:ai-toggle  { el, open }          — head 展开/折叠
- *   icen:ai-approve { id, kind }          — data-ai-approve 点击（工具审批）
- *   icen:ai-reject  { id, kind }          — data-ai-reject 点击
+ *   icen:ai-approve { id, kind }          — data-icen-ai-approve 点击（工具审批）
+ *   icen:ai-reject  { id, kind }          — data-icen-ai-reject 点击
  *
  * initAiTool / initAiSubagent：每卡片一个监听（accordion 同款 per-container 委托），
  * 幂等（__icenAiToolInit / __icenAiSubagentInit 标记）；动态新增卡片后重跑 init 即可接管；
@@ -64,6 +64,7 @@ import {
 import { emitIcen } from './events';
 import { renderAiContentPart } from './ai-chat';
 import { renderChart, type ChartSpec } from './charts';
+import { t } from './i18n';
 
 interface MarkedElement extends HTMLElement {
   __icenAiToolInit?: boolean;
@@ -141,14 +142,14 @@ function buildHead(headClass: string): HeadParts {
   head.type = 'button';
   head.setAttribute('aria-expanded', 'false');
 
-  const iconEl = h('span', 'ai-item-icon');
+  const iconEl = h('span', 'icen-ai-item-icon');
   iconEl.setAttribute('aria-hidden', 'true');
-  const main = h('span', 'ai-item-main');
-  const titleEl = h('span', 'ai-item-title');
-  const subEl = h('span', 'ai-item-sub');
-  const statusEl = h('span', 'ai-item-status');
+  const main = h('span', 'icen-ai-item-main');
+  const titleEl = h('span', 'icen-ai-item-title');
+  const subEl = h('span', 'icen-ai-item-sub');
+  const statusEl = h('span', 'icen-ai-item-status');
   statusEl.setAttribute('role', 'img');
-  const metaEl = h('span', 'ai-item-meta');
+  const metaEl = h('span', 'icen-ai-item-meta');
 
   main.append(titleEl, subEl);
   head.append(iconEl, main, statusEl, metaEl);
@@ -163,10 +164,10 @@ interface IoParts {
 }
 
 function buildIo(label: string): IoParts {
-  const root = h('div', 'ai-tool-io');
-  root.append(h('div', 'ai-tool-io-label', label));
-  const pre = h('pre', 'ai-tool-io-content');
-  const media = h('div', 'ai-tool-io-media');
+  const root = h('div', 'icen-ai-tool-io');
+  root.append(h('div', 'icen-ai-tool-io-label', label));
+  const pre = h('pre', 'icen-ai-tool-io-content');
+  const media = h('div', 'icen-ai-tool-io-media');
   media.hidden = true;
   root.append(pre, media);
   return { root, pre, media };
@@ -193,7 +194,7 @@ function setIo(io: IoParts, value: unknown, allowChart = true): void {
     io.pre.hidden = true;
     io.media.replaceChildren();
     const holder = document.createElement('div');
-    holder.className = 'ai-tool-io-chart';
+    holder.className = 'icen-ai-tool-io-chart';
     io.media.appendChild(holder);
     renderChart(holder, chartSpec);
     io.media.hidden = false;
@@ -234,15 +235,15 @@ function defaultExpanded(m: AiToolCallModel): boolean {
 }
 
 function buildApproval(): { root: HTMLDivElement; reason: HTMLDivElement } {
-  const root = h('div', 'ai-tool-approval');
-  const reason = h('div', 'ai-tool-approval-reason');
+  const root = h('div', 'icen-ai-tool-approval');
+  const reason = h('div', 'icen-ai-tool-approval-reason');
   reason.hidden = true;
-  const allow = h('button', 'btn btn-sm btn-primary', '允许');
+  const allow = h('button', 'icen-btn icen-btn-sm icen-btn-primary', t('aiTool.allow'));
   allow.type = 'button';
-  allow.setAttribute('data-ai-approve', '');
-  const deny = h('button', 'btn btn-sm', '拒绝');
+  allow.setAttribute('data-icen-ai-approve', '');
+  const deny = h('button', 'icen-btn icen-btn-sm', t('aiTool.reject'));
   deny.type = 'button';
-  deny.setAttribute('data-ai-reject', '');
+  deny.setAttribute('data-icen-ai-reject', '');
   root.append(reason, allow, deny);
   return { root, reason };
 }
@@ -250,7 +251,7 @@ function buildApproval(): { root: HTMLDivElement; reason: HTMLDivElement } {
 /* 注册表 tint → 内联局部变量（第三方 registerAiKind 的 tint 生效；内置 kind 由 CSS 修饰类兜底同值） */
 function applyTint(item: HTMLElement, model: AiToolCallModel): void {
   const tint = getAiKind(model.kind).tint;
-  if (tint) item.style.setProperty('--ai-item-tint', `var(--token-${tint})`);
+  if (tint) item.style.setProperty('--ai-item-tint', `var(--icen-token-${tint})`);
   else item.style.removeProperty('--ai-item-tint');
 }
 
@@ -283,15 +284,15 @@ export function renderAiToolCall(el: HTMLElement, model: AiToolCallModel): AiToo
   const item = el as MarkedElement;
   let current: AiToolCallModel = model;
 
-  item.className = `ai-tool ai-tool--${model.kind}`;
-  item.dataset.aiId = model.id;
-  item.dataset.aiKind = model.kind;
+  item.className = `icen-ai-tool icen-ai-tool--${model.kind}`;
+  item.dataset.icenAiId = model.id;
+  item.dataset.icenAiKind = model.kind;
 
-  const parts = buildHead('ai-tool-head');
-  const body = h('div', 'ai-tool-body');
+  const parts = buildHead('icen-ai-tool-head');
+  const body = h('div', 'icen-ai-tool-body');
   body.hidden = true;
-  const inputIo = buildIo('输入');
-  const outputIo = buildIo('输出');
+  const inputIo = buildIo(t('common.input'));
+  const outputIo = buildIo(t('common.output'));
   const approval = buildApproval();
   body.append(inputIo.root, outputIo.root, approval.root);
   item.append(parts.head, body);
@@ -342,15 +343,15 @@ export function renderAiSubagent(el: HTMLElement, model: AiToolCallModel): AiSub
   const item = el as MarkedElement;
   let current: AiToolCallModel = model;
 
-  item.className = 'ai-subagent';
-  item.dataset.aiId = model.id;
-  item.dataset.aiKind = model.kind;
+  item.className = 'icen-ai-subagent';
+  item.dataset.icenAiId = model.id;
+  item.dataset.icenAiKind = model.kind;
 
-  const parts = buildHead('ai-subagent-head');
-  const body = h('div', 'ai-subagent-body');
+  const parts = buildHead('icen-ai-subagent-head');
+  const body = h('div', 'icen-ai-subagent-body');
   body.hidden = true;
-  const stream = h('div', 'ai-subagent-stream');
-  const result = h('div', 'ai-subagent-result');
+  const stream = h('div', 'icen-ai-subagent-stream');
+  const result = h('div', 'icen-ai-subagent-result');
   result.hidden = true;
   body.append(stream, result);
   item.append(parts.head, body);
@@ -396,7 +397,7 @@ export function renderAiSubagent(el: HTMLElement, model: AiToolCallModel): AiSub
     applyTint(item, m);
     applyKindVisual(parts, m);
     const steps = m.activities?.length ?? 0;
-    const meta = [m.durationMs != null ? formatDuration(m.durationMs) : '', steps > 0 ? `${steps} 步` : '']
+    const meta = [m.durationMs != null ? formatDuration(m.durationMs) : '', steps > 0 ? t('common.steps', { p0: steps }) : '']
       .filter(Boolean)
       .join(' · ');
     applyStatusMeta(parts, m.status, meta);
@@ -432,8 +433,8 @@ function setupItem(
   if (marked[flag]) return () => undefined;
   marked[flag] = true;
 
-  const headClass = kind === 'tool' ? '.ai-tool-head' : '.ai-subagent-head';
-  const bodyClass = kind === 'tool' ? '.ai-tool-body' : '.ai-subagent-body';
+  const headClass = kind === 'tool' ? '.icen-ai-tool-head' : '.icen-ai-subagent-head';
+  const bodyClass = kind === 'tool' ? '.icen-ai-tool-body' : '.icen-ai-subagent-body';
   const head = item.querySelector<HTMLElement>(`:scope > ${headClass}`);
   const body = item.querySelector<HTMLElement>(`:scope > ${bodyClass}`);
 
@@ -450,20 +451,20 @@ function setupItem(
     if (!(target instanceof Element)) return;
 
     /* 审批按钮（嵌套卡片的事件由各自 listener 处理：closest 必须命中本卡片） */
-    const ownerOf = (node: Element): Element | null => node.closest('.ai-tool, .ai-subagent');
-    const approveBtn = target.closest('[data-ai-approve]');
+    const ownerOf = (node: Element): Element | null => node.closest('.icen-ai-tool, .icen-ai-subagent');
+    const approveBtn = target.closest('[data-icen-ai-approve]');
     if (approveBtn && ownerOf(approveBtn) === item) {
-      emitIcen(item, 'icen:ai-approve', { id: item.dataset.aiId ?? '', kind: item.dataset.aiKind ?? '' });
+      emitIcen(item, 'icen:ai-approve', { id: item.dataset.icenAiId ?? '', kind: item.dataset.icenAiKind ?? '' });
       return;
     }
-    const rejectBtn = target.closest('[data-ai-reject]');
+    const rejectBtn = target.closest('[data-icen-ai-reject]');
     if (rejectBtn && ownerOf(rejectBtn) === item) {
-      emitIcen(item, 'icen:ai-reject', { id: item.dataset.aiId ?? '', kind: item.dataset.aiKind ?? '' });
+      emitIcen(item, 'icen:ai-reject', { id: item.dataset.icenAiId ?? '', kind: item.dataset.icenAiKind ?? '' });
       return;
     }
 
     /* head 展开/折叠（键盘走原生 button 的 Enter/Space → click） */
-    const headEl = target.closest('.ai-tool-head, .ai-subagent-head');
+    const headEl = target.closest('.icen-ai-tool-head, .icen-ai-subagent-head');
     if (!headEl || ownerOf(headEl) !== item || !head) return;
     item.dataset.aiUserToggled = '1';   /* 手动切换后默认展开策略不再干预 */
     setOpen(head.getAttribute('aria-expanded') !== 'true');
@@ -472,7 +473,7 @@ function setupItem(
 
   /* 静态卡初始化：默认展开集（error / chart kind / 待审批）首次渲染直接展开 */
   if (body?.hidden) {
-    const kindName = item.dataset.aiKind ?? '';
+    const kindName = item.dataset.icenAiKind ?? '';
     const isErr = item.classList.contains('is-error');
     const isApproval = item.classList.contains('is-approval');
     if (isErr || isApproval || kindName === 'chart') {
@@ -489,7 +490,7 @@ function setupItem(
 
 function initItems(
   root: ParentNode | undefined,
-  selector: '.ai-tool' | '.ai-subagent',
+  selector: '.icen-ai-tool' | '.icen-ai-subagent',
   kind: 'tool' | 'subagent',
 ): Array<() => void> {
   if (typeof document === 'undefined') return [];
@@ -501,11 +502,11 @@ function initItems(
 }
 
 /**
- * 初始化 root 下所有工具调用卡（root 自身是 .ai-tool 也算）。重复调用幂等；
+ * 初始化 root 下所有工具调用卡（root 自身是 .icen-ai-tool 也算）。重复调用幂等；
  * 返回销毁函数（复刻 initAiChat 约定：解绑全部卡片监听并复位幂等标记）。
  */
 export function initAiTool(root?: ParentNode): () => void {
-  const cleanups = initItems(root, '.ai-tool', 'tool');
+  const cleanups = initItems(root, '.icen-ai-tool', 'tool');
   return () => {
     for (const fn of cleanups) fn();
     cleanups.length = 0;
@@ -513,11 +514,11 @@ export function initAiTool(root?: ParentNode): () => void {
 }
 
 /**
- * 初始化 root 下所有子智能体卡（含嵌套；root 自身是 .ai-subagent 也算）。重复调用幂等；
+ * 初始化 root 下所有子智能体卡（含嵌套；root 自身是 .icen-ai-subagent 也算）。重复调用幂等；
  * 返回销毁函数（复刻 initAiChat 约定：解绑全部卡片监听并复位幂等标记）。
  */
 export function initAiSubagent(root?: ParentNode): () => void {
-  const cleanups = initItems(root, '.ai-subagent', 'subagent');
+  const cleanups = initItems(root, '.icen-ai-subagent', 'subagent');
   return () => {
     for (const fn of cleanups) fn();
     cleanups.length = 0;

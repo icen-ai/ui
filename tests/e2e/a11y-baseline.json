@@ -1,0 +1,297 @@
+{
+  "btn": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"btn/\"]",
+      "details[data-icen-*] > summary > .docs-group-count",
+      ".icen-btn-link",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-str",
+      ".codeblock > pre > code > .cl > .tok-kw",
+      ".tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-attr",
+      ".cl > .tok-com",
+      ".cl > .tok-attr",
+      ".cl > .tok-str",
+      ".doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "modal": {
+    "color-contrast": [
+      "details[data-icen-*] > summary > .docs-group-count",
+      ".active.docs-link[href$=\"modal/\"]",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-str",
+      ".tok-kw",
+      ".cl > .tok-com",
+      ".doc-pager-link[href$=\"date-picker/\"] > .doc-pager-name",
+      ".doc-pager-next > .doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "form-validate": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"form-validate/\"]",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".tok-kw",
+      ".cl > .tok-kw",
+      ".cl > .tok-com",
+      ".doc-pager-link[href$=\"kb-visibility/\"] > .doc-pager-name",
+      ".doc-pager-next > .doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "home": {
+    "color-contrast": [
+      ".hero-pill-badge",
+      "a[href$=\"#quickstart\"]",
+      ".gauge-live",
+      ".is-running > .icen-ai-todo-active",
+      ".preset-hint > code",
+      ".group-card[href$=\"ai-overview/\"] > .group-count",
+      ".group-card[href$=\"icen-btn/\"] > .group-count",
+      ".group-card[href$=\"form/\"] > .group-count",
+      "a[href$=\"icen-card/\"] > .group-count",
+      ".group-card[href$=\"charts/\"] > .group-count",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".codeblock > pre > code > .cl > .tok-kw",
+      ".cl > .tok-kw",
+      ".tok-attr",
+      ".doc-note > a[href$=\"customize/\"]",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ],
+    "role-img-alt": [
+      ".icen-chart-heatmap-grid"
+    ],
+    "svg-img-alt": [
+      "svg[viewBox=\"0 0 96 28\"]",
+      ".icen-chart-donut > svg[viewBox=\"0 0 120 120\"][role=\"img\"]",
+      ".icen-chart-gauge > svg[viewBox=\"0 0 120 120\"][role=\"img\"]"
+    ]
+  },
+  "frameworks": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"frameworks/\"]",
+      ".cl > .tok-kw",
+      ".tok-kw",
+      ".tok-com",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "charts": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"charts/\"]",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".tok-kw",
+      ".cl > .tok-com",
+      ".cl > .tok-kw",
+      ".doc-pager-link[href$=\"scroll-area/\"] > .doc-pager-name",
+      ".doc-pager-next > .doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ],
+    "role-img-alt": [
+      ".icen-chart-heatmap-grid"
+    ],
+    "svg-img-alt": [
+      ".icen-chart-donut > svg[viewBox=\"0 0 120 120\"][role=\"img\"]",
+      ".icen-chart-gauge > svg[viewBox=\"0 0 120 120\"][role=\"img\"]",
+      "svg[viewBox=\"0 0 96 28\"]",
+      "#icen-chart-line > .icen-chart-body[data-chart-body=\"\"] > .icen-chart-line > svg[viewBox=\"0 0 360 150\"][role=\"img\"]"
+    ]
+  },
+  "datatable": {
+    "color-contrast": [
+      "details[data-icen-*] > summary > .docs-group-count",
+      ".active.docs-link[href$=\"datatable/\"]",
+      ".icen-dt-group-count",
+      ".icen-dt-group-agg",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-str",
+      ".cl > .tok-kw",
+      ".cl > .tok-str",
+      ".tok-kw",
+      ".cl > .tok-com",
+      ".cl > .tok-num",
+      ".doc-pager-link[href$=\"table/\"] > .doc-pager-name",
+      ".doc-pager-next > .doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "modal-open": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"modal/\"]",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".tok-kw",
+      ".cl > .tok-com",
+      ".doc-pager-link[href$=\"date-picker/\"] > .doc-pager-name",
+      ".doc-pager-next > .doc-pager-name",
+      ".footer-install-state",
+      "#modal-title-demo-modal-md",
+      "#modal-desc-demo-modal-md",
+      "div[role=\"dialog\"] > .icen-modal-body > p",
+      "div[role=\"dialog\"] > .icen-modal-footer > .icen-btn-sm.icen-btn[data-icen-modal-close=\"\"]"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "form-validate-errors": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"form-validate/\"]",
+      "a[href$=\"#demo-fv-user\"]",
+      "a[href$=\"#demo-fv-email\"]",
+      "a[href$=\"#demo-fv-pwd\"]",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".tok-kw",
+      ".cl > .tok-kw",
+      ".cl > .tok-com",
+      ".doc-pager-link[href$=\"kb-visibility/\"] > .doc-pager-name",
+      ".doc-pager-next > .doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "kb": {
+    "color-contrast": [
+      ".kbws-ver",
+      "section[data-icen-*] > .kbws-split > .kbws-main > .kbws-sec-h > .icen-kb-meta",
+      "#qa-run",
+      "#qa-answer > .kbws-sec-h > .icen-kb-meta",
+      "button[data-icen-kb-source-id=\"cite-vendor-mat\"] > .icen-kb-source-main > .icen-kb-source-sub",
+      "button[data-icen-kb-source-id=\"cite-vendor-mat\"] > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge--official.icen-kb-badge",
+      "button[data-icen-kb-source-id=\"cite-vendor-mat\"] > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge",
+      "button[data-icen-kb-source-id=\"cite-vendor-flow\"] > .icen-kb-source-main > .icen-kb-source-sub",
+      "button[data-icen-kb-source-id=\"cite-vendor-flow\"] > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge--official.icen-kb-badge",
+      "button[data-icen-kb-source-id=\"cite-vendor-flow\"] > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge",
+      "section[data-icen-*] > .kbws-split > .kbws-rail > .kbws-sec-h > .icen-kb-meta",
+      "button[data-icen-kb-source-id=\"cite-sec\"] > .icen-kb-source-main > .icen-kb-source-sub",
+      ".icen-kb-source-main > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge--official.icen-kb-badge",
+      ".icen-kb-badge--stale",
+      ".is-restricted > .icen-kb-source-main > .icen-kb-source-sub",
+      ".is-restricted > .icen-kb-source-main > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge",
+      ".icen-kb-badge--restricted",
+      ".kbws-rail > .kbws-hint",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ],
+    "nested-interactive": [
+      ".is-restricted"
+    ]
+  },
+  "kb-select-panel": {
+    "aria-required-children": [
+      ".nav-panel--preset"
+    ],
+    "color-contrast": [
+      ".kbws-ver",
+      "section[data-icen-*] > .kbws-split > .kbws-main > .kbws-sec-h > .icen-kb-meta",
+      "#qa-run",
+      "#qa-answer > .kbws-sec-h > .icen-kb-meta",
+      "button[data-icen-kb-source-id=\"cite-vendor-mat\"] > .icen-kb-source-main > .icen-kb-source-sub",
+      "button[data-icen-kb-source-id=\"cite-vendor-mat\"] > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge--official.icen-kb-badge",
+      "button[data-icen-kb-source-id=\"cite-vendor-mat\"] > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge",
+      "button[data-icen-kb-source-id=\"cite-vendor-flow\"] > .icen-kb-source-main > .icen-kb-source-sub",
+      "button[data-icen-kb-source-id=\"cite-vendor-flow\"] > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge--official.icen-kb-badge",
+      "button[data-icen-kb-source-id=\"cite-vendor-flow\"] > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge",
+      "section[data-icen-*] > .kbws-split > .kbws-rail > .kbws-sec-h > .icen-kb-meta",
+      "button[data-icen-kb-source-id=\"cite-sec\"] > .icen-kb-source-main > .icen-kb-source-sub",
+      ".icen-kb-source-main > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge--official.icen-kb-badge",
+      ".icen-kb-badge--stale",
+      ".is-restricted > .icen-kb-source-main > .icen-kb-source-sub",
+      ".is-restricted > .icen-kb-source-main > .icen-kb-source-side > .icen-kb-source-badges > .icen-kb-badge",
+      ".icen-kb-badge--restricted",
+      ".kbws-rail > .kbws-hint",
+      ".footer-install-state",
+      ".is-focused > span"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ],
+    "nested-interactive": [
+      ".is-restricted"
+    ]
+  },
+  "icen-btn": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"btn/\"]",
+      ".icen-btn-link",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".codeblock > pre > code > .cl > .tok-kw",
+      ".tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-attr",
+      ".cl > .tok-com",
+      ".cl > .tok-attr",
+      ".doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "icen-modal": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"modal/\"]",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".tok-kw",
+      ".cl > .tok-com",
+      ".doc-pager-link[href$=\"date-picker/\"] > .doc-pager-name",
+      ".doc-pager-next > .doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  },
+  "icen-datatable": {
+    "color-contrast": [
+      ".active.docs-link[href$=\"datatable/\"]",
+      ".icen-dt-group-count",
+      ".icen-dt-group-agg",
+      "div[data-icen-tab-panel=\"bun\"] > pre > code > .cl > .tok-kw",
+      ".code-collapse > .codeblock > pre > code > .cl > .tok-kw",
+      ".cl > .tok-kw",
+      ".tok-kw",
+      ".cl > .tok-com",
+      ".doc-pager-link[href$=\"form-validate/\"] > .doc-pager-name",
+      ".doc-pager-next > .doc-pager-name",
+      ".footer-install-state"
+    ],
+    "label-content-name-mismatch": [
+      ".brand"
+    ]
+  }
+}

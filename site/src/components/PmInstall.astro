@@ -16,7 +16,7 @@ const copySvg = `<svg class="ic-copy" width="14" height="14" viewBox="0 0 24 24"
 const checkSvg = `<svg class="ic-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>`;
 ---
-<div class="pm-install" data-tabs>
+<div class="pm-install" data-icen-tabs>
   <div class="pm-head">
     <span class="pm-term" aria-hidden="true"><Fragment set:html={termSvg} /></span>
     <nav class="pm-tabs" aria-label="包管理器">
@@ -24,15 +24,15 @@ const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
         <button
           class:list={['pm-tab', { 'is-active': i === 0 }]}
           type="button"
-          data-tab={m.id}
+          data-icen-tab={m.id}
         >{m.id}</button>
       ))}
     </nav>
   </div>
   {managers.map((m, i) => (
-    <div class="pm-panel" data-tab-panel={m.id} hidden={i !== 0}>
+    <div class="pm-panel" data-icen-tab-panel={m.id} hidden={i !== 0}>
       <pre><code>{highlightLines(m.cmd, 'bash').map((l) => <span class="cl" set:html={l} />)}</code></pre>
-      <button class="copy-btn copy-btn--icon pm-copy" type="button" data-copy={m.cmd} data-copy-icon aria-label="复制命令">
+      <button class="icen-copy-btn icen-copy-btn--icon pm-copy" type="button" data-icen-copy={m.cmd} data-icen-copy-icon aria-label="复制命令">
         <Fragment set:html={copySvg + checkSvg} />
       </button>
     </div>

@@ -2,35 +2,35 @@
  * @icen.ai/ui — Component: tabs（分区导航 / 子导航）
  *
  * 完整契约：
- *   <div class="tabs" role="tablist">                            ← 页面内分区
- *     <button class="page-tab [.is-active]" role="tab" [aria-selected="true"]>…</button>
+ *   <div class="icen-tabs" role="tablist">                            ← 页面内分区
+ *     <button class="icen-page-tab [.is-active]" role="tab" [aria-selected="true"]>…</button>
  *   </div>
  *
- *   <nav class="tabs" role="navigation">                         ← 顶部子导航（a 链接）
+ *   <icen-nav class="icen-tabs" role="navigation">                         ← 顶部子导航（a 链接）
  *     <a class="[.is-active]" [aria-current="page"] href="…">…</a>
- *   </nav>
+ *   </icen-nav>
  *
- * 与 behaviors/tabs 配套：[data-tabs] > [data-tab] + [data-tab-panel]，行为层维护 aria。
+ * 与 behaviors/tabs 配套：[data-icen-tabs] > [data-icen-tab] + [data-icen-tab-panel]，行为层维护 aria。
  * 窄屏换行不滚动（纪律：tab 条永不出现滚动条，一律 flex-wrap: wrap）。
  */
 
-.tabs {
+.icen-tabs {
   display: flex;
   gap: 2px;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--token-line-soft);
-  margin-bottom: var(--density-space-lg);
+  border-bottom: 1px solid var(--icen-token-line-soft);
+  margin-bottom: var(--icen-density-space-lg);
 }
 
-.page-tab {
+.icen-page-tab {
   background: none;
   border: 0;
   cursor: pointer;
-  padding: var(--density-space-sm) var(--density-space-md);
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-md);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-md);
   letter-spacing: 0.05em;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   white-space: nowrap;
@@ -38,25 +38,25 @@
     color var(--icen-tx-fast),
     border-color var(--icen-tx-fast);
 }
-.page-tab:hover {
-  color: var(--token-accent);
+.icen-page-tab:hover {
+  color: var(--icen-token-accent);
 }
-.page-tab:focus-visible {
+.icen-page-tab:focus-visible {
   outline: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--icen-radius-sm);
   box-shadow: var(--icen-ring);
 }
-.page-tab.is-active,
-.page-tab[aria-selected='true'] {
-  color: var(--token-accent);
-  border-bottom-color: var(--token-accent);
+.icen-page-tab.is-active,
+.icen-page-tab[aria-selected='true'] {
+  color: var(--icen-token-accent);
+  border-bottom-color: var(--icen-token-accent);
   font-weight: 700;
 }
 
-.tabs a {
-  padding: var(--density-space-sm) var(--density-space-md);
-  font-size: var(--density-font-size-md);
-  color: var(--token-text-muted);
+.icen-tabs a {
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-md);
+  color: var(--icen-token-text-muted);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   white-space: nowrap;
@@ -65,44 +65,44 @@
     color var(--icen-tx-fast),
     border-color var(--icen-tx-fast);
 }
-.tabs a:hover {
-  color: var(--token-accent);
+.icen-tabs a:hover {
+  color: var(--icen-token-accent);
   text-decoration: none;
 }
-.tabs a:focus-visible {
+.icen-tabs a:focus-visible {
   outline: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--icen-radius-sm);
   box-shadow: var(--icen-ring);
 }
-.tabs a.is-active,
-.tabs a[aria-current='page'] {
-  color: var(--token-accent);
-  border-bottom-color: var(--token-accent);
+.icen-tabs a.is-active,
+.icen-tabs a[aria-current='page'] {
+  color: var(--icen-token-accent);
+  border-bottom-color: var(--icen-token-accent);
 }
 
-/* 卡片变体（可选 .tabs--cards）：tab 变成 pill，没有底边线 */
-.tabs--cards {
+/* 卡片变体（可选 .icen-tabs--cards）：tab 变成 pill，没有底边线 */
+.icen-tabs--cards {
   border-bottom: 0;
-  gap: var(--density-space-xs);
-  margin-bottom: var(--density-space-md);
+  gap: var(--icen-density-space-xs);
+  margin-bottom: var(--icen-density-space-md);
 }
-.tabs--cards .page-tab {
-  padding: var(--density-space-xs) var(--density-space-md);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-full);
+.icen-tabs--cards .icen-page-tab {
+  padding: var(--icen-density-space-xs) var(--icen-density-space-md);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-full);
   margin-bottom: 0;
 }
-.tabs--cards .page-tab.is-active,
-.tabs--cards .page-tab[aria-selected='true'] {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
-  border-color: var(--token-accent);
+.icen-tabs--cards .icen-page-tab.is-active,
+.icen-tabs--cards .icen-page-tab[aria-selected='true'] {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
+  border-color: var(--icen-token-accent-strong);
   font-weight: 500;
 }
 
 /* 等宽变体：tab 平均占满容器 */
-.tabs--equal .page-tab,
-.tabs--equal a {
+.icen-tabs--equal .icen-page-tab,
+.icen-tabs--equal a {
   flex: 1;
   text-align: center;
 }
@@ -110,137 +110,137 @@
 /* ── 增强 ── */
 
 /* 尺寸变体 */
-.tabs--sm .page-tab {
-  padding: var(--density-space-xs) var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
+.icen-tabs--sm .icen-page-tab {
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
 }
-.tabs--lg .page-tab {
-  padding: var(--density-space-md) calc(var(--density-space-md) + 4px);
-  font-size: var(--density-font-size-lg);
+.icen-tabs--lg .icen-page-tab {
+  padding: var(--icen-density-space-md) calc(var(--icen-density-space-md) + 4px);
+  font-size: var(--icen-density-font-size-lg);
 }
 
 /* Tab 带图标 */
-.page-tab-icon {
+.icen-page-tab-icon {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  margin-right: 2px;
+  margin-inline-end: 2px;
 }
 
 /* Tab 带徽章/计数 */
-.page-tab-badge {
+.icen-page-tab-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  margin-left: var(--density-space-xs);
-  font-size: var(--density-font-size-2xs);
+  margin-inline-start: var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 600;
-  color: var(--token-text-faint);
-  background: var(--token-fill-2);
-  border-radius: var(--radius-full);
+  color: var(--icen-token-text-faint);
+  background: var(--icen-token-fill-2);
+  border-radius: var(--icen-radius-full);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
-.page-tab.is-active .page-tab-badge,
-.page-tab[aria-selected='true'] .page-tab-badge {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
+.icen-page-tab.is-active .icen-page-tab-badge,
+.icen-page-tab[aria-selected='true'] .icen-page-tab-badge {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
 }
 
 /* 可关闭 tab */
-.page-tab-close {
+.icen-page-tab-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
   height: 16px;
-  margin-left: var(--density-space-xs);
-  margin-right: -4px;
+  margin-inline-start: var(--icen-density-space-xs);
+  margin-inline-end: -4px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   background: transparent;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.page-tab-close:hover {
-  color: var(--token-error);
-  background: var(--token-error-muted);
+.icen-page-tab-close:hover {
+  color: var(--icen-token-error);
+  background: var(--icen-token-error-muted);
 }
-.page-tab-close svg { width: 10px; height: 10px; }
+.icen-page-tab-close svg { width: 10px; height: 10px; }
 
 /* 分段式 tab（替代底边线，用 segmented 视觉） */
-.tabs--segment {
+.icen-tabs--segment {
   display: inline-flex;
   border-bottom: none;
   gap: 2px;
   padding: 2px;
-  background: var(--token-panel);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-inset);
+  background: var(--icen-token-panel);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
 }
-.tabs--segment .page-tab {
+.icen-tabs--segment .icen-page-tab {
   border-bottom: none;
   margin-bottom: 0;
-  padding: var(--density-space-xs) var(--density-space-md);
-  border-radius: var(--radius-sm);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-md);
+  border-radius: var(--icen-radius-sm);
 }
-.tabs--segment .page-tab.is-active,
-.tabs--segment .page-tab[aria-selected='true'] {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
+.icen-tabs--segment .icen-page-tab.is-active,
+.icen-tabs--segment .icen-page-tab[aria-selected='true'] {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
   border-bottom-color: transparent;
   font-weight: 500;
 }
 
-/* 垂直 tab（侧栏式） */
-.tabs--vertical {
+/* 垂直 tab（侧栏式）：轨道与指示条在 inline-end 侧，RTL 自动镜像到左缘 */
+.icen-tabs--vertical {
   flex-direction: column;
   border-bottom: none;
-  border-right: 1px solid var(--token-line-soft);
+  border-inline-end: 1px solid var(--icen-token-line-soft);
   margin-bottom: 0;
-  min-width: 160px;
+  min-inline-size: 160px;
 }
-.tabs--vertical .page-tab {
+.icen-tabs--vertical .icen-page-tab {
   border-bottom: none;
-  border-right: 2px solid transparent;
+  border-inline-end: 2px solid transparent;
   margin-bottom: 0;
-  margin-right: -1px;
+  margin-inline-end: -1px;
 }
-.tabs--vertical .page-tab.is-active,
-.tabs--vertical .page-tab[aria-selected='true'] {
-  border-right-color: var(--token-accent);
+.icen-tabs--vertical .icen-page-tab.is-active,
+.icen-tabs--vertical .icen-page-tab[aria-selected='true'] {
+  border-inline-end-color: var(--icen-token-accent);
   border-bottom-color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-tab, .tabs a, .page-tab-close { transition: none; }
+  .icen-page-tab, .icen-tabs a, .icen-page-tab-close { transition: none; }
 }
 
-/* ── 指示条（[data-tabs-ink]，与 behaviors/tabs 配套；本节为追加）── */
-/* tablist（.tabs）挂 data-tabs-ink 时，行为层创建并移动 .tabs-ink：
+/* ── 指示条（[data-icen-tabs-ink]，与 behaviors/tabs 配套；本节为追加）── */
+/* tablist（.icen-tabs）挂 data-icen-tabs-ink 时，行为层创建并移动 .icen-tabs-ink：
    宽 / translateX 由 JS 内联写入（布局定位，同 popover 模式）；
    此处只负责视觉（高度 / 圆角 / 背景）与位移过渡（--duration / --ease token）。 */
-.tabs[data-tabs-ink] {
+.icen-tabs[data-icen-tabs-ink] {
   position: relative;
 }
-.tabs-ink {
+.icen-tabs-ink {
   position: absolute;
   bottom: -1px; /* 盖在容器 1px 底边线上，与活动 tab 的 2px 下划线同高 */
-  left: 0;
+  left: 0; /* guard:allow-physical 指示条由 JS 内联写 width/translateX 定位（popover 同模式），原点取物理左缘由布局函数计算 */
   height: 2px;
-  border-radius: var(--radius-full);
-  background: var(--token-accent);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent);
   pointer-events: none;
   transition:
-    width var(--duration-normal) var(--ease-out),
-    transform var(--duration-normal) var(--ease-out);
+    width var(--icen-duration-normal) var(--icen-ease-out),
+    transform var(--icen-duration-normal) var(--icen-ease-out);
 }
 @media (prefers-reduced-motion: reduce) {
-  .tabs-ink { transition: none; }
+  .icen-tabs-ink { transition: none; }
 }

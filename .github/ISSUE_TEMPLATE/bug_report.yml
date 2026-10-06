@@ -1,0 +1,72 @@
+name: Bug 报告
+description: 组件行为 / 样式 / 类型与文档不符，或守卫与测试漏抓的缺陷
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢报告。安全漏洞请走 [SECURITY.md](../../SECURITY.md) 中的私密渠道（GitHub Security Advisories / security@icen.ai），不要开公开 issue。
+
+  - type: input
+    id: version
+    attributes:
+      label: 受影响版本
+      description: "@icen.ai/ui 的版本号（package.json 的 dependencies 里看）"
+      placeholder: "例如 0.10.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: env
+    attributes:
+      label: 环境
+      description: 渲染/构建环境（可多选）
+      multiple: true
+      options:
+        - Chrome / Edge（Chromium）
+        - Firefox
+        - Safari / WebKit
+        - Vite SPA
+        - Astro（注意 kit CSS 的 Astro 陷阱，见 AGENTS.md）
+        - webpack / 其他 bundler
+        - SSR（Node 端渲染）
+    validations:
+      required: true
+
+  - type: input
+    id: framework
+    attributes:
+      label: 框架（如适用）
+      description: 原生 / React / Vue，及版本
+      placeholder: "例如 React 19.3 / Vue 3.5 / 原生"
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 最小复现
+      description: 能重现问题的最少代码或步骤。贴代码请用围栏块。
+      placeholder: |
+        ```css
+        @import '@icen.ai/ui/tokens.css';
+        ```
+        ```ts
+        // 触发问题的调用
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 如有报错或截图（控制台红字、视觉异常），一并贴上。
+    validations:
+      required: true

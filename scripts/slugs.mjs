@@ -8,7 +8,8 @@ export const SLUGS = [
   // 基础
   'btn', 'panel', 'pill', 'tag', 'tabs', 'stat', 'toast', 'toolbar', 'split-pane',
   // 表单
-  'form', 'input', 'select', 'slider', 'tag-input', 'switch', 'segmented', 'upload', 'date-picker',
+  'form', 'input', 'select', 'slider', 'tag-input', 'switch', 'segmented', 'upload', 'date-picker', 'form-validate',
+  'cascader', 'tree-select', 'mentions', 'autocomplete',
   // 浮层
   'modal', 'dropdown', 'context-menu', 'popover', 'tooltip', 'command-palette',
   // 数据展示
@@ -60,7 +61,7 @@ export const MERGED_CSS = {
   carousel: 'media.css',
   dropdown: 'menu.css',
   'context-menu': 'menu.css',
-  // chart-calendar 无独立 css，样式并入 chart-heatmap.css（.chart-calendar* 规则）
+  // chart-calendar 无独立 css，样式并入 chart-heatmap.css（.icen-chart-calendar* 规则）
   'chart-calendar': 'chart-heatmap.css',
   // AI 族合并文件：ai-chat.css / ai-tool.css / ai-diff.css / ai-panel.css
   'ai-message': 'ai-chat.css',
@@ -109,7 +110,7 @@ export const MERGED_CSS = {
   'kb-access': 'kb-perm.css',
   'kb-audit': 'kb-perm.css',
   'kb-visibility': 'kb-perm.css',
-  // chart-map 无独立 css，样式并入 charts.css 基座（.chart-map 变体）
+  // chart-map 无独立 css，样式并入 charts.css 基座（.icen-chart-map 变体）
   'chart-map': 'charts.css',
 };
 
@@ -130,6 +131,7 @@ export const SLUG_INIT = {
   'date-picker': 'initDatePicker',
   dropdown: 'initDropdown',
   input: 'initInput',
+  'form-validate': 'initFormValidate',
   modal: 'initModal',
   nav: 'initNav',
   notification: 'initNotification',
@@ -235,6 +237,11 @@ export const SLUG_BEHAVIOR = {
   'ai-reasoning': 'ai-chat',
   'ai-files': 'ai-diff',
   'ai-usage': 'ai-panel',
+  // tool-call/subagent 的 init 在 ai-tool.ts；todo/context 的 init 在 ai-panel.ts（合并文件同族）
+  'ai-tool-call': 'ai-tool',
+  'ai-subagent': 'ai-tool',
+  'ai-todo': 'ai-panel',
+  'ai-context': 'ai-panel',
   'chart-line': 'charts',
   'chart-bar': 'charts',
   'chart-pie': 'charts',
@@ -275,7 +282,7 @@ export const EXTRA_CSS = {
   'chart-graph': ['charts.css'],
   // kb umbrella：一条 import 拿到知识库全家（基座 kb.css + 七域）
   kb: ['kb-ground.css', 'kb-ingest.css', 'kb-search.css', 'kb-data.css', 'kb-ops.css', 'kb-agent.css', 'kb-perm.css'],
-  // kb 域组件全部依赖共享基座 kb.css（.kb-row/.kb-num/.kb-quote 等原语）
+  // kb 域组件全部依赖共享基座 kb.css（.icen-kb-row/.icen-kb-num/.icen-kb-quote 等原语）
   'kb-citation': ['kb.css'],
   'kb-sources': ['kb.css'],
   'kb-passage': ['kb.css'],

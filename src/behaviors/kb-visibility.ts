@@ -8,31 +8,31 @@
  * 禁止嵌入终端用户界面。
  *
  * DOM 契约（render 快照 + 句柄）：
- *   <div class="kb-visibility">
- *     <div class="kb-visibility-warn">admin 审计视图——命中差异对照对普通用户构成泄露，勿嵌入终端用户界面</div>
- *     <div class="kb-visibility-bar">
- *       <button class="kb-chip kb-visibility-idn" data-identity-user aria-pressed>身份 label</button>…
- *         ← 点击聚焦该列（.kb-visibility-col.is-focused；再点取消），派 icen:kb-visibility-identity {identity}
- *       <span class="kb-meta">查询：{query}</span>              ← 只读回显（展示件不提供输入）
- *       <button class="kb-chip kb-layer-chip" data-layer="pre|post|none">pre ✓</button>
+ *   <div class="icen-kb-visibility">
+ *     <div class="icen-kb-visibility-warn">admin 审计视图——命中差异对照对普通用户构成泄露，勿嵌入终端用户界面</div>
+ *     <div class="icen-kb-visibility-bar">
+ *       <button class="icen-kb-chip icen-kb-visibility-idn" data-icen-identity-user aria-pressed>身份 label</button>…
+ *         ← 点击聚焦该列（.icen-kb-visibility-col.is-focused；再点取消），派 icen:kb-visibility-identity {identity}
+ *       <span class="icen-kb-meta">查询：{query}</span>              ← 只读回显（展示件不提供输入）
+ *       <button class="icen-kb-chip icen-kb-layer-chip" data-icen-layer="pre|post|none">pre ✓</button>
  *         ← 点击循环 pre→post→none，派 icen:kb-visibility-layer {layer}；title 语义见 LAYER_TITLE
  *     </div>
- *     <div class="kb-visibility-grid">
- *       <div class="kb-visibility-col [.is-focused]" data-identity-user>
- *         <header><span>身份 label</span><span class="kb-meta">note</span></header>
- *         <div class="kb-visibility-count kb-num">安全计数 n</div>
- *         <div class="kb-visibility-hits">
- *           <div class="kb-visibility-hit" data-visibility="full|summary|metadata|restricted" data-hit-id>…</div>
+ *     <div class="icen-kb-visibility-grid">
+ *       <div class="icen-kb-visibility-col [.is-focused]" data-icen-identity-user>
+ *         <header><span>身份 label</span><span class="icen-kb-meta">note</span></header>
+ *         <div class="icen-kb-visibility-count icen-kb-num">安全计数 n</div>
+ *         <div class="icen-kb-visibility-hits">
+ *           <div class="icen-kb-visibility-hit" data-icen-visibility="full|summary|metadata|restricted" data-icen-hit-id>…</div>
  *         </div>
  *       </div>…
  *     </div>
- *     <div class="kb-visibility-lesson">三条教学项 + muted「以上对照仅限 admin 审计」</div>
+ *     <div class="icen-kb-visibility-lesson">三条教学项 + muted「以上对照仅限 admin 审计」</div>
  *   </div>
  *
  * 命中行呈现（五级 KbVisibility 映射，kb-core §9.6）：
  *   full      = 标题 + snippet（内容态）
- *   summary   = 标题 + AI 摘要段（.kb-visibility-summary）+「原文不可用」禁用钮（摘要权限 ≠ 原文权限）
- *   metadata / restricted = 锁图标（svgIcon）+ 标题 + 打码条（.kb-visibility-snippet 空元素，纯 CSS 块）
+ *   summary   = 标题 + AI 摘要段（.icen-kb-visibility-summary）+「原文不可用」禁用钮（摘要权限 ≠ 原文权限）
+ *   metadata / restricted = 锁图标（svgIcon）+ 标题 + 打码条（.icen-kb-visibility-snippet 空元素，纯 CSS 块）
  *               + restricted 附「申请访问」文字钮 → opts.onRequest(hit, identity)
  *               ——展示件不派权限域申请事件，申请流（kb-access）由宿主经回调接线
  *   hidden    = 该行在该列内不渲染——对照器表达的就是「这一列少掉的行」（security trimming）
@@ -61,6 +61,7 @@ import {
 } from './kb-core';
 import { emitIcen } from './events';
 import { KB_ICON_LOCK } from './kb-citation';
+import { t } from './i18n';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -114,16 +115,16 @@ const LAYER_ORDER: readonly Layer[] = ['pre', 'post', 'none'];
 const LAYER_LABEL: Record<Layer, string> = { pre: 'pre ✓', post: 'post ⚠', none: 'none ✕' };
 
 const LAYER_TITLE: Record<Layer, string> = {
-  pre: 'pre-filter：ACL 在检索执行体内生效——安全基线',
-  post: 'post-filter：分数已可观察——缺陷层，仅演示',
-  none: 'none：fail-open，无身份过滤返回全部——危险，仅演示',
+  pre: t('kbRetrieval.layerPre'),
+  post: t('kbRetrieval.layerPost'),
+  none: t('kbRetrieval.layerNone'),
 };
 
 /** 教学段三条（admin 审计视角的安全课；spec §9.5） */
 const LESSON_ITEMS: readonly string[] = [
-  'fail-open：Kendra 无身份上下文返回全部文档——检索必须携带服务端身份',
-  'post-filter：topK 被无权结果占用且相似度分数可被观察',
-  '计数差异即 volume leakage：对普通用户只可给「已按权限过滤」恒定文案，缓解只有 padding 取整',
+  t('kbVisibility.failOpenNote'),
+  t('kbVisibility.postFilterNote'),
+  t('kbVisibility.leakageNote'),
 ];
 
 /** SSR 静态 stub 句柄（接口完整可用但无副作用；getVisibility 同缺省演示语义返回 'full'） */
@@ -138,7 +139,7 @@ function normalizeHit(raw: KbVisibilityHit | Record<string, unknown>): KbVisibil
   const r = raw as Partial<KbVisibilityHit>;
   return {
     id: String(r.id ?? ''),
-    title: String(r.title ?? '未命名命中'),
+    title: String(r.title ?? t('kbVisibility.unnamedHit')),
     snippet: typeof r.snippet === 'string' ? r.snippet : undefined,
     summary: typeof r.summary === 'string' ? r.summary : undefined,
     documentId: typeof r.documentId === 'string' ? r.documentId : undefined,
@@ -173,37 +174,37 @@ export function renderKbVisibility(el: HTMLElement, opts: KbVisibilityOpts): KbV
   let destroyed = false;
 
   el.textContent = '';
-  el.classList.add('kb-visibility');
+  el.classList.add('icen-kb-visibility');
 
   /* ── 警示条（常驻：对照本身构成泄露，admin 审计例外，spec §9.0-2） ── */
   el.appendChild(
-    h('div', 'kb-visibility-warn', 'admin 审计视图——命中差异对照对普通用户构成泄露，勿嵌入终端用户界面'),
+    h('div', 'icen-kb-visibility-warn', t('kbVisibility.adminWarn')),
   );
 
   /* ── bar：身份 chip 组 · 查询回显 · 过滤层徽标 ── */
 
-  const bar = h('div', 'kb-visibility-bar');
+  const bar = h('div', 'icen-kb-visibility-bar');
   const chipMap = new Map<string, HTMLButtonElement>();
   for (const identity of identities) {
-    const chip = h('button', 'kb-chip kb-visibility-idn', identity.label ?? identity.user);
+    const chip = h('button', 'icen-kb-chip icen-kb-visibility-idn', identity.label ?? identity.user);
     chip.type = 'button';
-    chip.dataset.identityUser = identity.user;
+    chip.dataset.icenIdentityUser = identity.user;
     chip.setAttribute('aria-pressed', 'false');
-    chip.setAttribute('aria-label', `聚焦身份 ${identity.label ?? identity.user} 的列`);
+    chip.setAttribute('aria-label', t('kbVisibility.focusColumn', { p0: identity.label ?? identity.user }));
     bar.appendChild(chip);
     chipMap.set(identity.user, chip);
   }
-  bar.appendChild(h('span', 'kb-meta', `查询：${opts.query || '—'}`));
+  bar.appendChild(h('span', 'icen-kb-meta', t('kbVisibility.queryLabel', { p0: opts.query || '—' })));
 
-  const layerChip = h('button', 'kb-chip kb-layer-chip');
+  const layerChip = h('button', 'icen-kb-chip icen-kb-layer-chip');
   layerChip.type = 'button';
   bar.appendChild(layerChip);
 
   function paintLayer(): void {
-    layerChip.dataset.layer = layer;
+    layerChip.dataset.icenLayer = layer;
     layerChip.textContent = LAYER_LABEL[layer];
     layerChip.title = LAYER_TITLE[layer];
-    layerChip.setAttribute('aria-label', `过滤层：${LAYER_TITLE[layer]}`);
+    layerChip.setAttribute('aria-label', t('kbVisibility.layerValue', { p0: LAYER_TITLE[layer] }));
   }
   paintLayer();
 
@@ -211,40 +212,40 @@ export function renderKbVisibility(el: HTMLElement, opts: KbVisibilityOpts): KbV
 
   /* ── grid：每身份一列（header 只放身份 label + note——有效角色属 kb-who-can 的职责，不在此重复） ── */
 
-  const grid = h('div', 'kb-visibility-grid');
+  const grid = h('div', 'icen-kb-visibility-grid');
   const colMap = new Map<string, HTMLElement>();
 
   function buildHitRow(hit: KbVisibilityHit, identity: KbIdentity): HTMLElement | null {
     const visibility = evalHit(hit, identity);
     if (visibility === 'hidden') return null; /* hidden = 列内不可见——「这一列少掉的行」正是对照器要表达的 */
-    const row = h('div', 'kb-visibility-hit');
-    row.dataset.visibility = visibility;
-    row.dataset.hitId = hit.id;
+    const row = h('div', 'icen-kb-visibility-hit');
+    row.dataset.icenVisibility = visibility;
+    row.dataset.icenHitId = hit.id;
 
-    const titleRow = h('div', 'kb-visibility-hit-title');
+    const titleRow = h('div', 'icen-kb-visibility-hit-title');
     if (visibility === 'metadata' || visibility === 'restricted') {
       const lock = svgIcon(KB_ICON_LOCK);
       if (lock) titleRow.appendChild(lock);
     }
-    titleRow.appendChild(h('span', 'kb-visibility-hit-title-text', hit.title));
+    titleRow.appendChild(h('span', 'icen-kb-visibility-hit-title-text', hit.title));
     row.appendChild(titleRow);
 
     if (visibility === 'full') {
-      if (hit.snippet) row.appendChild(h('div', 'kb-visibility-snippet kb-meta', hit.snippet));
+      if (hit.snippet) row.appendChild(h('div', 'icen-kb-visibility-snippet icen-kb-meta', hit.snippet));
     } else if (visibility === 'summary') {
-      if (hit.summary) row.appendChild(h('div', 'kb-visibility-summary', hit.summary));
-      const origOff = h('button', 'kb-visibility-origoff', '原文不可用');
+      if (hit.summary) row.appendChild(h('div', 'icen-kb-visibility-summary', hit.summary));
+      const origOff = h('button', 'icen-kb-visibility-origoff', t('kbVisibility.sourceUnavailable'));
       origOff.type = 'button';
       origOff.disabled = true; /* 摘要权限 ≠ 原文权限：显式禁用，不做可点假象 */
       origOff.setAttribute('aria-disabled', 'true');
       row.appendChild(origOff);
     } else {
       /* metadata / restricted：打码条（空元素，块状呈现见 kb-perm.css） */
-      row.appendChild(h('div', 'kb-visibility-snippet'));
+      row.appendChild(h('div', 'icen-kb-visibility-snippet'));
       if (visibility === 'restricted') {
-        const request = h('button', 'kb-visibility-request', '申请访问');
+        const request = h('button', 'icen-kb-visibility-request', t('common.requestAccess'));
         request.type = 'button';
-        request.setAttribute('aria-label', `申请访问 ${hit.title}`);
+        request.setAttribute('aria-label', t('common.requestAccessFor', { p0: hit.title }));
         row.appendChild(request);
       }
     }
@@ -252,18 +253,18 @@ export function renderKbVisibility(el: HTMLElement, opts: KbVisibilityOpts): KbV
   }
 
   for (const identity of identities) {
-    const col = h('div', 'kb-visibility-col');
-    col.dataset.identityUser = identity.user;
+    const col = h('div', 'icen-kb-visibility-col');
+    col.dataset.icenIdentityUser = identity.user;
 
     const head = h('header');
     head.appendChild(h('span', 'kb-visibility-idn-label', identity.label ?? identity.user));
-    if (identity.note) head.appendChild(h('span', 'kb-meta', identity.note));
+    if (identity.note) head.appendChild(h('span', 'icen-kb-meta', identity.note));
     col.appendChild(head);
 
     /* 安全计数（admin 语义：授权集合内 = visibility ≠ hidden 的命中数；hidden 不计不显示。
        普通用户视图连此计数都不允许——只可给恒定文案（spec §9.0-5），见教学段第三条。 */
     let safeCount = 0;
-    const hitsBox = h('div', 'kb-visibility-hits');
+    const hitsBox = h('div', 'icen-kb-visibility-hits');
     for (const hit of hits) {
       const row = buildHitRow(hit, identity);
       if (row) {
@@ -271,7 +272,7 @@ export function renderKbVisibility(el: HTMLElement, opts: KbVisibilityOpts): KbV
         safeCount++;
       }
     }
-    col.appendChild(h('div', 'kb-visibility-count kb-num', `安全计数 ${formatCount(safeCount)}`));
+    col.appendChild(h('div', 'icen-kb-visibility-count icen-kb-num', t('kbVisibility.safeCount', { p0: formatCount(safeCount) })));
     col.appendChild(hitsBox);
 
     grid.appendChild(col);
@@ -281,11 +282,11 @@ export function renderKbVisibility(el: HTMLElement, opts: KbVisibilityOpts): KbV
 
   /* ── 教学段（admin 课） ── */
 
-  const lesson = h('div', 'kb-visibility-lesson');
+  const lesson = h('div', 'icen-kb-visibility-lesson');
   const lessonList = h('ul');
   for (const item of LESSON_ITEMS) lessonList.appendChild(h('li', undefined, item));
   lesson.appendChild(lessonList);
-  lesson.appendChild(h('div', 'kb-meta kb-visibility-lesson-note', '以上对照仅限 admin 审计'));
+  lesson.appendChild(h('div', 'icen-kb-meta kb-visibility-lesson-note', t('kbVisibility.adminOnlyNote')));
   el.appendChild(lesson);
 
   /* ── 交互 ── */
@@ -305,15 +306,15 @@ export function renderKbVisibility(el: HTMLElement, opts: KbVisibilityOpts): KbV
 
   listen(bar, 'click', (ev) => {
     const target = ev.target instanceof Element ? ev.target : null;
-    const chip = target?.closest<HTMLButtonElement>('.kb-visibility-idn');
+    const chip = target?.closest<HTMLButtonElement>('.icen-kb-visibility-idn');
     if (chip) {
-      const user = chip.dataset.identityUser ?? '';
+      const user = chip.dataset.icenIdentityUser ?? '';
       setFocus(focusedUser === user ? null : user); /* 再点取消聚焦 */
       const identity = identities.find((i) => i.user === user);
       if (identity) emitIcen(el, 'icen:kb-visibility-identity', { identity });
       return;
     }
-    const layerBtn = target?.closest<HTMLButtonElement>('.kb-layer-chip');
+    const layerBtn = target?.closest<HTMLButtonElement>('.icen-kb-layer-chip');
     if (layerBtn) {
       const idx = LAYER_ORDER.indexOf(layer);
       applyLayer(LAYER_ORDER[(idx + 1) % LAYER_ORDER.length]!); /* pre→post→none 循环 */
@@ -323,13 +324,13 @@ export function renderKbVisibility(el: HTMLElement, opts: KbVisibilityOpts): KbV
   /* 申请访问文字钮：委托到 grid；只走 opts.onRequest 回调（展示件不派权限域申请事件，宿主接 kb-access） */
   listen(grid, 'click', (ev) => {
     const target = ev.target instanceof Element ? ev.target : null;
-    const btn = target?.closest<HTMLButtonElement>('.kb-visibility-request');
+    const btn = target?.closest<HTMLButtonElement>('.icen-kb-visibility-request');
     if (!btn) return;
-    const row = btn.closest<HTMLElement>('.kb-visibility-hit');
-    const col = btn.closest<HTMLElement>('.kb-visibility-col');
+    const row = btn.closest<HTMLElement>('.icen-kb-visibility-hit');
+    const col = btn.closest<HTMLElement>('.icen-kb-visibility-col');
     if (!row || !col) return;
-    const hit = hits.find((x) => x.id === (row.dataset.hitId ?? ''));
-    const identity = identities.find((i) => i.user === (col.dataset.identityUser ?? ''));
+    const hit = hits.find((x) => x.id === (row.dataset.icenHitId ?? ''));
+    const identity = identities.find((i) => i.user === (col.dataset.icenIdentityUser ?? ''));
     if (hit && identity) opts.onRequest?.(hit, identity);
   });
 
@@ -349,7 +350,7 @@ export function renderKbVisibility(el: HTMLElement, opts: KbVisibilityOpts): KbV
       if (destroyed) return;
       destroyed = true;
       ctrl.abort();
-      el.classList.remove('kb-visibility');
+      el.classList.remove('icen-kb-visibility');
       el.textContent = '';
       delete marked.__icenKbVisibility;
     },

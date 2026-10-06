@@ -2,14 +2,14 @@
  * @icen.ai/ui — Behavior: kb-chain（Agent 工具链条横向摘要条，与 components/kb-agent.css 配套）
  *
  * DOM 契约（renderKbChain 构建，规格 docs/spec/kb-family.md §5.26）：
- *   <div class="kb-chain">
- *     <span class="kb-chain-step is-done" role="button" tabindex="0" aria-disabled="false"
- *           data-index="0" title="3 页 / 2 表（detail 存在时）">
- *       <i class="kb-chain-dot" aria-hidden="true"></i>
- *       <span class="kb-chain-label">检索</span>
+ *   <div class="icen-kb-chain">
+ *     <span class="icen-kb-chain-step is-done" role="button" tabindex="0" aria-disabled="false"
+ *           data-icen-index="0" title="3 页 / 2 表（detail 存在时）">
+ *       <i class="icen-kb-chain-dot" aria-hidden="true"></i>
+ *       <span class="icen-kb-chain-label">检索</span>
  *     </span>
- *     <i class="kb-chain-link" aria-hidden="true"></i>
- *     <span class="kb-chain-step is-running" …>重排</span>…
+ *     <i class="icen-kb-chain-link" aria-hidden="true"></i>
+ *     <span class="icen-kb-chain-step is-running" …>重排</span>…
  *   </div>
  *
  * 状态机（工作台域纪律：运动感来自动效不来自颜色，色只标语义）：
@@ -48,11 +48,11 @@ function frontierIndex(steps: KbChainStep[]): number {
 
 /** 原位更新一个步骤节点（不重建，保住 CSS 过渡与焦点）；结构不符返回 false 由调用方整段重建 */
 function applyStep(node: HTMLElement, step: KbChainStep, index: number, clickable: boolean): boolean {
-  const label = node.querySelector('.kb-chain-label');
-  const dot = node.querySelector('.kb-chain-dot');
+  const label = node.querySelector('.icen-kb-chain-label');
+  const dot = node.querySelector('.icen-kb-chain-dot');
   if (!(label instanceof HTMLElement) || !(dot instanceof HTMLElement)) return false;
-  node.className = `kb-chain-step is-${step.status}`;
-  node.dataset.index = String(index);
+  node.className = `icen-kb-chain-step is-${step.status}`;
+  node.dataset.icenIndex = String(index);
   label.textContent = step.label;
   if (step.detail) node.title = step.detail;
   else node.removeAttribute('title');
@@ -64,11 +64,11 @@ function applyStep(node: HTMLElement, step: KbChainStep, index: number, clickabl
 }
 
 function buildStep(step: KbChainStep, index: number, clickable: boolean): HTMLElement {
-  const node = h('span', `kb-chain-step is-${step.status}`);
-  const dot = h('i', 'kb-chain-dot');
+  const node = h('span', `icen-kb-chain-step is-${step.status}`);
+  const dot = h('i', 'icen-kb-chain-dot');
   dot.setAttribute('aria-hidden', 'true');
   node.appendChild(dot);
-  node.appendChild(h('span', 'kb-chain-label', step.label));
+  node.appendChild(h('span', 'icen-kb-chain-label', step.label));
   applyStep(node, step, index, clickable);
   return node;
 }
@@ -83,10 +83,10 @@ export function renderKbChain(el: HTMLElement, steps: KbChainStep[]): HTMLElemen
     ? steps.map((s) => ({ ...s, status: normStatus(s?.status) }))
     : [];
 
-  let root = el.querySelector(':scope > .kb-chain');
+  let root = el.querySelector(':scope > .icen-kb-chain');
   if (!(root instanceof HTMLElement)) {
     el.textContent = '';
-    root = h('div', 'kb-chain');
+    root = h('div', 'icen-kb-chain');
     el.appendChild(root);
   }
 
@@ -100,9 +100,9 @@ export function renderKbChain(el: HTMLElement, steps: KbChainStep[]): HTMLElemen
   let reusable = kids.length === expect;
   if (reusable) {
     for (let i = 0; i < n && reusable; i++) {
-      if (!kids[2 * i]!.classList.contains('kb-chain-step')) reusable = false;
+      if (!kids[2 * i]!.classList.contains('icen-kb-chain-step')) reusable = false;
       const link = kids[2 * i + 1];
-      if (link && !link.classList.contains('kb-chain-link')) reusable = false;
+      if (link && !link.classList.contains('icen-kb-chain-link')) reusable = false;
     }
   }
 
@@ -110,7 +110,7 @@ export function renderKbChain(el: HTMLElement, steps: KbChainStep[]): HTMLElemen
     root.textContent = '';
     for (let i = 0; i < n; i++) {
       root.appendChild(buildStep(list[i]!, i, clickable(i)));
-      if (i < n - 1) root.appendChild(h('i', 'kb-chain-link'));
+      if (i < n - 1) root.appendChild(h('i', 'icen-kb-chain-link'));
     }
     return el;
   }
@@ -144,7 +144,7 @@ export function initKbChain(root?: ParentNode): () => void {
 
   const activate = (stepEl: HTMLElement): void => {
     if (stepEl.getAttribute('aria-disabled') === 'true') return;
-    const index = Number(stepEl.dataset.index);
+    const index = Number(stepEl.dataset.icenIndex);
     const step = chainStepData.get(stepEl);
     if (!Number.isFinite(index) || !step) return;
     emitIcen(stepEl, 'icen:kb-chain-step', { index, step });
@@ -153,7 +153,7 @@ export function initKbChain(root?: ParentNode): () => void {
   const target = scope as ParentNode & EventTarget;
   const onClick = (e: Event): void => {
     const t = e.target instanceof Element ? e.target : null;
-    const stepEl = t?.closest<HTMLElement>('.kb-chain-step');
+    const stepEl = t?.closest<HTMLElement>('.icen-kb-chain-step');
     if (stepEl) activate(stepEl);
   };
   const onKeydown = (e: Event): void => {
@@ -161,7 +161,7 @@ export function initKbChain(root?: ParentNode): () => void {
     if (ke.key !== 'Enter' && ke.key !== ' ') return;
     const t = ke.target instanceof Element ? ke.target : null;
     if (!t || t.closest('button, a, input, textarea, select')) return;
-    const stepEl = t.closest<HTMLElement>('.kb-chain-step');
+    const stepEl = t.closest<HTMLElement>('.icen-kb-chain-step');
     if (!stepEl) return;
     ke.preventDefault();
     activate(stepEl);

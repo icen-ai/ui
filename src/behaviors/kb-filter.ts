@@ -2,33 +2,33 @@
  * @icen.ai/ui — Behavior: kb-filter（过滤器构建器，与 components/kb-search.css 配套）
  *
  * DOM 契约（create 装配，规格 docs/spec/kb-family.md §5.12）：
- *   <div class="kb-filter" data-kb-filter>
+ *   <div class="icen-kb-filter" data-icen-kb-filter>
  *     <div class="kb-filter-tree">
- *       <div class="kb-filter-group" data-depth="0">
- *         <div class="kb-filter-head">
- *           <button class="kb-filter-op-toggle [.is-or]" data-op="and|or">AND</button>
- *           <button class="kb-filter-act" data-act="add-rule">+ 规则</button>
- *           <button class="kb-filter-act" data-act="add-group" [disabled]>+ 组</button>
- *           [<button class="kb-filter-act is-danger" data-act="del-group">删除组</button>]  ← 仅嵌套组
+ *       <div class="icen-kb-filter-group" data-icen-depth="0">
+ *         <div class="icen-kb-filter-head">
+ *           <button class="icen-kb-filter-op-toggle [.is-or]" data-icen-op="and|or">AND</button>
+ *           <button class="icen-kb-filter-act" data-icen-act="add-rule">+ 规则</button>
+ *           <button class="icen-kb-filter-act" data-icen-act="add-group" [disabled]>+ 组</button>
+ *           [<button class="icen-kb-filter-act is-danger" data-icen-act="del-group">删除组</button>]  ← 仅嵌套组
  *         </div>
- *         <div class="kb-filter-body">
- *           <div class="kb-filter-rule">
- *             <input class="kb-filter-field" list="…" placeholder="字段" />
- *             <select class="kb-filter-op">等于/不等于/大于/大于等于/小于/小于等于/属于/包含/存在</select>
- *             <input class="kb-filter-value" placeholder="值（属于用逗号分隔）" [disabled] />
- *             <button class="kb-filter-act is-danger" data-act="del-rule">×</button>
+ *         <div class="icen-kb-filter-body">
+ *           <div class="icen-kb-filter-rule">
+ *             <icen-input class="icen-kb-filter-field" icen-list="…" placeholder="字段" />
+ *             <icen-select class="icen-kb-filter-op">等于/不等于/大于/大于等于/小于/小于等于/属于/包含/存在</icen-select>
+ *             <icen-input class="icen-kb-filter-value" placeholder="值（属于用逗号分隔）" [disabled] />
+ *             <button class="icen-kb-filter-act is-danger" data-icen-act="del-rule">×</button>
  *           </div>…
- *           [<div class="kb-filter-group" data-depth="1|2">…递归…</div>]…
+ *           [<div class="icen-kb-filter-group" data-icen-depth="1|2">…递归…</div>]…
  *         </div>
  *       </div>
  *     </div>
- *     <div class="kb-filter-dsl">
- *       <div class="kb-filter-dsl-bar">
- *         <button class="kb-filter-dsl-tab [.is-active]" data-dsl="mongo">Mongo</button>
- *         <button class="kb-filter-dsl-tab" data-dsl="odata">OData</button>
- *         <button class="kb-filter-act kb-filter-dsl-copy">复制</button>
+ *     <div class="icen-kb-filter-dsl">
+ *       <div class="icen-kb-filter-dsl-bar">
+ *         <button class="icen-kb-filter-dsl-tab [.is-active]" data-icen-dsl="mongo">Mongo</button>
+ *         <button class="icen-kb-filter-dsl-tab" data-icen-dsl="odata">OData</button>
+ *         <button class="icen-kb-filter-act icen-kb-filter-dsl-copy">复制</button>
  *       </div>
- *       <code class="kb-filter-dsl-text kb-meta">…序列化镜像（可复制）…</code>
+ *       <code class="icen-kb-filter-dsl-text icen-kb-meta">…序列化镜像（可复制）…</code>
  *     </div>
  *   </div>
  *
@@ -47,6 +47,7 @@
 
 import { h, normalizeFilterNode, filterToMongo, filterToOData, KB_FILTER_OPS, type KbFilterNode, type KbFilterOp } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -82,8 +83,8 @@ interface MarkedFilterEl extends HTMLElement {
 const MAX_GROUP_DEPTH = 2;
 
 const OP_LABELS: Record<KbFilterOp, string> = {
-  eq: '等于', ne: '不等于', gt: '大于', gte: '大于等于', lt: '小于', lte: '小于等于',
-  in: '属于', contains: '包含', exists: '存在',
+  eq: t('kbFilter.opEq'), ne: t('kbFilter.opNe'), gt: t('kbFilter.opGt'), gte: t('kbFilter.opGte'), lt: t('kbFilter.opLt'), lte: t('kbFilter.opLte'),
+  in: t('kbFilter.opIn'), contains: t('kbFilter.opContains'), exists: t('kbFilter.opExists'),
 };
 
 let fieldListSeq = 0;
@@ -162,8 +163,8 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
   let destroyed = false;
   let copyTimer: ReturnType<typeof setTimeout> | null = null;
 
-  el.classList.add('kb-filter');
-  el.dataset.kbFilter = '';
+  el.classList.add('icen-kb-filter');
+  el.dataset.icenKbFilter = '';
   el.textContent = '';
 
   /* 字段建议 datalist（自由输入不受限） */
@@ -175,19 +176,19 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
   const treeBox = h('div', 'kb-filter-tree');
 
   /* DSL 镜像行 */
-  const dslText = h('code', 'kb-filter-dsl-text kb-meta');
-  const tabMongo = h('button', 'kb-filter-dsl-tab is-active', 'Mongo');
+  const dslText = h('code', 'icen-kb-filter-dsl-text icen-kb-meta');
+  const tabMongo = h('button', 'icen-kb-filter-dsl-tab is-active', 'Mongo');
   tabMongo.type = 'button';
-  tabMongo.dataset.dsl = 'mongo';
-  const tabOdata = h('button', 'kb-filter-dsl-tab', 'OData');
+  tabMongo.dataset.icenDsl = 'mongo';
+  const tabOdata = h('button', 'icen-kb-filter-dsl-tab', 'OData');
   tabOdata.type = 'button';
-  tabOdata.dataset.dsl = 'odata';
-  const dslCopy = h('button', 'kb-filter-act kb-filter-dsl-copy', '复制');
+  tabOdata.dataset.icenDsl = 'odata';
+  const dslCopy = h('button', 'icen-kb-filter-act icen-kb-filter-dsl-copy', t('common.copy'));
   dslCopy.type = 'button';
-  dslCopy.title = '复制 DSL';
-  const dslBar = h('div', 'kb-filter-dsl-bar');
+  dslCopy.title = t('kbFilter.copyDsl');
+  const dslBar = h('div', 'icen-kb-filter-dsl-bar');
   dslBar.append(tabMongo, tabOdata, dslCopy);
-  const dslBox = h('div', 'kb-filter-dsl');
+  const dslBox = h('div', 'icen-kb-filter-dsl');
   dslBox.append(dslBar, dslText);
 
   el.append(treeBox, dslBox, datalist);
@@ -195,61 +196,61 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
   /* ── 行构件 ── */
 
   function buildRuleRow(rule: Extract<KbFilterNode, { type: 'rule' }>): HTMLElement {
-    const row = h('div', 'kb-filter-rule');
-    const field = h('input', 'kb-filter-field') as HTMLInputElement;
+    const row = h('div', 'icen-kb-filter-rule');
+    const field = h('input', 'icen-kb-filter-field') as HTMLInputElement;
     field.type = 'text';
     field.value = rule.field;
-    field.placeholder = '字段';
+    field.placeholder = t('kbFilter.fieldLabel');
     field.setAttribute('list', datalistId);
-    field.setAttribute('aria-label', '过滤字段');
-    const opSel = h('select', 'kb-filter-op') as HTMLSelectElement;
-    opSel.setAttribute('aria-label', '操作符');
+    field.setAttribute('aria-label', t('kbFilter.fieldPlaceholder'));
+    const opSel = h('select', 'icen-kb-filter-op') as HTMLSelectElement;
+    opSel.setAttribute('aria-label', t('kbFilter.operatorLabel'));
     for (const op of KB_FILTER_OPS) {
       const option = h('option', undefined, OP_LABELS[op]);
       option.value = op;
       opSel.appendChild(option);
     }
     opSel.value = rule.op;
-    const value = h('input', 'kb-filter-value') as HTMLInputElement;
+    const value = h('input', 'icen-kb-filter-value') as HTMLInputElement;
     value.type = 'text';
     value.value = formatValue(rule.value);
-    value.placeholder = rule.op === 'in' ? '值 1, 值 2（逗号分隔）' : '值';
-    value.setAttribute('aria-label', '过滤值');
+    value.placeholder = rule.op === 'in' ? t('kbFilter.valuePlaceholder') : t('kbFilter.valueLabel');
+    value.setAttribute('aria-label', t('kbFilter.valueAria'));
     if (rule.op === 'exists') value.disabled = true;
-    const del = h('button', 'kb-filter-act is-danger', '×');
+    const del = h('button', 'icen-kb-filter-act is-danger', '×');
     del.type = 'button';
-    del.dataset.act = 'del-rule';
-    del.title = '删除规则';
-    del.setAttribute('aria-label', '删除规则');
+    del.dataset.icenAct = 'del-rule';
+    del.title = t('kbFilter.deleteRule');
+    del.setAttribute('aria-label', t('kbFilter.deleteRule'));
     row.append(field, opSel, value, del);
     return row;
   }
 
   function buildGroup(node: Extract<KbFilterNode, { type: 'group' }>, depth: number): HTMLElement {
-    const box = h('div', 'kb-filter-group');
-    box.dataset.depth = String(depth);
-    const head = h('div', 'kb-filter-head');
-    const opBtn = h('button', 'kb-filter-op-toggle', node.op === 'or' ? 'OR' : 'AND');
+    const box = h('div', 'icen-kb-filter-group');
+    box.dataset.icenDepth = String(depth);
+    const head = h('div', 'icen-kb-filter-head');
+    const opBtn = h('button', 'icen-kb-filter-op-toggle', node.op === 'or' ? 'OR' : 'AND');
     opBtn.type = 'button';
-    opBtn.dataset.op = node.op;
+    opBtn.dataset.icenOp = node.op;
     opBtn.classList.toggle('is-or', node.op === 'or');
-    opBtn.title = '切换 AND / OR';
-    opBtn.setAttribute('aria-label', `组合方式 ${node.op === 'or' ? '或' : '且'}`);
-    const addRule = h('button', 'kb-filter-act', '+ 规则');
+    opBtn.title = t('kbFilter.toggleAndOr');
+    opBtn.setAttribute('aria-label', t('kbFilter.combineMode', { p0: node.op === 'or' ? t('kbFilter.or') : t('kbFilter.and') }));
+    const addRule = h('button', 'icen-kb-filter-act', t('kbFilter.addRule'));
     addRule.type = 'button';
-    addRule.dataset.act = 'add-rule';
-    const addGroup = h('button', 'kb-filter-act', '+ 组');
+    addRule.dataset.icenAct = 'add-rule';
+    const addGroup = h('button', 'icen-kb-filter-act', t('kbFilter.addGroup'));
     addGroup.type = 'button';
-    addGroup.dataset.act = 'add-group';
+    addGroup.dataset.icenAct = 'add-group';
     if (depth >= MAX_GROUP_DEPTH) addGroup.disabled = true;
     head.append(opBtn, addRule, addGroup);
     if (depth > 0) {
-      const delGroup = h('button', 'kb-filter-act is-danger', '删除组');
+      const delGroup = h('button', 'icen-kb-filter-act is-danger', t('kbFilter.deleteGroup'));
       delGroup.type = 'button';
-      delGroup.dataset.act = 'del-group';
+      delGroup.dataset.icenAct = 'del-group';
       head.appendChild(delGroup);
     }
-    const body = h('div', 'kb-filter-body');
+    const body = h('div', 'icen-kb-filter-body');
     for (const child of node.children) {
       body.appendChild(child.type === 'rule' ? buildRuleRow(child) : buildGroup(child, depth + 1));
     }
@@ -260,24 +261,24 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
   /* ── DOM → AST 解析 ── */
 
   function readGroup(groupEl: HTMLElement): { type: 'group'; op: 'and' | 'or'; children: KbFilterNode[] } {
-    const opBtn = groupEl.querySelector(':scope > .kb-filter-head > .kb-filter-op-toggle');
-    const op = opBtn instanceof HTMLElement && opBtn.dataset.op === 'or' ? 'or' : 'and';
+    const opBtn = groupEl.querySelector(':scope > .icen-kb-filter-head > .icen-kb-filter-op-toggle');
+    const op = opBtn instanceof HTMLElement && opBtn.dataset.icenOp === 'or' ? 'or' : 'and';
     const children: KbFilterNode[] = [];
-    const body = groupEl.querySelector(':scope > .kb-filter-body');
+    const body = groupEl.querySelector(':scope > .icen-kb-filter-body');
     if (body) {
       for (const child of Array.from(body.children)) {
         if (!(child instanceof HTMLElement)) continue;
-        if (child.classList.contains('kb-filter-rule')) {
-          const fieldEl = child.querySelector(':scope > .kb-filter-field');
-          const opEl = child.querySelector(':scope > .kb-filter-op');
-          const valueEl = child.querySelector(':scope > .kb-filter-value');
+        if (child.classList.contains('icen-kb-filter-rule')) {
+          const fieldEl = child.querySelector(':scope > .icen-kb-filter-field');
+          const opEl = child.querySelector(':scope > .icen-kb-filter-op');
+          const valueEl = child.querySelector(':scope > .icen-kb-filter-value');
           const field = fieldEl instanceof HTMLInputElement ? fieldEl.value.trim() : '';
           const op = opEl instanceof HTMLSelectElement && KB_FILTER_OPS.includes(opEl.value as KbFilterOp)
             ? opEl.value as KbFilterOp
             : 'eq';
           const rawValue = valueEl instanceof HTMLInputElement ? valueEl.value : '';
           children.push({ type: 'rule', field, op, value: parseValue(rawValue, op) });
-        } else if (child.classList.contains('kb-filter-group')) {
+        } else if (child.classList.contains('icen-kb-filter-group')) {
           children.push(readGroup(child));
         }
       }
@@ -286,7 +287,7 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
   }
 
   function rootNode(): { type: 'group'; op: 'and' | 'or'; children: KbFilterNode[] } {
-    const rootEl = treeBox.querySelector(':scope > .kb-filter-group');
+    const rootEl = treeBox.querySelector(':scope > .icen-kb-filter-group');
     return rootEl instanceof HTMLElement ? readGroup(rootEl) : { type: 'group', op: 'and', children: [] };
   }
 
@@ -318,7 +319,7 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
   function syncDsl(): void {
     tabMongo.classList.toggle('is-active', dslKind === 'mongo');
     tabOdata.classList.toggle('is-active', dslKind === 'odata');
-    dslText.textContent = serializeOf(currentNode(), dslKind) || '（无过滤）';
+    dslText.textContent = serializeOf(currentNode(), dslKind) || t('kbFilter.none');
   }
 
   function notify(): void {
@@ -355,9 +356,9 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
     const target = ev.target;
     if (!(target instanceof Element)) return;
 
-    const tab = target.closest('.kb-filter-dsl-tab');
+    const tab = target.closest('.icen-kb-filter-dsl-tab');
     if (tab instanceof HTMLElement) {
-      const kind = tab.dataset.dsl === 'odata' ? 'odata' : 'mongo';
+      const kind = tab.dataset.icenDsl === 'odata' ? 'odata' : 'mongo';
       if (kind !== dslKind) {
         dslKind = kind;
         syncDsl();
@@ -365,34 +366,34 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
       return;
     }
 
-    if (target.closest('.kb-filter-dsl-copy')) {
-      if (!destroyed && copyText(dslText.textContent === '（无过滤）' ? '' : dslText.textContent ?? '')) {
+    if (target.closest('.icen-kb-filter-dsl-copy')) {
+      if (!destroyed && copyText(dslText.textContent === t('kbFilter.none') ? '' : dslText.textContent ?? '')) {
         dslCopy.classList.add('is-copied');
-        dslCopy.textContent = '已复制';
+        dslCopy.textContent = t('common.copied');
         if (copyTimer) clearTimeout(copyTimer);
         copyTimer = setTimeout(() => {
           if (destroyed) return;
           dslCopy.classList.remove('is-copied');
-          dslCopy.textContent = '复制';
+          dslCopy.textContent = t('common.copy');
         }, 1200);
       }
       return;
     }
 
-    const actBtn = target.closest('.kb-filter-act');
+    const actBtn = target.closest('.icen-kb-filter-act');
     if (!(actBtn instanceof HTMLButtonElement) || actBtn.disabled) return;
-    const act = actBtn.dataset.act;
+    const act = actBtn.dataset.icenAct;
     if (!act) return;
 
     if (act === 'add-rule' || act === 'add-group') {
-      const groupEl = actBtn.closest('.kb-filter-group');
+      const groupEl = actBtn.closest('.icen-kb-filter-group');
       if (!(groupEl instanceof HTMLElement)) return;
-      const body = groupEl.querySelector(':scope > .kb-filter-body');
+      const body = groupEl.querySelector(':scope > .icen-kb-filter-body');
       if (!body) return;
       if (act === 'add-rule') {
         body.appendChild(buildRuleRow({ type: 'rule', field: '', op: 'eq', value: undefined }));
       } else {
-        const depth = Number(groupEl.dataset.depth) || 0;
+        const depth = Number(groupEl.dataset.icenDepth) || 0;
         body.appendChild(buildGroup({ type: 'group', op: 'and', children: [] }, depth + 1));
       }
       notify();
@@ -400,15 +401,15 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
     }
 
     if (act === 'del-rule') {
-      const row = actBtn.closest('.kb-filter-rule');
+      const row = actBtn.closest('.icen-kb-filter-rule');
       row?.remove();
       notify();
       return;
     }
 
     if (act === 'del-group') {
-      const groupEl = actBtn.closest('.kb-filter-group');
-      if (groupEl instanceof HTMLElement && (Number(groupEl.dataset.depth) || 0) > 0) {
+      const groupEl = actBtn.closest('.icen-kb-filter-group');
+      if (groupEl instanceof HTMLElement && (Number(groupEl.dataset.icenDepth) || 0) > 0) {
         groupEl.remove();
         notify();
       }
@@ -416,17 +417,17 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
     }
   });
 
-  /* AND/OR 切换（独立委托：op-toggle 不带 data-act） */
+  /* AND/OR 切换（独立委托：op-toggle 不带 data-icen-act） */
   listen('click', (ev) => {
     const target = ev.target;
     if (!(target instanceof Element)) return;
-    const opBtn = target.closest('.kb-filter-op-toggle');
+    const opBtn = target.closest('.icen-kb-filter-op-toggle');
     if (!(opBtn instanceof HTMLButtonElement)) return;
-    const nowOr = opBtn.dataset.op !== 'or';
-    opBtn.dataset.op = nowOr ? 'or' : 'and';
+    const nowOr = opBtn.dataset.icenOp !== 'or';
+    opBtn.dataset.icenOp = nowOr ? 'or' : 'and';
     opBtn.textContent = nowOr ? 'OR' : 'AND';
     opBtn.classList.toggle('is-or', nowOr);
-    opBtn.setAttribute('aria-label', `组合方式 ${nowOr ? '或' : '且'}`);
+    opBtn.setAttribute('aria-label', t('kbFilter.combineMode', { p0: nowOr ? t('kbFilter.or') : t('kbFilter.and') }));
     notify();
   });
 
@@ -434,20 +435,20 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
   listen('input', (ev) => {
     const target = ev.target;
     if (!(target instanceof HTMLInputElement)) return;
-    if (target.classList.contains('kb-filter-field') || target.classList.contains('kb-filter-value')) {
+    if (target.classList.contains('icen-kb-filter-field') || target.classList.contains('icen-kb-filter-value')) {
       notify();
     }
   });
 
   listen('change', (ev) => {
     const target = ev.target;
-    if (!(target instanceof HTMLSelectElement) || !target.classList.contains('kb-filter-op')) return;
-    const row = target.closest('.kb-filter-rule');
-    const valueEl = row?.querySelector(':scope > .kb-filter-value');
+    if (!(target instanceof HTMLSelectElement) || !target.classList.contains('icen-kb-filter-op')) return;
+    const row = target.closest('.icen-kb-filter-rule');
+    const valueEl = row?.querySelector(':scope > .icen-kb-filter-value');
     if (!(valueEl instanceof HTMLInputElement)) return;
     const op = KB_FILTER_OPS.includes(target.value as KbFilterOp) ? target.value as KbFilterOp : 'eq';
     valueEl.disabled = op === 'exists';
-    valueEl.placeholder = op === 'in' ? '值 1, 值 2（逗号分隔）' : op === 'exists' ? '（无需值）' : '值';
+    valueEl.placeholder = op === 'in' ? t('kbFilter.valuePlaceholder') : op === 'exists' ? t('kbFilter.noValueNeeded') : t('kbFilter.valueLabel');
     notify();
   });
 
@@ -471,8 +472,8 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
       destroyed = true;
       ctrl.abort();
       if (copyTimer) clearTimeout(copyTimer);
-      el.classList.remove('kb-filter');
-      delete el.dataset.kbFilter;
+      el.classList.remove('icen-kb-filter');
+      delete el.dataset.icenKbFilter;
       el.textContent = '';
       delete (el as MarkedFilterEl).__icenKbFilter;
     },

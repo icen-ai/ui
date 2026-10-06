@@ -290,7 +290,7 @@ if (host) {
     },
   });
   host.addEventListener('icen:kb-hittest-add', function (e) {
-    log('icen:kb-hittest-add · ' + e.detail.question + '（未设期望 → 结果「—」不进分母）');
+    log('icen:icen-kb-hittest-add · ' + e.detail.question + '（未设期望 → 结果「—」不进分母）');
   });
 }`,
   },
@@ -481,10 +481,10 @@ if (host) {
     group: '知识库',
     desc: 'renderKbClarify 澄清反问卡（快照渲染，重渲重置为未答态）：问题行 + 选项 chips 点选（点选非打字）+ 答后回显「已解析：…」并禁用其余选项（同一卡只能答一次）+ reason 弱化小字。点选派 icen:kb-clarify-answer {id, value, label}（onAnswer 双通道）；kb-answer 的澄清槽内部复用本组件。',
     demo: `<div id="demo-kb-clarify"></div>
-<div class="toolbar" style="margin-top:12px">
-  <span class="toolbar-label">答过即锁定 · 重答 = 数据快照重渲</span>
-  <span class="toolbar-spacer"></span>
-  <button class="btn btn-sm" type="button" id="kb-clarify-reset">重置为未答态</button>
+<div class="icen-toolbar" style="margin-top:12px">
+  <span class="icen-toolbar-label">答过即锁定 · 重答 = 数据快照重渲</span>
+  <span class="icen-toolbar-spacer"></span>
+  <button class="icen-btn icen-btn-sm" type="button" id="kb-clarify-reset">重置为未答态</button>
 </div>
 <p class="demo-label" id="kb-clarify-log" style="margin-top:8px">点选项 → icen:kb-clarify-answer · 回显「已解析：…」并禁用其余选项</p>`,
     usage: `import { renderKbClarify } from '@icen.ai/ui/kit/kb-clarify';

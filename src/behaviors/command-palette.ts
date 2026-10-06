@@ -2,37 +2,37 @@
  * @icen.ai/ui — Behavior: command-palette（命令面板，与 components/command-palette.css 配套）
  *
  * 契约：
- *   <div class="command-palette-backdrop" data-command-palette="id" hidden>
- *     <div class="command-palette">
- *       <div class="command-palette-search">
- *         <span class="command-palette-search-icon">…svg…</span>
- *         <input class="command-palette-input" placeholder="搜索命令…" />
- *         <kbd class="command-palette-esc">ESC</kbd>
+ *   <div class="icen-command-palette-backdrop" data-icen-command-palette="id" hidden>
+ *     <div class="icen-command-palette">
+ *       <div class="icen-command-palette-search">
+ *         <span class="icen-command-palette-search-icon">…svg…</span>
+ *         <icen-input class="icen-command-palette-input" placeholder="搜索命令…" />
+ *         <icen-kbd class="icen-command-palette-esc">ESC</icen-kbd>
  *       </div>
- *       <div class="command-palette-body">
- *         <div class="command-palette-group">
- *           <p class="command-palette-group-label">分组</p>
- *           <button class="command-palette-item" type="button" data-command-palette-keyword="别名 关键词">
+ *       <div class="icen-command-palette-body">
+ *         <div class="icen-command-palette-group">
+ *           <p class="icen-command-palette-group-label">分组</p>
+ *           <button class="icen-command-palette-item" type="button" data-icen-command-palette-keyword="别名 关键词">
  *             …
  *           </button>
  *         </div>
- *         <div class="command-palette-empty" hidden>无匹配命令</div>
+ *         <div class="icen-command-palette-empty" hidden>无匹配命令</div>
  *       </div>
- *       <div class="command-palette-foot">…</div>
+ *       <div class="icen-command-palette-foot">…</div>
  *     </div>
  *   </div>
  *
  *   触发器（任选其一）：
- *   <button data-command-palette-open="id">打开</button>
+ *   <button data-icen-command-palette-open="id">打开</button>
  *   全局快捷键 ⌘K / Ctrl+K → 打开键位匹配的面板（按文档序取第一个匹配者）。
- *   backdrop 上加 data-command-palette-key="p" 可覆盖默认键 k（修饰键仍为
+ *   backdrop 上加 data-icen-command-palette-key="p" 可覆盖默认键 k（修饰键仍为
  *   ⌘/Ctrl），多个面板各自注册、互不冲突。
  *
  * 功能：搜索过滤 + ↑↓ 导航（跳过 disabled / aria-disabled / hidden 项）
  * + Enter 执行（DOM 条目走自身 click；编程条目走 onSelect 回调）
  * + ESC 关闭 + 外点关闭 + 焦点陷阱。同时只开一个。
- * 命令项支持：data-command-palette-keyword 额外关键字、disabled / hidden 状态。
- * 点击 item 默认关闭面板，除非加 data-command-palette-keep-open。
+ * 命令项支持：data-icen-command-palette-keyword 额外关键字、disabled / hidden 状态。
+ * 点击 item 默认关闭面板，除非加 data-icen-command-palette-keep-open。
  * backdrop 被外部移除时关闭路径仍复位状态/监听/滚动锁。SSR 下为 no-op。
  *
  * 事件：打开/关闭从 document 广播 icen:command-palette-open / -close
@@ -54,22 +54,22 @@ import { FOCUSABLE } from './modal';
 
 /** 编程命令条目（openCommandPalette 的 opts.items 元素类型）。 */
 export interface CommandPaletteCommand {
-  /** 条目名（.command-palette-item-label，textContent 渲染） */
+  /** 条目名（.icen-command-palette-item-label，textContent 渲染） */
   label: string;
-  /** 副标题（.command-palette-item-hint） */
+  /** 副标题（.icen-command-palette-item-hint） */
   hint?: string;
-  /** 额外搜索关键字（data-command-palette-keyword） */
+  /** 额外搜索关键字（data-icen-command-palette-keyword） */
   keyword?: string;
   /** 选中回调：先派 icen:menu-select，再执行本回调 */
   onSelect?: () => void;
-  /** 选中后保持面板打开（data-command-palette-keep-open） */
+  /** 选中后保持面板打开（data-icen-command-palette-keep-open） */
   keepOpen?: boolean;
   /** 附加到条目元素的自定义属性（如 data-*） */
   attrs?: Record<string, string>;
 }
 
 export interface CommandPaletteOpenOptions {
-  /** 编程条目：传入时重建面板条目 DOM（替换面板内全部 .command-palette-group） */
+  /** 编程条目：传入时重建面板条目 DOM（替换面板内全部 .icen-command-palette-group） */
   items?: CommandPaletteCommand[];
   /** 覆盖默认 includes 过滤（query 为原始输入；空 query 仍视为匹配全部）。只作用于编程条目 */
   filter?: (query: string, item: CommandPaletteCommand) => boolean;
@@ -88,14 +88,14 @@ let customFilter: ((query: string, item: CommandPaletteCommand) => boolean) | nu
 
 /** 用编程条目重建面板条目 DOM（沿用现有类名/data 契约，纯 textContent 渲染）。 */
 function buildCommandItems(panel: HTMLElement, commands: CommandPaletteCommand[]): void {
-  const body = panel.querySelector<HTMLElement>('.command-palette-body');
+  const body = panel.querySelector<HTMLElement>('.icen-command-palette-body');
   if (!body) return;
-  body.querySelectorAll('.command-palette-group').forEach((g) => g.remove());
+  body.querySelectorAll('.icen-command-palette-group').forEach((g) => g.remove());
 
   const group = document.createElement('div');
-  group.className = 'command-palette-group';
+  group.className = 'icen-command-palette-group';
   for (const cmd of commands) group.appendChild(buildCommandItem(cmd));
-  const empty = body.querySelector('.command-palette-empty');
+  const empty = body.querySelector('.icen-command-palette-empty');
   if (empty) body.insertBefore(group, empty);
   else body.appendChild(group);
 }
@@ -103,19 +103,19 @@ function buildCommandItems(panel: HTMLElement, commands: CommandPaletteCommand[]
 function buildCommandItem(cmd: CommandPaletteCommand): HTMLElement {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'command-palette-item';
+  btn.className = 'icen-command-palette-item';
   const label = document.createElement('span');
-  label.className = 'command-palette-item-label';
+  label.className = 'icen-command-palette-item-label';
   label.textContent = cmd.label;
   btn.appendChild(label);
   if (cmd.hint) {
     const hint = document.createElement('span');
-    hint.className = 'command-palette-item-hint';
+    hint.className = 'icen-command-palette-item-hint';
     hint.textContent = cmd.hint;
     btn.appendChild(hint);
   }
-  if (cmd.keyword) btn.setAttribute('data-command-palette-keyword', cmd.keyword);
-  if (cmd.keepOpen) btn.setAttribute('data-command-palette-keep-open', '');
+  if (cmd.keyword) btn.setAttribute('data-icen-command-palette-keyword', cmd.keyword);
+  if (cmd.keepOpen) btn.setAttribute('data-icen-command-palette-keep-open', '');
   if (cmd.attrs) {
     for (const [name, value] of Object.entries(cmd.attrs)) btn.setAttribute(name, value);
   }
@@ -123,7 +123,7 @@ function buildCommandItem(cmd: CommandPaletteCommand): HTMLElement {
   /* 选中路径统一收敛到 click（鼠标点击与 Enter 的 active.click() 都会到达）：
      先派 icen:menu-select，再执行 onSelect；关闭与否交给 init 的委托逻辑（keepOpen 契约） */
   btn.addEventListener('click', () => {
-    emitMenuSelect(btn.closest<HTMLElement>('.command-palette') ?? btn, btn);
+    emitMenuSelect(btn.closest<HTMLElement>('.icen-command-palette') ?? btn, btn);
     cmd.onSelect?.();
   });
   return btn;
@@ -131,14 +131,14 @@ function buildCommandItem(cmd: CommandPaletteCommand): HTMLElement {
 
 function findBackdrop(id: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(
-    `.command-palette-backdrop[data-command-palette="${CSS.escape(id)}"]`,
+    `.icen-command-palette-backdrop[data-icen-command-palette="${CSS.escape(id)}"]`,
   );
 }
 
 function getVisibleItems(panel: HTMLElement): HTMLElement[] {
   return Array.from(
     panel.querySelectorAll<HTMLElement>(
-      '.command-palette-item:not([hidden]):not([disabled]):not([aria-disabled="true"])',
+      '.icen-command-palette-item:not([hidden]):not([disabled]):not([aria-disabled="true"])',
     ),
   ).filter((el) => el.offsetParent !== null || el.getClientRects().length > 0);
 }
@@ -162,7 +162,7 @@ function setActive(panel: HTMLElement, idx: number): void {
 function filterPanel(panel: HTMLElement, query: string): void {
   const q = query.trim().toLowerCase();
   let visibleCount = 0;
-  panel.querySelectorAll<HTMLElement>('.command-palette-item').forEach((item) => {
+  panel.querySelectorAll<HTMLElement>('.icen-command-palette-item').forEach((item) => {
     if (isDisabledItem(item)) return;
     const def = programmaticCommands.get(item);
     let match: boolean;
@@ -170,9 +170,9 @@ function filterPanel(panel: HTMLElement, query: string): void {
       /* 自定义过滤（仅编程条目）：空 query 仍视为匹配全部，保持「打开即见全量」语义 */
       match = !q || customFilter(query, def);
     } else {
-      const label = (item.querySelector('.command-palette-item-label')?.textContent ?? '').toLowerCase();
-      const hint = (item.querySelector('.command-palette-item-hint')?.textContent ?? '').toLowerCase();
-      const keyword = (item.dataset.commandPaletteKeyword ?? '').toLowerCase();
+      const label = (item.querySelector('.icen-command-palette-item-label')?.textContent ?? '').toLowerCase();
+      const hint = (item.querySelector('.icen-command-palette-item-hint')?.textContent ?? '').toLowerCase();
+      const keyword = (item.dataset.icenCommandPaletteKeyword ?? '').toLowerCase();
       match = !q || label.includes(q) || hint.includes(q) || keyword.includes(q);
     }
     item.hidden = !match;
@@ -180,13 +180,13 @@ function filterPanel(panel: HTMLElement, query: string): void {
     if (match) visibleCount++;
   });
   // 隐藏空分组
-  panel.querySelectorAll<HTMLElement>('.command-palette-group').forEach((group) => {
-    const hasVisible = Array.from(group.querySelectorAll<HTMLElement>('.command-palette-item')).some(
+  panel.querySelectorAll<HTMLElement>('.icen-command-palette-group').forEach((group) => {
+    const hasVisible = Array.from(group.querySelectorAll<HTMLElement>('.icen-command-palette-item')).some(
       (it) => !it.hidden,
     );
     group.hidden = !hasVisible;
   });
-  const empty = panel.querySelector<HTMLElement>('.command-palette-empty');
+  const empty = panel.querySelector<HTMLElement>('.icen-command-palette-empty');
   if (empty) empty.hidden = visibleCount !== 0;
   if (visibleCount > 0) setActive(panel, 0);
 }
@@ -203,13 +203,13 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
 
   const backdrop = findBackdrop(id);
   if (!backdrop) {
-    console.warn(`[@icen.ai/ui] command-palette: 未找到 data-command-palette="${id}" 的 .command-palette-backdrop，已跳过打开`);
+    console.warn(`[@icen.ai/ui] command-palette: 未找到 data-icen-command-palette="${id}" 的 .command-palette-backdrop，已跳过打开`);
     return;
   }
-  const panel = backdrop.querySelector<HTMLElement>('.command-palette');
+  const panel = backdrop.querySelector<HTMLElement>('.icen-command-palette');
   if (!panel) return;
 
-  /* 面板尺寸契约（PanelSizing）：backdrop 上 data-panel-width / data-panel-max-height 覆盖 CSS 默认 */
+  /* 面板尺寸契约（PanelSizing）：backdrop 上 data-icen-panel-width / data-icen-panel-max-height 覆盖 CSS 默认 */
   applyPanelSizing(panel, readPanelSizing(backdrop));
 
   /* 编程条目：每次打开重置过滤面（不传 items 则沿用面板现有 DOM） */
@@ -228,7 +228,7 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
   prevBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
 
-  const input = panel.querySelector<HTMLInputElement>('.command-palette-input');
+  const input = panel.querySelector<HTMLInputElement>('.icen-command-palette-input');
   if (input) {
     input.value = '';
     input.focus();
@@ -256,7 +256,7 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
       return;
     }
     if (e.key === 'Enter') {
-      const active = panel.querySelector<HTMLElement>('.command-palette-item.is-active');
+      const active = panel.querySelector<HTMLElement>('.icen-command-palette-item.is-active');
       // isDisabledItem 兜底拦截（getVisibleItems 已排除 disabled / aria-disabled）
       if (active && !isDisabledItem(active)) {
         e.preventDefault();
@@ -318,7 +318,7 @@ export function initCommandPalette(root?: ParentNode): () => void {
   const scope = root ?? document;
 
   scope
-    .querySelectorAll<HTMLElement>('[data-command-palette-open]')
+    .querySelectorAll<HTMLElement>('[data-icen-command-palette-open]')
     .forEach((el) => el.setAttribute('aria-haspopup', 'dialog'));
 
   if (teardown) return teardown;
@@ -327,21 +327,21 @@ export function initCommandPalette(root?: ParentNode): () => void {
     const target = e.target instanceof Element ? e.target : null;
     if (!target) return;
 
-    const opener = target.closest<HTMLElement>('[data-command-palette-open]');
-    if (opener?.dataset.commandPaletteOpen) {
-      openCommandPalette(opener.dataset.commandPaletteOpen);
+    const opener = target.closest<HTMLElement>('[data-icen-command-palette-open]');
+    if (opener?.dataset.icenCommandPaletteOpen) {
+      openCommandPalette(opener.dataset.icenCommandPaletteOpen);
       return;
     }
 
     // 点击命令项：DOM 条目在此派 menu-select（编程条目自带监听，跳过防双派）；默认关闭面板（除非 keep-open）
-    const item = target.closest<HTMLElement>('.command-palette-item');
+    const item = target.closest<HTMLElement>('.icen-command-palette-item');
     if (item) {
-      const backdrop = item.closest<HTMLElement>('[data-command-palette]');
-      if (backdrop?.dataset.commandPalette) {
-        const panelEl = item.closest<HTMLElement>('.command-palette');
+      const backdrop = item.closest<HTMLElement>('[data-icen-command-palette]');
+      if (backdrop?.dataset.icenCommandPalette) {
+        const panelEl = item.closest<HTMLElement>('.icen-command-palette');
         if (panelEl && !programmaticCommands.has(item)) emitMenuSelect(panelEl, item);
-        if (!item.hasAttribute('data-command-palette-keep-open')) {
-          closeCommandPalette(backdrop.dataset.commandPalette);
+        if (!item.hasAttribute('data-icen-command-palette-keep-open')) {
+          closeCommandPalette(backdrop.dataset.icenCommandPalette);
         }
       }
       return;
@@ -350,10 +350,10 @@ export function initCommandPalette(root?: ParentNode): () => void {
     // 外点 / backdrop 点击
     if (
       target instanceof HTMLElement &&
-      target.classList.contains('command-palette-backdrop') &&
-      target.dataset.commandPalette
+      target.classList.contains('icen-command-palette-backdrop') &&
+      target.dataset.icenCommandPalette
     ) {
-      closeCommandPalette(target.dataset.commandPalette);
+      closeCommandPalette(target.dataset.icenCommandPalette);
     }
   };
   document.addEventListener('click', onClick);
@@ -361,24 +361,24 @@ export function initCommandPalette(root?: ParentNode): () => void {
   // 输入过滤（事件委托）
   const onInput = (e: Event): void => {
     if (!(e.target instanceof HTMLElement)) return;
-    if (!e.target.matches('.command-palette-input')) return;
-    const backdrop = e.target.closest<HTMLElement>('[data-command-palette]');
-    const panel = backdrop?.querySelector<HTMLElement>('.command-palette');
+    if (!e.target.matches('.icen-command-palette-input')) return;
+    const backdrop = e.target.closest<HTMLElement>('[data-icen-command-palette]');
+    const panel = backdrop?.querySelector<HTMLElement>('.icen-command-palette');
     if (panel) filterPanel(panel, (e.target as HTMLInputElement).value);
   };
   document.addEventListener('input', onInput);
 
-  // 全局快捷键：默认 ⌘K / Ctrl+K；backdrop 的 data-command-palette-key 覆盖键位
+  // 全局快捷键：默认 ⌘K / Ctrl+K；backdrop 的 data-icen-command-palette-key 覆盖键位
   globalKeyHandler = (e: KeyboardEvent) => {
     if (!(e.metaKey || e.ctrlKey)) return;
     const key = e.key.toLowerCase();
     const palettes = document.querySelectorAll<HTMLElement>(
-      '.command-palette-backdrop[data-command-palette]',
+      '.icen-command-palette-backdrop[data-icen-command-palette]',
     );
     for (const backdrop of Array.from(palettes)) {
-      const paletteKey = (backdrop.dataset.commandPaletteKey ?? 'k').toLowerCase();
+      const paletteKey = (backdrop.dataset.icenCommandPaletteKey ?? 'k').toLowerCase();
       if (paletteKey !== key) continue;
-      const id = backdrop.dataset.commandPalette;
+      const id = backdrop.dataset.icenCommandPalette;
       if (!id) continue;
       e.preventDefault();
       if (openId === id) closeCommandPalette(id);

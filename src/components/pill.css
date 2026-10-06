@@ -2,130 +2,130 @@
  * @icen.ai/ui — Component: pill（状态徽章 / tag）
  *
  * 完整契约：
- *   <span class="pill [pill--success|pill--warning|pill--error|pill--info|pill--accent] [.pill--dot|pill--outline|pill--sm]">文本</span>
+ *   <span class="icen-pill [icen-pill--success|icen-pill--warning|icen-pill--error|icen-pill--info|icen-pill--accent] [.icen-pill--dot|icen-pill--outline|icen-pill--sm]">文本</span>
  *
  * 语义色纪律：仅绿/黄/红/信息 + 品牌 accent。
- * --dot：左侧加状态色圆点；--outline：透明底、纯描边；--sm：紧凑尺寸。
+ * --dot：起始缘加状态色圆点（RTL 镜像到右侧）；--outline：透明底、纯描边；--sm：紧凑尺寸。
  */
 
-.pill {
+.icen-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px var(--density-space-sm);
-  border-radius: var(--radius-full);
-  font-size: var(--density-font-size-xs);
+  padding: 2px var(--icen-density-space-sm);
+  border-radius: var(--icen-radius-full);
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.02em;
   font-weight: 500;
-  background: var(--token-surface-strong);
-  color: var(--token-text-muted);
-  border: 1px solid var(--token-line-soft);
+  background: var(--icen-token-surface-strong);
+  color: var(--icen-token-text-muted);
+  border: 1px solid var(--icen-token-line-soft);
   white-space: nowrap;
   vertical-align: middle;
 }
 
-.pill--success {
-  color: var(--token-success);
-  border-color: color-mix(in srgb, var(--token-success) 35%, transparent);
-  background: color-mix(in srgb, var(--token-success) 9%, transparent);
+.icen-pill--success {
+  color: var(--icen-token-success);
+  border-color: color-mix(in srgb, var(--icen-token-success) 35%, transparent);
+  background: color-mix(in srgb, var(--icen-token-success) 9%, transparent);
 }
-.pill--warning {
-  color: var(--token-warning);
-  border-color: color-mix(in srgb, var(--token-warning) 35%, transparent);
-  background: color-mix(in srgb, var(--token-warning) 9%, transparent);
+.icen-pill--warning {
+  color: var(--icen-token-warning);
+  border-color: color-mix(in srgb, var(--icen-token-warning) 35%, transparent);
+  background: color-mix(in srgb, var(--icen-token-warning) 9%, transparent);
 }
-.pill--error {
-  color: var(--token-error);
-  border-color: color-mix(in srgb, var(--token-error) 35%, transparent);
-  background: color-mix(in srgb, var(--token-error) 9%, transparent);
+.icen-pill--error {
+  color: var(--icen-token-error);
+  border-color: color-mix(in srgb, var(--icen-token-error) 35%, transparent);
+  background: color-mix(in srgb, var(--icen-token-error) 9%, transparent);
 }
-.pill--accent {
-  color: var(--token-accent-deep, var(--token-accent));
-  border-color: color-mix(in srgb, var(--token-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--token-accent) 9%, transparent);
+.icen-pill--accent {
+  color: var(--icen-token-accent-deep, var(--icen-token-accent));
+  border-color: color-mix(in srgb, var(--icen-token-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--icen-token-accent) 9%, transparent);
 }
-.pill--info {
-  color: var(--token-info);
-  border-color: color-mix(in srgb, var(--token-info) 35%, transparent);
-  background: color-mix(in srgb, var(--token-info) 9%, transparent);
+.icen-pill--info {
+  color: var(--icen-token-info);
+  border-color: color-mix(in srgb, var(--icen-token-info) 35%, transparent);
+  background: color-mix(in srgb, var(--icen-token-info) 9%, transparent);
 }
 
-/* 点状变体：左侧状态色圆点 */
-.pill--dot::before {
+/* 点状变体：起始缘状态色圆点（RTL 镜像到右侧） */
+.icen-pill--dot::before {
   content: '';
   display: inline-block;
   width: 6px;
   height: 6px;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   background: currentColor;
   flex-shrink: 0;
 }
 
 /* 描边变体：透明底，仅描边 */
-.pill--outline {
-  background: transparent !important;
+.icen-pill--outline {
+  background: transparent !important; /* guard:allow-important 状态/守卫覆盖需压制变体优先级 */
 }
 
 /* 尺寸变体 */
-.pill--sm {
-  padding: 1px var(--density-space-xs);
-  font-size: var(--density-font-size-2xs);
+.icen-pill--sm {
+  padding: 1px var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-2xs);
 }
-.pill--lg {
-  padding: 4px calc(var(--density-space-sm) + 2px);
-  font-size: var(--density-font-size-sm);
+.icen-pill--lg {
+  padding: 4px calc(var(--icen-density-space-sm) + 2px);
+  font-size: var(--icen-density-font-size-sm);
 }
 
 /* 实色变体：accent 实底（用于 count、活跃状态等强调场景） */
-.pill--solid {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
-  border-color: var(--token-accent);
+.icen-pill--solid {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
+  border-color: var(--icen-token-accent-strong);
 }
-.pill--solid.pill--success { background: var(--token-success); border-color: var(--token-success); }
-.pill--solid.pill--warning { background: var(--token-warning); border-color: var(--token-warning); }
-.pill--solid.pill--error   { background: var(--token-error);   border-color: var(--token-error); }
-.pill--solid.pill--info    { background: var(--token-info);    border-color: var(--token-info); }
+.icen-pill--solid.icen-pill--success { background: var(--icen-token-success); border-color: var(--icen-token-success); }
+.icen-pill--solid.icen-pill--warning { background: var(--icen-token-warning); border-color: var(--icen-token-warning); }
+.icen-pill--solid.icen-pill--error   { background: var(--icen-token-error);   border-color: var(--icen-token-error); }
+.icen-pill--solid.icen-pill--info    { background: var(--icen-token-info);    border-color: var(--icen-token-info); }
 
 /* ── 增强 ── */
 
 /* 可关闭 pill */
-.pill-close {
+.icen-pill-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 14px;
   height: 14px;
-  margin-left: 2px;
-  margin-right: -4px;
+  margin-inline-start: 2px;
+  margin-inline-end: -4px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   background: transparent;
   color: inherit;
   opacity: 0.6;
   cursor: pointer;
   transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.pill-close:hover { opacity: 1; background: color-mix(in srgb, currentColor 15%, transparent); }
-.pill-close svg { width: 9px; height: 9px; }
+.icen-pill-close:hover { opacity: 1; background: color-mix(in srgb, currentColor 15%, transparent); }
+.icen-pill-close svg { width: 9px; height: 9px; }
 
 /* 图标 pill */
-.pill-icon {
+.icen-pill-icon {
   display: inline-flex;
   align-items: center;
 }
-.pill-icon svg { width: 10px; height: 10px; }
+.icen-pill-icon svg { width: 10px; height: 10px; }
 
 /* 实时脉冲（用于"直播"/"实时"状态） */
-.pill--live::before {
+.icen-pill--live::before {
   content: '';
   display: inline-block;
   width: 6px;
   height: 6px;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   background: currentColor;
-  margin-right: 2px;
+  margin-inline-end: 2px;
   animation: pill-pulse var(--pill-pulse-duration, 1.5s) ease-in-out infinite;
 }
 @keyframes pill-pulse {
@@ -134,25 +134,25 @@
 }
 
 /* 纯数字计数（不带文字） */
-.pill--count {
+.icen-pill--count {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
   justify-content: center;
-  font-size: var(--density-font-size-2xs);
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
 /* 渐变变体 */
-.pill--gradient {
-  background: linear-gradient(135deg, var(--token-accent), var(--token-accent-deep, var(--token-accent)));
-  color: var(--token-on-accent);
+.icen-pill--gradient {
+  background: linear-gradient(135deg, var(--icen-token-accent), var(--icen-token-accent-deep, var(--icen-token-accent)));
+  color: var(--icen-token-on-accent);
   border-color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pill--live::before { animation: none; }
-  .pill-close { transition: none; }
+  .icen-pill--live::before { animation: none; }
+  .icen-pill-close { transition: none; }
 }

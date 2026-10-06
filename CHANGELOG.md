@@ -1,5 +1,137 @@
 # 更新日志
 
+## 0.10.0 - 2026-10-06
+
+> **v0.10 = 全面工程跃迁**（1.0 契约冻结点由维护者后续拍板）。命名空间全量前缀化（类名防冲突终态）+ cascade layers、测试基座（588 测试 + 8 项纪律守卫 + 浏览器验收舱 CI）、i18n 注册表（683 key 双语）+ RTL 逻辑属性全量迁移 + 移动触屏层、表单校验层 + 表单族四缺口组件、UI-as-tool 深化、React/Vue 官方薄封装、datatable/charts 重度数据场景、权限/诚实纪律测试化、设计工具导出（Tokens Studio / Figma Variables）、信任文档（SECURITY/CONTRIBUTING/versioning）。**含破坏性变更**（类名/data 属性/CSS 变量/主题类全面改名），自带 codemod：`bunx @icen.ai/ui migrate src --write`。
+
+### 破坏性变更（v0.9 → v0.10，codemod 全自动）
+
+- **类名一律 `icen-` 前缀**：`.btn` → `.icen-btn`、`.kb-citation` → `.icen-kb-citation`（1675 个类全量）；唯一例外 `.is-*` 状态类（纪律：永不单独出现，永远与根类复合，天然隔离）
+- **主题层从类改为 data 属性**：`<html class="piano dark">` → `<html data-icen-preset="piano" data-icen-theme="dark">`；风格 profile 同理 `data-icen-style="retro"`；密度 `data-icen-density`（`.dark` 是全业界最危险的类名，类形态废弃）
+- **库 data 钩子一律 `data-icen-*`**（236 个全量： `[data-tabs]` → `[data-icen-tabs]` 等）；**全局 CSS 变量十五族一律 `--icen-*`**（`--token-*` → `--icen-token-*`、 `--density-*` / `--radius-*` / `--duration-*` / `--ease-*` / `--z-*` / `--font-*` / `--accent-*` / `--bg-*` / `--text-*` / `--border-*` / `--color-*` / `--shadow-*` / `--line-height-*` / `--letter-spacing-*`）；组件作用域变量（`--btn-*` 等）不前缀（继承链随根类已隔离）
+- **领域值与协议键保持不动**（迁移期误伤已全量回正并锁防）：排序方向 `'asc'|'desc'`；ARIA role 值（switch/checkbox/menu/tree/alert 等 WAI 标准）；`input type=checkbox`；AI kind/tint 域（'chart'/'accent'）与图表 tone/type 域（'accent'/'stack'）；swipe 方向 `'up'|'down'`；JSON-RPC `result` 键；过滤器 `'numeric'` 型；SQL 高亮 `'num'` 型；兼容事件 `otp:complete`；元素选择器（'input[type=file]' 等）；原生事件名（'input'）；模块/slug/kit 路径
+- **BEM 修饰族 JS 模板与 CSS 同形态**：`icen-ai-msg--*`/`icen-ai-diff-line--*`/`icen-ai-tool--*`/`icen-notification--*`/`icen-ai-usage-ring-*` 等九族修饰模板已对齐；新增**第 8 项守卫「类名同步」**（JS 引用未前缀类 ∩ CSS 仅前缀族 → CI 红）永久防复发
+- slug / kit 路径 / 包导出路径全部不变（`@icen.ai/ui/kit/btn` 照旧）
+
+### 品牌级 AA 收口（accent 明度分档）
+
+- 新增 `--icen-token-accent-strong`（12 面）：**承文本填充档**——实心主按钮/选中态/徽标等「accent 底 + on-accent 字」的面全部切到 strong，六预设 × 明暗实测对比度 4.79–10.84 全部过 WCAG AA（clay 白字橙钮 2.96→5.16）。`accent` 亮档保留给图标/边框/数据可视化等纯图形面
+- 修正 `--icen-token-on-accent` 两面：clay dark 白→深棕黑（6.87）、vangogh light 米白→深靛（5.90）；piano 维持「金底乌木字」既有 AA 设计
+- 站壳次级文字 `text-faint` 与 `accent-text` 再提一档过纸白 AA；表单 valid 标签新增 `--icen-token-success-text` 文本安全绿
+
+### 修复（0.10.0 全量审计收口）
+
+- 站点：文档站 Docs 布局组件 CSS 改 glob 全量引入（修 v0.10 五件漏引裸奔）；demo 宿主 shrink-wrap 宽度契约补齐；输入壳高度契约（多行 textarea 不套单行固定高壳）
+- 组件：accordion 收起态块距动画化（修 0fr 轨道 padding 泄露首行）；media-card hover overlay 自带下圆角（backdrop-filter 不被祖先圆角裁切的浏览器行为免疫）；ai-usage 环 svg 固有尺寸兜底；kb-access 锁图标尺寸契约；kb-meta nowrap 补省略截断（修长文本横向盖邻列）
+- 巡检工具固化：`scripts/audit-visual.mjs`（双站像素对拍 + 页内断言：巨型/隐身 svg 64px 阈值、文本硬裁切、空色板、黑盘、裸 JSON、JS 错误）+ `scripts/audit-interact.mjs`（12 组件真实交互巡检）
+
+### 新功能
+
+- **cascade layers**：全部产物 CSS 包进 `@layer icen.tokens / icen.base / icen.components`——消费方无层样式永远赢库样式（放心覆盖），层序由 tokens.css 顶部声明锚定
+- **命名空间迁移 codemod 随包发布**：`bunx @icen.ai/ui migrate <paths...> [--write]`（API 感知 tokenizer：createElement/选择器/classList/属性名语义分流，歧义 token（类名∩标签名∩领域词）保守跳过并给人工清单；映射冻结于 `migrate-map.json`）
+- **测试基座**：bun test + happy-dom；`bun run verify` = tsc + guard + test + build；CI 四道门（`.github/workflows/ci.yml`）+ 浏览器验收舱 e2e（Playwright 真实 Chromium：视觉回归基线 + axe-core a11y 扫描，`.github/workflows/e2e.yml`）
+- **纪律守卫 `bun run guard`**（8 项）：CSS 纪律（hex/z-index/keyframes/滚动条/!important/头注释契约）· registry 一致性（slug×css×behavior×init×exports）· 事件纪律（emitIcen 字面量 × IcenEventMap 双向核对，禁裸 CustomEvent）· 行为模块纪律（SSR 守卫/innerHTML 禁令）· 命名空间（icen- 前缀 + 业界碰撞面 59 类基准恒零）· 权限域诚实呈现（泄露文案模式扫描 + evaluateAcl 纯函数形态钉死）· RTL 逻辑属性（流向物理属性禁令 + 豁免登记）· 类名同步（JS 模板/选择器引用的类与 CSS 定义同形态——v0.10 迁移期 BEM 修饰族错位事故的永久防线）
+
+**设计哲学与统一覆盖（docs/spec/design-philosophy.md + 主题工作台）**
+
+- 新增设计哲学规范：八条元原则 + 十维细则（色彩/几何/深度/动效/排印/密度/图标/材质/明暗/正交轴）+ 六预设人格 + 业界对标矩阵（Apple 同心圆/Primer 语义色/Fluent 海拔/Carbon 密度/Polaris 无障碍…）+ 统一覆盖三层架构 + 十条红线
+- **圆角几何契约**：同心圆法则（R内=R外−间距，calc 表达）、胶囊 full 与正圆 50% 语义分家、容器禁跑道形；守卫新增「圆角纪律」（禁裸 999px/撞档裸值，微构件登记制，29 处存量已登记）
+- 文档站「定制」页新增**主题工作台**：预设/明暗/风格/密度/accent/圆角基准六旋钮实时预览（全用本库组件搭建），accent 明度三档对比度实时验算并诚实展示达标与否，一键复制生成的覆盖 CSS 片段
+
+**i18n 本地化层（新模块 `i18n.ts`）**
+
+- `IcenLocale` 683 key 全量注册表（行为层每一句面向用户的文案——AI 族/kb 族/charts/datatable/表单族/控件族全覆盖）；`setIcenLocale(patch)` 合并 + `icen:locale-change` 广播（changed keys 精确）+ `resetIcenLocale()`；内置 `ICEN_LOCALE_ZH_CN`（默认）与 `ICEN_LOCALE_EN_US` 完整双语
+- 行为级验收：切 en 后代表性组件 DOM **零 CJK 字符**（tests/dom/i18n.test.ts）
+
+**RTL 与逻辑属性（51 个 CSS 文件审计迁移）**
+
+- 292 处流向属性改逻辑属性（margin/padding/border/inset-inline-* 等）+ 37 处 text-align start/end；16 条 `[dir="rtl"]` 镜像规则（方向性 chevron/箭头/抽屉滑向）
+- 物理坐标豁免纪律：浮层 JS 坐标/图表坐标系/物理隐喻控件（switch 拇指）/数字列——96 处行内豁免带理由 + 图表/diff/tooltip 文件级豁免；新增 guard 第 7 项强制新代码不再引入流向物理属性
+- 消费方零接线：`<html dir="rtl">` 即生效
+
+**移动/触屏层**
+
+- 手势层加 `swipe`：`data-icen-gestures="swipe"` → `icen:swipe-left/right/up/down`（48px 阈值 + 主轴判定 + 垂直滚动脉络不吞事件 + click 消歧共存）；carousel 在 `pointer: coarse` 下自动开滑动翻页
+- 触屏目标尺寸底线：pointer:coarse 下交互基元 ≥40px（WCAG 2.5.5 工程折中，`max(var(--icen-density-input-height-md), 40px)` 逻辑属性形态）；hover 守卫全库审计（10 处裸抬升修复进 `@media (hover:hover) and (pointer:fine)`）
+
+**设计工具导出（设计-开发闭环）**
+
+- `bun run design-tokens` → `dist/tokens/tokens-studio.json`（Tokens Studio：12 组 theme 直映射 DTCG）+ `dist/tokens/figma.variables.json`（Figma Variables：6 collection × light/dark，RGBA 浮点 + rem×16 换算 + 别名解析，不可表示项诚实跳过并打印）
+
+**表单族四缺口组件（新 slug）**
+
+- `cascader` 级联选择：多列面板 + 跨级搜索（命中显示面包屑路径）+ changeOnSelect + 全键盘 + combobox/listbox aria 完整
+- `tree-select` 树选择：多选 chips / 三态勾选（父=子孙并集，mixed 诚实）/ 搜索自动展开祖先 + 高亮 / RTL 镜像方向键
+- `mentions` 提及：`@query` 触发（行首/空白边界，email 不误触）+ 镜像 div caret 定位 + 异步源竞态守卫 + 删除同步摘除（诚实一致性）+ IME 挂起
+- `autocomplete` 自动补全：WAI combobox 完整模式 + freeSolo 两态 + 命中 `<mark>` 高亮 + 异步竞态
+- AI 工具内置 +1：`render_datatable`（columns/rows 纯 JSON → createTable 挂载，搜索/分页/CSV 默认开）
+
+**信任基础设施文档**
+
+- `SECURITY.md`（版本支持表/私密报告渠道/响应承诺/安全设计要点对应可验证机制）· `CONTRIBUTING.md`（四道门/加组件六步仪式/guard 速查表）· `docs/versioning.md`（0.x 纪律：breaking 只在 minor 且必配 codemod；1.0 冻结 checklist）· GitHub issue 表单 ×2
+
+**表单校验层（新 slug `form-validate`）**
+
+- 原生约束即 schema（required/type=email/minlength/pattern/min/max/step 零新词汇）+ `data-icen-validate` 承载额外规则（`matches:字段` 跨字段、`registerValidator` 具名异步校验）+ `data-icen-msg-<rule>` 与 `setValidateMessages` i18n
+- UX 策略 = 业界最佳形态：submit 优先 → 出错字段 input 即时复验 → 未触碰字段 blur 补验；`.is-error` + 自动 `role="alert"` 错误节点 + aria-invalid/describedby 接线；可选顶部错误汇总锚点；异步 `.is-validating` + 序号竞态守卫；IME 组合态挂起
+- `createFormValidator` 程序面 + `initFormValidate` 委托面 + `icen:form-field-validate/form-valid/form-invalid` 事件族
+
+**UI-as-tool 深化（ai-tools）**
+
+- 四族模型侧导出：`aiToolsToOpenAI` / `aiToolsToMcp` / **`aiToolsToAnthropic`** / **`aiToolsToAiSdk`**（共享同一归一管线）
+- 参数校验 `validateToolArgs`：JSON-schema-lite（type/required/properties/enum/items/min/max…），**不支持的关键字不猜不静默**——进 `unvalidated` 清单；校验失败挂错误态卡不执行
+- 执行契约：`run` 允许返回 Promise（area await 落定结果）；`timeoutMs` 超时信封；`requiresApproval` 审批流（挂载卡批准/拒绝，`icen:ai-tool-approve/reject`）；`idempotent` 在途去重；`ctx.signal` + `ctx.progress` 活动流
+- 内置工具 +1：`show_form`（模型渲染结构化表单收集输入，提交 resolve 值/取消 resolve `{cancelled:true}`，走 form-validate 校验层）
+
+**React/Vue 官方薄封装（`@icen.ai/ui/react` · `@icen.ai/ui/vue`）**
+
+- 原语 `useIcenInit` / `useIcenEvent` + 工厂 `createIcenComponent` / `createVueRenderer` + 旗舰组件 `Chart` / `DataTable` / `AiComposer` / `AiMessage` / `AiToolCall`（React）与 `IcenChart` / `IcenDataTable` / `IcenAiComposer` / `IcenAiMessage`（Vue）
+- 只做生命周期接线（mount→create、props 变→update、unmount→destroy）与事件桥（onIcen + AbortController）；零状态复制；react/react-dom/vue 全为 optional peer；React 入口自动打 `'use client'`
+- 文档站新页 [/frameworks](https://ui.icen.ai/frameworks/)（两框架最小接入示例 + SSR 注意事项）
+
+**datatable 重度数据场景（v2 增强）**
+
+- 多列排序（Shift+点击，徽标优先级）/ 列拖拽重排（冻结分区互不跨越）/ **右冻结**（`frozen: 'left'|'right'`）/ **行分组 + 聚合**（组头折叠跨 setData 保持，`computeAggregates` 纯函数）/ **单元格编辑**（text/number/select，事件+回调双通道，宿主决定采纳）/ **汇总行**（sticky 表尾，按筛选后数据实时重算）/ 键盘导航（roving tabindex + PageUp/Down 跨页）+ TSV 复制
+- 新事件：`icen:table-cell-edit` / `table-column-reorder` / `table-group-toggle` / `table-column-resize`（拖拽结束才派）
+
+**charts 重度数据场景**
+
+- **LTTB 降采样**（`spec.downsample`，导出纯函数 `lttb`；抽样时头部诚实提示「已抽样 N→M 点」）；**缩放/刷选**（`spec.zoom: 'x'|'brush'`，`icen:chart-zoom` 事件，位移 <5px 不拦截点击）；**标记线/标记点**（`spec.marks` 纯 JSON，无效项 warn 不炸）；**流式追加**（`handle.append(label, values, { maxPoints })`，缩放窗跟尾）；**导出**（`handle.toDataURL`，SVG→canvas 光栅化，SSR/无 canvas 诚实返回 undefined）；**加载态**（`spec.loading` 骨架 shimmer，优先于空态）
+
+**权限/诚实呈现纪律：从文档纪律升级为测试强制执行的工程契约**
+
+- 一致性测试套件 `tests/kb-conformance.test.ts`：spec §9.0 八条安全纪律逐条自动化证明（受限标题不出现 DOM / 分数 null→「—」/ 轨道定宽 / revoked 引用中性 / 截断声明 / DSL 无效规则不镜像 / admin 对照警示常驻）
+- `evaluateAcl` 补 **expiresAt 求值语义**（过期条目不计入、全过期 fail-closed、decision 带最近将来到期；第 4 参 `now` 可注入——守卫钉死纯函数形态）
+- 修复现行违规：kb-trace null 分数假条（0% 宽度）、kb-ops trace 轨道伸缩
+
+### 修复
+
+- **initSwitch 开关/复选整体失效**（委托与分流的 role 匹配不一致——迁移期捕获，测试锁定）
+- **ai-provider 审计聚合恒为空**（`addUsage` 非破坏性返回值被丢弃——summary/totals/byModel 三处）
+- **select destroy 后永久无法再 init**（面板 portal 到 body 未归位；销毁时归位，Astro 换页场景修复）
+- **inferKind('render_chart') 误推未注册 kind**（codemod 残留）
+- **ChartHandle.spec 快照名不副实**（改 getter，update/append 后读到最新）
+- **charts 单系列 pivot 数据丢失**（无 series 字段时矩阵为空——Phase A 测试当场抓获）
+- CSV 导出 BOM 字面量转义歧义
+
+### a11y 既有债清偿（浏览器验收舱 axe 扫描驱动）
+
+- **datatable 网格角色链补全**（critical）：`role="grid"` 下表头一律 `columnheader`、正文/汇总/分组格一律 `gridcell`
+- **图表 SVG 一律 `aria-label`**（标题 + 图型；渲染管线单点注入，axe svg-img-alt/role-img-alt 清零）
+- **datatable 可编辑格可访问名含当前值**（label-content-name-mismatch：`{值}（双击或按 Enter 编辑「{列}」）`，i18n key `datatable.editHintWithValue`）
+- **全预设 `--icen-token-text-faint` 对比度提到 WCAG AA ≥4.5:1**（12 面逐一按各自背景计算，只动 faint 这一装饰层级；muted 原本已 ≥6:1）——品牌级变更，视觉差异极小
+- **新增 `--icen-token-accent-text`**（12 面逐一计算，文本级 accent 全过 AA；`.icen-btn-link` 等小字号文本 accent 场景改用）——品牌填充色 `--icen-token-accent` 不动；**注**：`.icen-btn-primary`（白字 × accent 填充 = 2.96:1）是既有品牌级取舍，锁存在 a11y 基线在案，若要走 AA 可把主按钮底色切到 `#a84e2e` 系或改深字，由维护者定夺
+- 文档站：代码块 `pre` 可滚动区加 `tabindex="0"`（键盘可达）；SiteHeader 品牌版本号 aria-hidden + 两个 select 触发器改 aria-labelledby（可访问名含可见文本）
+- 残余债务锁存进 `tests/e2e/a11y-baseline.json`（**只许减不许增**门禁：修复即核销，新增即 CI 红）——站壳次级文字与 clay accent 品牌色的对比度属遗留设计决策，文档化在案
+
+### 迁移指南
+
+```bash
+bun update @icen.ai/ui          # 升到 0.10.0
+bunx @icen.ai/ui migrate src --write   # 官方 codemod（dry-run 先看不加 --write）
+# 主题层若手写过 classList.add('dark') 等：改为 data-icen-theme="dark" / setTheme()（codemod 会给出人工清单）
+```
+
 ## 0.9.0 - 2026-10-03
 
 > 知识库（kb）组件族全量落地：32 个新 slug（`kb` 总集 + 31 个组件，七域 + kb.css 基座 + kb-core 契约层），AI 族增强 3 件，图表 +2（图谱 / 地图）。业界模式逐条落地（Anthropic 引用三型 / Glean 连接器健康 / RAGFlow 分块审阅 / Cursor 检查点语义 / MCP Apps 沙箱 / Braintrust 评测分级 / Zanzibar 求值语义 / OWASP 检索前过滤铁律）。无破坏性变更。

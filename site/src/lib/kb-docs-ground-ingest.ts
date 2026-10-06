@@ -18,53 +18,53 @@ export const KB_DOCS_GROUND_INGEST: ComponentDoc[] = [
     desc: 'kb 族伞形入口：ai 族描述思考（ai-chat / ai-tool… 呈现「AI 在做什么」），kb 族呈现证据（「知识从哪来、可信吗、怎么用」）——引用角标、解析管线、chunk、检索分数、SQL、trace 全部是让知识工作可验证的界面。数据契约与纯函数统一在 kb-core，视觉基座 kb.css（.kb-row / .kb-num 等宽数字 / .kb-quote 引用体 / 徽标），六域各持一份合并 CSS；kit/kb 一行装全家，细分 slug 可独立安装。',
     demo: `<p class="demo-label" style="margin:0 0 12px">ai 族描述思考，kb 族呈现证据。六域 27 个组件，共享数据契约 kb-core（类型 + 纯函数 + 来源类型注册表）与视觉基座 kb.css——数字一律等宽、引文一律引用体、来源 / 分数 / 日期只用语义色。</p>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;width:100%">
-  <div style="border:1px solid var(--token-line-soft);border-left:2px solid var(--token-accent);border-radius:var(--radius-md);padding:12px 14px">
+  <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-accent);border-radius:var(--icen-radius-md);padding:12px 14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <strong style="font-size:13px">证据域 · ground</strong>
-      <span class="kb-badge kb-badge--official">引用是主角</span>
+      <span class="icen-kb-badge icen-kb-badge--official">引用是主角</span>
     </div>
-    <p style="margin:0 0 8px;font-size:12.5px;color:var(--token-text-muted);line-height:1.7">答案的证据链：行内引用角标（hover 引用卡）、来源列表、原文定位抽屉、来源冲突对勘（市场空白组件）。</p>
-    <div class="mono" style="font-size:11.5px;color:var(--token-text-faint)">kb-citation · kb-sources · kb-passage · kb-conflict</div>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--icen-token-text-muted);line-height:1.7">答案的证据链：行内引用角标（hover 引用卡）、来源列表、原文定位抽屉、来源冲突对勘（市场空白组件）。</p>
+    <div class="icen-mono" style="font-size:11.5px;color:var(--icen-token-text-faint)">kb-citation · kb-sources · kb-passage · kb-conflict</div>
   </div>
-  <div style="border:1px solid var(--token-line-soft);border-left:2px solid var(--token-line-soft);border-radius:var(--radius-md);padding:12px 14px">
+  <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-line-soft);border-radius:var(--icen-radius-md);padding:12px 14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <strong style="font-size:13px">摄取域 · ingest</strong>
-      <span class="kb-badge">解析先行</span>
+      <span class="icen-kb-badge">解析先行</span>
     </div>
-    <p style="margin:0 0 8px;font-size:12.5px;color:var(--token-text-muted);line-height:1.7">进知识库之前：解析管线时间线、chunk 编辑器、分段策略实时预览、连接器健康、元数据、认证 QA 对。</p>
-    <div class="mono" style="font-size:11.5px;color:var(--token-text-faint)">kb-pipeline · kb-chunks · kb-segment · kb-connector · kb-metadata · kb-qa</div>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--icen-token-text-muted);line-height:1.7">进知识库之前：解析管线时间线、chunk 编辑器、分段策略实时预览、连接器健康、元数据、认证 QA 对。</p>
+    <div class="icen-mono" style="font-size:11.5px;color:var(--icen-token-text-faint)">kb-pipeline · kb-chunks · kb-segment · kb-connector · kb-metadata · kb-qa</div>
   </div>
-  <div style="border:1px solid var(--token-line-soft);border-left:2px solid var(--token-line-soft);border-radius:var(--radius-md);padding:12px 14px">
+  <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-line-soft);border-radius:var(--icen-radius-md);padding:12px 14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <strong style="font-size:13px">检索域 · search</strong>
-      <span class="kb-badge">可解释分数</span>
+      <span class="icen-kb-badge">可解释分数</span>
     </div>
-    <p style="margin:0 0 8px;font-size:12.5px;color:var(--token-text-muted);line-height:1.7">检索 playground（topK / 混合权重 / rerank）、过滤器构建器（Mongo / OData 双序列化）、rerank A/B 对比、召回测试集。</p>
-    <div class="mono" style="font-size:11.5px;color:var(--token-text-faint)">kb-retrieval · kb-filter · kb-rerank · kb-hittest</div>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--icen-token-text-muted);line-height:1.7">检索 playground（topK / 混合权重 / rerank）、过滤器构建器（Mongo / OData 双序列化）、rerank A/B 对比、召回测试集。</p>
+    <div class="icen-mono" style="font-size:11.5px;color:var(--icen-token-text-faint)">kb-retrieval · kb-filter · kb-rerank · kb-hittest</div>
   </div>
-  <div style="border:1px solid var(--token-line-soft);border-left:2px solid var(--token-success);border-radius:var(--radius-md);padding:12px 14px">
+  <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-success);border-radius:var(--icen-radius-md);padding:12px 14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <strong style="font-size:13px">问数域 · data</strong>
-      <span class="kb-badge kb-badge--trusted">认证优先于生成</span>
+      <span class="icen-kb-badge icen-kb-badge--trusted">认证优先于生成</span>
     </div>
-    <p style="margin:0 0 8px;font-size:12.5px;color:var(--token-text-muted);line-height:1.7">生成 SQL 卡（可见性 / 修正 diff）、问数答案容器、澄清反问、口径解释面板。</p>
-    <div class="mono" style="font-size:11.5px;color:var(--token-text-faint)">kb-sql · kb-answer · kb-clarify · kb-explain</div>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--icen-token-text-muted);line-height:1.7">生成 SQL 卡（可见性 / 修正 diff）、问数答案容器、澄清反问、口径解释面板。</p>
+    <div class="icen-mono" style="font-size:11.5px;color:var(--icen-token-text-faint)">kb-sql · kb-answer · kb-clarify · kb-explain</div>
   </div>
-  <div style="border:1px solid var(--token-line-soft);border-left:2px solid var(--token-warning);border-radius:var(--radius-md);padding:12px 14px">
+  <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-warning);border-radius:var(--icen-radius-md);padding:12px 14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <strong style="font-size:13px">治理域 · ops</strong>
-      <span class="kb-badge">观测与标注</span>
+      <span class="icen-kb-badge">观测与标注</span>
     </div>
-    <p style="margin:0 0 8px;font-size:12.5px;color:var(--token-text-muted);line-height:1.7">trace span 树、标注队列（全键盘流）、无答案分析（建文档 / 加同义词）、评估对比（判级徽章）。</p>
-    <div class="mono" style="font-size:11.5px;color:var(--token-text-faint)">kb-trace · kb-review · kb-gap · kb-eval</div>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--icen-token-text-muted);line-height:1.7">trace span 树、标注队列（全键盘流）、无答案分析（建文档 / 加同义词）、评估对比（判级徽章）。</p>
+    <div class="icen-mono" style="font-size:11.5px;color:var(--icen-token-text-faint)">kb-trace · kb-review · kb-gap · kb-eval</div>
   </div>
-  <div style="border:1px solid var(--token-line-soft);border-left:2px solid var(--token-accent-cold);border-radius:var(--radius-md);padding:12px 14px">
+  <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-accent-cold);border-radius:var(--icen-radius-md);padding:12px 14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <strong style="font-size:13px">工作台域 · agent</strong>
-      <span class="kb-badge">动效非颜色</span>
+      <span class="icen-kb-badge">动效非颜色</span>
     </div>
-    <p style="margin:0 0 8px;font-size:12.5px;color:var(--token-text-muted);line-height:1.7">双栏画布（划词 AI 操作）、检查点（只回滚内容保留对话）、沙箱容器（postMessage JSON-RPC）、工具链条。</p>
-    <div class="mono" style="font-size:11.5px;color:var(--token-text-faint)">kb-canvas · kb-checkpoint · kb-sandbox · kb-chain</div>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--icen-token-text-muted);line-height:1.7">双栏画布（划词 AI 操作）、检查点（只回滚内容保留对话）、沙箱容器（postMessage JSON-RPC）、工具链条。</p>
+    <div class="icen-mono" style="font-size:11.5px;color:var(--icen-token-text-faint)">kb-canvas · kb-checkpoint · kb-sandbox · kb-chain</div>
   </div>
 </div>`,
     usage: `// 一行装全家（kb.css 基座 + 六域 CSS 全带上；behavior 按需从各细分 kit 引入）
@@ -89,9 +89,9 @@ import { normalizeCitation, segmentText, connectorHealth, formatScore } from '@i
     group: '知识库',
     desc: '行内引用角标 .kb-citation + hover 引用卡：renderCitationText(el, text, sources) 把含 [3] 的答案文本切成「文本节点 + 角标」混合流（流式安全：delta 边界的 "[3" 自然留在文本段，增量重渲该 el 即可），sources 同时写入模块级注册表供 hover 卡取数；hover ≥300ms 经 popover portal 浮 .kb-citation-card（类型图标 / 域名 / 引文 ≤150 字 / 官方·过期·受限徽标，受限引文打码）；超界编号自动降级 .is-dead 灰显不可点——「不信任模型生成编号」纪律。点击派 icen:kb-citation-open { citation }。',
     demo: `<p class="demo-label" style="margin:0 0 8px">答案正文由 renderCitationText 注入角标 —— 悬停角标 ≥300ms 看引用卡（官方 / 过期 / 受限三种徽标态），点击派事件；末尾 [9] 超出来源数，降级为灰显死角标</p>
-<div class="kb-quote" id="demo-kb-citation-answer" style="font-size:13px;line-height:2.1"></div>
-<div class="toolbar" style="margin-top:12px">
-  <span class="toolbar-label" id="demo-kb-citation-log">事件日志：悬停 / 点击任一活角标</span>
+<div class="icen-kb-quote" id="demo-kb-citation-answer" style="font-size:13px;line-height:2.1"></div>
+<div class="icen-toolbar" style="margin-top:12px">
+  <span class="icen-toolbar-label" id="demo-kb-citation-log">事件日志：悬停 / 点击任一活角标</span>
 </div>`,
     usage: `import { initKbCitation, renderCitationText } from '@icen.ai/ui/kit/kb-citation';
 initKbCitation();   // root 级委托：click → icen:kb-citation-open；hover ≥300ms 浮引用卡（幂等 + 返回销毁函数）
@@ -104,8 +104,8 @@ renderCitationText(el, '按《供应商准入手册》需三证审核与验厂 [
   { id: 's2', index: 2, title: '2026 Q3 采购政策更新纪要', kind: 'doc', date: '2026-09-21',
     citedText: '自 Q3 起准入评分新增 ESG 维度，权重 15%。' },
 ]);
-// 超界编号（如 [9]）自动降级 <sup class="kb-citation is-dead">（灰显、aria-hidden、不可点）
-// 单独造角标：renderCitationMark(3) → <button class="kb-citation" data-cite="3">3</button>
+// 超界编号（如 [9]）自动降级 <sup class="icen-kb-citation is-dead">（灰显、aria-hidden、不可点）
+// 单独造角标：renderCitationMark(3) → <button class="icen-kb-citation" data-icen-cite="3">3</button>
 // 注册表读写（答案区与来源列表共享数据源）：setKbCitationSources(sources) / getKbCitationSources()
 // hover 卡兜底增强：initKbCitation(root, { getCard(citation) { return fetchDetail(citation); } })`,
     behaviors: ['kb-citation'],
@@ -134,12 +134,12 @@ if (answer && kbCitationMod) {
     name: '来源列表',
     group: '知识库',
     desc: '来源列表 .kb-sources：--row 答案上方横排 / --rail 侧栏纵列两种布局；useCount 降序（被引 ×N，同计数稳定原序）；徽标覆盖 官方（accent 线框）/ 相对时间（>90 天自动 stale 加警示点）/ 受限（锁形徽标 + 申请访问按钮，行壳降级 role=button 补 Enter/Space 键控）；onlyCited 只保留被引过的来源（流式「随流填充」），空集给引导空态。点击来源行 / 申请访问 → icen:kb-source-open { source }（与冲突组、原文抽屉同一事件契约）。',
-    demo: `<div class="toolbar" style="margin-bottom:10px">
-  <span class="toolbar-label">布局</span>
-  <button class="btn btn-sm btn-primary" type="button" data-kb-sources-variant="row">row 横排</button>
-  <button class="btn btn-sm" type="button" data-kb-sources-variant="rail">rail 纵列</button>
-  <span class="toolbar-spacer"></span>
-  <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--token-text-muted)"><input type="checkbox" id="demo-kb-sources-only">onlyCited（随流填充）</label>
+    demo: `<div class="icen-toolbar" style="margin-bottom:10px">
+  <span class="icen-toolbar-label">布局</span>
+  <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" data-kb-sources-variant="row">row 横排</button>
+  <button class="icen-btn icen-btn-sm" type="button" data-kb-sources-variant="rail">rail 纵列</button>
+  <span class="icen-toolbar-spacer"></span>
+  <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--icen-token-text-muted)"><input type="icen-checkbox" id="demo-kb-sources-only">onlyCited（随流填充）</label>
 </div>
 <div id="demo-kb-sources-box" style="max-width:600px"></div>
 <p class="demo-label" id="demo-kb-sources-log" style="margin-top:10px">事件日志：点击来源行或受限行的「申请访问」</p>`,
@@ -152,7 +152,7 @@ renderKbSources(el, sources, {
   onOpen: (source) => openPassage(source),   // 与事件双通道
 });
 // 来源对象即 kb-core KbCitation：official / date（>90 天自动 stale）/ permission 受限加锁与申请入口
-// 排序：useCount 降序（被引 ×N）；空数组渲染 .kb-empty「下一条答案引用的段落将出现在这里」`,
+// 排序：useCount 降序（被引 ×N）；空数组渲染 .icen-kb-empty「下一条答案引用的段落将出现在这里」`,
     behaviors: ['kb-sources'],
     behaviorInit: { 'kb-sources': 'initKbSources' },
     script: `const box = document.getElementById('demo-kb-sources-box');
@@ -177,7 +177,7 @@ document.querySelectorAll('[data-kb-sources-variant]').forEach(function (btn) {
   btn.addEventListener('click', function () {
     variant = btn.getAttribute('data-kb-sources-variant') || 'row';
     render();
-    document.querySelectorAll('[data-kb-sources-variant]').forEach(function (b) { b.classList.toggle('btn-primary', b === btn); });
+    document.querySelectorAll('[data-kb-sources-variant]').forEach(function (b) { b.classList.toggle('icen-btn-primary', b === btn); });
   });
 });
 if (onlyCb) onlyCb.addEventListener('change', render);
@@ -190,13 +190,13 @@ if (box) box.addEventListener('icen:kb-source-open', function (e) {
     slug: 'kb-passage',
     name: '原文定位',
     group: '知识库',
-    desc: '原文定位查看器 .kb-passage（右侧抽屉，滑入不打断对话）：open(citation) 渲染来源标题 + KbLocation 三分型位置徽标（第 N 页 / 块 a–b / 字符 a–b），getDocument 同异步取 { content, loc, contextBefore, contextAfter }，缺席回落 citedText → snippet；highlight(terms) 纯文本遍历 <mark> 多词轮转分色（data-hit 0|1|2）；expand() 展开上下文；受限权限正文 blur 打码 + 申请访问（派 icen:kb-source-open）。Esc 关闭 / Tab 圈禁 / 焦点还原，跳转派 icen:kb-passage-jump，关闭派 icen:kb-passage-close。',
-    demo: `<div class="toolbar" style="margin-bottom:10px">
-  <button class="btn btn-sm btn-primary" type="button" id="demo-kb-passage-open">打开可读来源（第 3 页）</button>
-  <button class="btn btn-sm" type="button" id="demo-kb-passage-restricted">打开受限来源（打码 + 申请访问）</button>
-  <button class="btn btn-sm" type="button" id="demo-kb-passage-highlight">highlight 多词分色</button>
-  <button class="btn btn-sm" type="button" id="demo-kb-passage-expand">expand 上下文</button>
-  <button class="btn btn-sm" type="button" id="demo-kb-passage-close">close</button>
+    desc: '原文定位查看器 .kb-passage（右侧抽屉，滑入不打断对话）：open(citation) 渲染来源标题 + KbLocation 三分型位置徽标（第 N 页 / 块 a–b / 字符 a–b），getDocument 同异步取 { content, loc, contextBefore, contextAfter }，缺席回落 citedText → snippet；highlight(terms) 纯文本遍历 <mark> 多词轮转分色（data-icen-hit 0|1|2）；expand() 展开上下文；受限权限正文 blur 打码 + 申请访问（派 icen:kb-source-open）。Esc 关闭 / Tab 圈禁 / 焦点还原，跳转派 icen:kb-passage-jump，关闭派 icen:kb-passage-close。',
+    demo: `<div class="icen-toolbar" style="margin-bottom:10px">
+  <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" id="demo-kb-passage-open">打开可读来源（第 3 页）</button>
+  <button class="icen-btn icen-btn-sm" type="button" id="demo-kb-passage-restricted">打开受限来源（打码 + 申请访问）</button>
+  <button class="icen-btn icen-btn-sm" type="button" id="demo-kb-passage-highlight">highlight 多词分色</button>
+  <button class="icen-btn icen-btn-sm" type="button" id="demo-kb-passage-expand">expand 上下文</button>
+  <button class="icen-btn icen-btn-sm" type="button" id="demo-kb-passage-close">close</button>
 </div>
 <p class="demo-label" style="margin:0 0 8px">右侧滑入抽屉（Esc 关闭，焦点还原触发前元素）</p>
 <div id="demo-kb-passage-host"></div>
@@ -205,13 +205,13 @@ if (box) box.addEventListener('icen:kb-source-open', function (e) {
 const viewer = createKbPassage(hostEl, {
   getDocument: (citation) => fetch('/api/docs/' + citation.documentId).then((r) => r.json()),
   // 返回 { content, loc?, contextBefore?, contextAfter? }；未提供 / 落空回落 citedText → snippet
-  // anchor: anchorEl,   // 提供后 open 时滚动定位容器内 [data-kb-loc]（精确匹配 → loc.start 最近匹配）
+  // anchor: anchorEl,   // 提供后 open 时滚动定位容器内 [data-icen-kb-loc]（精确匹配 → loc.start 最近匹配）
   onJump: (citation) => console.log('jump', citation.title),
 });
 viewer.open({ id: 'c1', title: '供应商准入手册 v3.2', kind: 'wiki', documentId: 'doc-vendor-32',
   loc: { kind: 'page', start: 3, end: 3 },          // KbLocation 三分型：char | page | block
   citedText: '评分低于 60 分不予通过' });
-viewer.highlight(['供应商', '验厂']);   // <mark class="kb-passage-hit" data-hit="0|1|2"> 多词轮转分色
+viewer.highlight(['供应商', '验厂']);   // <mark class="kb-passage-hit" data-icen-hit="0|1|2"> 多词轮转分色
 viewer.expand();                        // 展示 contextBefore / contextAfter（一层，幂等）
 viewer.close();                         // 派 icen:kb-passage-close，焦点还原
 // 受限来源（permission ≠ readable）正文自动打码 +「申请访问」→ icen:kb-source-open
@@ -243,7 +243,7 @@ document.getElementById('demo-kb-passage-open')?.addEventListener('click', funct
 document.getElementById('demo-kb-passage-restricted')?.addEventListener('click', function () { viewer?.open(RESTRICTED); });
 document.getElementById('demo-kb-passage-highlight')?.addEventListener('click', function () {
   viewer?.highlight(['供应商', '验厂', '评分']);
-  log('highlight([供应商, 验厂, 评分]) · 三词轮转 data-hit 0|1|2 分色');
+  log('highlight([供应商, 验厂, 评分]) · 三词轮转 data-icen-hit 0|1|2 分色');
 });
 document.getElementById('demo-kb-passage-expand')?.addEventListener('click', function () { viewer?.expand(); });
 document.getElementById('demo-kb-passage-close')?.addEventListener('click', function () { viewer?.close(); });`,
@@ -253,42 +253,42 @@ document.getElementById('demo-kb-passage-close')?.addEventListener('click', func
     name: '来源冲突',
     group: '知识库',
     desc: '来源冲突组 .kb-conflict（市场空白组件）：同一主张的多版本对勘——claim 警示行 + 版本卡横排；is-current 自动判定（官方优先，否则最新日期，都无则首个版本），其余版本 faded（.is-older）+ 满足 >90 天 stale 判定加过期徽标；对勘场景日期用绝对值（相对时间看不出先后）。点击版本卡 → icen:kb-source-open { source }（与来源列表同一契约，宿主据此打开 passage / 外链）；渲染即接线，无 init。',
-    demo: `<div class="kb-conflict">
-  <div class="kb-conflict-claim"><i class="kb-dot is-warn"></i>同一主张：差旅住宿标准为一线城市每晚 600 元</div>
-  <div class="kb-conflict-versions">
-    <button class="kb-conflict-ver is-current" type="button" data-kb-source-id="cf1">
-      <span class="kb-conflict-ver-head">
-        <span class="kb-conflict-ver-date kb-num">2026-08-12</span>
-        <span class="kb-conflict-ver-badges"><span class="kb-badge kb-badge--official">官方</span></span>
+    demo: `<div class="icen-kb-conflict">
+  <div class="icen-kb-conflict-claim"><i class="icen-kb-dot is-warn"></i>同一主张：差旅住宿标准为一线城市每晚 600 元</div>
+  <div class="icen-kb-conflict-versions">
+    <button class="icen-kb-conflict-ver is-current" type="button" data-icen-kb-source-id="cf1">
+      <span class="icen-kb-conflict-ver-head">
+        <span class="icen-kb-conflict-ver-date icen-kb-num">2026-08-12</span>
+        <span class="icen-kb-conflict-ver-badges"><span class="icen-kb-badge icen-kb-badge--official">官方</span></span>
       </span>
-      <span class="kb-conflict-ver-title">差旅费用管理制度（财务部终版）</span>
-      <span class="kb-conflict-ver-sub">confluence.corp · 责任人 财务部 · 陈静</span>
+      <span class="icen-kb-conflict-ver-title">差旅费用管理制度（财务部终版）</span>
+      <span class="icen-kb-conflict-ver-sub">confluence.corp · 责任人 财务部 · 陈静</span>
     </button>
-    <button class="kb-conflict-ver is-older" type="button" data-kb-source-id="cf2">
-      <span class="kb-conflict-ver-head">
-        <span class="kb-conflict-ver-date kb-num">2025-11-03</span>
-        <span class="kb-conflict-ver-badges"><span class="kb-badge kb-badge--stale"><i class="kb-dot is-warn"></i>10 个月前</span></span>
+    <button class="icen-kb-conflict-ver is-older" type="button" data-icen-kb-source-id="cf2">
+      <span class="icen-kb-conflict-ver-head">
+        <span class="icen-kb-conflict-ver-date icen-kb-num">2025-11-03</span>
+        <span class="icen-kb-conflict-ver-badges"><span class="icen-kb-badge icen-kb-badge--stale"><i class="icen-kb-dot is-warn"></i>10 个月前</span></span>
       </span>
-      <span class="kb-conflict-ver-title">差旅报销 FAQ（行政部旧版）</span>
-      <span class="kb-conflict-ver-sub">confluence.corp · 责任人 行政部 · 刘洋</span>
+      <span class="icen-kb-conflict-ver-title">差旅报销 FAQ（行政部旧版）</span>
+      <span class="icen-kb-conflict-ver-sub">confluence.corp · 责任人 行政部 · 刘洋</span>
     </button>
   </div>
 </div>
-<div class="kb-conflict" style="margin-top:12px">
-  <div class="kb-conflict-claim"><i class="kb-dot is-warn"></i>同一主张：质保期自验收合格之日起 12 个月</div>
-  <div class="kb-conflict-versions">
-    <button class="kb-conflict-ver is-current" type="button" data-kb-source-id="cf3">
-      <span class="kb-conflict-ver-head"><span class="kb-conflict-ver-date kb-num">2026-06-20</span><span class="kb-conflict-ver-badges"></span></span>
-      <span class="kb-conflict-ver-title">采购合同模板 v5（法务更新）</span>
-      <span class="kb-conflict-ver-sub">confluence.corp · 责任人 法务部 · 赵珂</span>
+<div class="icen-kb-conflict" style="margin-top:12px">
+  <div class="icen-kb-conflict-claim"><i class="icen-kb-dot is-warn"></i>同一主张：质保期自验收合格之日起 12 个月</div>
+  <div class="icen-kb-conflict-versions">
+    <button class="icen-kb-conflict-ver is-current" type="button" data-icen-kb-source-id="cf3">
+      <span class="icen-kb-conflict-ver-head"><span class="icen-kb-conflict-ver-date icen-kb-num">2026-06-20</span><span class="icen-kb-conflict-ver-badges"></span></span>
+      <span class="icen-kb-conflict-ver-title">采购合同模板 v5（法务更新）</span>
+      <span class="icen-kb-conflict-ver-sub">confluence.corp · 责任人 法务部 · 赵珂</span>
     </button>
-    <button class="kb-conflict-ver is-older" type="button" data-kb-source-id="cf4">
-      <span class="kb-conflict-ver-head">
-        <span class="kb-conflict-ver-date kb-num">2025-05-08</span>
-        <span class="kb-conflict-ver-badges"><span class="kb-badge kb-badge--stale"><i class="kb-dot is-warn"></i>1 年前</span></span>
+    <button class="icen-kb-conflict-ver is-older" type="button" data-icen-kb-source-id="cf4">
+      <span class="icen-kb-conflict-ver-head">
+        <span class="icen-kb-conflict-ver-date icen-kb-num">2025-05-08</span>
+        <span class="icen-kb-conflict-ver-badges"><span class="icen-kb-badge icen-kb-badge--stale"><i class="icen-kb-dot is-warn"></i>1 年前</span></span>
       </span>
-      <span class="kb-conflict-ver-title">供应商合作须知（2025 版）</span>
-      <span class="kb-conflict-ver-sub">confluence.corp · 责任人 采购部 · 王莉</span>
+      <span class="icen-kb-conflict-ver-title">供应商合作须知（2025 版）</span>
+      <span class="icen-kb-conflict-ver-sub">confluence.corp · 责任人 采购部 · 王莉</span>
     </button>
   </div>
 </div>
@@ -359,7 +359,7 @@ renderKbPipeline(el, {
   error: { stage: '表格识别', message: '合并单元格跨页断裂：B14 外键引用为空' },
 });
 // 数组输入渲染纵向列表（外层 .kb-pipeline-list）；空数组给空态「暂无解析任务」
-// running / fail 折叠初值自动展开；用户操作过（按 data-document-id 记忆）则重渲染不覆盖
+// running / fail 折叠初值自动展开；用户操作过（按 data-icen-document-id 记忆）则重渲染不覆盖
 // 事件：icen:kb-pipeline-toggle { el, open } / icen:kb-pipeline-rerun { documentId }`,
     behaviors: ['kb-pipeline'],
     behaviorInit: { 'kb-pipeline': 'initKbPipeline' },
@@ -398,10 +398,10 @@ if (box && kbPipelineMod) {
   kbPipelineMod.renderKbPipeline(box, RUNS);
   box.addEventListener('icen:kb-pipeline-toggle', function (e) {
     const card = e.detail.el;
-    log('icen:kb-pipeline-toggle · ' + (card && card.dataset ? card.dataset.documentId : '') + ' → ' + (e.detail.open ? '展开' : '折叠'));
+    log('icen:icen-kb-pipeline-toggle · ' + (card && card.dataset ? card.dataset.icenDocumentId : '') + ' → ' + (e.detail.open ? '展开' : '折叠'));
   });
   box.addEventListener('icen:kb-pipeline-rerun', function (e) {
-    log('icen:kb-pipeline-rerun · documentId=' + e.detail.documentId + '（失败重跑粒度 = 单文档）');
+    log('icen:icen-kb-pipeline-rerun · documentId=' + e.detail.documentId + '（失败重跑粒度 = 单文档）');
   });
 }`,
   },
@@ -458,9 +458,9 @@ if (box && kbChunksMod) {
     name: '分段策略',
     group: '知识库',
     desc: '分段策略编辑器 .kb-segment：左表单（模式 auto / custom / parent-child + 分隔符 + 最大长度 + 重叠 + 三项清洗勾选）右实时预览——预览走 kb-core segmentText 纯函数真实切分（非估算），N 段 / 均长 / ≈tokens 三指标 + 前 20 段卡片（200px 截断点击展开）。locked 锁模式不锁参数（Dify 纪律）；重叠 ≥ 最大长度即时校验且不阻断预览。任一变更派 icen:kb-segment-change { config }，句柄 getConfig / setConfig / refresh(sample) 程序化读写。',
-    demo: `<div class="toolbar" style="margin-bottom:10px">
-  <button class="btn btn-sm" type="button" id="demo-kb-segment-lock">setConfig({ mode: 'parent-child', locked: true })</button>
-  <span class="toolbar-label">样本：《供应商准入手册》第 3–6 条（真实切分，非估算）</span>
+    demo: `<div class="icen-toolbar" style="margin-bottom:10px">
+  <button class="icen-btn icen-btn-sm" type="button" id="demo-kb-segment-lock">setConfig({ mode: 'parent-child', locked: true })</button>
+  <span class="icen-toolbar-label">样本：《供应商准入手册》第 3–6 条（真实切分，非估算）</span>
 </div>
 <div id="demo-kb-segment"></div>
 <p class="demo-label" id="demo-kb-segment-log" style="margin-top:8px">事件日志：改动左侧任一参数，或点上方按钮程序化赋值</p>`,
@@ -542,7 +542,7 @@ if (box && kbConnectorMod) {
   kbConnectorMod.renderKbConnectors(box, CONNECTORS);
   box.addEventListener('icen:kb-connector-sync', function (e) { log('icen:kb-connector-sync · ' + e.detail.connectorId); });
   box.addEventListener('icen:kb-connector-reauth', function (e) { log('icen:kb-connector-reauth · ' + e.detail.connectorId); });
-  box.addEventListener('icen:kb-connector-schedule', function (e) { log('icen:kb-connector-schedule · ' + e.detail.connectorId + ' cron=' + e.detail.schedule); });
+  box.addEventListener('icen:kb-connector-schedule', function (e) { log('icen:icen-kb-connector-schedule · ' + e.detail.connectorId + ' cron=' + e.detail.schedule); });
 }`,
   },
   {

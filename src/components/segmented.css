@@ -6,25 +6,25 @@
  *
  * 完整契约：
  *   1) 分段控件（排他单选）：
- *      <div class="segmented [segmented--sm|segmented--lg]" role="radiogroup">
- *        <button class="segmented-item [.is-active]" role="radio" [aria-checked="true"]>…</button>
+ *      <div class="icen-segmented [icen-segmented--sm|icen-segmented--lg]" role="radiogroup">
+ *        <button class="icen-segmented-item [.is-active]" role="radio" [aria-checked="true"]>…</button>
  *      </div>
  *
  *   2) 切换组（同族变体，更松散）：
- *      <div class="toggle-group [toggle-group--sm]">
- *        <button class="toggle-item [.is-active]">…</button>
+ *      <div class="icen-toggle-group [icen-toggle-group--sm]">
+ *        <button class="icen-toggle-item [.is-active]">…</button>
  *      </div>
  *
  *   3) 数字步进器：
- *      <div class="stepper">
- *        <button class="stepper-btn" data-step="-1">−</button>
- *        <input class="stepper-input" type="number" min="0" max="100" />
- *        <button class="stepper-btn" data-step="1">+</button>
+ *      <div class="icen-stepper">
+ *        <button class="icen-stepper-btn" data-icen-step="-1">−</button>
+ *        <icen-input class="icen-stepper-input" type="number" min="0" max="100" />
+ *        <button class="icen-stepper-btn" data-icen-step="1">+</button>
  *      </div>
  *
  *   4) OTP 验证码单元格：
- *      <div class="otp otp--sm" role="group" aria-label="一次性验证码">
- *        <input class="otp-cell" maxlength="1" />
+ *      <div class="icen-otp icen-otp--sm" role="group" aria-label="一次性验证码">
+ *        <icen-input class="icen-otp-cell" maxlength="1" />
  *        …
  *      </div>
  *
@@ -35,310 +35,310 @@
  * 增强段（正文"增强"段）：
  *   变体：segmented--block / segmented--ghost / toggle-group--block / toggle-group--ghost
  *   槽位：stepper-unit（步进器单位后缀）/ otp-separator（OTP 分组分隔符）
- *   状态类（消费方施加）：.otp.is-complete（behavior 接线中）/ .otp.is-error /
- *         .segmented.is-error / .segmented.is-disabled / .toggle-group.is-error / .toggle-group.is-disabled
+ *   状态类（消费方施加）：.icen-otp.is-complete（behavior 接线中）/ .icen-otp.is-error /
+ *         .icen-segmented.is-error / .icen-segmented.is-disabled / .icen-toggle-group.is-error / .icen-toggle-group.is-disabled
  */
 
 /* ── 分段控件（排他单选） ── */
-.segmented {
+.icen-segmented {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   padding: 2px;
-  background: var(--token-panel);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-inset);
+  background: var(--icen-token-panel);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
 }
 
-.segmented-item {
+.icen-segmented-item {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  padding: var(--density-space-xs) calc(var(--density-space-sm) + 2px);
-  font-size: var(--density-font-size-sm);
+  gap: var(--icen-density-space-xs);
+  padding: var(--icen-density-space-xs) calc(var(--icen-density-space-sm) + 2px);
+  font-size: var(--icen-density-font-size-sm);
   font-weight: 500;
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: var(--radius-sm);
-  color: var(--token-text-muted);
+  border-radius: var(--icen-radius-sm);
+  color: var(--icen-token-text-muted);
   -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
 }
-.segmented-item:hover:not(.is-active):not(:disabled) {
-  color: var(--token-text);
-  background: var(--token-surface-hover);
+.icen-segmented-item:hover:not(.is-active):not(:disabled) {
+  color: var(--icen-token-text);
+  background: var(--icen-token-surface-hover);
 }
-.segmented-item:focus-visible {
+.icen-segmented-item:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.segmented-item.is-active,
-.segmented-item[aria-checked='true'] {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
-  box-shadow: var(--token-shadow-elevated);
+.icen-segmented-item.is-active,
+.icen-segmented-item[aria-checked='true'] {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
+  box-shadow: var(--icen-token-shadow-elevated);
 }
-.segmented-item:disabled,
-.segmented-item[aria-disabled='true'] {
+.icen-segmented-item:disabled,
+.icen-segmented-item[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
-.segmented-item svg { width: 13px; height: 13px; flex-shrink: 0; }
+.icen-segmented-item svg { width: 13px; height: 13px; flex-shrink: 0; }
 
 /* 尺寸 */
-.segmented--sm .segmented-item {
-  padding: 2px var(--density-space-sm);
-  font-size: var(--density-font-size-xs);
+.icen-segmented--sm .icen-segmented-item {
+  padding: 2px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-xs);
 }
-.segmented--lg .segmented-item {
-  padding: var(--density-space-xs) var(--density-space-md);
-  font-size: var(--density-font-size-md);
+.icen-segmented--lg .icen-segmented-item {
+  padding: var(--icen-density-space-xs) var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-md);
 }
 
 /* ── 切换组（segmented 同族变体） ── */
-.toggle-group {
+.icen-toggle-group {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  padding: var(--density-space-xs);
-  background: var(--token-panel);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
+  gap: var(--icen-density-space-xs);
+  padding: var(--icen-density-space-xs);
+  background: var(--icen-token-panel);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
 }
 
-.toggle-item {
+.icen-toggle-item {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  padding: var(--density-space-xs) var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
+  gap: var(--icen-density-space-xs);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
   font-weight: 500;
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: var(--radius-xs);
-  color: var(--token-text-muted);
+  border-radius: var(--icen-radius-xs);
+  color: var(--icen-token-text-muted);
   transition:
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.toggle-item:hover:not(.is-active):not(:disabled) {
-  color: var(--token-text);
-  background: var(--token-control-hover);
+.icen-toggle-item:hover:not(.is-active):not(:disabled) {
+  color: var(--icen-token-text);
+  background: var(--icen-token-control-hover);
 }
-.toggle-item:focus-visible {
+.icen-toggle-item:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.toggle-item.is-active,
-.toggle-item[aria-checked='true'] {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
-  box-shadow: var(--token-shadow-card);
+.icen-toggle-item.is-active,
+.icen-toggle-item[aria-checked='true'] {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
+  box-shadow: var(--icen-token-shadow-card);
 }
-.toggle-item:disabled,
-.toggle-item[aria-disabled='true'] {
+.icen-toggle-item:disabled,
+.icen-toggle-item[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
-.toggle-group--sm .toggle-item {
-  padding: 2px var(--density-space-sm);
-  font-size: var(--density-font-size-xs);
+.icen-toggle-group--sm .icen-toggle-item {
+  padding: 2px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-xs);
 }
 
 /* ── 数字步进器 ── */
-.stepper {
+.icen-stepper {
   display: inline-flex;
   align-items: stretch;
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
   overflow: hidden;
   transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
-.stepper:hover { border-color: var(--icen-hover-border); }
-.stepper:focus-within {
+.icen-stepper:hover { border-color: var(--icen-hover-border); }
+.icen-stepper:focus-within {
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
 
-.stepper-btn {
+.icen-stepper-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 var(--density-space-sm);
+  padding: 0 var(--icen-density-space-sm);
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--token-text-muted);
-  font-size: var(--density-font-size-md);
+  color: var(--icen-token-text-muted);
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
   -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.stepper-btn:hover:not(:disabled) {
-  background: var(--token-control-hover);
-  color: var(--token-text);
+.icen-stepper-btn:hover:not(:disabled) {
+  background: var(--icen-token-control-hover);
+  color: var(--icen-token-text);
 }
-.stepper-btn:focus-visible {
+.icen-stepper-btn:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring-inset);
 }
-.stepper-btn:disabled,
-.stepper-btn[aria-disabled='true'] {
+.icen-stepper-btn:disabled,
+.icen-stepper-btn[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
 
-.stepper-input {
+.icen-stepper-input {
   width: 56px;
-  padding: var(--density-space-sm) 0;
+  padding: var(--icen-density-space-sm) 0;
   text-align: center;
   font-variant-numeric: tabular-nums;
   background: transparent;
   outline: none;
   border: none;
-  border-left: 1px solid var(--token-outline-soft);
-  border-right: 1px solid var(--token-outline-soft);
-  color: var(--token-text);
+  border-inline-start: 1px solid var(--icen-token-outline-soft);
+  border-inline-end: 1px solid var(--icen-token-outline-soft);
+  color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--density-font-size-md);
+  font-size: var(--icen-density-font-size-md);
 }
-/* 隐藏原生 number 箭头（± 交给 .stepper-btn） */
-.stepper-input::-webkit-outer-spin-button,
-.stepper-input::-webkit-inner-spin-button {
+/* 隐藏原生 number 箭头（± 交给 .icen-stepper-btn） */
+.icen-stepper-input::-webkit-outer-spin-button,
+.icen-stepper-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.stepper-input[type='number'] {
+.icen-stepper-input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
 
 /* ── OTP 验证码单元格 ── */
-.otp {
+.icen-otp {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
 }
-.otp-cell {
+.icen-otp-cell {
   width: 40px;
   height: 48px;
   padding: 0;
   text-align: center;
-  font-size: var(--density-font-size-xl);
+  font-size: var(--icen-density-font-size-xl);
   font-weight: 600;
-  font-family: var(--font-mono);
-  color: var(--token-text);
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
+  font-family: var(--icen-font-mono);
+  color: var(--icen-token-text);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
   outline: none;
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
 }
-.otp-cell:hover {
+.icen-otp-cell:hover {
   border-color: var(--icen-hover-border);
 }
-.otp-cell:focus-visible {
+.icen-otp-cell:focus-visible {
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.otp-cell.is-filled {
-  border-color: var(--token-accent);
-  background: var(--token-accent-subtle);
+.icen-otp-cell.is-filled {
+  border-color: var(--icen-token-accent);
+  background: var(--icen-token-accent-subtle);
 }
-.otp-cell:disabled,
-.otp-cell[aria-disabled='true'] {
+.icen-otp-cell:disabled,
+.icen-otp-cell[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
-.otp--sm .otp-cell { width: 32px; height: 40px; font-size: var(--density-font-size-lg); }
-.otp--lg .otp-cell { width: 48px; height: 56px; font-size: var(--density-font-size-2xl); }
+.icen-otp--sm .icen-otp-cell { width: 32px; height: 40px; font-size: var(--icen-density-font-size-lg); }
+.icen-otp--lg .icen-otp-cell { width: 48px; height: 56px; font-size: var(--icen-density-font-size-2xl); }
 
 @media (prefers-reduced-motion: reduce) {
-  .segmented-item, .toggle-item, .stepper-btn, .stepper, .otp-cell { transition: none; }
+  .icen-segmented-item, .icen-toggle-item, .icen-stepper-btn, .icen-stepper, .icen-otp-cell { transition: none; }
 }
 
 /* ── 增强 ── */
 
 /* 全宽分段（每项等宽） */
-.segmented--block,
-.toggle-group--block {
+.icen-segmented--block,
+.icen-toggle-group--block {
   display: flex;
-  width: 100%;
+  inline-size: 100%;
 }
-.segmented--block .segmented-item,
-.toggle-group--block .toggle-item {
+.icen-segmented--block .icen-segmented-item,
+.icen-toggle-group--block .icen-toggle-item {
   flex: 1;
   justify-content: center;
 }
 
 /* 分段底色变体（幽灵底，用于次要分组） */
-.segmented--ghost,
-.toggle-group--ghost {
+.icen-segmented--ghost,
+.icen-toggle-group--ghost {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
 }
-.segmented--ghost .segmented-item.is-active,
-.toggle-group--ghost .toggle-item.is-active {
-  background: var(--token-fill-2);
-  color: var(--token-text);
+.icen-segmented--ghost .icen-segmented-item.is-active,
+.icen-toggle-group--ghost .icen-toggle-item.is-active {
+  background: var(--icen-token-fill-2);
+  color: var(--icen-token-text);
   box-shadow: none;
 }
 
 /* 分段错误态 */
-.segmented.is-error,
-.toggle-group.is-error {
-  border-color: var(--token-error);
+.icen-segmented.is-error,
+.icen-toggle-group.is-error {
+  border-color: var(--icen-token-error);
 }
 
 /* 分段禁用整体 */
-.segmented.is-disabled,
-.toggle-group.is-disabled {
+.icen-segmented.is-disabled,
+.icen-toggle-group.is-disabled {
   opacity: var(--icen-disabled-opacity);
   pointer-events: none;
 }
 
 /* 步进器带单位后缀 */
-.stepper-unit {
+.icen-stepper-unit {
   display: inline-flex;
   align-items: center;
-  padding-right: var(--density-space-sm);
-  color: var(--token-text-faint);
+  padding-inline-end: var(--icen-density-space-sm);
+  color: var(--icen-token-text-faint);
   font-size: 0.85em;
 }
 
 /* OTP 分组分隔符（如 4-4 分两组时中间加横线） */
-.otp-separator {
+.icen-otp-separator {
   display: inline-flex;
   align-items: center;
-  padding: 0 var(--density-space-xs);
-  color: var(--token-text-faint);
-  font-size: var(--density-font-size-lg);
+  padding: 0 var(--icen-density-space-xs);
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-lg);
   font-weight: 300;
 }
 
 /* OTP 错误态 */
-.otp.is-error .otp-cell { border-color: var(--token-error); }
-.otp.is-error .otp-cell.is-filled {
-  background: var(--token-error-muted);
-  border-color: var(--token-error);
+.icen-otp.is-error .icen-otp-cell { border-color: var(--icen-token-error); }
+.icen-otp.is-error .icen-otp-cell.is-filled {
+  background: var(--icen-token-error-muted);
+  border-color: var(--icen-token-error);
 }
 
 /* OTP 完成（全部填满）态 */
-.otp.is-complete .otp-cell {
-  border-color: var(--token-success);
+.icen-otp.is-complete .icen-otp-cell {
+  border-color: var(--icen-token-success);
 }
-.otp.is-complete .otp-cell.is-filled {
-  background: color-mix(in srgb, var(--token-success) 8%, transparent);
+.icen-otp.is-complete .icen-otp-cell.is-filled {
+  background: color-mix(in srgb, var(--icen-token-success) 8%, transparent);
 }

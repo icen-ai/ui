@@ -1,77 +1,86 @@
 /*
  * @icen.ai/ui — Component: charts base（图表共享基座，与 behaviors/charts 配套）
  *
- * 仅含所有图表类型共用的契约：.chart 容器、.chart-empty 空态、.chart-legend 图例、
- * .chart-labels 轴标签行、.chart-tone-* 调色盘。
+ * 仅含所有图表类型共用的契约：.icen-chart 容器、.icen-chart-empty 空态、.icen-chart-legend 图例、
+ * .icen-chart-labels 轴标签行、.chart-tone-* 调色盘。
  * 各图表类型的专属样式在独立 CSS 文件中（chart-line / chart-bar / chart-pie /
  * chart-stack / chart-heatmap / chart-sparkline / chart-gauge / chart-radar / chart-area），
  * 按需引入——kit/chart-<type> 入口会自动带上本基座 + 对应专属 CSS。
  *
- * 单色调通过容器或条上的 --chart-tone 自定义属性注入（默认 var(--token-accent)）。
+ * v0.10 重度数据场景追加契约（renderChart 管线产出）：
+ *   头部行 .icen-chart-head 附加件——.icen-chart-note（降采样诚实提示「已抽样 N→M 点」）、
+ *   .icen-chart-zoom-reset（缩放态「重置缩放」chip）；
+ *   .icen-chart-zoom-rect（缩放手势选区，拖拽期挂 body，--icen-token-accent 10% 填充）；
+ *   .icen-chart-skeleton / .icen-chart-skeleton-bar（loading 骨架，复用 base.css 共享
+ *   keyframes icen-skeleton-pulse；根挂 .icen-chart.is-loading，优先于空态）；
+ *   标记 .icen-chart-mark-line / .icen-chart-mark-point / .icen-chart-mark-label
+ *   （spec.marks：SVG 变体属性直出样式仅挡指针事件，vbar DOM 变体在 chart-bar.css）。
+ *
+ * 单色调通过容器或条上的 --chart-tone 自定义属性注入（默认 var(--icen-token-accent)）。
  */
 
-.chart {
+.icen-chart {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
 }
-.chart-empty {
+.icen-chart-empty {
   height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
 }
 
 /* ── 图例 / 轴标签（donut / stack / vbar / line 共用） ── */
-.chart-legend {
+.icen-chart-legend {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
   flex: 1;
 }
-.chart-legend-item {
+.icen-chart-legend-item {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  font-size: var(--density-font-size-xs);
+  gap: var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
   min-width: 0;
 }
-.chart-legend-dot {
+.icen-chart-legend-dot {
   width: 8px;
   height: 8px;
   flex-shrink: 0;
-  border-radius: var(--radius-full);
-  background: var(--chart-tone, var(--token-accent));
+  border-radius: var(--icen-radius-full);
+  background: var(--chart-tone, var(--icen-token-accent));
 }
-.chart-legend-label {
+.icen-chart-legend-label {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
 }
-.chart-legend-value {
+.icen-chart-legend-value {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
 
-.chart-labels {
+.icen-chart-labels {
   display: flex;
-  gap: var(--density-space-xs);
-  margin-top: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
+  margin-top: var(--icen-density-space-xs);
 }
-.chart-labels > span {
+.icen-chart-labels > span {
   flex: 1;
   min-width: 0;
   text-align: center;
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -79,31 +88,31 @@
 }
 
 /* ── 调色盘：手写 markup 调色盘；behavior 走 charts.ts PALETTE_VARS 内联同值（两处值需人工同步） ── */
-.chart-tone-1 { --chart-tone: var(--token-accent); }
-.chart-tone-2 { --chart-tone: var(--token-accent-cold); }
-.chart-tone-3 { --chart-tone: var(--token-success); }
-.chart-tone-4 { --chart-tone: var(--token-warning); }
-.chart-tone-5 { --chart-tone: var(--token-info); }
-.chart-tone-6 { --chart-tone: color-mix(in srgb, var(--token-text) 50%, transparent); }
+.icen-chart-tone-1 { --chart-tone: var(--icen-token-accent); }
+.icen-chart-tone-2 { --chart-tone: var(--icen-token-accent-cold); }
+.icen-chart-tone-3 { --chart-tone: var(--icen-token-success); }
+.icen-chart-tone-4 { --chart-tone: var(--icen-token-warning); }
+.icen-chart-tone-5 { --chart-tone: var(--icen-token-info); }
+.icen-chart-tone-6 { --chart-tone: color-mix(in srgb, var(--icen-token-text) 50%, transparent); }
 
 /* ═══ 通用层（renderChart）：标题 / 内置 tooltip / 标记交互 / 图例切换 ═══ */
 
 /* 标题（spec.title 有值时渲染） */
-.chart-title {
-  font-size: var(--density-font-size-sm);
+.icen-chart-title {
+  font-size: var(--icen-density-font-size-sm);
   font-weight: 600;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
 
 /* 头部行（renderChart 渲染）：标题 + 图例可见性小眼睛 */
-.chart-head {
+.icen-chart-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   min-height: 24px;
 }
-.chart-legend-eye {
+.icen-chart-legend-eye {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -111,65 +120,127 @@
   height: 22px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   background: transparent;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.chart-legend-eye:hover { color: var(--token-text); background: var(--token-fill-1); }
-.chart-legend-eye:focus-visible { outline: none; box-shadow: var(--icen-ring); }
-.chart-legend-eye svg { width: 13px; height: 13px; }
+.icen-chart-legend-eye:hover { color: var(--icen-token-text); background: var(--icen-token-fill-1); }
+.icen-chart-legend-eye:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+.icen-chart-legend-eye svg { width: 13px; height: 13px; }
 
-/* 图例统一隐藏：容器级继承——data-legend-hidden 一条选择器覆盖全部图型的图例 */
-[data-legend-hidden='true'] .chart-legend,
-[data-legend-hidden='true'] .chart-legend--toggle,
-[data-legend-hidden='true'] .chart-heatmap-legend {
+/* 图例统一隐藏：容器级继承——data-icen-legend-hidden 一条选择器覆盖全部图型的图例 */
+[data-icen-legend-hidden='true'] .icen-chart-legend,
+[data-icen-legend-hidden='true'] .icen-chart-legend--toggle,
+[data-icen-legend-hidden='true'] .icen-chart-heatmap-legend {
   display: none;
 }
 
 /* 内置 tooltip：portal 到 body 的单例，position: fixed 跟随指针 */
-.chart-tooltip {
+.icen-chart-tooltip {
   position: fixed;
-  z-index: var(--z-tooltip);
+  z-index: var(--icen-z-tooltip);
   max-width: 280px;
   padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--token-card-strong);
-  border: 1px solid var(--token-line);
-  box-shadow: var(--token-shadow-elevated);
-  font-size: var(--density-font-size-xs);
+  border-radius: var(--icen-radius-sm);
+  background: var(--icen-token-card-strong);
+  border: 1px solid var(--icen-token-line);
+  box-shadow: var(--icen-token-shadow-elevated);
+  font-size: var(--icen-density-font-size-xs);
   font-variant-numeric: tabular-nums;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   pointer-events: none;
 }
-.chart-tooltip[hidden] { display: none; }
+.icen-chart-tooltip[hidden] { display: none; }
 
 /* 数据标记（各图型的条/点/段/格）：交互态由委托层挂 .is-hover，图例切换挂 .is-off */
-[data-chart-mark] { cursor: pointer; }
-[data-chart-mark].is-hover { filter: brightness(1.12); }
-[data-chart-mark].is-off { opacity: 0.16; pointer-events: none; }
-svg circle[data-chart-mark].is-hover { stroke-width: 3; }
+[data-icen-chart-mark] { cursor: pointer; }
+[data-icen-chart-mark].is-hover { filter: brightness(1.12); }
+[data-icen-chart-mark].is-off { opacity: 0.16; pointer-events: none; }
+svg circle[data-icen-chart-mark].is-hover { stroke-width: 3; }
 
 /* 可切换图例：行可点（Enter/Space 等价），.is-off 划线淡化 */
-.chart-legend--toggle .chart-legend-toggle-item {
+.icen-chart-legend--toggle .icen-chart-legend-toggle-item {
   cursor: pointer;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   padding: 2px 4px;
   margin: -2px -4px;
   transition: background-color var(--icen-tx-fast);
 }
-.chart-legend--toggle .chart-legend-toggle-item:hover { background: var(--token-fill-1); }
-.chart-legend--toggle .chart-legend-toggle-item:focus-visible {
+.icen-chart-legend--toggle .icen-chart-legend-toggle-item:hover { background: var(--icen-token-fill-1); }
+.icen-chart-legend--toggle .icen-chart-legend-toggle-item:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.chart-legend--toggle .is-off .chart-legend-label,
-.chart-legend--toggle .is-off .chart-legend-value {
-  color: var(--token-text-faint);
+.icen-chart-legend--toggle .is-off .icen-chart-legend-label,
+.icen-chart-legend--toggle .is-off .icen-chart-legend-value {
+  color: var(--icen-token-text-faint);
   text-decoration: line-through;
 }
-.chart-legend--toggle .is-off .chart-legend-dot { opacity: 0.3; }
+.icen-chart-legend--toggle .is-off .icen-chart-legend-dot { opacity: 0.3; }
+
+/* ═══ 重度数据场景（renderChart 管线产出；v0.10）═══ */
+
+/* 头部行附加件：降采样诚实提示（faint）+ 缩放态「重置缩放」chip */
+.icen-chart-note {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
+}
+.icen-chart-zoom-reset {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border: 1px solid var(--icen-token-line);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-fill-1);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-muted);
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.icen-chart-zoom-reset:hover { color: var(--icen-token-text); background: var(--icen-token-fill-2); }
+.icen-chart-zoom-reset:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+
+/* 缩放手势选区（拖拽期挂 body，position:fixed；accent 10% 填充） */
+.icen-chart-zoom-rect {
+  position: fixed;
+  z-index: var(--icen-z-tooltip);
+  border: 1px solid var(--icen-token-accent);
+  background: color-mix(in srgb, var(--icen-token-accent) 10%, transparent);
+  pointer-events: none;
+}
+
+/* 加载态骨架（复用 base.css 共享 keyframes icen-skeleton-pulse，不各自重定义） */
+.icen-chart-skeleton {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--icen-density-space-sm);
+  height: 150px;
+}
+.icen-chart-skeleton-bar {
+  height: 10px;
+  border-radius: var(--icen-radius-sm);
+  background: color-mix(in srgb, var(--icen-token-text) 8%, transparent);
+  animation: icen-skeleton-pulse var(--skeleton-duration, 2s) ease-in-out infinite;
+}
+
+/* 标记（spec.marks）：SVG 变体（line/area）样式由 behaviors 属性直出，此处只挡指针
+   事件（防遮 tooltip 与 mark 点击）；vbar DOM 变体见 chart-bar.css */
+svg .icen-chart-mark-line,
+svg .icen-chart-mark-point,
+svg .icen-chart-mark-label {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-chart-skeleton-bar { animation: none; }
+}
 
 /* ═══ 知识图谱 / 嵌入地图追加区（graph 专属在独立 chart-graph.css；此处为 map 变体）═══ */
 
@@ -177,28 +248,28 @@ svg circle[data-chart-mark].is-hover { stroke-width: 3; }
  * chart-map：embedding 2D 散点（renderMap）—— renderScatter 的去轴变体：
  * 无刻度文字、只留细虚线网格（预投影坐标的刻度无意义）；点 4px 半透明
  * （fill-opacity .7，高密度层叠可辨）。DOM 由 behaviors/charts.ts 的
- * renderMap 构建（.chart-map > svg > g.chart-map-point > dot + hit + title）。
+ * renderMap 构建（.icen-chart-map > svg > g.icen-chart-map-point > dot + hit + title）。
  * 样式并入基座（map 无独立 css，与 chart-calendar 并入 chart-heatmap 同策略）。
  */
-.chart-map svg {
+.icen-chart-map svg {
   width: 100%;
   height: auto;
   display: block;
 }
-.chart-map .chart-map-point {
+.icen-chart-map .icen-chart-map-point {
   cursor: pointer;
 }
-.chart-map-dot {
+.icen-chart-map-dot {
   transition: transform var(--icen-tx-fast);
   transform-box: fill-box;
   transform-origin: center;
 }
-.chart-map-point.is-hover .chart-map-dot {
+.icen-chart-map-point.is-hover .icen-chart-map-dot {
   transform: scale(1.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chart-map-dot {
+  .icen-chart-map-dot {
     transition: none;
   }
 }

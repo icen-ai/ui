@@ -2,18 +2,18 @@
  * @icen.ai/ui — Behavior: upload（拖放上传区，与 components/upload.css 配套）
  *
  * DOM 契约：
- *   <div class="upload" role="button" tabindex="0"
- *        [data-upload-list] [data-max-size="5242880"] [data-max-files="10"]>
+ *   <div class="icen-upload" role="button" tabindex="0"
+ *        [data-icen-upload-list] [data-icen-max-size="5242880"] [data-icen-max-files="10"]>
  *     <input type="file" multiple accept="…" />
  *     …图标与文案…
  *   </div>
  *
- * 增强（data-upload-list 开启）：
- *   - 选择/拖放后自动渲染 .upload-list 文件列表
+ * 增强（data-icen-upload-list 开启）：
+ *   - 选择/拖放后自动渲染 .icen-upload-list 文件列表
  *   - 图片显示缩略图（createObjectURL），非图片显示类型图标
  *   - 单文件大小格式化（B/KB/MB/GB）
  *   - 每个文件可单独移除（×），列表可整体清空
- *   - accept 类型校验 + data-max-size 大小校验 + data-max-files 数量上限
+ *   - accept 类型校验 + data-icen-max-size 大小校验 + data-icen-max-files 数量上限
  *   - 校验失败派发 icen:upload-error（detail: { file, reason }）
  *
  * 事件：
@@ -25,6 +25,7 @@
  */
 
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 interface MarkedUpload extends HTMLElement {
   __icenUploadInit?: boolean;
@@ -87,9 +88,9 @@ function setup(zone: HTMLElement): void {
   if (!input) return;
   el.__icenUploadInit = true;
 
-  const hasList = zone.hasAttribute('data-upload-list');
-  const maxSize = Number(zone.getAttribute('data-max-size')) || 0;
-  const maxFiles = Number(zone.getAttribute('data-max-files')) || 0;
+  const hasList = zone.hasAttribute('data-icen-upload-list');
+  const maxSize = Number(zone.getAttribute('data-icen-max-size')) || 0;
+  const maxFiles = Number(zone.getAttribute('data-icen-max-files')) || 0;
   const accept = input.getAttribute('accept') ?? '';
 
   /** 当前文件列表（列表模式的唯一事实源）。 */
@@ -102,10 +103,10 @@ function setup(zone: HTMLElement): void {
   /** 查找或创建文件列表容器。 */
   function getListEl(): HTMLUListElement | null {
     if (!hasList) return null;
-    let list = zone.querySelector<HTMLUListElement>('.upload-list');
+    let list = zone.querySelector<HTMLUListElement>('.icen-upload-list');
     if (!list) {
       list = document.createElement('ul');
-      list.className = 'upload-list';
+      list.className = 'icen-upload-list';
       zone.appendChild(list);
     }
     return list;
@@ -133,7 +134,7 @@ function setup(zone: HTMLElement): void {
 
     for (const file of currentFiles) {
       const li = document.createElement('li');
-      li.className = 'upload-list-item';
+      li.className = 'icen-upload-list-item';
 
       // 缩略图或图标
       const isImage = file.type.startsWith('image/');
@@ -151,13 +152,13 @@ function setup(zone: HTMLElement): void {
       }
       if (thumbUrl) {
         const img = document.createElement('img');
-        img.className = 'upload-list-item-thumb';
+        img.className = 'icen-upload-list-item-thumb';
         img.src = thumbUrl;
         img.alt = file.name;
         li.appendChild(img);
       } else {
         const icon = document.createElement('span');
-        icon.className = 'upload-list-item-icon';
+        icon.className = 'icen-upload-list-item-icon';
         const svg = parseSvg(fileIconSvg);
         if (svg) icon.appendChild(svg);
         li.appendChild(icon);
@@ -165,12 +166,12 @@ function setup(zone: HTMLElement): void {
 
       // 文件名 + 大小
       const info = document.createElement('div');
-      info.className = 'upload-list-item-info';
+      info.className = 'icen-upload-list-item-info';
       const name = document.createElement('span');
-      name.className = 'upload-list-item-name';
+      name.className = 'icen-upload-list-item-name';
       name.textContent = file.name;
       const size = document.createElement('span');
-      size.className = 'upload-list-item-size';
+      size.className = 'icen-upload-list-item-size';
       size.textContent = formatSize(file.size);
       info.appendChild(name);
       info.appendChild(size);
@@ -178,9 +179,9 @@ function setup(zone: HTMLElement): void {
 
       // 移除按钮
       const removeBtn = document.createElement('button');
-      removeBtn.className = 'upload-list-item-x';
+      removeBtn.className = 'icen-upload-list-item-x';
       removeBtn.type = 'button';
-      removeBtn.setAttribute('aria-label', `移除 ${file.name}`);
+      removeBtn.setAttribute('aria-label', t('upload.remove', { p0: file.name }));
       const xSvg = parseSvg(xIconSvg);
       if (xSvg) removeBtn.appendChild(xSvg);
       removeBtn.addEventListener('click', (ev) => {
@@ -219,8 +220,8 @@ function setup(zone: HTMLElement): void {
 
   /** 校验单个文件。 */
   function validate(file: File): string | null {
-    if (accept && !isAccepted(file, accept)) return '文件类型不支持';
-    if (maxSize > 0 && file.size > maxSize) return `文件超过 ${formatSize(maxSize)}`;
+    if (accept && !isAccepted(file, accept)) return t('upload.typeNotAllowed');
+    if (maxSize > 0 && file.size > maxSize) return t('upload.tooBig', { p0: formatSize(maxSize) });
     return null;
   }
 
@@ -248,7 +249,7 @@ function setup(zone: HTMLElement): void {
       if (maxFiles > 0) {
         const remaining = maxFiles - currentFiles.length;
         if (remaining <= 0) {
-          emitIcen(zone, 'icen:upload-error', { file: null, reason: `最多 ${maxFiles} 个文件` });
+          emitIcen(zone, 'icen:upload-error', { file: null, reason: t('upload.tooMany', { p0: maxFiles }) });
           return;
         }
         if (fresh.length > remaining) fresh.length = remaining;
@@ -269,15 +270,15 @@ function setup(zone: HTMLElement): void {
     if (ev.target === input) return;
     // 不在文件列表项内点击
     const tgt = ev.target;
-    if (tgt instanceof Element && tgt.closest('.upload-list')) return;
+    if (tgt instanceof Element && tgt.closest('.icen-upload-list')) return;
     openPicker();
   });
   zone.addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter' || ev.key === ' ') {
-      // 镜像 click 守卫：焦点在 .upload-list 内控件（如移除钮）时放行原生激活，
+      // 镜像 click 守卫：焦点在 .icen-upload-list 内控件（如移除钮）时放行原生激活，
       // 否则 Enter/Space 被吃掉反而打开文件选择器
       const tgt = ev.target;
-      if (tgt instanceof Element && tgt.closest('.upload-list')) return;
+      if (tgt instanceof Element && tgt.closest('.icen-upload-list')) return;
       ev.preventDefault();
       openPicker();
     }
@@ -316,12 +317,12 @@ function setup(zone: HTMLElement): void {
   });
 }
 
-/** 为 root 下每个 .upload 容器初始化（root 自身是 .upload 也算）。 */
+/** 为 root 下每个 .icen-upload 容器初始化（root 自身是 .icen-upload 也算）。 */
 export function initUpload(root?: ParentNode): void {
   if (typeof document === 'undefined') return;
   const scope: ParentNode = root ?? document;
   const zones: HTMLElement[] = [];
-  if (scope instanceof HTMLElement && scope.matches('.upload')) zones.push(scope);
-  zones.push(...Array.from(scope.querySelectorAll<HTMLElement>('.upload')));
+  if (scope instanceof HTMLElement && scope.matches('.icen-upload')) zones.push(scope);
+  zones.push(...Array.from(scope.querySelectorAll<HTMLElement>('.icen-upload')));
   for (const z of zones) setup(z);
 }

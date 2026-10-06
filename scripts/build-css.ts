@@ -1,5 +1,7 @@
 // 构建 CSS 产物：拷贝 src 的 css 到 dist，拼合 tokens.css / ui.css，生成 registry.json
 // 另生成：kit 一行入口 dist/components/<slug>.mjs（import css + re-export behavior）与 CLI（dist/cli.mjs）
+// v0.10 起全部产物包进 cascade layers（@layer icen.tokens/base/components）——消费方无层样式
+// 永远赢库样式（可覆盖性保证），库内部不再有优先级战争；层序由 tokens.css 顶部声明锚定。
 // 运行：bun scripts/build-css.ts（在 tsup 之后执行）
 import { readdir, readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
@@ -15,6 +17,10 @@ const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css'];
 // 可选 token 文件：单独拷贝、暴露 exports，但不进 tokens.css / ui.css 默认拼合
 const TOKEN_EXTRAS = ['retro-effects.css'];
 
+/* cascade layer 契约：层序声明必须出现在任何样式之前（tokens.css/ui.css 顶部） */
+const LAYER_ORDER = '@layer icen.tokens, icen.base, icen.components;';
+const inLayer = (layer: string, css: string) => `@layer ${layer} {\n${css}\n}\n`;
+
 async function readSrc(p: string) {
   return readFile(join(SRC, p), 'utf8');
 }
@@ -23,36 +29,41 @@ await mkdir(join(DIST, 'tokens'), { recursive: true });
 await mkdir(join(DIST, 'components'), { recursive: true });
 
 // 1. tokens：按固定顺序拼合 + 单独拷贝
-let tokensOut = '/* @icen.ai/ui — tokens（colors + style-profiles + typography） */\n';
+let tokensBody = '';
 for (const f of TOKEN_ORDER) {
   const css = await readSrc(join('tokens', f));
-  await writeFile(join(DIST, 'tokens', f), css);
-  tokensOut += `\n/* ── tokens/${f} ── */\n${css}\n`;
+  await writeFile(join(DIST, 'tokens', f), inLayer('icen.tokens', css));
+  tokensBody += `\n/* ── tokens/${f} ── */\n${css}\n`;
 }
+const tokensOut = `/* @icen.ai/ui — tokens（colors + style-profiles + typography） */\n${LAYER_ORDER}\n${inLayer('icen.tokens', tokensBody)}`;
 await writeFile(join(DIST, 'tokens.css'), tokensOut);
 
 // 1b. token extras：按需引入的独立 token 层（如 retro-effects.css）
 for (const f of TOKEN_EXTRAS) {
   const css = await readSrc(join('tokens', f));
-  await writeFile(join(DIST, 'tokens', f), css);
+  await writeFile(join(DIST, 'tokens', f), inLayer('icen.components', css));
   // 同时暴露到 dist 根，便于 `import '@icen.ai/ui/retro-effects.css'`
-  await writeFile(join(DIST, f), css);
+  await writeFile(join(DIST, f), inLayer('icen.components', css));
 }
 
 // 2. base
 const base = await readSrc('base.css');
-await writeFile(join(DIST, 'base.css'), base);
+await writeFile(join(DIST, 'base.css'), inLayer('icen.base', base));
 
 // 3. components：逐个拷贝 + 全部拼进 ui.css
 const compFiles = (await readdir(join(SRC, 'components'))).filter(f => f.endsWith('.css')).sort();
-let uiOut = tokensOut + '\n/* ── base.css ── */\n' + base + '\n';
+let compBody = '';
 const components: string[] = [];
 for (const f of compFiles) {
   const css = await readSrc(join('components', f));
-  await writeFile(join(DIST, 'components', f), css);
-  uiOut += `\n/* ── components/${f} ── */\n${css}\n`;
+  await writeFile(join(DIST, 'components', f), inLayer('icen.components', css));
+  compBody += `\n/* ── components/${f} ── */\n${css}\n`;
   components.push(f.replace(/\.css$/, ''));
 }
+const uiOut = `/* @icen.ai/ui — 全量（tokens + base + components） */\n${LAYER_ORDER}\n`
+  + inLayer('icen.tokens', tokensBody)
+  + inLayer('icen.base', `\n/* ── base.css ── */\n${base}\n`)
+  + inLayer('icen.components', compBody);
 await writeFile(join(DIST, 'ui.css'), uiOut);
 
 // 3b. kit 一行入口：dist/components/<slug>.mjs = import css + re-export behavior（有的话）
@@ -111,8 +122,14 @@ await writeFile(join(DIST, 'registry.json'), JSON.stringify({
   slugs: slugsRegistry,
 }, null, 2) + '\n');
 
-// 5. CLI（bunx @icen.ai/ui add <slug>）：纯 node 标准库，直接拷贝
+// 5. CLI（bunx @icen.ai/ui add <slug> / migrate <paths>）：cli + 迁移引擎，纯 node 标准库，直接拷贝
 await writeFile(join(DIST, 'cli.mjs'), await readFile(join(ROOT, 'scripts', 'cli.mjs'), 'utf8'));
+await writeFile(join(DIST, 'migrate-engine.mjs'), await readFile(join(ROOT, 'scripts', 'migrate-engine.mjs'), 'utf8'));
+
+// 6. migrate-map.json（CLI `icen-ui migrate` 用）：v0→v1 命名空间迁移映射是**冻结资产**
+//    （scripts/migrate-map.v1.json，自迁移前 git HEAD 生成一次后入库——不可随构建重建，
+//     否则迁移合入后 HEAD 已是新形态，映射会退化为 icen-→icen-icen- 垃圾）。
+await writeFile(join(DIST, 'migrate-map.json'), await readFile(join(ROOT, 'scripts', 'migrate-map.v1.json'), 'utf8'));
 
 console.log(
   `build-css: ${TOKEN_ORDER.length} tokens + ${TOKEN_EXTRAS.length} extras + base + ${components.length} components + ${SLUGS.length} kit 入口 → dist/`,

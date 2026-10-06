@@ -1,0 +1,86 @@
+# 贡献指南
+
+感谢考虑给 `@icen.ai/ui` 提贡献。本文件把「怎么搭环境」到「PR 怎么写才收」一次讲清；仓库内更完整的开发约定（规格唯一事实源、文档站约定等）在 [AGENTS.md](./AGENTS.md)，本文不重复抄录。
+
+## 开发环境
+
+- **Bun 1.3+**（仓库唯一的运行时与包管理器；CI 同款 `oven-sh/setup-bun`）。
+- Node 仅个别脚本工具用到，不需要单独装。
+
+```bash
+git clone https://github.com/icen-ai/ui.git && cd ui
+bun install
+bun run verify    # 四道门：tsc --noEmit + guard + test + build
+```
+
+四道门全绿 = 你的改动可以进 PR。`verify` 里任何一门红了都不要先改测试预期让它过——守卫红通常意味着你违反了某条纪律，先读守卫输出的违规描述。
+
+## 目录结构速览
+
+```
+src/tokens/*.css        # 设计 token（colors 6 预设 × 明暗 / style-profiles / typography / retro-effects）
+src/base.css            # 元素基线 + 滚动条 + z-index 标尺 + 6 个交互基元 + a11y 工具类
+src/components/*.css    # 66 个无框架组件 CSS（每文件头注释 = 完整 DOM 契约）
+src/behaviors/*.ts      # 71 个行为模块（SSR 守卫 + 幂等 init + textContent-only）
+src/react/ src/vue/     # 官方薄封装（只做生命周期接线与事件桥）
+scripts/slugs.mjs       # slug 登记单一事实源（kit 入口 / CLI / 文档站都消费它）
+scripts/guard/          # 8 项纪律守卫源码（违规文案里写了修法）
+tests/unit/ tests/dom/  # 契约测试 + 委托行为测试（bun test + happy-dom）
+tests/kb-conformance.test.ts  # 权限域诚实呈现一致性套件
+docs/spec/              # 规格唯一事实源（kb-family.md / ai-native.md）
+site/                   # 文档站（独立 Astro 应用，ui.icen.ai）
+```
+
+## 加组件的完整仪式
+
+漏任何一步，CI 的守卫会替我们拦下你——但按顺序走一遍比被 CI 打回来快。
+
+1. **写 CSS**：`src/components/<name>.css`，一个文件一个组件。**头注释必须列出完整 DOM 契约**（槽位、状态类、data 钩子）——守卫检查头注释存在与否。
+2. **写 behavior**（如有交互）：`src/behaviors/<name>.ts`。铁律：函数**幂等**（重复调用安全，WeakSet/MarkedElement 标记）、提供**销毁函数**（移除监听 + 复位标记）、`typeof document === 'undefined'` **SSR 守卫**、文本只写 `textContent`。
+3. **登记 slug**：`scripts/slugs.mjs` 的 `SLUGS` + 按需 `SLUG_BEHAVIOR` / `SLUG_INIT` / `SLUG_EXPORTS` / `EXTRA_CSS`。这是 kit 一行入口、CLI、`registry.json`、文档站的共同事实源，registry 守卫会核对登记名与真实导出是否一致。
+4. **登记事件**：behavior 派发的自定义事件统一 `icen:` 前缀，且 detail 契约必须登记进 `IcenEventMap`（`behaviors/events.ts`）。`onIcen` / `emitIcen` 是绑定与派发的唯一入口——**禁裸写 `new CustomEvent`**，事件守卫双向核对。
+5. **文档站条目**：`site/` 对应分组加一节（demo / 用法 / kit 三段齐全）。纯文档站改动可以不配测试，但改组件行为必须同步文档。
+6. **测试三件**：
+   - `tests/unit/<name>.test.ts`——纯契约/normalize/纯函数；
+   - `tests/dom/<name>.test.ts`——委托行为（mount/nextTick/fire 在 `tests/helpers/dom.ts`）；
+   - `bun run guard` 全绿——你新加的类名/data 钩子/事件自然纳入 8 项守卫的扫描面，过不了就是违反了纪律，不是守卫误伤。
+
+改 kb 族（尤其权限域）行为时，**先改 `tests/kb-conformance.test.ts` 预期**再改实现——安全纪律的测试是契约本身，不是实现细节的镜像。
+
+## 纪律速查表（guard 六项）
+
+| 守卫 | 一句话 | 违反后怎么修 |
+| --- | --- | --- |
+| CSS 纪律 | 组件只消费 `--icen-token-*` 变量，禁写死 hex / z-index / keyframes / 滚动条样式 / `!important`；头注释必须存在 | 把值换成对应 token；确属语义性例外（如 print 绝对色）时进 `scripts/guard/css-discipline.ts` 的 ALLOWLIST 并写清理由 |
+| registry 一致性 | `slugs.mjs` 登记的 CSS / behavior / init / export 必须真实存在 | 多数是登记名拼错或漏建文件——对齐 `slugs.mjs` 与 `src/` 实物 |
+| 事件纪律 | 事件名 `icen:` 前缀 + 登记 `IcenEventMap` + 只经 `emitIcen` 派发；登记了就必须有字面量使用 | 补登记 / 改走 `emitIcen` / 删掉死登记；确有前瞻登记需求时进守卫的 `FORWARD_EXEMPT` 并注明落地模块 |
+| 行为模块纪律 | 有 DOM 引用必有 SSR 守卫；禁 `.innerHTML =`（清空 `= ''` 除外）；禁 `dangerouslySetInnerHTML` | 加 `typeof document === 'undefined'` 守卫；改 `textContent`；图标槽位类契约进 ALLOWLIST 附理由 |
+| 命名空间 | 新类名一律 `icen-` 前缀（`.is-*` 状态类只能与根类复合出现）、data 钩子 `data-icen-*`、全局变量 `--icen-*` | 改名；与业界 59 类基准撞名说明前缀缺失，不是守卫误报 |
+| 权限域诚实呈现 | 禁「被裁 N 条 / 剔除 N 块」类泄露文案；`evaluateAcl` 保持纯函数（时间经 `now` 注入） | 换成与命中无关的恒定事实文案（行尾 `guard:allow-honesty 理由` 可豁免并需评审）；时间需求改走参数注入 |
+
+## 命名空间契约（v0.10，防冲突终态）
+
+- 类名：`.icen-*`（唯一例外 `.is-*` 状态类，永不单独出现在选择器里，永远 `.icen-tab.is-active` 复合）。
+- data 钩子：`data-icen-*`；全局 CSS 变量：`--icen-*` 十五族；组件作用域变量（`--btn-*` 等）不前缀（继承链随根类已隔离）。
+- 事件：`icen:` 前缀（deprecated 兼容事件如 `otp:complete` 是登记在案的例外，政策见 [docs/versioning.md](./docs/versioning.md)）。
+- 主题层是 data 属性不是类：`data-icen-preset` / `data-icen-theme` / `data-icen-style` / `data-icen-density`。
+- 全部产物 CSS 在 `@layer icen.tokens / icen.base / icen.components` 内——消费方无层样式永远赢库样式，不要写出层外的选择器。
+
+## PR 规范
+
+- **描述**：做了什么 + 为什么（链接相关 issue）。破坏性变更必须在描述里显式标注，并附迁移说明或 codemod 计划——0.x 纪律见 [docs/versioning.md](./docs/versioning.md)。
+- **验收输出贴样**：PR 里贴 `bun run verify` 的四道门输出结尾（`✓ 全部守卫通过` + 测试计数 + build 成功行）。差一门就标 Draft，不要挂 Ready 碰 CI。
+- **范围克制**：一个 PR 一件事。重命名 / 格式化 / 行为变更分开提。
+- **文档同步**：改组件 = CSS 头注释 + 文档站 + 测试三处同 PR；只改 site 的 typo 可以不带测试。
+- 仓库自带 `AGENTS.md`（AI 助手约定）与文档站 `llms-full.txt`——如果你预期审你 PR 的人有 AI 辅助工作流，这两份就是它们的输入。
+
+## AI 助手友好声明
+
+这个仓库是为「人和 AI 一起维护」设计的：
+
+- **[AGENTS.md](./AGENTS.md)**：消费方速查 + 仓库开发约定，随 npm 包发布（`node_modules/@icen.ai/ui/AGENTS.md`）；
+- **<https://ui.icen.ai/llms-full.txt>**：文档全文 + 类型面快照（构建期自动生成，单一事实源，不会漂移）；
+- 类型真相在 `dist/*.d.mts`（JSDoc 含行为约束）——比任何文档都新；
+- 纪律由守卫机器强制：AI 生成的代码过不了 `bun run guard`，和人类写的待遇相同。
+
+用 AI 辅助生成贡献内容没有问题，但 PR 的责任主体是你本人——请通读并理解你提交的每一行。

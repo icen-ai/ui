@@ -17,15 +17,15 @@ const chevron = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" str
 ---
 <div class:list={['code-collapse', { 'is-collapsible': collapsible }]}>
   <div class:list={['codeblock', { 'codeblock--flat': flat }]}>
-    <button class="copy-btn copy-btn--icon" type="button" data-copy={code} data-copy-icon aria-label="复制代码">
+    <button class="icen-copy-btn icen-copy-btn--icon" type="button" data-icen-copy={code} data-icen-copy-icon aria-label="复制代码">
       <Fragment set:html={copySvg + checkSvg} />
     </button>
-    <pre><code>{lines.map((l) => <span class="cl" set:html={l || ' '} />)}</code></pre>
+    <pre tabindex="0"><code>{lines.map((l) => <span class="cl" set:html={l || ' '} />)}</code></pre>
   </div>
   {collapsible && (
     <button class="code-toggle" type="button" aria-expanded="false">
-      <span class="code-toggle-label" data-label="more">展开代码 <Fragment set:html={chevron} /></span>
-      <span class="code-toggle-label" data-label="less">收起 <Fragment set:html={chevron} /></span>
+      <span class="code-toggle-label" data-icen-label="more">展开代码 <Fragment set:html={chevron} /></span>
+      <span class="code-toggle-label" data-icen-label="less">收起 <Fragment set:html={chevron} /></span>
     </button>
   )}
 </div>

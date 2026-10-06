@@ -2,45 +2,46 @@
  * @icen.ai/ui — Behavior: select（弹层选择器，与 components/select.css 配套，data 属性驱动）
  *
  * DOM 契约（基础单选）：
- *   <div class="select" data-select>
- *     <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
- *       <span class="select-value is-empty">占位</span>
- *       <svg class="select-chevron">…</svg>
+ *   <div class="icen-select" data-icen-select>
+ *     <button class="icen-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+ *       <span class="icen-select-value is-empty">占位</span>
+ *       <svg class="icen-select-chevron">…</svg>
  *     </button>
- *     <div class="select-panel" hidden>
- *       <button class="select-option" data-value="x">…</button>
+ *     <div class="icen-select-panel" hidden>
+ *       <button class="icen-select-option" data-icen-value="x">…</button>
  *     </div>
- *     <input type="hidden" data-select-value />   可选：选中后同步 value 并派发 change
+ *     <input type="hidden" data-icen-select-value />   可选：选中后同步 value 并派发 change
  *   </div>
  *
  * 增强模式：
- *   data-select-search          可搜索/过滤：面板顶部自动插入搜索输入框
- *   data-select-multiple        多选：点击切选（不关面板），trigger 渲染 chips（单项 × 悬停出现，
- *                               超 data-select-max-label 折叠 +n），hidden input 同步逗号分隔值
- *   data-select-max="3"         多选上限（配合 data-select-multiple），达到上限后其余选项 .is-disabled
- *   data-select-placeholder     自定义占位文案（也可直接写在 .select-value 内）
- *   选项内容支持任意 HTML（色卡/图标/多行等，直接写在 .select-option 内）
+ *   data-icen-select-search          可搜索/过滤：面板顶部自动插入搜索输入框
+ *   data-icen-select-multiple        多选：点击切选（不关面板），trigger 渲染 chips（单项 × 悬停出现，
+ *                               超 data-icen-select-max-label 折叠 +n），hidden input 同步逗号分隔值
+ *   data-icen-select-max="3"         多选上限（配合 data-icen-select-multiple），达到上限后其余选项 .is-disabled
+ *   data-icen-select-placeholder     自定义占位文案（也可直接写在 .icen-select-value 内）
+ *   选项内容支持任意 HTML（色卡/图标/多行等，直接写在 .icen-select-option 内）
  *   面板尺寸走全库统一 PanelSizing 契约（见 behaviors/popover.ts）：
- *   data-panel-width 固定宽（最高优先）/ data-panel-min / data-panel-max /
- *   data-panel-max-height（默认 240）
+ *   data-icen-panel-width 固定宽（最高优先）/ data-icen-panel-min / data-icen-panel-max /
+ *   data-icen-panel-max-height（默认 240）
  *
- * 分组：面板内可用 .select-group > .select-group-label + .select-option 结构，
+ * 分组：面板内可用 .icen-select-group > .icen-select-group-label + .icen-select-option 结构，
  *   搜索过滤时自动隐藏空分组。
  *
- * 交互：trigger 点击开关面板；选项点击 → .is-selected、.select-value 文本更新（单选）
+ * 交互：trigger 点击开关面板；选项点击 → .is-selected、.icen-select-value 文本更新（单选）
  *   或切选（多选）；Esc / 外点关闭；↑↓ 移动 .is-focused（跳过 disabled / hidden）；
  *   Enter/Space 选中；搜索框输入实时过滤选项。同一容器重复 init 幂等。
  *
  * 浮层：面板首次打开时 portal 到 document.body（跳出祖先 overflow 裁切与
  *   stacking context），由 behavior 按 trigger rect 用 computePopoverLayout 计算
  *   定位（prefer 下方、空间不足翻上），inline 写入 left/top/min-width/width/max-height
- *   并同步 data-side；window scroll（capture）/ resize 时跟随重定位（trigger 离场则
+ *   并同步 data-icen-side；window scroll（capture）/ resize 时跟随重定位（trigger 离场则
  *   关闭）；关闭仅隐藏，不移回原位。外点 / Esc 用 document 级单例委托（参照
  *   dropdown.ts），同时只开一个 panel。
  */
 
 import { computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 interface MarkedSelect extends Element {
   __icenSelectInit?: boolean;
@@ -120,10 +121,10 @@ function setup(container: Element): () => void {
     t.addEventListener(ev, listener, { signal: ac.signal });
   };
 
-  const triggerEl = container.querySelector<HTMLButtonElement>('.select-trigger');
-  const panelEl = container.querySelector<HTMLElement>('.select-panel');
-  const valueEl = container.querySelector<HTMLElement>('.select-value');
-  const hiddenInput = container.querySelector<HTMLInputElement>('input[data-select-value]');
+  const triggerEl = container.querySelector<HTMLButtonElement>('.icen-select-trigger');
+  const panelEl = container.querySelector<HTMLElement>('.icen-select-panel');
+  const valueEl = container.querySelector<HTMLElement>('.icen-select-value');
+  const hiddenInput = container.querySelector<HTMLInputElement>('icen-input[data-icen-select-value]');
   if (!triggerEl || !panelEl) return () => {};
   /* 幂等标记在校验通过后才置位：异步渲染中途 trigger/panel 尚未就位时不占坑，
      渲染完成后的容器还能被后续 init 接管（提前置位会让它永不再接线） */
@@ -132,10 +133,10 @@ function setup(container: Element): () => void {
   const trigger = triggerEl;
   const panel = panelEl;
 
-  const isMultiple = container.hasAttribute('data-select-multiple');
-  const isSearchable = container.hasAttribute('data-select-search');
-  const maxSelect = Number(container.getAttribute('data-select-max')) || 0;
-  /* 面板尺寸：统一 PanelSizing 契约（data-panel-width 固定 / -min / -max 夹取 / -max-height 上限）。
+  const isMultiple = container.hasAttribute('data-icen-select-multiple');
+  const isSearchable = container.hasAttribute('data-icen-select-search');
+  const maxSelect = Number(container.getAttribute('data-icen-select-max')) || 0;
+  /* 面板尺寸：统一 PanelSizing 契约（data-icen-panel-width 固定 / -min / -max 夹取 / -max-height 上限）。
      富选项（色卡/图标等多内容）场景用它们消除滚动条与折行。 */
   const panelSizing = resolvePanelSizing(container);
 
@@ -148,31 +149,31 @@ function setup(container: Element): () => void {
     return w;
   }
   const placeholder =
-    container.getAttribute('data-select-placeholder') ??
+    container.getAttribute('data-icen-select-placeholder') ??
     (valueEl?.classList.contains('is-empty') ? (valueEl?.textContent ?? '') : '');
 
-  // panel portal 到 body 后不再是 .select 的后代，把多选标记复制到 panel 上供 CSS 挂钩
-  if (isMultiple) panel.setAttribute('data-select-multiple', '');
+  // panel portal 到 body 后不再是 .icen-select 的后代，把多选标记复制到 panel 上供 CSS 挂钩
+  if (isMultiple) panel.setAttribute('data-icen-select-multiple', '');
 
   let searchInput: HTMLInputElement | null = null;
   let focusIdx = -1;
 
-  // ── 搜索框：自动插入（若面板内尚无 .select-search-input）──
-  if (isSearchable && !panel.querySelector('.select-search-input')) {
+  // ── 搜索框：自动插入（若面板内尚无 .icen-select-search-input）──
+  if (isSearchable && !panel.querySelector('.icen-select-search-input')) {
     const searchWrap = document.createElement('div');
-    searchWrap.className = 'select-search';
+    searchWrap.className = 'icen-select-search';
     const input = document.createElement('input');
-    input.className = 'select-search-input';
+    input.className = 'icen-select-search-input';
     input.type = 'search';
-    input.placeholder = '搜索…';
+    input.placeholder = t('select.searchPlaceholder');
     searchWrap.appendChild(input);
     panel.insertBefore(searchWrap, panel.firstChild);
   }
-  searchInput = panel.querySelector<HTMLInputElement>('.select-search-input');
+  searchInput = panel.querySelector<HTMLInputElement>('.icen-select-search-input');
 
   /** 获取所有选项按钮（不在分组容器内的也包含）。 */
   const allOptions = (): HTMLButtonElement[] =>
-    Array.from(panel.querySelectorAll<HTMLButtonElement>('.select-option'));
+    Array.from(panel.querySelectorAll<HTMLButtonElement>('.icen-select-option'));
 
   /** 获取当前可见（未被搜索过滤）的选项。 */
   const visibleOptions = (): HTMLButtonElement[] =>
@@ -204,12 +205,12 @@ function setup(container: Element): () => void {
     setFocus(n);
   }
 
-  // ── 空状态元素（若面板内尚无 .select-empty 则自动创建）──
-  let emptyEl = panel.querySelector<HTMLElement>('.select-empty');
+  // ── 空状态元素（若面板内尚无 .icen-select-empty 则自动创建）──
+  let emptyEl = panel.querySelector<HTMLElement>('.icen-select-empty');
   if (!emptyEl) {
     emptyEl = document.createElement('div');
-    emptyEl.className = 'select-empty';
-    emptyEl.textContent = '无匹配项';
+    emptyEl.className = 'icen-select-empty';
+    emptyEl.textContent = t('select.noMatch');
     emptyEl.hidden = true;
     panel.appendChild(emptyEl);
   }
@@ -222,15 +223,15 @@ function setup(container: Element): () => void {
   // ── 搜索过滤 ──
   function filterOptions(query: string): void {
     const q = query.trim().toLowerCase();
-    const groups = Array.from(panel.querySelectorAll<HTMLElement>('.select-group'));
+    const groups = Array.from(panel.querySelectorAll<HTMLElement>('.icen-select-group'));
     for (const opt of allOptions()) {
       const text = (opt.textContent ?? '').toLowerCase();
-      const kw = (opt.getAttribute('data-keywords') ?? '').toLowerCase();
+      const kw = (opt.getAttribute('data-icen-keywords') ?? '').toLowerCase();
       opt.hidden = q !== '' && !text.includes(q) && !kw.includes(q);
     }
     // 隐藏所有选项都被过滤掉的分组
     for (const g of groups) {
-      const hasVisible = Array.from(g.querySelectorAll<HTMLElement>('.select-option')).some((o) => !o.hidden);
+      const hasVisible = Array.from(g.querySelectorAll<HTMLElement>('.icen-select-option')).some((o) => !o.hidden);
       g.hidden = !hasVisible;
     }
     updateEmptyState();
@@ -272,7 +273,7 @@ function setup(container: Element): () => void {
     panel.style.minWidth = `${layout.width}px`;
     panel.style.width = `${layout.width}px`;
     panel.style.maxHeight = `${layout.maxHeight}px`;
-    panel.dataset.side = layout.side;
+    panel.dataset.icenSide = layout.side;
   }
 
   function openPanel(): void {
@@ -311,7 +312,7 @@ function setup(container: Element): () => void {
   function getSelectedValues(): string[] {
     return allOptions()
       .filter((o) => o.classList.contains('is-selected'))
-      .map((o) => o.getAttribute('data-value') ?? '');
+      .map((o) => o.getAttribute('data-icen-value') ?? '');
   }
 
   /** 多选：更新 trigger 显示（计数或前两项 + +N）。 */
@@ -319,41 +320,41 @@ function setup(container: Element): () => void {
     if (!valueEl) return;
     const selected = allOptions().filter((o) => o.classList.contains('is-selected'));
     /* chips 容器惰性创建（trigger 内、valueEl 之后）；有选中时 valueEl 隐藏、chips 接管 */
-    let chipsEl = trigger.querySelector<HTMLElement>('.select-chips');
+    let chipsEl = trigger.querySelector<HTMLElement>('.icen-select-chips');
     if (selected.length === 0) {
       valueEl.textContent = placeholder;
       valueEl.classList.add('is-empty');
       valueEl.hidden = false;
       if (chipsEl) chipsEl.hidden = true;
-      container.removeAttribute('data-value');
+      container.removeAttribute('data-icen-value');
     } else {
       valueEl.classList.remove('is-empty');
       valueEl.hidden = true;
       if (!chipsEl) {
         chipsEl = document.createElement('span');
-        chipsEl.className = 'select-chips';
+        chipsEl.className = 'icen-select-chips';
         valueEl.insertAdjacentElement('afterend', chipsEl);
       }
       chipsEl.hidden = false;
       chipsEl.textContent = '';
-      /* 超过 data-select-max-label（默认 3）折叠为 +n 汇总 chip */
-      const maxLabel = Number(container.getAttribute('data-select-max-label')) || 3;
+      /* 超过 data-icen-select-max-label（默认 3）折叠为 +n 汇总 chip */
+      const maxLabel = Number(container.getAttribute('data-icen-select-max-label')) || 3;
       const shown = selected.slice(0, maxLabel);
       const rest = selected.length - shown.length;
       for (const o of shown) {
         const label = o.textContent ?? '';
         const chip = document.createElement('span');
-        chip.className = 'select-chip';
+        chip.className = 'icen-select-chip';
         const lb = document.createElement('span');
         lb.textContent = label;
         chip.appendChild(lb);
         /* 单项 ×（hover chip 才出现）：span 而非 button——trigger 是 button，不能嵌套按钮；
            指针通道；键盘/读屏的等价路径 = 面板反选 */
         const x = document.createElement('span');
-        x.className = 'select-chip-x';
+        x.className = 'icen-select-chip-x';
         x.setAttribute('role', 'button');
         x.setAttribute('tabindex', '-1');
-        x.setAttribute('aria-label', `移除 ${label}`);
+        x.setAttribute('aria-label', t('select.remove', { p0: label }));
         x.textContent = '×';
         on(x, 'pointerdown', (ev: PointerEvent) => ev.stopPropagation());
         on(x, 'click', (ev: MouseEvent) => {
@@ -368,11 +369,11 @@ function setup(container: Element): () => void {
       }
       if (rest > 0) {
         const more = document.createElement('span');
-        more.className = 'select-chip select-chip--more';
+        more.className = 'icen-select-chip icen-select-chip--more';
         more.textContent = `+${rest}`;
         chipsEl.appendChild(more);
       }
-      container.setAttribute('data-value', getSelectedValues().join(','));
+      container.setAttribute('data-icen-value', getSelectedValues().join(','));
     }
     /* 清除全部钮：有选中才显示 */
     if (clearBtn) clearBtn.hidden = selected.length === 0;
@@ -406,7 +407,7 @@ function setup(container: Element): () => void {
     if (isMultiple) {
       opt.classList.toggle('is-selected');
       container.setAttribute(
-        'data-value',
+        'data-icen-value',
         getSelectedValues().join(','),
       );
       updateMultiTrigger();
@@ -420,8 +421,8 @@ function setup(container: Element): () => void {
         valueEl.textContent = opt.textContent ?? '';
         valueEl.classList.remove('is-empty');
       }
-      const v = opt.getAttribute('data-value') ?? '';
-      container.setAttribute('data-value', v);
+      const v = opt.getAttribute('data-icen-value') ?? '';
+      container.setAttribute('data-icen-value', v);
       syncHiddenInput();
       closePanel();
       trigger.focus();
@@ -429,7 +430,7 @@ function setup(container: Element): () => void {
   }
 
   // ── 清除全部按钮（多选可选；与 trigger 同级叠放右侧，不能嵌套进 button）──
-  const clearBtn = container.querySelector<HTMLElement>('.select-clear');
+  const clearBtn = container.querySelector<HTMLElement>('.icen-select-clear');
   if (clearBtn && isMultiple) {
     on(clearBtn, 'click', (ev: MouseEvent) => {
       ev.stopPropagation();
@@ -467,7 +468,7 @@ function setup(container: Element): () => void {
   on(panel, 'click', (ev: MouseEvent) => {
     const t = ev.target;
     if (!(t instanceof Element)) return;
-    const opt = t.closest('.select-option');
+    const opt = t.closest('.icen-select-option');
     if (opt instanceof HTMLButtonElement && panel.contains(opt)) choose(opt);
   });
 
@@ -475,7 +476,7 @@ function setup(container: Element): () => void {
   on(panel, 'mouseover', (ev: MouseEvent) => {
     const t = ev.target;
     if (!(t instanceof Element)) return;
-    const opt = t.closest('.select-option');
+    const opt = t.closest('.icen-select-option');
     if (!opt || (opt as HTMLElement).hidden) return;
     const idx = visibleOptions().indexOf(opt as HTMLButtonElement);
     if (idx >= 0 && !opt.classList.contains('is-disabled')) setFocus(idx);
@@ -488,6 +489,9 @@ function setup(container: Element): () => void {
     /* 打开状态下销毁：先收浮层（隐藏面板 + 摘 window scroll/resize 监听 + 清单例），
        否则面板残留 body、跟随重定位监听泄漏 */
     if (openSelect?.panel === panel) closePanel();
+    /* 面板曾 portal 到 body 的，销毁时归位容器——否则 destroy 后容器查不到 panel，
+       re-init 在 setup 早退处静默失效（Astro 换页等重 init 场景） */
+    if (panel.parentElement === document.body) container.appendChild(panel);
     ac.abort();
     el.__icenSelectInit = false;
   };
@@ -496,7 +500,7 @@ function setup(container: Element): () => void {
 /** 活跃容器销毁器（最后一个销毁时连带摘除全局委托）。 */
 const activeSetups = new Set<() => void>();
 
-/** 为 root 下每个 [data-select] 容器初始化（root 自身是 [data-select] 也算）。
+/** 为 root 下每个 [data-icen-select] 容器初始化（root 自身是 [data-icen-select] 也算）。
  *  返回销毁函数：摘除本次初始化容器的全部监听并复位幂等标记（可重新 init）；
  *  最后一个容器销毁时同时摘除 document 级单例委托。 */
 export function initSelect(root?: ParentNode): () => void {
@@ -505,8 +509,8 @@ export function initSelect(root?: ParentNode): () => void {
   // 外点 / Esc 的 document 级单例委托，全库只挂一次
   bindGlobalListeners();
   const containers: Element[] = [];
-  if (scope instanceof Element && scope.matches('[data-select]')) containers.push(scope);
-  containers.push(...Array.from(scope.querySelectorAll('[data-select]')));
+  if (scope instanceof Element && scope.matches('[data-icen-select]')) containers.push(scope);
+  containers.push(...Array.from(scope.querySelectorAll('[data-icen-select]')));
   const disposers: Array<() => void> = [];
   for (const c of containers) {
     const dispose = setup(c);

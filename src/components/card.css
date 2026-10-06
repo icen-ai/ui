@@ -2,220 +2,228 @@
  * @icen.ai/ui — Component: card（组合卡片容器）
  *
  * 完整契约：
- *   <div class="card [.card--elevated|.card--outlined|.card--glass|.card--flat|.card--interactive] [.is-selected]">
- *     <div class="card-media">                           ← 可选：封面图区
+ *   <div class="icen-card [.icen-card--elevated|.icen-card--outlined|.icen-card--glass|.icen-card--flat|.icen-card--interactive] [.is-selected]">
+ *     <div class="icen-card-media">                           ← 可选：封面图区
  *       <img src="…" />
- *       <span class="card-tag">置顶</span>                ← 可选：图上徽标
+ *       <span class="icen-card-tag">置顶</span>                ← 可选：图上徽标
  *     </div>
- *     <div class="card-head">
+ *     <div class="icen-card-head">
  *       <div>
- *         <h3 class="card-title">标题</h3>
- *         <p class="card-desc">副标题（可选）</p>
+ *         <h3 class="icen-card-title">标题</h3>
+ *         <p class="icen-card-desc">副标题（可选）</p>
  *       </div>
- *       <div class="card-action"><button>…</button></div>
+ *       <div class="icen-card-action"><button>…</button></div>
  *     </div>
- *     <div class="card-body">…</div>
- *     <div class="card-foot">
- *       <div class="card-meta">…</div>
- *       <div class="card-action">…</div>
+ *     <div class="icen-card-body">…</div>
+ *     <div class="icen-card-foot">
+ *       <div class="icen-card-meta">…</div>
+ *       <div class="icen-card-action">…</div>
  *     </div>
  *   </div>
  *
  * 规格源自 opengal src/presentation/ui/data/card.tsx。
  */
 
-.card {
+.icen-card {
   position: relative;
-  background: var(--token-card);
-  border: 1px solid var(--token-outline-soft);
-  box-shadow: var(--token-shadow-inset);
-  border-radius: var(--radius-lg);
+  background: var(--icen-token-card);
+  border: 1px solid var(--icen-token-outline-soft);
+  box-shadow: var(--icen-token-shadow-inset);
+  border-radius: var(--icen-radius-lg);
   overflow: hidden;
 }
 
 /* ── 变体 ── */
-.card--elevated {
-  box-shadow: var(--token-shadow-card);
+.icen-card--elevated {
+  box-shadow: var(--icen-token-shadow-card);
   border-color: transparent;
 }
-.card--outlined {
-  border-color: var(--token-outline);
+.icen-card--outlined {
+  border-color: var(--icen-token-outline);
   box-shadow: none;
 }
-.card--flat {
+.icen-card--flat {
   box-shadow: none;
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
 }
-.card--glass {
-  background: var(--token-surface-glass);
+.icen-card--glass {
+  background: var(--icen-token-surface-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: none;
 }
 
 /* ── 修饰 ── */
-.card--interactive {
+.icen-card--interactive {
   cursor: pointer;
   transition:
     border-color var(--icen-tx-slow),
     box-shadow var(--icen-tx-slow),
     transform var(--icen-tx-slow);
 }
-.card--interactive:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--token-accent) 26%, var(--token-outline-soft));
-  box-shadow: var(--token-shadow-card);
+/* hover 抬升仅可悬停设备生效（触屏关闭，AGENTS 动效守卫）；focus-within 全设备保留 */
+@media (hover: hover) and (pointer: fine) {
+  .icen-card--interactive:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--icen-token-accent) 26%, var(--icen-token-outline-soft));
+    box-shadow: var(--icen-token-shadow-card);
+  }
 }
-.card--interactive:focus-within {
-  border-color: var(--token-accent);
+.icen-card--interactive:focus-within {
+  border-color: var(--icen-token-accent);
 }
-.card.is-selected {
+.icen-card--interactive:focus-within {
+  border-color: var(--icen-token-accent);
+}
+.icen-card.is-selected {
   box-shadow: var(--icen-ring);
 }
 
 /* ── 媒体封面 ── */
-.card-media {
+.icen-card-media {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
 }
 /* 封面比例变体 */
-.card-media--square { aspect-ratio: 1 / 1; }
-.card-media--tall { aspect-ratio: 3 / 4; }
-.card-media--wide { aspect-ratio: 21 / 9; }
-.card-media--auto { aspect-ratio: auto; }
-/* 封面 hover 放大（配合 .card--interactive） */
-.card--interactive:hover .card-media > img,
-.card--interactive:hover .card-media > video {
-  transform: scale(1.04);
+.icen-card-media--square { aspect-ratio: 1 / 1; }
+.icen-card-media--tall { aspect-ratio: 3 / 4; }
+.icen-card-media--wide { aspect-ratio: 21 / 9; }
+.icen-card-media--auto { aspect-ratio: auto; }
+/* 封面 hover 放大（配合 .icen-card--interactive，仅可悬停设备） */
+@media (hover: hover) and (pointer: fine) {
+  .icen-card--interactive:hover .icen-card-media > img,
+  .icen-card--interactive:hover .icen-card-media > video {
+    transform: scale(1.04);
+  }
 }
-.card-media > img,
-.card-media > video {
-  width: 100%;
+.icen-card-media > img,
+.icen-card-media > video {
+  inline-size: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--icen-tx-slow) var(--ease-out);
+  transition: transform var(--icen-tx-slow) var(--icen-ease-out);
 }
-.card-tag {
+.icen-card-tag {
   position: absolute;
-  top: var(--density-space-xs);
-  left: var(--density-space-xs);
-  padding: 2px var(--density-space-xs);
-  font-size: var(--density-font-size-xs);
+  top: var(--icen-density-space-xs);
+  inset-inline-start: var(--icen-density-space-xs);
+  padding: 2px var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 600;
-  color: var(--token-on-accent);
-  background: color-mix(in srgb, var(--token-text) 70%, transparent);
-  border-radius: var(--radius-xs);
+  color: var(--icen-token-on-accent);
+  background: color-mix(in srgb, var(--icen-token-text) 70%, transparent);
+  border-radius: var(--icen-radius-xs);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
 /* ── 子结构 ── */
-.card-head {
+.icen-card-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-md);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-md);
 }
-.card-title {
-  font-size: var(--density-font-size-lg);
+.icen-card-title {
+  font-size: var(--icen-density-font-size-lg);
   font-weight: 600;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   line-height: 1.3;
   margin: 0;
-  font-family: var(--font-heading);
+  font-family: var(--icen-font-heading);
 }
-.card-desc {
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+.icen-card-desc {
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
   margin: 2px 0 0;
   line-height: 1.4;
 }
-.card-body {
-  padding: 0 var(--density-space-md) var(--density-space-md);
-  font-size: var(--density-font-size-md);
-  color: var(--token-text-muted);
+.icen-card-body {
+  padding: 0 var(--icen-density-space-md) var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-md);
+  color: var(--icen-token-text-muted);
   line-height: 1.6;
 }
-.card-body > p:first-child { margin-top: 0; }
-.card-body > p:last-child { margin-bottom: 0; }
+.icen-card-body > p:first-child { margin-top: 0; }
+.icen-card-body > p:last-child { margin-bottom: 0; }
 
-.card-foot {
+.icen-card-foot {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-sm) var(--density-space-md);
-  border-top: 1px solid var(--token-outline-soft);
-  background: color-mix(in srgb, var(--token-bg-soft) 50%, transparent);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  border-top: 1px solid var(--icen-token-outline-soft);
+  background: color-mix(in srgb, var(--icen-token-bg-soft) 50%, transparent);
 }
-.card-meta {
+.icen-card-meta {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  gap: var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
 }
-.card-action {
-  margin-left: auto;
+.icen-card-action {
+  margin-inline-start: auto;
   flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card--interactive { transition: none; }
+  .icen-card--interactive { transition: none; }
 }
 
 /* ── 卡片网格（card-group）：自适应多列 ── */
-.card-group {
+.icen-card-group {
   display: grid;
-  gap: var(--density-space-md);
+  gap: var(--icen-density-space-md);
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
-.card-group--2 { grid-template-columns: repeat(2, 1fr); }
-.card-group--3 { grid-template-columns: repeat(3, 1fr); }
-.card-group--4 { grid-template-columns: repeat(4, 1fr); }
+.icen-card-group--2 { grid-template-columns: repeat(2, 1fr); }
+.icen-card-group--3 { grid-template-columns: repeat(3, 1fr); }
+.icen-card-group--4 { grid-template-columns: repeat(4, 1fr); }
 
 /* ── 卡片列表（横向铺开，常用于搜索结果/消息流） ── */
-.card-list {
+.icen-card-list {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
 }
-.card-list > .card {
+.icen-card-list > .icen-card {
   display: flex;
   flex-direction: row;
   align-items: stretch;
 }
-.card-list > .card .card-media {
-  width: 120px;
+.icen-card-list > .icen-card .icen-card-media {
+  inline-size: 120px;
   flex-shrink: 0;
   aspect-ratio: auto;
 }
-.card-list > .card .card-head,
-.card-list > .card .card-body,
-.card-list > .card .card-foot {
+.icen-card-list > .icen-card .icen-card-head,
+.icen-card-list > .icen-card .icen-card-body,
+.icen-card-list > .icen-card .icen-card-foot {
   flex: 1;
 }
 
 /* ── 卡片头副标题 ── */
-.card-subtitle {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-card-subtitle {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   margin: 1px 0 0;
   line-height: 1.4;
 }
 
 /* ── 卡片状态色边 ── */
-.card--success { border-color: color-mix(in srgb, var(--token-success) 35%, transparent); }
-.card--warning { border-color: color-mix(in srgb, var(--token-warning) 35%, transparent); }
-.card--error   { border-color: color-mix(in srgb, var(--token-error) 35%, transparent); }
+.icen-card--success { border-color: color-mix(in srgb, var(--icen-token-success) 35%, transparent); }
+.icen-card--warning { border-color: color-mix(in srgb, var(--icen-token-warning) 35%, transparent); }
+.icen-card--error   { border-color: color-mix(in srgb, var(--icen-token-error) 35%, transparent); }
 
-/* ── 卡片右上角徽标位 ── */
-.card-badge {
+/* ── 卡片右上角徽标位（物理角契约：与 .icen-badge 角标一致，RTL 不镜像） ── */
+.icen-card-badge {
   position: absolute;
-  top: var(--density-space-sm);
-  right: var(--density-space-sm);
+  top: var(--icen-density-space-sm);
+  right: var(--icen-density-space-sm); /* guard:allow-physical 徽标位钉在卡片物理右上角（同 .icen-badge 角标契约） */
   z-index: 1;
 }

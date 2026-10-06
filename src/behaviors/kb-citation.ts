@@ -3,21 +3,21 @@
  *
  * DOM 契约（docs/spec/kb-family.md §5.1）：
  *   正文角标（renderCitationText / renderCitationMark 产物）：
- *   <button class="kb-citation" type="button" data-cite="3">3</button>
+ *   <button class="icen-kb-citation" type="button" data-icen-cite="3">3</button>
  *
  *   无效编号降级（sources 已提供且 n 查无来源 ——「不信任模型生成编号」纪律）：
- *   <sup class="kb-citation is-dead" data-cite="9">9</sup>   ← 灰显、不可点
+ *   <sup class="icen-kb-citation is-dead" data-icen-cite="9">9</sup>   ← 灰显、不可点
  *
  *   hover ≥300ms 引用卡（initKbCitation 委托产生，经 popover portal 挂 body）：
- *   <div class="kb-citation-card" role="tooltip">
- *     <div class="kb-citation-card-head"><span class="kb-citation-card-icon">svg</span>
- *       <span class="kb-citation-card-title">标题</span></div>
- *     <div class="kb-citation-card-domain">docs.example.com</div>
- *     <div class="kb-quote kb-citation-card-quote [kb-citation-card-masked]">citedText ≤150 字</div>
- *     <div class="kb-citation-card-badges">
- *       <span class="kb-badge kb-badge--official">官方</span>
- *       <span class="kb-badge kb-badge--stale"><i class="kb-dot is-warn"></i>3 天前</span>
- *       <span class="kb-badge kb-badge--restricted">🔒 受限</span>   ← 受限时 quote 打码
+ *   <div class="icen-kb-citation-card" role="tooltip">
+ *     <div class="icen-kb-citation-card-head"><span class="icen-kb-citation-card-icon">svg</span>
+ *       <span class="icen-kb-citation-card-title">标题</span></div>
+ *     <div class="icen-kb-citation-card-domain">docs.example.com</div>
+ *     <div class="icen-kb-quote icen-kb-citation-card-quote [icen-kb-citation-card-masked]">citedText ≤150 字</div>
+ *     <div class="icen-kb-citation-card-badges">
+ *       <span class="icen-kb-badge icen-kb-badge--official">官方</span>
+ *       <span class="icen-kb-badge icen-kb-badge--stale"><i class="icen-kb-dot is-warn"></i>3 天前</span>
+ *       <span class="icen-kb-badge icen-kb-badge--restricted">🔒 受限</span>   ← 受限时 quote 打码
  *     </div>
  *   </div>
  *
@@ -29,7 +29,7 @@
  *   - initKbCitation(root?, opts?)：root 级委托（幂等 WeakSet 标记 + 返回销毁函数）：
  *     click → icen:kb-citation-open { citation }（查无数据时派合成占位 citation，不吞交互）；
  *     hover ≥ opts.hoverDelay（默认 300ms）且 opts.getCard / 来源注册表能给出数据 →
- *     openPopover 浮 .kb-citation-card（PanelSizing 契约；离开角标即收卡；点击角标也先收卡）
+ *     openPopover 浮 .icen-kb-citation-card（PanelSizing 契约；离开角标即收卡；点击角标也先收卡）
  *   - setKbCitationSources / getKbCitationSources：模块级来源注册表（答案区与来源列表共享数据源）
  *
  * 引用白名单纪律（spec §9.0-6，评审必查）：citation 只能生成自过滤后检索集合——
@@ -53,6 +53,7 @@ import {
 } from './kb-core';
 import { emitIcen } from './events';
 import { closePopover, openPopover } from './popover';
+import { t } from './i18n';
 
 /* ── 共享常量与图标（证据域 ground 的公共小件，供 kb-sources / kb-passage 复用） ── */
 
@@ -110,7 +111,7 @@ function lookupCitation(pool: KbCitation[], n: number): KbCitation | undefined {
 
 /** 查无来源时的占位 citation（保住交互链路：点击仍可派事件，宿主自行取数补全） */
 function syntheticCitation(n: number): KbCitation {
-  return normalizeCitation({ id: `cite-${n}`, index: n, title: `来源 ${n}` });
+  return normalizeCitation({ id: `cite-${n}`, index: n, title: t('kbCitation.sourceN', { p0: n }) });
 }
 
 function clip(text: string, max: number): string {
@@ -119,26 +120,26 @@ function clip(text: string, max: number): string {
 
 /* ── 角标构件 ── */
 
-/** 造一枚行内引用角标 `<button class="kb-citation" data-cite="{n}">`（有效性由渲染端对照来源数降级）；SSR 无元素可造，返回 null */
+/** 造一枚行内引用角标 `<button class="icen-kb-citation" data-icen-cite="{n}">`（有效性由渲染端对照来源数降级）；SSR 无元素可造，返回 null */
 export function renderCitationMark(n: number): HTMLButtonElement | null {
   if (typeof document === 'undefined') return null;
-  const btn = h('button', 'kb-citation', String(n));
+  const btn = h('button', 'icen-kb-citation', String(n));
   btn.type = 'button';
-  btn.dataset.cite = String(n);
-  btn.setAttribute('aria-label', `来源 ${n}`);
+  btn.dataset.icenCite = String(n);
+  btn.setAttribute('aria-label', t('kbCitation.sourceN', { p0: n }));
   return btn;
 }
 
 /** 内部：带有效性判定的角标（dead 时降级为不可点的 sup，保持与活角标同款视觉重量） */
 function citationMark(n: number, pool: KbCitation[] | undefined): HTMLElement {
   if (pool && !lookupCitation(pool, n)) {
-    const sup = h('sup', 'kb-citation is-dead', String(n));
-    sup.dataset.cite = String(n);
+    const sup = h('sup', 'icen-kb-citation is-dead', String(n));
+    sup.dataset.icenCite = String(n);
     sup.setAttribute('aria-hidden', 'true'); /* 无效编号是装饰残留，不进可读流 */
     return sup;
   }
   /* SSR 下 renderCitationMark 返回 null：dead 分支的 sup 同样依赖 document，此处一并收敛为 sup 文本兜底 */
-  return renderCitationMark(n) ?? h('sup', 'kb-citation is-dead', String(n));
+  return renderCitationMark(n) ?? h('sup', 'icen-kb-citation is-dead', String(n));
 }
 
 /**
@@ -160,18 +161,18 @@ export function renderCitationText(el: HTMLElement, text: string, sources?: KbCi
 /* ── hover 引用卡 ── */
 
 function buildBadgeRow(citation: KbCitation, now: Date): HTMLElement {
-  const row = h('div', 'kb-citation-card-badges');
-  if (citation.official) row.appendChild(h('span', 'kb-badge kb-badge--official', '官方'));
+  const row = h('div', 'icen-kb-citation-card-badges');
+  if (citation.official) row.appendChild(h('span', 'icen-kb-badge icen-kb-badge--official', t('common.official')));
   if (citation.date) {
-    const b = h('span', 'kb-badge', relativeTime(citation.date, now));
+    const b = h('span', 'icen-kb-badge', relativeTime(citation.date, now));
     if (isKbCitationStale(citation, now)) {
-      b.classList.add('kb-badge--stale');
-      b.prepend(h('i', 'kb-dot is-warn'));
+      b.classList.add('icen-kb-badge--stale');
+      b.prepend(h('i', 'icen-kb-dot is-warn'));
     }
     row.appendChild(b);
   }
   if (citation.permission !== 'readable') {
-    const lock = h('span', 'kb-badge kb-badge--restricted', '受限');
+    const lock = h('span', 'icen-kb-badge icen-kb-badge--restricted', t('common.restricted'));
     const svg = svgIcon(KB_ICON_LOCK);
     if (svg) lock.prepend(svg);
     row.appendChild(lock);
@@ -182,30 +183,30 @@ function buildBadgeRow(citation: KbCitation, now: Date): HTMLElement {
 /** 组装 hover 引用卡（favicon 位用来源类型图标；受限时 citedText 打码；
  * revoked 来源（权限收回后的历史引用，spec §9.0-6）附中性「来源已不可用」chip，citedText 不渲染） */
 function buildCitationCard(citation: KbCitation, now: Date): HTMLElement {
-  const card = h('div', 'kb-citation-card');
+  const card = h('div', 'icen-kb-citation-card');
   card.setAttribute('role', 'tooltip');
 
   /* revoked 非 KbCitation 契约字段：局部窄化读取，不扩 kb-core 类型（宿主数据侧自行标注） */
   const revoked = (citation as { revoked?: boolean }).revoked === true;
 
-  const head = h('div', 'kb-citation-card-head');
-  const icon = h('span', 'kb-citation-card-icon');
+  const head = h('div', 'icen-kb-citation-card-head');
+  const icon = h('span', 'icen-kb-citation-card-icon');
   const svg = svgIcon(getKbSourceType(citation.kind).icon);
   if (svg) icon.appendChild(svg);
   head.appendChild(icon);
-  head.appendChild(h('span', 'kb-citation-card-title', citation.title));
+  head.appendChild(h('span', 'icen-kb-citation-card-title', citation.title));
   /* 中性 chip（faint，禁红）：「不知道」与「不能说」不可区分的呈现态——不删不留裸链 */
-  if (revoked) head.appendChild(h('span', 'kb-chip is-revoked', '来源已不可用'));
+  if (revoked) head.appendChild(h('span', 'icen-kb-chip is-revoked', t('kbCitation.unavailable')));
   card.appendChild(head);
 
   const domain = kbDomainOf(citation.url) || getKbSourceType(citation.kind).label;
-  card.appendChild(h('div', 'kb-citation-card-domain', domain));
+  card.appendChild(h('div', 'icen-kb-citation-card-domain', domain));
 
   if (!revoked) {
     const quoteText = clip(citation.citedText ?? citation.snippet ?? '', CITE_TEXT_MAX);
     if (quoteText) {
-      const quote = h('div', 'kb-quote kb-citation-card-quote', quoteText);
-      if (citation.permission !== 'readable') quote.classList.add('kb-citation-card-masked');
+      const quote = h('div', 'icen-kb-quote icen-kb-citation-card-quote', quoteText);
+      if (citation.permission !== 'readable') quote.classList.add('icen-kb-citation-card-masked');
       card.appendChild(quote);
     }
   }
@@ -278,7 +279,7 @@ export function initKbCitation(root?: ParentNode, opts?: KbCitationInitOptions):
   };
 
   const citeNum = (mark: Element): number => {
-    const n = Number(mark.getAttribute('data-cite'));
+    const n = Number(mark.getAttribute('data-icen-cite'));
     return Number.isFinite(n) && n >= 1 ? n : 0;
   };
 
@@ -303,7 +304,7 @@ export function initKbCitation(root?: ParentNode, opts?: KbCitationInitOptions):
 
   const onClick = (e: Event): void => {
     const t = e.target instanceof Element ? e.target : null;
-    const mark = t?.closest<HTMLElement>('.kb-citation');
+    const mark = t?.closest<HTMLElement>('.icen-kb-citation');
     if (!mark || mark.classList.contains('is-dead')) return;
     const n = citeNum(mark);
     if (n < 1) return;
@@ -315,7 +316,7 @@ export function initKbCitation(root?: ParentNode, opts?: KbCitationInitOptions):
 
   const onPointerOver = (e: Event): void => {
     const t = e.target instanceof Element ? e.target : null;
-    const mark = t?.closest<HTMLElement>('.kb-citation:not(.is-dead)');
+    const mark = t?.closest<HTMLElement>('.icen-kb-citation:not(.is-dead)');
     if (!mark || hover.mark === mark) return;
     closeHoverCard();
     hover.mark = mark;

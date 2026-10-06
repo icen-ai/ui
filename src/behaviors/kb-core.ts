@@ -1,3 +1,4 @@
+import { t as icenT } from './i18n';
 /*
  * @icen.ai/ui — Behavior: kb-core（知识库族共享核心：类型契约 + 纯函数 + 注册表，无 UI 无副作用）
  *
@@ -38,16 +39,16 @@ export interface KbSourceTypeDef {
 const ic = (label: string, d: string): KbSourceTypeDef => ({ label, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>` });
 
 const BUILTIN_SOURCE_TYPES: Record<string, KbSourceTypeDef> = {
-  doc: ic('文档', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'),
-  web: ic('网页', '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>'),
-  wiki: ic('知识库', '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
-  sheet: ic('表格', '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>'),
-  db: ic('数据库', '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>'),
-  ticket: ic('工单', '<path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v14"/>'),
-  code: ic('代码', '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>'),
-  api: ic('接口', '<path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4z"/>'),
-  image: ic('图片', '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.6-4.6a2 2 0 0 0-2.8 0L3 21"/>'),
-  mail: ic('邮件', '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/>'),
+  doc: ic(icenT('kbCore.typeDocument'), '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'),
+  web: ic(icenT('kbCore.typeWebpage'), '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>'),
+  wiki: ic(icenT('kbCore.typeKb'), '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
+  sheet: ic(icenT('kbCore.typeTable'), '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>'),
+  db: ic(icenT('kbCore.typeDatabase'), '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>'),
+  ticket: ic(icenT('kbCore.typeTicket'), '<path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/><path d="M13 5v14"/>'),
+  code: ic(icenT('kbCore.typeCode'), '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>'),
+  api: ic(icenT('kbCore.typeApi'), '<path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4z"/>'),
+  image: ic(icenT('kbCore.typeImage'), '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.6-4.6a2 2 0 0 0-2.8 0L3 21"/>'),
+  mail: ic(icenT('kbCore.typeEmail'), '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/>'),
 };
 
 const sourceTypeRegistry = new Map<string, KbSourceTypeDef>(Object.entries(BUILTIN_SOURCE_TYPES));
@@ -111,7 +112,7 @@ export function normalizeCitation(raw: KbCitation | Record<string, unknown>): Kb
   return {
     id: String(r.id ?? ''),
     index: typeof r.index === 'number' ? r.index : undefined,
-    title: String(r.title ?? '未命名来源'),
+    title: String(r.title ?? icenT('kbCore.unnamedSource')),
     url: typeof r.url === 'string' && r.url ? r.url : undefined,
     kind: typeof r.kind === 'string' ? r.kind : undefined,
     citedText: typeof r.citedText === 'string' ? r.citedText : undefined,
@@ -224,12 +225,12 @@ export type KbRunStatus = 'unstart' | 'queued' | 'running' | 'cancel' | 'done' |
 export const KB_RUN_STATUSES: readonly KbRunStatus[] = ['unstart', 'queued', 'running', 'cancel', 'done', 'fail'];
 
 const RUN_LABELS: Record<KbRunStatus, string> = {
-  unstart: '未开始',
-  queued: '排队中',
-  running: '进行中',
-  cancel: '已取消',
-  done: '已完成',
-  fail: '失败',
+  unstart: icenT('kbCore.runUnstarted'),
+  queued: icenT('kbCore.runQueued'),
+  running: icenT('kbCore.runRunning'),
+  cancel: icenT('kbCore.runCancelled'),
+  done: icenT('kbCore.runDone'),
+  fail: icenT('kbCore.runFailed'),
 };
 
 export function kbRunStatusLabel(s: KbRunStatus): string {
@@ -721,8 +722,8 @@ export const KB_SPAN_KINDS: readonly KbSpanKind[] = [
 ];
 
 const SPAN_LABELS: Record<KbSpanKind, string> = {
-  retrieval: '检索', generation: '生成', rerank: '重排', embed: '向量化',
-  tool: '工具', guard: '护栏', chunk: '切片', query: '查询', agent: '代理',
+  retrieval: icenT('kbCore.stageRetrieval'), generation: icenT('kbCore.stageGeneration'), rerank: icenT('kbCore.stageRerank'), embed: icenT('kbCore.stageEmbed'),
+  tool: icenT('kbCore.stageTool'), guard: icenT('kbCore.stageGuard'), chunk: icenT('kbCore.stageChunk'), query: icenT('kbCore.stageQuery'), agent: icenT('kbCore.stageAgent'),
 };
 
 export function kbSpanKindLabel(k: KbSpanKind): string {
@@ -909,7 +910,7 @@ export type KbRole = 'viewer' | 'commenter' | 'editor' | 'owner';
 export const KB_ROLES: readonly KbRole[] = ['viewer', 'commenter', 'editor', 'owner'];
 
 export function kbRoleLabel(r: KbRole | null): string {
-  return r === 'viewer' ? '可查看' : r === 'commenter' ? '可评论' : r === 'editor' ? '可编辑' : r === 'owner' ? '负责人' : '无权限';
+  return r === 'viewer' ? icenT('kbCore.levelView') : r === 'commenter' ? icenT('kbCore.levelComment') : r === 'editor' ? icenT('kbCore.levelEdit') : r === 'owner' ? icenT('kbCore.levelOwner') : icenT('kbCore.levelNone');
 }
 
 /** 权限序比较：roleA ⊇ roleB（owner 最大） */
@@ -927,7 +928,7 @@ export type KbVisibility = 'hidden' | 'metadata' | 'restricted' | 'summary' | 'f
 export const KB_VISIBILITIES: readonly KbVisibility[] = ['hidden', 'metadata', 'restricted', 'summary', 'full'];
 
 export function kbVisibilityLabel(v: KbVisibility): string {
-  return v === 'hidden' ? '不可见' : v === 'metadata' ? '仅元数据' : v === 'restricted' ? '受限' : v === 'summary' ? '仅摘要' : '可见';
+  return v === 'hidden' ? icenT('kbCore.visHidden') : v === 'metadata' ? icenT('kbCore.visMetadataOnly') : v === 'restricted' ? icenT('common.restricted') : v === 'summary' ? icenT('kbCore.visSummaryOnly') : icenT('kbCore.visVisible');
 }
 
 /** 授权主体（组是一等主体——部门树不当 ACL 用，业界共识） */
@@ -958,7 +959,7 @@ export function normalizeAclEntry(raw: KbAclEntry | Record<string, unknown>): Kb
   const kind: KbSubject['kind'] =
     s.kind === 'user' || s.kind === 'group' || s.kind === 'org' || s.kind === 'anyone' || s.kind === 'link' ? s.kind : 'user';
   return {
-    subject: { kind, id: String(s.id ?? ''), label: String(s.label ?? '未命名主体'), note: typeof s.note === 'string' ? s.note : undefined },
+    subject: { kind, id: String(s.id ?? ''), label: String(s.label ?? icenT('kbCore.unnamedSubject')), note: typeof s.note === 'string' ? s.note : undefined },
     role: KB_ROLES.includes(r.role as KbRole) ? (r.role as KbRole) : 'viewer',
     inheritedFrom: typeof r.inheritedFrom === 'string' && r.inheritedFrom ? r.inheritedFrom : undefined,
     expiresAt: typeof r.expiresAt === 'string' && r.expiresAt ? r.expiresAt : undefined,
@@ -1020,15 +1021,27 @@ function subjectMatches(subject: KbSubject, identity: KbIdentity): boolean {
 /**
  * 有效权限求值（纯函数）：先显式 deny（一票否决）→ 再 allow 并集（角色取权限序最大）→ 默认拒绝。
  * 多角色叠加语义 = SharePoint/Azure/Zanzibar 主流范式；first-match 是 NTFS 反教材，禁止。
+ *
+ * 到期一等公民（spec §9.0-7，到期自动回收）：expiresAt 已过的条目整体不计入求值
+ * （deny / allow 并集 / 原因链都视同不存在）；全部授权过期 = 无授权 → fail-closed。
+ * expiresAt 不可解析时视为永不过期（normalize 诚实缺省，不猜）。当前时间经 now 参数
+ * 注入（缺省 new Date()）——求值必须可测试、可复现，守卫脚本钉死此形态。
  */
 export function evaluateAcl(
   entries: Array<KbAclEntry | Record<string, unknown>>,
   identity: KbIdentity | Record<string, unknown>,
   policy?: KbVisibilityPolicy,
+  now: Date | number = new Date(),
 ): KbAclDecision {
   const list = (Array.isArray(entries) ? entries : []).map((e) => normalizeAclEntry(e));
   const id = normalizeIdentity(identity);
-  const matched = list.filter((e) => subjectMatches(e.subject, id));
+  const nowMs = now instanceof Date ? now.getTime() : now;
+  const active = list.filter((e) => {
+    if (!e.expiresAt) return true;
+    const t = Date.parse(e.expiresAt);
+    return !Number.isFinite(t) || t > nowMs;
+  });
+  const matched = active.filter((e) => subjectMatches(e.subject, id));
   const chain: KbAclDecision['chain'] = matched.map((entry) => ({
     entry,
     via: entry.subject.kind === 'link' ? 'link' : entry.inheritedFrom ? 'inherit' : 'direct',
@@ -1041,7 +1054,7 @@ export function evaluateAcl(
   const role = grants.reduce<KbRole | null>((acc, e) => (acc && roleAtLeast(acc, e.role) ? acc : e.role), null);
   const futureExpiry = grants
     .map((e) => Date.parse(e.expiresAt ?? ''))
-    .filter((t) => Number.isFinite(t) && t > Date.now())
+    .filter((t) => Number.isFinite(t) && t > nowMs)
     .sort((a, b) => a - b)[0];
   return {
     role,
@@ -1069,14 +1082,14 @@ export const KB_ACCESS_STATES: readonly KbAccessState[] = [
 export function kbAccessStateLabel(s: KbAccessState): string {
   return (
     {
-      idle: '未申请',
-      requested: '已提交',
-      pending_review: '待审批',
-      granted: '已开通',
-      expiring: '即将到期',
-      expired: '已过期',
-      denied: '未通过',
-      revoked: '已收回',
+      idle: icenT('kbCore.accessNotRequested'),
+      requested: icenT('kbCore.accessRequested'),
+      pending_review: icenT('kbCore.accessPending'),
+      granted: icenT('kbCore.accessGranted'),
+      expiring: icenT('kbCore.accessExpiring'),
+      expired: icenT('kbCore.accessExpired'),
+      denied: icenT('kbCore.accessDenied'),
+      revoked: icenT('kbCore.accessRevoked'),
     } as Record<KbAccessState, string>
   )[s] ?? s;
 }
@@ -1137,17 +1150,17 @@ export const KB_AUDIT_ACTIONS: readonly KbAuditAction[] = [
 export function kbAuditActionLabel(a: KbAuditAction): string {
   return (
     {
-      read: '读取',
-      preview: '预览',
-      permission_change: '权限变更',
-      grant: '授予',
-      revoke: '收回',
-      request: '申请',
-      approve: '批准',
-      deny: '拒绝',
-      delegation: '委派',
-      break_glass: '应急访问',
-      sync: '权限同步',
+      read: icenT('kbCore.auditRead'),
+      preview: icenT('kbCore.auditPreview'),
+      permission_change: icenT('kbCore.auditPermissionChange'),
+      grant: icenT('kbCore.auditGrant'),
+      revoke: icenT('kbCore.auditRevoke'),
+      request: icenT('kbCore.auditRequest'),
+      approve: icenT('kbCore.auditApprove'),
+      deny: icenT('kbCore.auditDeny'),
+      delegation: icenT('kbCore.auditDelegation'),
+      break_glass: icenT('kbCore.auditBreakGlass'),
+      sync: icenT('kbCore.auditSync'),
     } as Record<KbAuditAction, string>
   )[a] ?? a;
 }
@@ -1182,7 +1195,7 @@ export function normalizeAuditEntry(raw: KbAuditEntry | Record<string, unknown>)
   return {
     id: String(r.id ?? ''),
     at: String(r.at ?? ''),
-    actor: { kind, name: String(actor.name ?? '未知') },
+    actor: { kind, name: String(actor.name ?? icenT('common.unknown')) },
     action: KB_AUDIT_ACTIONS.includes(r.action as KbAuditAction) ? (r.action as KbAuditAction) : 'read',
     resource: typeof r.resource === 'string' && r.resource ? r.resource : undefined,
     detail: String(r.detail ?? ''),
@@ -1206,12 +1219,12 @@ export const KB_HYGIENE_KINDS: readonly KbHygieneKind[] = [
 export function kbHygieneLabel(k: KbHygieneKind): string {
   return (
     {
-      org_wide_link: '组织级链接',
-      broad_group: '过宽组授权',
-      sensitive_mismatch: '敏感度错配',
-      broken_inheritance: '断继承',
-      orphaned_owner: '负责人缺位',
-      overexposed: '过度暴露',
+      org_wide_link: icenT('kbCore.hygieneOrgWideLink'),
+      broad_group: icenT('kbCore.hygieneBroadGroup'),
+      sensitive_mismatch: icenT('kbCore.hygieneSensitiveMismatch'),
+      broken_inheritance: icenT('kbCore.hygieneBrokenInheritance'),
+      orphaned_owner: icenT('kbCore.hygieneOrphanedOwner'),
+      overexposed: icenT('kbCore.hygieneOverexposed'),
     } as Record<KbHygieneKind, string>
   )[k] ?? k;
 }
@@ -1258,10 +1271,10 @@ export function relativeTime(input: string | number | Date, now: Date = new Date
   if (!Number.isFinite(t)) return typeof input === 'string' ? input : '—';
   const diff = now.getTime() - t;
   const MIN = 60_000, HOUR = 3_600_000, DAY = 86_400_000;
-  if (diff < MIN) return '刚刚';
-  if (diff < HOUR) return `${Math.floor(diff / MIN)} 分钟前`;
-  if (diff < DAY) return `${Math.floor(diff / HOUR)} 小时前`;
-  if (diff < 30 * DAY) return `${Math.floor(diff / DAY)} 天前`;
+  if (diff < MIN) return icenT('kbCore.justNow');
+  if (diff < HOUR) return icenT('kbCore.minutesAgo', { p0: Math.floor(diff / MIN) });
+  if (diff < DAY) return icenT('kbCore.hoursAgo', { p0: Math.floor(diff / HOUR) });
+  if (diff < 30 * DAY) return icenT('kbCore.daysAgo', { p0: Math.floor(diff / DAY) });
   const d = new Date(t);
   const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   return ymd;

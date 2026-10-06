@@ -6,7 +6,7 @@
 
 ## 0. 设计原则
 
-1. **继承用 CSS 变量级联实现**：`.ai-item` 基元定义 `--ai-item-*` 局部变量，kind/变体只覆盖变量不改结构（btn.css 的 `--btn-*` 模式的推广）。
+1. **继承用 CSS 变量级联实现**：`.icen-ai-item` 基元定义 `--ai-item-*` 局部变量，kind/变体只覆盖变量不改结构（btn.css 的 `--btn-*` 模式的推广）。
 2. **多态用 kind 注册表**：MCP、skill 不是独立组件，是 tool-call 的 kind。`registerAiKind()` 开放第三方扩展。
 3. **组件只消费归一化模型**：业界格式（OpenAI / Anthropic / AI SDK / 素朴）由适配层统一翻译，组件不认识任何 provider。
 4. **状态机是唯一语言**：所有 AI 条目共享 7 态，语义色与动画全库一致。
@@ -33,24 +33,24 @@ pending → running → streaming → done
 
 协议映射：AI SDK `input-streaming/input-available`→pending、`approval-requested`→approval、`output-available`→done、`output-error`→error；AG-UI `TOOL_CALL_RESULT`→done、`outcome.interrupt`→approval；A2A `INPUT_REQUIRED/AUTH_REQUIRED`→approval、`WORKING`→running、终态→done/error/cancelled。
 
-## 2. 条目基元 `.ai-item`（CSS 骨架，所有行式条目的"基类"）
+## 2. 条目基元 `.icen-ai-item`（CSS 骨架，所有行式条目的"基类"）
 
 ```html
-<div class="ai-item is-running" style="--ai-item-tint: var(--token-accent)">
-  <span class="ai-item-icon"><!-- svg --></span>
-  <div class="ai-item-main">
-    <div class="ai-item-title">一行摘要</div>
-    <div class="ai-item-sub">次要信息（路径/参数）</div>
+<div class="icen-ai-item is-running" style="--ai-item-tint: var(--icen-token-accent)">
+  <span class="icen-ai-item-icon"><!-- svg --></span>
+  <div class="icen-ai-item-main">
+    <div class="icen-ai-item-title">一行摘要</div>
+    <div class="icen-ai-item-sub">次要信息（路径/参数）</div>
   </div>
-  <div class="ai-item-side">
-    <span class="ai-item-status"></span>   <!-- 状态点，纯 CSS 由 .is-* 驱动 -->
-    <span class="ai-item-meta">1.2s</span>
+  <div class="icen-ai-item-side">
+    <span class="icen-ai-item-status"></span>   <!-- 状态点，纯 CSS 由 .is-* 驱动 -->
+    <span class="icen-ai-item-meta">1.2s</span>
   </div>
-  <div class="ai-item-detail" hidden>展开详情</div>
+  <div class="icen-ai-item-detail" hidden>展开详情</div>
 </div>
 ```
 
-局部变量：`--ai-item-tint`（图标/状态点着色槽，默认 accent）。状态点 `.ai-item-status` 是纯 CSS 圆点，由 `.is-*` 决定颜色与动效（running 脉冲用 `--pill-pulse-duration` 同款变量化时长）。
+局部变量：`--ai-item-tint`（图标/状态点着色槽，默认 accent）。状态点 `.icen-ai-item-status` 是纯 CSS 圆点，由 `.is-*` 决定颜色与动效（running 脉冲用 `--pill-pulse-duration` 同款变量化时长）。
 
 ## 3. 文件与 slug 组织
 
@@ -87,20 +87,20 @@ pending → running → streaming → done
 ### 4.1 ai-chat（ai-chat.css + ai-chat.ts）
 
 ```html
-<div class="ai-chat" data-density="normal">   <!-- verbose|normal|summary 透明度三档 -->
-  <div class="ai-chat-scroll">
-    <div class="ai-msg ai-msg--user | ai-msg--assistant | ai-msg--system | ai-msg--tool">
-      <span class="ai-msg-avatar"></span>
-      <div class="ai-msg-body">…内容（消费方可自行渲染 markdown）…</div>
-      <div class="ai-msg-actions"><button data-ai-msg-action="copy">…<button data-ai-msg-action="retry">…</div>
-      <div class="ai-msg-meta">12:04 · 1.2k tok</div>
+<div class="icen-ai-chat" data-icen-density="normal">   <!-- verbose|normal|summary 透明度三档 -->
+  <div class="icen-ai-chat-scroll">
+    <div class="icen-ai-msg icen-ai-msg--user | icen-ai-msg--assistant | icen-ai-msg--system | icen-ai-msg--tool">
+      <span class="icen-ai-msg-avatar"></span>
+      <div class="icen-ai-msg-body">…内容（消费方可自行渲染 markdown）…</div>
+      <div class="icen-ai-msg-actions"><button data-icen-ai-msg-action="copy">…<button data-icen-ai-msg-action="retry">…</div>
+      <div class="icen-ai-msg-meta">12:04 · 1.2k tok</div>
     </div>
   </div>
-  <button class="ai-chat-jump" hidden>回到底部 · 3 条新消息</button>
+  <button class="icen-ai-chat-jump" hidden>回到底部 · 3 条新消息</button>
 </div>
 ```
 
-- `initAiChat(root?)`：幂等（`__icenAiChatInit`）。滚动钉底：scroll 监听，贴底时自动跟随新内容（监听 scroll 容器尺寸变化用 ResizeObserver）；用户上滚暂停跟随并显示 `.ai-chat-jump`（带未读计数），点击回底恢复。消息动作委托：copy→复制正文+派 `icen:ai-copy`；retry→派 `icen:ai-retry`（detail 含消息元素）。reasoning 折叠委托也在这里（`.ai-reasoning-head` 点击切换）。
+- `initAiChat(root?)`：幂等（`__icenAiChatInit`）。滚动钉底：scroll 监听，贴底时自动跟随新内容（监听 scroll 容器尺寸变化用 ResizeObserver）；用户上滚暂停跟随并显示 `.icen-ai-chat-jump`（带未读计数），点击回底恢复。消息动作委托：copy→复制正文+派 `icen:ai-copy`；retry→派 `icen:ai-retry`（detail 含消息元素）。reasoning 折叠委托也在这里（`.icen-ai-reasoning-head` 点击切换）。
 - `createAiStream(el)` → `{ append(text), done(), cancel(), fail(message?) }`：textContent 级追加（不解析 HTML），追加期间宿主挂 `.is-streaming`，done/cancel 移除；`fail()` 终止流并给宿主挂 `.is-error`（错误路径，append 之后失效）。Markdown 重渲染是消费方职责（文档里写明）。
 - `renderAiMessage(scrollEl, model)` → `{ el, body, setMeta, setError, stream() }`：DOM API 构建整条消息（含多模态部件渲染，见 §10），返回句柄；`stream()` 在正文末尾开 `createAiStream`。model：
 
@@ -110,7 +110,7 @@ interface AiMessageModel {
   content: AiContent;            // string | AiContentPart[]（§10）
   meta?: string;                 // "12:04 · 1.2k tok"
   model?: string;                // assistant 消息的模型名标签
-  error?: string;                // → .ai-msg--error + 错误文本行
+  error?: string;                // → .icen-ai-msg--error + 错误文本行
   streaming?: boolean;           // 初始即流式态
 }
 ```
@@ -118,11 +118,11 @@ interface AiMessageModel {
 ### 4.2 ai-message / ai-reasoning（ai-chat.css 一族）
 
 ```html
-<div class="ai-reasoning is-done">
-  <button class="ai-reasoning-head" aria-expanded="false">
-    <span class="ai-reasoning-label">思考过程</span><span class="ai-reasoning-time">3s</span>
+<div class="icen-ai-reasoning is-done">
+  <button class="icen-ai-reasoning-head" aria-expanded="false">
+    <span class="icen-ai-reasoning-label">思考过程</span><span class="icen-ai-reasoning-time">3s</span>
   </button>
-  <div class="ai-reasoning-body" hidden>…</div>
+  <div class="icen-ai-reasoning-body" hidden>…</div>
 </div>
 ```
 
@@ -131,14 +131,14 @@ interface AiMessageModel {
 ### 4.3 ai-composer（ai-chat.css + ai-composer.ts）
 
 ```html
-<div class="ai-composer" data-ai-composer>
-  <div class="ai-composer-queue" hidden><!-- 排队消息 chips，可逐个 × --></div>
-  <div class="ai-composer-attach" hidden><!-- 附件 chips --></div>
-  <div class="ai-composer-box control">
-    <textarea class="ai-composer-input" rows="1" placeholder="…"></textarea>
-    <div class="ai-composer-actions">
-      <button class="ai-composer-btn" data-ai-attach aria-label="附件"></button>
-      <button class="ai-composer-send" data-ai-send></button>  <!-- 运行态变 .is-stop 停止钮 -->
+<div class="icen-ai-composer" data-icen-ai-composer>
+  <div class="icen-ai-composer-queue" hidden><!-- 排队消息 chips，可逐个 × --></div>
+  <div class="icen-ai-composer-attach" hidden><!-- 附件 chips --></div>
+  <div class="icen-ai-composer-box icen-control">
+    <textarea class="icen-ai-composer-input" rows="1" placeholder="…"></textarea>
+    <div class="icen-ai-composer-actions">
+      <button class="icen-ai-composer-btn" data-icen-ai-attach aria-label="附件"></button>
+      <button class="icen-ai-composer-send" data-icen-ai-send></button>  <!-- 运行态变 .is-stop 停止钮 -->
     </div>
   </div>
 </div>
@@ -151,20 +151,20 @@ interface AiMessageModel {
 ### 4.4 ai-tool-call（ai-tool.css + ai-tool.ts）
 
 ```html
-<div class="ai-tool ai-tool--shell is-done">   <!-- kind 修饰类：--shell/--read/--edit/… -->
-  <button class="ai-tool-head" aria-expanded="false">
-    <span class="ai-item-icon"></span>
-    <span class="ai-item-main"><span class="ai-item-title">Read</span>
-      <span class="ai-item-sub">src/foo.ts:1-50</span></span>
-    <span class="ai-item-status"></span>
-    <span class="ai-item-meta">0.4s</span>
+<div class="icen-ai-tool icen-ai-tool--shell is-done">   <!-- kind 修饰类：--shell/--read/--edit/… -->
+  <button class="icen-ai-tool-head" aria-expanded="false">
+    <span class="icen-ai-item-icon"></span>
+    <span class="icen-ai-item-main"><span class="icen-ai-item-title">Read</span>
+      <span class="icen-ai-item-sub">src/foo.ts:1-50</span></span>
+    <span class="icen-ai-item-status"></span>
+    <span class="icen-ai-item-meta">0.4s</span>
   </button>
-  <div class="ai-tool-body" hidden>
-    <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">…</pre></div>
-    <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">…</pre></div>
-    <div class="ai-tool-approval">   <!-- 仅 .is-approval 显示 -->
-      <button class="btn btn-sm btn-primary" data-ai-approve>允许</button>
-      <button class="btn btn-sm" data-ai-reject>拒绝</button>
+  <div class="icen-ai-tool-body" hidden>
+    <div class="icen-ai-tool-io"><div class="icen-ai-tool-io-label">输入</div><pre class="icen-ai-tool-io-content">…</pre></div>
+    <div class="icen-ai-tool-io"><div class="icen-ai-tool-io-label">输出</div><pre class="icen-ai-tool-io-content">…</pre></div>
+    <div class="icen-ai-tool-approval">   <!-- 仅 .is-approval 显示 -->
+      <button class="icen-btn icen-btn-sm icen-btn-primary" data-icen-ai-approve>允许</button>
+      <button class="icen-btn icen-btn-sm" data-icen-ai-reject>拒绝</button>
     </div>
   </div>
 </div>
@@ -179,17 +179,17 @@ interface AiMessageModel {
 ### 4.5 ai-subagent（ai-tool.css + ai-tool.ts）
 
 ```html
-<div class="ai-subagent is-running">
-  <button class="ai-subagent-head" aria-expanded="false">
-    <span class="ai-item-icon"></span>
-    <span class="ai-item-main"><span class="ai-item-title">explore</span>
-      <span class="ai-item-sub">搜索 auth 模块的所有入口</span></span>
-    <span class="ai-item-status"></span>
-    <span class="ai-item-meta">12.3s · 4 步</span>
+<div class="icen-ai-subagent is-running">
+  <button class="icen-ai-subagent-head" aria-expanded="false">
+    <span class="icen-ai-item-icon"></span>
+    <span class="icen-ai-item-main"><span class="icen-ai-item-title">explore</span>
+      <span class="icen-ai-item-sub">搜索 auth 模块的所有入口</span></span>
+    <span class="icen-ai-item-status"></span>
+    <span class="icen-ai-item-meta">12.3s · 4 步</span>
   </button>
-  <div class="ai-subagent-body" hidden>
-    <div class="ai-subagent-stream"><!-- 嵌套 .ai-item / .ai-tool / .ai-reasoning 活动流 --></div>
-    <div class="ai-subagent-result">完成回执摘要</div>
+  <div class="icen-ai-subagent-body" hidden>
+    <div class="icen-ai-subagent-stream"><!-- 嵌套 .icen-ai-item / .icen-ai-tool / .icen-ai-reasoning 活动流 --></div>
+    <div class="icen-ai-subagent-result">完成回执摘要</div>
   </div>
 </div>
 ```
@@ -201,21 +201,21 @@ interface AiMessageModel {
 ### 4.6 ai-diff（ai-diff.css + ai-diff.ts）
 
 ```html
-<div class="ai-diff">
-  <div class="ai-diff-file is-modified">   <!-- is-added/is-modified/is-deleted/is-renamed -->
-    <div class="ai-diff-head">
-      <span class="ai-diff-path">src/foo.ts</span>
-      <span class="ai-diff-stat"><b class="ai-diff-add">+12</b> <b class="ai-diff-del">−4</b></span>
-      <span class="ai-diff-actions">
-        <button data-ai-diff-accept>接受</button><button data-ai-diff-reject>拒绝</button>
+<div class="icen-ai-diff">
+  <div class="icen-ai-diff-file is-modified">   <!-- is-added/is-modified/is-deleted/is-renamed -->
+    <div class="icen-ai-diff-head">
+      <span class="icen-ai-diff-path">src/foo.ts</span>
+      <span class="icen-ai-diff-stat"><b class="icen-ai-diff-add">+12</b> <b class="icen-ai-diff-del">−4</b></span>
+      <span class="icen-ai-diff-actions">
+        <button data-icen-ai-diff-accept>接受</button><button data-icen-ai-diff-reject>拒绝</button>
       </span>
     </div>
-    <div class="ai-diff-body" hidden>
-      <table class="ai-diff-table">
-        <tr class="ai-diff-line--hunk"><td colspan="3">@@ -10,6 +10,8 @@</td></tr>
-        <tr class="ai-diff-line--ctx"><td class="ai-diff-ln">10</td><td class="ai-diff-ln">10</td><td class="ai-diff-code">…</td></tr>
-        <tr class="ai-diff-line--add">…</tr>
-        <tr class="ai-diff-line--del">…</tr>
+    <div class="icen-ai-diff-body" hidden>
+      <table class="icen-ai-diff-table">
+        <tr class="icen-ai-diff-line--hunk"><td colspan="3">@@ -10,6 +10,8 @@</td></tr>
+        <tr class="icen-ai-diff-line--ctx"><td class="icen-ai-diff-ln">10</td><td class="icen-ai-diff-ln">10</td><td class="icen-ai-diff-code">…</td></tr>
+        <tr class="icen-ai-diff-line--add">…</tr>
+        <tr class="icen-ai-diff-line--del">…</tr>
       </table>
     </div>
   </div>
@@ -229,8 +229,8 @@ interface AiMessageModel {
 ### 4.7 ai-files（ai-diff.css 一族，纯 CSS）
 
 ```html
-<div class="ai-files">
-  <span class="ai-file-chip is-added"><span class="ai-file-icon"></span>src/foo.ts</span>
+<div class="icen-ai-files">
+  <span class="icen-ai-file-chip is-added"><span class="icen-ai-file-icon"></span>src/foo.ts</span>
 </div>
 ```
 
@@ -240,60 +240,60 @@ chip 态：`is-added/is-modified/is-deleted` + hover 操作（可选）。无 be
 
 待办是**工具调用**（对话里只留折叠的 TodoWrite 卡，todo kind summarize 显示 x/y 完成），
 **实时状态挂在输入区**而非对话流：`setComposerTodo(el, items | null)` 在工具条渲染
-`.ai-composer-todo` chip（清单图标 + x/y；进行中 accent / 全部完成 success / 有失败
+`.icen-ai-composer-todo` chip（清单图标 + x/y；进行中 accent / 全部完成 success / 有失败
 warning），点击弹层展示完整清单（popover + renderAiTodo 只读）；传 null 清除。
 
 ### 4.8 ai-todo（ai-panel.css + ai-panel.ts）
 
 ```html
-<div class="ai-todo">
-  <div class="ai-todo-head"><span class="ai-todo-progress">2/5</span><div class="ai-todo-bar"><i style="width:40%"></i></div></div>
-  <div class="ai-todo-item is-running">
-    <span class="ai-item-status"></span>
-    <span class="ai-todo-text">实现登录页</span>
-    <span class="ai-todo-active">正在实现登录页…</span>  <!-- activeForm：运行中替换文案（Claude Code 模式） -->
+<div class="icen-ai-todo">
+  <div class="icen-ai-todo-head"><span class="icen-ai-todo-progress">2/5</span><div class="icen-ai-todo-bar"><i style="width:40%"></i></div></div>
+  <div class="icen-ai-todo-item is-running">
+    <span class="icen-ai-item-status"></span>
+    <span class="icen-ai-todo-text">实现登录页</span>
+    <span class="icen-ai-todo-active">正在实现登录页…</span>  <!-- activeForm：运行中替换文案（Claude Code 模式） -->
   </div>
 </div>
 ```
 
-- `renderAiTodo(el, items)`：`items: {content, status: AiStatus, activeForm?}[]`；`initAiTodo(root?)`：`data-ai-todo-interactive` 时可点击循环状态并派 `icen:ai-todo-toggle {index, status}`；默认只读。
+- `renderAiTodo(el, items)`：`items: {content, status: AiStatus, activeForm?}[]`；`initAiTodo(root?)`：`data-icen-ai-todo-interactive` 时可点击循环状态并派 `icen:ai-todo-toggle {index, status}`；默认只读。
 - 进度条用 feedback 的 progress 视觉（token 消费）。
 
 ### 4.9 ai-usage（ai-panel.css + ai-panel.ts）
 
 ```html
-<div class="ai-usage">
-  <div class="ai-usage-bar">
-    <i class="ai-usage-seg ai-usage-seg--input" style="width:35%"></i>
-    <i class="ai-usage-seg ai-usage-seg--cache-read" style="width:20%"></i>
-    <i class="ai-usage-seg ai-usage-seg--cache-write" style="width:5%"></i>
-    <i class="ai-usage-seg ai-usage-seg--reasoning" style="width:10%"></i>
-    <i class="ai-usage-seg ai-usage-seg--output" style="width:12%"></i>
+<div class="icen-ai-usage">
+  <div class="icen-ai-usage-bar">
+    <i class="icen-ai-usage-seg icen-ai-usage-seg--input" style="width:35%"></i>
+    <i class="icen-ai-usage-seg icen-ai-usage-seg--cache-read" style="width:20%"></i>
+    <i class="icen-ai-usage-seg icen-ai-usage-seg--cache-write" style="width:5%"></i>
+    <i class="icen-ai-usage-seg icen-ai-usage-seg--reasoning" style="width:10%"></i>
+    <i class="icen-ai-usage-seg icen-ai-usage-seg--output" style="width:12%"></i>
   </div>
-  <div class="ai-usage-legend"><!-- 各段色点+数值；缓存分列（计费诚实） --></div>
-  <div class="ai-usage-total">82k / 200k · 41%</div>
+  <div class="icen-ai-usage-legend"><!-- 各段色点+数值；缓存分列（计费诚实） --></div>
+  <div class="icen-ai-usage-total">82k / 200k · 41%</div>
 </div>
 ```
 
 - `renderAiUsage(el, usage: AiUsage, opts?: { total?: number; cost?: number })`：分段条 + 图例 + 占比；`normalizeUsage` 在 ai-core。
 - 配色：input=accent、output=success、cacheRead=info、cacheWrite=warning、reasoning=faint——语义 token。
-- **环形形态 `renderAiUsageRing`**（Claude Desktop 式上下文窗口指示器）：紧凑圆环（SVG dasharray，`viewBox 36 / r 15.9155` → 周长恰为 100），中心百分比；点击弹出完整分段分解（弹层为一次性动态 `.popover.ai-usage-popover`，复用 `openPopover`/`closePopover`，anchor 豁免外点关闭，Esc/外点/再点关闭即移除）。状态档：<60% is-ok（accent）/ 60–85% is-warn / >85% is-hot（error + 脉冲）。`--lg` 大号变体。
+- **环形形态 `renderAiUsageRing`**（Claude Desktop 式上下文窗口指示器）：紧凑圆环（SVG dasharray，`viewBox 36 / r 15.9155` → 周长恰为 100），中心百分比；点击弹出完整分段分解（弹层为一次性动态 `.icen-popover.icen-ai-usage-popover`，复用 `openPopover`/`closePopover`，anchor 豁免外点关闭，Esc/外点/再点关闭即移除）。状态档：<60% is-ok（icen-accent）/ 60–85% is-warn / >85% is-hot（error + 脉冲）。`--lg` 大号变体。
 
 ### 4.10 ai-context（ai-panel.css + ai-panel.ts）—— 右上角资源抽屉
 
 ```html
-<aside class="ai-context" hidden>
-  <div class="ai-context-head"><span>上下文</span><button data-ai-context-close>×</button></div>
-  <section class="ai-context-section"><h3>用量</h3><!-- ai-usage --></section>
-  <section class="ai-context-section"><h3>文件 (3)</h3><!-- ai-files chips --></section>
-  <section class="ai-context-section"><h3>MCP (2)</h3><!-- server 行：名称+状态点+工具数 --></section>
-  <section class="ai-context-section"><h3>Skills</h3><!-- skill chip 列表 --></section>
+<aside class="icen-ai-context" hidden>
+  <div class="icen-ai-context-head"><span>上下文</span><button data-icen-ai-context-close>×</button></div>
+  <section class="icen-ai-context-section"><h3>用量</h3><!-- ai-usage --></section>
+  <section class="icen-ai-context-section"><h3>文件 (3)</h3><!-- ai-files chips --></section>
+  <section class="icen-ai-context-section"><h3>MCP (2)</h3><!-- server 行：名称+状态点+工具数 --></section>
+  <section class="icen-ai-context-section"><h3>Skills</h3><!-- skill chip 列表 --></section>
 </aside>
 ```
 
-- `initAiContext(root?)`：触发器 `[data-ai-context-open]` 全局委托开合；抽屉 fixed 右侧滑入（`--z-chrome`），Esc/外点关闭；`.ai-context--inline` 变体为页面流内嵌（不做 fixed）。开/合从抽屉根派 `icen:ai-context-open` / `icen:ai-context-close` `{}`。
+- `initAiContext(root?)`：触发器 `[data-icen-ai-context-open]` 全局委托开合；抽屉 fixed 右侧滑入（`--icen-z-chrome`），Esc/外点关闭；`.icen-ai-context--inline` 变体为页面流内嵌（不做 fixed）。开/合从抽屉根派 `icen:ai-context-open` / `icen:ai-context-close` `{}`。
 - `renderAiContext(el, { usage?, files?, mcpServers?, skills? })`：组合渲染（内部复用 renderAiUsage / ai-files chip / ai-item 行）。
-- MCP server 行：`.ai-item` 基元 + `is-done`（已连接）/`is-error`（断开）。
+- MCP server 行：`.icen-ai-item` 基元 + `is-done`（已连接）/`is-error`（断开）。
 
 ## 5. 事件汇总（全部 bubbles）
 
@@ -320,7 +320,7 @@ warning），点击弹层展示完整清单（popover + renderAiTodo 只读）�
 ```ts
 export type AiStatus = 'pending'|'running'|'streaming'|'approval'|'done'|'error'|'cancelled';
 export interface AiUsage { input?; output?; cacheRead?; cacheWrite?; reasoning?; total?; }
-export interface AiKindDef { label: string; icon: string; tint?: 'accent'|'success'|'warning'|'error'|'info'|'muted'; summarize?: (input: unknown) => string; }
+export interface AiKindDef { label: string; icon: string; tint?: 'icen-accent'|'success'|'warning'|'error'|'info'|'muted'; summarize?: (input: unknown) => string; }
 export interface AiToolCallModel {
   id: string; name: string; kind: string; status: AiStatus;
   input?: unknown; output?: unknown; errorText?: string;
@@ -356,18 +356,18 @@ export function svgIcon(svg: string): SVGElement | null;  // DOMParser 消毒（
 结构（自底向上工具条，业界主流形态）：
 
 ```html
-<div class="ai-composer" data-ai-composer>
-  <div class="ai-composer-queue" hidden></div>   <!-- 排队 chips（v1 已有） -->
-  <div class="ai-composer-refs" hidden></div>    <!-- @ 引用 chips（分离渲染：textarea 不嵌 chip） -->
-  <div class="ai-composer-attach" hidden></div>  <!-- 附件 chips（v1 已有） -->
-  <div class="ai-composer-box control">
-    <textarea class="ai-composer-input" rows="1"></textarea>
-    <div class="ai-composer-toolbar">
-      <button class="ai-composer-model" data-ai-model-open>  <!-- 模型切换：provider 图标 + 模型名 + chevron -->
-      <span class="ai-composer-spacer"></span>
-      <span class="ai-composer-usage" data-ai-usage></span>   <!-- 上下文环挂载点 -->
-      <button class="ai-composer-btn" data-ai-attach></button>
-      <button class="ai-composer-send" data-ai-send></button>
+<div class="icen-ai-composer" data-icen-ai-composer>
+  <div class="icen-ai-composer-queue" hidden></div>   <!-- 排队 chips（v1 已有） -->
+  <div class="icen-ai-composer-refs" hidden></div>    <!-- @ 引用 chips（分离渲染：textarea 不嵌 chip） -->
+  <div class="icen-ai-composer-attach" hidden></div>  <!-- 附件 chips（v1 已有） -->
+  <div class="icen-ai-composer-box icen-control">
+    <textarea class="icen-ai-composer-input" rows="1"></textarea>
+    <div class="icen-ai-composer-toolbar">
+      <button class="icen-ai-composer-model" data-icen-ai-model-open>  <!-- 模型切换：provider 图标 + 模型名 + chevron -->
+      <span class="icen-ai-composer-spacer"></span>
+      <span class="icen-ai-composer-usage" data-icen-ai-usage></span>   <!-- 上下文环挂载点 -->
+      <button class="icen-ai-composer-btn" data-icen-ai-attach></button>
+      <button class="icen-ai-composer-send" data-icen-ai-send></button>
     </div>
   </div>
 </div>
@@ -377,7 +377,7 @@ export function svgIcon(svg: string): SVGElement | null;  // DOMParser 消毒（
 
 - `setComposerModels(el, providers: AiProviderOption[], current?: {provider, model})`：
   `AiProviderOption = { id, label, icon?, models: { id, label, context? }[] }`。
-  工具条出现模型钮；点击开 `.ai-composer-popup`（portal body，`computePopoverLayout` side:top）——
+  工具条出现模型钮；点击开 `.icen-ai-composer-popup`（portal body，`computePopoverLayout` side:top）——
   按 provider 分组（图标+名）+ 模型行（label + 上下文窗口如 `1M`）+ 搜索过滤 + 当前勾选。
   选择派 `icen:ai-model-change { provider, model, label, context }`；
   **切换时若 cacheRead 占比高则弹层内提示"换模型会使 prompt 缓存失效"**（Kimi Code 细节）。
@@ -563,7 +563,7 @@ export interface AiComposerBindOpts {
                               //   → assistant 消息 + createAiStream 逐 chunk 追加 → done 收尾
                               //   （错误 → fail + setError；stop → session.cancel；排队消息在
                               //    每轮完成后自动发送下一条）
-  messages?: HTMLElement;     // .ai-chat-scroll 或任意消息容器：renderAiMessage 的挂载点（client 模式必填）
+  messages?: HTMLElement;     // .icen-ai-chat-scroll 或任意消息容器：renderAiMessage 的挂载点（client 模式必填）
   usage?: { from: 'context' | 'billing' | AiAuditor; total?: number };
                               // 环口径：'context'（默认，icen:ai-done 的 contextEstimate——环语义正确）
                               //   | 'billing'（icen:ai-done 的请求 usage 累加——计费视角）
@@ -613,50 +613,133 @@ GLM-5.x ~$0.5/$3 档；Kimi K3 $3/$15、缓存读 ~$0.3，K2.6 ~$0.95/$3）。ca
 
 > 任何 UI 能力（图表渲染、未来的 diff 应用 / todo 写入……）注册为 **AiToolDef**，
 > 模型侧可调用、宿主侧全控。库内置 `render_chart` 一个工具（吃 ChartSpec 纯 JSON）。
+> 设计纪律：**诚实失败优先于智能猜测**——参数校验不支持的关键字记清单不静默，
+> 超时/拒绝/失败一律落 `record.icen-result = { ok:false, error:{ code, … } }` 信封。
 
-### 13.1 注册表
+### 13.1 注册表（AiToolDef 执行契约）
 
 ```ts
+export interface AiToolRunContext {
+  signal: AbortSignal;            // 超时、卡片移除/淘汰/清空、unregister 时 abort
+  progress(line: string): void;   // 活动流：追加进挂载卡 .icen-ai-tools-item-stream
+}
+
 export interface AiToolDef<TInput = unknown> {
   name: string;                    // 模型侧 function name（snake_case）
-  description: string;             // 给模型看的说明
+  description: string;             // 给模型看的说明；requiresApproval 时兼作审批区原因行
   inputSchema: Record<string, unknown>;  // OpenAI parameters / MCP inputSchema 兼容
-  run: (input: TInput, mount: HTMLElement) => unknown;  // 在挂载点上渲染，返回值即工具结果
+  run: (input: TInput, mount: HTMLElement, ctx: AiToolRunContext) => unknown;
   present?: 'mount' | 'data';
+  timeoutMs?: number;              // 超时 → { ok:false, error:{ code:'timeout' } }（只作用于 Promise 型 run）
+  requiresApproval?: boolean;      // 执行前审批门禁（仅 'mount' 模式生效；'data' 无卡可审批）
+  idempotent?: boolean;            // 同名同输入在途调用复用同一条记录
 }
 registerAiTool(def) / unregisterAiTool(name) / getAiTool(name) / listAiTools()
 ```
 
-### 13.2 挂载区（挂不挂 / 挂哪些 / 挂几个——宿主三层控制）
+- **Promise 结果契约**：`run` 允许返回 Promise；area 在落定后写 `record.icen-result` 并补派
+  `icen:ai-tool-result`（落定前不派）。超时竞速后晚到的兑现/拒绝被丢弃并吞掉
+  （不冒 unhandledrejection）。
+- **timeoutMs 诚实边界**：只作用于 Promise 型 run——同步 run 在单线程内无法中断，
+  设了也不生效（不假装）。定时器触发 → `signal.abort()` + 结果
+  `{ ok:false, error:{ code:'timeout', timeoutMs } }`，卡片 `.is-error`。
+- **失败统一信封**：校验失败 `code:'validation'`（含 errors/unvalidated 明细）、
+  执行异常 `code:'exec'`（含 message）、超时 `code:'timeout'`、审批拒绝 `code:'rejected'`。
+  事件 `icen:ai-tool-result` 的 `error` 字段按 events.ts 契约为 **string** 摘要，
+  机器可读细节一律在 `record.icen-result`。
+
+### 13.2 参数校验 `validateToolArgs`（诚实纪律）
+
+```ts
+validateToolArgs(schema, args) → { ok, errors: { path, message }[], unvalidated: string[] }
+```
+
+- 支持关键字：`type`（object/array/string/number/integer/boolean/null）/ `required` /
+  `properties`（递归不限深度）/ `enum` / `items`（**只展开一层**：二层数组记
+  `unvalidated` 不展开）/ `minimum` / `maximum` / `minLength` / `maxLength`。
+- **不支持的关键字不猜不静默**：`oneOf`/`anyOf`/`allOf`/`not`/`$ref`/`format`/`pattern`/
+  `additionalProperties`/`minItems`/`uniqueItems` 等出现在**实际访问到的节点**上时，
+  以 schema 路径（`'$.properties.email.format'`、`'$.properties.matrix.items.items'`、
+  根节点直接 `'$.additionalProperties'`）记入 `unvalidated`，
+  该断言不生效也不报错。注解类关键字（description/title/default/examples…）不作出
+  校验承诺，静默跳过、不进清单。未访问节点的关键字不进清单（清单只对实际校验负责）。
+- 错误 `path` 为 JSON-pointer 风参数路径（`'$'` 根；`'$.tags[1]'`、`'$.series[2].name'`）；
+  多错误并列收集不短路。`args` 为 `undefined` 的可选字段不做任何断言（由 required 把关）。
+- `parseAiToolArgs(raw)` 保持现状：模型回包容错解析（JSON 字符串/对象/坏 JSON → `{}），
+  不做校验——校验只走 `validateToolArgs`。
+
+### 13.3 挂载区（挂不挂 / 挂哪些 / 挂几个——宿主三层控制）
 
 ```ts
 createAiToolArea(el, { tools?: string[]; max?: number; itemMinHeight?: number }) → AiToolArea
-// tools 白名单支持通配 'chart-*'；max 超出 FIFO 淘汰最旧挂载（present:'data' 的工具不占挂载位、不参与淘汰）
-// AiToolArea: { el, count, call(name, input), can(name), setTools, setMax, clear, onChange(fn) }
+// tools 白名单支持通配 'chart-*'；max 超出 LRU 淘汰最旧挂载（present:'data' 的工具不占挂载位、不参与淘汰）
+// AiToolArea: { el, count, call(name, input, opts?), can(name), setTools, setMax, clear, onChange(fn) }
+call(name, input, opts?: { validate?: boolean })   // validate 默认 true：校验失败不执行 run
 ```
 
 - 三层控制：① 不 import 本模块 = 生态无工具体系（tree-shake）；② area 白名单 + max；
-  ③ 运行时 setTools/setMax/clear + unregisterAiTool 全局下架。
-- 挂载项结构：`.ai-tools-mount > .ai-tools-item > head（折叠钮 chevron/工具名/时间/×，button，aria-expanded）+ body（工具自渲染，默认展开，head 点击折叠；× 拦截冒泡只做移除）`。
-- 事件（bubbles）：`icen:ai-tool-call {name, input, el}` / `icen:ai-tool-result {name, ok, el, error?, count}`
-  / `icen:ai-tool-evict {name, el}`。
+  ③ 运行时 setTools/setMax/clear + unregisterAiTool 全局下架（联动摘除各区域已挂载卡）。
+- **call 管线**：白名单/注册检查 → `parseAiToolArgs` 归一 → 校验（可关）→ 幂等复用 →
+  挂载卡（'mount'）/ 纯记录（'data'）→ 审批门禁（requiresApproval）→ 执行。
+  每次 call 在挂载时触发一次 `onChange`，result 落定时再触发一次。
+- 挂载卡结构（状态类挂 `.icen-ai-tools-item`，7 态状态机的挂载区形态）：
 
-### 13.3 模型侧导出（agent loop 直接消费）
+  ```
+  .icen-ai-tools-mount > .icen-ai-tools-item（.is-approval/.is-running/.is-done/.is-error/.is-cancelled）
+    > head（折叠钮 chevron/工具名/时间/状态点 .icen-ai-tools-item-status/×，button，aria-expanded）
+    + .icen-ai-tools-item-approval（仅审批态：原因行 = description + 归一输入 JSON 预览 + 批准/拒绝钮，裁决后移除）
+    + .icen-ai-tools-item-error（仅失败态：逐行一条错误，role=alert）
+    + .icen-ai-tools-item-body（工具自渲染，默认展开，head 点击折叠；折叠同时隐藏活动流）
+    + .icen-ai-tools-item-stream（活动流，progress(line) 懒建追加）
+  ```
+
+- 校验失败仍挂载错误态卡（逐条列出 errors）并成对派 call + result（审计可关联），不执行 run。
+- 事件（bubbles，全部经 emitIcen）：`icen:ai-tool-call {name, input, el}`（挂载即派，input 为原始入参）/
+  `icen:ai-tool-result {name, ok, el, error?, count}`（error 为 string 摘要）/
+  `icen:ai-tool-evict {name, el}`。审批两事件见 §13.4。
+- `ctx.signal` 中止时机：超时触发、卡片被 × 移除/LRU 淘汰/clear/unregister 下架。
+
+### 13.4 审批流与幂等（requiresApproval / idempotent）
+
+- **requiresApproval**：call 时挂载卡进入 `.is-approval`（warning 边框 + 状态点外环），
+  审批区 = 原因行（description）+ 输入 JSON 预览 + 批准/拒绝按钮。**批准** → 派
+  `icen:ai-tool-approve {name, input, el}`（input 为归一后的 Record）→ 移除审批区 →
+  执行 run；**拒绝** → 派 `icen:ai-tool-reject {name, input, el}` → 卡片 `.is-cancelled`
+  （标题删除线），结果 `{ ok:false, error:{ code:'rejected' } }`，result 事件 `ok:false`。
+  'data' 模式无挂载卡，requiresApproval 不生效（文档注明，不静默假装有门禁）。
+- **idempotent**：以 `name + JSON.stringify(parseAiToolArgs(input))` 为键——JSON 字符串与
+  对象形态的同输入同键；在途（执行中/待审批）的同键调用返回**同一条 record 引用**
+  （不重复挂载、不重复执行）；落定后同键调用正常重新执行。
+
+### 13.5 模型侧导出（agent loop 直接消费；四族共享同一归一管线）
 
 ```ts
-aiToolsToOpenAI(names?)   // → chat.completions tools 参数格式
-aiToolsToMcp(names?)      // → MCP tools 格式（name/description/inputSchema）
-aiToolsManifest(names?)   // → system prompt 能力清单文本
-parseAiToolArgs(raw)      // tool_call 参数容错解析（JSON 字符串/对象/坏 JSON→{}）
+aiToolsToOpenAI(names?)    // → [{ type:'function', function:{ name, description, parameters } }]
+aiToolsToAnthropic(names?) // → [{ name, description, input_schema }]
+aiToolsToMcp(names?)       // → [{ name, description, inputSchema }]
+aiToolsToAiSdk(names?)     // → Record<name, { description, inputSchema }>——Vercel AI SDK v5 tool() 描述表
+aiToolsManifest(names?)    // → system prompt 能力清单文本
+parseAiToolArgs(raw)       // tool_call 参数容错解析（JSON 字符串/对象/坏 JSON→{}）
 ```
 
-宿主 agent loop 接线：模型回 `render_chart` tool_call → `area.call('render_chart', parseAiToolArgs(args))`。
+- 四族经私有 `toDescriptor` 归一后各自映射（names 缺省 = 全部，支持通配过滤），
+  name/description/inputSchema 内容严格一致；`aiToolsToAiSdk` **不携带 execute**——
+  执行永远留在宿主侧（createAiToolArea 挂载）。
+- 宿主 agent loop 接线：模型回 `render_chart` tool_call →
+  `area.call('render_chart', parseAiToolArgs(args))`。
 
-### 13.4 图表与 AI 族的接缝
+### 13.6 `render_chart` 内置工具（schema 先行）
+
+- inputSchema = ChartSpec JSON Schema（§13.7 接缝全数继承）；另声明三个可选字段描述，
+  渲染层随图表重度场景落地（schema-ahead，不提前实现）：`downsample?: boolean|number`
+  （true=自动上限，数字=最大保留点数）、`zoom?: 'x'|'brush'`、`marks?: array`（标记层
+  描述子）。`downsample` 的联合类型（type 数组）走 validateToolArgs 诚实清单。
+
+### 13.7 图表与 AI 族的接缝
 
 - `render_chart` 工具：inputSchema = ChartSpec JSON Schema；run = renderChart（自动选型 /
   容错归一 / 交互事件族 / 可隐藏图例全数继承）。
 - **工具回执内嵌图**：`renderAiToolCall` 的 output 为 `{type:'chart', spec}` 信封或裸
-  ChartSpec 时，IO 区直接渲染小图（`chartSpecOf` 探测，`.ai-tool-io-chart` 容器）。
+  ChartSpec 时，IO 区直接渲染小图（`chartSpecOf` 探测，`.icen-ai-tool-io-chart` 容器）。
 - **kind**：ai-core 内置 `chart` kind（折线图标，info tint，summarize 取 title）；
   `inferKind`：工具名含 chart/plot/visualize → 'chart'。

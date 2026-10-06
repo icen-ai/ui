@@ -3,25 +3,27 @@
  *
  * 契约（三种用法）：
  *   1. 手写按钮 + init：
- *      <button class="back-top" data-back-top type="button" aria-label="回到顶部">…svg…</button>
+ *      <button class="icen-back-top" data-icen-back-top type="button" aria-label="回到顶部">…svg…</button>
  *      initBackTop();   // 给 .is-shown 切换 + 点击滚到顶
  *
  *   2. 全自动：传入 autoCreate，自动 portal 一个默认按钮到 body
  *      initBackTop({ autoCreate: true });
  *
- *   3. 已存在 [data-back-top-auto] 元素的扫描：
+ *   3. 已存在 [data-icen-back-top-auto] 元素的扫描：
  *      initBackTop({ root: someRoot });
  *
  * 可选项（data-* 或 opts）：
- *   data-back-top-threshold="320"   显示阈值（默认 320px）
- *   data-back-top-target="selector" 滚动容器（默认 window）
- *   data-back-top-offset="0"        滚动到多少 px（默认 0）
+ *   data-icen-back-top-threshold="320"   显示阈值（默认 320px）
+ *   data-icen-back-top-target="selector" 滚动容器（默认 window）
+ *   data-icen-back-top-offset="0"        滚动到多少 px（默认 0）
  *
  * 同一元素重复 init 幂等；initBackTop 返回销毁函数（移除 scroll/resize/click 监听）。
  * 点击回顶动作时从按钮派发 icen:back-top {}（bubbles）。SSR 下为 no-op。
  */
 
 import { emitIcen } from './events';
+import { t } from './i18n';
+import { parseSvg } from './svg-parse';
 
 interface MarkedBtn extends HTMLElement {
   __icenBackTopInit?: boolean;
@@ -83,9 +85,9 @@ function setup(btn: HTMLElement, opts: BackTopOptions = {}): (() => void) | unde
   if (el.__icenBackTopInit) return undefined;
   el.__icenBackTopInit = true;
 
-  const threshold = numOr(btn.dataset.backTopThreshold ?? opts.threshold, 320);
-  const target = btn.dataset.backTopTarget ?? opts.target;
-  const offset = numOr(btn.dataset.backTopOffset ?? opts.offset, 0);
+  const threshold = numOr(btn.dataset.icenBackTopThreshold ?? opts.threshold, 320);
+  const target = btn.dataset.icenBackTopTarget ?? opts.target;
+  const offset = numOr(btn.dataset.icenBackTopOffset ?? opts.offset, 0);
 
   let ticking = false;
 
@@ -125,7 +127,7 @@ function setup(btn: HTMLElement, opts: BackTopOptions = {}): (() => void) | unde
 }
 
 /**
- * 初始化：扫描 root 下的 .back-top[data-back-top] 与 [data-back-top-auto]。
+ * 初始化：扫描 root 下的 .icen-back-top[data-icen-back-top] 与 [data-icen-back-top-auto]。
  * 传 autoCreate 时自动创建一个默认按钮。
  * 返回销毁函数：移除本次初始化挂上的全部 scroll/resize/click 监听。
  */
@@ -135,17 +137,17 @@ export function initBackTop(opts: BackTopOptions = {}): () => void {
     const root = opts.root ?? document;
 
     if (opts.autoCreate) {
-      let btn = document.body.querySelector<HTMLButtonElement>('.back-top[data-back-top-auto]');
+      let btn = document.body.querySelector<HTMLButtonElement>('.icen-back-top[data-icen-back-top-auto]');
       /* 是否由本次 autoCreate 生成：destroy 只移除本实例生成的按钮，
-         宿主手写的 [data-back-top-auto] 不随之回收 */
+         宿主手写的 [data-icen-back-top-auto] 不随之回收 */
       let created = false;
       if (!btn) {
         btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'back-top';
-        btn.setAttribute('data-back-top', '');
-        btn.setAttribute('data-back-top-auto', '');
-        btn.setAttribute('aria-label', '回到顶部');
+        btn.className = 'icen-back-top';
+        btn.setAttribute('data-icen-back-top', '');
+        btn.setAttribute('data-icen-back-top-auto', '');
+        btn.setAttribute('aria-label', t('backTop.label'));
         /* AUTO_BTN_SVG 是库内静态常量（非外部输入），DOMParser 构建以守「禁 innerHTML」约定 */
         const svg = new DOMParser().parseFromString(AUTO_BTN_SVG, 'image/svg+xml').documentElement;
         btn.appendChild(document.importNode(svg, true));
@@ -158,11 +160,11 @@ export function initBackTop(opts: BackTopOptions = {}): () => void {
     }
 
     const candidates: Element[] = [];
-    if (root instanceof Element && root.matches('.back-top[data-back-top]')) candidates.push(root);
-    candidates.push(...Array.from(root.querySelectorAll('.back-top[data-back-top]')));
+    if (root instanceof Element && root.matches('.icen-back-top[data-icen-back-top]')) candidates.push(root);
+    candidates.push(...Array.from(root.querySelectorAll('.icen-back-top[data-icen-back-top]')));
     for (const c of candidates) {
       const el = c as HTMLElement;
-      if (el.hasAttribute('data-back-top-auto') && opts.autoCreate) continue;
+      if (el.hasAttribute('data-icen-back-top-auto') && opts.autoCreate) continue;
       const cleanup = setup(el, opts);
       if (cleanup) cleanups.push(cleanup);
     }

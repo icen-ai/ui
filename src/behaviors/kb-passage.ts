@@ -2,24 +2,24 @@
  * @icen.ai/ui — Behavior: kb-passage（原文定位查看器：右侧抽屉，与 components/kb-ground.css 配套）
  *
  * DOM 契约（docs/spec/kb-family.md §5.3；createKbPassage 在挂载容器内搭出下列骨架）：
- *   <aside class="kb-passage" hidden role="dialog" aria-modal="false" aria-label="原文定位">
- *     <div class="kb-passage-head">
- *       <span class="kb-passage-icon">…svg…</span>
- *       <span class="kb-passage-titlewrap">
- *         <span class="kb-passage-title">来源标题</span>
- *         <span class="kb-passage-loc">第 3 页 · 块 12–18 · 字符 402–520（KbLocation 三分型位置徽标）</span>
+ *   <aside class="icen-kb-passage" hidden role="dialog" aria-modal="false" aria-label="原文定位">
+ *     <div class="icen-kb-passage-head">
+ *       <span class="icen-kb-passage-icon">…svg…</span>
+ *       <span class="icen-kb-passage-titlewrap">
+ *         <span class="icen-kb-passage-title">来源标题</span>
+ *         <span class="icen-kb-passage-loc">第 3 页 · 块 12–18 · 字符 402–520（KbLocation 三分型位置徽标）</span>
  *       </span>
- *       <button class="kb-passage-close" data-kb-passage-close aria-label="关闭">×</button>
+ *       <button class="icen-kb-passage-close" data-icen-kb-passage-close aria-label="关闭">×</button>
  *     </div>
- *     <div class="kb-passage-body">
- *       <div class="kb-passage-context is-before" hidden>上文…</div>
- *       <div class="kb-passage-text">原文…<mark class="kb-passage-hit" data-hit="0|1|2">命中</mark>…</div>
- *       <div class="kb-passage-context is-after" hidden>下文…</div>
- *       <button class="kb-passage-expand" data-kb-passage-expand hidden>展开上下文</button>
+ *     <div class="icen-kb-passage-body">
+ *       <div class="icen-kb-passage-context is-before" hidden>上文…</div>
+ *       <div class="icen-kb-passage-text">原文…<mark class="kb-passage-hit" data-icen-hit="0|1|2">命中</mark>…</div>
+ *       <div class="icen-kb-passage-context is-after" hidden>下文…</div>
+ *       <button class="icen-kb-passage-expand" data-icen-kb-passage-expand hidden>展开上下文</button>
  *     </div>
  *     受限权限（permission ≠ readable）时正文替换为：
- *       <div class="kb-passage-masked">citedText（CSS blur 打码）</div>
- *       <button class="kb-passage-request" data-kb-passage-request>申请访问</button>
+ *       <div class="icen-kb-passage-masked">citedText（CSS blur 打码）</div>
+ *       <button class="icen-kb-passage-request" data-icen-kb-passage-request>申请访问</button>
  *   </aside>
  *
  * 行为说明：
@@ -28,11 +28,11 @@
  *     未提供/落空时回落 citedText → snippet；受限权限走打码 + 申请访问（点击派
  *     icen:kb-source-open { source }，宿主据此弹申请流程）；打开派 icen:kb-passage-jump
  *     { citation }；侧栏滑入不打断对话（焦点移入关闭钮，Esc/Tab 圈禁对齐 ai-context 抽屉）
- *   - highlight(terms)：对正文做纯文本遍历 <mark>，多词轮转 data-hit 0/1/2 分色（kb.css 配色）；
+ *   - highlight(terms)：对正文做纯文本遍历 <mark>，多词轮转 data-icen-hit 0/1/2 分色（kb.css 配色）；
  *     open 后异步填充完成前调用会在填充后自动补染
  *   - expand(delta?)：显示 contextBefore/After（当前仅一层上下文，delta 为预留参数）
  *   - close()：滑出后恢复 hidden，派 icen:kb-passage-close {}，焦点还原触发前元素
- *   - 跳转锚定：opts.anchor（容器元素或取值函数）存在时，滚动到容器内 [data-kb-loc]
+ *   - 跳转锚定：opts.anchor（容器元素或取值函数）存在时，滚动到容器内 [data-icen-kb-loc]
  *     精确匹配（值 = documentId / citation.id），无精确命中再按 loc.start 数值最近匹配，
  *     命中项加 .is-current（容器内其余项移除）
  *
@@ -43,6 +43,7 @@
 import { h, normalizeCitation, svgIcon, getKbSourceType, type KbCitation, type KbLocation } from './kb-core';
 import { emitIcen } from './events';
 import { KB_ICON_LOCK } from './kb-citation';
+import { t } from './i18n';
 
 /** getDocument 的返回契约：原文 + 定位 + 上下文（受限来源可只给 content 空串并依赖 citedText 回落） */
 export interface KbPassageDoc {
@@ -56,7 +57,7 @@ export interface KbPassageDoc {
 export interface KbPassageOptions {
   /** 原文取数（同步返回或 Promise；未提供 / 落空时回落 citation.citedText → snippet） */
   getDocument?: (citation: KbCitation) => KbPassageDoc | null | undefined | Promise<KbPassageDoc | null | undefined>;
-  /** 跳转锚定容器（元素或惰性取值函数；提供后 open 时滚动定位 [data-kb-loc]） */
+  /** 跳转锚定容器（元素或惰性取值函数；提供后 open 时滚动定位 [data-icen-kb-loc]） */
   anchor?: HTMLElement | (() => HTMLElement | null | undefined);
   /** 打开回调（与 icen:kb-passage-jump 事件双通道） */
   onJump?: (citation: KbCitation) => void;
@@ -70,7 +71,7 @@ export interface KbPassageHandle {
   open(citation: KbCitation): void;
   /** 关闭抽屉（派 icen:kb-passage-close，焦点还原） */
   close(): void;
-  /** 高亮正文命中词（多词轮转 data-hit 0/1/2 分色） */
+  /** 高亮正文命中词（多词轮转 data-icen-hit 0/1/2 分色） */
   highlight(terms: string | string[]): void;
   /** 展开上下文（当前仅一层；delta 预留） */
   expand(delta?: number): void;
@@ -84,10 +85,10 @@ const CLOSE_FALLBACK_MS = 240;
 function locLabel(loc: KbLocation | undefined): string {
   if (!loc) return '';
   if (loc.kind === 'page') {
-    return loc.start === loc.end ? `第 ${loc.start} 页` : `第 ${loc.start}–${loc.end} 页`;
+    return loc.start === loc.end ? t('common.page', { p0: loc.start }) : t('kbPassage.pageRange', { p0: loc.start, p1: loc.end });
   }
-  if (loc.kind === 'block') return `块 ${loc.start}–${loc.end}`;
-  const unit = loc.unit === 'byte' ? '字节' : '字符';
+  if (loc.kind === 'block') return t('kbPassage.blockRange', { p0: loc.start, p1: loc.end });
+  const unit = loc.unit === 'byte' ? t('kbPassage.unitByte') : t('kbPassage.unitChar');
   return `${unit} ${loc.start}–${loc.end}`;
 }
 
@@ -113,39 +114,39 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
 
   /* ── 骨架（一次搭建，open 只更新内容） ── */
   el.textContent = '';
-  const aside = h('aside', 'kb-passage');
+  const aside = h('aside', 'icen-kb-passage');
   aside.hidden = true;
   aside.setAttribute('role', 'dialog');
   aside.setAttribute('aria-modal', 'false');
-  aside.setAttribute('aria-label', '原文定位');
+  aside.setAttribute('aria-label', t('kbPassage.locate'));
 
-  const head = h('div', 'kb-passage-head');
-  const headIcon = h('span', 'kb-passage-icon');
+  const head = h('div', 'icen-kb-passage-head');
+  const headIcon = h('span', 'icen-kb-passage-icon');
   const headSvg = svgIcon(getKbSourceType(undefined).icon);
   if (headSvg) headIcon.appendChild(headSvg);
   head.appendChild(headIcon);
-  const titleWrap = h('span', 'kb-passage-titlewrap');
-  const titleEl = h('span', 'kb-passage-title');
-  const locEl = h('span', 'kb-passage-loc');
+  const titleWrap = h('span', 'icen-kb-passage-titlewrap');
+  const titleEl = h('span', 'icen-kb-passage-title');
+  const locEl = h('span', 'icen-kb-passage-loc');
   titleWrap.appendChild(titleEl);
   titleWrap.appendChild(locEl);
   head.appendChild(titleWrap);
-  const closeBtn = h('button', 'kb-passage-close', '×');
+  const closeBtn = h('button', 'icen-kb-passage-close', '×');
   closeBtn.type = 'button';
-  closeBtn.dataset.kbPassageClose = '';
-  closeBtn.setAttribute('aria-label', '关闭原文');
+  closeBtn.dataset.icenKbPassageClose = '';
+  closeBtn.setAttribute('aria-label', t('kbPassage.close'));
   head.appendChild(closeBtn);
   aside.appendChild(head);
 
-  const body = h('div', 'kb-passage-body');
-  const ctxBefore = h('div', 'kb-passage-context is-before');
+  const body = h('div', 'icen-kb-passage-body');
+  const ctxBefore = h('div', 'icen-kb-passage-context is-before');
   ctxBefore.hidden = true;
-  const textEl = h('div', 'kb-passage-text');
-  const ctxAfter = h('div', 'kb-passage-context is-after');
+  const textEl = h('div', 'icen-kb-passage-text');
+  const ctxAfter = h('div', 'icen-kb-passage-context is-after');
   ctxAfter.hidden = true;
-  const expandBtn = h('button', 'kb-passage-expand', '展开上下文');
+  const expandBtn = h('button', 'icen-kb-passage-expand', t('kbPassage.expandContext'));
   expandBtn.type = 'button';
-  expandBtn.dataset.kbPassageExpand = '';
+  expandBtn.dataset.icenKbPassageExpand = '';
   expandBtn.hidden = true;
   body.appendChild(ctxBefore);
   body.appendChild(textEl);
@@ -178,7 +179,7 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
       textEl.textContent = plainText;
       return;
     }
-    /* 长词优先，防短词截断长词命中；组序 ↔ 原词序映射保证 data-hit 分色稳定 */
+    /* 长词优先，防短词截断长词命中；组序 ↔ 原词序映射保证 data-icen-hit 分色稳定 */
     const sorted = terms.map((t, i) => ({ re: escapeRe(t), i })).sort((a, b) => b.re.length - a.re.length);
     const re = new RegExp(`(${sorted.map((s) => s.re).join(')|(')})`, 'gi');
     let last = 0;
@@ -193,7 +194,7 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
         }
       }
       const mark = h('mark', 'kb-passage-hit', m[0]);
-      mark.dataset.hit = String(hit);
+      mark.dataset.icenHit = String(hit);
       textEl.appendChild(mark);
       last = m.index + m[0].length;
       if (m[0].length === 0) re.lastIndex++;
@@ -212,10 +213,10 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
 
     if (restricted) {
       /* 受限：citedText 打码 + 申请访问（原文不下发到端侧，blur 只是视觉层） */
-      const masked = h('div', 'kb-passage-masked', citation.citedText ?? citation.snippet ?? '内容受限');
-      const request = h('button', 'kb-passage-request', '申请访问');
+      const masked = h('div', 'icen-kb-passage-masked', citation.citedText ?? citation.snippet ?? t('kbPassage.restricted'));
+      const request = h('button', 'icen-kb-passage-request', t('common.requestAccess'));
       request.type = 'button';
-      request.dataset.kbPassageRequest = '';
+      request.dataset.icenKbPassageRequest = '';
       const lockSvg = svgIcon(KB_ICON_LOCK);
       if (lockSvg) request.prepend(lockSvg);
       request.addEventListener('click', () => {
@@ -228,7 +229,7 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
       return;
     }
 
-    plainText = resolved?.content ?? citation.citedText ?? citation.snippet ?? '（无原文）';
+    plainText = resolved?.content ?? citation.citedText ?? citation.snippet ?? t('kbPassage.none');
     renderPlainText();
     /* loc 徽标补全：citation.loc 缺席时采用文档侧定位 */
     const locText = locLabel(citation.loc ?? resolved?.loc);
@@ -251,16 +252,16 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
   function anchorTo(citation: KbCitation): void {
     const anchorEl = typeof o.anchor === 'function' ? o.anchor() : o.anchor;
     if (!anchorEl || typeof anchorEl.querySelector !== 'function') return;
-    const nodes = Array.from(anchorEl.querySelectorAll<HTMLElement>('[data-kb-loc]'));
+    const nodes = Array.from(anchorEl.querySelectorAll<HTMLElement>('[data-icen-kb-loc]'));
     if (nodes.length === 0) return;
     const key = citation.documentId || citation.id;
-    let target = nodes.find((n) => n.dataset.kbLoc === key);
+    let target = nodes.find((n) => n.dataset.icenKbLoc === key);
     if (!target && citation.loc) {
-      /* 数值最近匹配：data-kb-loc 形如 "start:end" 或单值，取与 loc.start 最近者 */
+      /* 数值最近匹配：data-icen-kb-loc 形如 "start:end" 或单值，取与 loc.start 最近者 */
       let best: HTMLElement | null = null;
       let bestDist = Number.POSITIVE_INFINITY;
       for (const n of nodes) {
-        const raw = n.dataset.kbLoc ?? '';
+        const raw = n.dataset.icenKbLoc ?? '';
         const start = Number(raw.split(':')[0]);
         if (!Number.isFinite(start)) continue;
         const dist = Math.abs(start - citation.loc.start);
@@ -291,7 +292,7 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
 
   function trapFocus(ke: KeyboardEvent): void {
     const focusables = Array.from(
-      aside.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+      aside.querySelectorAll<HTMLElement>('button, [href], icen-input, icen-select, icen-textarea, [tabindex]:not([tabindex="-1"])'),
     ).filter((n) => !n.hidden && n.getAttribute('aria-hidden') !== 'true');
     if (focusables.length === 0) {
       ke.preventDefault();
@@ -348,7 +349,7 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
 
       /* 正文：同步直染，异步先占位（fill 时 token 校验防旧请求覆盖新打开） */
       textEl.textContent = '';
-      textEl.appendChild(h('span', 'kb-meta', '加载中…'));
+      textEl.appendChild(h('span', 'icen-kb-meta', t('common.loadingEllipsis')));
       let pending = false;
       let syncDoc: KbPassageDoc | null = null;
       try {

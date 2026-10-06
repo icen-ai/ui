@@ -2,19 +2,19 @@
  * @icen.ai/ui — Behavior: nav（scroll 收缩 + 导航项选中，与 components/nav.css 配套）
  *
  * DOM 契约：
- *   <nav class="nav nav--sticky" data-scroll-reactive>…</nav>
+ *   <icen-nav class="icen-nav icen-nav--sticky" data-icen-scroll-reactive>…</icen-nav>
  *
  * 监听 window scroll（passive + rAF 节流），scrollY > 12 时切 .is-scrolled：
  * 与 nav.css 的 :not(.is-scrolled) 透明态 / .is-scrolled 实色态联动。
  *
  * 可选：
- *   data-nav-hide-on-scroll  → 滚动方向感知（向下滚隐藏、向上/静止恢复）
- *   data-nav-threshold="40"  → 自定义触发阈值（默认 12px）
+ *   data-icen-nav-hide-on-scroll  → 滚动方向感知（向下滚隐藏、向上/静止恢复）
+ *   data-icen-nav-threshold="40"  → 自定义触发阈值（默认 12px）
  *
- * 导航项选中（nav.css 契约的项类为 .nav-btn / .nav-link，二者同权）：
+ * 导航项选中（nav.css 契约的项类为 .icen-nav-btn / .icen-nav-link，二者同权）：
  * 点击项 → 同 nav 内其余项互斥摘除 .is-active / aria-current，当前项挂上
  * .is-active + aria-current="page"，并派发 icen:nav-select { item, index }
- * （index 为项在本 nav 全部 .nav-btn/.nav-link 中的序号；禁用项不响应）。
+ * （index 为项在本 nav 全部 .icen-nav-btn/.icen-nav-link 中的序号；禁用项不响应）。
  *
  * 同一元素重复 init 幂等。监听器挂在 window 上，元素从 DOM 移除后**不会**自动回收
  * （window 持有 listener 引用，元素无法随之 GC）——initNav 返回销毁函数，
@@ -33,8 +33,8 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** nav.css 契约的导航项选择器（按钮式 .nav-btn 与链接式 .nav-link）。 */
-const NAV_ITEM_SELECTOR = '.nav-btn, .nav-link';
+/** nav.css 契约的导航项选择器（按钮式 .icen-nav-btn 与链接式 .icen-nav-link）。 */
+const NAV_ITEM_SELECTOR = '.icen-nav-btn, .icen-nav-link';
 
 function isNavItemDisabled(item: HTMLElement): boolean {
   return (
@@ -49,10 +49,10 @@ function setup(nav: HTMLElement): (() => void) | undefined {
   if (el.__icenNavInit) return undefined;
   el.__icenNavInit = true;
 
-  const rawThreshold = nav.dataset.navThreshold;
+  const rawThreshold = nav.dataset.icenNavThreshold;
   const parsedThreshold = rawThreshold === undefined || rawThreshold === '' ? NaN : Number(rawThreshold);
   const threshold = Number.isFinite(parsedThreshold) ? parsedThreshold : 12;
-  const hideOnScroll = nav.hasAttribute('data-nav-hide-on-scroll');
+  const hideOnScroll = nav.hasAttribute('data-icen-nav-hide-on-scroll');
 
   let ticking = false;
   let lastY = window.scrollY;
@@ -89,12 +89,12 @@ function setup(nav: HTMLElement): (() => void) | undefined {
   window.addEventListener('resize', onScroll, { passive: true });
   apply();
 
-  /* 导航项选中：.nav-btn / .nav-link 同 nav 互斥 is-active + aria-current="page" */
+  /* 导航项选中：.icen-nav-btn / .icen-nav-link 同 nav 互斥 is-active + aria-current="page" */
   const onSelect = (ev: Event): void => {
     const target = ev.target;
     if (!(target instanceof Element)) return;
     const item = target.closest<HTMLElement>(NAV_ITEM_SELECTOR);
-    if (!item || item.closest('.nav') !== nav) return;
+    if (!item || item.closest('.icen-nav') !== nav) return;
     if (isNavItemDisabled(item)) return;
 
     const items = Array.from(nav.querySelectorAll<HTMLElement>(NAV_ITEM_SELECTOR));
@@ -122,7 +122,7 @@ function setup(nav: HTMLElement): (() => void) | undefined {
 }
 
 /**
- * 为 root 下每个 .nav[data-scroll-reactive] 初始化（root 自身匹配也算）。
+ * 为 root 下每个 .icen-nav[data-icen-scroll-reactive] 初始化（root 自身匹配也算）。
  * 返回销毁函数：移除本次初始化挂上的全部 window scroll/resize 与 nav click 监听。
  */
 export function initNav(root?: ParentNode): () => void {
@@ -130,8 +130,8 @@ export function initNav(root?: ParentNode): () => void {
   if (typeof document !== 'undefined' && typeof window !== 'undefined') {
     const scope = root ?? document;
     const navs: Element[] = [];
-    if (scope instanceof Element && scope.matches('.nav[data-scroll-reactive]')) navs.push(scope);
-    navs.push(...Array.from(scope.querySelectorAll('.nav[data-scroll-reactive]')));
+    if (scope instanceof Element && scope.matches('.icen-nav[data-icen-scroll-reactive]')) navs.push(scope);
+    navs.push(...Array.from(scope.querySelectorAll('.icen-nav[data-icen-scroll-reactive]')));
     for (const n of navs) {
       const cleanup = setup(n as HTMLElement);
       if (cleanup) cleanups.push(cleanup);

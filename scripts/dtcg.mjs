@@ -6,7 +6,7 @@
 // retro-effects.css 是按需 extras 层（不进 tokens.css 拼合），不在导出范围。
 //
 // 结构：{ $description, $extensions, clay: { light: {…}, dark: {…} }, piano: {…}, … }
-//   - 每个 (预设, 明/暗) 是「有效级联结果」：:root → .dark / .预设 → .预设.dark（按特异性分层、同层按源序）
+//   - 每个 (预设, 明/暗) 是「有效级联结果」：:root → [data-icen-theme="dark"] / .预设 → .预设[data-icen-theme="dark"]（按特异性分层、同层按源序）
 //   - 组内按变量前缀分子组并提升组级 $type（token 级 $type 恒最高优先，仅例外 token 携带）
 //   - $value 用经典版标量：颜色 #rrggbb[aa]、尺寸 "8px"/"0.25rem"（仅 px/rem）、时长 "150ms"、
 //     fontFamily 字符串数组、cubicBezier 四元数组、number 为 JSON number
@@ -32,37 +32,37 @@ const PRESETS = ['clay', 'piano', 'art', 'vangogh', 'ink', 'retro'];
 
 // 变量名前缀 → (子组, $type)。类型来自命名语义，不从值猜。
 const GROUP_RULES = [
-  ['token-', 'token', 'color'],
-  ['accent-', 'accent', 'color'],
-  ['bg-', 'bg', 'color'],
-  ['text-', 'text', 'color'],
-  ['border-', 'border', 'color'],
-  ['color-', 'color', 'color'],
-  ['radius-', 'radius', 'dimension'],
-  ['density-', 'density', 'dimension'],
-  ['duration-', 'duration', 'duration'],
-  ['ease-', 'ease', 'cubicBezier'],
-  ['font-', 'font', 'fontFamily'],
-  ['line-height-', 'line-height', 'number'],
-  ['letter-spacing-', 'letter-spacing', 'dimension'],
+  ['icen-token-', 'token', 'color'],
+  ['icen-accent-', 'accent', 'color'],
+  ['icen-bg-', 'bg', 'color'],
+  ['icen-text-', 'text', 'color'],
+  ['icen-border-', 'border', 'color'],
+  ['icen-color-', 'color', 'color'],
+  ['icen-radius-', 'radius', 'dimension'],
+  ['icen-density-', 'density', 'dimension'],
+  ['icen-duration-', 'duration', 'duration'],
+  ['icen-ease-', 'ease', 'cubicBezier'],
+  ['icen-font-', 'font', 'fontFamily'],
+  ['icen-line-height-', 'line-height', 'number'],
+  ['icen-letter-spacing-', 'letter-spacing', 'dimension'],
 ];
 // 组级 $type 的例外（token 级 $type 覆盖组级——规范允许且优先级最高）
-const TYPE_OVERRIDES = { '--token-scrollbar-size': 'dimension' };
+const TYPE_OVERRIDES = { '--icen-token-scrollbar-size': 'dimension' };
 
 const GROUP_DESCRIPTIONS = {
-  token: '语义色彩系统（--token-*）',
-  accent: '主色桥接（--accent-*）',
-  bg: '背景桥接（--bg-*）',
-  text: '文字桥接（--text-*）',
-  border: '边框桥接（--border-*）',
-  color: '语义色桥接（--color-*）',
-  radius: '圆角（--radius-*）',
-  density: '间距/字号/控件高度标尺（--density-*）',
-  duration: '动效时长（--duration-*）',
-  ease: '缓动曲线（--ease-*）',
-  font: '字体栈（--font-*）',
-  'line-height': '行高（--line-height-*，无单位 number）',
-  'letter-spacing': '字距（--letter-spacing-*）',
+  token: '语义色彩系统（--icen-token-*）',
+  accent: '主色桥接（--icen-accent-*）',
+  bg: '背景桥接（--icen-bg-*）',
+  text: '文字桥接（--icen-text-*）',
+  border: '边框桥接（--icen-border-*）',
+  color: '语义色桥接（--icen-color-*）',
+  radius: '圆角（--icen-radius-*）',
+  density: '间距/字号/控件高度标尺（--icen-density-*）',
+  duration: '动效时长（--icen-duration-*）',
+  ease: '缓动曲线（--icen-ease-*）',
+  font: '字体栈（--icen-font-*）',
+  'line-height': '行高（--icen-line-height-*，无单位 number）',
+  'letter-spacing': '字距（--icen-letter-spacing-*）',
 };
 
 const REASONS = {
@@ -97,22 +97,25 @@ for (const m of noComments.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
   for (const d of body.matchAll(/--([A-Za-z][\w-]*)\s*:\s*([^;]+);/g)) decls.set('--' + d[1], d[2].trim());
   if (decls.size === 0) continue;
 
-  // 选择器分类：仅接受单选择器块的 :root / .dark / .预设 / .预设.dark（两段复合任意顺序）
+  // 选择器分类：仅接受单选择器块的 :root / [data-icen-theme="dark"] /
+  // [data-icen-preset="<预设>"] / [data-icen-preset="<预设>"][data-icen-theme="dark"]（两段复合任意顺序）
   const parts = selector.split(',').map((s) => s.trim()).filter(Boolean);
   let role = null;
   if (parts.length === 1) {
     const p = parts[0];
     if (p === ':root') role = { tier: 0, kind: 'root' };
     else {
-      const m2 = p.match(/^\.([A-Za-z][\w-]*)(?:\.([A-Za-z][\w-]*))?$/);
-      if (m2 && !m2[2]) {
-        if (PRESETS.includes(m2[1])) role = { tier: 1, kind: 'preset', preset: m2[1] };
-        else if (m2[1] === 'dark') role = { tier: 1, kind: 'dark' };
-      } else if (m2 && m2[2]) {
-        // 复合类：预设 + dark（顺序任意；不能 sort 后取下标——'dark' 字母序未必在后）
-        const [a, b] = [m2[1], m2[2]];
-        if (a === 'dark' && PRESETS.includes(b)) role = { tier: 2, kind: 'preset-dark', preset: b, mode: 'dark' };
-        else if (b === 'dark' && PRESETS.includes(a)) role = { tier: 2, kind: 'preset-dark', preset: a, mode: 'dark' };
+      const presetM = p.match(/\[data-icen-preset="([a-z][\w-]*)"\]/);
+      const darkM = /\[data-icen-theme="dark"\]/.test(p);
+      const isPresetForm = /^\[data-icen-(preset="[a-z][\w-]*"|theme="dark")\](\[data-icen-(preset="[a-z][\w-]*"|theme="dark")\])?$/.test(p);
+      if (isPresetForm) {
+        if (presetM && darkM) {
+          if (PRESETS.includes(presetM[1])) role = { tier: 2, kind: 'preset-dark', preset: presetM[1], mode: 'dark' };
+        } else if (presetM) {
+          if (PRESETS.includes(presetM[1])) role = { tier: 1, kind: 'preset', preset: presetM[1] };
+        } else if (darkM) {
+          role = { tier: 1, kind: 'dark' };
+        }
       }
     }
   }
@@ -210,7 +213,7 @@ function ruleFor(name) {
 }
 
 // ── 3. 逐 (预设, 模式)：分类值 → 别名链校验 → 组装 DTCG 组 ──
-const MODE_LABEL = { light: 'Light（html 无 .dark）', dark: 'Dark（html.dark）' };
+const MODE_LABEL = { light: 'Light（无 data-icen-theme）', dark: 'Dark（data-icen-theme="dark"）' };
 const out = {
   $description: 'icen design tokens (DTCG classic format)',
   $extensions: {
@@ -236,7 +239,7 @@ let totalExported = 0, totalSkipped = 0, totalAliases = 0;
 
 for (const preset of PRESETS) {
   out[preset] = {
-    $description: `${preset} 预设（${preset === 'clay' ? '默认主题，:root 基值' : `html.${preset}` }）——每个模式为该组合下的有效级联结果`,
+    $description: `${preset} 预设（${preset === 'clay' ? '默认主题，:root 基值' : `[data-icen-preset="${preset}"]` }）——每个模式为该组合下的有效级联结果`,
   };
   for (const mode of ['light', 'dark']) {
     const eff = effective(preset, mode);
@@ -279,7 +282,7 @@ for (const preset of PRESETS) {
 
     // 3c. 组装：子组（组级 $type 提升）→ token 对象
     /** @type {Record<string, any>} */
-    const modeGroup = { $description: `${MODE_LABEL[mode]}——有效级联：:root${mode === 'dark' ? ' + .dark' : ''}${preset !== 'clay' ? ` + .${preset}` : ''}${mode === 'dark' && preset !== 'clay' ? ` + .${preset}.dark` : ''}` };
+    const modeGroup = { $description: `${MODE_LABEL[mode]}——有效级联：:root${mode === 'dark' ? ' + [data-icen-theme="dark"]' : ''}${preset !== 'clay' ? ` + [data-icen-preset="${preset}"]` : ''}` };
     const groups = new Map(); // group -> { $type, tokens: [[name, tokenObj]] }
     const skips = [];
     let exported = 0, aliases = 0;

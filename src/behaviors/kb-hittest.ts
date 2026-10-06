@@ -2,32 +2,32 @@
  * @icen.ai/ui — Behavior: kb-hittest（召回测试集，与 components/kb-search.css 配套）
  *
  * DOM 契约（create 装配，规格 docs/spec/kb-family.md §5.14）：
- *   <div class="kb-hittest" data-kb-hittest>
- *     <div class="kb-hittest-stats">                          ← renderKbHitStats 快照填充
- *       <div class="kb-hittest-stat kb-hittest-stat--rate">
- *         <span class="kb-hittest-stat-label">命中率</span>
- *         <span class="kb-num kb-hittest-hitrate">62.5%</span></div>
- *       <div class="kb-hittest-stat"><span class="kb-hittest-stat-label">均分</span>
- *         <span class="kb-num">0.72</span></div>
- *       <div class="kb-hittest-stat"><span class="kb-hittest-stat-label">通过</span>
- *         <span class="kb-num">5/8</span></div>
- *       <span class="kb-badge">参数仅本次会话生效</span>
+ *   <div class="icen-kb-hittest" data-icen-kb-hittest>
+ *     <div class="icen-kb-hittest-stats">                          ← renderKbHitStats 快照填充
+ *       <div class="icen-kb-hittest-stat kb-hittest-stat--rate">
+ *         <span class="icen-kb-hittest-stat-label">命中率</span>
+ *         <span class="icen-kb-num icen-kb-hittest-hitrate">62.5%</span></div>
+ *       <div class="icen-kb-hittest-stat"><span class="icen-kb-hittest-stat-label">均分</span>
+ *         <span class="icen-kb-num">0.72</span></div>
+ *       <div class="icen-kb-hittest-stat"><span class="icen-kb-hittest-stat-label">通过</span>
+ *         <span class="icen-kb-num">5/8</span></div>
+ *       <span class="icen-kb-badge">参数仅本次会话生效</span>
  *     </div>
- *     <div class="kb-hittest-list">
- *       <div class="kb-hittest-row [.is-pass|.is-fail]">
- *         <button class="kb-hittest-pin [.is-pinned]">…pin svg…</button>
- *         <span class="kb-hittest-q">问题文本</span>
- *         <span class="kb-hittest-expected"><span class="kb-chip">chunkA</span>…[+N]</span>
- *         <span class="kb-hittest-result kb-num">✓ | ✗ | —</span>
- *         <button class="kb-hittest-remove">×</button>
+ *     <div class="icen-kb-hittest-list">
+ *       <div class="icen-kb-hittest-row [.is-pass|.is-fail]">
+ *         <button class="icen-kb-hittest-pin [.is-pinned]">…pin svg…</button>
+ *         <span class="icen-kb-hittest-q">问题文本</span>
+ *         <span class="icen-kb-hittest-expected"><span class="icen-kb-chip">chunkA</span>…[+N]</span>
+ *         <span class="icen-kb-hittest-result icen-kb-num">✓ | ✗ | —</span>
+ *         <button class="icen-kb-hittest-remove">×</button>
  *       </div>…
- *       [<div class="kb-empty">…空态…</div>]
+ *       [<div class="icen-kb-empty">…空态…</div>]
  *     </div>
- *     <div class="kb-hittest-add">
- *       <input class="kb-hittest-input" placeholder="新增问题，Enter 添加" />
- *       <button class="kb-hittest-add-btn">添加</button>
+ *     <div class="icen-kb-hittest-add">
+ *       <icen-input class="icen-kb-hittest-input" placeholder="新增问题，Enter 添加" />
+ *       <button class="icen-kb-hittest-add-btn">添加</button>
  *     </div>
- *     <button class="kb-run">运行全部</button>                ← 本视图唯一 accent
+ *     <button class="icen-kb-run">运行全部</button>                ← 本视图唯一 icen-accent
  *   </div>
  *
  * 行为：
@@ -48,6 +48,7 @@ import {
   h, svgIcon, hitTestStats, formatScore, formatPercent, type KbHitTestCase, type KbHitStats,
 } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -112,34 +113,34 @@ function newCaseId(): string {
 /* ══════════════ 统计头（独立导出） ══════════════ */
 
 /**
- * 快照渲染召回统计头：命中率大数字（.kb-num）+ 均分 + 通过 x/y + 参数快照徽标
+ * 快照渲染召回统计头：命中率大数字（.icen-kb-num）+ 均分 + 通过 x/y + 参数快照徽标
  * 「参数仅本次会话生效」。清空并填充宿主 el，返回统计容器；SSR 返回宿主 el。
  */
 export function renderKbHitStats(el: HTMLElement, stats: KbHitStats): HTMLElement {
   if (typeof document === 'undefined' || !el) return el;
   el.textContent = '';
-  const box = h('div', 'kb-hittest-stats');
+  const box = h('div', 'icen-kb-hittest-stats');
 
-  const rate = h('div', 'kb-hittest-stat kb-hittest-stat--rate');
+  const rate = h('div', 'icen-kb-hittest-stat kb-hittest-stat--rate');
   rate.append(
-    h('span', 'kb-hittest-stat-label', '命中率'),
-    h('span', 'kb-num kb-hittest-hitrate', formatPercent(stats.hitRate)),
+    h('span', 'icen-kb-hittest-stat-label', t('kbHittest.hitRate')),
+    h('span', 'icen-kb-num icen-kb-hittest-hitrate', formatPercent(stats.hitRate)),
   );
 
-  const avg = h('div', 'kb-hittest-stat');
+  const avg = h('div', 'icen-kb-hittest-stat');
   avg.append(
-    h('span', 'kb-hittest-stat-label', '均分'),
-    h('span', 'kb-num', formatScore(stats.avgScore)),
+    h('span', 'icen-kb-hittest-stat-label', t('kbHittest.avgScore')),
+    h('span', 'icen-kb-num', formatScore(stats.avgScore)),
   );
 
-  const pass = h('div', 'kb-hittest-stat');
+  const pass = h('div', 'icen-kb-hittest-stat');
   pass.append(
-    h('span', 'kb-hittest-stat-label', '通过'),
-    h('span', 'kb-num', `${stats.passed}/${stats.total}`),
+    h('span', 'icen-kb-hittest-stat-label', t('kbHittest.pass')),
+    h('span', 'icen-kb-num', `${stats.passed}/${stats.total}`),
   );
 
-  const badge = h('span', 'kb-badge', '参数仅本次会话生效');
-  badge.title = '测试运行的检索参数（topK/阈值/重排）不落库，仅本次会话生效';
+  const badge = h('span', 'icen-kb-badge', t('kbHittest.sessionOnly'));
+  badge.title = t('kbHittest.sessionOnlyHint');
 
   box.append(rate, avg, pass, badge);
   el.appendChild(box);
@@ -171,21 +172,21 @@ export function createKbHitTest(el: HTMLElement, opts: KbHitTestOpts = {}): KbHi
   let cases: KbHitTestCase[] = (opts.cases ?? []).map(cloneCase);
   let destroyed = false;
 
-  el.classList.add('kb-hittest');
+  el.classList.add('icen-kb-hittest');
   el.dataset.kbHitTest = '';
   el.textContent = '';
 
   const statsBox = h('div', 'kb-hittest-stats-slot');
-  const listBox = h('div', 'kb-hittest-list');
-  const input = h('input', 'kb-hittest-input') as HTMLInputElement;
+  const listBox = h('div', 'icen-kb-hittest-list');
+  const input = h('input', 'icen-kb-hittest-input') as HTMLInputElement;
   input.type = 'text';
-  input.placeholder = '新增问题，Enter 添加';
-  input.setAttribute('aria-label', '新增测试问题');
-  const addBtn = h('button', 'kb-hittest-add-btn', '添加');
+  input.placeholder = t('kbHittest.addPlaceholder');
+  input.setAttribute('aria-label', t('kbHittest.addAria'));
+  const addBtn = h('button', 'icen-kb-hittest-add-btn', t('common.add'));
   addBtn.type = 'button';
-  const addRow = h('div', 'kb-hittest-add');
+  const addRow = h('div', 'icen-kb-hittest-add');
   addRow.append(input, addBtn);
-  const runBtn = h('button', 'kb-run', '运行全部');
+  const runBtn = h('button', 'icen-kb-run', t('kbHittest.runAll'));
   runBtn.type = 'button';
   const runIcon = svgIcon(ICON_RUN);
   if (runIcon) runBtn.prepend(runIcon);
@@ -204,18 +205,18 @@ export function createKbHitTest(el: HTMLElement, opts: KbHitTestOpts = {}): KbHi
   function renderList(): void {
     listBox.textContent = '';
     if (!cases.length) {
-      listBox.appendChild(h('div', 'kb-empty', '暂无测试问题——添加第一条，开始召回回归'));
+      listBox.appendChild(h('div', 'icen-kb-empty', t('kbHittest.empty')));
       return;
     }
     for (const c of orderedCases()) {
       const passed = derivePassed(c);
-      const row = h('div', 'kb-hittest-row');
+      const row = h('div', 'icen-kb-hittest-row');
       if (passed === true) row.classList.add('is-pass');
       if (passed === false) row.classList.add('is-fail');
 
-      const pin = h('button', 'kb-hittest-pin');
+      const pin = h('button', 'icen-kb-hittest-pin');
       pin.type = 'button';
-      pin.title = c.pinned ? '取消置顶' : '置顶固定';
+      pin.title = c.pinned ? t('kbHittest.unpin') : t('kbHittest.pin');
       pin.setAttribute('aria-label', pin.title);
       pin.setAttribute('aria-pressed', c.pinned ? 'true' : 'false');
       if (c.pinned) pin.classList.add('is-pinned');
@@ -223,25 +224,25 @@ export function createKbHitTest(el: HTMLElement, opts: KbHitTestOpts = {}): KbHi
       if (pinIcon) pin.appendChild(pinIcon);
       pin.dataset.id = c.id;
 
-      const q = h('span', 'kb-hittest-q', c.question);
+      const q = h('span', 'icen-kb-hittest-q', c.question);
 
-      const expected = h('span', 'kb-hittest-expected');
+      const expected = h('span', 'icen-kb-hittest-expected');
       const ids = c.expectedChunkIds ?? [];
       for (const id of ids.slice(0, EXPECTED_CHIP_LIMIT)) {
-        expected.appendChild(h('span', 'kb-chip', id));
+        expected.appendChild(h('span', 'icen-kb-chip', id));
       }
       if (ids.length > EXPECTED_CHIP_LIMIT) {
-        expected.appendChild(h('span', 'kb-chip', `+${ids.length - EXPECTED_CHIP_LIMIT}`));
+        expected.appendChild(h('span', 'icen-kb-chip', `+${ids.length - EXPECTED_CHIP_LIMIT}`));
       }
-      if (!ids.length) expected.appendChild(h('span', 'kb-chip', '未设期望'));
+      if (!ids.length) expected.appendChild(h('span', 'icen-kb-chip', t('kbHittest.noExpectation')));
 
-      const result = h('span', 'kb-hittest-result kb-num', passed === true ? '✓' : passed === false ? '✗' : '—');
-      result.title = passed === undefined ? '未运行' : passed ? '期望命中在前排命中中' : '期望未命中';
+      const result = h('span', 'icen-kb-hittest-result icen-kb-num', passed === true ? '✓' : passed === false ? '✗' : '—');
+      result.title = passed === undefined ? t('kbHittest.notRun') : passed ? t('kbHittest.expectHit') : t('kbHittest.expectMiss');
 
-      const remove = h('button', 'kb-hittest-remove', '×');
+      const remove = h('button', 'icen-kb-hittest-remove', '×');
       remove.type = 'button';
-      remove.title = '删除问题';
-      remove.setAttribute('aria-label', '删除问题');
+      remove.title = t('kbHittest.deleteQuestion');
+      remove.setAttribute('aria-label', t('kbHittest.deleteQuestion'));
       remove.dataset.id = c.id;
 
       row.append(pin, q, expected, result, remove);
@@ -272,7 +273,7 @@ export function createKbHitTest(el: HTMLElement, opts: KbHitTestOpts = {}): KbHi
   listen(listBox, 'click', (ev) => {
     const target = ev.target;
     if (!(target instanceof Element)) return;
-    const pin = target.closest('.kb-hittest-pin');
+    const pin = target.closest('.icen-kb-hittest-pin');
     if (pin instanceof HTMLButtonElement) {
       const c = cases.find((x) => x.id === pin.dataset.id);
       if (c) {
@@ -281,7 +282,7 @@ export function createKbHitTest(el: HTMLElement, opts: KbHitTestOpts = {}): KbHi
       }
       return;
     }
-    const remove = target.closest('.kb-hittest-remove');
+    const remove = target.closest('.icen-kb-hittest-remove');
     if (remove instanceof HTMLButtonElement) {
       cases = cases.filter((x) => x.id !== remove.dataset.id);
       refresh();
@@ -319,7 +320,7 @@ export function createKbHitTest(el: HTMLElement, opts: KbHitTestOpts = {}): KbHi
       if (destroyed) return;
       destroyed = true;
       ctrl.abort();
-      el.classList.remove('kb-hittest');
+      el.classList.remove('icen-kb-hittest');
       delete el.dataset.kbHitTest;
       el.textContent = '';
       delete (el as MarkedHitTestEl).__icenKbHitTest;

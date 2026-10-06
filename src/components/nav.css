@@ -2,29 +2,29 @@
  * @icen.ai/ui — Component: nav（玻璃顶栏，scroll 收缩配套 behaviors/nav）
  *
  * 完整契约：
- *   <nav class="nav [nav--sticky|nav--fixed] [.is-scrolled]" data-scroll-reactive>
- *     <div class="nav-left">…品牌/返回</div>
- *     <div class="nav-center">…中间菜单</div>
- *     <div class="nav-right">…操作</div>
- *     <div class="nav-bottom">…整行补充（可选，会换行）</div>
- *   </nav>
+ *   <icen-nav class="icen-nav [icen-nav--sticky|icen-nav--fixed] [.is-scrolled]" data-icen-scroll-reactive>
+ *     <div class="icen-nav-left">…品牌/返回</div>
+ *     <div class="icen-nav-center">…中间菜单</div>
+ *     <div class="icen-nav-right">…操作</div>
+ *     <div class="icen-nav-bottom">…整行补充（可选，会换行）</div>
+ *   </icen-nav>
  *
- * 按钮：<button class="nav-btn motion pressable [.is-active] [.is-disabled] [.nav-btn--icon]">
+ * 按钮：<button class="icen-nav-btn icen-motion icen-pressable [.is-active] [.is-disabled] [.icen-nav-btn--icon]">
  * 三段布局：left/right flex-shrink:0；center flex:1 居中。
  * behavior 维护：scrollY > 12 时挂 .is-scrolled；prefers-reduced-motion 下不监听。
  */
 
-.nav {
+.icen-nav {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   height: 56px;
-  padding: 0 var(--density-space-md);
-  background: var(--token-surface-glass);
+  padding: 0 var(--icen-density-space-md);
+  background: var(--icen-token-surface-glass);
   backdrop-filter: blur(12px) saturate(1.1);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
-  border-bottom: 1px solid var(--token-outline-soft);
+  border-bottom: 1px solid var(--icen-token-outline-soft);
   transition:
     background-color var(--icen-tx-slow),
     border-color var(--icen-tx-slow),
@@ -32,69 +32,68 @@
     transform var(--icen-tx-slow),
     backdrop-filter var(--icen-tx-slow);
 }
-.nav:has(.nav-bottom) {
+.icen-nav:has(.icen-nav-bottom) {
   height: auto;
   min-height: 56px;
 }
-.nav--sticky {
+.icen-nav--sticky {
   position: sticky;
   top: 0;
-  z-index: var(--z-chrome);
+  z-index: var(--icen-z-chrome);
 }
-.nav--fixed {
+.icen-nav--fixed {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: var(--z-chrome);
+  inset-inline: 0;
+  z-index: var(--icen-z-chrome);
 }
 
 /* scroll-reactive：未滚动更透、底边线透明；滚动后底色更实 + blur 加倍 */
-.nav[data-scroll-reactive]:not(.is-scrolled) {
-  background: color-mix(in srgb, var(--token-surface-glass) 70%, transparent);
+.icen-nav[data-icen-scroll-reactive]:not(.is-scrolled) {
+  background: color-mix(in srgb, var(--icen-token-surface-glass) 70%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom-color: transparent;
 }
-.nav.is-scrolled {
-  background: color-mix(in srgb, var(--token-surface-glass) 92%, transparent);
+.icen-nav.is-scrolled {
+  background: color-mix(in srgb, var(--icen-token-surface-glass) 92%, transparent);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  box-shadow: var(--token-shadow-elevated);
+  box-shadow: var(--icen-token-shadow-elevated);
 }
 
 /* hide-on-scroll 模式：向下滚隐藏，向上滚恢复。仅 sticky/fixed 生效。 */
-.nav.nav--sticky.is-nav-hidden,
-.nav.nav--fixed.is-nav-hidden {
+.icen-nav.icen-nav--sticky.is-nav-hidden,
+.icen-nav.icen-nav--fixed.is-nav-hidden {
   transform: translateY(-100%);
   box-shadow: none;
 }
 
-.nav-left,
-.nav-right {
+.icen-nav-left,
+.icen-nav-right {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   flex-shrink: 0;
 }
-.nav-center {
+.icen-nav-center {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
 }
-.nav-bottom { width: 100%; padding-top: var(--density-space-xs); }
+.icen-nav-bottom { inline-size: 100%; padding-top: var(--icen-density-space-xs); }
 
-.nav-btn {
+.icen-nav-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  border-radius: var(--radius-full);
-  padding: 6px var(--density-space-sm);
-  font-size: var(--density-font-size-md);
-  color: var(--token-text-muted);
+  gap: var(--icen-density-space-xs);
+  border-radius: var(--icen-radius-full);
+  padding: 6px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-md);
+  color: var(--icen-token-text-muted);
   background: none;
   border: 0;
   cursor: pointer;
@@ -103,119 +102,119 @@
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.nav-btn > svg {
+.icen-nav-btn > svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
 }
-.nav-btn:not(.is-active):hover {
-  color: var(--token-text);
-  background: var(--token-control-hover);
+.icen-nav-btn:not(.is-active):hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-control-hover);
 }
-.nav-btn:focus-visible {
+.icen-nav-btn:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.nav-btn.is-active,
-.nav-btn[aria-current='page'] {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
+.icen-nav-btn.is-active,
+.icen-nav-btn[aria-current='page'] {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
   font-weight: 500;
-  box-shadow: var(--token-shadow-elevated);
+  box-shadow: var(--icen-token-shadow-elevated);
 }
-.nav-btn.is-disabled,
-.nav-btn:disabled,
-.nav-btn[aria-disabled='true'] {
+.icen-nav-btn.is-disabled,
+.icen-nav-btn:disabled,
+.icen-nav-btn[aria-disabled='true'] {
   opacity: var(--icen-disabled-opacity);
   pointer-events: none;
 }
-.nav-btn--icon { padding: 6px 10px; }
-.nav-btn--icon > svg { width: 16px; height: 16px; }
+.icen-nav-btn--icon { padding: 6px 10px; }
+.icen-nav-btn--icon > svg { width: 16px; height: 16px; }
 
-.nav-divider {
+.icen-nav-divider {
   width: 1px;
   height: 20px;
   margin: 0 2px;
-  background: var(--token-outline-soft);
+  background: var(--icen-token-outline-soft);
 }
 
 /* 品牌徽标位 */
-.nav-brand {
+.icen-nav-brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  font-family: var(--font-heading);
-  font-size: var(--density-font-size-md);
+  gap: var(--icen-density-space-xs);
+  font-family: var(--icen-font-heading);
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   text-decoration: none;
 }
-.nav-brand:hover { text-decoration: none; }
-.nav-brand > svg, .nav-brand > img {
+.icen-nav-brand:hover { text-decoration: none; }
+.icen-nav-brand > svg, .icen-nav-brand > img {
   width: 24px;
   height: 24px;
 }
 
 /* 移动端：缩短高度、收紧间距 */
 @media (max-width: 640px) {
-  .nav { height: 48px; min-height: 48px; padding: 0 var(--density-space-sm); }
-  .nav-btn { padding: 4px var(--density-space-xs); }
+  .icen-nav { height: 48px; min-height: 48px; padding: 0 var(--icen-density-space-sm); }
+  .icen-nav-btn { padding: 4px var(--icen-density-space-xs); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav, .nav-btn { transition: none; }
+  .icen-nav, .icen-nav-btn { transition: none; }
 }
 
 /* ── 增强 ── */
 
 /* 导航搜索槽 */
-.nav-search {
+.icen-nav-search {
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  padding: 0 var(--density-space-sm);
+  gap: var(--icen-density-space-xs);
+  padding: 0 var(--icen-density-space-sm);
   height: 32px;
   min-width: 180px;
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-full);
-  color: var(--token-text-faint);
-  font-size: var(--density-font-size-sm);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-full);
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-sm);
   cursor: pointer;
   transition: border-color var(--icen-tx-fast);
 }
-.nav-search:hover { border-color: var(--token-accent); }
-.nav-search svg { width: 14px; height: 14px; flex-shrink: 0; }
-.nav-search-kbd {
-  margin-left: auto;
+.icen-nav-search:hover { border-color: var(--icen-token-accent); }
+.icen-nav-search svg { width: 14px; height: 14px; flex-shrink: 0; }
+.icen-nav-search-kbd {
+  margin-inline-start: auto;
   padding: 1px 5px;
-  font-size: var(--density-font-size-2xs);
-  font-family: var(--font-mono);
-  color: var(--token-text-faint);
-  background: var(--token-fill-2);
-  border-radius: var(--radius-xs);
+  font-size: var(--icen-density-font-size-2xs);
+  font-family: var(--icen-font-mono);
+  color: var(--icen-token-text-faint);
+  background: var(--icen-token-fill-2);
+  border-radius: var(--icen-radius-xs);
 }
 
-/* 导航按钮上的通知徽标 */
-.nav-btn-badge {
+/* 导航按钮上的通知徽标（与 .icen-badge 同为物理右上角契约，RTL 不镜像） */
+.icen-nav-btn-badge {
   position: absolute;
   top: 2px;
-  right: 2px;
+  right: 2px; /* guard:allow-physical 徽标钉在按钮物理右上角（同 .icen-badge 角标契约） */
   min-width: 8px;
   height: 8px;
   padding: 0;
-  background: var(--token-error);
-  border: 1.5px solid var(--token-surface-glass);
-  border-radius: var(--radius-full);
+  background: var(--icen-token-error);
+  border: 1.5px solid var(--icen-token-surface-glass);
+  border-radius: var(--icen-radius-full);
   pointer-events: none;
 }
-.nav-btn-badge--count {
+.icen-nav-btn-badge--count {
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  font-size: var(--density-font-size-2xs);
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 700;
-  color: var(--token-on-accent);
+  color: var(--icen-token-on-accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -223,43 +222,44 @@
 }
 
 /* 链接式导航项（a 标签替代 button） */
-.nav-link {
+.icen-nav-link {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  padding: 6px var(--density-space-sm);
-  font-size: var(--density-font-size-md);
-  color: var(--token-text-muted);
+  gap: var(--icen-density-space-xs);
+  padding: 6px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-md);
+  color: var(--icen-token-text-muted);
   text-decoration: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.nav-link:hover {
-  color: var(--token-text);
-  background: var(--token-control-hover);
+.icen-nav-link:hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-control-hover);
   text-decoration: none;
 }
-.nav-link.is-active,
-.nav-link[aria-current='page'] {
-  color: var(--token-accent);
-  background: var(--token-accent-subtle);
+.icen-nav-link.is-active,
+.icen-nav-link[aria-current='page'] {
+  color: var(--icen-token-accent);
+  background: var(--icen-token-accent-subtle);
 }
 
 /* 导航用户区（头像 + 下拉触发器） */
-.nav-user {
+.icen-nav-user {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  padding: 3px var(--density-space-xs) 3px 3px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--token-outline-soft);
-  background: var(--token-surface);
+  gap: var(--icen-density-space-xs);
+  padding-block: 3px;
+  padding-inline: 3px var(--icen-density-space-xs);
+  border-radius: var(--icen-radius-full);
+  border: 1px solid var(--icen-token-outline-soft);
+  background: var(--icen-token-surface);
   cursor: pointer;
   transition: border-color var(--icen-tx-fast);
 }
-.nav-user:hover { border-color: var(--token-accent); }
-.nav-user-name {
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text);
+.icen-nav-user:hover { border-color: var(--icen-token-accent); }
+.icen-nav-user-name {
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text);
 }
-.nav-user svg { width: 12px; height: 12px; color: var(--token-text-faint); }
+.icen-nav-user svg { width: 12px; height: 12px; color: var(--icen-token-text-faint); }

@@ -2,23 +2,23 @@
  * @icen.ai/ui — Behavior: kb-qa（认证问答对编辑器：两列表格行内编辑，与 components/kb-ingest.css 配套）
  *
  * DOM 契约（docs/spec/kb-family.md §5.10）：
- *   <div class="kb-qa">
- *     <div class="kb-qa-bar">
- *       <span class="kb-qa-hint kb-meta">CSV 模板：question,answer（每行一对，UTF-8）</span>
- *       <button type="button" class="kb-btn" data-kb-qa-import>导入 CSV</button>
- *       <button type="button" class="kb-btn" data-kb-qa-add>+ 新增</button>
+ *   <div class="icen-kb-qa">
+ *     <div class="icen-kb-qa-bar">
+ *       <span class="icen-kb-qa-hint icen-kb-meta">CSV 模板：question,answer（每行一对，UTF-8）</span>
+ *       <button type="button" class="icen-kb-btn" data-icen-kb-qa-import>导入 CSV</button>
+ *       <button type="button" class="icen-kb-btn" data-icen-kb-qa-add>+ 新增</button>
  *     </div>
- *     <table class="kb-qa-table">
+ *     <icen-table class="icen-kb-qa-table">
  *       <thead><tr><th>问题</th><th>答案</th><th></th></tr></thead>
  *       <tbody>
- *         <tr class="kb-qa-row" data-index="0">
- *           <td class="kb-qa-q" contenteditable="true" data-kb-qa-field="question" data-original="…">…</td>
- *           <td class="kb-qa-a" contenteditable="true" data-kb-qa-field="answer" data-original="…">…</td>
- *           <td class="kb-qa-ops"><button class="kb-btn" data-kb-qa-remove>删除</button></td>
+ *         <tr class="icen-kb-qa-row" data-icen-index="0">
+ *           <td class="icen-kb-qa-q" contenteditable="true" data-icen-kb-qa-field="question" data-icen-original="…">…</td>
+ *           <td class="icen-kb-qa-a" contenteditable="true" data-icen-kb-qa-field="answer" data-icen-original="…">…</td>
+ *           <td class="icen-kb-qa-ops"><button class="icen-kb-btn" data-icen-kb-qa-remove>删除</button></td>
  *         </tr>…
- *         [空态行 .kb-qa-empty（colSpan 3）]
+ *         [空态行 .icen-kb-qa-empty（colSpan 3）]
  *       </tbody>
- *     </table>
+ *     </icen-table>
  *   </div>
  *
  * 行为：
@@ -26,9 +26,9 @@
  *     opts.importSource 覆盖导入事件 detail 的 source（缺省 'csv'）。
  *   - initKbQa(root?)：幂等（scope.__icenKbQaInit）+ 返回销毁函数，root 缺省 document 级委托：
  *     · 单元格 contenteditable 行内编辑（focusout 且内容变化才提交）
- *       → icen:kb-qa-change { op:'edit', index }（index = 行 data-index）
+ *       → icen:kb-qa-change { op:'edit', index }（index = 行 data-icen-index）
  *     · 新增（本地追加空行并聚焦问题格）→ icen:kb-qa-change { op:'add', index }
- *     · 删除（先派事件再本地删行，其后行 data-index 顺位重排）
+ *     · 删除（先派事件再本地删行，其后行 data-icen-index 顺位重排）
  *       → icen:kb-qa-change { op:'remove', index }（index = 被删行原序号）
  *     · 导入 → icen:kb-qa-import { source }（CSV 模板示意由 hint 行承担）
  *   - 渲染只写 textContent / createElement；SVG 过 kb-core svgIcon() 消毒。
@@ -36,6 +36,7 @@
 
 import { h, svgIcon } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /* ── 域内小工具 ── */
 
@@ -67,26 +68,26 @@ export interface KbQaOpts {
 /* ── 构建 ── */
 
 function buildQaCell(field: 'question' | 'answer', text: string): HTMLElement {
-  const td = h('td', field === 'question' ? 'kb-qa-q' : 'kb-qa-a', text);
+  const td = h('td', field === 'question' ? 'icen-kb-qa-q' : 'icen-kb-qa-a', text);
   td.contentEditable = 'true';
-  td.dataset.kbQaField = field;
-  td.dataset.original = text;
+  td.dataset.icenKbQaField = field;
+  td.dataset.icenOriginal = text;
   td.setAttribute('role', 'textbox');
-  td.setAttribute('aria-label', field === 'question' ? '问题' : '答案');
+  td.setAttribute('aria-label', field === 'question' ? t('kbQa.colQuestion') : t('kbQa.colAnswer'));
   return td;
 }
 
 function buildQaRow(row: KbQaRow, index: number): HTMLElement {
-  const tr = h('tr', 'kb-qa-row');
-  tr.dataset.index = String(index);
+  const tr = h('tr', 'icen-kb-qa-row');
+  tr.dataset.icenIndex = String(index);
   tr.appendChild(buildQaCell('question', row?.question ?? ''));
   tr.appendChild(buildQaCell('answer', row?.answer ?? ''));
-  const ops = h('td', 'kb-qa-ops');
-  const rm = h('button', 'kb-btn');
+  const ops = h('td', 'icen-kb-qa-ops');
+  const rm = h('button', 'icen-kb-btn');
   rm.type = 'button';
-  rm.dataset.kbQaRemove = '';
-  rm.textContent = '删除';
-  rm.setAttribute('aria-label', `删除第 ${index + 1} 行`);
+  rm.dataset.icenKbQaRemove = '';
+  rm.textContent = t('common.delete');
+  rm.setAttribute('aria-label', t('kbQa.deleteRow', { p0: index + 1 }));
   ops.appendChild(rm);
   tr.appendChild(ops);
   return tr;
@@ -105,35 +106,35 @@ export function renderKbQa(el: HTMLElement, rows: KbQaRow[], opts?: KbQaOpts): H
   const list = Array.isArray(rows) ? rows : [];
   el.textContent = '';
 
-  const root = h('div', 'kb-qa');
-  const bar = h('div', 'kb-qa-bar');
-  bar.appendChild(h('span', 'kb-qa-hint kb-meta', 'CSV 模板：question,answer（每行一对，UTF-8）'));
-  const importBtn = h('button', 'kb-btn');
+  const root = h('div', 'icen-kb-qa');
+  const bar = h('div', 'icen-kb-qa-bar');
+  bar.appendChild(h('span', 'icen-kb-qa-hint icen-kb-meta', t('kbQa.csvHint')));
+  const importBtn = h('button', 'icen-kb-btn');
   importBtn.type = 'button';
-  importBtn.dataset.kbQaImport = '';
+  importBtn.dataset.icenKbQaImport = '';
   icon(importBtn, ICON_IMPORT);
-  importBtn.appendChild(document.createTextNode('导入 CSV'));
+  importBtn.appendChild(document.createTextNode(t('kbQa.importCsv')));
   importBtn.dataset.importSource = o.importSource ?? 'csv';
   bar.appendChild(importBtn);
-  const addBtn = h('button', 'kb-btn');
+  const addBtn = h('button', 'icen-kb-btn');
   addBtn.type = 'button';
-  addBtn.dataset.kbQaAdd = '';
+  addBtn.dataset.icenKbQaAdd = '';
   icon(addBtn, ICON_PLUS);
-  addBtn.appendChild(document.createTextNode('新增'));
+  addBtn.appendChild(document.createTextNode(t('common.add')));
   bar.appendChild(addBtn);
   root.appendChild(bar);
 
   const table = document.createElement('table');
-  table.className = 'kb-qa-table';
+  table.className = 'icen-kb-qa-table';
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
-  ['问题', '答案', ''].forEach((label) => headRow.appendChild(h('th', 'kb-qa-th', label)));
+  [t('kbQa.colQuestion'), t('kbQa.colAnswer'), ''].forEach((label) => headRow.appendChild(h('th', 'icen-kb-qa-th', label)));
   thead.appendChild(headRow);
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   if (!list.length) {
     const tr = h('tr', 'kb-qa-empty-row');
-    const td = h('td', 'kb-qa-empty', o.emptyText ?? '暂无认证问答对');
+    const td = h('td', 'icen-kb-qa-empty', o.emptyText ?? t('kbQa.empty'));
     td.colSpan = 3;
     tr.appendChild(td);
     tbody.appendChild(tr);
@@ -152,10 +153,10 @@ interface QaScope extends ParentNode {
   __icenKbQaInit?: boolean;
 }
 
-/** 删除后顺位重排（保持 data-index 与可视序一致，后续 edit/remove 事件索引稳定） */
+/** 删除后顺位重排（保持 data-icen-index 与可视序一致，后续 edit/remove 事件索引稳定） */
 function renumberRows(root: HTMLElement): void {
-  root.querySelectorAll<HTMLElement>('.kb-qa-row[data-index]').forEach((row, i) => {
-    row.dataset.index = String(i);
+  root.querySelectorAll<HTMLElement>('.icen-kb-qa-row[data-icen-index]').forEach((row, i) => {
+    row.dataset.icenIndex = String(i);
   });
 }
 
@@ -177,35 +178,35 @@ export function initKbQa(root?: ParentNode): () => void {
     if (!t) return;
 
     /* 导入（source 透传 detail） */
-    const importBtn = t.closest<HTMLElement>('[data-kb-qa-import]');
+    const importBtn = t.closest<HTMLElement>('[data-icen-kb-qa-import]');
     if (importBtn) {
       emitIcen(importBtn, 'icen:kb-qa-import', { source: importBtn.dataset.importSource ?? 'csv' });
       return;
     }
 
     /* 新增：本地追加空行 + 聚焦问题格 */
-    const addBtn = t.closest<HTMLElement>('[data-kb-qa-add]');
+    const addBtn = t.closest<HTMLElement>('[data-icen-kb-qa-add]');
     if (addBtn) {
-      const rootEl = addBtn.closest<HTMLElement>('.kb-qa');
+      const rootEl = addBtn.closest<HTMLElement>('.icen-kb-qa');
       const tbody = rootEl?.querySelector('tbody');
       if (!rootEl || !tbody) return;
       const empty = tbody.querySelector<HTMLElement>('.kb-qa-empty-row');
       if (empty) empty.remove();
-      const rows = tbody.querySelectorAll<HTMLElement>('.kb-qa-row').length;
+      const rows = tbody.querySelectorAll<HTMLElement>('.icen-kb-qa-row').length;
       const tr = buildQaRow({ question: '', answer: '' }, rows);
       tbody.appendChild(tr);
-      tr.querySelector<HTMLElement>('.kb-qa-q')?.focus();
+      tr.querySelector<HTMLElement>('.icen-kb-qa-q')?.focus();
       emitIcen(rootEl, 'icen:kb-qa-change', { op: 'add', index: rows });
       return;
     }
 
     /* 删除：先派事件（带原序号）再删行 + 重排 */
-    const rm = t.closest<HTMLElement>('[data-kb-qa-remove]');
+    const rm = t.closest<HTMLElement>('[data-icen-kb-qa-remove]');
     if (rm) {
-      const row = rm.closest<HTMLElement>('.kb-qa-row[data-index]');
-      const rootEl = rm.closest<HTMLElement>('.kb-qa');
+      const row = rm.closest<HTMLElement>('.icen-kb-qa-row[data-icen-index]');
+      const rootEl = rm.closest<HTMLElement>('.icen-kb-qa');
       if (!row || !rootEl) return;
-      const index = Number(row.dataset.index ?? '0');
+      const index = Number(row.dataset.icenIndex ?? '0');
       emitIcen(row, 'icen:kb-qa-change', { op: 'remove', index });
       row.remove();
       renumberRows(rootEl);
@@ -216,13 +217,13 @@ export function initKbQa(root?: ParentNode): () => void {
   const onFocusOut = (e: Event): void => {
     const t = e.target;
     if (!(t instanceof HTMLElement)) return;
-    if (!t.hasAttribute('data-kb-qa-field')) return;
-    const row = t.closest<HTMLElement>('.kb-qa-row[data-index]');
+    if (!t.hasAttribute('data-icen-kb-qa-field')) return;
+    const row = t.closest<HTMLElement>('.icen-kb-qa-row[data-icen-index]');
     if (!row) return;
     const next = t.textContent ?? '';
-    if (next === (t.dataset.original ?? '')) return;
-    t.dataset.original = next;
-    emitIcen(row, 'icen:kb-qa-change', { op: 'edit', index: Number(row.dataset.index ?? '0') });
+    if (next === (t.dataset.icenOriginal ?? '')) return;
+    t.dataset.icenOriginal = next;
+    emitIcen(row, 'icen:kb-qa-change', { op: 'edit', index: Number(row.dataset.icenIndex ?? '0') });
   };
 
   target.addEventListener('click', onClick);

@@ -155,7 +155,7 @@ if (host && kbGapMod) {
     ]
   });
   host.addEventListener('icen:kb-gap-action', function (e) {
-    if (log) log.textContent = 'icen:kb-gap-action · ' + (e.detail.action === 'create-doc' ? '建文档' : '加同义词') + '：「' + e.detail.query + '」';
+    if (log) log.textContent = 'icen:icen-kb-gap-action · ' + (e.detail.action === 'create-doc' ? '建文档' : '加同义词') + '：「' + e.detail.query + '」';
   });
 }`,
   },
@@ -255,7 +255,7 @@ if (host && kbCanvasMod && aiDiffMod) {
   const msg = function (role, text) {
     const p = document.createElement('p');
     p.style.cssText = 'margin:0 0 10px;font-size:12.5px;line-height:1.7';
-    p.style.color = role === 'user' ? 'var(--token-text-muted)' : 'var(--token-text)';
+    p.style.color = role === 'user' ? 'var(--icen-token-text-muted)' : 'var(--icen-token-text)';
     p.textContent = (role === 'user' ? '我：' : '助理：') + text;
     return p;
   };
@@ -266,7 +266,7 @@ if (host && kbCanvasMod && aiDiffMod) {
   canvas.setChat(chat);
   /* 右栏：文档原文 */
   const doc = document.createElement('div');
-  doc.style.cssText = 'font-size:12.5px;line-height:1.9;color:var(--token-text)';
+  doc.style.cssText = 'font-size:12.5px;line-height:1.9;color:var(--icen-token-text)';
   doc.textContent = '第二条 单笔报销限额为 5000 元。第三条 发票抬头须为公司全称。';
   canvas.setDoc(doc);
   /* 右栏追加内联 diff：ai-diff 复用（宿主传入 parseUnifiedDiff 产物） */
@@ -328,10 +328,10 @@ if (host && kbCheckpointMod) {
     slug: 'kb-sandbox',
     name: '沙箱工具容器',
     group: '知识库',
-    desc: 'MCP App 沙箱工具容器（MCP Apps 对齐）：iframe sandbox="allow-scripts"（绝不加 allow-same-origin）+ postMessage JSON-RPC 2.0 双向桥。load 三种来源（ui:// 声明式资源走 opts.resolve / html 片段 srcdoc / URL），idle / loading / ready / error 四态由 data-state 纯 CSS 驱动；call(name, args) 返回 Promise（默认 8s 超时，重载 / 销毁一律 reject pending）；全部出入站信封经 icen:kb-sandbox-message + onMessage 双通道可观测，子帧 app.ready 通知即就绪。',
-    demo: `<div class="toolbar" style="margin-bottom:10px">
-  <button class="btn btn-sm btn-primary" type="button" id="kb-sandbox-load">load('ui://demo/echo')</button>
-  <button class="btn btn-sm" type="button" id="kb-sandbox-call">call('echo', { text, n })</button>
+    desc: 'MCP App 沙箱工具容器（MCP Apps 对齐）：iframe sandbox="allow-scripts"（绝不加 allow-same-origin）+ postMessage JSON-RPC 2.0 双向桥。load 三种来源（ui:// 声明式资源走 opts.resolve / html 片段 srcdoc / URL），idle / loading / ready / error 四态由 data-icen-state 纯 CSS 驱动；call(name, args) 返回 Promise（默认 8s 超时，重载 / 销毁一律 reject pending）；全部出入站信封经 icen:kb-sandbox-message + onMessage 双通道可观测，子帧 app.ready 通知即就绪。',
+    demo: `<div class="icen-toolbar" style="margin-bottom:10px">
+  <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" id="kb-sandbox-load">load('ui://demo/echo')</button>
+  <button class="icen-btn icen-btn-sm" type="button" id="kb-sandbox-call">call('echo', { text, n })</button>
 </div>
 <div id="kb-sandbox-demo"></div>
 <p class="demo-label" id="kb-sandbox-log" style="margin-top:8px">先 load 等 app.ready 转 ready，再 call：子应用把参数原样回传 · 入站双闸（只信自家帧 + 可选 origin 白名单）</p>`,
@@ -375,7 +375,7 @@ if (host && kbSandboxMod) {
   const sb = kbSandboxMod.createKbSandbox(host, {
     resolve: function (uri) { return uri === 'ui://demo/echo' ? APP_HTML : null; },
     onMessage: function (m) {
-      if (m.channel === 'in' && m.payload && m.payload.method === 'app.ready') tlog('app.ready → 沙箱就绪（data-state=ready）');
+      if (m.channel === 'in' && m.payload && m.payload.method === 'app.ready') tlog('app.ready → 沙箱就绪（data-icen-state=ready）');
     }
   });
   document.getElementById('kb-sandbox-load')?.addEventListener('click', function () {
@@ -428,7 +428,7 @@ if (host && kbChainMod) {
     ]);
   }, 2600);
   host.addEventListener('icen:kb-chain-step', function (e) {
-    if (log) log.textContent = 'icen:kb-chain-step · #' + e.detail.index + ' ' + e.detail.step.label;
+    if (log) log.textContent = 'icen:icen-kb-chain-step · #' + e.detail.index + ' ' + e.detail.step.label;
   });
 }`,
   },
@@ -438,8 +438,8 @@ if (host && kbChainMod) {
     name: '会话列表',
     group: 'AI 原生',
     desc: 'AI 会话列表：分组模式（今天 / 昨天 / 更早，组头可折叠；archived 项沉底收进「已归档」组并降透明）或平铺模式，activeKey 高亮当前会话（aria-current），每项带「···」动作钮（只做事件挂载点，菜单本体由宿主实现）。initAiThreads 委托选择 / 动作 / 组头折叠；setAiThreadsActive 供外部路由同步激活态，对静态手写 DOM 一视同仁。事件 icen:ai-thread-select { key } / icen:ai-thread-action { action, key }。',
-    demo: `<div class="toolbar" style="margin-bottom:10px">
-  <button class="btn btn-sm" type="button" id="ai-threads-route">模拟外部路由切换激活态</button>
+    demo: `<div class="icen-toolbar" style="margin-bottom:10px">
+  <button class="icen-btn icen-btn-sm" type="button" id="ai-threads-route">模拟外部路由切换激活态</button>
 </div>
 <div id="ai-threads-demo" style="max-width:340px"></div>
 <p class="demo-label" id="ai-threads-log" style="margin-top:8px">今天 / 昨天 / 更早分组（组头可折叠）· 已归档沉底降透明 · 点 ··· 派发动作事件（菜单宿主实现）</p>`,
@@ -482,7 +482,7 @@ if (host && aiThreadsMod) {
     aiThreadsMod.setAiThreadsActive(host, e.detail.key);
   });
   host.addEventListener('icen:ai-thread-action', function (e) {
-    tlog('icen:ai-thread-action · ' + e.detail.action + ' ' + e.detail.key + '（菜单本体由宿主实现）');
+    tlog('icen:icen-ai-thread-action · ' + e.detail.action + ' ' + e.detail.key + '（菜单本体由宿主实现）');
   });
   document.getElementById('ai-threads-route')?.addEventListener('click', function () {
     const key = KEYS[turn++ % KEYS.length];
@@ -515,7 +515,7 @@ const log = document.getElementById('ai-feedback-log');
 if (host && aiFeedbackMod) {
   aiFeedbackMod.renderAiFeedback(host, {
     onFeedback: function (d) {
-      if (log) log.textContent = 'icen:ai-feedback · value=' + d.value + (d.reason ? ' · reason=' + d.reason : '');
+      if (log) log.textContent = 'icen:icen-ai-feedback · value=' + d.value + (d.reason ? ' · reason=' + d.reason : '');
     }
   });
 }`,
@@ -524,7 +524,7 @@ if (host && aiFeedbackMod) {
     slug: 'ai-branch',
     name: '分支切换',
     group: 'AI 原生',
-    desc: '回答分支版本切换器「‹ 2/3 ›」：当前从 1 计的页码 + 边界方向钮禁用；count ≤ 1 时容器渲染为空并置 hidden + aria-hidden（单版本无切换语义）。initAiBranch 委托 prev/next 点击：DOM 自动同步页码 / data-index / 边界禁用态（宿主不重渲染也可用，重渲染覆盖亦安全），并派发 icen:ai-branch-change { index, count }；按钮为原生 button，键盘走原生 click。',
+    desc: '回答分支版本切换器「‹ 2/3 ›」：当前从 1 计的页码 + 边界方向钮禁用；count ≤ 1 时容器渲染为空并置 hidden + aria-hidden（单版本无切换语义）。initAiBranch 委托 prev/next 点击：DOM 自动同步页码 / data-icen-index / 边界禁用态（宿主不重渲染也可用，重渲染覆盖亦安全），并派发 icen:ai-branch-change { index, count }；按钮为原生 button，键盘走原生 click。',
     demo: `<div id="ai-branch-demo"></div>
 <p class="demo-label" id="ai-branch-log" style="margin-top:8px">‹ 2/3 ›：边界方向钮禁用 · 切换派发 icen:ai-branch-change（宿主按 index 换分支内容）· count ≤ 1 时自动隐藏</p>`,
     usage: `import { renderAiBranch, initAiBranch } from '@icen.ai/ui/kit/ai-branch';
@@ -550,7 +550,7 @@ if (host && aiBranchMod) {
     name: '知识图谱',
     group: '图表',
     desc: 'renderGraph：GraphRAG 实体关系力导向 node-link——确定性布局（id 升序环初始化 + 300 轮松弛，无随机源，同数据同布局）、簇着色走既有调色盘（图例可点隐藏整簇，边随任一端簇隐藏淡化）、weight 映射节点半径 6–18px（缺省用度中心性）与边宽 0.6–2.5px、节点可拖拽（局部松弛 20 轮 / rAF 批处理）；事件走既有 icen:chart-* 通道，detail.datum = { id, label, cluster?, meta? } 点击节点回实体卡数据；directed: true 时边带箭头。layoutGraph 为可单测纯函数。',
-    demo: `<div class="chart" id="chart-graph-demo"></div>
+    demo: `<div class="icen-chart" id="chart-graph-demo"></div>
 <p class="demo-label" id="chart-graph-log" style="margin-top:8px">悬停看实体 · 点击节点回实体卡数据（detail.datum.meta）· 拖拽节点局部松弛 · 点图例隐藏整簇（边随端点淡化）</p>`,
     usage: `import { renderGraph, layoutGraph } from '@icen.ai/ui/kit/chart-graph';
 
@@ -616,7 +616,7 @@ if (host && chartsMod) {
     name: '嵌入地图',
     group: '图表',
     desc: 'renderMap：embedding 2D 投影地图（renderScatter 的去轴变体）——坐标为预投影值（UMAP / t-SNE 产物，本组件只做视口 min-max 缩放不算投影），无轴刻度只留细虚线网格；点 4px 半透明（fill-opacity 0.7，高密度层叠可辨），簇着色走既有调色盘 + 可点击图例隐藏整簇；点选走 icen:chart-click，detail.datum = { id, label, cluster?, meta? } 回 chunk 数据（meta 原样回传）。',
-    demo: `<div class="chart" id="chart-map-demo"></div>
+    demo: `<div class="icen-chart" id="chart-map-demo"></div>
 <p class="demo-label" id="chart-map-log" style="margin-top:8px">悬停看簇名 · 点击点回 chunk 数据 · 点图例隐藏整簇 · 坐标为预投影值（UMAP / t-SNE 产物，组件不做投影）</p>`,
     usage: `import { renderMap } from '@icen.ai/ui/kit/chart-map';
 

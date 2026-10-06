@@ -1,21 +1,21 @@
 /*
  * @icen.ai/ui — Behavior: input（清除钮 / 密码可见切换 / textarea 自适应 / OTP / 字符计数 / 输入掩码）
- * 与 components/input.css、components/segmented.css（.otp）配套，data 属性驱动。
+ * 与 components/input.css、components/segmented.css（.icen-otp）配套，data 属性驱动。
  *
  * DOM 契约：
- *   ① .input-wrap 内同时存在 input.input 与 .input-clear → 点击清空、派发 input 事件并聚焦。
- *   ② .input-wrap 内存在 .input-pw-toggle → 切换包裹内 input 的 type（password ↔ text），
- *      按钮内 [data-icon="show"] / [data-icon="hide"] 两个图标随状态切换 hidden，
+ *   ① .icen-input-wrap 内同时存在 input.icen-input 与 .icen-input-clear → 点击清空、派发 input 事件并聚焦。
+ *   ② .icen-input-wrap 内存在 .icen-input-pw-toggle → 切换包裹内 input 的 type（password ↔ text），
+ *      按钮内 [data-icen-icon="show"] / [data-icen-icon="hide"] 两个图标随状态切换 hidden，
  *      aria-label 在「显示密码 / 隐藏密码」间同步。
- *   ③ textarea[data-autosize] → input 事件自适应高度：height:auto → scrollHeight，
- *      按 data-min-rows（默认 3）/ data-max-rows（可选）钳制；初始化时先跑一次。
- *   ④ .otp 容器内的 .otp-cell 单元格 → 输入取末字符并跳下一格；空格 Backspace / 方向键
+ *   ③ textarea[data-icen-autosize] → input 事件自适应高度：height:auto → scrollHeight，
+ *      按 data-icen-min-rows（默认 3）/ data-icen-max-rows（可选）钳制；初始化时先跑一次。
+ *   ④ .icen-otp 容器内的 .icen-otp-cell 单元格 → 输入取末字符并跳下一格；空格 Backspace / 方向键
  *      移动焦点；粘贴按字符分摊到后续单元格。
- *   ⑤ input.input[data-count] 或 input.input[maxlength] 或 textarea[maxlength] →
- *      自动插入/更新 .input-counter（N 或 N / Max），接近上限转 warning 色，到顶转 error 色。
- *   ⑥ input.input[data-mask="###-####-####"] → 实时掩码格式化（# 数字 / A 字母 / * 任意），
- *      原始值存 data-raw-value。
- *   ⑦ input.input[data-trim] → blur 时自动去除首尾空白。
+ *   ⑤ input.icen-input[data-icen-count] 或 input.icen-input[maxlength] 或 textarea[maxlength] →
+ *      自动插入/更新 .icen-input-counter（N 或 N / Max），接近上限转 warning 色，到顶转 error 色。
+ *   ⑥ input.icen-input[data-icen-mask="###-####-####"] → 实时掩码格式化（# 数字 / A 字母 / * 任意），
+ *      原始值存 data-icen-raw-value。
+ *   ⑦ input.icen-input[data-icen-trim] → blur 时自动去除首尾空白。
  *
  * IME 安全：所有 input 事件处理在 compositionstart…compositionend 期间挂起，避免中文/日文
  *   输入法打断组合字符。
@@ -24,6 +24,7 @@
  */
 
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 interface MarkedElement extends Element {
   __icenInputInit?: boolean;
@@ -46,8 +47,8 @@ function trackComposing(target: Element): () => boolean {
 
 /* ── 清除钮 ── */
 function setupClear(wrap: Element): void {
-  const btn = wrap.querySelector('.input-clear');
-  const field = wrap.querySelector<HTMLInputElement>('input.input, textarea.textarea');
+  const btn = wrap.querySelector('.icen-input-clear');
+  const field = wrap.querySelector<HTMLInputElement>('icen-input.icen-input, icen-textarea.icen-textarea');
   if (!btn || !field) return;
   btn.addEventListener('click', () => {
     field.value = '';
@@ -58,18 +59,18 @@ function setupClear(wrap: Element): void {
 
 /* ── 密码可见切换 ── */
 function setupPasswordToggle(wrap: Element): void {
-  const btn = wrap.querySelector('.input-pw-toggle');
+  const btn = wrap.querySelector('.icen-input-pw-toggle');
   const field = wrap.querySelector<HTMLInputElement>('input.input');
   if (!btn || !field) return;
-  const iconShow = btn.querySelector<HTMLElement>('[data-icon="show"]');
-  const iconHide = btn.querySelector<HTMLElement>('[data-icon="hide"]');
-  btn.setAttribute('aria-label', '显示密码');
+  const iconShow = btn.querySelector<HTMLElement>('[data-icen-icon="show"]');
+  const iconHide = btn.querySelector<HTMLElement>('[data-icen-icon="hide"]');
+  btn.setAttribute('aria-label', t('input.showPassword'));
   btn.addEventListener('click', () => {
     const show = field.type === 'password';
     field.type = show ? 'text' : 'password';
     if (iconShow) iconShow.hidden = show;
     if (iconHide) iconHide.hidden = !show;
-    btn.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
+    btn.setAttribute('aria-label', show ? t('input.hidePassword') : t('input.showPassword'));
   });
 }
 
@@ -79,8 +80,8 @@ function resizeTextarea(ta: HTMLTextAreaElement): void {
   const cs = getComputedStyle(ta);
   const lineHeight = parseFloat(cs.lineHeight) || 20;
   const padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
-  const minRows = Number(ta.getAttribute('data-min-rows') ?? '3') || 3;
-  const maxAttr = ta.getAttribute('data-max-rows');
+  const minRows = Number(ta.getAttribute('data-icen-min-rows') ?? '3') || 3;
+  const maxAttr = ta.getAttribute('data-icen-max-rows');
   const maxRows = maxAttr ? Number(maxAttr) || 0 : 0;
   const minH = minRows * lineHeight + padY;
   const maxH = maxRows > 0 ? maxRows * lineHeight + padY : Infinity;
@@ -100,25 +101,25 @@ function setupCounter(field: HTMLInputElement | HTMLTextAreaElement): void {
   const el = field as MarkedElement;
   if (el.__icenCounterInit) return;
   const maxAttr = field.getAttribute('maxlength');
-  const dataCount = field.getAttribute('data-count');
-  // 有 maxlength 或显式 data-count 都启用
+  const dataCount = field.getAttribute('data-icen-count');
+  // 有 maxlength 或显式 data-icen-count 都启用
   if (!maxAttr && dataCount === null) return;
 
   const max = maxAttr ? Number(maxAttr) : 0;
 
   // 创建计数元素
   let counter: HTMLElement | null = null;
-  const wrap = field.closest('.input-wrap, .textarea-wrap');
+  const wrap = field.closest('.icen-input-wrap, .icen-textarea-wrap');
 
   if (wrap) {
-    counter = wrap.querySelector('.input-counter');
+    counter = wrap.querySelector('.icen-input-counter');
     if (!counter) {
       counter = document.createElement('span');
-      counter.className = 'input-counter';
+      counter.className = 'icen-input-counter';
       wrap.appendChild(counter);
       // input-wrap 需要加 position: relative 才能定位 counter
-      if (wrap.classList.contains('input-wrap')) {
-        wrap.classList.add('input-wrap--has-counter');
+      if (wrap.classList.contains('icen-input-wrap')) {
+        wrap.classList.add('icen-input-wrap--has-counter');
       }
     }
   }
@@ -149,7 +150,7 @@ function setupCounter(field: HTMLInputElement | HTMLTextAreaElement): void {
 function setupMask(field: HTMLInputElement): void {
   const el = field as MarkedElement;
   if (el.__icenMaskInit) return;
-  const mask = field.getAttribute('data-mask');
+  const mask = field.getAttribute('data-icen-mask');
   if (!mask) return;
   el.__icenMaskInit = true;
   const isComposing = trackComposing(field);
@@ -202,7 +203,7 @@ function setupMask(field: HTMLInputElement): void {
   // 记录上次格式化后的值，避免光标跳动
   let lastFormatted = applyMask(field.value);
   field.value = lastFormatted;
-  field.setAttribute('data-raw-value', extractRaw(lastFormatted));
+  field.setAttribute('data-icen-raw-value', extractRaw(lastFormatted));
 
   field.addEventListener('input', () => {
     if (isComposing()) return;
@@ -214,7 +215,7 @@ function setupMask(field: HTMLInputElement): void {
     // 用户可能删了字符 → raw 变短 → 掩码也应该收缩
     const formatted = applyMask(newRaw);
     field.value = formatted;
-    field.setAttribute('data-raw-value', extractRaw(formatted));
+    field.setAttribute('data-icen-raw-value', extractRaw(formatted));
     lastFormatted = formatted;
 
     // 光标定位：跟在最后一个新输入位之后
@@ -258,7 +259,7 @@ function setupMask(field: HTMLInputElement): void {
 
 /* ── blur 自动 trim ── */
 function setupTrim(field: HTMLInputElement | HTMLTextAreaElement): void {
-  if (!field.hasAttribute('data-trim')) return;
+  if (!field.hasAttribute('data-icen-trim')) return;
   const el = field as MarkedElement;
   if (el.__icenTrimInit) return;
   el.__icenTrimInit = true;
@@ -279,7 +280,7 @@ function setupOtp(group: Element): void {
   /* IME 组合态：composition 事件在 cell 上冒泡到容器，容器挂一份全 cell 共读 */
   const isComposing = trackComposing(group);
 
-  const cells = Array.from(group.querySelectorAll<HTMLInputElement>('.otp-cell'));
+  const cells = Array.from(group.querySelectorAll<HTMLInputElement>('.icen-otp-cell'));
   const syncFilled = (cell: HTMLInputElement): void => {
     cell.classList.toggle('is-filled', cell.value.length > 0);
   };
@@ -287,7 +288,7 @@ function setupOtp(group: Element): void {
   cells.forEach((cell, i) => {
     /* 角色与无障碍补齐：自动给 cell 标 index */
     if (!cell.hasAttribute('aria-label')) {
-      cell.setAttribute('aria-label', `第 ${i + 1} 位，共 ${cells.length} 位`);
+      cell.setAttribute('aria-label', t('input.otpPosition', { p0: i + 1, p1: cells.length }));
     }
     syncFilled(cell);
 
@@ -324,7 +325,7 @@ function setupOtp(group: Element): void {
   const fireComplete = (): void => {
     const code = cells.map((c) => c.value).join('');
     if (code.length === cells.length && cells.every((c) => c.value.length > 0)) {
-      // 完成时挂 .otp.is-complete（segmented.css 既有状态样式，此前无行为接线；classList.add 天然幂等）
+      // 完成时挂 .icen-otp.is-complete（segmented.css 既有状态样式，此前无行为接线；classList.add 天然幂等）
       group.classList.add('is-complete');
       emitIcen(group, 'icen:otp-complete', { code });
       /** @deprecated 旧事件名（无 icen: 前缀），仅为兼容保留，请迁移到 icen:otp-complete */
@@ -340,8 +341,8 @@ export function initInput(root?: ParentNode): void {
   const scope = root ?? document;
 
   const wraps: Element[] = [];
-  if (scope instanceof Element && scope.matches('.input-wrap')) wraps.push(scope);
-  wraps.push(...Array.from(scope.querySelectorAll('.input-wrap')));
+  if (scope instanceof Element && scope.matches('.icen-input-wrap')) wraps.push(scope);
+  wraps.push(...Array.from(scope.querySelectorAll('.icen-input-wrap')));
   for (const w of wraps) {
     const el = w as MarkedElement;
     if (el.__icenInputInit) continue;
@@ -352,36 +353,36 @@ export function initInput(root?: ParentNode): void {
 
   // textarea 自适应
   const textareas: HTMLTextAreaElement[] = [];
-  if (scope instanceof HTMLTextAreaElement && scope.matches('[data-autosize]')) textareas.push(scope);
-  textareas.push(...Array.from(scope.querySelectorAll<HTMLTextAreaElement>('textarea[data-autosize]')));
+  if (scope instanceof HTMLTextAreaElement && scope.matches('[data-icen-autosize]')) textareas.push(scope);
+  textareas.push(...Array.from(scope.querySelectorAll<HTMLTextAreaElement>('textarea[data-icen-autosize]')));
   for (const ta of textareas) setupAutosize(ta);
 
-  // 字符计数器：所有有 maxlength / data-count 的 input/textarea
+  // 字符计数器：所有有 maxlength / data-icen-count 的 input/textarea
   const countedFields: (HTMLInputElement | HTMLTextAreaElement)[] = [];
   if (scope instanceof Element) {
     const fields = Array.from(scope.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-      'input[maxlength], input[data-count], textarea[maxlength], textarea[data-count]',
+      'input[maxlength], input[data-icen-count], textarea[maxlength], textarea[data-icen-count]',
     ));
     countedFields.push(...fields);
     if (scope instanceof HTMLInputElement || scope instanceof HTMLTextAreaElement) {
-      if (scope.hasAttribute('maxlength') || scope.hasAttribute('data-count')) countedFields.push(scope);
+      if (scope.hasAttribute('maxlength') || scope.hasAttribute('data-icen-count')) countedFields.push(scope);
     }
   }
   for (const f of countedFields) setupCounter(f);
 
-  // 输入掩码：有 data-mask 的 input
+  // 输入掩码：有 data-icen-mask 的 input
   const maskedInputs: HTMLInputElement[] = [];
   if (scope instanceof Element) {
-    maskedInputs.push(...Array.from(scope.querySelectorAll<HTMLInputElement>('input[data-mask]')));
-    if (scope instanceof HTMLInputElement && scope.hasAttribute('data-mask')) maskedInputs.push(scope);
+    maskedInputs.push(...Array.from(scope.querySelectorAll<HTMLInputElement>('input[data-icen-mask]')));
+    if (scope instanceof HTMLInputElement && scope.hasAttribute('data-icen-mask')) maskedInputs.push(scope);
   }
   for (const inp of maskedInputs) setupMask(inp);
 
   // 自动 trim
   const trimFields: (HTMLInputElement | HTMLTextAreaElement)[] = [];
   if (scope instanceof Element) {
-    trimFields.push(...Array.from(scope.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-trim]')));
-    if ((scope instanceof HTMLInputElement || scope instanceof HTMLTextAreaElement) && scope.hasAttribute('data-trim')) {
+    trimFields.push(...Array.from(scope.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-icen-trim]')));
+    if ((scope instanceof HTMLInputElement || scope instanceof HTMLTextAreaElement) && scope.hasAttribute('data-icen-trim')) {
       trimFields.push(scope);
     }
   }
@@ -389,7 +390,7 @@ export function initInput(root?: ParentNode): void {
 
   // OTP
   const otps: Element[] = [];
-  if (scope instanceof Element && scope.matches('.otp')) otps.push(scope);
-  otps.push(...Array.from(scope.querySelectorAll('.otp')));
+  if (scope instanceof Element && scope.matches('.icen-otp')) otps.push(scope);
+  otps.push(...Array.from(scope.querySelectorAll('.icen-otp')));
   for (const g of otps) setupOtp(g);
 }

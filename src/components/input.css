@@ -3,115 +3,115 @@
  * 规格源自 opengal primitives/input.tsx；与 behaviors/input.ts 配套。
  *
  * 完整契约：
- *   <div class="input-wrap control [--sm|--lg] [--search] [.is-error] [.is-disabled]">
- *     <span class="input-leading">…</span>            可选前缀（svg/icon/text）
- *     <input class="input" />
- *     <button class="input-clear" aria-label="清除">…</button>     behavior 清空并聚焦
- *     <button class="input-pw-toggle" aria-label="切换可见性">…</button>
- *     <span class="input-trailing">…</span>           可选后缀（单位/字符计数等）
+ *   <div class="icen-input-wrap icen-control [--sm|--lg] [--search] [.is-error] [.is-disabled]">
+ *     <span class="icen-input-leading">…</span>            可选前缀（svg/icon/text）
+ *     <input class="icen-input" />
+ *     <button class="icen-input-clear" aria-label="清除">…</button>     behavior 清空并聚焦
+ *     <button class="icen-input-pw-toggle" aria-label="切换可见性">…</button>
+ *     <span class="icen-input-trailing">…</span>           可选后缀（单位/字符计数等）
  *   </div>
  *
- *   多行：<div class="textarea-wrap control" [.is-error|.is-disabled]><textarea class="textarea" data-autosize></textarea></div>
+ *   多行：<div class="icen-textarea-wrap icen-control" [.is-error|.is-disabled]><icen-textarea class="icen-textarea" data-icen-autosize></icen-textarea></div>
  *
  * --search 修饰：仅语义标记（让 behavior 知道这是搜索框，绑定 clear + Esc），
- *              不额外改样式；视觉上仍用 .input-leading 放大镜。
+ *              不额外改样式；视觉上仍用 .icen-input-leading 放大镜。
  */
 
 /* ── 单行 ── */
-.input-wrap {
+.icen-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   width: 100%;
-  height: var(--density-input-height-md);
-  padding: 0 var(--density-space-sm);
-  font-size: var(--density-font-size-md);
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-inset);
+  height: var(--icen-density-input-height-md);
+  padding: 0 var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-md);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
   transition: border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
 }
-.input-wrap:hover {
+.icen-input-wrap:hover {
   border-color: var(--icen-hover-border);
 }
-.input-wrap:focus-within {
+.icen-input-wrap:focus-within {
   box-shadow: var(--icen-control-focus-shadow);
   border-color: var(--icen-control-focus-border);
 }
-.input-wrap.is-error,
-.input-wrap.is-error:focus-within {
-  border-color: var(--token-error);
+.icen-input-wrap.is-error,
+.icen-input-wrap.is-error:focus-within {
+  border-color: var(--icen-token-error);
 }
-.input-wrap.is-error:focus-within {
+.icen-input-wrap.is-error:focus-within {
   box-shadow: var(--icen-control-error-shadow);
 }
-.input-wrap.is-disabled,
-.input-wrap[aria-disabled='true'],
-.input-wrap[data-disabled] {
+.icen-input-wrap.is-disabled,
+.icen-input-wrap[aria-disabled='true'],
+.icen-input-wrap[data-icen-disabled] {
   opacity: var(--icen-disabled-opacity);
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
   cursor: not-allowed;
   pointer-events: none;
 }
-.input-wrap.is-disabled .input { cursor: not-allowed; }
+.icen-input-wrap.is-disabled .icen-input { cursor: not-allowed; }
 
 /* 尺寸变体 */
-.input-wrap--sm {
-  height: var(--density-input-height-sm);
+.icen-input-wrap--sm {
+  height: var(--icen-density-input-height-sm);
   padding: 0 10px;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
 }
-.input-wrap--lg {
-  height: var(--density-input-height-lg);
-  padding: 0 var(--density-space-md);
-  font-size: var(--density-font-size-lg);
+.icen-input-wrap--lg {
+  height: var(--icen-density-input-height-lg);
+  padding: 0 var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-lg);
 }
 
-.input {
+.icen-input {
   flex: 1;
   min-width: 0;
   padding: 0;
   background: transparent;
   border: none;
   outline: none;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   font: inherit;
 }
-.input::placeholder {
-  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+.icen-input::placeholder {
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
 }
-.input:read-only {
-  color: var(--token-text-muted);
+.icen-input:read-only {
+  color: var(--icen-token-text-muted);
   cursor: default;
 }
-.input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.icen-input::-webkit-search-cancel-button { -webkit-appearance: none; }
 
-.input-leading,
-.input-trailing {
+.icen-input-leading,
+.icen-input-trailing {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
-.input-leading svg, .input-trailing svg { width: 14px; height: 14px; }
+.icen-input-leading svg, .icen-input-trailing svg { width: 14px; height: 14px; }
 
 /* ── 前缀/后缀文字（单位、域名等）── */
-.input-affix {
+.icen-input-affix {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  padding: 0 var(--density-space-xs);
-  color: var(--token-text-muted);
+  padding: 0 var(--icen-density-space-xs);
+  color: var(--icen-token-text-muted);
   font-size: 0.92em;
-  background: var(--token-fill-1);
-  border-radius: var(--radius-xs);
+  background: var(--icen-token-fill-1);
+  border-radius: var(--icen-radius-xs);
 }
 
-.input-clear,
-.input-pw-toggle {
+.icen-input-clear,
+.icen-input-pw-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -121,105 +121,105 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: var(--radius-full);
-  color: var(--token-text-faint);
+  border-radius: var(--icen-radius-full);
+  color: var(--icen-token-text-faint);
   transition:
     color var(--icen-tx-fast),
     background-color var(--icen-tx-fast);
 }
-.input-clear:hover,
-.input-pw-toggle:hover {
-  color: var(--token-text);
-  background: var(--token-surface-hover);
+.icen-input-clear:hover,
+.icen-input-pw-toggle:hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-surface-hover);
 }
-.input-clear:focus-visible,
-.input-pw-toggle:focus-visible {
+.icen-input-clear:focus-visible,
+.icen-input-pw-toggle:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.input-clear svg, .input-pw-toggle svg { width: 12px; height: 12px; }
+.icen-input-clear svg, .icen-input-pw-toggle svg { width: 12px; height: 12px; }
 
 /* ── 多行：同一 wrapper 视觉，内部 textarea 裸奔 ── */
-.textarea-wrap {
+.icen-textarea-wrap {
   position: relative;
   display: flex;
   width: 100%;
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-inset);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
   transition: border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
 }
-.textarea-wrap:hover {
+.icen-textarea-wrap:hover {
   border-color: var(--icen-hover-border);
 }
-.textarea-wrap:focus-within {
+.icen-textarea-wrap:focus-within {
   box-shadow: var(--icen-control-focus-shadow);
   border-color: var(--icen-control-focus-border);
 }
-.textarea-wrap.is-error,
-.textarea-wrap.is-error:focus-within {
-  border-color: var(--token-error);
+.icen-textarea-wrap.is-error,
+.icen-textarea-wrap.is-error:focus-within {
+  border-color: var(--icen-token-error);
   box-shadow: var(--icen-control-error-shadow);
 }
-.textarea-wrap.is-disabled,
-.textarea-wrap[aria-disabled='true'],
-.textarea-wrap[data-disabled] {
+.icen-textarea-wrap.is-disabled,
+.icen-textarea-wrap[aria-disabled='true'],
+.icen-textarea-wrap[data-icen-disabled] {
   opacity: var(--icen-disabled-opacity);
-  background: var(--token-bg-soft);
+  background: var(--icen-token-bg-soft);
   cursor: not-allowed;
   pointer-events: none;
 }
-.textarea-wrap.is-disabled .textarea { cursor: not-allowed; }
+.icen-textarea-wrap.is-disabled .icen-textarea { cursor: not-allowed; }
 
-.textarea {
+.icen-textarea {
   width: 100%;
-  padding: var(--density-space-sm) var(--density-space-md);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
   background: transparent;
   border: none;
   outline: none;
   resize: vertical;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--density-font-size-md);
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.5;
   min-height: calc(3 * 1.5em + 24px);
 }
-.textarea::placeholder {
-  color: color-mix(in srgb, var(--token-text-faint) 60%, transparent);
+.icen-textarea::placeholder {
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
 }
 
-/* 字符计数（behavior 可挂到 .input-wrap 或 .textarea-wrap 内尾部） */
-.input-wrap--has-counter { padding-right: calc(var(--density-space-sm) + 48px); }
-.input-wrap--has-counter .input-counter {
+/* 字符计数（behavior 可挂到 .icen-input-wrap 或 .icen-textarea-wrap 内行内末端） */
+.icen-input-wrap--has-counter { padding-inline-end: calc(var(--icen-density-space-sm) + 48px); }
+.icen-input-wrap--has-counter .icen-input-counter {
   position: absolute;
-  right: var(--density-space-sm);
+  inset-inline-end: var(--icen-density-space-sm);
   top: 50%;
   transform: translateY(-50%);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
-.input-counter {
+.icen-input-counter {
   position: absolute;
-  right: var(--density-space-sm);
-  bottom: var(--density-space-xs);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  inset-inline-end: var(--icen-density-space-sm);
+  bottom: var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
   transition: color var(--icen-tx-fast);
 }
-.input-counter.is-warn { color: var(--token-warning); }
-.input-counter.is-error { color: var(--token-error); font-weight: 600; }
+.icen-input-counter.is-warn { color: var(--icen-token-warning); }
+.icen-input-counter.is-error { color: var(--icen-token-error); font-weight: 600; }
 
-.textarea-wrap .textarea { padding-bottom: 24px; }
+.icen-textarea-wrap .icen-textarea { padding-bottom: 24px; }
 
 /* 有计数器时的 textarea 底部留空 */
-.textarea-wrap .input-counter {
+.icen-textarea-wrap .icen-input-counter {
   position: absolute;
-  right: var(--density-space-sm);
-  bottom: var(--density-space-xs);
+  inset-inline-end: var(--icen-density-space-sm);
+  bottom: var(--icen-density-space-xs);
 }

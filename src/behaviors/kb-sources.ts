@@ -3,32 +3,32 @@
  * 与 components/kb-ground.css 配套）
  *
  * DOM 契约（docs/spec/kb-family.md §5.2）：
- *   <div class="kb-sources kb-sources--row|kb-sources--rail">
- *     <button class="kb-source" type="button" data-kb-source-id="…">       ← 可读来源：原生 button
- *       <span class="kb-source-icon">…svg…</span>
- *       <span class="kb-source-main">
- *         <span class="kb-source-title">标题</span>
- *         <span class="kb-source-sub">域名/类型 · 相对时间</span>
+ *   <div class="icen-kb-sources icen-kb-sources--row|icen-kb-sources--rail">
+ *     <button class="icen-kb-source" type="button" data-icen-kb-source-id="…">       ← 可读来源：原生 button
+ *       <span class="icen-kb-source-icon">…svg…</span>
+ *       <span class="icen-kb-source-main">
+ *         <span class="icen-kb-source-title">标题</span>
+ *         <span class="icen-kb-source-sub">域名/类型 · 相对时间</span>
  *       </span>
- *       <span class="kb-source-side">
- *         <span class="kb-source-badges">…kb-badge--official / --stale / --restricted…</span>
- *         <span class="kb-num">被引 ×2</span>
+ *       <span class="icen-kb-source-side">
+ *         <span class="icen-kb-source-badges">…icen-kb-badge--official / --stale / --restricted…</span>
+ *         <span class="icen-kb-num">被引 ×2</span>
  *       </span>
  *     </button>
- *     <div class="kb-source is-restricted" role="button" tabindex="0" data-kb-source-id="…">
- *       …同上结构 + <button class="kb-source-request" data-kb-source-request>申请访问</button>
+ *     <div class="icen-kb-source is-restricted" role="button" tabindex="0" data-icen-kb-source-id="…">
+ *       …同上结构 + <button class="icen-kb-source-request" data-icen-kb-source-request>申请访问</button>
  *     </div>                                                                ← 受限行：含真实按钮，
  *     行壳降级为 role=button（HTML 禁止 button 嵌套 button；init 补 Enter/Space 键控）
  *   </div>
  *   rail 变体：side（徽章/被引/申请访问）并入 kb-source-main 尾部——标题独占一行
  *   （line-clamp 2），meta 行与徽章行各自 flex-wrap（窄侧栏不挤压标题，见 kb-ground.css）。
- *   空态：<div class="kb-empty">下一条答案引用的段落将出现在这里</div>
+ *   空态：<div class="icen-kb-empty">下一条答案引用的段落将出现在这里</div>
  *
  * 行为说明：
  *   - renderKbSources(el, sources, opts?)：useCount 降序（无计数按原序稳定排后）；
- *     徽标组：official → .kb-badge--official「官方」；date 距今 >90 天 → .kb-badge--stale
+ *     徽标组：official → .icen-kb-badge--official「官方」；date 距今 >90 天 → .icen-kb-badge--stale
  *     + 相对时间 + warning 点；permission 非 readable → 锁形徽标 + 申请访问按钮；
- *     opts.onlyCited 只保留被引过的来源（useCount > 0）；空集/空数组渲染 .kb-empty 文案；
+ *     opts.onlyCited 只保留被引过的来源（useCount > 0）；空集/空数组渲染 .icen-kb-empty 文案；
  *     原始输入 permission === 'hidden' 的来源不渲染行（数据兜底，见下方权限映射）
  *   - initKbSources(root?)：root 级委托（幂等 WeakSet + 销毁函数）：
  *     点击来源行 / 申请访问按钮 → icen:kb-source-open { source }（受限来源宿主据此弹
@@ -54,6 +54,7 @@ import {
 } from './kb-core';
 import { emitIcen } from './events';
 import { isKbCitationStale, kbDomainOf, KB_ICON_LOCK } from './kb-citation';
+import { t } from './i18n';
 
 /** renderKbSources 的配置项：布局变体 / onlyCited 过滤 / 基准时钟 / 点击回调 */
 export interface KbSourcesOptions {
@@ -72,18 +73,18 @@ const rowSourceMap = new WeakMap<HTMLElement, KbCitation>();
 const rowOpenMap = new WeakMap<HTMLElement, (source: KbCitation) => void>();
 
 function buildBadges(source: KbCitation, now: Date): HTMLElement {
-  const badges = h('span', 'kb-source-badges');
-  if (source.official) badges.appendChild(h('span', 'kb-badge kb-badge--official', '官方'));
+  const badges = h('span', 'icen-kb-source-badges');
+  if (source.official) badges.appendChild(h('span', 'icen-kb-badge icen-kb-badge--official', t('common.official')));
   if (source.date) {
-    const b = h('span', 'kb-badge', relativeTime(source.date, now));
+    const b = h('span', 'icen-kb-badge', relativeTime(source.date, now));
     if (isKbCitationStale(source, now)) {
-      b.classList.add('kb-badge--stale');
-      b.prepend(h('i', 'kb-dot is-warn'));
+      b.classList.add('icen-kb-badge--stale');
+      b.prepend(h('i', 'icen-kb-dot is-warn'));
     }
     badges.appendChild(b);
   }
   if (source.permission !== 'readable') {
-    const lock = h('span', 'kb-badge kb-badge--restricted', '受限');
+    const lock = h('span', 'icen-kb-badge icen-kb-badge--restricted', t('common.restricted'));
     const svg = svgIcon(KB_ICON_LOCK);
     if (svg) lock.prepend(svg);
     badges.appendChild(lock);
@@ -100,39 +101,39 @@ function buildSourceRow(
   const restricted = source.permission !== 'readable';
   /* 受限行内含「申请访问」真实按钮，行壳不能用 button（嵌套交互元素非法）→ role=button 降级 */
   const row: HTMLElement = restricted
-    ? h('div', 'kb-source is-restricted')
-    : h('button', 'kb-source');
+    ? h('div', 'icen-kb-source is-restricted')
+    : h('button', 'icen-kb-source');
   if (restricted) {
     row.setAttribute('role', 'button');
     row.setAttribute('tabindex', '0');
   } else {
     (row as HTMLButtonElement).type = 'button';
   }
-  row.dataset.kbSourceId = source.id;
+  row.dataset.icenKbSourceId = source.id;
   rowSourceMap.set(row, source);
   if (onOpen) rowOpenMap.set(row, onOpen);
 
-  const icon = h('span', 'kb-source-icon');
+  const icon = h('span', 'icen-kb-source-icon');
   const svg = svgIcon(getKbSourceType(source.kind).icon);
   if (svg) icon.appendChild(svg);
   row.appendChild(icon);
 
   const typeDef = getKbSourceType(source.kind);
-  const main = h('span', 'kb-source-main');
-  main.appendChild(h('span', 'kb-source-title', source.title));
+  const main = h('span', 'icen-kb-source-main');
+  main.appendChild(h('span', 'icen-kb-source-title', source.title));
   const subBits = [kbDomainOf(source.url) || typeDef.label, source.date ? relativeTime(source.date, now) : ''];
-  main.appendChild(h('span', 'kb-source-sub', subBits.filter(Boolean).join(' · ')));
+  main.appendChild(h('span', 'icen-kb-source-sub', subBits.filter(Boolean).join(' · ')));
 
-  const side = h('span', 'kb-source-side');
+  const side = h('span', 'icen-kb-source-side');
   side.appendChild(buildBadges(source, now));
   if (source.useCount && source.useCount > 0) {
-    side.appendChild(h('span', 'kb-num', `被引 ×${source.useCount}`));
+    side.appendChild(h('span', 'icen-kb-num', t('kbSources.cited', { p0: source.useCount })));
   }
   if (restricted) {
-    const request = h('button', 'kb-source-request', '申请访问');
+    const request = h('button', 'icen-kb-source-request', t('common.requestAccess'));
     request.type = 'button';
-    request.dataset.kbSourceRequest = '';
-    request.setAttribute('aria-label', `申请访问 ${source.title}`);
+    request.dataset.icenKbSourceRequest = '';
+    request.setAttribute('aria-label', t('common.requestAccessFor', { p0: source.title }));
     side.appendChild(request);
   }
 
@@ -148,7 +149,7 @@ function buildSourceRow(
 }
 
 /**
- * 渲染来源列表（useCount 降序；--row 横排 / --rail 纵列；onlyCited 过滤；空态 .kb-empty）。
+ * 渲染来源列表（useCount 降序；--row 横排 / --rail 纵列；onlyCited 过滤；空态 .icen-kb-empty）。
  * 返回挂载容器 el。
  */
 export function renderKbSources(el: HTMLElement, sources: KbCitation[], opts?: KbSourcesOptions): HTMLElement {
@@ -164,11 +165,11 @@ export function renderKbSources(el: HTMLElement, sources: KbCitation[], opts?: K
   if (opts?.onlyCited) list = list.filter((s) => (s.useCount ?? 0) > 0);
 
   el.textContent = '';
-  el.classList.remove('kb-sources--row', 'kb-sources--rail'); /* 变体切换重渲时不残留旧类 */
-  el.classList.add('kb-sources', `kb-sources--${variant}`);
+  el.classList.remove('icen-kb-sources--row', 'icen-kb-sources--rail'); /* 变体切换重渲时不残留旧类 */
+  el.classList.add('icen-kb-sources', `icen-kb-sources--${variant}`);
 
   if (list.length === 0) {
-    el.appendChild(h('div', 'kb-empty', '下一条答案引用的段落将出现在这里'));
+    el.appendChild(h('div', 'icen-kb-empty', t('kbSources.empty')));
     return el;
   }
 
@@ -206,13 +207,13 @@ export function initKbSources(root?: ParentNode): () => void {
     const t = e.target instanceof Element ? e.target : null;
     if (!t) return;
     /* 申请访问按钮：单独命中即止（避免与行壳重复派发） */
-    const request = t.closest<HTMLElement>('[data-kb-source-request]');
+    const request = t.closest<HTMLElement>('[data-icen-kb-source-request]');
     if (request) {
-      const row = request.closest<HTMLElement>('[data-kb-source-id]');
+      const row = request.closest<HTMLElement>('[data-icen-kb-source-id]');
       if (row) fire(row);
       return;
     }
-    const row = t.closest<HTMLElement>('[data-kb-source-id].kb-source');
+    const row = t.closest<HTMLElement>('[data-icen-kb-source-id].icen-kb-source');
     if (row) fire(row);
   };
 
@@ -220,7 +221,7 @@ export function initKbSources(root?: ParentNode): () => void {
     const ke = e as KeyboardEvent;
     if (ke.key !== 'Enter' && ke.key !== ' ') return;
     const t = e.target instanceof Element ? e.target : null;
-    const row = t?.closest<HTMLElement>('.kb-source[role="button"]');
+    const row = t?.closest<HTMLElement>('.icen-kb-source[role="button"]');
     if (!row) return;
     ke.preventDefault();
     fire(row);

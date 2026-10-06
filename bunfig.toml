@@ -1,0 +1,6 @@
+# bun 测试配置：预挂 happy-dom 全局 DOM（tests/setup.ts）
+[test]
+preload = ["./tests/setup.ts"]
+# bun 1.3.5 尚未实现 discovery 排除（实测不生效）；e2e 靠 .pw.ts 后缀规避扫描
+# （见 playwright.config.ts / docs/testing.md）。此处作为升级 bun 后的双保险保留。
+pathIgnorePatterns = ["tests/e2e"]

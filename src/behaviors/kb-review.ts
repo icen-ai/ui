@@ -2,40 +2,40 @@
  * @icen.ai/ui — Behavior: kb-review（人工标注/审查队列，观测治理域；与 components/kb-ops.css 配套）
  *
  * DOM 契约（类名固定，docs/spec/kb-family.md §5.20）：
- *   <div class="kb-review" tabindex?>(keybind)
- *     <div class="kb-review-queue">
- *       <div class="kb-review-filter">分配人 <select class="kb-review-filter-select">全部|@a|…</select></div>
- *       <div class="kb-review-list">
- *         <button class="kb-review-item [is-active] [is-done]" data-task-id="…">
- *           <span class="kb-dot [is-ok]"></span>            ← open 灰 / done 绿
- *           <span class="kb-review-item-main"><span class="kb-review-item-title">label</span></span>
- *           <span class="kb-review-item-kind">回答</span>
- *           <span class="kb-review-item-assignee">@李四</span>
+ *   <div class="icen-kb-review" tabindex?>(keybind)
+ *     <div class="icen-kb-review-queue">
+ *       <div class="icen-kb-review-filter">分配人 <icen-select class="icen-kb-review-filter-select">全部|@a|…</icen-select></div>
+ *       <div class="icen-kb-review-list">
+ *         <button class="icen-kb-review-item [is-active] [is-done]" data-icen-task-id="…">
+ *           <span class="icen-kb-dot [is-ok]"></span>            ← open 灰 / done 绿
+ *           <span class="kb-review-item-main"><span class="icen-kb-review-item-title">label</span></span>
+ *           <span class="icen-kb-review-item-kind">回答</span>
+ *           <span class="icen-kb-review-item-assignee">@李四</span>
  *         </button>…
  *       </div>
  *     </div>
- *     <div class="kb-review-card" tabindex="0">            ← 全键盘流挂载点（keybind 在组件容器上、命中卡片内才生效）
- *       <div class="kb-review-card-head">
- *         <span class="kb-review-card-kind">回答</span>
- *         <span class="kb-review-card-title">target 标题</span>
- *         <select class="kb-review-assign">未分配|姓名…</select>   ← 仅 opts.assignees 提供时
+ *     <div class="icen-kb-review-card" tabindex="0">            ← 全键盘流挂载点（keybind 在组件容器上、命中卡片内才生效）
+ *       <div class="icen-kb-review-card-head">
+ *         <span class="icen-kb-review-card-kind">回答</span>
+ *         <span class="icen-kb-review-card-title">target 标题</span>
+ *         <icen-select class="icen-kb-review-assign">未分配|姓名…</icen-select>   ← 仅 opts.assignees 提供时
  *       </div>
- *       <div class="kb-review-rubrics">
- *         <div class="kb-review-rubric" data-config-name="正确性">
- *           <div class="kb-review-rubric-name">正确性 <span class="kb-review-rubric-desc">…</span></div>
- *           categorical → <div class="kb-review-chips">
- *             <button class="kb-review-chip [is-on]" data-opt="对"><span class="kb-key">1</span>对</button>…（前 9 项带数字角标）
+ *       <div class="icen-kb-review-rubrics">
+ *         <div class="icen-kb-review-rubric" data-icen-config-name="正确性">
+ *           <div class="icen-kb-review-rubric-name">正确性 <span class="icen-kb-review-rubric-desc">…</span></div>
+ *           categorical → <div class="icen-kb-review-chips">
+ *             <button class="icen-kb-review-chip [is-on]" data-icen-opt="对"><span class="icen-kb-key">1</span>对</button>…（前 9 项带数字角标）
  *           </div>
- *           numeric → <div class="kb-review-slider-row">
- *             <input class="kb-review-slider" type="range" min="0" max="10" step="0.5">
- *             <span class="kb-num kb-review-slider-value">7.5</span></div>
+ *           icen-numeric → <div class="icen-kb-review-slider-row">
+ *             <icen-input class="icen-kb-review-slider" type="range" min="0" max="10" icen-step="0.5">
+ *             <span class="icen-kb-num icen-kb-review-slider-value">7.5</span></div>
  *         </div>…
  *       </div>
- *       <div class="kb-review-foot">
- *         <button class="kb-review-submit">完成并下一条 <span class="kb-key">⌘↵</span></button>
- *         <span class="kb-review-hint">? 快捷键</span>
+ *       <div class="icen-kb-review-foot">
+ *         <button class="icen-kb-review-submit">完成并下一条 <span class="icen-kb-key">⌘↵</span></button>
+ *         <span class="icen-kb-review-hint">? 快捷键</span>
  *       </div>
- *       <div class="kb-review-keys" hidden>…快捷键小浮层（.kb-key 表）…</div>
+ *       <div class="icen-kb-review-keys" hidden>…快捷键小浮层（.icen-kb-key 表）…</div>
  *     </div>
  *   </div>
  *
@@ -56,6 +56,7 @@
 
 import { h, type KbReviewTask, type KbScoreConfig } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /** onAction 回调的动作信封（与 icen:kb-review-* 事件双通道；select 无对应事件，仅回调） */
 export interface KbReviewActionDetail {
@@ -95,7 +96,7 @@ export interface KbReviewHandle {
 }
 
 /** target.kind 的展示标签 */
-const KIND_LABELS: Record<string, string> = { trace: '轨迹', message: '消息', answer: '回答' };
+const KIND_LABELS: Record<string, string> = { trace: t('kbReview.typeTrace'), message: t('kbReview.typeMessage'), answer: t('kbReview.typeAnswer') };
 
 /** numeric 滑杆值显示：7.5 / 5 / 0 */
 const fmtSlider = (v: number): string => v.toFixed(1).replace(/\.0$/, '');
@@ -219,7 +220,7 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
     if (destroyed) return;
     const target = e.target;
     if (!(target instanceof Element)) return;
-    if (!target.closest('.kb-review-card')) return;
+    if (!target.closest('.icen-kb-review-card')) return;
     if (target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement) return;
     const isRange = target instanceof HTMLInputElement && target.type === 'range';
 
@@ -248,9 +249,9 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
     }
     if (!isRange && e.key >= '1' && e.key <= '9') {
       const n = Number(e.key);
-      const rubricRow = target.closest<HTMLElement>('.kb-review-rubric');
+      const rubricRow = target.closest<HTMLElement>('.icen-kb-review-rubric');
       let cfg: KbScoreConfig | undefined;
-      if (rubricRow) cfg = state.configs.find((c) => c.name === rubricRow.dataset.configName);
+      if (rubricRow) cfg = state.configs.find((c) => c.name === rubricRow.dataset.icenConfigName);
       cfg ??= state.configs.find((c) => c.type === 'categorical');
       if (!cfg || cfg.type !== 'categorical') return;
       const opt = (cfg.categories ?? [])[n - 1];
@@ -269,15 +270,15 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
     const active = doc.activeElement;
     const hadFocus = active instanceof HTMLElement && host.contains(active);
 
-    host.className = 'kb-review';
+    host.className = 'icen-kb-review';
     host.replaceChildren();
 
     /* 左：队列列表 */
-    const queueCol = h('div', 'kb-review-queue');
-    const filterWrap = h('div', 'kb-review-filter');
-    filterWrap.append(h('span', 'kb-review-filter-label', '分配人'));
-    const filterSel = h('select', 'kb-review-filter-select');
-    const allOpt = h('option', undefined, '全部');
+    const queueCol = h('div', 'icen-kb-review-queue');
+    const filterWrap = h('div', 'icen-kb-review-filter');
+    filterWrap.append(h('span', 'kb-review-filter-label', t('kbReview.assignee')));
+    const filterSel = h('select', 'icen-kb-review-filter-select');
+    const allOpt = h('option', undefined, t('common.all'));
     allOpt.value = '';
     filterSel.append(allOpt);
     for (const a of distinctAssignees(state.tasks)) {
@@ -295,21 +296,21 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
     queueCol.append(filterWrap);
 
     const vis = visible();
-    const listEl = h('div', 'kb-review-list');
+    const listEl = h('div', 'icen-kb-review-list');
     if (!vis.length) {
-      listEl.append(h('div', 'kb-empty', state.filter ? '该分配人下没有条目' : '队列为空'));
+      listEl.append(h('div', 'icen-kb-empty', state.filter ? t('kbReview.emptyAssignee') : t('kbReview.emptyQueue')));
     } else {
       vis.forEach((t, i) => {
-        const item = h('button', `kb-review-item${t.status === 'done' ? ' is-done' : ''}${i === state.idx ? ' is-active' : ''}`);
+        const item = h('button', `icen-kb-review-item${t.status === 'done' ? ' is-done' : ''}${i === state.idx ? ' is-active' : ''}`);
         item.type = 'button';
-        item.dataset.taskId = t.id;
+        item.dataset.icenTaskId = t.id;
         const main = h('span', 'kb-review-item-main');
-        main.append(h('span', 'kb-review-item-title', t.target.label || t.target.id));
+        main.append(h('span', 'icen-kb-review-item-title', t.target.label || t.target.id));
         item.append(
-          h('span', `kb-dot${t.status === 'done' ? ' is-ok' : ''}`),
+          h('span', `icen-kb-dot${t.status === 'done' ? ' is-ok' : ''}`),
           main,
-          h('span', 'kb-review-item-kind', KIND_LABELS[t.target.kind] ?? t.target.kind),
-          h('span', 'kb-review-item-assignee', t.assignee ? `@${t.assignee}` : ''),
+          h('span', 'icen-kb-review-item-kind', KIND_LABELS[t.target.kind] ?? t.target.kind),
+          h('span', 'icen-kb-review-item-assignee', t.assignee ? `@${t.assignee}` : ''),
         );
         item.addEventListener('click', () => {
           if (i !== state.idx) selectIdx(i);
@@ -320,20 +321,20 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
     queueCol.append(listEl);
 
     /* 右：审查卡 */
-    const card = h('div', 'kb-review-card');
+    const card = h('div', 'icen-kb-review-card');
     card.tabIndex = 0;
     const task = vis[state.idx];
     if (!task) {
-      card.append(h('div', 'kb-empty', '没有待审查条目'));
+      card.append(h('div', 'icen-kb-empty', t('kbReview.empty')));
     } else {
-      const head = h('div', 'kb-review-card-head');
+      const head = h('div', 'icen-kb-review-card-head');
       head.append(
-        h('span', 'kb-review-card-kind', KIND_LABELS[task.target.kind] ?? task.target.kind),
-        h('span', 'kb-review-card-title', task.target.label || task.target.id),
+        h('span', 'icen-kb-review-card-kind', KIND_LABELS[task.target.kind] ?? task.target.kind),
+        h('span', 'icen-kb-review-card-title', task.target.label || task.target.id),
       );
       if (state.assignees.length) {
-        const sel = h('select', 'kb-review-assign');
-        const placeholder = h('option', undefined, '未分配');
+        const sel = h('select', 'icen-kb-review-assign');
+        const placeholder = h('option', undefined, t('kbReview.unassigned'));
         placeholder.value = '';
         sel.append(placeholder);
         for (const a of state.assignees) {
@@ -347,21 +348,21 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
       }
       card.append(head);
 
-      const rubrics = h('div', 'kb-review-rubrics');
+      const rubrics = h('div', 'icen-kb-review-rubrics');
       for (const cfg of state.configs) {
-        const row = h('div', 'kb-review-rubric');
-        row.dataset.configName = cfg.name;
-        const nameEl = h('div', 'kb-review-rubric-name', cfg.name);
-        if (cfg.description) nameEl.append(h('span', 'kb-review-rubric-desc', cfg.description));
+        const row = h('div', 'icen-kb-review-rubric');
+        row.dataset.icenConfigName = cfg.name;
+        const nameEl = h('div', 'icen-kb-review-rubric-name', cfg.name);
+        if (cfg.description) nameEl.append(h('span', 'icen-kb-review-rubric-desc', cfg.description));
         row.append(nameEl);
 
         if (cfg.type === 'categorical') {
-          const chips = h('div', 'kb-review-chips');
+          const chips = h('div', 'icen-kb-review-chips');
           (cfg.categories ?? []).forEach((opt, oi) => {
-            const chip = h('button', `kb-review-chip${getScore(task, cfg.name) === opt ? ' is-on' : ''}`);
+            const chip = h('button', `icen-kb-review-chip${getScore(task, cfg.name) === opt ? ' is-on' : ''}`);
             chip.type = 'button';
-            chip.dataset.opt = opt;
-            if (oi < 9) chip.append(h('span', 'kb-key', String(oi + 1))); /* 数字角标（1–9） */
+            chip.dataset.icenOpt = opt;
+            if (oi < 9) chip.append(h('span', 'icen-kb-key', String(oi + 1))); /* 数字角标（1–9） */
             chip.append(h('span', 'kb-review-chip-label', opt));
             chip.addEventListener('click', () => score(task, cfg.name, opt));
             chips.append(chip);
@@ -369,15 +370,15 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
           row.append(chips);
         } else {
           const cur = typeof getScore(task, cfg.name) === 'number' ? (getScore(task, cfg.name) as number) : 5;
-          const sliderRow = h('div', 'kb-review-slider-row');
-          const input = h('input', 'kb-review-slider');
+          const sliderRow = h('div', 'icen-kb-review-slider-row');
+          const input = h('input', 'icen-kb-review-slider');
           input.type = 'range';
           input.min = '0';
           input.max = '10';
           input.step = '0.5';
           input.value = String(cur);
           input.setAttribute('aria-label', cfg.name);
-          const val = h('span', 'kb-num kb-review-slider-value', fmtSlider(cur));
+          const val = h('span', 'icen-kb-num icen-kb-review-slider-value', fmtSlider(cur));
           /* input 只更新本地（整树重渲会打断拖拽）；change 才走事件通道 */
           input.addEventListener('input', () => {
             const v = Number(input.value);
@@ -392,28 +393,28 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
       }
       card.append(rubrics);
 
-      const foot = h('div', 'kb-review-foot');
-      const submitBtn = h('button', 'kb-review-submit');
+      const foot = h('div', 'icen-kb-review-foot');
+      const submitBtn = h('button', 'icen-kb-review-submit');
       submitBtn.type = 'button';
-      submitBtn.append(h('span', undefined, '完成并下一条'), h('span', 'kb-key', '⌘↵'));
+      submitBtn.append(h('span', undefined, t('kbReview.doneNext')), h('span', 'icen-kb-key', '⌘↵'));
       submitBtn.addEventListener('click', () => submit());
-      foot.append(submitBtn, h('span', 'kb-review-hint', '? 快捷键'));
+      foot.append(submitBtn, h('span', 'icen-kb-review-hint', t('kbReview.shortcuts')));
       card.append(foot);
     }
 
     /* 快捷键小浮层（? 切换） */
-    const keys = h('div', 'kb-review-keys');
+    const keys = h('div', 'icen-kb-review-keys');
     keys.hidden = !state.keysOpen;
     const KEY_ROWS: ReadonlyArray<readonly [string, string]> = [
-      ['←/→', '切换条目'],
-      ['1–9', '选择选项'],
-      ['⌘/Ctrl ↵', '完成并下一条'],
-      ['?', '显示/隐藏本提示'],
-      ['Esc', '关闭提示'],
+      ['←/→', t('kbReview.kbSwitchItem')],
+      ['1–9', t('kbReview.kbSelectOption')],
+      ['⌘/Ctrl ↵', t('kbReview.doneNext')],
+      ['?', t('kbReview.kbToggleHint')],
+      ['Esc', t('kbReview.kbCloseHint')],
     ];
     for (const [k, label] of KEY_ROWS) {
-      const r = h('div', 'kb-review-keys-row');
-      r.append(h('span', 'kb-key', k), h('span', undefined, label));
+      const r = h('div', 'icen-kb-review-keys-row');
+      r.append(h('span', 'icen-kb-key', k), h('span', undefined, label));
       keys.append(r);
     }
     card.append(keys);
@@ -427,7 +428,7 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
     destroyed = true;
     host.removeEventListener('keydown', onKeyDown);
     host.replaceChildren();
-    host.classList.remove('kb-review');
+    host.classList.remove('icen-kb-review');
     delete host.__icenKbReview;
   };
   host.__icenKbReview = { destroy };

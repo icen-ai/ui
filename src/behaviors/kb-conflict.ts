@@ -2,25 +2,25 @@
  * @icen.ai/ui — Behavior: kb-conflict（来源冲突组：同一主张的多版本对勘，与 components/kb-ground.css 配套）
  *
  * DOM 契约（docs/spec/kb-family.md §5.4）：
- *   <div class="kb-conflict">
- *     <div class="kb-conflict-claim"><i class="kb-dot is-warn"></i>同一主张…</div>
- *     <div class="kb-conflict-versions">
- *       <button class="kb-conflict-ver is-current" type="button" data-kb-source-id="…">
- *         <span class="kb-conflict-ver-head">
- *           <span class="kb-conflict-ver-date kb-num">2026-08-01</span>
- *           <span class="kb-conflict-ver-badges">…kb-badge--official / --stale…</span>
+ *   <div class="icen-kb-conflict">
+ *     <div class="icen-kb-conflict-claim"><i class="icen-kb-dot is-warn"></i>同一主张…</div>
+ *     <div class="icen-kb-conflict-versions">
+ *       <button class="icen-kb-conflict-ver is-current" type="button" data-icen-kb-source-id="…">
+ *         <span class="icen-kb-conflict-ver-head">
+ *           <span class="icen-kb-conflict-ver-date icen-kb-num">2026-08-01</span>
+ *           <span class="icen-kb-conflict-ver-badges">…icen-kb-badge--official / --stale…</span>
  *         </span>
- *         <span class="kb-conflict-ver-title">版本来源标题</span>
- *         <span class="kb-conflict-ver-sub">域名/类型</span>
+ *         <span class="icen-kb-conflict-ver-title">版本来源标题</span>
+ *         <span class="icen-kb-conflict-ver-sub">域名/类型</span>
  *       </button>
- *       <button class="kb-conflict-ver is-older" …>…</button>   ← faded + stale 徽标
+ *       <button class="icen-kb-conflict-ver is-older" …>…</button>   ← faded + stale 徽标
  *     </div>
  *   </div>
  *
  * 行为说明：
  *   - renderKbConflict(el, groups, opts?)：每组 = claim 行 + 版本卡横排；
  *     is-current 判定：优先 official 来源，否则最新 date（都无则首个版本），其余版本
- *     faded（.is-older）+ 满足 >90 天 stale 判定时加 .kb-badge--stale
+ *     faded（.is-older）+ 满足 >90 天 stale 判定时加 .icen-kb-badge--stale
  *   - 点击版本卡 → icen:kb-source-open { source }（与来源列表同一事件契约，
  *     宿主据此打开 passage / 外链），opts.onOpen 回调双通道；本组件无 init（渲染即接线）
  *
@@ -31,6 +31,7 @@
 import { h, normalizeCitation, relativeTime, getKbSourceType, type KbCitation } from './kb-core';
 import { emitIcen } from './events';
 import { isKbCitationStale, kbDomainOf } from './kb-citation';
+import { t } from './i18n';
 
 /** 冲突组：一条共享主张 + 相互矛盾的多个来源版本 */
 export interface KbConflictGroup {
@@ -79,26 +80,26 @@ function buildVersionCard(
   onOpen?: (s: KbCitation) => void,
 ): HTMLElement {
   const isCurrent = source === current || source.id === current?.id;
-  const ver = h('button', `kb-conflict-ver${isCurrent ? ' is-current' : ' is-older'}`);
+  const ver = h('button', `icen-kb-conflict-ver${isCurrent ? ' is-current' : ' is-older'}`);
   ver.type = 'button';
-  ver.dataset.kbSourceId = source.id;
+  ver.dataset.icenKbSourceId = source.id;
 
-  const head = h('span', 'kb-conflict-ver-head');
-  head.appendChild(h('span', 'kb-conflict-ver-date kb-num', dateLabel(source)));
-  const badges = h('span', 'kb-conflict-ver-badges');
-  if (source.official) badges.appendChild(h('span', 'kb-badge kb-badge--official', '官方'));
+  const head = h('span', 'icen-kb-conflict-ver-head');
+  head.appendChild(h('span', 'icen-kb-conflict-ver-date icen-kb-num', dateLabel(source)));
+  const badges = h('span', 'icen-kb-conflict-ver-badges');
+  if (source.official) badges.appendChild(h('span', 'icen-kb-badge icen-kb-badge--official', t('common.official')));
   if (!isCurrent && isKbCitationStale(source, now)) {
-    const stale = h('span', 'kb-badge kb-badge--stale', relativeTime(source.date ?? '', now));
-    stale.prepend(h('i', 'kb-dot is-warn'));
+    const stale = h('span', 'icen-kb-badge icen-kb-badge--stale', relativeTime(source.date ?? '', now));
+    stale.prepend(h('i', 'icen-kb-dot is-warn'));
     badges.appendChild(stale);
   }
   head.appendChild(badges);
   ver.appendChild(head);
 
-  ver.appendChild(h('span', 'kb-conflict-ver-title', source.title));
+  ver.appendChild(h('span', 'icen-kb-conflict-ver-title', source.title));
   const typeDef = getKbSourceType(source.kind);
-  const subBits = [kbDomainOf(source.url) || typeDef.label, source.owner ? `责任人 ${source.owner}` : ''];
-  ver.appendChild(h('span', 'kb-conflict-ver-sub', subBits.filter(Boolean).join(' · ')));
+  const subBits = [kbDomainOf(source.url) || typeDef.label, source.owner ? t('kbConflict.owner', { p0: source.owner }) : ''];
+  ver.appendChild(h('span', 'icen-kb-conflict-ver-sub', subBits.filter(Boolean).join(' · ')));
 
   ver.addEventListener('click', () => {
     emitIcen(ver, 'icen:kb-source-open', { source });
@@ -120,13 +121,13 @@ export function renderKbConflict(
   const now = opts?.now ?? new Date();
   el.textContent = '';
   for (const group of Array.isArray(groups) ? groups : []) {
-    const box = h('div', 'kb-conflict');
-    const claim = h('div', 'kb-conflict-claim');
-    claim.prepend(h('i', 'kb-dot is-warn'));
+    const box = h('div', 'icen-kb-conflict');
+    const claim = h('div', 'icen-kb-conflict-claim');
+    claim.prepend(h('i', 'icen-kb-dot is-warn'));
     claim.appendChild(document.createTextNode(group.claim ?? ''));
     box.appendChild(claim);
 
-    const versions = h('div', 'kb-conflict-versions');
+    const versions = h('div', 'icen-kb-conflict-versions');
     const list = (Array.isArray(group.versions) ? group.versions : []).map(normalizeCitation);
     const current = pickCurrent(list);
     for (const v of list) versions.appendChild(buildVersionCard(v, current, now, opts?.onOpen));

@@ -9,18 +9,28 @@
  * 能力：
  *   - 内置搜索（searchable，160ms 防抖，跨列大小写不敏感）
  *   - 列排序（sortable，点表头 升→降→取消，数字感知；sortFn 可自定义）
+ *   - 多列排序（multiSort：Shift+点击追加次级排序，徽标显示优先级；getSorts/setSorts）
+ *   - 列重排（reorderable：表头拖拽换位，影子 + 插入指示线；冻结/非冻结分区互不跨越；
+ *     完成派 icen:table-column-reorder；moveColumn(key, toIndex)）
  *   - 列筛选（filterable，表头漏斗面板，去重值多选，即时生效）
  *   - 多选（selectable，rowKey 跨页保持，表头三态，Shift+点击范围选，onSelectionChange）
  *   - 分页（pagination 默认开启、10 条/页；pagination: false 关闭——页大小切换 + 页码窗口 ±2 + 总数/已选统计）
  *   - 虚拟滚动（virtual: true，固定行高窗口化渲染，万级行流畅；与分页二选一）
+ *   - 行分组 + 聚合（groupBy 字段/函数；column.aggregate 组头摘要 chip；点击折叠派
+ *     icen:table-group-toggle，状态跨 setData 保持；管线末拍平 flatRows，虚拟滚动兼容）
  *   - 行展开（expandable，chevron 展开嵌套任意 Node；虚拟模式下不可用）
+ *   - 单元格编辑（column.editable: text/number/select；双击或 Enter 进入，Enter/失焦提交、Esc 取消；
+ *     提交派 icen:table-cell-edit + onCellEdit，宿主调 updateCell/setData 采纳；number 非法值抖动不提交）
+ *   - 汇总行（summaryRow：表尾 sticky 一行，按当前管线（搜索/筛选后）数据聚合；'label' 列显示「合计」）
+ *   - 键盘导航 + 复制（tbody roving tabindex：方向键/Home/End/PageUp/Down；Enter 进编辑；
+ *     Ctrl/Cmd+C 复制当前格或选中行集（TSV，clipboard + legacy 回退））
  *   - 行右键（contextMenu(row) → ContextMenuItem[]，复用 context-menu 浮层）
- *   - 列宽拖拽（resizable，拖表头边界改列宽）
+ *   - 列宽拖拽（resizable，拖表头边界改列宽；结束派 icen:table-column-resize，过程不派）
  *   - 列显隐（columnVisibility，工具栏齿轮开关）
- *   - 冻结列（column.frozen，左固定不随横向滚动）
+ *   - 冻结列（column.frozen：true/'left' 左固定 | 'right' 右固定，sticky 偏移按列宽累计测量）
  *   - CSV 导出（exportable，工具栏按钮，导出当前管线数据）
  *   - 行自定义 class（rowClassName，条件着色）
- *   - 管线缓存（pipeline memoization，同帧多次读不重算）
+ *   - 管线缓存（pipeline memoization：缓存键含 search/filters/sorts/group 状态，同帧多次读不重算）
  *   - 斑马纹（striped）、空态（emptyLabel）、加载骨架（loading）
  *   - 紧凑密度（density: 'compact'，32px 行高）
  *
@@ -29,9 +39,12 @@
  *       { key: 'name', title: '名称', sortable: true },
  *       { key: 'status', title: '状态', filterable: true,
  *         render: (v) => pillNode(String(v)) },   // 返回 Node = 嵌套组件
+ *       { key: 'amount', title: '金额', sortable: true, editable: 'number', aggregate: 'sum' },
  *     ],
  *     data: rows, rowKey: 'id',
  *     searchable: true, selectable: true,   // pagination 默认开启（10 条/页），false 关闭
+ *     multiSort: true, reorderable: true,
+ *     groupBy: 'dept', summaryRow: { name: 'label', amount: 'sum' },
  *     contextMenu: (row) => [{ label: '重命名', onClick: () => … }],
  *   });
  *   table.setData(next); table.getSelected(); table.destroy();
@@ -40,6 +53,27 @@
 import { openContextMenu, type ContextMenuItem } from './context-menu';
 import { emitIcen } from './events';
 import { applyPanelSizing, computePopoverLayout, readPanelSizing, resolvePanelSizing } from './popover';
+import { t } from './i18n';
+
+export type TableFrozenSide = 'left' | 'right';
+
+/** 行分组聚合器：内置五种 + 自定义函数（收数字数组，返回展示串） */
+export type TableAggregate = 'sum' | 'avg' | 'count' | 'min' | 'max' | ((values: number[]) => string);
+
+/** 单元格编辑类型：true = 'text' */
+export type TableCellEditable = boolean | 'text' | 'number' | 'select';
+
+/** select 编辑器选项（纯字符串或 value/label 对） */
+export type TableEditOption = string | { value: string; label: string };
+
+/** 排序栈条目（sorts[0] = 主排序） */
+export interface TableSortEntry {
+  key: string;
+  dir: 'asc' | 'desc';
+}
+
+/** 汇总行逐列规格；'label' = 显示「合计」 */
+export type TableSummarySpec = 'sum' | 'avg' | 'count' | 'min' | 'max' | 'label';
 
 export interface TableColumn<Row = Record<string, unknown>> {
   key: string;
@@ -54,8 +88,14 @@ export interface TableColumn<Row = Record<string, unknown>> {
   /** 返回 Node 可嵌套任意组件；返回 string/number 走 textContent（安全） */
   render?: (value: unknown, row: Row, rowIndex: number) => Node | string | number | null;
   hidden?: boolean;
-  /** 冻结列（左固定，横向滚动时不跟随） */
-  frozen?: boolean;
+  /** 冻结列：true/'left' 左固定（默认），'right' 右固定（横向滚动不跟随） */
+  frozen?: boolean | TableFrozenSide;
+  /** 行分组聚合器（groupBy 开启时组头摘要 chip；summaryRow: true 时同名复用） */
+  aggregate?: TableAggregate;
+  /** 单元格编辑：true/'text' 文本；'number' 数字（非法值抖动不提交）；'select' 需 editOptions */
+  editable?: TableCellEditable;
+  /** select 编辑器选项 */
+  editOptions?: TableEditOption[];
 }
 
 export interface TableOptions<Row = Record<string, unknown>> {
@@ -90,11 +130,22 @@ export interface TableOptions<Row = Record<string, unknown>> {
   columnVisibility?: boolean;
   /** 导出 CSV 按钮显示在工具栏（默认 false） */
   exportable?: boolean;
+  /** 多列排序：Shift+点击表头追加次级排序，徽标显示优先级（单点击行为与单排序完全一致） */
+  multiSort?: boolean;
+  /** 表头拖拽列重排（冻结/非冻结分区互不跨越；完成派 icen:table-column-reorder） */
+  reorderable?: boolean;
+  /** 行分组：字段名或函数 → 组头行（组名 + 计数 + 聚合 chip，点击折叠，状态跨 setData 保持） */
+  groupBy?: keyof Row | ((row: Row) => string);
+  /** 汇总行：true 按各列 aggregate 汇总；或逐列规格（'label' 列显示「合计」）。
+   *  数据口径 = 当前管线（搜索/筛选后、分页前）。 */
+  summaryRow?: boolean | Record<string, TableSummarySpec>;
   /** 行自定义 class（条件着色 / 状态行） */
   rowClassName?: (row: Row, index: number) => string;
   onSelectionChange?: (rows: Row[]) => void;
   onRowClick?: (row: Row) => void;
   onSortChange?: (key: string | null, dir: 'asc' | 'desc') => void;
+  /** 单元格编辑提交（与 icen:table-cell-edit 双通道；宿主决定是否采纳：调 handle.updateCell 或 setData） */
+  onCellEdit?: (rowKey: string, field: string, value: unknown, row: Row) => void;
   /** 搜索谓词（默认跨列 String includes；自定义拼音/高亮/索引匹配） */
   searchFn?: (query: string, row: Row) => boolean;
   /** 服务端/受控分页：开启后翻页只派事件与回调，不再本地切片（配 totalCount + setData/setPage 喂数） */
@@ -113,6 +164,14 @@ export interface TableHandle<Row = Record<string, unknown>> {
   /** values=null 清除该列筛选 */
   setFilter(key: string, values: string[] | null): void;
   setSort(key: string | null, dir?: 'asc' | 'desc'): void;
+  /** 当前排序栈（[0] = 主排序）；返回副本，改之不影响内部状态 */
+  getSorts(): TableSortEntry[];
+  /** 整体替换排序栈（与 setSort 同纪律：不派 icen:table-sort-change，只回调 onSortChange） */
+  setSorts(sorts: TableSortEntry[]): void;
+  /** 列重排：把 key 移到当前可见列序的 toIndex（冻结分区约束内自动夹取；派 icen:table-column-reorder） */
+  moveColumn(key: string, toIndex: number): void;
+  /** 采纳编辑值：按行键写回 data 并重渲（宿主在 onCellEdit / icen:table-cell-edit 里调用） */
+  updateCell(rowKey: string, field: string, value: unknown): void;
   /** 获取当前管线（搜索→筛选→排序）后的数据 */
   getData(): Row[];
   /** 导出当前管线数据为 CSV 并触发下载 */
@@ -157,12 +216,89 @@ function defaultCompare(a: unknown, b: unknown): number {
   return String(a ?? '').localeCompare(String(b ?? ''), 'zh-CN', { numeric: true });
 }
 
+/* ═══ 聚合纯函数（模块级，可单测）：分组头摘要 / 汇总行共用同一口径 ═══ */
+
+/** 数字值抽取：数字直取；非空字符串尝试 Number；其余（null/undefined/''/NaN）返回 null（不进聚合） */
+function toNum(v: unknown): number | null {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v);
+    return Number.isNaN(n) ? null : n;
+  }
+  return null;
+}
+
+/** 聚合数格式化：整数原样，小数四舍五入到 2 位（去尾零），非有限值「—」不猜 */
+function formatAggNumber(n: number): string {
+  if (!Number.isFinite(n)) return '—';
+  const r = Math.round(n * 100) / 100;
+  return String(r);
+}
+
+/**
+ * 计算各聚合列的展示值（纯函数）。
+ * - sum/avg/min/max：只统计可转数字的值（字符串数字计入；空/非数字跳过），无有效值 → '—'
+ * - count：非空值计数（null/undefined/'' 跳过），与类型无关
+ * - 自定义函数：收数字数组（同一口径过滤后），返回串由宿主决定
+ */
+export function computeAggregates<Row = Record<string, unknown>>(
+  rows: Row[],
+  columns: Array<TableColumn<Row>>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const col of columns) {
+    const agg = col.aggregate;
+    if (!agg) continue;
+    if (typeof agg === 'function') {
+      const vals: number[] = [];
+      for (const row of rows) {
+        const n = toNum(row[col.key as keyof Row]);
+        if (n != null) vals.push(n);
+      }
+      out[col.key] = agg(vals);
+      continue;
+    }
+    if (agg === 'count') {
+      let c = 0;
+      for (const row of rows) {
+        const v = row[col.key as keyof Row];
+        if (v !== null && v !== undefined && v !== '') c++;
+      }
+      out[col.key] = String(c);
+      continue;
+    }
+    let acc = 0;
+    let cnt = 0;
+    let extreme = 0;
+    for (const row of rows) {
+      const n = toNum(row[col.key as keyof Row]);
+      if (n == null) continue;
+      if (cnt === 0) extreme = n;
+      else if (agg === 'min') extreme = Math.min(extreme, n);
+      else if (agg === 'max') extreme = Math.max(extreme, n);
+      acc += n;
+      cnt++;
+    }
+    if (cnt === 0) {
+      out[col.key] = '—';
+    } else if (agg === 'sum') {
+      out[col.key] = formatAggNumber(acc);
+    } else if (agg === 'avg') {
+      out[col.key] = formatAggNumber(acc / cnt);
+    } else {
+      out[col.key] = formatAggNumber(extreme);
+    }
+  }
+  return out;
+}
+
 /** 无 DOM（SSR）时的 no-op handle */
 function noopHandle<Row>(): TableHandle<Row> {
   const noop = (): void => undefined;
   return {
     setData: noop, getSelected: () => [], clearSelection: noop,
     setSearch: noop, setFilter: noop, setSort: noop, refresh: noop, destroy: noop,
+    getSorts: () => [], setSorts: noop, moveColumn: noop, updateCell: noop,
     getData: () => [], exportCSV: noop, showColumn: noop, hideColumn: noop,
     setPage: noop, setPageSize: noop,
   };
@@ -179,8 +315,8 @@ export function createTable<Row = Record<string, unknown>>(
   let search = '';
   let page = 1;
   let pageSize = opts.pageSize ?? 10;
-  let sortKey: string | null = null;
-  let sortDir: 'asc' | 'desc' = 'asc';
+  /** 排序栈：[0] = 主排序（单排序 = 长度为 1 的退化形态，事件/API 语义与旧版一致） */
+  let sorts: TableSortEntry[] = [];
   let scrollTop = 0;
   const filters = new Map<string, Set<string>>();
   const selected = new Set<string>();
@@ -189,6 +325,20 @@ export function createTable<Row = Record<string, unknown>>(
   const colWidths = new Map<string, string>();
   /** 列动态 hidden（工具栏开关写入） */
   const colHidden = new Map<string, boolean>();
+  /** 列重排顺序（全部列 key 的排列；null = 未重排过，跟随 opts.columns 声明序） */
+  let colOrder: string[] | null = null;
+  /** 分组折叠状态：组 key → collapsed（Map by key，跨 setData 保持） */
+  const groupState = new Map<string, boolean>();
+  /** 当前编辑会话（单元格编辑） */
+  let editing: EditSession | null = null;
+  /** 列重排拖拽会话 */
+  let drag: DragSession | null = null;
+  /** 拖拽刚结束的时间戳：抑制尾随 click 触发排序 */
+  let lastDragEndAt = 0;
+  /** 当前渲染的导航总行数（flatRows 长度或数据行数；键盘导航/PageUp/Down 用） */
+  let navTotal = 0;
+  /** roving tabindex 焦点位（行 key + 列 key），重渲后恢复 */
+  let focusPos: { key: string; col: string } | null = null;
   /** 上次点击的行索引（Shift+点击范围选起点） */
   let lastClickedIndex = -1;
   let destroyed = false;
@@ -200,10 +350,36 @@ export function createTable<Row = Record<string, unknown>>(
   const selectable = opts.selectable === true;
   const expandable = !virtual ? opts.expandable : undefined;
   const resizable = opts.resizable !== false; // 默认开启
+  const multiSort = opts.multiSort === true;
+  const reorderable = opts.reorderable === true;
 
-  /** 当前列表（合并静态 hidden 与动态 colHidden） */
-  const cols = (): TableColumn<Row>[] =>
-    opts.columns.filter((c) => !(c.hidden || colHidden.get(c.key)));
+  /** 分组函数（字段名或宿主函数；null = 不分组） */
+  const groupFn: ((row: Row) => string) | null = opts.groupBy
+    ? typeof opts.groupBy === 'function'
+      ? opts.groupBy
+      : (row: Row) => String(row[opts.groupBy as keyof Row] ?? '')
+    : null;
+
+  const frozenSide = (c: TableColumn<Row>): TableFrozenSide | null =>
+    c.frozen === true ? 'left' : c.frozen === 'left' || c.frozen === 'right' ? c.frozen : null;
+
+  const isEditable = (c: TableColumn<Row>): boolean => c.editable === true || typeof c.editable === 'string';
+  const editKind = (c: TableColumn<Row>): 'text' | 'number' | 'select' =>
+    c.editable === 'number' || c.editable === 'select' ? c.editable : 'text';
+
+  /** 当前列序（colOrder 含全部列；此处滤 hidden——静态 hidden 与动态 colHidden 合并） */
+  function cols(): TableColumn<Row>[] {
+    const order = colOrder ?? opts.columns.map((c) => c.key);
+    const byKey = new Map(opts.columns.map((c) => [c.key, c]));
+    const out: TableColumn<Row>[] = [];
+    for (const k of order) {
+      const c = byKey.get(k);
+      if (c && !(c.hidden || colHidden.get(k))) out.push(c);
+    }
+    return out;
+  }
+
+  const colByKey = (key: string): TableColumn<Row> | undefined => opts.columns.find((c) => c.key === key);
 
   const keyOf = (row: Row, index: number): string => {
     if (typeof opts.rowKey === 'function') return opts.rowKey(row);
@@ -220,9 +396,13 @@ export function createTable<Row = Record<string, unknown>>(
     data.forEach((r, i) => keyCache.set(r as object, keyOf(r, i)));
   }
 
-  /* ═══ 数据管线：搜索 → 筛选 → 排序（记忆化：同帧多次读不重算）═══ */
+  /* ═══ 数据管线：搜索 → 筛选 → 排序（记忆化：缓存键含 search/filters/sorts 状态，
+         任一变化走 invalidate() 清空，同帧多次读不重算）═══ */
   let pipelineCache: Row[] | null = null;
-  function invalidate(): void { pipelineCache = null; }
+  function invalidate(): void {
+    pipelineCache = null;
+    flatCache = null;
+  }
   function pipeline(): Row[] {
     if (pipelineCache) return pipelineCache;
     let rows = data;
@@ -242,25 +422,80 @@ export function createTable<Row = Record<string, unknown>>(
         return true;
       });
     }
-    if (sortKey) {
-      const col = opts.columns.find((c) => c.key === sortKey);
-      const cmp = col?.sortFn
-        ? (a: Row, b: Row) => col.sortFn!(a, b)
-        : (a: Row, b: Row) => defaultCompare(a[sortKey as keyof Row], b[sortKey as keyof Row]);
-      rows = [...rows].sort((a, b) => (sortDir === 'asc' ? cmp(a, b) : -cmp(a, b)));
+    if (sorts.length > 0) {
+      /* 多列排序：单趟比较按排序栈优先级短路（sorts[0] 主排序优先），稳定排序保留原序 */
+      rows = [...rows].sort((a, b) => {
+        for (const s of sorts) {
+          const col = colByKey(s.key);
+          const cmp = col?.sortFn
+            ? col.sortFn(a, b)
+            : defaultCompare(a[s.key as keyof Row], b[s.key as keyof Row]);
+          if (cmp !== 0) return s.dir === 'asc' ? cmp : -cmp;
+        }
+        return 0;
+      });
     }
     pipelineCache = rows;
     return rows;
   }
 
+  /* ═══ 行分组：管线末一步把（组头 + 行）拍平成 flatRows——虚拟滚动/分页/键盘导航
+         全部只在 flatRows 上做（组头行高同 data 行）。缓存键 = 管线数组引用 +
+         groupState（折叠变化走 invalidate 清空）。═══ */
+  type FlatEntry =
+    | { kind: 'group'; gkey: string; label: string; count: number; aggs: Record<string, string>; collapsed: boolean }
+    | { kind: 'data'; row: Row; pipeIndex: number };
+
+  let flatCache: { base: Row[]; entries: FlatEntry[] } | null = null;
+  function flatEntries(): FlatEntry[] {
+    const rows = pipeline();
+    if (flatCache && flatCache.base === rows) return flatCache.entries;
+    const entries: FlatEntry[] = [];
+    if (groupFn) {
+      /* 组顺序 = 排序后首现行顺序（与 AG Grid 一致，不额外按组名排序） */
+      const groups: Array<{ label: string; items: Array<{ row: Row; i: number }> }> = [];
+      const byKey = new Map<string, { label: string; items: Array<{ row: Row; i: number }> }>();
+      rows.forEach((row, i) => {
+        const label = groupFn(row);
+        let g = byKey.get(label);
+        if (!g) {
+          g = { label, items: [] };
+          byKey.set(label, g);
+          groups.push(g);
+        }
+        g.items.push({ row, i });
+      });
+      for (const g of groups) {
+        const collapsed = groupState.get(g.label) === true;
+        const gRows = g.items.map((it) => it.row);
+        entries.push({
+          kind: 'group',
+          gkey: g.label,
+          label: g.label,
+          count: g.items.length,
+          aggs: computeAggregates(gRows, opts.columns),
+          collapsed,
+        });
+        if (!collapsed) {
+          for (const it of g.items) entries.push({ kind: 'data', row: it.row, pipeIndex: it.i });
+        }
+      }
+    } else {
+      rows.forEach((row, i) => entries.push({ kind: 'data', row, pipeIndex: i }));
+    }
+    flatCache = { base: rows, entries };
+    return entries;
+  }
+
   /* ═══ DOM 骨架 ═══ */
   el.textContent = '';
   const root = document.createElement('div');
-  root.className = 'datatable';
-  if (opts.striped) root.classList.add('datatable--striped');
-  if (virtual) root.classList.add('datatable--virtual');
-  if (compact) root.classList.add('datatable--compact');
-  if (opts.columns.some((c) => c.frozen)) root.classList.add('datatable--frozen');
+  root.className = 'icen-datatable';
+  if (opts.striped) root.classList.add('icen-datatable--striped');
+  if (virtual) root.classList.add('icen-datatable--virtual');
+  if (compact) root.classList.add('icen-datatable--compact');
+  if (opts.columns.some((c) => c.frozen)) root.classList.add('icen-datatable--frozen');
+  if (reorderable) root.classList.add('icen-datatable--reorderable');
 
   /* 工具栏（搜索 + 列开关 + 导出） */
   let searchInput: HTMLInputElement | null = null;
@@ -268,27 +503,27 @@ export function createTable<Row = Record<string, unknown>>(
   let toolbar: HTMLElement | null = null;
   if (needsToolbar) {
     toolbar = document.createElement('div');
-    toolbar.className = 'dt-toolbar';
+    toolbar.className = 'icen-dt-toolbar';
     if (opts.searchable) {
       const box = document.createElement('div');
-      box.className = 'dt-search';
+      box.className = 'icen-dt-search';
       box.appendChild(svgIcon(ICON_SEARCH, 14));
       searchInput = document.createElement('input');
-      searchInput.className = 'dt-search-input';
+      searchInput.className = 'icen-dt-search-input';
       searchInput.type = 'search';
-      searchInput.placeholder = opts.searchPlaceholder ?? '搜索…';
-      searchInput.setAttribute('aria-label', '搜索表格');
+      searchInput.placeholder = opts.searchPlaceholder ?? t('datatable.searchPlaceholder');
+      searchInput.setAttribute('aria-label', t('datatable.searchAria'));
       box.appendChild(searchInput);
       toolbar.appendChild(box);
     }
     // 右侧操作按钮组
     const actions = document.createElement('div');
-    actions.className = 'dt-toolbar-actions';
+    actions.className = 'icen-dt-toolbar-actions';
     if (opts.columnVisibility) {
       const colBtn = document.createElement('button');
       colBtn.type = 'button';
-      colBtn.className = 'dt-tool-btn';
-      colBtn.setAttribute('aria-label', '列设置');
+      colBtn.className = 'icen-dt-tool-btn';
+      colBtn.setAttribute('aria-label', t('datatable.columnSettingsAria'));
       colBtn.appendChild(svgIcon(ICON_COLUMNS, 14));
       colBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -300,8 +535,8 @@ export function createTable<Row = Record<string, unknown>>(
     if (opts.exportable) {
       const expBtn = document.createElement('button');
       expBtn.type = 'button';
-      expBtn.className = 'dt-tool-btn';
-      expBtn.setAttribute('aria-label', '导出 CSV');
+      expBtn.className = 'icen-dt-tool-btn';
+      expBtn.setAttribute('aria-label', t('common.exportCsv'));
       expBtn.appendChild(svgIcon(ICON_DOWNLOAD, 14));
       expBtn.addEventListener('click', () => exportCSV());
       actions.appendChild(expBtn);
@@ -312,55 +547,79 @@ export function createTable<Row = Record<string, unknown>>(
 
   /* 表头 + 表体滚动容器 */
   const scroll = document.createElement('div');
-  scroll.className = 'dt-scroll';
+  scroll.className = 'icen-dt-scroll';
   if (virtual) scroll.style.maxHeight = opts.height ?? '420px';
 
   const canvas = document.createElement('div');
-  canvas.className = 'dt-canvas';
+  canvas.className = 'icen-dt-canvas';
   canvas.setAttribute('role', 'grid');
 
   const head = document.createElement('div');
-  head.className = 'dt-head';
+  head.className = 'icen-dt-head';
   head.setAttribute('role', 'rowgroup');
   const headRow = document.createElement('div');
-  headRow.className = 'dt-row dt-row--head';
+  headRow.className = 'icen-dt-row icen-dt-row--head';
   headRow.setAttribute('role', 'row');
   head.appendChild(headRow);
 
   const body = document.createElement('div');
-  body.className = 'dt-body';
+  body.className = 'icen-dt-body';
   body.setAttribute('role', 'rowgroup');
 
-  canvas.append(head, body);
+  /* 汇总行：挂在 canvas 内（随横向滚动对齐列），sticky bottom 钉在视口底 */
+  const summaryEl = document.createElement('div');
+  summaryEl.className = 'icen-dt-row icen-dt-row--summary';
+  summaryEl.setAttribute('role', 'row');
+  summaryEl.hidden = true;
+
+  canvas.append(head, body, summaryEl);
   scroll.appendChild(canvas);
   root.appendChild(scroll);
 
   /* 底部（分页 / 统计） */
   const foot = document.createElement('div');
-  foot.className = 'dt-foot';
+  foot.className = 'icen-dt-foot';
   root.appendChild(foot);
   el.appendChild(root);
 
   /* ═══ 列模板（合并拖拽覆盖宽度 + 冻结偏移计算）═══ */
-  /** 冻结列的左侧偏移 px 累计（用于 sticky left） */
-  function frozenOffsets(): Map<string, number> {
-    const offsets = new Map<string, number>();
-    if (!opts.columns.some((c) => c.frozen)) return offsets;
+  function parsePx(w: string): number {
+    const m = /^(\d+(?:\.\d+)?)px/.exec(w);
+    return m ? Number(m[1]) : 0;
+  }
+  /** 冻结偏移：左冻结从行首累计（含前导选择/展开列宽），右冻结从行尾倒序累计——
+      与列宽拖拽同法，只吃 colWidths 覆盖值与列声明 px 宽（fr 视为 0，同左冻结口径） */
+  function frozenOffsets(): { left: Map<string, number>; right: Map<string, number> } {
+    const left = new Map<string, number>();
+    const right = new Map<string, number>();
     const visible = cols();
-    // 前导非数据列宽
+    if (!visible.some((c) => c.frozen)) return { left, right };
     let acc = 0;
     if (selectable) acc += 40;
     if (expandable) acc += 34;
     for (const c of visible) {
-      if (c.frozen) offsets.set(c.key, acc);
-      const w = colWidths.get(c.key) ?? c.width ?? 'minmax(0,1fr)';
-      acc += parsePx(w);
+      if (frozenSide(c) === 'left') left.set(c.key, acc);
+      acc += parsePx(colWidths.get(c.key) ?? c.width ?? 'minmax(0,1fr)');
     }
-    return offsets;
+    let accR = 0;
+    for (let i = visible.length - 1; i >= 0; i--) {
+      const c = visible[i]!;
+      if (frozenSide(c) === 'right') right.set(c.key, accR);
+      accR += parsePx(colWidths.get(c.key) ?? c.width ?? 'minmax(0,1fr)');
+    }
+    return { left, right };
   }
-  function parsePx(w: string): number {
-    const m = /^(\d+(?:\.\d+)?)px/.exec(w);
-    return m ? Number(m[1]) : 0;
+  function applyFrozen(cell: HTMLElement, col: TableColumn<Row>, frz: { left: Map<string, number>; right: Map<string, number> }): void {
+    const side = frozenSide(col);
+    if (side === 'left') {
+      cell.classList.add('icen-dt-cell--frozen');
+      const off = frz.left.get(col.key);
+      if (off != null) cell.style.left = `${off}px`;
+    } else if (side === 'right') {
+      cell.classList.add('icen-dt-cell--frozen-right');
+      const off = frz.right.get(col.key);
+      if (off != null) cell.style.right = `${off}px`;
+    }
   }
   function template(): string {
     const parts: string[] = [];
@@ -385,18 +644,54 @@ export function createTable<Row = Record<string, unknown>>(
   function makeCheck(checked: boolean, label: string): HTMLInputElement {
     const input = document.createElement('input');
     input.type = 'checkbox';
-    input.className = 'dt-check';
+    input.className = 'icen-dt-check';
     input.checked = checked;
     input.setAttribute('aria-label', label);
     return input;
   }
 
+  /* ═══ 排序内核（单排序 = 单元素栈；事件/回调语义与旧版完全一致）═══ */
+  /** 应用新排序栈：emit 只派主排序（旧口径），onSortChange 收主键或 null */
+  function applySorts(next: TableSortEntry[], nullDir: 'asc' | 'desc' = 'asc', emit = true): void {
+    sorts = next;
+    invalidate();
+    const primary = sorts[0];
+    if (primary && emit) emitIcen(root, 'icen:table-sort-change', { key: primary.key, dir: primary.dir });
+    opts.onSortChange?.(primary?.key ?? null, primary?.dir ?? nullDir);
+    renderAll();
+  }
+
+  function toggleSort(key: string, append: boolean): void {
+    const cur = sorts.find((s) => s.key === key);
+    if (!multiSort || !append) {
+      /* 单排序路径（与旧版逐字节同义）：他列 → 升序；本列 → 升→降→取消 */
+      if (!cur) applySorts([{ key, dir: 'asc' }]);
+      else if (cur.dir === 'asc') applySorts([{ key, dir: 'desc' }]);
+      else applySorts([], cur.dir);
+      return;
+    }
+    /* Shift+点击：追加/循环/移除该列自身，不动其它列的相对优先级 */
+    if (!cur) applySorts([...sorts, { key, dir: 'asc' }]);
+    else if (cur.dir === 'asc') applySorts(sorts.map((s) => (s.key === key ? { key, dir: 'desc' as const } : s)));
+    else applySorts(sorts.filter((s) => s.key !== key), cur.dir);
+  }
+
+  function sanitizeSorts(arr: TableSortEntry[]): TableSortEntry[] {
+    const out: TableSortEntry[] = [];
+    for (const s of arr ?? []) {
+      if (!s || typeof s.key !== 'string' || !colByKey(s.key)) continue;
+      const dir: 'asc' | 'desc' = s.dir === 'desc' ? 'desc' : 'asc';
+      if (!out.some((o) => o.key === s.key)) out.push({ key: s.key, dir });
+    }
+    return out;
+  }
+
   /* ═══ 表头渲染（排序/筛选状态跟随）═══ */
-  /* 筛选面板 portal 到 body（.dt-scroll 有 overflow，绝对定位会被裁切） */
+  /* 筛选面板 portal 到 body（.icen-dt-scroll 有 overflow，绝对定位会被裁切） */
   let openPanel: { key: string; el: HTMLElement } | null = null;
 
-/** 浮层面板定位走全库 PanelSizing 契约：根 data-panel-* 可覆盖宽/高度上限，
-    视口翻转/夹取复用 computePopoverLayout（与 popover 家族同一布局纪律）。 */
+  /** 浮层面板定位走全库 PanelSizing 契约：根 data-panel-* 可覆盖宽/高度上限，
+      视口翻转/夹取复用 computePopoverLayout（与 popover 家族同一布局纪律）。 */
   function positionDropdownPanel(panel: HTMLElement, btn: HTMLElement): void {
     panel.hidden = false;
     /* data-panel-* 须从用户可见根 el 读：root 是 createTable 内部 div，用户无法在其上挂覆盖 */
@@ -423,7 +718,7 @@ export function createTable<Row = Record<string, unknown>>(
     if (!openPanel) return;
     openPanel.el.remove();
     openPanel = null;
-    headRow.querySelectorAll('.dt-filter-btn').forEach((b) => b.classList.remove('is-open'));
+    headRow.querySelectorAll('.icen-dt-filter-btn').forEach((b) => b.classList.remove('is-open'));
     window.removeEventListener('scroll', onPanelScroll, true);
     window.removeEventListener('resize', onPanelScroll);
   }
@@ -444,14 +739,16 @@ export function createTable<Row = Record<string, unknown>>(
     closeFilterPanel();
     headRow.textContent = '';
     headRow.style.gridTemplateColumns = template();
+    const frz = frozenOffsets();
 
     if (selectable) {
       const cell = document.createElement('div');
-      cell.className = 'dt-cell dt-cell--check';
+      cell.className = 'icen-dt-cell icen-dt-cell--check';
+      cell.setAttribute('role', 'columnheader');
       const rows = pipeline();
       const allKeys = rows.map((r) => keyOfRow(r));
       const selCount = allKeys.filter((k) => selected.has(k)).length;
-      const box = makeCheck(selCount > 0 && selCount === allKeys.length, '全选');
+      const box = makeCheck(selCount > 0 && selCount === allKeys.length, t('datatable.selectAll'));
       box.indeterminate = selCount > 0 && selCount < allKeys.length;
       box.addEventListener('change', () => {
         if (box.checked) allKeys.forEach((k) => selected.add(k));
@@ -465,18 +762,21 @@ export function createTable<Row = Record<string, unknown>>(
     }
     if (expandable) {
       const cell = document.createElement('div');
-      cell.className = 'dt-cell dt-cell--expand';
+      cell.className = 'icen-dt-cell icen-dt-cell--expand';
+      cell.setAttribute('role', 'columnheader');
       headRow.appendChild(cell);
     }
 
     for (const col of cols()) {
       const cell = document.createElement('div');
-      cell.className = 'dt-cell dt-cell--head';
-      if (col.align) cell.dataset.align = col.align;
-      if (col.frozen) cell.classList.add('dt-cell--frozen');
+      cell.className = 'icen-dt-cell icen-dt-cell--head';
+      cell.setAttribute('role', 'columnheader');
+      if (col.align) cell.dataset.icenAlign = col.align;
+      cell.dataset.icenColKey = col.key;
+      applyFrozen(cell, col, frz);
 
       const title = document.createElement('span');
-      title.className = 'dt-head-title';
+      title.className = 'icen-dt-head-title';
       title.textContent = col.title;
       cell.appendChild(title);
 
@@ -484,28 +784,28 @@ export function createTable<Row = Record<string, unknown>>(
         cell.classList.add('is-sortable');
         cell.setAttribute('role', 'columnheader');
         cell.tabIndex = 0;
-        const active = sortKey === col.key;
-        cell.setAttribute('aria-sort', active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none');
+        const si = sorts.findIndex((s) => s.key === col.key);
+        const active = si >= 0;
+        cell.setAttribute('aria-sort', active ? (sorts[si]!.dir === 'asc' ? 'ascending' : 'descending') : 'none');
         const arrow = document.createElement('span');
-        arrow.className = 'dt-sort';
-        arrow.textContent = active ? (sortDir === 'asc' ? '↑' : '↓') : '↕';
+        arrow.className = 'icen-dt-sort';
+        arrow.textContent = active ? (sorts[si]!.dir === 'asc' ? '↑' : '↓') : '↕';
         if (active) arrow.classList.add('is-active');
         cell.appendChild(arrow);
-        const toggleSort = (): void => {
-          if (sortKey !== col.key) { sortKey = col.key; sortDir = 'asc'; }
-          else if (sortDir === 'asc') sortDir = 'desc';
-          else sortKey = null;
-          invalidate();
-          if (sortKey) emitIcen(root, 'icen:table-sort-change', { key: sortKey, dir: sortDir });
-          opts.onSortChange?.(sortKey, sortDir);
-          renderAll();
-        };
+        if (active && sorts.length > 1) {
+          /* 多列排序：徽标显示优先级序号（1 = 主排序） */
+          const badge = document.createElement('span');
+          badge.className = 'icen-dt-sort-badge';
+          badge.textContent = String(si + 1);
+          cell.appendChild(badge);
+        }
         cell.addEventListener('click', (ev) => {
-          if ((ev.target as Element).closest('.dt-filter-btn, .dt-resize')) return;
-          toggleSort();
+          if ((ev.target as Element).closest('.icen-dt-filter-btn, .icen-dt-resize')) return;
+          if (Date.now() - lastDragEndAt < 200) return; /* 列重排拖拽的尾随 click 不触发排序 */
+          toggleSort(col.key, ev.shiftKey);
         });
         cell.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleSort(); }
+          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleSort(col.key, ev.shiftKey); }
         });
       }
 
@@ -513,10 +813,10 @@ export function createTable<Row = Record<string, unknown>>(
         const hasFilter = filters.has(col.key);
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'dt-filter-btn';
+        btn.className = 'icen-dt-filter-btn';
         btn.dataset.colKey = col.key;
         if (hasFilter) btn.classList.add('is-active');
-        btn.setAttribute('aria-label', `筛选「${col.title}」`);
+        btn.setAttribute('aria-label', t('datatable.filterChipAria', { p0: col.title }));
         btn.appendChild(svgIcon(ICON_FUNNEL, 12));
         btn.addEventListener('click', (ev) => {
           ev.stopPropagation();
@@ -532,13 +832,16 @@ export function createTable<Row = Record<string, unknown>>(
       /* 列宽拖拽手柄（最后一列不加：它需要弹性伸展） */
       if (resizable && col !== cols()[cols().length - 1]) {
         const handle = document.createElement('div');
-        handle.className = 'dt-resize';
+        handle.className = 'icen-dt-resize';
         handle.setAttribute('role', 'separator');
         handle.setAttribute('aria-orientation', 'vertical');
-        handle.setAttribute('aria-label', `调整「${col.title}」列宽`);
+        handle.setAttribute('aria-label', t('datatable.resizeAria', { p0: col.title }));
         attachResize(handle, col);
         cell.appendChild(handle);
       }
+
+      /* 列重排拖拽（复用列宽拖拽的指针基础设施：位移阈值触发，rAF 批处理影子/指示线） */
+      if (reorderable) attachReorderDrag(cell, col);
 
       headRow.appendChild(cell);
     }
@@ -547,14 +850,14 @@ export function createTable<Row = Record<string, unknown>>(
   /* 只同步表头状态（全选三态 / 筛选钮激活徽标），不重建表头——
      筛选/列显隐面板在勾选变更期间必须存活，重建表头会 closeFilterPanel() */
   function syncHeadState(): void {
-    const headBox = headRow.querySelector<HTMLInputElement>('.dt-cell--check .dt-check');
+    const headBox = headRow.querySelector<HTMLInputElement>('.icen-dt-cell--check .icen-dt-check');
     if (headBox) {
       const allKeys = pipeline().map((r) => keyOfRow(r));
       const selCount = allKeys.filter((k) => selected.has(k)).length;
       headBox.checked = selCount > 0 && selCount === allKeys.length;
       headBox.indeterminate = selCount > 0 && selCount < allKeys.length;
     }
-    headRow.querySelectorAll<HTMLElement>('.dt-filter-btn').forEach((b) => {
+    headRow.querySelectorAll<HTMLElement>('.icen-dt-filter-btn').forEach((b) => {
       const key = b.dataset.colKey;
       if (key) b.classList.toggle('is-active', filters.has(key));
     });
@@ -572,26 +875,27 @@ export function createTable<Row = Record<string, unknown>>(
     window.addEventListener('resize', onPanelScroll);
     /* 筛选面板的触发钮在重建后的表头里，补回 is-open（列显隐面板的钮在工具栏，不受影响） */
     if (keep.key !== '__cols') {
-      headRow.querySelectorAll<HTMLElement>('.dt-filter-btn').forEach((b) => {
+      headRow.querySelectorAll<HTMLElement>('.icen-dt-filter-btn').forEach((b) => {
         if (b.dataset.colKey === keep.key) b.classList.add('is-open');
       });
     }
   }
 
-  /* ═══ 列宽拖拽：pointer capture + 写入 colWidths → 重算模板 ═══ */
+  /* ═══ 列宽拖拽：pointer capture + 写入 colWidths → 重算模板；
+         只在拖拽结束时派一次 icen:table-column-resize（过程不派，防事件洪泛）═══ */
   function attachResize(handle: HTMLElement, col: TableColumn<Row>): void {
     handle.addEventListener('pointerdown', (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
       const startX = ev.clientX;
-      const startW = handle.closest('.dt-cell')!.getBoundingClientRect().width;
-      handle.setPointerCapture(ev.pointerId);
+      const startW = handle.closest('.icen-dt-cell')!.getBoundingClientRect().width;
+      try { handle.setPointerCapture(ev.pointerId); } catch { /* 部分环境（测试 DOM 等）无 pointer capture */ }
       const onMove = (e: PointerEvent): void => {
         const delta = e.clientX - startX;
         const next = Math.max(48, Math.round(startW + delta)); /* 48：最小可读列宽，拖拽不至把列挤没 */
         colWidths.set(col.key, `${next}px`);
         headRow.style.gridTemplateColumns = template();
-        body.querySelectorAll<HTMLElement>('.dt-row').forEach((r) => {
+        body.querySelectorAll<HTMLElement>('.icen-dt-row').forEach((r) => {
           r.style.gridTemplateColumns = template();
         });
       };
@@ -600,6 +904,8 @@ export function createTable<Row = Record<string, unknown>>(
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         handle.removeEventListener('pointercancel', onUp);
+        const width = colWidths.get(col.key);
+        if (width) emitIcen(root, 'icen:table-column-resize', { key: col.key, width });
       };
       handle.addEventListener('pointermove', onMove);
       handle.addEventListener('pointerup', onUp);
@@ -607,19 +913,163 @@ export function createTable<Row = Record<string, unknown>>(
     });
   }
 
+  /* ═══ 列重排 ═══
+     冻结/非冻结分区互不跨越：左冻结块 [0, L)、自由块 [L, n-R)、右冻结块 [n-R, n)。
+     toIndex 语义 = 拖出该列后可见列序中的落点（与拖拽指示线同一口径）。 */
+  const clampN = (v: number, lo: number, hi: number): number =>
+    hi < lo ? lo : Math.min(hi, Math.max(lo, v));
+
+  function reorderBounds(key: string): [number, number] {
+    const vis = cols();
+    const leftCount = vis.filter((c) => frozenSide(c) === 'left').length;
+    const rightCount = vis.filter((c) => frozenSide(c) === 'right').length;
+    const col = colByKey(key);
+    if (!col) return [0, vis.length - 1];
+    const side = frozenSide(col);
+    if (side === 'left') return [0, leftCount - 1];
+    if (side === 'right') return [vis.length - rightCount, vis.length - 1];
+    return [leftCount, vis.length - rightCount - 1];
+  }
+
+  function moveColumn(key: string, toIndex: number): void {
+    if (!colByKey(key) || !Number.isFinite(toIndex)) return;
+    if (!colOrder) colOrder = opts.columns.map((c) => c.key);
+    const hiddenSet = new Set(opts.columns.filter((c) => c.hidden || colHidden.get(c.key)).map((c) => c.key));
+    const vis = colOrder.filter((k) => !hiddenSet.has(k));
+    const from = vis.indexOf(key);
+    if (from < 0) return;
+    const [lo, hi] = reorderBounds(key);
+    const target = clampN(Math.round(toIndex), lo, hi);
+    if (target === from) return;
+    vis.splice(from, 1);
+    vis.splice(target, 0, key);
+    /* 合回全量顺序：隐藏列槽位不动，可见槽位按新可见序填入 */
+    const newOrder: string[] = [];
+    let vi = 0;
+    for (const k of colOrder) {
+      newOrder.push(hiddenSet.has(k) ? k : vis[vi++]!);
+    }
+    colOrder = newOrder;
+    invalidate();
+    emitIcen(root, 'icen:table-column-reorder', { key, fromIndex: from, toIndex: target });
+    renderAll();
+  }
+
+  interface DragSession {
+    key: string;
+    ghost: HTMLElement;
+    indicator: HTMLElement;
+    off: () => void;
+  }
+
+  function attachReorderDrag(cell: HTMLElement, col: TableColumn<Row>): void {
+    cell.addEventListener('pointerdown', (ev) => {
+      if (destroyed || ev.button !== 0) return;
+      const t = ev.target;
+      /* 把手/按钮/表单控件上的按下不算拖拽起手（与排序 click 判定同口径） */
+      if (t instanceof Element && t.closest('.icen-dt-resize, .icen-dt-filter-btn, button, input, select, textarea, a')) return;
+      const startX = ev.clientX;
+      const startY = ev.clientY;
+      let started = false;
+      let latestX = startX;
+      let latestY = startY;
+      let raf = 0;
+
+      const headCellsExcl = (): HTMLElement[] =>
+        Array.from(headRow.querySelectorAll<HTMLElement>('.icen-dt-cell--head'))
+          .filter((c) => c.dataset.icenColKey !== col.key);
+
+      const targetFromX = (x: number): number => {
+        const cells = headCellsExcl();
+        let target = cells.length;
+        for (let i = 0; i < cells.length; i++) {
+          const r = cells[i]!.getBoundingClientRect();
+          if (x < r.left + r.width / 2) { target = i; break; }
+        }
+        const [lo, hi] = reorderBounds(col.key);
+        return clampN(target, lo, hi);
+      };
+
+      const placeIndicator = (target: number): void => {
+        if (!drag) return;
+        const cells = headCellsExcl();
+        const scrollRect = scroll.getBoundingClientRect();
+        let x: number;
+        if (cells.length === 0) x = scrollRect.left;
+        else if (target >= cells.length) x = cells[cells.length - 1]!.getBoundingClientRect().right;
+        else x = cells[target]!.getBoundingClientRect().left;
+        drag.indicator.style.left = `${Math.max(0, x - 1)}px`;
+        drag.indicator.style.top = `${scrollRect.top}px`;
+        drag.indicator.style.height = `${scrollRect.height}px`;
+      };
+
+      const paint = (): void => {
+        raf = 0;
+        if (!drag || !started) return;
+        drag.ghost.style.left = `${latestX + 12}px`;
+        drag.ghost.style.top = `${latestY + 10}px`;
+        placeIndicator(targetFromX(latestX));
+      };
+
+      const onMove = (e: PointerEvent): void => {
+        if (!started && Math.hypot(e.clientX - startX, e.clientY - startY) > 5) {
+          started = true;
+          const ghost = document.createElement('div');
+          ghost.className = 'icen-dt-col-ghost';
+          ghost.textContent = col.title;
+          const indicator = document.createElement('div');
+          indicator.className = 'icen-dt-col-indicator';
+          document.body.append(ghost, indicator);
+          cell.classList.add('is-drag-source');
+          drag = { key: col.key, ghost, indicator, off: cleanup };
+        }
+        latestX = e.clientX;
+        latestY = e.clientY;
+        if (started && !raf) raf = requestAnimationFrame(paint);
+      };
+
+      const cleanup = (): void => {
+        window.cancelAnimationFrame(raf);
+        document.removeEventListener('pointermove', onMove, true);
+        document.removeEventListener('pointerup', onUp, true);
+        document.removeEventListener('pointercancel', onUp, true);
+        if (drag) {
+          drag.ghost.remove();
+          drag.indicator.remove();
+          drag = null;
+        }
+        cell.classList.remove('is-drag-source');
+      };
+
+      const onUp = (e: PointerEvent): void => {
+        const wasDrag = started;
+        const target = wasDrag ? targetFromX(e.clientX) : -1;
+        cleanup();
+        if (wasDrag) {
+          lastDragEndAt = Date.now();
+          moveColumn(col.key, target);
+        }
+      };
+
+      document.addEventListener('pointermove', onMove, true);
+      document.addEventListener('pointerup', onUp, true);
+      document.addEventListener('pointercancel', onUp, true);
+    });
+  }
+
   /* ═══ 列显隐面板 ═══ */
   function openColumnPanel(btn: HTMLElement): void {
     const panel = document.createElement('div');
-    panel.className = 'dt-filter-panel dt-col-panel';
+    panel.className = 'icen-dt-filter-panel dt-col-panel';
     panel.hidden = true;
     panel.addEventListener('click', (ev) => ev.stopPropagation());
 
     const list = document.createElement('div');
-    list.className = 'dt-filter-list';
+    list.className = 'icen-dt-filter-list';
     for (const col of opts.columns) {
       if (col.key === '__select' || col.key === '__expand') continue;
       const row = document.createElement('label');
-      row.className = 'dt-filter-item';
+      row.className = 'icen-dt-filter-item';
       const isHidden = colHidden.get(col.key) ?? col.hidden ?? false;
       const box = makeCheck(!isHidden, col.title);
       box.addEventListener('change', () => {
@@ -654,8 +1104,8 @@ export function createTable<Row = Record<string, unknown>>(
     const lines = rows.map((row) =>
       visible.map((c) => csvEscape(String(row[c.key as keyof Row] ?? ''))).join(','),
     );
-    /* UTF-8 BOM：Excel 识别 UTF-8 CSV 用 */
-    const csv = '\uFEFF' + [header, ...lines].join('\r\n');
+    /* UTF-8 BOM：Excel 识别 UTF-8 CSV 用（fromCharCode 避开转义字面量歧义） */
+    const csv = String.fromCharCode(0xfeff) + [header, ...lines].join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -673,19 +1123,19 @@ export function createTable<Row = Record<string, unknown>>(
   /* ═══ 筛选面板（去重值多选，即时生效）═══ */
   function buildFilterPanel(col: TableColumn<Row>): HTMLElement {
     const panel = document.createElement('div');
-    panel.className = 'dt-filter-panel';
+    panel.className = 'icen-dt-filter-panel';
     panel.hidden = true;
     panel.addEventListener('click', (ev) => ev.stopPropagation());
 
     const list = document.createElement('div');
-    list.className = 'dt-filter-list';
+    list.className = 'icen-dt-filter-list';
 
     const values = Array.from(new Set(data.map((r) => String(r[col.key as keyof Row] ?? ''))))
       .sort((a, b) => a.localeCompare(b, 'zh-CN', { numeric: true }));
 
     for (const v of values) {
       const row = document.createElement('label');
-      row.className = 'dt-filter-item';
+      row.className = 'icen-dt-filter-item';
       const box = makeCheck(filters.get(col.key)?.has(v) ?? true, v);
       box.addEventListener('change', () => {
         const cur = new Set(filters.get(col.key) ?? values);
@@ -701,23 +1151,23 @@ export function createTable<Row = Record<string, unknown>>(
         syncHeadState();
       });
       const text = document.createElement('span');
-      text.textContent = v === '' ? '（空）' : v;
+      text.textContent = v === '' ? t('datatable.emptyValue') : v;
       row.append(box, text);
       list.appendChild(row);
     }
 
     const footRow = document.createElement('div');
-    footRow.className = 'dt-filter-foot';
+    footRow.className = 'icen-dt-filter-foot';
     const reset = document.createElement('button');
     reset.type = 'button';
-    reset.className = 'dt-filter-reset';
-    reset.textContent = '重置';
+    reset.className = 'icen-dt-filter-reset';
+    reset.textContent = t('datatable.reset');
     reset.addEventListener('click', () => {
       filters.delete(col.key);
       invalidate();
       page = 1;
       /* 重置后所有去重值恢复勾选，面板保持打开 */
-      list.querySelectorAll<HTMLInputElement>('.dt-check').forEach((b) => { b.checked = true; });
+      list.querySelectorAll<HTMLInputElement>('.icen-dt-check').forEach((b) => { b.checked = true; });
       renderBody();
       syncHeadState();
     });
@@ -726,29 +1176,236 @@ export function createTable<Row = Record<string, unknown>>(
     return panel;
   }
 
-  /* ═══ 行渲染 ═══ */
-  /* offsets 由 renderBody 算一次传入：frozenOffsets 全列重扫，每行重算是 O(行×列) 放大 */
-  function makeRow(row: Row, rowIndex: number, key: string, offsets: Map<string, number>): HTMLElement {
+  /* ═══ 单元格编辑 ═══
+     双击或 Enter 进入（行内 input/select 替换单元格内容）；Enter/失焦提交、Esc 取消。
+     提交派 icen:table-cell-edit + onCellEdit——本地数据不自动改，宿主决定是否采纳
+     （调 handle.updateCell(rowKey, field, value) 或 setData）。
+     number 编辑器校验数字：非法值 .is-invalid 抖动 + 不提交。编辑中的行滚出视口 = 取消
+     （renderBody 重建 DOM 前静默取消，虚拟滚动与分页模式下同此纪律）。 */
+  interface EditSession {
+    rowKey: string;
+    col: TableColumn<Row>;
+    row: Row;
+    cell: HTMLElement;
+    editor: HTMLInputElement | HTMLSelectElement;
+    onKey: (ev: Event) => void;
+    onBlur: () => void;
+    onChange: () => void;
+  }
+
+  function startEdit(cell: HTMLElement, row: Row, col: TableColumn<Row>, rowKey: string): void {
+    if (!isEditable(col) || editing) return;
+    const kind = editKind(col);
+    let editor: HTMLInputElement | HTMLSelectElement;
+    if (kind === 'select') {
+      const sel = document.createElement('select');
+      sel.className = 'icen-dt-editor icen-dt-editor--select';
+      const cur = String(row[col.key as keyof Row] ?? '');
+      for (const opt of col.editOptions ?? []) {
+        const o = document.createElement('option');
+        o.value = typeof opt === 'string' ? opt : opt.value;
+        o.textContent = typeof opt === 'string' ? opt : opt.label;
+        if (o.value === cur) o.selected = true;
+        sel.appendChild(o);
+      }
+      editor = sel;
+    } else {
+      const inp = document.createElement('input');
+      inp.className = 'icen-dt-editor';
+      if (kind === 'number') {
+        /* type=text + inputMode：非法输入可达（由校验拦截），type=number 会吞掉非法值无法反馈 */
+        inp.type = 'text';
+        inp.inputMode = 'decimal';
+      } else {
+        inp.type = 'text';
+      }
+      inp.value = String(row[col.key as keyof Row] ?? '');
+      editor = inp;
+    }
+    const session: EditSession = {
+      rowKey,
+      col,
+      row,
+      cell,
+      editor,
+      onKey: (ev) => {
+        const ke = ev as KeyboardEvent;
+        if (ke.key === 'Enter') {
+          ke.preventDefault();
+          ke.stopPropagation();
+          commitEdit();
+        } else if (ke.key === 'Escape') {
+          ke.preventDefault();
+          ke.stopPropagation();
+          cancelEdit();
+        }
+      },
+      /* 失焦提交（点击表外/切格）；值非法时 markInvalid 内会夺回焦点 */
+      onBlur: () => { commitEdit(); },
+      onChange: () => {
+        if (editing?.editor instanceof HTMLSelectElement) commitEdit();
+      },
+    };
+    editing = session;
+    cell.classList.add('is-editing');
+    cell.textContent = '';
+    cell.appendChild(editor);
+    editor.addEventListener('keydown', session.onKey);
+    editor.addEventListener('blur', session.onBlur);
+    if (editor instanceof HTMLSelectElement) editor.addEventListener('change', session.onChange);
+    editor.addEventListener('input', () => editor.classList.remove('is-invalid'));
+    editor.focus();
+    if (editor instanceof HTMLInputElement) editor.select();
+  }
+
+  function markInvalid(s: EditSession): void {
+    s.editor.classList.add('is-invalid');
+    s.editor.focus();
+  }
+
+  function commitEdit(): void {
+    const s = editing;
+    if (!s) return;
+    let value: unknown;
+    if (s.editor instanceof HTMLSelectElement) {
+      value = s.editor.value;
+    } else if (editKind(s.col) === 'number') {
+      const raw = s.editor.value.trim();
+      const n = raw === '' ? NaN : Number(raw);
+      if (Number.isNaN(n)) { markInvalid(s); return; }
+      value = n;
+    } else {
+      value = s.editor.value;
+    }
+    /* 先摘会话再派事件：宿主在回调里调 updateCell/setData 会触发重渲，blur 尾随不重复提交 */
+    editing = null;
+    s.editor.removeEventListener('keydown', s.onKey);
+    s.editor.removeEventListener('blur', s.onBlur);
+    s.editor.removeEventListener('change', s.onChange);
+    emitIcen(root, 'icen:table-cell-edit', { rowKey: s.rowKey, field: s.col.key, value, row: s.row });
+    opts.onCellEdit?.(s.rowKey, s.col.key, value, s.row);
+    renderBody();
+    refocusCell(s.rowKey, s.col.key);
+  }
+
+  function cancelEdit(silent = false): void {
+    const s = editing;
+    if (!s) return;
+    editing = null;
+    s.editor.removeEventListener('keydown', s.onKey);
+    s.editor.removeEventListener('blur', s.onBlur);
+    s.editor.removeEventListener('change', s.onChange);
+    if (!silent) {
+      renderBody();
+      refocusCell(s.rowKey, s.col.key);
+    }
+  }
+
+  function refocusCell(rowKey: string, colKey: string): void {
+    const rowEl = Array.from(body.querySelectorAll<HTMLElement>('.icen-dt-row[data-icen-key]'))
+      .find((r) => r.dataset.icenKey === rowKey);
+    const cell = rowEl
+      ? Array.from(rowEl.querySelectorAll<HTMLElement>('.icen-dt-cell[data-icen-col-key]'))
+          .find((c) => c.dataset.icenColKey === colKey)
+      : null;
+    if (cell) {
+      focusPos = { key: rowKey, col: colKey };
+      cell.focus();
+    }
+  }
+
+  function updateCell(rowKey: string, field: string, value: unknown): void {
+    const row = data.find((r) => keyOfRow(r) === rowKey);
+    if (!row) return;
+    (row as unknown as Record<string, unknown>)[field] = value;
+    invalidate();
+    renderAll();
+  }
+
+  /* ═══ 行分组：组头行渲染 + 折叠（状态跨 setData 保持）═══ */
+  function toggleGroup(label: string, collapsed?: boolean): void {
+    const next = collapsed ?? groupState.get(label) !== true;
+    groupState.set(label, next);
+    emitIcen(root, 'icen:table-group-toggle', { key: label, collapsed: next });
+    invalidate();
+    renderBody();
+  }
+
+  function makeGroupRow(entry: Extract<FlatEntry, { kind: 'group' }>): HTMLElement {
     const tr = document.createElement('div');
-    tr.className = 'dt-row';
+    tr.className = 'icen-dt-row icen-dt-row--group';
+    if (entry.collapsed) tr.classList.add('is-collapsed');
     tr.setAttribute('role', 'row');
     tr.style.gridTemplateColumns = template();
     if (virtual) tr.style.height = `${rowH}px`;
+
+    const cell = document.createElement('div');
+    cell.className = 'icen-dt-cell icen-dt-cell--group';
+    cell.setAttribute('role', 'gridcell');
+    cell.style.gridColumn = '1 / -1';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'icen-dt-group-toggle';
+    btn.setAttribute('aria-expanded', String(!entry.collapsed));
+    btn.setAttribute('aria-label', entry.collapsed ? t('datatable.expandGroup', { p0: entry.label }) : t('datatable.collapseGroup', { p0: entry.label }));
+    btn.appendChild(svgIcon(ICON_CHEVRON, 14));
+
+    const label = document.createElement('span');
+    label.className = 'icen-dt-group-label';
+    label.textContent = entry.label;
+
+    const count = document.createElement('span');
+    count.className = 'icen-dt-group-count';
+    count.textContent = t('datatable.countUnit', { p0: entry.count });
+
+    cell.append(btn, label, count);
+
+    const aggKeys = Object.keys(entry.aggs);
+    if (aggKeys.length > 0) {
+      const aggs = document.createElement('span');
+      aggs.className = 'icen-dt-group-aggs';
+      for (const k of aggKeys) {
+        const chip = document.createElement('span');
+        chip.className = 'icen-dt-group-agg';
+        chip.textContent = `${colByKey(k)?.title ?? k} ${entry.aggs[k]}`;
+        aggs.appendChild(chip);
+      }
+      cell.appendChild(aggs);
+    }
+
+    tr.appendChild(cell);
+    /* 整行点击折叠/展开（button 冒泡到此，单一处理器不会双触发） */
+    tr.addEventListener('click', () => toggleGroup(entry.label));
+    return tr;
+  }
+
+  /* ═══ 行渲染 ═══ */
+  /* offsets 由 renderBody 算一次传入：frozenOffsets 全列重扫，每行重算是 O(行×列) 放大 */
+  function makeRow(row: Row, flatIndex: number, pipeIndex: number, key: string, offsets: { left: Map<string, number>; right: Map<string, number> }): HTMLElement {
+    const tr = document.createElement('div');
+    tr.className = 'icen-dt-row';
+    tr.setAttribute('role', 'row');
+    tr.style.gridTemplateColumns = template();
+    if (virtual) tr.style.height = `${rowH}px`;
+    tr.dataset.icenRow = String(flatIndex);
+    tr.dataset.icenKey = key;
     if (selected.has(key)) tr.classList.add('is-selected');
     if (opts.rowClassName) {
-      const extra = opts.rowClassName(row, rowIndex);
+      const extra = opts.rowClassName(row, pipeIndex);
       if (extra) tr.classList.add(...extra.split(/\s+/).filter(Boolean));
     }
 
     if (selectable) {
       const cell = document.createElement('div');
-      cell.className = 'dt-cell dt-cell--check';
-      if (offsets.size > 0) {
+      cell.className = 'icen-dt-cell icen-dt-cell--check';
+      cell.setAttribute('role', 'gridcell');
+      if (offsets.left.size > 0 || offsets.right.size > 0) {
         /* 选择列也冻结 */
-        cell.classList.add('dt-cell--frozen');
+        cell.classList.add('icen-dt-cell--frozen');
         cell.style.left = '0px';
       }
-      const box = makeCheck(selected.has(key), '选择该行');
+      const box = makeCheck(selected.has(key), t('datatable.selectRow'));
       /* click 先于 change 触发：shiftKey 经闭包变量中转（不往 DOM 元素上挂私有属性） */
       let shiftClicked = false;
       box.addEventListener('click', (ev) => {
@@ -758,15 +1415,18 @@ export function createTable<Row = Record<string, unknown>>(
       box.addEventListener('change', () => {
         const shift = shiftClicked;
         shiftClicked = false;
-        if (shift && lastClickedIndex >= 0 && lastClickedIndex !== rowIndex) {
-          /* Shift+点击：范围选 */
-          const rows = pipeline();
-          const [lo, hi] = lastClickedIndex < rowIndex
-            ? [lastClickedIndex, rowIndex]
-            : [rowIndex, lastClickedIndex];
+        if (shift && lastClickedIndex >= 0 && lastClickedIndex !== flatIndex) {
+          /* Shift+点击：范围选（统一按 flatRows 区间取数据行，组头自然跳过；
+             无分组时 flatRows 与管线序一一对应，语义与旧版一致） */
+          const entries = flatEntries();
+          const [lo, hi] = lastClickedIndex < flatIndex
+            ? [lastClickedIndex, flatIndex]
+            : [flatIndex, lastClickedIndex];
           const willSelect = box.checked;
           for (let i = lo; i <= hi; i++) {
-            const k = keyOfRow(rows[i]!);
+            const entry = entries[i];
+            if (!entry || entry.kind !== 'data') continue;
+            const k = keyOfRow(entry.row);
             if (willSelect) selected.add(k);
             else selected.delete(k);
           }
@@ -776,45 +1436,56 @@ export function createTable<Row = Record<string, unknown>>(
           else selected.delete(key);
           tr.classList.toggle('is-selected', box.checked);
         }
-        lastClickedIndex = rowIndex;
+        lastClickedIndex = flatIndex;
         emitSelection();
         syncHeadState();
-        renderFoot(opts.remote ? (opts.totalCount ?? data.length) : pipeline().length);
+        renderFoot(currentTotal, pipeline().length);
       });
       cell.appendChild(box);
       tr.appendChild(cell);
     }
     if (expandable) {
       const cell = document.createElement('div');
-      cell.className = 'dt-cell dt-cell--expand';
+      cell.className = 'icen-dt-cell icen-dt-cell--expand';
+      cell.setAttribute('role', 'gridcell');
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'dt-expand-btn';
-      btn.setAttribute('aria-label', '展开行');
+      btn.className = 'icen-dt-expand-btn';
+      btn.setAttribute('aria-label', t('datatable.expandRow'));
       btn.setAttribute('aria-expanded', String(expanded.has(key)));
       btn.appendChild(svgIcon(ICON_CHEVRON, 14));
       btn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         if (expanded.has(key)) expanded.delete(key);
         else expanded.add(key);
-        emitIcen(root, 'icen:table-row-toggle', { row, index: rowIndex, expanded: expanded.has(key) });
+        emitIcen(root, 'icen:table-row-toggle', { row, index: pipeIndex, expanded: expanded.has(key) });
         renderBody();
       });
       cell.appendChild(btn);
       tr.appendChild(cell);
     }
 
+    let ci = 0;
     for (const col of cols()) {
       const cell = document.createElement('div');
-      cell.className = 'dt-cell';
-      if (col.align) cell.dataset.align = col.align;
-      if (col.frozen) {
-        cell.classList.add('dt-cell--frozen');
-        const off = offsets.get(col.key);
-        if (off != null) cell.style.left = `${off}px`;
+      cell.className = 'icen-dt-cell';
+      cell.setAttribute('role', 'gridcell');
+      if (col.align) cell.dataset.icenAlign = col.align;
+      cell.dataset.icenCol = String(ci);
+      cell.dataset.icenColKey = col.key;
+      cell.tabIndex = -1; /* roving tabindex：body 级键盘导航 */
+      applyFrozen(cell, col, offsets);
+      fillCell(cell, col, row, pipeIndex);
+      if (isEditable(col)) {
+        cell.classList.add('is-editable');
+        cell.setAttribute('aria-label', t('datatable.editHintWithValue', { p0: cell.textContent ?? '', p1: col.title }));
+        cell.addEventListener('dblclick', (ev) => {
+          ev.stopPropagation();
+          startEdit(cell, row, col, key);
+        });
       }
-      fillCell(cell, col, row, rowIndex);
       tr.appendChild(cell);
+      ci++;
     }
 
     if (opts.onRowClick) {
@@ -822,7 +1493,7 @@ export function createTable<Row = Record<string, unknown>>(
       tr.addEventListener('click', () => opts.onRowClick!(row));
     }
     tr.addEventListener('click', () => {
-      emitIcen(root, 'icen:table-row-click', { row, index: rowIndex });
+      emitIcen(root, 'icen:table-row-click', { row, index: pipeIndex });
     });
     if (opts.contextMenu) {
       tr.addEventListener('contextmenu', (ev) => {
@@ -838,14 +1509,222 @@ export function createTable<Row = Record<string, unknown>>(
 
   function makeExpandRow(row: Row): HTMLElement {
     const wrap = document.createElement('div');
-    wrap.className = 'dt-expand-row';
+    wrap.className = 'icen-dt-expand-row';
     const out = expandable!(row);
     if (out instanceof Node) wrap.appendChild(out);
     else wrap.textContent = String(out);
     return wrap;
   }
 
-  /* ═══ 表体渲染（分页切片 / 虚拟窗口）═══ */
+  /* ═══ 汇总行：表尾 sticky 一行，按当前管线（搜索/筛选后、分页前）数据聚合 ═══ */
+  function renderSummary(): void {
+    summaryEl.textContent = '';
+    summaryEl.hidden = true;
+    const cfg = opts.summaryRow;
+    if (!cfg) return;
+    const rows = pipeline();
+    if (rows.length === 0) return;
+    /* true = 按各列 aggregate（仅内置五种；自定义函数无对应 summary 规格）；
+       对象形态 = 逐列规格，'label' 列显示「合计」 */
+    const spec: Record<string, TableSummarySpec> =
+      cfg === true
+        ? Object.fromEntries(
+            opts.columns
+              .filter((c) => typeof c.aggregate === 'string')
+              .map((c) => [c.key, c.aggregate as TableSummarySpec]),
+          )
+        : cfg;
+    if (Object.keys(spec).length === 0) return;
+    summaryEl.hidden = false;
+    summaryEl.style.gridTemplateColumns = template();
+    const frz = frozenOffsets();
+
+    if (selectable) {
+      const cell = document.createElement('div');
+      cell.className = 'icen-dt-cell icen-dt-cell--check';
+      cell.setAttribute('role', 'gridcell');
+      summaryEl.appendChild(cell);
+    }
+    if (expandable) {
+      const cell = document.createElement('div');
+      cell.className = 'icen-dt-cell icen-dt-cell--expand';
+      cell.setAttribute('role', 'gridcell');
+      summaryEl.appendChild(cell);
+    }
+    for (const col of cols()) {
+      const cell = document.createElement('div');
+      cell.className = 'icen-dt-cell icen-dt-cell--summary';
+      cell.setAttribute('role', 'gridcell');
+      if (col.align) cell.dataset.icenAlign = col.align;
+      applyFrozen(cell, col, frz);
+      const s = spec[col.key];
+      if (s === 'label') cell.textContent = t('datatable.totalLabel');
+      else if (s) cell.textContent = computeAggregates(rows, [{ ...col, aggregate: s }])[col.key] ?? '';
+      summaryEl.appendChild(cell);
+    }
+  }
+
+  /* ═══ 键盘导航 + 复制（tbody roving tabindex）═══ */
+  function onBodyFocusIn(ev: FocusEvent): void {
+    const cell = (ev.target as Element).closest<HTMLElement>('.icen-dt-cell');
+    if (!cell || !body.contains(cell) || cell.dataset.icenCol == null) return;
+    if (cell.classList.contains('is-editing')) return;
+    const tr = cell.parentElement;
+    focusPos = { key: tr?.dataset.icenKey ?? '', col: cell.dataset.icenColKey ?? '' };
+    body.querySelectorAll<HTMLElement>('.icen-dt-cell[data-icen-col]').forEach((c) => {
+      c.tabIndex = c === cell ? 0 : -1;
+    });
+  }
+
+  /** 重渲后恢复 roving tabindex：回到焦点位（若该行仍渲染），否则落到首个数据格 */
+  function syncNavFocus(): void {
+    const cells = body.querySelectorAll<HTMLElement>('.icen-dt-cell[data-icen-col]');
+    let marked = false;
+    cells.forEach((c) => {
+      const tr = c.parentElement;
+      const match =
+        focusPos != null && tr?.dataset.icenKey === focusPos.key && c.dataset.icenColKey === focusPos.col;
+      c.tabIndex = match ? 0 : -1;
+      if (match) marked = true;
+    });
+    if (!marked) {
+      const first = body.querySelector<HTMLElement>('.icen-dt-cell[data-icen-col]');
+      if (first) first.tabIndex = 0;
+    }
+  }
+
+  function navStep(): number {
+    if (virtual) return Math.max(1, Math.floor((scroll.clientHeight || rowH * 10) / rowH));
+    return Math.max(1, pageSize);
+  }
+
+  function findNavCell(r: number, c: number, dir: 0 | 1 | -1): HTMLElement | null {
+    let nr = r;
+    while (nr >= 0 && nr < navTotal) {
+      const el = body.querySelector<HTMLElement>(
+        `.icen-dt-row[data-icen-row="${nr}"] .icen-dt-cell[data-icen-col="${c}"]`,
+      );
+      if (el) return el;
+      /* 组头行没有数据格：沿移动方向越过 */
+      if (dir === 0) return null;
+      nr += dir;
+    }
+    return null;
+  }
+
+  function onBodyKeydown(ev: KeyboardEvent): void {
+    if (editing) return; /* 编辑器自管 Enter/Esc，不触发导航 */
+    const t = ev.target;
+    if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return;
+    const cell = t instanceof Element ? t.closest<HTMLElement>('.icen-dt-cell') : null;
+    if (!cell || cell.dataset.icenCol == null) return;
+
+    if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'c' || ev.key === 'C')) {
+      copyFocusedCell(cell);
+      return;
+    }
+
+    const rowEl = cell.parentElement as HTMLElement | null;
+    const r = Number(rowEl?.dataset.icenRow ?? -1);
+    const c = Number(cell.dataset.icenCol);
+    const colCount = cols().length;
+    let nr = r;
+    let nc = c;
+    let dir: 0 | 1 | -1 = 0;
+    switch (ev.key) {
+      case 'ArrowLeft': nc = c - 1; break;
+      case 'ArrowRight': nc = c + 1; break;
+      case 'ArrowUp': nr = r - 1; dir = -1; break;
+      case 'ArrowDown': nr = r + 1; dir = 1; break;
+      case 'Home': nc = 0; break;
+      case 'End': nc = colCount - 1; break;
+      case 'PageUp': nr = r - navStep(); dir = -1; break;
+      case 'PageDown': nr = r + navStep(); dir = 1; break;
+      case 'Enter': {
+        const key = rowEl?.dataset.icenKey ?? '';
+        const row = data.find((rr) => keyOfRow(rr) === key);
+        const col = cols()[c];
+        if (row && col && isEditable(col)) {
+          ev.preventDefault();
+          startEdit(cell, row, col, key);
+        }
+        return;
+      }
+      default: return;
+    }
+    ev.preventDefault();
+    if (nc < 0) nc = 0;
+    if (nc >= colCount) nc = colCount - 1;
+    if (nr < 0) nr = 0;
+    const maxRow = navTotal - 1;
+    if (nr > maxRow) nr = maxRow;
+    let target = findNavCell(nr, nc, dir);
+    if (!target && virtual) {
+      /* 目标行在窗口外：先把视口滚过去（onScroll 同步重渲）再取 */
+      scroll.scrollTop = Math.max(0, Math.min(nr, maxRow)) * rowH;
+      onScroll();
+      target = findNavCell(nr, nc, dir);
+    } else if (!target && opts.pagination !== false && !opts.remote) {
+      /* 分页模式跨页导航：翻到目标页（派 page-change，与点击页码同纪律）再定位 */
+      const pages = Math.max(1, Math.ceil(navTotal / pageSize));
+      const want = clampN(Math.floor(nr / pageSize) + 1, 1, pages);
+      if (want !== page) {
+        page = want;
+        emitIcen(root, 'icen:table-page-change', { page, pageSize });
+        opts.onPageChange?.(page, pageSize);
+        renderBody();
+        target = findNavCell(nr, nc, 0);
+      }
+    }
+    target?.focus();
+  }
+
+  /** Ctrl/Cmd+C：有选中行集时复制选中行（当前可见列）TSV；否则复制当前格文本 */
+  function copyFocusedCell(cell: HTMLElement): void {
+    let text: string;
+    if (selectable && selected.size > 0) {
+      const vis = cols();
+      const rows = data.filter((r) => selected.has(keyOfRow(r)));
+      text = rows
+        .map((row) => vis.map((col) => tsvSafe(String(row[col.key as keyof Row] ?? ''))).join('\t'))
+        .join('\n');
+    } else {
+      text = tsvSafe(cell.textContent ?? '');
+    }
+    void writeClipboard(text);
+  }
+
+  function tsvSafe(s: string): string {
+    return s.replace(/[\t\r\n]+/g, ' ');
+  }
+
+  function writeClipboard(text: string): void {
+    const nav = typeof navigator !== 'undefined' ? navigator : undefined;
+    if (nav?.clipboard && typeof nav.clipboard.writeText === 'function') {
+      nav.clipboard.writeText(text).catch(() => legacyCopy(text));
+      return;
+    }
+    legacyCopy(text);
+  }
+
+  function legacyCopy(text: string): void {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    } catch {
+      /* 剪贴板不可用（非安全上下文等）：复制为尽力而为，静默放弃 */
+    }
+  }
+
+  /* ═══ 表体渲染（分页切片 / 虚拟窗口；分组模式在 flatRows 上做窗口化）═══ */
+  let currentTotal = 0;
+
   function visibleRange(total: number): [number, number] {
     if (!virtual) {
       if (opts.remote || opts.pagination === false) return [0, total];
@@ -860,8 +1739,14 @@ export function createTable<Row = Record<string, unknown>>(
   }
 
   function renderBody(): void {
+    /* 重建 DOM 前静默取消编辑（编辑中的行滚出视口 = 取消；提交路径自己会先摘会话） */
+    if (editing) cancelEdit(true);
     const rows = pipeline();
-    const total = opts.remote ? (opts.totalCount ?? data.length) : rows.length;
+    const entries = groupFn ? flatEntries() : null;
+    /* 分组/分页/虚拟的切片单位 = flat 条目（组头行高同 data 行）；统计条数用语义上的数据行数 */
+    const total = entries ? entries.length : opts.remote ? (opts.totalCount ?? data.length) : rows.length;
+    navTotal = entries ? entries.length : rows.length;
+    currentTotal = total;
     /* 虚拟模式：清空 body 会塌掉 scrollHeight 导致 scrollTop 被浏览器夹回 0，
        先记下滚动位置，重渲后恢复（恢复为同值不会再触发 scroll） */
     const keepTop = virtual ? scroll.scrollTop : 0;
@@ -870,24 +1755,26 @@ export function createTable<Row = Record<string, unknown>>(
     if (opts.loading) {
       for (let i = 0; i < Math.min(pageSize, 8); i++) {
         const sk = document.createElement('div');
-        sk.className = 'dt-skeleton-row';
+        sk.className = 'icen-dt-skeleton-row';
         const bar = document.createElement('div');
-        bar.className = 'skeleton';
+        bar.className = 'icen-skeleton';
         bar.style.height = '14px';
         bar.style.width = `${88 - (i % 3) * 14}%`; /* 88/14：三档错落的伪内容宽度节奏，避免骨架齐刷刷一列 */
         sk.appendChild(bar);
         body.appendChild(sk);
       }
-      renderFoot(total);
+      renderFoot(total, rows.length);
+      renderSummary();
       return;
     }
 
     if (total === 0) {
       const empty = document.createElement('div');
-      empty.className = 'dt-empty';
-      empty.textContent = opts.emptyLabel ?? '暂无数据';
+      empty.className = 'icen-dt-empty';
+      empty.textContent = opts.emptyLabel ?? t('datatable.empty');
       body.appendChild(empty);
-      renderFoot(total);
+      renderFoot(total, rows.length);
+      renderSummary();
       return;
     }
 
@@ -900,10 +1787,21 @@ export function createTable<Row = Record<string, unknown>>(
       frag.appendChild(top);
     }
     for (let i = start; i < end; i++) {
-      const row = rows[i]!;
-      const key = keyOfRow(row);
-      frag.appendChild(makeRow(row, i, key, offsets));
-      if (expandable && expanded.has(key)) frag.appendChild(makeExpandRow(row));
+      if (entries) {
+        const entry = entries[i]!;
+        if (entry.kind === 'group') {
+          frag.appendChild(makeGroupRow(entry));
+          continue;
+        }
+        const key = keyOfRow(entry.row);
+        frag.appendChild(makeRow(entry.row, i, entry.pipeIndex, key, offsets));
+        if (expandable && expanded.has(key)) frag.appendChild(makeExpandRow(entry.row));
+      } else {
+        const row = rows[i]!;
+        const key = keyOfRow(row);
+        frag.appendChild(makeRow(row, i, i, key, offsets));
+        if (expandable && expanded.has(key)) frag.appendChild(makeExpandRow(row));
+      }
     }
     if (virtual && end < total) {
       const bottom = document.createElement('div');
@@ -912,26 +1810,28 @@ export function createTable<Row = Record<string, unknown>>(
     }
     body.appendChild(frag);
     if (virtual) scroll.scrollTop = keepTop;
-    renderFoot(total);
+    syncNavFocus();
+    renderFoot(total, rows.length);
+    renderSummary();
   }
 
   /* ═══ 底部（统计 + 分页）═══ */
-  function renderFoot(total: number): void {
+  function renderFoot(total: number, dataCount = total): void {
     foot.textContent = '';
 
     const stat = document.createElement('span');
-    stat.className = 'dt-stat';
-    stat.textContent = `共 ${total} 条`;
+    stat.className = 'icen-dt-stat';
+    stat.textContent = t('datatable.totalCount', { p0: dataCount });
     foot.appendChild(stat);
 
     if (selectable && selected.size > 0) {
       const sel = document.createElement('span');
-      sel.className = 'dt-stat dt-stat--sel';
-      sel.textContent = `已选 ${selected.size} 项`;
+      sel.className = 'icen-dt-stat icen-dt-stat--sel';
+      sel.textContent = t('datatable.selectedCount', { p0: selected.size });
       const clear = document.createElement('button');
       clear.type = 'button';
-      clear.className = 'dt-clear-sel';
-      clear.textContent = '清空';
+      clear.className = 'icen-dt-clear-sel';
+      clear.textContent = t('datatable.clear');
       clear.addEventListener('click', () => {
         selected.clear();
         emitSelection();
@@ -946,16 +1846,16 @@ export function createTable<Row = Record<string, unknown>>(
 
     const pages = Math.ceil(total / pageSize);
     const pager = document.createElement('nav');
-    pager.className = 'dt-pager';
-    pager.setAttribute('aria-label', '分页');
+    pager.className = 'icen-dt-pager';
+    pager.setAttribute('aria-label', t('datatable.paginationAria'));
 
     const sizeSel = document.createElement('select');
-    sizeSel.className = 'dt-page-size';
-    sizeSel.setAttribute('aria-label', '每页条数');
+    sizeSel.className = 'icen-dt-page-size';
+    sizeSel.setAttribute('aria-label', t('datatable.pageSizeAria'));
     for (const s of pageSizes) {
       const o = document.createElement('option');
       o.value = String(s);
-      o.textContent = `${s} 条/页`;
+      o.textContent = t('pagination.pageSize', { p0: s });
       if (s === pageSize) o.selected = true;
       sizeSel.appendChild(o);
     }
@@ -973,7 +1873,7 @@ export function createTable<Row = Record<string, unknown>>(
     const pageBtn = (label: string, target: number, opts2: { disabled?: boolean; active?: boolean; aria?: string } = {}): HTMLButtonElement => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'dt-page-btn';
+      b.className = 'icen-dt-page-btn';
       if (opts2.active) b.classList.add('is-active');
       b.disabled = opts2.disabled === true;
       b.textContent = label;
@@ -987,7 +1887,7 @@ export function createTable<Row = Record<string, unknown>>(
       return b;
     };
 
-    pager.appendChild(pageBtn('‹', page - 1, { disabled: page <= 1, aria: '上一页' }));
+    pager.appendChild(pageBtn('‹', page - 1, { disabled: page <= 1, aria: t('pagination.prev') }));
     const win: number[] = [];
     for (let p = 1; p <= pages; p++) {
       if (p === 1 || p === pages || Math.abs(p - page) <= 2) win.push(p);
@@ -996,14 +1896,14 @@ export function createTable<Row = Record<string, unknown>>(
     for (const p of win) {
       if (p - last > 1) {
         const dots = document.createElement('span');
-        dots.className = 'dt-page-dots';
+        dots.className = 'icen-dt-page-dots';
         dots.textContent = '…';
         pager.appendChild(dots);
       }
       pager.appendChild(pageBtn(String(p), p, { active: p === page }));
       last = p;
     }
-    pager.appendChild(pageBtn('›', page + 1, { disabled: page >= pages, aria: '下一页' }));
+    pager.appendChild(pageBtn('›', page + 1, { disabled: page >= pages, aria: t('pagination.next') }));
 
     foot.appendChild(pager);
   }
@@ -1027,6 +1927,9 @@ export function createTable<Row = Record<string, unknown>>(
     renderBody();
   }
   if (virtual) scroll.addEventListener('scroll', onScroll, { passive: true });
+
+  body.addEventListener('keydown', onBodyKeydown);
+  body.addEventListener('focusin', onBodyFocusIn);
 
   function onDocPointerDown(ev: Event): void {
     if (!openPanel) return;
@@ -1078,7 +1981,14 @@ export function createTable<Row = Record<string, unknown>>(
   return {
     setPage,
     setPageSize,
-    setData(next) { data = next; rekey(); invalidate(); page = 1; renderAll(); },
+    setData(next) {
+      if (editing) cancelEdit(true);
+      data = next;
+      rekey();
+      invalidate();
+      page = 1;
+      renderAll();
+    },
     getSelected() { return data.filter((r) => selected.has(keyOfRow(r))); },
     clearSelection() { selected.clear(); emitSelection(); renderAll(); },
     setSearch(q) { search = q; if (searchInput) searchInput.value = q; invalidate(); page = 1; renderAll(); },
@@ -1089,7 +1999,14 @@ export function createTable<Row = Record<string, unknown>>(
       page = 1;
       renderAll();
     },
-    setSort(key, dir = 'asc') { sortKey = key; sortDir = dir; invalidate(); opts.onSortChange?.(sortKey, sortDir); renderAll(); },
+    setSort(key, dir = 'asc') {
+      /* 旧口径：不派 icen:table-sort-change，只回调 onSortChange */
+      applySorts(key ? sanitizeSorts([{ key, dir }]) : [], dir, false);
+    },
+    getSorts() { return sorts.map((s) => ({ ...s })); },
+    setSorts(next) { applySorts(sanitizeSorts(next ?? []), 'asc', false); },
+    moveColumn,
+    updateCell,
     getData() { return pipeline(); },
     exportCSV,
     showColumn(key) {
@@ -1106,6 +2023,11 @@ export function createTable<Row = Record<string, unknown>>(
       destroyed = true;
       window.clearTimeout(searchTimer);
       closeFilterPanel();
+      if (editing) cancelEdit(true);
+      if (drag) {
+        drag.off();
+        drag = null;
+      }
       searchInput?.removeEventListener('input', onSearch);
       if (virtual) scroll.removeEventListener('scroll', onScroll);
       document.removeEventListener('pointerdown', onDocPointerDown, true);

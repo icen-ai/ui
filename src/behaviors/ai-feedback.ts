@@ -1,17 +1,17 @@
 /*
- * @icen.ai/ui — Behavior: ai-feedback（回答级 👍/👎 反馈 + 踩因枚举，与 components/ai-panel.css 的 .ai-feedback 段配套）
+ * @icen.ai/ui — Behavior: ai-feedback（回答级 👍/👎 反馈 + 踩因枚举，与 components/ai-panel.css 的 .icen-ai-feedback 段配套）
  *
  * DOM 契约（类名固定，docs/spec/kb-family.md §5.27）：
- *   <div class="ai-feedback [.is-done]">
- *     <div class="ai-feedback-votes">
- *       <button class="ai-feedback-vote is-up" type="button" aria-pressed="false" aria-label="有帮助">…svg…</button>
- *       <button class="ai-feedback-vote is-down" type="button" aria-pressed="false" aria-label="无帮助">…svg…</button>
+ *   <div class="icen-ai-feedback [.is-done]">
+ *     <div class="icen-ai-feedback-votes">
+ *       <button class="icen-ai-feedback-vote is-up" type="button" aria-pressed="false" aria-label="有帮助">…svg…</button>
+ *       <button class="icen-ai-feedback-vote is-down" type="button" aria-pressed="false" aria-label="无帮助">…svg…</button>
  *     </div>
- *     <div class="ai-feedback-reasons" hidden>                    ← 点 👎 展开；点 👍 不展开
- *       <button class="ai-feedback-chip [.is-picked]" type="button">答案有误</button>…
- *       <button class="ai-feedback-submit" type="button">提交</button>
+ *     <div class="icen-ai-feedback-reasons" hidden>                    ← 点 👎 展开；点 👍 不展开
+ *       <button class="icen-ai-feedback-chip [.is-picked]" type="button">答案有误</button>…
+ *       <button class="icen-ai-feedback-submit" type="button">提交</button>
  *     </div>
- *     <div class="ai-feedback-done" hidden>感谢反馈，已关联到该条回答的追踪记录</div>
+ *     <div class="icen-ai-feedback-done" hidden>感谢反馈，已关联到该条回答的追踪记录</div>
  *   </div>
  *
  * 状态机：
@@ -19,7 +19,7 @@
  *   再次点击已选钮 → 回中性（对侧恢复、chips 收起）。picked-down 下选 chip（单选可切换）后
  *   「提交」→ .is-done 终态（按钮与 chips 隐藏，显示感谢文案）。
  *   每次 vote 变更与提交都派 icen:ai-feedback {value: 1|-1|0, reason?, el}
- *   （el 为 .ai-feedback 根；事件与 opts.onFeedback 回调双通道）。
+ *   （el 为 .icen-ai-feedback 根；事件与 opts.onFeedback 回调双通道）。
  *
  * 行为：
  *   renderAiFeedback(el, opts?)  快照渲染（reasons 默认五项枚举）；返回挂载容器 el
@@ -33,10 +33,11 @@
 
 import { h, svgIcon } from './ai-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /* ── 模型 ── */
 
-/** 反馈事件 detail（与 IcenEventMap['icen:ai-feedback'] 同构；el 为 .ai-feedback 根） */
+/** 反馈事件 detail（与 IcenEventMap['icen:ai-feedback'] 同构；el 为 .icen-ai-feedback 根） */
 export interface AiFeedbackDetail {
   value: 1 | -1 | 0;
   reason?: string;
@@ -51,7 +52,7 @@ export interface AiFeedbackOpts {
 }
 
 /** 默认踩因（kb-family §5.27：踩后原因枚举 chips） */
-const DEFAULT_REASONS: readonly string[] = ['答案有误', '引用不符', '内容过时', '无引用依据', '越权信息'];
+const DEFAULT_REASONS: readonly string[] = [t('aiFeedback.reasonWrong'), t('aiFeedback.reasonCitationMismatch'), t('aiFeedback.reasonOutdated'), t('aiFeedback.reasonUnsourced'), t('aiFeedback.reasonUnauthorized')];
 
 /* ── 图标（lucide 风格 24×24 stroke，svgIcon 消毒解析） ── */
 
@@ -77,36 +78,36 @@ const feedbackCallbacks = new WeakMap<HTMLElement, (detail: AiFeedbackDetail) =>
 export function renderAiFeedback(el: HTMLElement, opts: AiFeedbackOpts = {}): HTMLElement {
   if (typeof document === 'undefined') return el;
   el.textContent = '';
-  const root = h('div', 'ai-feedback');
+  const root = h('div', 'icen-ai-feedback');
 
-  const votes = h('div', 'ai-feedback-votes');
+  const votes = h('div', 'icen-ai-feedback-votes');
   for (const dir of ['is-up', 'is-down'] as const) {
-    const btn = h('button', `ai-feedback-vote ${dir}`);
+    const btn = h('button', `icen-ai-feedback-vote ${dir}`);
     btn.type = 'button';
     btn.setAttribute('aria-pressed', 'false');
-    btn.setAttribute('aria-label', dir === 'is-up' ? '有帮助' : '无帮助');
+    btn.setAttribute('aria-label', dir === 'is-up' ? t('aiFeedback.helpful') : t('aiFeedback.notHelpful'));
     const icon = svgIcon(dir === 'is-up' ? ICON_THUMB_UP : ICON_THUMB_DOWN);
     if (icon) btn.appendChild(icon);
     votes.appendChild(btn);
   }
   root.appendChild(votes);
 
-  const reasons = h('div', 'ai-feedback-reasons');
+  const reasons = h('div', 'icen-ai-feedback-reasons');
   reasons.hidden = true;
   const chips = (opts.reasons && opts.reasons.length > 0 ? opts.reasons : Array.from(DEFAULT_REASONS))
     .filter((r) => typeof r === 'string' && r.trim() !== '');
   for (const r of chips) {
-    const chip = h('button', 'ai-feedback-chip', r);
+    const chip = h('button', 'icen-ai-feedback-chip', r);
     chip.type = 'button';
     chip.setAttribute('aria-pressed', 'false');
     reasons.appendChild(chip);
   }
-  const submit = h('button', 'ai-feedback-submit', '提交');
+  const submit = h('button', 'icen-ai-feedback-submit', t('common.submit'));
   submit.type = 'button';
   reasons.appendChild(submit);
   root.appendChild(reasons);
 
-  const done = h('div', 'ai-feedback-done', '感谢反馈，已关联到该条回答的追踪记录');
+  const done = h('div', 'icen-ai-feedback-done', t('aiFeedback.thanks'));
   done.hidden = true;
   root.appendChild(done);
 
@@ -131,18 +132,18 @@ function voteOf(btn: HTMLElement): 1 | -1 | undefined {
 
 /** 回中性：摘锁定、恢复双侧可用、收起原因区 */
 function resetVotes(root: HTMLElement): void {
-  for (const btn of Array.from(root.querySelectorAll<HTMLButtonElement>('.ai-feedback-vote'))) {
+  for (const btn of Array.from(root.querySelectorAll<HTMLButtonElement>('.icen-ai-feedback-vote'))) {
     btn.classList.remove('is-picked');
     btn.disabled = false;
     btn.setAttribute('aria-pressed', 'false');
   }
-  const reasons = root.querySelector<HTMLElement>('.ai-feedback-reasons');
+  const reasons = root.querySelector<HTMLElement>('.icen-ai-feedback-reasons');
   if (reasons) reasons.hidden = true;
 }
 
 /** 锁定某一侧：picked + 对侧禁用；is-down 时展开原因 chips */
 function pickVote(root: HTMLElement, btn: HTMLButtonElement, value: 1 | -1): void {
-  for (const other of Array.from(root.querySelectorAll<HTMLButtonElement>('.ai-feedback-vote'))) {
+  for (const other of Array.from(root.querySelectorAll<HTMLButtonElement>('.icen-ai-feedback-vote'))) {
     if (other === btn) {
       other.classList.add('is-picked');
       other.disabled = false;
@@ -153,7 +154,7 @@ function pickVote(root: HTMLElement, btn: HTMLButtonElement, value: 1 | -1): voi
       other.setAttribute('aria-pressed', 'false');
     }
   }
-  const reasons = root.querySelector<HTMLElement>('.ai-feedback-reasons');
+  const reasons = root.querySelector<HTMLElement>('.icen-ai-feedback-reasons');
   if (reasons) reasons.hidden = value !== -1;
 }
 
@@ -175,14 +176,14 @@ export function initAiFeedback(root?: ParentNode): () => void {
   const onClick = (e: Event): void => {
     const t = e.target instanceof Element ? e.target : null;
     if (!t) return;
-    const rootEl = t.closest<HTMLElement>('.ai-feedback');
+    const rootEl = t.closest<HTMLElement>('.icen-ai-feedback');
     if (!rootEl || rootEl.classList.contains('is-done')) return;
 
     /* chip 单选（可切换） */
-    const chip = t.closest<HTMLElement>('.ai-feedback-chip');
+    const chip = t.closest<HTMLElement>('.icen-ai-feedback-chip');
     if (chip) {
       const picked = chip.classList.contains('is-picked');
-      for (const c of Array.from(rootEl.querySelectorAll<HTMLElement>('.ai-feedback-chip'))) {
+      for (const c of Array.from(rootEl.querySelectorAll<HTMLElement>('.icen-ai-feedback-chip'))) {
         c.classList.remove('is-picked');
         c.setAttribute('aria-pressed', 'false');
       }
@@ -194,19 +195,19 @@ export function initAiFeedback(root?: ParentNode): () => void {
     }
 
     /* 提交：携带选中原因进入终态 */
-    if (t.closest('.ai-feedback-submit')) {
-      const reason = rootEl.querySelector<HTMLElement>('.ai-feedback-chip.is-picked')?.textContent ?? undefined;
+    if (t.closest('.icen-ai-feedback-submit')) {
+      const reason = rootEl.querySelector<HTMLElement>('.icen-ai-feedback-chip.is-picked')?.textContent ?? undefined;
       rootEl.classList.add('is-done');
-      const done = rootEl.querySelector<HTMLElement>('.ai-feedback-done');
+      const done = rootEl.querySelector<HTMLElement>('.icen-ai-feedback-done');
       if (done) done.hidden = false;
-      const reasons = rootEl.querySelector<HTMLElement>('.ai-feedback-reasons');
+      const reasons = rootEl.querySelector<HTMLElement>('.icen-ai-feedback-reasons');
       if (reasons) reasons.hidden = true;
       notify(rootEl, { value: -1, reason: reason || undefined });
       return;
     }
 
     /* 👍/👎：已选再点回中性，未选锁定 */
-    const voteBtn = t.closest<HTMLButtonElement>('.ai-feedback-vote');
+    const voteBtn = t.closest<HTMLButtonElement>('.icen-ai-feedback-vote');
     if (!voteBtn || voteBtn.disabled) return;
     const value = voteOf(voteBtn);
     if (value === undefined) return;

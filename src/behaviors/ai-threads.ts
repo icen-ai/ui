@@ -1,22 +1,22 @@
 /*
- * @icen.ai/ui — Behavior: ai-threads（AI 会话列表，与 components/ai-chat.css 的 .ai-threads 段配套）
+ * @icen.ai/ui — Behavior: ai-threads（AI 会话列表，与 components/ai-chat.css 的 .icen-ai-threads 段配套）
  *
  * DOM 契约（类名固定，docs/spec/kb-family.md §5.27）：
  *   分组模式（model.groups 为 true 且项带 group 字段）：
- *   <div class="ai-threads">
- *     <div class="ai-threads-group" data-group="今天">          ← group 缺省的项平铺在最前（无组头）
- *       <button class="ai-threads-group-head" type="button" aria-expanded="true">今天</button>
- *       <div class="ai-threads-group-list">…ai-thread…</div>
+ *   <div class="icen-ai-threads">
+ *     <div class="icen-ai-threads-group" data-icen-group="今天">          ← group 缺省的项平铺在最前（无组头）
+ *       <button class="icen-ai-threads-group-head" type="button" aria-expanded="true">今天</button>
+ *       <div class="icen-ai-threads-group-list">…icen-ai-thread…</div>
  *     </div>…
- *     <div class="ai-threads-group" data-group="已归档">…</div>  ← archived 项沉底收进「已归档」组
+ *     <div class="icen-ai-threads-group" data-icen-group="已归档">…</div>  ← archived 项沉底收进「已归档」组
  *   </div>
  *
  *   平铺模式（model.groups 缺省/false）：
- *   <div class="ai-threads">
- *     <div class="ai-thread [.is-active] [.is-archived]" role="button" tabindex="0" data-key="t1">
- *       <span class="ai-thread-icon">…svg…</span>               ← item.icon 给定时（svgIcon 消毒）
- *       <span class="ai-thread-label">会话标题</span>
- *       <button class="ai-thread-action" type="button" aria-label="会话操作">···</button>
+ *   <div class="icen-ai-threads">
+ *     <div class="icen-ai-thread [.is-active] [.is-archived]" role="button" tabindex="0" data-icen-key="t1">
+ *       <span class="icen-ai-thread-icon">…svg…</span>               ← item.icon 给定时（svgIcon 消毒）
+ *       <span class="icen-ai-thread-label">会话标题</span>
+ *       <button class="icen-ai-thread-action" type="button" aria-label="会话操作">···</button>
  *     </div>…                                                    ← archived 项同样沉底（无组头）
  *   </div>
  *
@@ -26,11 +26,11 @@
  *                                .is-archived（降透明）并沉底（分组模式收进「已归档」组）。
  *                                返回挂载容器 el（render* 返回挂载元素约定，SSR 原样返回）。
  *   initAiThreads(root?)         幂等（__icenAiThreadsInit）+ 返回销毁函数；scope 级委托：
- *                                点 .ai-thread → icen:ai-thread-select {key}；
- *                                点 .ai-thread-action → icen:ai-thread-action {action:'rename', key}
+ *                                点 .icen-ai-thread → icen:ai-thread-select {key}；
+ *                                点 .icen-ai-thread-action → icen:ai-thread-action {action:'rename', key}
  *                                （动作菜单本体由宿主实现——组件只给挂载点与事件，不绑死菜单）；
  *                                组头点击折叠/展开（aria-expanded + .is-collapsed）；
- *                                键盘 Enter/Space 等价选择（.ai-thread[role=button]）。
+ *                                键盘 Enter/Space 等价选择（.icen-ai-thread[role=button]）。
  *   setAiThreadsActive(el, key)  外部路由同步激活态：key 命中项挂 .is-active，其余摘除；
  *                                key 为空时清空全部激活（返回 el 自身）。
  *
@@ -39,6 +39,7 @@
 
 import { h, svgIcon } from './ai-core';
 import { emitIcen, type IcenEventMap } from './events';
+import { t } from './i18n';
 
 /* ── 模型 ── */
 
@@ -64,7 +65,7 @@ export interface AiThreadsModel {
 }
 
 /* 归档组名（分组模式下 archived 项的沉底容器） */
-const ARCHIVED_GROUP = '已归档';
+const ARCHIVED_GROUP = t('aiThreads.archived');
 
 interface MarkedScope extends ParentNode {
   __icenAiThreadsInit?: boolean;
@@ -77,8 +78,8 @@ function dispatch<K extends keyof IcenEventMap>(node: Element, name: K, detail: 
 /* ── 单条会话行 ── */
 
 function buildThread(item: AiThreadItem, activeKey?: string): HTMLElement {
-  const row = h('div', 'ai-thread');
-  if (item.key) row.dataset.key = item.key;
+  const row = h('div', 'icen-ai-thread');
+  if (item.key) row.dataset.icenKey = item.key;
   if (item.archived) row.classList.add('is-archived');
   if (activeKey != null && item.key === activeKey) {
     row.classList.add('is-active');
@@ -88,18 +89,18 @@ function buildThread(item: AiThreadItem, activeKey?: string): HTMLElement {
   row.tabIndex = 0;
 
   if (item.icon) {
-    const iconWrap = h('span', 'ai-thread-icon');
+    const iconWrap = h('span', 'icen-ai-thread-icon');
     const svg = svgIcon(item.icon);
     if (svg) iconWrap.appendChild(svg);
     row.appendChild(iconWrap);
   }
-  row.appendChild(h('span', 'ai-thread-label', item.label));
+  row.appendChild(h('span', 'icen-ai-thread-label', item.label));
 
   /* 动作钮：只做事件挂载点（菜单本体由宿主实现），不吞选择点击之外的语义 */
-  const action = h('button', 'ai-thread-action', '···');
+  const action = h('button', 'icen-ai-thread-action', '···');
   action.type = 'button';
-  action.setAttribute('aria-label', '会话操作');
-  action.setAttribute('data-thread-action', 'rename');
+  action.setAttribute('aria-label', t('aiThreads.actionsAria'));
+  action.setAttribute('data-icen-thread-action', 'rename');
   row.appendChild(action);
   return row;
 }
@@ -113,7 +114,7 @@ function buildThread(item: AiThreadItem, activeKey?: string): HTMLElement {
 export function renderAiThreads(el: HTMLElement, model: AiThreadsModel): HTMLElement {
   if (typeof document === 'undefined') return el;
   el.textContent = '';
-  const root = h('div', 'ai-threads');
+  const root = h('div', 'icen-ai-threads');
   const items = Array.isArray(model.items) ? model.items : [];
   const active = items.filter((it) => !it.archived);
   const archived = items.filter((it) => it.archived);
@@ -132,26 +133,26 @@ export function renderAiThreads(el: HTMLElement, model: AiThreadsModel): HTMLEle
       groups.set(label, list);
     }
     for (const [label, list] of groups) {
-      const group = h('div', 'ai-threads-group');
-      group.dataset.group = label;
-      const head = h('button', 'ai-threads-group-head', label);
+      const group = h('div', 'icen-ai-threads-group');
+      group.dataset.icenGroup = label;
+      const head = h('button', 'icen-ai-threads-group-head', label);
       head.type = 'button';
       head.setAttribute('aria-expanded', 'true');
       group.appendChild(head);
-      const listEl = h('div', 'ai-threads-group-list');
+      const listEl = h('div', 'icen-ai-threads-group-list');
       for (const it of list) listEl.appendChild(buildThread(it, model.activeKey));
       group.appendChild(listEl);
       root.appendChild(group);
     }
 
     if (archived.length > 0) {
-      const group = h('div', 'ai-threads-group');
-      group.dataset.group = ARCHIVED_GROUP;
-      const head = h('button', 'ai-threads-group-head', ARCHIVED_GROUP);
+      const group = h('div', 'icen-ai-threads-group');
+      group.dataset.icenGroup = ARCHIVED_GROUP;
+      const head = h('button', 'icen-ai-threads-group-head', ARCHIVED_GROUP);
       head.type = 'button';
       head.setAttribute('aria-expanded', 'true');
       group.appendChild(head);
-      const listEl = h('div', 'ai-threads-group-list');
+      const listEl = h('div', 'icen-ai-threads-group-list');
       for (const it of archived) listEl.appendChild(buildThread(it, model.activeKey));
       group.appendChild(listEl);
       root.appendChild(group);
@@ -168,15 +169,15 @@ export function renderAiThreads(el: HTMLElement, model: AiThreadsModel): HTMLEle
 /* ── 激活态同步 ── */
 
 /**
- * 外部路由同步激活态：el 范围内 data-key === key 的 .ai-thread 挂 .is-active
+ * 外部路由同步激活态：el 范围内 data-icen-key === key 的 .icen-ai-thread 挂 .is-active
  * （+aria-current），其余摘除；key 为空串/null/undefined 时清空全部激活。
  * 对静态手写 DOM 与 renderAiThreads 产物一视同仁。返回 el。
  */
 export function setAiThreadsActive(el: HTMLElement, key: string | null | undefined): HTMLElement {
-  const threads = Array.from(el.querySelectorAll<HTMLElement>('.ai-thread'));
-  if (el instanceof HTMLElement && el.classList.contains('ai-thread')) threads.unshift(el);
+  const threads = Array.from(el.querySelectorAll<HTMLElement>('.icen-ai-thread'));
+  if (el instanceof HTMLElement && el.classList.contains('icen-ai-thread')) threads.unshift(el);
   for (const t of threads) {
-    const hit = key != null && key !== '' && t.dataset.key === key;
+    const hit = key != null && key !== '' && t.dataset.icenKey === key;
     t.classList.toggle('is-active', hit);
     if (hit) t.setAttribute('aria-current', 'true');
     else t.removeAttribute('aria-current');
@@ -200,12 +201,12 @@ export function initAiThreads(root?: ParentNode): () => void {
   const target = scope as ParentNode & EventTarget;
 
   const selectThread = (thread: HTMLElement): void => {
-    const key = thread.dataset.key ?? '';
+    const key = thread.dataset.icenKey ?? '';
     dispatch(thread, 'icen:ai-thread-select', { key });
   };
 
   const toggleGroup = (head: HTMLElement): void => {
-    const group = head.closest<HTMLElement>('.ai-threads-group');
+    const group = head.closest<HTMLElement>('.icen-ai-threads-group');
     if (!group) return;
     const open = head.getAttribute('aria-expanded') !== 'true';
     head.setAttribute('aria-expanded', String(open));
@@ -215,20 +216,20 @@ export function initAiThreads(root?: ParentNode): () => void {
   const onClick = (e: Event): void => {
     const t = e.target instanceof Element ? e.target : null;
     if (!t) return;
-    /* 动作钮优先：冒泡到 .ai-thread 前截住，不触发选择 */
-    const action = t.closest<HTMLElement>('.ai-thread-action');
+    /* 动作钮优先：冒泡到 .icen-ai-thread 前截住，不触发选择 */
+    const action = t.closest<HTMLElement>('.icen-ai-thread-action');
     if (action) {
-      const thread = action.closest<HTMLElement>('.ai-thread');
+      const thread = action.closest<HTMLElement>('.icen-ai-thread');
       if (!thread) return;
-      dispatch(thread, 'icen:ai-thread-action', { action: 'rename', key: thread.dataset.key ?? '' });
+      dispatch(thread, 'icen:ai-thread-action', { action: 'rename', key: thread.dataset.icenKey ?? '' });
       return;
     }
-    const head = t.closest<HTMLElement>('.ai-threads-group-head');
+    const head = t.closest<HTMLElement>('.icen-ai-threads-group-head');
     if (head) {
       toggleGroup(head);
       return;
     }
-    const thread = t.closest<HTMLElement>('.ai-thread');
+    const thread = t.closest<HTMLElement>('.icen-ai-thread');
     if (thread) selectThread(thread);
   };
 
@@ -236,7 +237,7 @@ export function initAiThreads(root?: ParentNode): () => void {
     const ke = e as KeyboardEvent;
     if (ke.key !== 'Enter' && ke.key !== ' ') return;
     const t = ke.target instanceof Element ? ke.target : null;
-    const thread = t?.closest<HTMLElement>('.ai-thread');
+    const thread = t?.closest<HTMLElement>('.icen-ai-thread');
     if (!thread || thread.getAttribute('role') !== 'button') return;
     ke.preventDefault();
     selectThread(thread);

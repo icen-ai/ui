@@ -14,36 +14,36 @@ const presets = [
 const swatches = [
   'bg', 'bg-soft', 'surface', 'surface-strong',
   'line', 'line-strong', 'text', 'text-muted', 'text-faint',
-  'accent', 'accent-cold', 'success', 'warning', 'error',
+  'accent', 'accent-strong', 'accent-cold', 'success', 'warning', 'error',
 ];
 ---
 
 <Docs title="色彩预设 · ICEN UI">
   <h1 class="page-title">色彩预设</h1>
-  <p class="page-sub">6 套预设 × 明暗双模。每套都定义完整的 <code>--token-*</code> 色彩面，组件全部消费 token，换肤零改动。导航栏可实时切换全站预设与明暗。</p>
+  <p class="page-sub">6 套预设 × 明暗双模。每套都定义完整的 <code>--icen-token-*</code> 色彩面，组件全部消费 token，换肤零改动。导航栏可实时切换全站预设与明暗。</p>
 
   {presets.map((p) => (
-    <section class="panel">
-      <div class="panel-title"><span>{p.name}</span><code>.{p.id}</code></div>
-      <div class="panel-body">
+    <section class="icen-panel">
+      <div class="icen-panel-title"><span>{p.name}</span><code>[data-icen-preset="{p.id}"]</code></div>
+      <div class="icen-panel-body">
         <div class="palette-pair">
-          <div class={p.id}>
+          <div data-icen-preset={p.id}>
             <div class="palette-label">亮色</div>
             <div class="swatch-grid">
               {swatches.map((s) => (
                 <div class="swatch">
-                  <span class="swatch-color" style={`background: var(--token-${s})`} data-token={`--token-${s}`}></span>
-                  <span class="swatch-name mono">{s}</span>
-                  <span class="swatch-val mono" data-val></span>
+                  <span class="swatch-color" style={`background: var(--icen-token-${s})`} data-token={`--icen-token-${s}`}></span>
+                  <span class="swatch-name icen-mono">{s}</span>
+                  <span class="swatch-val icen-mono" data-val></span>
                 </div>
               ))}
             </div>
             <div class="demo-row" style="margin-top:14px">
-              <button class="btn btn-primary btn-sm" type="button">主要按钮</button>
-              <button class="btn btn-sm" type="button">次要按钮</button>
-              <span class="pill pill--success">成功</span>
-              <span class="pill pill--warning">警告</span>
-              <span class="pill pill--error">错误</span>
+              <button class="icen-btn icen-btn-primary icen-btn-sm" type="button">主要按钮</button>
+              <button class="icen-btn icen-btn-sm" type="button">次要按钮</button>
+              <span class="icen-pill icen-pill--success">成功</span>
+              <span class="icen-pill icen-pill--warning">警告</span>
+              <span class="icen-pill icen-pill--error">错误</span>
             </div>
           </div>
           <div class={`${p.id} dark`}>
@@ -51,24 +51,49 @@ const swatches = [
             <div class="swatch-grid">
               {swatches.map((s) => (
                 <div class="swatch">
-                  <span class="swatch-color" style={`background: var(--token-${s})`} data-token={`--token-${s}`}></span>
-                  <span class="swatch-name mono">{s}</span>
-                  <span class="swatch-val mono" data-val></span>
+                  <span class="swatch-color" style={`background: var(--icen-token-${s})`} data-token={`--icen-token-${s}`}></span>
+                  <span class="swatch-name icen-mono">{s}</span>
+                  <span class="swatch-val icen-mono" data-val></span>
                 </div>
               ))}
             </div>
             <div class="demo-row" style="margin-top:14px">
-              <button class="btn btn-primary btn-sm" type="button">主要按钮</button>
-              <button class="btn btn-sm" type="button">次要按钮</button>
-              <span class="pill pill--success">成功</span>
-              <span class="pill pill--warning">警告</span>
-              <span class="pill pill--error">错误</span>
+              <button class="icen-btn icen-btn-primary icen-btn-sm" type="button">主要按钮</button>
+              <button class="icen-btn icen-btn-sm" type="button">次要按钮</button>
+              <span class="icen-pill icen-pill--success">成功</span>
+              <span class="icen-pill icen-pill--warning">警告</span>
+              <span class="icen-pill icen-pill--error">错误</span>
             </div>
           </div>
         </div>
       </div>
     </section>
   ))}
+
+  <section class="icen-panel">
+    <div class="icen-panel-title"><span>设计工具导出</span><code>bun run dtcg &amp;&amp; bun run design-tokens</code></div>
+    <div class="icen-panel-body">
+      <p class="export-sub">
+        tokens 同时导出为设计工具互操作格式（DTCG 经典版 → Tokens Studio / Figma Variables），设计侧改 token 可走插件回灌，闭环到 <code>src/tokens/*.css</code>。
+        命令在仓库根执行；产物落在 <code>dist/tokens/</code>，npm 包内经 <code>@icen.ai/ui/tokens/*</code> 子路径可达：
+      </p>
+      <div class="export-list">
+        <div class="export-row">
+          <code>dist/tokens/dtcg.json</code>
+          <span>W3C DTCG 经典版（预设 → light/dark 两级有效级联 + 组级 $type + 别名）</span>
+        </div>
+        <div class="export-row">
+          <code>dist/tokens/tokens-studio.json</code>
+          <span>Tokens Studio 插件原生格式（$themes 12 组，token set 键 <code>clay/light</code> 式）</span>
+        </div>
+        <div class="export-row">
+          <code>dist/tokens/figma.variables.json</code>
+          <span>Figma Variables 形态（6 collection × light/dark；别名 → VARIABLE_ALIAS；rem 按 ×16 记 px）</span>
+        </div>
+      </div>
+      <p class="export-sub export-note">诚实口径：color-mix / box-shadow 等不可表示项与仅单模式存在的 token 一律跳过并打印清单，不进产物（与 dtcg 导出同纪律）。</p>
+    </div>
+  </section>
 
   <script>
     // 计算并展示每个色块的实际颜色值（getComputedStyle 读解析后的 token）；
@@ -84,16 +109,22 @@ const swatches = [
 </Docs>
 
 <style is:global>
-  .page-title { font-family: var(--font-heading); font-size: 26px; margin: 0 0 8px; }
-  .page-sub { color: var(--token-text-muted); font-size: 14px; line-height: 1.7; margin: 0 0 24px; max-width: 640px; }
+  .page-title { font-family: var(--icen-font-heading); font-size: 26px; margin: 0 0 8px; }
+  .page-sub { color: var(--icen-token-text-muted); font-size: 14px; line-height: 1.7; margin: 0 0 24px; max-width: 640px; }
   .palette-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   /* 亮/暗两块都直接消费各自上下文（class=preset / preset+dark）里的 token，无需硬编码 */
-  .palette-pair > div { border: 1px solid var(--token-line-soft); border-radius: var(--radius-sm); padding: 14px; background: var(--token-bg); }
-  .palette-label { font-size: 11px; letter-spacing: 2px; color: var(--token-text-faint); margin-bottom: 10px; }
+  .palette-pair > div { border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-sm); padding: 14px; background: var(--icen-token-bg); }
+  .palette-label { font-size: 11px; letter-spacing: 2px; color: var(--icen-token-text-faint); margin-bottom: 10px; }
   .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
   .swatch { display: flex; flex-direction: column; gap: 3px; }
-  .swatch-color { height: 34px; border-radius: var(--radius-xs); border: 1px solid var(--token-line-soft); }
-  .swatch-name { font-size: 11px; color: var(--token-text-muted); }
-  .swatch-val { font-size: 10px; color: var(--token-text-faint); word-break: break-all; }
+  .swatch-color { height: 34px; border-radius: var(--icen-radius-xs); border: 1px solid var(--icen-token-line-soft); }
+  .swatch-name { font-size: 11px; color: var(--icen-token-text-muted); }
+  .swatch-val { font-size: 10px; color: var(--icen-token-text-faint); word-break: break-all; }
   @media (max-width: 860px) { .palette-pair { grid-template-columns: 1fr; } }
+  .export-sub { color: var(--icen-token-text-muted); font-size: 13px; line-height: 1.7; margin: 0 0 12px; max-width: 720px; }
+  .export-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .export-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; font-size: 13px; }
+  .export-row > code { flex: 0 0 auto; font-size: 12px; color: var(--icen-token-accent); }
+  .export-row > span { color: var(--icen-token-text-muted); }
+  .export-note { margin-bottom: 0; font-size: 12px; color: var(--icen-token-text-faint); }
 </style>

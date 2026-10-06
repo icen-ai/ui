@@ -2,31 +2,34 @@
  * @icen.ai/ui — Component: tooltip（纯 CSS 气泡提示，无 JS）
  *
  * 完整契约：
- *   <button data-tooltip="提示文案" data-tooltip-side="top|bottom|left|right" data-tooltip-align="start|center|end">
- *   多行：data-tooltip-multiline="true" 允许换行（默认 whitespace nowrap 截断）
+ *   <button data-icen-tooltip="提示文案" data-icen-tooltip-side="top|bottom|left|right" data-icen-tooltip-align="start|icen-center|end">
+ *   多行：data-icen-tooltip-multiline="true" 允许换行（默认 whitespace nowrap 截断）
  *   无障碍：键盘 :focus-visible 立即出现（无延迟），鼠标 hover 延迟 400ms。
+ *
+ * RTL 豁免（guard 文件级白名单 scripts/guard/rtl.ts）：side 是物理侧边契约
+ * （data-icen-tooltip-side="left|right" 指触发器物理左/右侧），left/right 定位与水平居中配套，RTL 语义不变。
  */
 
-[data-tooltip] { position: relative; --tooltip-delay: 400ms; }
+[data-icen-tooltip] { position: relative; --tooltip-delay: 400ms; }
 
-[data-tooltip]::after {
+[data-icen-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
-  z-index: var(--z-tooltip);
+  z-index: var(--icen-z-tooltip);
   width: max-content;
   max-width: min(260px, calc(100vw - 32px));
-  padding: 4px var(--density-space-xs);
-  font-size: var(--density-font-size-xs);
+  padding: 4px var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 400;
   line-height: 1.4;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  background: color-mix(in srgb, var(--token-text) 92%, var(--token-bg));
-  color: var(--token-bg);
-  border: 1px solid var(--token-line);
-  box-shadow: var(--token-shadow-elevated);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--icen-token-text) 92%, var(--icen-token-bg));
+  color: var(--icen-token-bg);
+  border: 1px solid var(--icen-token-line);
+  box-shadow: var(--icen-token-shadow-elevated);
+  border-radius: var(--icen-radius-sm);
   opacity: 0;
   pointer-events: none;
   transition:
@@ -41,26 +44,26 @@
 }
 
 /* 多行模式 */
-[data-tooltip-multiline='true']::after {
+[data-icen-tooltip-multiline='true']::after {
   white-space: normal;
   max-width: min(320px, calc(100vw - 32px));
 }
 
 /* ── 方向 ── */
-[data-tooltip-side='bottom']::after {
+[data-icen-tooltip-side='bottom']::after {
   bottom: auto;
   top: calc(100% + 6px);
   left: 50%;
   transform: translate(-50%, -4px);
 }
-[data-tooltip-side='left']::after {
+[data-icen-tooltip-side='left']::after {
   bottom: auto;
   top: 50%;
   left: auto;
   right: calc(100% + 6px);
   transform: translate(4px, -50%);
 }
-[data-tooltip-side='right']::after {
+[data-icen-tooltip-side='right']::after {
   bottom: auto;
   top: 50%;
   right: auto;
@@ -69,48 +72,48 @@
 }
 
 /* ── 对齐（仅 top/bottom 方向生效）── */
-[data-tooltip-align='start']::after { left: 0; transform: translate(0, 4px); }
-[data-tooltip-align='end']::after { left: auto; right: 0; transform: translate(0, 4px); }
-[data-tooltip-side='bottom'][data-tooltip-align='start']::after { transform: translate(0, -4px); }
-[data-tooltip-side='bottom'][data-tooltip-align='end']::after { transform: translate(0, -4px); }
+[data-icen-tooltip-align='start']::after { inset-inline-start: 0; transform: translate(0, 4px); }
+[data-icen-tooltip-align='end']::after { inset-inline-start: auto; inset-inline-end: 0; transform: translate(0, 4px); }
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']::after { transform: translate(0, -4px); }
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']::after { transform: translate(0, -4px); }
 
 /* ── 出现：hover/focus-visible ── */
-[data-tooltip]:hover::after,
-[data-tooltip]:focus-visible::after {
+[data-icen-tooltip]:hover::after,
+[data-icen-tooltip]:focus-visible::after {
   opacity: 1;
   transform: translate(-50%, 0);
 }
-[data-tooltip-side='bottom']:hover::after,
-[data-tooltip-side='bottom']:focus-visible::after {
+[data-icen-tooltip-side='bottom']:hover::after,
+[data-icen-tooltip-side='bottom']:focus-visible::after {
   transform: translate(-50%, 0);
 }
-[data-tooltip-side='left']:hover::after,
-[data-tooltip-side='left']:focus-visible::after {
+[data-icen-tooltip-side='left']:hover::after,
+[data-icen-tooltip-side='left']:focus-visible::after {
   transform: translate(0, -50%);
 }
-[data-tooltip-side='right']:hover::after,
-[data-tooltip-side='right']:focus-visible::after {
+[data-icen-tooltip-side='right']:hover::after,
+[data-icen-tooltip-side='right']:focus-visible::after {
   transform: translate(0, -50%);
 }
 
 /* align 起效（覆盖 translateX 的 -50%） */
-[data-tooltip-align='start']:hover::after,
-[data-tooltip-align='start']:focus-visible::after { transform: translate(0, 0); }
-[data-tooltip-align='end']:hover::after,
-[data-tooltip-align='end']:focus-visible::after { transform: translate(0, 0); }
-[data-tooltip-side='bottom'][data-tooltip-align='start']:hover::after,
-[data-tooltip-side='bottom'][data-tooltip-align='start']:focus-visible::after { transform: translate(0, 0); }
-[data-tooltip-side='bottom'][data-tooltip-align='end']:hover::after,
-[data-tooltip-side='bottom'][data-tooltip-align='end']:focus-visible::after { transform: translate(0, 0); }
+[data-icen-tooltip-align='start']:hover::after,
+[data-icen-tooltip-align='start']:focus-visible::after { transform: translate(0, 0); }
+[data-icen-tooltip-align='end']:hover::after,
+[data-icen-tooltip-align='end']:focus-visible::after { transform: translate(0, 0); }
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']:hover::after,
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']:focus-visible::after { transform: translate(0, 0); }
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']:hover::after,
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']:focus-visible::after { transform: translate(0, 0); }
 
 /* 键盘聚焦立即出现（覆盖 400ms 延迟） */
-[data-tooltip]:focus-visible::after { transition-delay: 0ms; }
+[data-icen-tooltip]:focus-visible::after { transition-delay: 0ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-tooltip]::after {
+  [data-icen-tooltip]::after {
     transition: opacity var(--icen-tx-fast);
-    transform: none !important;
+    transform: none !important; /* guard:allow-important 动效守卫：降级媒体查询需压制组件动画 */
   }
-  [data-tooltip]:hover::after,
-  [data-tooltip]:focus-visible::after { transform: none !important; }
+  [data-icen-tooltip]:hover::after,
+  [data-icen-tooltip]:focus-visible::after { transform: none !important; /* guard:allow-important 状态/守卫覆盖需压制变体优先级 */ }
 }

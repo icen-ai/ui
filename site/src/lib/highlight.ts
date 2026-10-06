@@ -1,7 +1,7 @@
 /*
  * 文档站轻量语法高亮 —— 单行 token 化，输出带 .tok-* class 的 HTML。
  * 不做完整 parser：每行独立扫描（多行注释/字符串不跨行，文档代码片段足够）。
- * token 颜色由 site.css 的 .tok-* 规则定义，全部消费语义 --token-*。
+ * token 颜色由 site.css 的 .tok-* 规则定义，全部消费语义 --icen-token-*。
  */
 
 export type CodeLang = 'html' | 'js' | 'ts' | 'css' | 'bash';

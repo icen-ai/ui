@@ -1,136 +1,139 @@
 /*
  * @icen.ai/ui — Component: ai-diff（AI 差异审阅 + 文件 chips，与 behaviors/ai-diff.ts 配套）
  *
+ * RTL 豁免（guard 文件级白名单 scripts/guard/rtl.ts）：diff 视图是物理 LTR 代码面——
+ * 行号槽右对齐 / 代码列 padding / 分隔线全部保持物理（源码不随界面方向镜像），RTL 下不变。
+ *
  * 完整 DOM 契约（类名与规格 §4.6/§4.7 一致）：
- *   <div class="ai-diff">
- *     <div class="ai-diff-file is-added|is-modified|is-deleted|is-renamed
- *          [.is-accepted|.is-rejected]" data-path="src/foo.ts">
- *       <div class="ai-diff-head" role="button" tabindex="0" aria-expanded="false">
- *         <span class="ai-diff-path">src/foo.ts</span>            <!-- renamed：旧路径 → 新路径 -->
- *         <span class="ai-diff-stat"><b class="ai-diff-add">+12</b> <b class="ai-diff-del">−4</b></span>
- *         <span class="ai-diff-actions">
- *           <button type="button" data-ai-diff-accept>接受</button>
- *           <button type="button" data-ai-diff-reject>拒绝</button>
+ *   <div class="icen-ai-diff">
+ *     <div class="icen-ai-diff-file is-added|is-modified|is-deleted|is-renamed
+ *          [.is-accepted|.is-rejected]" data-icen-path="src/foo.ts">
+ *       <div class="icen-ai-diff-head" role="button" tabindex="0" aria-expanded="false">
+ *         <span class="icen-ai-diff-path">src/foo.ts</span>            <!-- renamed：旧路径 → 新路径 -->
+ *         <span class="icen-ai-diff-stat"><b class="icen-ai-diff-add">+12</b> <b class="icen-ai-diff-del">−4</b></span>
+ *         <span class="icen-ai-diff-actions">
+ *           <button type="button" data-icen-ai-diff-accept>接受</button>
+ *           <button type="button" data-icen-ai-diff-reject>拒绝</button>
  *         </span>
- *         <span class="ai-diff-verdict" hidden>已接受|已拒绝</span>   <!-- 状态章（JS 决策后显示） -->
+ *         <span class="icen-ai-diff-verdict" hidden>已接受|已拒绝</span>   <!-- 状态章（JS 决策后显示） -->
  *       </div>
- *       <div class="ai-diff-body" hidden>
- *         <table class="ai-diff-table">
- *           <tr class="ai-diff-line--hunk"><td colspan="3">@@ -10,6 +10,8 @@ …</td></tr>
- *           <tr class="ai-diff-line--ctx|ai-diff-line--add|ai-diff-line--del">
- *             <td class="ai-diff-ln" aria-hidden="true">10</td>
- *             <td class="ai-diff-ln" aria-hidden="true">10</td>
- *             <td class="ai-diff-code">内容（行首符号由 ::before 提供）</td>
+ *       <div class="icen-ai-diff-body" hidden>
+ *         <icen-table class="icen-ai-diff-table">
+ *           <tr class="icen-ai-diff-line--hunk"><td colspan="3">@@ -10,6 +10,8 @@ …</td></tr>
+ *           <tr class="icen-ai-diff-line--ctx|icen-ai-diff-line--add|icen-ai-diff-line--del">
+ *             <td class="icen-ai-diff-ln" aria-hidden="true">10</td>
+ *             <td class="icen-ai-diff-ln" aria-hidden="true">10</td>
+ *             <td class="icen-ai-diff-code">内容（行首符号由 ::before 提供）</td>
  *           </tr>
- *         </table>
+ *         </icen-table>
  *       </div>
  *     </div>
  *   </div>
  *
  *   文件 chips（纯 CSS 族，无 behavior；文件图标由消费方/ai-panel.ts 注入 svg）：
- *   <div class="ai-files">
- *     <span class="ai-file-chip is-added|is-modified|is-deleted
+ *   <div class="icen-ai-files">
+ *     <span class="icen-ai-file-chip is-added|is-modified|is-deleted
  *                 ai-file-chip--ts|js|css|json|md|img|other">
- *       <span class="ai-file-icon">…svg…</span>src/foo.ts
+ *       <span class="icen-ai-file-icon">…svg…</span>src/foo.ts
  *     </span>
  *   </div>
  *
  * 状态视觉：
  *   add 行 = success 底 / del 行 = error 底 / hunk 行 = info 文字（bg-soft 底）
  *   文件头状态色边（inset 左色条）：added=success / modified=accent / deleted=error / renamed=info
- *   .is-accepted / .is-rejected = 整体淡化 + .ai-diff-verdict 状态章，actions 由 JS hidden
+ *   .is-accepted / .is-rejected = 整体淡化 + .icen-ai-diff-verdict 状态章，actions 由 JS hidden
  *
  * 依赖：base.css（--icen-tx-* / --icen-ring / keyframes icen-pop-in）。
- * 只消费 --token-* / --density-* / --radius-*；动画时长全部走组件局部变量。
+ * 只消费 --icen-token-* / --icen-density-* / --icen-radius-*；动画时长全部走组件局部变量。
  */
 
 /* ══════════════ ai-diff · 差异审阅 ══════════════ */
 
-.ai-diff {
+.icen-ai-diff {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
+  gap: var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
   min-width: 0;
   align-self: stretch;  /* 输出容器宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
 }
 
-.ai-diff-file {
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-md);
-  background: var(--token-surface);
+.icen-ai-diff-file {
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-surface);
   overflow: hidden;
   min-width: 0;
   animation: icen-pop-in var(--ai-diff-pop-duration, var(--icen-tx-fast));
 }
 
 /* 文件头状态色边（inset 色条避免 border 宽差导致布局抖动） */
-.ai-diff-file.is-added    { box-shadow: inset 3px 0 0 var(--token-success); }
-.ai-diff-file.is-modified { box-shadow: inset 3px 0 0 var(--token-accent); }
-.ai-diff-file.is-deleted  { box-shadow: inset 3px 0 0 var(--token-error); }
-.ai-diff-file.is-renamed  { box-shadow: inset 3px 0 0 var(--token-info); }
+.icen-ai-diff-file.is-added    { box-shadow: inset 3px 0 0 var(--icen-token-success); }
+.icen-ai-diff-file.is-modified { box-shadow: inset 3px 0 0 var(--icen-token-accent); }
+.icen-ai-diff-file.is-deleted  { box-shadow: inset 3px 0 0 var(--icen-token-error); }
+.icen-ai-diff-file.is-renamed  { box-shadow: inset 3px 0 0 var(--icen-token-info); }
 
-/* 决策后淡化（状态章配色见 .ai-diff-verdict） */
-.ai-diff-file.is-accepted,
-.ai-diff-file.is-rejected {
+/* 决策后淡化（状态章配色见 .icen-ai-diff-verdict） */
+.icen-ai-diff-file.is-accepted,
+.icen-ai-diff-file.is-rejected {
   opacity: 0.66;
   transition: opacity var(--ai-diff-fade-duration, var(--icen-tx-normal));
 }
 
 /* ── head ── */
 
-.ai-diff-head {
+.icen-ai-diff-head {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-xs) var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
   min-width: 0;
   cursor: pointer;
   user-select: none;
   transition: background-color var(--icen-tx-fast);
 }
-.ai-diff-head:hover {
-  background: var(--token-fill-1);
+.icen-ai-diff-head:hover {
+  background: var(--icen-token-fill-1);
 }
-.ai-diff-head:focus-visible {
+.icen-ai-diff-head:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.ai-diff-path {
+.icen-ai-diff-path {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text);
 }
 
-.ai-diff-stat {
+.icen-ai-diff-stat {
   flex-shrink: 0;
   display: inline-flex;
-  gap: var(--density-space-xs);
-  font-size: var(--density-font-size-xs);
+  gap: var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
   font-variant-numeric: tabular-nums;
 }
-.ai-diff-add { color: var(--token-success); font-weight: 600; }
-.ai-diff-del { color: var(--token-error); font-weight: 600; }
+.icen-ai-diff-add { color: var(--icen-token-success); font-weight: 600; }
+.icen-ai-diff-del { color: var(--icen-token-error); font-weight: 600; }
 
 /* accept / reject 行内小钮（DOM 无固定类，按 data 属性定位） */
-.ai-diff-actions {
+.icen-ai-diff-actions {
   flex-shrink: 0;
   display: inline-flex;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
 }
-.ai-diff-actions button {
+.icen-ai-diff-actions button {
   padding: 3px 10px;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-full);
-  background: var(--token-surface);
-  color: var(--token-text-muted);
-  font-size: var(--density-font-size-xs);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-surface);
+  color: var(--icen-token-text-muted);
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
   cursor: pointer;
   transition:
@@ -138,121 +141,121 @@
     border-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.ai-diff-actions button:focus-visible {
+.icen-ai-diff-actions button:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.ai-diff-actions [data-ai-diff-accept]:hover {
-  color: var(--token-success);
-  border-color: color-mix(in srgb, var(--token-success) 45%, transparent);
-  background: var(--token-success-muted);
+.icen-ai-diff-actions [data-icen-ai-diff-accept]:hover {
+  color: var(--icen-token-success);
+  border-color: color-mix(in srgb, var(--icen-token-success) 45%, transparent);
+  background: var(--icen-token-success-muted);
 }
-.ai-diff-actions [data-ai-diff-reject]:hover {
-  color: var(--token-error);
-  border-color: color-mix(in srgb, var(--token-error) 45%, transparent);
-  background: var(--token-error-muted);
+.icen-ai-diff-actions [data-icen-ai-diff-reject]:hover {
+  color: var(--icen-token-error);
+  border-color: color-mix(in srgb, var(--icen-token-error) 45%, transparent);
+  background: var(--icen-token-error-muted);
 }
 
 /* 状态章：决策后 JS 置 text + 去 hidden */
-.ai-diff-verdict {
+.icen-ai-diff-verdict {
   flex-shrink: 0;
   padding: 2px 8px;
   border: 1px solid currentColor;
-  border-radius: var(--radius-full);
-  font-size: var(--density-font-size-xs);
+  border-radius: var(--icen-radius-full);
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 500;
   line-height: 1.4;
 }
-.ai-diff-file.is-accepted .ai-diff-verdict { color: var(--token-success); background: var(--token-success-muted); }
-.ai-diff-file.is-rejected .ai-diff-verdict { color: var(--token-error); background: var(--token-error-muted); }
+.icen-ai-diff-file.is-accepted .icen-ai-diff-verdict { color: var(--icen-token-success); background: var(--icen-token-success-muted); }
+.icen-ai-diff-file.is-rejected .icen-ai-diff-verdict { color: var(--icen-token-error); background: var(--icen-token-error-muted); }
 
 /* ── body / 表格 ── */
 
-.ai-diff-body {
-  border-top: 1px solid var(--token-line-soft);
+.icen-ai-diff-body {
+  border-top: 1px solid var(--icen-token-line-soft);
   overflow-x: auto;
 }
 
-.ai-diff-table {
+.icen-ai-diff-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-xs);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.6;
 }
-.ai-diff-table td {
-  padding: 0 var(--density-space-xs);
+.icen-ai-diff-table td {
+  padding: 0 var(--icen-density-space-xs);
   vertical-align: top;
 }
 
 /* hunk 头：info 文字 */
-.ai-diff-line--hunk td {
-  padding: 2px var(--density-space-sm);
-  background: var(--token-bg-soft);
-  color: var(--token-info);
+.icen-ai-diff-line--hunk td {
+  padding: 2px var(--icen-density-space-sm);
+  background: var(--icen-token-bg-soft);
+  color: var(--icen-token-info);
   user-select: none;
   white-space: nowrap;
 }
 
-.ai-diff-ln {
+.icen-ai-diff-ln {
   width: 1%;
   min-width: 3.5ch;
   text-align: right;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
   user-select: none;
 }
 /* 行号区与代码区的分隔线画在第二列右侧 */
-.ai-diff-ln + .ai-diff-ln {
-  border-right: 1px solid var(--token-line-soft);
+.icen-ai-diff-ln + .icen-ai-diff-ln {
+  border-right: 1px solid var(--icen-token-line-soft);
 }
 
 /* add = success 底 / del = error 底 */
-.ai-diff-line--add { background: var(--token-success-muted); }
-.ai-diff-line--del { background: var(--token-error-muted); }
+.icen-ai-diff-line--add { background: var(--icen-token-success-muted); }
+.icen-ai-diff-line--del { background: var(--icen-token-error-muted); }
 
-.ai-diff-code {
+.icen-ai-diff-code {
   white-space: pre-wrap;
   word-break: break-all;
-  padding-left: var(--density-space-sm);
+  padding-left: var(--icen-density-space-sm);
 }
 /* 行首符号（选择 diff 内容时不带符号） */
-.ai-diff-code::before {
+.icen-ai-diff-code::before {
   user-select: none;
 }
-.ai-diff-line--add .ai-diff-code::before {
+.icen-ai-diff-line--add .icen-ai-diff-code::before {
   content: '+ ';
-  color: var(--token-success);
+  color: var(--icen-token-success);
 }
-.ai-diff-line--del .ai-diff-code::before {
+.icen-ai-diff-line--del .icen-ai-diff-code::before {
   content: '− ';
-  color: var(--token-error);
+  color: var(--icen-token-error);
 }
-.ai-diff-line--ctx .ai-diff-code::before {
+.icen-ai-diff-line--ctx .icen-ai-diff-code::before {
   content: '  ';
 }
 
 /* ══════════════ ai-files · 文件 chips（纯 CSS 族） ══════════════ */
 
-.ai-files {
+.icen-ai-files {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   align-self: stretch;  /* 容器自稳定；chip 自身保持内容宽 */
 }
 
-.ai-file-chip {
+.icen-ai-file-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   max-width: 100%;
   padding: 2px 8px;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-full);
-  background: var(--token-surface);
-  color: var(--token-text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-xs);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-surface);
+  color: var(--icen-token-text-muted);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.6;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -261,51 +264,51 @@
     background-color var(--icen-tx-fast),
     border-color var(--icen-tx-fast);
 }
-.ai-file-chip:hover {
-  background: var(--token-fill-1);
-  border-color: var(--token-line);
+.icen-ai-file-chip:hover {
+  background: var(--icen-token-fill-1);
+  border-color: var(--icen-token-line);
 }
 
 /* 状态色点（尾点，纯 CSS） */
-.ai-file-chip::after {
+.icen-ai-file-chip::after {
   content: '';
   flex-shrink: 0;
   width: 6px;
   height: 6px;
-  border-radius: var(--radius-full);
-  background: var(--token-text-faint);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-text-faint);
 }
-.ai-file-chip.is-added::after    { background: var(--token-success); }
-.ai-file-chip.is-modified::after { background: var(--token-accent); }
-.ai-file-chip.is-deleted::after  { background: var(--token-error); }
+.icen-ai-file-chip.is-added::after    { background: var(--icen-token-success); }
+.icen-ai-file-chip.is-modified::after { background: var(--icen-token-accent); }
+.icen-ai-file-chip.is-deleted::after  { background: var(--icen-token-error); }
 
-.ai-file-chip.is-deleted {
+.icen-ai-file-chip.is-deleted {
   text-decoration: line-through;
   opacity: 0.75;
 }
 
-.ai-file-icon {
+.icen-ai-file-icon {
   flex-shrink: 0;
   display: inline-flex;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
-.ai-file-icon svg {
+.icen-ai-file-icon svg {
   width: 13px;
   height: 13px;
 }
 
 /* 文件类型色（语义 token）：ts/js=冷调 accent-cold，css=accent，json=warning，md=info，img=success */
-.ai-file-chip--ts .ai-file-icon,
-.ai-file-chip--js .ai-file-icon { color: var(--token-accent-cold); }
-.ai-file-chip--css .ai-file-icon { color: var(--token-accent); }
-.ai-file-chip--json .ai-file-icon { color: var(--token-warning); }
-.ai-file-chip--md .ai-file-icon { color: var(--token-info); }
-.ai-file-chip--img .ai-file-icon { color: var(--token-success); }
+.icen-ai-file-chip--ts .icen-ai-file-icon,
+.icen-ai-file-chip--js .icen-ai-file-icon { color: var(--icen-token-accent-cold); }
+.icen-ai-file-chip--css .icen-ai-file-icon { color: var(--icen-token-accent); }
+.icen-ai-file-chip--json .icen-ai-file-icon { color: var(--icen-token-warning); }
+.icen-ai-file-chip--md .icen-ai-file-icon { color: var(--icen-token-info); }
+.icen-ai-file-chip--img .icen-ai-file-icon { color: var(--icen-token-success); }
 
 /* ── 动效守卫 ── */
 
 @media (prefers-reduced-motion: reduce) {
-  .ai-diff-file { animation: none; }
-  .ai-diff-file.is-accepted,
-  .ai-diff-file.is-rejected { transition: none; }
+  .icen-ai-diff-file { animation: none; }
+  .icen-ai-diff-file.is-accepted,
+  .icen-ai-diff-file.is-rejected { transition: none; }
 }

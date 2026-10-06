@@ -4,12 +4,20 @@
  * 顶层设计（全库事件心智模型，一次学习处处可用）：
  *
  *   1. 手势层 Gesture —— 通用指针/键盘手势的归一化：
- *      任意容器挂 data-gestures="click dblclick contextmenu longpress text-select"（空格分隔）
- *      即开通对应 icen: 事件；组件内建领域事件（icen:chart-* / icen:ai-* / icen:tab-change…）
- *      不变，两者互补。click 与 dblclick 同开时单击延迟 220ms 派发（双击到达即取消单击）。
+ *      任意容器挂 data-icen-gestures="click dblclick contextmenu longpress text-select swipe"
+ *      （空格分隔）即开通对应 icen: 事件；组件内建领域事件（icen:chart-* / icen:ai-* /
+ *      icen:tab-change…）不变，两者互补。click 与 dblclick 同开时单击延迟 220ms 派发
+ *      （双击到达即取消单击）。
  *      位移守卫：按下→松开位移 >5px 视为拖拽/划词，不派 click/dblclick；longpress 派发后
  *      尾随的松开单击也抑制。
  *      拖拽不在此层：文件拖放走 upload，排序/分割走各自组件，原生 HTML5 DnD 自行接线。
+ *
+ *      swipe（滑动手势，data-icen-gestures~="swipe"）：pointerdown→pointerup 位移 ≥48px
+ *      且主轴明确（|dx|/|dy| 大者为主轴，次轴位移 < 主轴 1/2）派 icen:swipe-left/right/icen-up/icen-down，
+ *      detail = 手势包络 + { dx, dy }。pointermove 期判定垂直滚动脉络（次轴/y 先行领先 12px）
+ *      则抬手不派横向滑动；全程不 preventDefault（被动监听纪律）——滚动不被吞，
+ *      只在抬手时判定派发；pointercancel 中止。click 消歧沿用现有 >5px 纪律。
+ *      swipe 只有事件语义：策略层不收（无全站默认行为需求）。
  *
  *   2. 协议层 Protocol —— 全部 CustomEvent：bubbles + composed + cancelable。
  *      手势事件 detail 统一包络 IcenGestureDetail；领域事件 detail 契约登记在 IcenEventMap
@@ -40,7 +48,7 @@ import type {
 } from './kb-core';
 
 export interface IcenGestureDetail {
-  /** 手势命中源：最近的 [data-gestures] 宿主 */
+  /** 手势命中源：最近的 [data-icen-gestures] 宿主 */
   source: HTMLElement;
   /** 原始 DOM 事件（click / contextmenu / pointerdown / mouseup…） */
   originalEvent: Event;
@@ -61,6 +69,13 @@ export type IcenGestureEvent =
   | 'icen:longpress'
   | 'icen:text-select';
 
+/** 滑动手势事件名（策略层不收——swipe 只有事件语义，无全站默认行为需求）。 */
+export type IcenSwipeEvent =
+  | 'icen:swipe-left'
+  | 'icen:swipe-right'
+  | 'icen:swipe-up'
+  | 'icen:swipe-down';
+
 /* ── 协议层绑定：全库事件一个入口 ── */
 
 /**
@@ -74,6 +89,14 @@ export interface IcenEventMap {
   'icen:contextmenu': IcenGestureDetail;
   'icen:longpress': IcenGestureDetail;
   'icen:text-select': IcenGestureDetail;
+  /* 滑动手势（data-icen-gestures="swipe" 开通；detail = 手势包络 + 位移） */
+  'icen:swipe-left': IcenGestureDetail & { dx: number; dy: number };
+  'icen:swipe-right': IcenGestureDetail & { dx: number; dy: number };
+  'icen:swipe-up': IcenGestureDetail & { dx: number; dy: number };
+  'icen:swipe-down': IcenGestureDetail & { dx: number; dy: number };
+
+  /* 本地化（i18n.ts：setIcenLocale 合并后派发，组件可据此重渲染） */
+  'icen:locale-change': { changed: string[] };
 
   /* 图表（charts.ts） */
   'icen:chart-hover': ChartEventDetail;
@@ -82,6 +105,8 @@ export interface IcenEventMap {
   'icen:chart-contextmenu': ChartEventDetail;
   'icen:chart-legend-toggle': { key: string; seriesIndex: number; hidden: boolean };
   'icen:chart-legend-visibility': { visible: boolean };
+  /** 缩放/刷选（renderChart spec.zoom）：类目索引区间 [from, to]（含端点） */
+  'icen:chart-zoom': { chart: string; from: number; to: number };
 
   /* 基础交互 */
   'icen:tab-change': { tab: HTMLElement | null; panel: HTMLElement | null; index: number };
@@ -134,7 +159,26 @@ export interface IcenEventMap {
   'icen:table-row-toggle': { row: unknown; index: number; expanded: boolean };
   'icen:table-columns-change': { hidden: string[] };
   'icen:table-export': { count: number };
+  /** 单元格编辑提交（editable 列；宿主应用数据后调 handle.updateCell 或 setData） */
+  'icen:table-cell-edit': { rowKey: string; field: string; value: unknown; row: unknown };
+  /** 列拖拽重排完成 */
+  'icen:table-column-reorder': { key: string; fromIndex: number; toIndex: number };
+  /** 分组行展开/折叠 */
+  'icen:table-group-toggle': { key: string; collapsed: boolean };
+  /** 列宽拖拽完成（拖动过程中不派发，防事件洪泛） */
+  'icen:table-column-resize': { key: string; width: string };
 
+  /* 表单校验（form-validate.ts；与 handle 回调双通道） */
+  'icen:form-field-validate': { name: string; valid: boolean; message?: string };
+  'icen:form-valid': { names: string[] };
+  'icen:form-invalid': { errors: Record<string, string>; first: string | null };
+
+  /* 级联/树选择/提及/自动补全（cascader.ts / tree-select.ts / mentions.ts / autocomplete.ts） */
+  'icen:cascader-change': { value: string[]; path: string[] };
+  'icen:tree-select-change': { value: string[]; labels: string[] };
+  'icen:mention-select': { id: string; label: string; query: string };
+  'icen:autocomplete-select': { value: string; label: string };
+  'icen:autocomplete-change': { value: string };
   /* 上传（upload.ts） */
   'icen:upload': { files: File[] };
   'icen:upload-error': { file: File | null; reason: string };
@@ -163,6 +207,9 @@ export interface IcenEventMap {
   'icen:ai-tool-call': { name: string; input: unknown; el: HTMLElement };
   'icen:ai-tool-result': { name: string; ok: boolean; el: HTMLElement; error?: string; count: number };
   'icen:ai-tool-evict': { name: string; el: HTMLElement };
+  /** 工具审批（requiresApproval 的工具在挂载卡上等待宿主裁决；approve 才执行 run） */
+  'icen:ai-tool-approve': { name: string; input: Record<string, unknown>; el: HTMLElement };
+  'icen:ai-tool-reject': { name: string; input: Record<string, unknown>; el: HTMLElement };
   /* 广播（ai-provider 从 document 派发的全局生命周期，见文件头「广播事件」） */
   'icen:ai-usage': AiUsage;
   'icen:ai-done': AiDoneEventDetail;
@@ -245,7 +292,7 @@ export interface IcenListenOptions {
 /**
  * 统一绑定器（全库事件一个入口）：
  *   onIcen('icen:tab-change', (e) => e.detail.index)                       全局
- *   onIcen('icen:chart-click', '.chart', (e) => …)                          选择器委托
+ *   onIcen('icen:chart-click', '.icen-chart', (e) => …)                          选择器委托
  *   onIcen('icen:upload', (e) => …, { within: formEl })                     子树限定
  *   onIcen('icen:ai-done', (e) => …, { signal: ctrl.signal })               广播 + 信号解绑
  * 返回解绑函数 —— React useEffect / Vue onUnmounted 直接 return。
@@ -282,7 +329,7 @@ export function onIcen(
     if (selector) {
       if (broadcast) return;
       const detail = (e as CustomEvent).detail as { source?: unknown } | undefined;
-      /* 手势事件的 target 可能是 [data-gestures] 宿主内的深层子节点，委托匹配以
+      /* 手势事件的 target 可能是 [data-icen-gestures] 宿主内的深层子节点，委托匹配以
          detail.source 宿主为准，否则选择器永远匹配不到深子节点命中的手势 */
       const src = detail?.source instanceof Element ? detail.source : e.target;
       if (!(src instanceof Element) || !src.closest(selector)) return;
@@ -343,11 +390,14 @@ const LONGPRESS_MS = 520;
 const LONGPRESS_MOVE = 12;
 const CLICK_DELAY = 220;
 const CLICK_DRAG_TOLERANCE = 5;
+const SWIPE_MIN = 48;        /* 位移阈值：按下→抬起主轴位移 ≥48px 才算滑动 */
+const SWIPE_AXIS_RATIO = 2;  /* 主轴明确性：次轴位移须 < 主轴 1/2 */
+const SWIPE_SCROLL_HINT = 12; /* 滚动脉络提示：次轴（y）位移领先主轴达此值即判垂直滚动，抬手不派横向 */
 
 function gestureHost(e: Event, name: string): HTMLElement | null {
   const t = e.target;
   if (!(t instanceof Element)) return null;
-  return t.closest<HTMLElement>(`[data-gestures~="${name}"]`);
+  return t.closest<HTMLElement>(`[data-icen-gestures~="${name}"]`);
 }
 
 function pointOf(e: Event): { x: number; y: number } {
@@ -413,7 +463,7 @@ export function initGestures(): () => void {
     if (!host) return;
     if (suppressTrailingClick) { suppressTrailingClick = false; return; }
     if (isDragRelease(e)) return;
-    if (host.matches('[data-gestures~="dblclick"]')) {
+    if (host.matches('[data-icen-gestures~="dblclick"]')) {
       if (clickTimer) clearTimeout(clickTimer);
       pending = { host, e };
       clickTimer = setTimeout(() => {
@@ -473,6 +523,48 @@ export function initGestures(): () => void {
     if (Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > LONGPRESS_MOVE) clearLp();
   };
 
+  /* swipe：见文件头词表。move 期只做滚动脉络判定与位移记录，不 preventDefault
+     （被动纪律：原生滚动照常）；派发判定全部留到 pointerup。 */
+  let sw: {
+    host: HTMLElement;
+    x: number;
+    y: number;
+    scroll: boolean;
+  } | null = null;
+  const clearSwipe = (): void => {
+    sw = null;
+  };
+  const onSwipeDown = (e: PointerEvent): void => {
+    const host = gestureHost(e, 'swipe');
+    if (!host) return;
+    sw = { host, x: e.clientX, y: e.clientY, scroll: false };
+  };
+  const onSwipeMove = (e: PointerEvent): void => {
+    if (!sw) return;
+    const adx = Math.abs(e.clientX - sw.x);
+    const ady = Math.abs(e.clientY - sw.y);
+    /* 垂直滚动脉络：y 位移领先 x（次轴先行）——抬手时横向滑动被抑制，纵向判定不受影响 */
+    if (ady > adx && ady >= SWIPE_SCROLL_HINT) sw.scroll = true;
+  };
+  const onSwipeUp = (e: PointerEvent): void => {
+    const cur = sw;
+    sw = null;
+    if (!cur) return;
+    const dx = e.clientX - cur.x;
+    const dy = e.clientY - cur.y;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
+    const main = Math.max(adx, ady);
+    if (main < SWIPE_MIN) return;
+    if (Math.min(adx, ady) * SWIPE_AXIS_RATIO >= main) return; /* 次轴 ≥ 主轴 1/2：主轴不明确 */
+    let dir: 'left' | 'right' | 'up' | 'down';
+    if (adx >= ady) dir = dx < 0 ? 'left' : 'right';
+    else dir = dy < 0 ? 'up' : 'down';
+    if (cur.scroll && (dir === 'left' || dir === 'right')) return;
+    const { x, y } = pointOf(e);
+    emitIcen(cur.host, `icen:swipe-${dir}`, { source: cur.host, originalEvent: e, x, y, dx, dy });
+  };
+
   /* text-select（划词）：mouseup 后选区非空且锚点在宿主内才派发 */
   const onTextSelect = (e: MouseEvent): void => {
     const host = gestureHost(e, 'text-select');
@@ -491,6 +583,10 @@ export function initGestures(): () => void {
   document.addEventListener('pointermove', onLpMove);
   document.addEventListener('pointerup', clearLp);
   document.addEventListener('pointercancel', clearLp);
+  document.addEventListener('pointerdown', onSwipeDown);
+  document.addEventListener('pointermove', onSwipeMove);
+  document.addEventListener('pointerup', onSwipeUp);
+  document.addEventListener('pointercancel', clearSwipe);
   document.addEventListener('mouseup', onTextSelect);
 
   gesturesTeardown = (): void => {
@@ -502,9 +598,14 @@ export function initGestures(): () => void {
     document.removeEventListener('pointermove', onLpMove);
     document.removeEventListener('pointerup', clearLp);
     document.removeEventListener('pointercancel', clearLp);
+    document.removeEventListener('pointerdown', onSwipeDown);
+    document.removeEventListener('pointermove', onSwipeMove);
+    document.removeEventListener('pointerup', onSwipeUp);
+    document.removeEventListener('pointercancel', clearSwipe);
     document.removeEventListener('mouseup', onTextSelect);
     cancelPendingClick();
     clearLp();
+    clearSwipe();
     gesturesInit = false;
     gesturesTeardown = null;
   };

@@ -31,41 +31,45 @@ const styles = [
   ['terminal', 'terminal 终端'],
 ] as const;
 
-const chevronSvg = `<svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+const chevronSvg = `<svg class="icen-select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
 const searchSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
-const sunSvg = `<svg data-icon="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
-const moonSvg = `<svg data-icon="moon" hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+const sunSvg = `<svg data-icen-icon="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+const moonSvg = `<svg data-icen-icon="moon" hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
 const githubSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.35.77 1.05.77 2.12v3.15c0 .3.21.67.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>`;
-const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="var(--token-accent)"/><path d="M12 6.5 17.5 12 12 17.5 6.5 12z" fill="var(--token-bg)"/><circle cx="12" cy="12" r="1.6" fill="var(--token-accent)"/></svg>`;
+const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="var(--icen-token-accent)"/><path d="M12 6.5 17.5 12 12 17.5 6.5 12z" fill="var(--icen-token-bg)"/><circle cx="12" cy="12" r="1.6" fill="var(--icen-token-accent)"/></svg>`;
 ---
 <header class="site-nav" transition:persist="site-nav">
   <div class="site-nav-inner">
     <a class="brand" href="/" aria-label="ICEN UI 首页">
       <Fragment set:html={logoSvg} />
       <span class="brand-name">ICEN UI</span>
-      <span class="brand-ver">v{pkg.version}</span>
+      <span class="brand-ver" aria-hidden="true">v{pkg.version}</span>
     </a>
     <nav class="nav-links" aria-label="主导航">
       <a class:list={[{ active: isActive('/components/') }]} href="/components/">组件</a>
       <a class:list={[{ active: isActive('/kb/') }]} href="/kb/">知识库</a>
       <a class:list={[{ active: isActive('/primitives/') }]} href="/primitives/">原语</a>
+      <a class:list={[{ active: isActive('/frameworks/') }]} href="/frameworks/">框架</a>
+      <a class:list={[{ active: isActive('/customize/') }]} href="/customize/">定制</a>
       <a class:list={[{ active: isActive('/tokens/') }]} href="/tokens/">色彩</a>
       <span class="nav-ink" aria-hidden="true"></span>
     </nav>
     <div class="nav-controls">
-      <button class="nav-search" type="button" data-command-palette-open="site-nav" title="搜索组件（⌘K）">
+      <button class="icen-nav-search" type="button" data-icen-command-palette-open="site-nav" title="搜索组件（⌘K）">
         <Fragment set:html={searchSvg} />
         <kbd class="nav-kbd">⌘K</kbd>
       </button>
       <span class="nav-sep" aria-hidden="true"></span>
-      <div class="select nav-select" id="preset-select" data-select data-value="clay" data-panel-width="204">
-        <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="色彩预设">
+      <div class="icen-select nav-select" id="preset-select" data-icen-select data-icen-value="clay" data-icen-panel-width="204">
+        <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="preset-select-label preset-select-value">
+          <span id="preset-select-label" class="icen-sr-only">色彩预设：</span>
           <span class="nav-trigger-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span id="preset-select-value" class="icen-select-value"></span>
           <Fragment set:html={chevronSvg} />
         </button>
-        <div class="select-panel nav-panel--preset" hidden role="listbox" aria-label="色彩预设">
+        <div class="icen-select-panel nav-panel--preset" hidden role="listbox" aria-label="色彩预设">
           {presets.map(([v, label, bg, accent, cold], i) => (
-            <button class:list={['select-option', 'nav-opt--preset', { 'is-selected': i === 0 }]} type="button" data-value={v}>
+            <button class:list={['icen-select-option', 'nav-opt--preset', { 'is-selected': i === 0 }]} type="button" data-icen-value={v}>
               <span class="opt-dots" aria-hidden="true">
                 <i style={`background:${bg}`}></i><i style={`background:${accent}`}></i><i style={`background:${cold}`}></i>
               </span>
@@ -73,19 +77,20 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
             </button>
           ))}
         </div>
-        <input type="hidden" data-select-value name="preset" value="clay" />
+        <input type="hidden" data-icen-select-value name="preset" value="clay" />
       </div>
-      <div class="select nav-select nav-select--style" id="style-select" data-select data-value="modern" data-panel-width="188">
-        <button class="select-trigger pressable focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="风格">
-          <span class="select-value">modern 现代</span>
+      <div class="icen-select nav-select nav-select--style" id="style-select" data-icen-select data-icen-value="modern" data-icen-panel-width="188">
+        <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="style-select-label style-select-value">
+          <span id="style-select-label" class="icen-sr-only">风格：</span>
+          <span id="style-select-value" class="icen-select-value">modern 现代</span>
           <Fragment set:html={chevronSvg} />
         </button>
-        <div class="select-panel nav-panel--style" hidden role="listbox" aria-label="风格">
+        <div class="icen-select-panel nav-panel--style" hidden role="listbox" aria-label="风格">
           {styles.map(([v, label], i) => (
-            <button class:list={['select-option', `style-opt--${v}`, { 'is-selected': i === 0 }]} type="button" data-value={v}>{label}</button>
+            <button class:list={['icen-select-option', `style-opt--${v}`, { 'is-selected': i === 0 }]} type="button" data-icen-value={v}>{label}</button>
           ))}
         </div>
-        <input type="hidden" data-select-value name="style" value="modern" />
+        <input type="hidden" data-icen-select-value name="style" value="modern" />
       </div>
       <button id="dark-toggle" class="nav-icon-btn" type="button" aria-label="切换明暗">
         <Fragment set:html={sunSvg + moonSvg} />
@@ -98,38 +103,38 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
 </header>
 
 <!-- ⌘K 全站搜索：命令面板（自家组件直出，条目 = 顶层页面 + 全部组件） -->
-<div class="command-palette-backdrop" data-command-palette="site-nav" hidden>
-  <div class="command-palette">
-    <div class="command-palette-search">
-      <span class="command-palette-search-icon"><Fragment set:html={searchSvg} /></span>
-      <input class="command-palette-input" placeholder="搜索组件或页面…" />
-      <kbd class="command-palette-esc">ESC</kbd>
+<div class="icen-command-palette-backdrop" data-icen-command-palette="site-nav" hidden>
+  <div class="icen-command-palette">
+    <div class="icen-command-palette-search">
+      <span class="icen-command-palette-search-icon"><Fragment set:html={searchSvg} /></span>
+      <input class="icen-command-palette-input" placeholder="搜索组件或页面…" />
+      <kbd class="icen-command-palette-esc">ESC</kbd>
     </div>
-    <div class="command-palette-body">
-      <div class="command-palette-group">
-        <p class="command-palette-group-label">页面</p>
+    <div class="icen-command-palette-body">
+      <div class="icen-command-palette-group">
+        <p class="icen-command-palette-group-label">页面</p>
         {pages.map((p) => (
-          <a class="command-palette-item" href={p.href} data-command-palette-keyword={p.kw}>
-            <span class="command-palette-item-label">{p.name}</span>
-            <span class="command-palette-item-hint">{p.href}</span>
+          <a class="icen-command-palette-item" href={p.href} data-icen-command-palette-keyword={p.kw}>
+            <span class="icen-command-palette-item-label">{p.name}</span>
+            <span class="icen-command-palette-item-hint">{p.href}</span>
           </a>
         ))}
       </div>
       {paletteGroups.map((g) => (
-        <div class="command-palette-group">
-          <p class="command-palette-group-label">{g.name}</p>
+        <div class="icen-command-palette-group">
+          <p class="icen-command-palette-group-label">{g.name}</p>
           {g.items.map((c) => (
-            <a class="command-palette-item" href={`/components/${c.slug}/`} data-command-palette-keyword={`${c.slug} ${c.name}`}>
-              <span class="command-palette-item-label">{c.name}</span>
-              <span class="command-palette-item-hint">{c.slug}</span>
+            <a class="icen-command-palette-item" href={`/components/${c.slug}/`} data-icen-command-palette-keyword={`${c.slug} ${c.name}`}>
+              <span class="icen-command-palette-item-label">{c.name}</span>
+              <span class="icen-command-palette-item-hint">{c.slug}</span>
             </a>
           ))}
         </div>
       ))}
-      <div class="command-palette-empty" hidden>无匹配结果</div>
+      <div class="icen-command-palette-empty" hidden>无匹配结果</div>
     </div>
-    <div class="command-palette-foot">
-      <span class="command-palette-foot-hint">
+    <div class="icen-command-palette-foot">
+      <span class="icen-command-palette-foot-hint">
         <kbd>↑↓</kbd> 导航 <kbd>↵</kbd> 打开 <kbd>esc</kbd> 关闭
       </span>
     </div>
@@ -158,20 +163,20 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
 
   // 程序化同步 select 组件的展示态（choose() 之外的第二写入口：主题恢复/跨控件联动）
   function syncSelect(box: HTMLElement, value: string): void {
-    const opts = box.querySelectorAll('.select-option');
+    const opts = box.querySelectorAll('.icen-select-option');
     let label = '';
     opts.forEach((o) => {
-      const on = o.getAttribute('data-value') === value;
+      const on = o.getAttribute('data-icen-value') === value;
       o.classList.toggle('is-selected', on);
       if (on) label = o.textContent ?? '';
     });
-    const valueEl = box.querySelector('.select-value');
+    const valueEl = box.querySelector('.icen-select-value');
     if (valueEl && label) {
       valueEl.textContent = label;
       valueEl.classList.remove('is-empty');
     }
-    box.setAttribute('data-value', value);
-    const input = box.querySelector('input[data-select-value]');
+    box.setAttribute('data-icen-value', value);
+    const input = box.querySelector('input[data-icen-select-value]');
     if (input instanceof HTMLInputElement) input.value = value;
   }
 
@@ -188,7 +193,7 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
     darkBtn?.querySelectorAll('svg').forEach((s) => {
       (s as SVGSVGElement).toggleAttribute(
         'hidden',
-        (s.getAttribute('data-icon') === 'sun') === t.dark,
+        (s.getAttribute('data-icen-icon') === 'sun') === t.dark,
       );
     });
   }
@@ -197,10 +202,10 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
   initCommandPalette(); // ⌘K / Ctrl+K 全局唤起站搜索（behavior 自带快捷键）
   reflect(initTheme());
 
-  presetBox?.querySelector('input[data-select-value]')?.addEventListener('change', (ev) => {
+  presetBox?.querySelector('input[data-icen-select-value]')?.addEventListener('change', (ev) => {
     reflect(setTheme({ preset: (ev.target as HTMLInputElement).value }));
   });
-  styleBox?.querySelector('input[data-select-value]')?.addEventListener('change', (ev) => {
+  styleBox?.querySelector('input[data-icen-select-value]')?.addEventListener('change', (ev) => {
     reflect(setTheme({ style: (ev.target as HTMLInputElement).value }));
   });
   darkBtn?.addEventListener('click', () => reflect(toggleDark()));

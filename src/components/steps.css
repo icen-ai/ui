@@ -1,60 +1,60 @@
 /*
- * @icen.ai/ui — Component: steps（步骤条，横向默认 / .steps--vertical 垂直）
+ * @icen.ai/ui — Component: steps（步骤条，横向默认 / .icen-steps--vertical 垂直）
  *
  * 完整契约：
- *   <ol class="steps [steps--vertical] [steps--sm|steps--lg] [steps--dots|steps--progress|steps--connected]"
+ *   <ol class="icen-steps [icen-steps--vertical] [icen-steps--sm|icen-steps--lg] [icen-steps--dots|icen-steps--progress|icen-steps--connected]"
  *        aria-label="进度">
- *     <li class="step [step--finish|step--process|step--wait] [.step--error]">
- *       <span class="step-line"></span>                   ← 横向：右半段连线；末步自动隐藏
- *       <span class="step-dot">[✓ | ! | 数字]</span>
- *       <div class="step-body">
- *         <div class="step-title">已完成</div>
- *         <div class="step-desc">描述（可选）</div>
+ *     <li class="icen-step [icen-step--finish|icen-step--process|icen-step--wait] [.icen-step--error]">
+ *       <span class="icen-step-line"></span>                   ← 横向：朝下一棒的行进半段连线（RTL 镜像）；末步自动隐藏
+ *       <span class="icen-step-dot">[✓ | ! | 数字]</span>
+ *       <div class="icen-step-body">
+ *         <div class="icen-step-title">已完成</div>
+ *         <div class="icen-step-desc">描述（可选）</div>
  *       </div>
  *     </li>
  *   </ol>
  *
  * 四态：finish / process / wait / error（错误用 error 色 dot + 描边）。
  * 变体与增强（正文下半段）：--dots 纯点紧凑 / --progress 步骤间填充进度线 / --connected 虚线连接；
- *   dot 内可放 svg.step-dot-icon；step-desc 旁可加 .step-extra 富化描述；
- *   可点击步骤标 .step--clickable（与 controls.ts initSteps 的 JSDoc 同口径）。
- * 点击 .step[role=button] 由 behaviors/controls.ts 的 initSteps() 接线（激活态位移 +
+ *   dot 内可放 svg.icen-step-dot-icon；step-desc 旁可加 .icen-step-extra 富化描述；
+ *   可点击步骤标 .icen-step--clickable（与 controls.ts initSteps 的 JSDoc 同口径）。
+ * 点击 .icen-step[role=button] 由 behaviors/controls.ts 的 initSteps() 接线（激活态位移 +
  * icen:step-change）；跳转业务仍由使用方监听事件实现。
  */
 
-.steps {
+.icen-steps {
   display: flex;
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.step {
+.icen-step {
   flex: 1;
   position: relative;
   text-align: center;
-  padding: 0 var(--density-space-xs);
+  padding: 0 var(--icen-density-space-xs);
 }
 
-.step-line {
+.icen-step-line {
   position: absolute;
   top: 16px;
-  left: calc(50% + 20px);
-  width: calc(100% - 40px);
+  inset-inline-start: calc(50% + 20px);
+  inline-size: calc(100% - 40px);
   height: 1px;
-  background: var(--token-outline-soft);
+  background: var(--icen-token-outline-soft);
   transition: background-color var(--icen-tx-normal);
 }
-.step:last-child .step-line { display: none; }
-.step--finish .step-line { background: color-mix(in srgb, var(--token-accent) 40%, transparent); }
+.icen-step:last-child .icen-step-line { display: none; }
+.icen-step--finish .icen-step-line { background: color-mix(in srgb, var(--icen-token-accent) 40%, transparent); }
 
-.step-dot {
+.icen-step-dot {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   position: relative;
@@ -64,38 +64,38 @@
     border-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.step--finish .step-dot {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
+.icen-step--finish .icen-step-dot {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
 }
-.step--process .step-dot {
-  background: var(--token-accent-subtle);
-  color: var(--token-accent);
-  border: 2px solid var(--token-accent);
+.icen-step--process .icen-step-dot {
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent);
+  border: 2px solid var(--icen-token-accent);
   box-shadow: var(--icen-ring-soft);
 }
-.step--wait .step-dot {
-  background: var(--token-control);
-  color: var(--token-text-faint);
-  border: 1px solid var(--token-outline-soft);
+.icen-step--wait .icen-step-dot {
+  background: var(--icen-token-control);
+  color: var(--icen-token-text-faint);
+  border: 1px solid var(--icen-token-outline-soft);
 }
-.step--error .step-dot {
-  background: var(--token-error-muted);
-  color: var(--token-error);
-  border: 2px solid var(--token-error);
+.icen-step--error .icen-step-dot {
+  background: var(--icen-token-error-muted);
+  color: var(--icen-token-error);
+  border: 2px solid var(--icen-token-error);
 }
 
-.step-title {
-  font-size: var(--density-font-size-md);
+.icen-step-title {
+  font-size: var(--icen-density-font-size-md);
   font-weight: 500;
-  margin-top: var(--density-space-xs);
-  color: var(--token-text);
+  margin-top: var(--icen-density-space-xs);
+  color: var(--icen-token-text);
 }
-.step--wait .step-title { color: var(--token-text-muted); }
-.step--error .step-title { color: var(--token-error); }
-.step-desc {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-step--wait .icen-step-title { color: var(--icen-token-text-muted); }
+.icen-step--error .icen-step-title { color: var(--icen-token-error); }
+.icen-step-desc {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   margin-top: 2px;
   max-width: 160px;
   margin-inline: auto;
@@ -103,44 +103,44 @@
 }
 
 /* 尺寸变体 */
-.steps--sm .step-dot { width: 24px; height: 24px; font-size: var(--density-font-size-xs); }
-.steps--sm .step-line { top: 12px; }
-.steps--lg .step-dot { width: 40px; height: 40px; font-size: var(--density-font-size-md); }
-.steps--lg .step-line { top: 20px; }
+.icen-steps--sm .icen-step-dot { width: 24px; height: 24px; font-size: var(--icen-density-font-size-xs); }
+.icen-steps--sm .icen-step-line { top: 12px; }
+.icen-steps--lg .icen-step-dot { width: 40px; height: 40px; font-size: var(--icen-density-font-size-md); }
+.icen-steps--lg .icen-step-line { top: 20px; }
 
 /* ── 垂直变体 ── */
-.steps--vertical {
+.icen-steps--vertical {
   flex-direction: column;
-  gap: var(--density-space-md);
+  gap: var(--icen-density-space-md);
 }
-.steps--vertical .step {
+.icen-steps--vertical .icen-step {
   flex: none;
   display: flex;
-  gap: var(--density-space-sm);
-  text-align: left;
+  gap: var(--icen-density-space-sm);
+  text-align: start;
   padding: 0;
 }
-.steps--vertical .step-line {
+.icen-steps--vertical .icen-step-line {
   top: 36px;
-  bottom: calc(-1 * var(--density-space-md));
-  left: 16px;
+  bottom: calc(-1 * var(--icen-density-space-md));
+  inset-inline-start: 16px;
   width: 1px;
   height: auto;
 }
-.steps--vertical .step-dot { flex-shrink: 0; }
-.steps--vertical .step-body { padding-top: 4px; }
-.steps--vertical .step-title { margin-top: 0; }
-.steps--vertical .step-desc {
-  max-width: none;
+.icen-steps--vertical .icen-step-dot { flex-shrink: 0; }
+.icen-steps--vertical .icen-step-body { padding-top: 4px; }
+.icen-steps--vertical .icen-step-title { margin-top: 0; }
+.icen-steps--vertical .icen-step-desc {
+  max-inline-size: none;
   margin-inline: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .step-dot, .step-line { transition: none; }
+  .icen-step-dot, .icen-step-line { transition: none; }
 }
 
 /* ── 纯点变体（无数字/无标签，紧凑进度指示） ── */
-.steps--dots .step-dot {
+.icen-steps--dots .icen-step-dot {
   width: 10px;
   height: 10px;
   padding: 0;
@@ -148,95 +148,98 @@
 }
 /* 线 top = dot 高度一半：默认 32→16 / sm 24→12 / lg 40→20 / dots 10→5；
    本块位于尺寸变体之后，同等特异性下靠源顺序生效，dots 与 --sm/--lg 叠加时以 5px 为准 */
-.steps--dots .step-line { top: 5px; }
-.steps--dots .step-title,
-.steps--dots .step-desc { display: none; }
-.steps--dots .step { flex: none; }
-.steps--dots { gap: var(--density-space-xs); }
+.icen-steps--dots .icen-step-line { top: 5px; }
+.icen-steps--dots .icen-step-title,
+.icen-steps--dots .icen-step-desc { display: none; }
+.icen-steps--dots .icen-step { flex: none; }
+.icen-steps--dots { gap: var(--icen-density-space-xs); }
 
 /* ── 自定义图标槽（step-dot 内放 svg） ── */
-.step-dot-icon {
+.icen-step-dot-icon {
   width: 16px;
   height: 16px;
 }
-.step--finish .step-dot-icon { color: var(--token-on-accent); }
-.step--process .step-dot-icon { color: var(--token-accent); }
-.step--wait .step-dot-icon { color: var(--token-text-faint); }
-.step--error .step-dot-icon { color: var(--token-error); }
+.icen-step--finish .icen-step-dot-icon { color: var(--icen-token-on-accent); }
+.icen-step--process .icen-step-dot-icon { color: var(--icen-token-accent); }
+.icen-step--wait .icen-step-dot-icon { color: var(--icen-token-text-faint); }
+.icen-step--error .icen-step-dot-icon { color: var(--icen-token-error); }
 
 /* ── 可点击步骤 ── */
-.step--clickable {
+.icen-step--clickable {
   cursor: pointer;
   transition: opacity var(--icen-tx-fast);
 }
-.step--clickable:hover .step-dot {
-  transform: scale(1.08);
-  box-shadow: var(--icen-ring-soft);
+/* hover 圆点放大+光晕仅可悬停设备生效（触屏关闭抬升，AGENTS 动效守卫）；标题变色保留 */
+@media (hover: hover) and (pointer: fine) {
+  .icen-step--clickable:hover .icen-step-dot {
+    transform: scale(1.08);
+    box-shadow: var(--icen-ring-soft);
+  }
 }
-.step--clickable:hover .step-title {
-  color: var(--token-accent);
+.icen-step--clickable:hover .icen-step-title {
+  color: var(--icen-token-accent);
 }
 
 /* ── 进度条变体（步骤间的填充进度，非离散连线） ── */
 /* 高度 1px→3px 时线只向下扩张 2px，整体上移 1px 使线心与 1px 基线居中一致；
    用 translateY 而非改 top，可同时适配 --sm(12px)/--lg(20px) 的不同基线 */
-.steps--progress .step-line {
+.icen-steps--progress .icen-step-line {
   height: 3px;
   transform: translateY(-1px);
-  border-radius: var(--radius-full);
-  background: var(--token-fill-2);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-fill-2);
   overflow: hidden;
 }
-.steps--progress .step-line::after {
+.icen-steps--progress .icen-step-line::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--token-accent);
+  background: var(--icen-token-accent);
   transform-origin: left;
   transform: scaleX(0);
-  transition: transform var(--icen-tx-slow) var(--ease-out);
+  transition: transform var(--icen-tx-slow) var(--icen-ease-out);
 }
-.steps--progress .step--finish .step-line::after { transform: scaleX(1); }
+.icen-steps--progress .icen-step--finish .icen-step-line::after { transform: scaleX(1); }
 
 /* ── 垂直模式的进度条变体 ── */
-.steps--vertical.steps--progress .step-line::after {
+.icen-steps--vertical.icen-steps--progress .icen-step-line::after {
   transform-origin: top;
   transform: scaleY(0);
 }
-.steps--vertical.steps--progress .step--finish .step-line::after {
+.icen-steps--vertical.icen-steps--progress .icen-step--finish .icen-step-line::after {
   transform: scaleY(1);
 }
 
 /* ── 步骤描述富化（可选 icon + text） ── */
-.step-extra {
+.icen-step-extra {
   display: flex;
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   justify-content: center;
 }
-.step--error .step-extra { color: var(--token-error); }
+.icen-step--error .icen-step-extra { color: var(--icen-token-error); }
 
 /* ── 数字步骤的连接箭头（可选替代纯线条） ── */
-.steps--connected .step-line {
+.icen-steps--connected .icen-step-line {
   height: 0;
   background: transparent;
 }
-.steps--connected .step-line::before {
+.icen-steps--connected .icen-step-line::before {
   content: '';
   position: absolute;
   inset: 0;
-  border-top: 1px dashed var(--token-outline-soft);
+  border-top: 1px dashed var(--icen-token-outline-soft);
 }
-.steps--connected .step--finish .step-line::before {
+.icen-steps--connected .icen-step--finish .icen-step-line::before {
   border-top-style: solid;
-  border-top-color: var(--token-accent);
+  border-top-color: var(--icen-token-accent);
 }
 
 @media (max-width: 640px) {
   /* 小屏：横向 steps 变为可横向滚动 */
-  .steps { overflow-x: auto; flex-wrap: nowrap; }
-  .step { min-width: 80px; }
+  .icen-steps { overflow-x: auto; flex-wrap: nowrap; }
+  .icen-step { min-width: 80px; }
 }

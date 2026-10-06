@@ -1,51 +1,51 @@
 /*
- * @icen.ai/ui — Component: ai-tool（AI 工具调用卡 + 子智能体卡；含 .ai-item 条目基元完整定义）
+ * @icen.ai/ui — Component: ai-tool（AI 工具调用卡 + 子智能体卡；含 .icen-ai-item 条目基元完整定义）
  *
  * 完整契约：
- *   ── 条目基元 .ai-item（规格 §2 骨架：所有行式 AI 条目的"基类"，todo/panel 亦复用）──
- *   <div class="ai-item is-running" style="--ai-item-tint: var(--token-accent)">
- *     <span class="ai-item-icon"><!-- svg --></span>
- *     <div class="ai-item-main">
- *       <div class="ai-item-title">一行摘要</div>
- *       <div class="ai-item-sub">次要信息（路径/参数）</div>
+ *   ── 条目基元 .icen-ai-item（规格 §2 骨架：所有行式 AI 条目的"基类"，todo/panel 亦复用）──
+ *   <div class="icen-ai-item is-running" style="--ai-item-tint: var(--icen-token-accent)">
+ *     <span class="icen-ai-item-icon"><!-- svg --></span>
+ *     <div class="icen-ai-item-main">
+ *       <div class="icen-ai-item-title">一行摘要</div>
+ *       <div class="icen-ai-item-sub">次要信息（路径/参数）</div>
  *     </div>
- *     <div class="ai-item-side">
- *       <span class="ai-item-status"></span>   ← 状态点，纯 CSS 由 .is-* 驱动
- *       <span class="ai-item-meta">1.2s</span>
+ *     <div class="icen-ai-item-side">
+ *       <span class="icen-ai-item-status"></span>   ← 状态点，纯 CSS 由 .is-* 驱动
+ *       <span class="icen-ai-item-meta">1.2s</span>
  *     </div>
- *     <div class="ai-item-detail" hidden>展开详情</div>
+ *     <div class="icen-ai-item-detail" hidden>展开详情</div>
  *   </div>
  *
- *   ── 工具调用卡（.ai-tool-head 复用 .ai-item-* 零件，不带 .ai-item 壳）──
- *   <div class="ai-tool ai-tool--shell is-done" data-ai-id="…" data-ai-kind="shell">
- *     <button class="ai-tool-head" type="button" aria-expanded="false">
- *       <span class="ai-item-icon" aria-hidden="true">…svg…</span>
- *       <span class="ai-item-main">
- *         <span class="ai-item-title">Read</span>
- *         <span class="ai-item-sub">src/foo.ts:1-50</span>
+ *   ── 工具调用卡（.icen-ai-tool-head 复用 .ai-item-* 零件，不带 .icen-ai-item 壳）──
+ *   <div class="icen-ai-tool icen-ai-tool--shell is-done" data-icen-ai-id="…" data-icen-ai-kind="shell">
+ *     <button class="icen-ai-tool-head" type="button" aria-expanded="false">
+ *       <span class="icen-ai-item-icon" aria-hidden="true">…svg…</span>
+ *       <span class="icen-ai-item-main">
+ *         <span class="icen-ai-item-title">Read</span>
+ *         <span class="icen-ai-item-sub">src/foo.ts:1-50</span>
  *       </span>
- *       <span class="ai-item-status" role="img" aria-label="完成"></span>
- *       <span class="ai-item-meta">0.4s</span>
+ *       <span class="icen-ai-item-status" role="img" aria-label="完成"></span>
+ *       <span class="icen-ai-item-meta">0.4s</span>
  *     </button>
- *     <div class="ai-tool-body" hidden>
- *       <div class="ai-tool-io"><div class="ai-tool-io-label">输入</div><pre class="ai-tool-io-content">…</pre></div>
- *       <div class="ai-tool-io"><div class="ai-tool-io-label">输出</div><pre class="ai-tool-io-content">…</pre></div>
- *       <div class="ai-tool-approval">            ← 仅 .is-approval 显示（纯 CSS 驱动）
- *         <div class="ai-tool-approval-reason" hidden>审批原因</div>  ← 可选（model.approval.reason）
- *         <button class="btn btn-sm btn-primary" data-ai-approve type="button">允许</button>
- *         <button class="btn btn-sm" data-ai-reject type="button">拒绝</button>
+ *     <div class="icen-ai-tool-body" hidden>
+ *       <div class="icen-ai-tool-io"><div class="icen-ai-tool-io-label">输入</div><pre class="icen-ai-tool-io-content">…</pre></div>
+ *       <div class="icen-ai-tool-io"><div class="icen-ai-tool-io-label">输出</div><pre class="icen-ai-tool-io-content">…</pre></div>
+ *       <div class="icen-ai-tool-approval">            ← 仅 .is-approval 显示（纯 CSS 驱动）
+ *         <div class="icen-ai-tool-approval-reason" hidden>审批原因</div>  ← 可选（model.approval.reason）
+ *         <button class="icen-btn icen-btn-sm icen-btn-primary" data-icen-ai-approve type="button">允许</button>
+ *         <button class="icen-btn icen-btn-sm" data-icen-ai-reject type="button">拒绝</button>
  *       </div>
  *     </div>
  *   </div>
  *
  *   ── 子智能体卡 ──
- *   <div class="ai-subagent is-running" data-ai-id="…" data-ai-kind="subagent">
- *     <button class="ai-subagent-head" type="button" aria-expanded="false">…head 结构同上…</button>
- *     <div class="ai-subagent-body" hidden>
- *       <div class="ai-subagent-stream">          ← 嵌套 .ai-tool / .ai-subagent；
+ *   <div class="icen-ai-subagent is-running" data-icen-ai-id="…" data-icen-ai-kind="subagent">
+ *     <button class="icen-ai-subagent-head" type="button" aria-expanded="false">…head 结构同上…</button>
+ *     <div class="icen-ai-subagent-body" hidden>
+ *       <div class="icen-ai-subagent-stream">          ← 嵌套 .icen-ai-tool / .icen-ai-subagent；
  *         …                                    行间 style="--ai-activity-index:i" 驱动渐入 stagger
  *       </div>
- *       <div class="ai-subagent-result">完成回执摘要</div>
+ *       <div class="icen-ai-subagent-result">完成回执摘要</div>
  *     </div>
  *   </div>
  *
@@ -62,27 +62,51 @@
  *   read/search/grep/glob=info · edit/write=accent · rm=error · shell=muted · mcp/skill=success
  *   browser/fetch/todo/plan/subagent/note = 默认 accent（不写规则）
  * 第三方 registerAiKind 的 tint 由 behavior 内联 --ai-item-tint 兜底。
+ *
+ *   ── AI 工具挂载区（ai-tools.ts createAiToolArea，§13；状态类挂 .icen-ai-tools-item）──
+ *   <div class="icen-ai-tools-mount">
+ *     <div class="icen-ai-tools-item is-approval|is-running|is-done|is-error|is-cancelled">
+ *       <button class="icen-ai-tools-item-head" aria-expanded="true">
+ *         chevron / 名 / 时间 / <span class="icen-ai-tools-item-status">状态点</span> / ×
+ *       </button>
+ *       <div class="icen-ai-tools-item-approval">          ← 仅审批态（requiresApproval），批准/拒绝后移除
+ *         <div class="icen-ai-tools-item-approval-text">
+ *           <div class="icen-ai-tools-item-approval-reason">工具 description（原因行）</div>
+ *           <div class="icen-ai-tools-item-approval-preview">归一输入 JSON 预览</div>
+ *         </div>
+ *         <button class="icen-btn icen-btn-sm icen-btn-primary">批准</button>
+ *         <button class="icen-btn icen-btn-sm">拒绝</button>
+ *       </div>
+ *       <div class="icen-ai-tools-item-error" role="alert">   ← 仅失败态（校验/执行/超时），逐行一条
+ *         <div class="icen-ai-tools-item-error-line">…</div>
+ *       </div>
+ *       <div class="icen-ai-tools-item-body">…</div>          ← 工具自渲染（折叠时隐藏）
+ *       <div class="icen-ai-tools-item-stream">               ← 活动流（run ctx.icen-progress 懒建追加）
+ *         <div class="icen-ai-tools-item-stream-line">…</div>
+ *       </div>
+ *     </div>
+ *   </div>
  */
 
 /* ══════════════════════════════════════════════════════════════
-   条目基元 .ai-item（行式条目"基类"）
+   条目基元 .icen-ai-item（行式条目"基类"）
    ══════════════════════════════════════════════════════════════ */
 
-.ai-item {
+.icen-ai-item {
   /* 局部变量槽：kind/变体只覆盖这些变量（--btn-* 同款继承模式） */
-  --ai-item-tint: var(--token-accent);
+  --ai-item-tint: var(--icen-token-accent);
   --ai-item-pulse-duration: 1.5s;  /* running 脉冲（pill --pill-pulse-duration 同款变量化） */
   --ai-item-blink-duration: 1s;    /* streaming 光标闪烁 */
 
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   min-width: 0;
   align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap（width:100% 会塌成 min-content，禁用） */
 }
 
-.ai-item-icon {
+.icen-ai-item-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -92,61 +116,61 @@
   color: var(--ai-item-tint);
   transition: color var(--icen-tx-fast);
 }
-.ai-item-icon > svg {
+.icen-ai-item-icon > svg {
   width: 16px;
   height: 16px;
 }
 
-.ai-item-main {
+.icen-ai-item-main {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
-.ai-item-title {
-  font-size: var(--density-font-size-md);
+.icen-ai-item-title {
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.4;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ai-item-sub {
-  font-size: var(--density-font-size-xs);
+.icen-ai-item-sub {
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ai-item-side {
+.icen-ai-item-side {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
-  margin-left: auto;
+  gap: var(--icen-density-space-xs);
+  margin-inline-start: auto;
   flex-shrink: 0;
 }
-/* head 直排结构（无 .ai-item-side 包裹）时，状态点顶到右侧 */
-.ai-tool-head > .ai-item-status,
-.ai-subagent-head > .ai-item-status {
-  margin-left: auto;
+/* head 直排结构（无 .icen-ai-item-side 包裹）时，状态点顶到行内末端 */
+.icen-ai-tool-head > .icen-ai-item-status,
+.icen-ai-subagent-head > .icen-ai-item-status {
+  margin-inline-start: auto;
 }
 
-.ai-item-meta {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-ai-item-meta {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
-.ai-item-detail {
+.icen-ai-item-detail {
   flex-basis: 100%;
-  min-width: 100%;
+  min-inline-size: 100%;
 }
 
-/* ── 状态点 .ai-item-status（纯 CSS 圆点，由 .is-* 决定颜色与动效） ── */
-.ai-item-status {
+/* ── 状态点 .icen-ai-item-status（纯 CSS 圆点，由 .is-* 决定颜色与动效） ── */
+.icen-ai-item-status {
   position: relative;
   flex-shrink: 0;
   width: 8px;
@@ -154,13 +178,13 @@
   border-radius: 50%;
 }
 
-/* 等待：faint 空心点（.ai-subagent 与 .ai-item 共享同一状态语言） */
-:is(.ai-item, .ai-tool, .ai-subagent).is-pending .ai-item-status {
-  border: 1.5px solid var(--token-text-faint);
+/* 等待：faint 空心点（.icen-ai-subagent 与 .icen-ai-item 共享同一状态语言） */
+:is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-pending .icen-ai-item-status {
+  border: 1.5px solid var(--icen-token-text-faint);
 }
 
 /* 执行中：tint 脉冲点 */
-:is(.ai-item, .ai-tool, .ai-subagent).is-running .ai-item-status {
+:is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-running .icen-ai-item-status {
   background: var(--ai-item-tint);
   animation: ai-item-pulse var(--ai-item-pulse-duration) ease-in-out infinite;
 }
@@ -170,363 +194,493 @@
 }
 
 /* 流式中：▍光标闪烁（复用 colors.css 的 blink keyframes，animate-blink 同款） */
-:is(.ai-item, .ai-tool, .ai-subagent).is-streaming .ai-item-status {
+:is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-streaming .icen-ai-item-status {
   width: 3px;
   height: 12px;
-  border-radius: 1px;
+  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
   background: var(--ai-item-tint);
   animation: blink var(--ai-item-blink-duration) step-end infinite;
 }
 
 /* 待人确认：warning 点 + 外环 */
-:is(.ai-item, .ai-tool, .ai-subagent).is-approval .ai-item-status {
-  background: var(--token-warning);
-  box-shadow: 0 0 0 3px var(--token-warning-muted);
+:is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-approval .icen-ai-item-status {
+  background: var(--icen-token-warning);
+  box-shadow: 0 0 0 3px var(--icen-token-warning-muted);
 }
 
 /* 完成：success 对勾（纯 CSS，无 SVG） */
-:is(.ai-item, .ai-tool, .ai-subagent).is-done .ai-item-status::after {
+:is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-done .icen-ai-item-status::after {
   content: "";
   position: absolute;
-  left: 1px;
+  left: 1px; /* guard:allow-physical ✓ 字形微定位（对勾在 8px 圆点内的物理偏移，RTL 下对勾仍朝该方向） */
   top: -1px;
   width: 5px;
   height: 9px;
-  border-right: 1.5px solid var(--token-success);
-  border-bottom: 1.5px solid var(--token-success);
+  border-right: 1.5px solid var(--icen-token-success); /* guard:allow-physical ✓ 字形半边构成（与 rotate(45deg) 配套） */
+  border-bottom: 1.5px solid var(--icen-token-success); /* guard:allow-physical ✓ 字形半边构成 */
   transform: rotate(45deg);
 }
 
 /* 失败：error 点 + 外环 */
-:is(.ai-item, .ai-tool, .ai-subagent).is-error .ai-item-status {
-  background: var(--token-error);
-  box-shadow: 0 0 0 3px var(--token-error-muted);
+:is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-error .icen-ai-item-status {
+  background: var(--icen-token-error);
+  box-shadow: 0 0 0 3px var(--icen-token-error-muted);
 }
 
 /* 已取消：faint 点 + 标题删除线 */
-:is(.ai-item, .ai-tool, .ai-subagent).is-cancelled .ai-item-status {
-  background: var(--token-text-faint);
+:is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-cancelled .icen-ai-item-status {
+  background: var(--icen-token-text-faint);
   opacity: 0.6;
 }
-:is(.ai-item, .ai-tool, .ai-subagent).is-cancelled .ai-item-title {
-  color: var(--token-text-faint);
+:is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-cancelled .icen-ai-item-title {
+  color: var(--icen-token-text-faint);
   text-decoration: line-through;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   工具调用卡 .ai-tool
+   工具调用卡 .icen-ai-tool
    ══════════════════════════════════════════════════════════════ */
 
-.ai-tool {
-  --ai-item-tint: var(--token-accent);
+.icen-ai-tool {
+  --ai-item-tint: var(--icen-token-accent);
   align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-md);
-  background: var(--token-surface);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-surface);
 }
 
 /* ── kind 修饰类：只覆盖 --ai-item-tint ──
    browser/fetch/todo/plan/subagent/note 用默认 accent，不写规则 */
-.ai-tool--read,
-.ai-tool--search,
-.ai-tool--grep,
-.ai-tool--glob {
-  --ai-item-tint: var(--token-info);
+.icen-ai-tool--read,
+.icen-ai-tool--search,
+.icen-ai-tool--grep,
+.icen-ai-tool--glob {
+  --ai-item-tint: var(--icen-token-info);
 }
-.ai-tool--edit,
-.ai-tool--write {
-  --ai-item-tint: var(--token-accent);
+.icen-ai-tool--edit,
+.icen-ai-tool--write {
+  --ai-item-tint: var(--icen-token-accent);
 }
-.ai-tool--rm {
-  --ai-item-tint: var(--token-error);
+.icen-ai-tool--rm {
+  --ai-item-tint: var(--icen-token-error);
 }
-.ai-tool--shell {
-  --ai-item-tint: var(--token-text-muted);
+.icen-ai-tool--shell {
+  --ai-item-tint: var(--icen-token-text-muted);
 }
-.ai-tool--mcp,
-.ai-tool--skill {
-  --ai-item-tint: var(--token-success);
+.icen-ai-tool--mcp,
+.icen-ai-tool--skill {
+  --ai-item-tint: var(--icen-token-success);
 }
 
 /* ── head ── */
-.ai-tool-head,
-.ai-subagent-head {
+.icen-ai-tool-head,
+.icen-ai-subagent-head {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   width: 100%;
-  padding: var(--density-space-xs) var(--density-space-sm);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
   border: none;
   border-radius: inherit; /* hover 底色不戳破卡片圆角 */
   background: transparent;
   color: inherit;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color var(--icen-tx-fast);
 }
-.ai-tool-head:hover,
-.ai-subagent-head:hover {
-  background: var(--token-fill-1);
+.icen-ai-tool-head:hover,
+.icen-ai-subagent-head:hover {
+  background: var(--icen-token-fill-1);
 }
-.ai-tool-head:focus-visible,
-.ai-subagent-head:focus-visible {
+.icen-ai-tool-head:focus-visible,
+.icen-ai-subagent-head:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
 /* ── body ── */
-.ai-tool-body {
+.icen-ai-tool-body {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-sm);
-  border-top: 1px solid var(--token-line-soft);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm);
+  border-top: 1px solid var(--icen-token-line-soft);
   animation: icen-pop-in var(--icen-tx-fast);
 }
-.ai-tool-body[hidden],
-.ai-subagent-body[hidden],
-.ai-tool-io[hidden],
-.ai-subagent-result[hidden] {
+.icen-ai-tool-body[hidden],
+.icen-ai-subagent-body[hidden],
+.icen-ai-tool-io[hidden],
+.icen-ai-subagent-result[hidden] {
   display: none;
 }
 
 /* ── 输入/输出区块（pre 等宽、可滚、max-height 收敛） ── */
-.ai-tool-io {
+.icen-ai-tool-io {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 0;
+  min-inline-size: 0;
 }
-.ai-tool-io-label {
-  font-size: var(--density-font-size-2xs);
+.icen-ai-tool-io-label {
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
 }
-.ai-tool-io-content {
+.icen-ai-tool-io-content {
   --ai-tool-io-max: 12rem; /* 收敛上限（组件局部变量） */
   margin: 0;
-  padding: var(--density-space-xs) var(--density-space-sm);
-  max-height: var(--ai-tool-io-max);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  max-block-size: var(--ai-tool-io-max);
   overflow: auto;
-  background: var(--token-bg-soft);
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-sm);
+  background: var(--icen-token-bg-soft);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-sm);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-sm);
   line-height: 1.5;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 /* 多模态回执（MCP content 数组 → 媒体/链接，spec §10.3）：
-   容器纵向排布；媒体本体复用 ai-chat.css 的 .ai-msg-media 全局样式 */
-.ai-tool-io-media {
+   容器纵向排布；媒体本体复用 ai-chat.css 的 .icen-ai-msg-media 全局样式 */
+.icen-ai-tool-io-media {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
-  min-width: 0;
+  gap: var(--icen-density-space-xs);
+  min-inline-size: 0;
 }
 
 /* ── 审批区（仅 .is-approval 显示，纯 CSS 驱动） ── */
-.ai-tool-approval {
+.icen-ai-tool-approval {
   display: none;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding-top: var(--density-space-xs);
-  border-top: 1px dashed var(--token-line-soft);
+  gap: var(--icen-density-space-sm);
+  padding-top: var(--icen-density-space-xs);
+  border-top: 1px dashed var(--icen-token-line-soft);
 }
-.ai-tool.is-approval .ai-tool-approval {
+.icen-ai-tool.is-approval .icen-ai-tool-approval {
   display: flex;
 }
-.ai-tool-approval-reason {
+.icen-ai-tool-approval-reason {
   flex: 1 1 auto;
-  min-width: 0;
-  font-size: var(--density-font-size-xs);
+  min-inline-size: 0;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.5;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
 }
-.ai-tool.is-approval {
-  border-color: color-mix(in srgb, var(--token-warning) 40%, transparent);
+.icen-ai-tool.is-approval {
+  border-color: color-mix(in srgb, var(--icen-token-warning) 40%, transparent);
 }
-.ai-tool.is-error {
-  border-color: color-mix(in srgb, var(--token-error) 40%, transparent);
+.icen-ai-tool.is-error {
+  border-color: color-mix(in srgb, var(--icen-token-error) 40%, transparent);
 }
 
 /* ══════════════════════════════════════════════════════════════
-   子智能体卡 .ai-subagent（嵌套活动流 = 缩进 + 左侧引导线，可递归）
+   子智能体卡 .icen-ai-subagent（嵌套活动流 = 缩进 + 起始缘引导线，可递归）
    ══════════════════════════════════════════════════════════════ */
 
-.ai-subagent {
-  --ai-item-tint: var(--token-accent);
+.icen-ai-subagent {
+  --ai-item-tint: var(--icen-token-accent);
   align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
-  border: 1px solid var(--token-line-soft);
-  border-left: 3px solid var(--ai-item-tint); /* 代理卡身份：tint 左边条 */
-  border-radius: var(--radius-md);
-  background: var(--token-surface);
+  border: 1px solid var(--icen-token-line-soft);
+  border-inline-start: 3px solid var(--ai-item-tint); /* 代理卡身份：tint 起始缘边条 */
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-surface);
 }
-.ai-subagent.is-error {
-  border-left-color: var(--token-error);
+.icen-ai-subagent.is-error {
+  border-inline-start-color: var(--icen-token-error);
 }
-.ai-subagent.is-done {
-  border-left-color: var(--token-success);
+.icen-ai-subagent.is-done {
+  border-inline-start-color: var(--icen-token-success);
 }
 
-.ai-subagent-body {
+.icen-ai-subagent-body {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-sm);
-  border-top: 1px solid var(--token-line-soft);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm);
+  border-top: 1px solid var(--icen-token-line-soft);
 }
 
-/* 嵌套流：缩进 + 引导线；行间渐入 stagger 由 --ai-activity-index（render 写入）驱动 */
-.ai-subagent-stream {
+/* 嵌套流：缩进 + 起始缘引导线；行间渐入 stagger 由 --ai-activity-index（render 写入）驱动 */
+.icen-ai-subagent-stream {
   --ai-stagger-step: 40ms; /* 活动项渐入步长（组件局部变量） */
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
-  padding-left: var(--density-space-md);
+  gap: var(--icen-density-space-xs);
+  padding-inline-start: var(--icen-density-space-md);
 }
-.ai-subagent-stream::before {
+.icen-ai-subagent-stream::before {
   content: "";
   position: absolute;
-  left: 5px;
-  top: var(--density-space-xs);
-  bottom: var(--density-space-xs);
+  inset-inline-start: 5px;
+  top: var(--icen-density-space-xs);
+  bottom: var(--icen-density-space-xs);
   width: 1px;
-  background: var(--token-line-soft);
+  background: var(--icen-token-line-soft);
 }
 /* 展开（body 从 hidden 解除）时，活动项逐条 icen-pop-in 渐入 */
-.ai-subagent-stream > * {
+.icen-ai-subagent-stream > * {
   animation: icen-pop-in var(--icen-tx-fast) backwards;
   animation-delay: calc(var(--ai-activity-index, 0) * var(--ai-stagger-step));
 }
 
 /* 完成回执 */
-.ai-subagent-result {
-  padding: var(--density-space-xs) var(--density-space-sm);
-  background: var(--token-bg-soft);
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-sm);
-  font-size: var(--density-font-size-sm);
+.icen-ai-subagent-result {
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  background: var(--icen-token-bg-soft);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-sm);
+  font-size: var(--icen-density-font-size-sm);
   line-height: 1.5;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
 }
-.ai-subagent.is-done .ai-subagent-result {
-  color: var(--token-text);
-  border-color: color-mix(in srgb, var(--token-success) 30%, transparent);
+.icen-ai-subagent.is-done .icen-ai-subagent-result {
+  color: var(--icen-token-text);
+  border-color: color-mix(in srgb, var(--icen-token-success) 30%, transparent);
 }
 
 /* ══════════════════════════════════════════════════════════════
    动效守卫
    ══════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  :is(.ai-item, .ai-tool, .ai-subagent).is-running .ai-item-status,
-  :is(.ai-item, .ai-tool, .ai-subagent).is-streaming .ai-item-status {
+  :is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-running .icen-ai-item-status,
+  :is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-streaming .icen-ai-item-status {
     animation: none;
   }
-  .ai-tool-body,
-  .ai-subagent-stream > * {
+  .icen-ai-tool-body,
+  .icen-ai-subagent-stream > * {
     animation: none;
   }
-  .ai-tool-head,
-  .ai-subagent-head {
+  .icen-ai-tool-head,
+  .icen-ai-subagent-head {
     transition: none;
   }
 }
 
 /* ═══ 工具卡内嵌图表（回执 = ChartSpec 时 setIo 走 renderChart，§13）═══ */
-.ai-tool-io-chart {
+.icen-ai-tool-io-chart {
   width: 100%;
   min-width: 0;
 }
 
-/* ═══ AI 工具挂载区（ai-tools.ts 的 createAiToolArea，§13）═══
- *   .ai-tools-mount > .ai-tools-item > head（名/时间/×）+ body（工具自渲染） */
-.ai-tools-mount {
+/* ═══ AI 工具挂载区（ai-tools.ts 的 createAiToolArea，§13；完整 DOM 契约见文件头）═══
+ *   .icen-ai-tools-mount > .icen-ai-tools-item（状态类 is-*）> head（名/时间/状态点/×）
+ *   + approval（仅审批态）+ error（仅失败态）+ body（工具自渲染）+ stream（progress 活动流） */
+.icen-ai-tools-mount {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--density-space-md);
+  gap: var(--icen-density-space-md);
   align-items: start;
 }
-.ai-tools-item {
+.icen-ai-tools-item {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-md);
-  background: var(--token-surface);
-  animation: icen-pop-in var(--duration-normal) var(--ease-out);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-surface);
+  animation: icen-pop-in var(--icen-duration-normal) var(--icen-ease-out);
 }
-.ai-tools-item-head {
+.icen-ai-tools-item-head {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-xs) var(--density-space-sm);
-  border-bottom: 1px solid var(--token-line-soft);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  border-bottom: 1px solid var(--icen-token-line-soft);
 }
-.ai-tools-item-name {
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text);
+.icen-ai-tools-item-name {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text);
 }
-.ai-tools-item-meta {
+.icen-ai-tools-item-meta {
   flex: 1;
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text-faint);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
 }
-.ai-tools-item-remove {
+.icen-ai-tools-item-remove {
   border: 0;
   background: transparent;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   cursor: pointer;
-  border-radius: var(--radius-xs);
-  font-size: var(--density-font-size-sm);
+  border-radius: var(--icen-radius-xs);
+  font-size: var(--icen-density-font-size-sm);
   line-height: 1;
   padding: 2px 6px;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.ai-tools-item-remove:hover { color: var(--token-error); background: var(--token-fill-1); }
-.ai-tools-item-remove:focus-visible { outline: none; box-shadow: var(--icen-ring); }
-.ai-tools-item-body {
-  padding: var(--density-space-sm);
+.icen-ai-tools-item-remove:hover { color: var(--icen-token-error); background: var(--icen-token-fill-1); }
+.icen-ai-tools-item-remove:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+.icen-ai-tools-item-body {
+  padding: var(--icen-density-space-sm);
   min-width: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ai-tools-item { animation: none; }
+  .icen-ai-tools-item { animation: none; }
 }
 
 /* 挂载项折叠态：head 为 button（chevron + 名/时间 + ×） */
-.ai-tools-item-head {
+.icen-ai-tools-item-head {
   cursor: pointer;
   border: 0;
   background: transparent;
-  text-align: left;
-  width: 100%;
+  text-align: start;
+  inline-size: 100%;
   font: inherit;
 }
-.ai-tools-item-chevron {
+.icen-ai-tools-item-chevron {
   flex-shrink: 0;
-  color: var(--token-text-faint);
-  font-size: var(--density-font-size-xs);
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
   transition: transform var(--icen-tx-fast);
 }
-.ai-tools-item-head[aria-expanded='false'] .ai-tools-item-chevron {
+.icen-ai-tools-item-head[aria-expanded='false'] .icen-ai-tools-item-chevron {
   transform: rotate(-90deg);
 }
-.ai-tools-item.is-collapsed .ai-tools-item-body {
+.icen-ai-tools-item.is-collapsed .icen-ai-tools-item-body,
+.icen-ai-tools-item.is-collapsed .icen-ai-tools-item-stream {
   display: none;
 }
-.ai-tools-item-head:focus-visible {
+.icen-ai-tools-item-head:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
+}
+
+/* ── 挂载卡状态点 + 状态类（7 态状态机的挂载区形态，规格 §13）── */
+.icen-ai-tools-item-status {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--icen-token-text-faint);
+}
+.icen-ai-tools-item.is-running .icen-ai-tools-item-status {
+  background: var(--icen-token-accent);
+  animation: ai-item-pulse 1.5s ease-in-out infinite;
+}
+.icen-ai-tools-item.is-approval {
+  border-color: color-mix(in srgb, var(--icen-token-warning) 40%, transparent);
+}
+.icen-ai-tools-item.is-approval .icen-ai-tools-item-status {
+  background: var(--icen-token-warning);
+  box-shadow: 0 0 0 3px var(--icen-token-warning-muted);
+}
+.icen-ai-tools-item.is-done .icen-ai-tools-item-status {
+  background: var(--icen-token-success);
+}
+.icen-ai-tools-item.is-error {
+  border-color: color-mix(in srgb, var(--icen-token-error) 40%, transparent);
+}
+.icen-ai-tools-item.is-error .icen-ai-tools-item-status {
+  background: var(--icen-token-error);
+  box-shadow: 0 0 0 3px var(--icen-token-error-muted);
+}
+.icen-ai-tools-item.is-cancelled {
+  opacity: 0.75;
+}
+.icen-ai-tools-item.is-cancelled .icen-ai-tools-item-status {
+  background: var(--icen-token-text-faint);
+  opacity: 0.6;
+}
+.icen-ai-tools-item.is-cancelled .icen-ai-tools-item-name {
+  color: var(--icen-token-text-faint);
+  text-decoration: line-through;
+}
+
+/* ── 审批区（仅审批态在 DOM，批准/拒绝后由 behavior 移除；按钮复用 btn 契约类）── */
+.icen-ai-tools-item-approval {
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  border-bottom: 1px dashed color-mix(in srgb, var(--icen-token-warning) 45%, transparent);
+  background: color-mix(in srgb, var(--icen-token-warning) 7%, transparent);
+}
+.icen-ai-tools-item-approval-text {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.icen-ai-tools-item-approval-reason {
+  font-size: var(--icen-density-font-size-xs);
+  line-height: 1.5;
+  color: var(--icen-token-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.icen-ai-tools-item-approval-preview {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
+  line-height: 1.5;
+  color: var(--icen-token-text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── 错误清单（仅失败态在 DOM：校验/执行/超时；逐行 textContent）── */
+.icen-ai-tools-item-error {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  border-bottom: 1px solid var(--icen-token-line-soft);
+  background: color-mix(in srgb, var(--icen-token-error) 6%, transparent);
+}
+.icen-ai-tools-item-error-line {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
+  line-height: 1.5;
+  color: var(--icen-token-error);
+  word-break: break-word;
+}
+
+/* ── 活动流（run ctx.icen-progress(line) 懒建追加；每行渐入）── */
+.icen-ai-tools-item-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  border-top: 1px dashed var(--icen-token-line-soft);
+}
+.icen-ai-tools-item-stream-line {
+  position: relative;
+  padding-inline-start: 12px;
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
+  line-height: 1.6;
+  color: var(--icen-token-text-muted);
+  word-break: break-word;
+  animation: icen-pop-in var(--icen-tx-fast);
+}
+.icen-ai-tools-item-stream-line::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 2px;
+  top: 0.62em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--icen-token-text-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-ai-tools-item.is-running .icen-ai-tools-item-status,
+  .icen-ai-tools-item-stream-line {
+    animation: none;
+  }
 }

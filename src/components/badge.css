@@ -6,38 +6,38 @@
  *   - badge = 角标式徽章，挂在外层元素的右上角，强调"数量/新动态"
  *
  * 完整契约（外层必须 position: relative 或 inline-flex）：
- *   <span class="badge-host">
- *     <button class="btn">…</button>
- *     <span class="badge">9</span>                   <!-- 数字徽标 -->
+ *   <span class="icen-badge-host">
+ *     <button class="icen-btn">…</button>
+ *     <span class="icen-badge">9</span>                   <!-- 数字徽标 -->
  *   </span>
  *
- *   <span class="badge-host">
- *     <button class="btn">…</button>
- *     <span class="badge badge--dot"></span>          <!-- 纯圆点（无数字） -->
+ *   <span class="icen-badge-host">
+ *     <button class="icen-btn">…</button>
+ *     <span class="icen-badge icen-badge--dot"></span>          <!-- 纯圆点（无数字） -->
  *   </span>
  *
- *   <span class="badge-host">
- *     <span class="avatar">…</span>
- *     <span class="badge badge--bottom badge--success badge--dot"></span>  <!-- 头像右下角在线点 -->
+ *   <span class="icen-badge-host">
+ *     <span class="icen-avatar">…</span>
+ *     <span class="icen-badge icen-badge--bottom icen-badge--success icen-badge--dot"></span>  <!-- 头像右下角在线点 -->
  *   </span>
  *
  * 变体：--dot 纯圆点 / --sm 小号 / --lg 大号 / --bottom 底部角
  * 语义色：--success（在线）/ --warning / --error / --info / --accent
  */
 
-.badge-host {
+.icen-badge-host {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.badge {
+.icen-badge {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 0; /* guard:allow-physical 角标契约是物理右上角（transform translate(50%) 同角心对齐），RTL 保持右上角 */
   transform: translate(50%, -50%);
-  z-index: var(--z-raised);
+  z-index: var(--icen-z-raised);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -45,22 +45,22 @@
   height: 16px;
   padding: 0 4px;
   font: inherit;
-  font-size: var(--density-font-size-2xs);
+  font-size: var(--icen-density-font-size-2xs);
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--token-on-accent);
-  background: var(--token-error);
-  border: 2px solid var(--token-surface);
-  border-radius: var(--radius-full);
-  box-shadow: var(--token-shadow-inset);
+  color: var(--icen-token-on-accent);
+  background: var(--icen-token-error);
+  border: 2px solid var(--icen-token-surface);
+  border-radius: var(--icen-radius-full);
+  box-shadow: var(--icen-token-shadow-inset);
   pointer-events: none;
   white-space: nowrap;
   transform-origin: center;
 }
 
 /* 纯圆点（无数字） */
-.badge--dot {
+.icen-badge--dot {
   width: 8px;
   height: 8px;
   min-width: 0;
@@ -69,59 +69,59 @@
 }
 
 /* 尺寸 */
-.badge--sm {
+.icen-badge--sm {
   min-width: 14px;
   height: 14px;
-  font-size: var(--density-font-size-2xs);
+  font-size: var(--icen-density-font-size-2xs);
   padding: 0 3px;
 }
-.badge--sm.badge--dot {
+.icen-badge--sm.icen-badge--dot {
   width: 6px;
   height: 6px;
 }
-.badge--lg {
+.icen-badge--lg {
   min-width: 20px;
   height: 20px;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
   padding: 0 5px;
 }
-.badge--lg.badge--dot {
+.icen-badge--lg.icen-badge--dot {
   width: 10px;
   height: 10px;
 }
 
 /* 底部角（头像在线指示等） */
-.badge--bottom {
+.icen-badge--bottom {
   top: auto;
   bottom: 0;
   transform: translate(50%, 50%);
 }
 
 /* 语义色变体 */
-.badge--accent {
-  background: var(--token-accent);
+.icen-badge--accent {
+  background: var(--icen-token-accent-strong);
 }
-.badge--success {
-  background: var(--token-success);
+.icen-badge--success {
+  background: var(--icen-token-success);
 }
-.badge--warning {
-  background: var(--token-warning);
+.icen-badge--warning {
+  background: var(--icen-token-warning);
 }
-.badge--error {
-  background: var(--token-error);
+.icen-badge--error {
+  background: var(--icen-token-error);
 }
-.badge--info {
-  background: var(--token-info);
+.icen-badge--info {
+  background: var(--icen-token-info);
 }
 
 /* 挂在实底色按钮上时用更浅的边框 */
-.btn-primary .badge,
-.btn-danger .badge {
-  border-color: var(--token-on-accent);
+.icen-btn-primary .icen-badge,
+.icen-btn-danger .icen-badge {
+  border-color: var(--icen-token-on-accent);
 }
 
 /* 数字超过 99 显示 99+（消费方决定是否使用，这里只保证宽度容纳） */
-.badge[data-overflow] {
+.icen-badge[data-icen-overflow] {
   min-width: 20px;
   padding: 0 5px;
 }

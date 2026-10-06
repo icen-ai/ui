@@ -2,122 +2,122 @@
  * @icen.ai/ui — Component: date-picker（日期选择，与 behaviors/date-picker 配套）
  *
  * 契约：
- *   <div class="date-picker" data-date-picker data-date-picker-input="id">
- *     <button class="date-picker-trigger [--sm|--lg]" type="button" aria-haspopup="dialog">
- *       <span class="date-picker-value">2026-07-29</span>
- *       <svg class="date-picker-icon">…日历 svg…</svg>
+ *   <div class="icen-date-picker" data-icen-date-picker data-icen-date-picker-input="id">
+ *     <button class="icen-date-picker-trigger [--sm|--lg]" type="button" aria-haspopup="dialog">
+ *       <span class="icen-date-picker-value">2026-07-29</span>
+ *       <svg class="icen-date-picker-icon">…日历 svg…</svg>
  *     </button>
  *     <input type="hidden" id="id" name="date" value="2026-07-29" />
  *   </div>
  *
  *   或直接挂到普通 input（behavior 自动包裹触发器外观）：
- *   <input class="date-picker-input" data-date-picker value="2026-07-29" />
+ *   <icen-input class="date-picker-input" data-icen-date-picker value="2026-07-29" />
  *
  * behavior 渲染面板（portal 到 body）：
- *   <div class="date-picker-panel" role="dialog">
- *     <div class="date-picker-head">
- *       <button class="date-picker-nav" data-prev>‹</button>
- *       <span class="date-picker-title">2026 年 7 月</span>
- *       <button class="date-picker-nav" data-next>›</button>
+ *   <div class="icen-date-picker-panel" role="dialog">
+ *     <div class="icen-date-picker-head">
+ *       <button class="icen-date-picker-nav" data-icen-prev>‹</button>
+ *       <span class="icen-date-picker-title">2026 年 7 月</span>
+ *       <button class="icen-date-picker-nav" data-icen-next>›</button>
  *     </div>
- *     <div class="date-picker-weekdays">
+ *     <div class="icen-date-picker-weekdays">
  *       <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
  *     </div>
- *     <div class="date-picker-grid">
- *       <button class="date-picker-cell [.is-outside] [.is-today] [.is-selected] [.is-disabled]">15</button>
+ *     <div class="icen-date-picker-grid">
+ *       <button class="icen-date-picker-cell [.is-outside] [.is-today] [.is-selected] [.is-disabled]">15</button>
  *       …
  *     </div>
- *     <div class="date-picker-foot">
- *       <button class="date-picker-today">今天</button>
- *       <button class="date-picker-clear">清除</button>
+ *     <div class="icen-date-picker-foot">
+ *       <button class="icen-date-picker-today">今天</button>
+ *       <button class="icen-date-picker-clear">清除</button>
  *     </div>
  *   </div>
  *
  * 可选 data-*：
- *   data-date-picker-format="yyyy-mm-dd"  显示格式
- *   data-date-picker-min="2026-01-01"     最小可选日期
- *   data-date-picker-max="2026-12-31"     最大可选日期
- *   data-date-picker-week-start="0"       周首日（0=周日，1=周一，默认 1）
+ *   data-icen-date-picker-format="yyyy-mm-dd"  显示格式
+ *   data-icen-date-picker-min="2026-01-01"     最小可选日期
+ *   data-icen-date-picker-max="2026-12-31"     最大可选日期
+ *   data-icen-date-picker-week-start="0"       周首日（0=周日，1=周一，默认 1）
  */
 
-.date-picker {
+.icen-date-picker {
   display: inline-block;
   position: relative;
 }
 
-.date-picker-trigger {
+.icen-date-picker-trigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   width: 100%;
-  height: var(--density-input-height-md);
-  padding: 0 var(--density-space-sm);
-  background: var(--token-control);
-  border: 1px solid var(--token-outline-soft);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-inset);
-  color: var(--token-text);
+  height: var(--icen-density-input-height-md);
+  padding: 0 var(--icen-density-space-sm);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
+  color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--density-font-size-md);
+  font-size: var(--icen-density-font-size-md);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
-.date-picker-trigger:hover { border-color: var(--icen-hover-border); }
-.date-picker-trigger.is-open {
+.icen-date-picker-trigger:hover { border-color: var(--icen-hover-border); }
+.icen-date-picker-trigger.is-open {
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.date-picker-trigger:focus-visible {
+.icen-date-picker-trigger:focus-visible {
   outline: none;
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.date-picker-value {
+.icen-date-picker-value {
   flex: 1;
-  min-width: 0;
-  text-align: left;
+  min-inline-size: 0;
+  text-align: start;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.date-picker-value.is-empty { color: color-mix(in srgb, var(--token-text-faint) 60%, transparent); }
-.date-picker-icon { display: inline-flex; color: var(--token-text-faint); flex-shrink: 0; }
-.date-picker-icon svg { width: 14px; height: 14px; }
+.icen-date-picker-value.is-empty { color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent); }
+.icen-date-picker-icon { display: inline-flex; color: var(--icen-token-text-faint); flex-shrink: 0; }
+.icen-date-picker-icon svg { width: 14px; height: 14px; }
 
 /* 尺寸 */
-.date-picker-trigger.date-picker-trigger--sm { height: var(--density-input-height-sm); font-size: var(--density-font-size-sm); }
-.date-picker-trigger.date-picker-trigger--lg { height: var(--density-input-height-lg); font-size: var(--density-font-size-lg); }
+.icen-date-picker-trigger.icen-date-picker-trigger--sm { height: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-date-picker-trigger.icen-date-picker-trigger--lg { height: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }
 
 /* ── 面板 ── */
-.date-picker-panel {
+.icen-date-picker-panel {
   position: fixed;
-  z-index: var(--z-popover);
+  z-index: var(--icen-z-popover);
   width: 280px;
-  padding: var(--density-space-sm);
-  background: var(--token-card-strong);
-  border: 1px solid var(--token-outline);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-overlay);
-  font-size: var(--density-font-size-sm);
+  padding: var(--icen-density-space-sm);
+  background: var(--icen-token-card-strong);
+  border: 1px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-overlay);
+  font-size: var(--icen-density-font-size-sm);
   animation: icen-pop-in var(--icen-tx-fast);
 }
 
-.date-picker-head {
+.icen-date-picker-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--density-space-sm);
+  margin-bottom: var(--icen-density-space-sm);
 }
-.date-picker-title {
+.icen-date-picker-title {
   font-weight: 600;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   font-variant-numeric: tabular-nums;
   flex: 1;
   text-align: center;
 }
-.date-picker-nav {
+.icen-date-picker-nav {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -125,116 +125,116 @@
   height: 24px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   background: transparent;
-  color: var(--token-text-muted);
-  font-size: var(--density-font-size-md);
+  color: var(--icen-token-text-muted);
+  font-size: var(--icen-density-font-size-md);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.date-picker-nav:hover { color: var(--token-text); background: var(--token-fill-1); }
-.date-picker-nav:focus-visible {
+.icen-date-picker-nav:hover { color: var(--icen-token-text); background: var(--icen-token-fill-1); }
+.icen-date-picker-nav:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.date-picker-weekdays {
+.icen-date-picker-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
   margin-bottom: 4px;
 }
-.date-picker-weekdays > span {
+.icen-date-picker-weekdays > span {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 24px;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   font-weight: 500;
 }
 
-.date-picker-grid {
+.icen-date-picker-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
 }
-.date-picker-cell {
+.icen-date-picker-cell {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 30px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--icen-radius-sm);
   background: transparent;
-  color: var(--token-text);
+  color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color var(--icen-tx-fast), color var(--icen-tx-fast);
 }
-.date-picker-cell:hover { background: var(--token-fill-1); }
-.date-picker-cell.is-today {
-  border: 1px solid var(--token-accent);
-  color: var(--token-accent);
+.icen-date-picker-cell:hover { background: var(--icen-token-fill-1); }
+.icen-date-picker-cell.is-today {
+  border: 1px solid var(--icen-token-accent);
+  color: var(--icen-token-accent);
   font-weight: 600;
 }
-.date-picker-cell.is-selected {
-  background: var(--token-accent);
-  color: var(--token-on-accent);
+.icen-date-picker-cell.is-selected {
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
   font-weight: 600;
 }
-.date-picker-cell.is-selected.is-today { border-color: var(--token-on-accent); }
-.date-picker-cell.is-outside {
-  color: var(--token-text-faint);
+.icen-date-picker-cell.is-selected.is-today { border-color: var(--icen-token-on-accent); }
+.icen-date-picker-cell.is-outside {
+  color: var(--icen-token-text-faint);
   opacity: 0.55;
 }
-.date-picker-cell.is-disabled {
-  color: var(--token-text-faint);
+.icen-date-picker-cell.is-disabled {
+  color: var(--icen-token-text-faint);
   opacity: 0.35;
   cursor: not-allowed;
   pointer-events: none;
 }
-.date-picker-cell:focus-visible {
+.icen-date-picker-cell:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.date-picker-foot {
+.icen-date-picker-foot {
   display: flex;
   justify-content: space-between;
-  gap: var(--density-space-xs);
-  margin-top: var(--density-space-sm);
-  padding-top: var(--density-space-sm);
-  border-top: 1px solid var(--token-line-soft);
+  gap: var(--icen-density-space-xs);
+  margin-top: var(--icen-density-space-sm);
+  padding-top: var(--icen-density-space-sm);
+  border-top: 1px solid var(--icen-token-line-soft);
 }
-.date-picker-today,
-.date-picker-clear {
-  padding: 4px var(--density-space-sm);
+.icen-date-picker-today,
+.icen-date-picker-clear {
+  padding: 4px var(--icen-density-space-sm);
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   background: transparent;
-  color: var(--token-accent);
+  color: var(--icen-token-accent);
   font: inherit;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color var(--icen-tx-fast);
 }
-.date-picker-today:hover,
-.date-picker-clear:hover { background: var(--token-fill-1); }
-.date-picker-today:focus-visible,
-.date-picker-clear:focus-visible {
+.icen-date-picker-today:hover,
+.icen-date-picker-clear:hover { background: var(--icen-token-fill-1); }
+.icen-date-picker-today:focus-visible,
+.icen-date-picker-clear:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.date-picker-clear { color: var(--token-text-muted); }
+.icen-date-picker-clear { color: var(--icen-token-text-muted); }
 
 @media (prefers-reduced-motion: reduce) {
-  .date-picker-panel { animation: none; }
-  .date-picker-cell { transition: none; }
+  .icen-date-picker-panel { animation: none; }
+  .icen-date-picker-cell { transition: none; }
 }

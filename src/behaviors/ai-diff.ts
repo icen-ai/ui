@@ -2,27 +2,27 @@
  * @icen.ai/ui — Behavior: ai-diff（AI 变更 diff 审阅，与 components/ai-diff.css 配套）
  *
  * DOM 契约（renderAiDiff 构建，类名与规格 §4.6 一致）：
- *   <div class="ai-diff">
- *     <div class="ai-diff-file is-added|is-modified|is-deleted|is-renamed
- *          [.is-accepted|.is-rejected]" data-path="src/foo.ts">
- *       <div class="ai-diff-head" role="button" tabindex="0" aria-expanded="false">
- *         <span class="ai-diff-path">src/foo.ts</span>          <!-- renamed：旧路径 → 新路径 -->
- *         <span class="ai-diff-stat"><b class="ai-diff-add">+12</b> <b class="ai-diff-del">−4</b></span>
- *         <span class="ai-diff-actions">
- *           <button type="button" data-ai-diff-accept>接受</button>
- *           <button type="button" data-ai-diff-reject>拒绝</button>
+ *   <div class="icen-ai-diff">
+ *     <div class="icen-ai-diff-file is-added|is-modified|is-deleted|is-renamed
+ *          [.is-accepted|.is-rejected]" data-icen-path="src/foo.ts">
+ *       <div class="icen-ai-diff-head" role="button" tabindex="0" aria-expanded="false">
+ *         <span class="icen-ai-diff-path">src/foo.ts</span>          <!-- renamed：旧路径 → 新路径 -->
+ *         <span class="icen-ai-diff-stat"><b class="icen-ai-diff-add">+12</b> <b class="icen-ai-diff-del">−4</b></span>
+ *         <span class="icen-ai-diff-actions">
+ *           <button type="button" data-icen-ai-diff-accept>接受</button>
+ *           <button type="button" data-icen-ai-diff-reject>拒绝</button>
  *         </span>
- *         <span class="ai-diff-verdict" hidden>已接受|已拒绝</span>
+ *         <span class="icen-ai-diff-verdict" hidden>已接受|已拒绝</span>
  *       </div>
- *       <div class="ai-diff-body" hidden>
- *         <table class="ai-diff-table">
- *           <tr class="ai-diff-line--hunk"><td colspan="3">@@ -10,6 +10,8 @@</td></tr>
- *           <tr class="ai-diff-line--ctx|ai-diff-line--add|ai-diff-line--del">
- *             <td class="ai-diff-ln" aria-hidden="true">10</td>
- *             <td class="ai-diff-ln" aria-hidden="true">10</td>
- *             <td class="ai-diff-code">内容（行首 +/- 符号由 CSS ::before 提供）</td>
+ *       <div class="icen-ai-diff-body" hidden>
+ *         <icen-table class="icen-ai-diff-table">
+ *           <tr class="icen-ai-diff-line--hunk"><td colspan="3">@@ -10,6 +10,8 @@</td></tr>
+ *           <tr class="icen-ai-diff-line--ctx|icen-ai-diff-line--add|icen-ai-diff-line--del">
+ *             <td class="icen-ai-diff-ln" aria-hidden="true">10</td>
+ *             <td class="icen-ai-diff-ln" aria-hidden="true">10</td>
+ *             <td class="icen-ai-diff-code">内容（行首 +/- 符号由 CSS ::before 提供）</td>
  *           </tr>
- *         </table>
+ *         </icen-table>
  *       </div>
  *     </div>
  *   </div>
@@ -34,14 +34,15 @@
  *     body 默认折叠（长 diff 只露 head）；返回挂载元素 el（render* 约定，SSR 原样返回）
  *   - initAiDiff(root?)：幂等（__icenAiDiffInit），事件委托（渲染后注入的新文件同样生效）：
  *       · head 点击 / Enter / Space → 展开折叠 body，同步 aria-expanded，派 icen:ai-toggle {el, open}
- *       · [data-ai-diff-accept] / [data-ai-diff-reject] → 文件加 .is-accepted / .is-rejected
- *         （CSS 淡化 + .ai-diff-verdict 状态章），按钮 hidden 禁用，
+ *       · [data-icen-ai-diff-accept] / [data-icen-ai-diff-reject] → 文件加 .is-accepted / .is-rejected
+ *         （CSS 淡化 + .icen-ai-diff-verdict 状态章），按钮 hidden 禁用，
  *         派 icen:ai-diff-accept / icen:ai-diff-reject（detail {path}，bubbles）
  *   - 返回销毁函数：移除监听、复位幂等标记（销毁后可重新 init）
  */
 
 import { h } from './ai-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /* ── 数据模型 ── */
 
@@ -232,29 +233,29 @@ export function parseUnifiedDiff(text: string): AiDiffFile[] {
 
 function renderLineRow(line: AiDiffLine): HTMLTableRowElement {
   const tr = document.createElement('tr');
-  tr.className = `ai-diff-line--${line.type}`;
+  tr.className = `icen-ai-diff-line--${line.type}`;
   if (line.type === 'hunk') {
     const td = h('td', '', line.text);
     td.colSpan = 3;
     tr.appendChild(td);
     return tr;
   }
-  const oldTd = h('td', 'ai-diff-ln', line.oldNo === null ? '' : String(line.oldNo));
+  const oldTd = h('td', 'icen-ai-diff-ln', line.oldNo === null ? '' : String(line.oldNo));
   oldTd.setAttribute('aria-hidden', 'true');
-  const newTd = h('td', 'ai-diff-ln', line.newNo === null ? '' : String(line.newNo));
+  const newTd = h('td', 'icen-ai-diff-ln', line.newNo === null ? '' : String(line.newNo));
   newTd.setAttribute('aria-hidden', 'true');
   tr.appendChild(oldTd);
   tr.appendChild(newTd);
-  tr.appendChild(h('td', 'ai-diff-code', line.text));
+  tr.appendChild(h('td', 'icen-ai-diff-code', line.text));
   return tr;
 }
 
 function renderFile(file: AiDiffFile): HTMLElement {
-  const root = h('div', `ai-diff-file is-${file.status}`);
-  root.dataset.path = file.path;
+  const root = h('div', `icen-ai-diff-file is-${file.status}`);
+  root.dataset.icenPath = file.path;
 
   /* head */
-  const head = h('div', 'ai-diff-head');
+  const head = h('div', 'icen-ai-diff-head');
   head.setAttribute('role', 'button');
   head.tabIndex = 0;
   head.setAttribute('aria-expanded', 'false');
@@ -262,33 +263,33 @@ function renderFile(file: AiDiffFile): HTMLElement {
   const pathText = file.status === 'renamed' && file.oldPath
     ? `${file.oldPath} → ${file.path}`
     : file.path;
-  head.appendChild(h('span', 'ai-diff-path', pathText));
+  head.appendChild(h('span', 'icen-ai-diff-path', pathText));
 
-  const stat = h('span', 'ai-diff-stat');
-  if (file.addCount > 0) stat.appendChild(h('b', 'ai-diff-add', `+${file.addCount}`));
-  if (file.delCount > 0) stat.appendChild(h('b', 'ai-diff-del', `−${file.delCount}`));
+  const stat = h('span', 'icen-ai-diff-stat');
+  if (file.addCount > 0) stat.appendChild(h('b', 'icen-ai-diff-add', `+${file.addCount}`));
+  if (file.delCount > 0) stat.appendChild(h('b', 'icen-ai-diff-del', `−${file.delCount}`));
   if (stat.children.length > 0) head.appendChild(stat);
 
-  const actions = h('span', 'ai-diff-actions');
-  actions.appendChild(h('button', '', '接受')).setAttribute('data-ai-diff-accept', '');
-  const rejectBtn = h('button', '', '拒绝');
-  rejectBtn.setAttribute('data-ai-diff-reject', '');
+  const actions = h('span', 'icen-ai-diff-actions');
+  actions.appendChild(h('button', '', t('common.accept'))).setAttribute('data-icen-ai-diff-accept', '');
+  const rejectBtn = h('button', '', t('common.reject'));
+  rejectBtn.setAttribute('data-icen-ai-diff-reject', '');
   actions.appendChild(rejectBtn);
   head.appendChild(actions);
 
-  const verdict = h('span', 'ai-diff-verdict');
+  const verdict = h('span', 'icen-ai-diff-verdict');
   verdict.hidden = true;
   head.appendChild(verdict);
   root.appendChild(head);
 
   /* body（默认折叠，只露 head） */
-  const body = h('div', 'ai-diff-body');
+  const body = h('div', 'icen-ai-diff-body');
   body.hidden = true;
-  const table = h('table', 'ai-diff-table');
+  const table = h('table', 'icen-ai-diff-table');
   if (file.hunks.length === 0) {
     const tr = document.createElement('tr');
-    tr.className = 'ai-diff-line--ctx';
-    const td = h('td', '', file.binary ? '二进制文件，无法显示文本差异' : '无差异内容');
+    tr.className = 'icen-ai-diff-line--ctx';
+    const td = h('td', '', file.binary ? t('aiDiff.binary') : t('aiDiff.empty'));
     td.colSpan = 3;
     tr.appendChild(td);
     table.appendChild(tr);
@@ -310,7 +311,7 @@ function renderFile(file: AiDiffFile): HTMLElement {
 export function renderAiDiff(el: HTMLElement, model: AiDiffModel): HTMLElement {
   if (typeof document === 'undefined') return el; /* SSR：原样返回挂载元素（render* SSR 分支口径） */
   el.textContent = '';
-  const root = h('div', 'ai-diff');
+  const root = h('div', 'icen-ai-diff');
   const files = Array.isArray(model?.files) ? model.files : [];
   for (const file of files) root.appendChild(renderFile(file));
   el.appendChild(root);
@@ -325,21 +326,21 @@ interface MarkedScope extends ParentNode {
 
 const noopDestroy = (): void => undefined;
 
-/** 找最近的 .ai-diff-file（含 root 自身） */
+/** 找最近的 .icen-ai-diff-file（含 root 自身） */
 function closestFile(node: Element | null): HTMLElement | null {
-  const file = node?.closest('.ai-diff-file');
+  const file = node?.closest('.icen-ai-diff-file');
   return file instanceof HTMLElement ? file : null;
 }
 
 function filePath(file: HTMLElement): string {
-  if (file.dataset.path) return file.dataset.path;
-  return file.querySelector('.ai-diff-path')?.textContent ?? '';
+  if (file.dataset.icenPath) return file.dataset.icenPath;
+  return file.querySelector('.icen-ai-diff-path')?.textContent ?? '';
 }
 
 function toggleFile(head: HTMLElement): void {
   const file = closestFile(head);
   if (!file) return;
-  const body = file.querySelector<HTMLElement>('.ai-diff-body');
+  const body = file.querySelector<HTMLElement>('.icen-ai-diff-body');
   if (!body) return;
   const open = body.hidden;
   body.hidden = !open;
@@ -353,16 +354,16 @@ function decide(btn: Element, accepted: boolean): void {
   if (file.classList.contains('is-accepted') || file.classList.contains('is-rejected')) return;
 
   file.classList.add(accepted ? 'is-accepted' : 'is-rejected');
-  let verdict = file.querySelector<HTMLElement>('.ai-diff-verdict');
+  let verdict = file.querySelector<HTMLElement>('.icen-ai-diff-verdict');
   if (!verdict) {
-    verdict = h('span', 'ai-diff-verdict');
-    file.querySelector('.ai-diff-head')?.appendChild(verdict);
+    verdict = h('span', 'icen-ai-diff-verdict');
+    file.querySelector('.icen-ai-diff-head')?.appendChild(verdict);
   }
-  verdict.textContent = accepted ? '已接受' : '已拒绝';
+  verdict.textContent = accepted ? t('aiDiff.accepted') : t('aiDiff.rejected');
   verdict.hidden = false;
 
   file.querySelectorAll<HTMLButtonElement>(
-    '[data-ai-diff-accept], [data-ai-diff-reject]',
+    '[data-icen-ai-diff-accept], [data-icen-ai-diff-reject]',
   ).forEach((b) => {
     b.hidden = true;
     b.disabled = true;
@@ -389,20 +390,20 @@ export function initAiDiff(root?: ParentNode): () => void {
     if (!t) return;
 
     /* 决策按钮在 head 内，先处理并阻断展开（单次 closest 查询，命中即决策） */
-    const acceptBtn = t.closest('[data-ai-diff-accept]');
+    const acceptBtn = t.closest('[data-icen-ai-diff-accept]');
     if (acceptBtn) {
       e.stopPropagation();
       decide(acceptBtn, true);
       return;
     }
-    const rejectBtn = t.closest('[data-ai-diff-reject]');
+    const rejectBtn = t.closest('[data-icen-ai-diff-reject]');
     if (rejectBtn) {
       e.stopPropagation();
       decide(rejectBtn, false);
       return;
     }
 
-    const head = t.closest<HTMLElement>('.ai-diff-head');
+    const head = t.closest<HTMLElement>('.icen-ai-diff-head');
     if (head) toggleFile(head);
   };
 
@@ -411,7 +412,7 @@ export function initAiDiff(root?: ParentNode): () => void {
     if (ke.key !== 'Enter' && ke.key !== ' ') return;
     const t = ke.target instanceof Element ? ke.target : null;
     if (!t || t.closest('button, a, input, textarea, select')) return;
-    const head = t.closest<HTMLElement>('.ai-diff-head');
+    const head = t.closest<HTMLElement>('.icen-ai-diff-head');
     if (!head) return;
     ke.preventDefault();
     toggleFile(head);

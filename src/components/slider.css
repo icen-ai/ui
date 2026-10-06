@@ -4,89 +4,89 @@
  * 与 behaviors/slider.ts 配套（透明原生 range 覆盖层驱动 fill/thumb 定位）。
  *
  * 完整契约：
- *   <div class="slider [--sm|--lg] [--vertical] [.is-disabled]" data-min=0 data-max=100 data-step=1>
- *     <div class="slider-track"></div>
- *     <div class="slider-fill" style="width:40%"></div>                 单值：from 0
+ *   <div class="icen-slider [--sm|--lg] [--vertical] [.is-disabled]" data-icen-min=0 data-icen-max=100 data-icen-step=1>
+ *     <div class="icen-slider-track"></div>
+ *     <div class="icen-slider-fill" style="width:40%"></div>                 单值：from 0
  *     OR
- *     <div class="slider-range" style="left:20%; right:35%"></div>      双值：选中段
- *     <div class="slider-thumb" style="left:calc(40% - 8px)"></div>     单 thumb
+ *     <div class="icen-slider-range" style="left:20%; right:35%"></div>      双值：选中段
+ *     <div class="icen-slider-thumb" style="left:calc(40% - 8px)"></div>     单 thumb
  *     OR
- *     <div class="slider-thumb slider-thumb--lo" …>
- *     <div class="slider-thumb slider-thumb--hi" …>                     双 thumb
- *     <input class="slider-native" type="range" />                      单：1 个；双：2 个 [data-thumb=lo|hi]
+ *     <div class="icen-slider-thumb slider-thumb--lo" …>
+ *     <div class="icen-slider-thumb slider-thumb--hi" …>                     双 thumb
+ *     <input class="icen-slider-native" type="range" />                      单：1 个；双：2 个 [data-icen-thumb=lo|hi]
  *   </div>
  *
  *   带标签行：
- *   <div class="slider-row">
- *     <span class="slider-label">音量</span>
- *     <span class="slider-value">40</span>     ← behavior 同步当前值，tabular-nums
+ *   <div class="icen-slider-row">
+ *     <span class="icen-slider-label">音量</span>
+ *     <span class="icen-slider-value">40</span>     ← behavior 同步当前值，tabular-nums
  *   </div>
  *
  * behavior 维护：thumb 位置 % 化、aria-valuenow/min/max、键盘 ←/→ 步进、Shift 十步、双滑块互锁。
  */
 
-.slider {
+.icen-slider {
   position: relative;
   height: 20px;
   width: 100%;
   --slider-thumb-size: 16px;
   --slider-track-height: 6px;
 }
-.slider--sm {
+.icen-slider--sm {
   height: 16px;
   --slider-thumb-size: 12px;
   --slider-track-height: 4px;
 }
-.slider--lg {
+.icen-slider--lg {
   height: 24px;
   --slider-thumb-size: 20px;
   --slider-track-height: 8px;
 }
-.slider.is-disabled,
-.slider[aria-disabled='true'],
-.slider[data-disabled] {
+.icen-slider.is-disabled,
+.icen-slider[aria-disabled='true'],
+.icen-slider[data-icen-disabled] {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
 
 /* 垂直方向（orient=vertical），常见于音量/色相 */
-.slider--vertical {
+.icen-slider--vertical {
   width: 20px;
   height: 100%;
   min-height: 120px;
 }
-.slider--vertical.slider--sm { width: 16px; }
-.slider--vertical.slider--lg { width: 24px; }
+.icen-slider--vertical.icen-slider--sm { width: 16px; }
+.icen-slider--vertical.icen-slider--lg { width: 24px; }
 
-.slider-track {
+.icen-slider-track {
   position: absolute;
-  left: 0; right: 0;
+  inset-inline: 0;
   top: 50%;
   transform: translateY(-50%);
   height: var(--slider-track-height);
-  border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--token-line-soft) 50%, transparent);
+  border-radius: var(--icen-radius-full);
+  background: color-mix(in srgb, var(--icen-token-line-soft) 50%, transparent);
 }
-.slider--vertical .slider-track {
-  left: 50%; right: auto;
+.icen-slider--vertical .icen-slider-track {
+  left: 50%; right: auto; /* guard:allow-physical 垂直变体轨道水平居中（translateX(-50%) 配套） */
   top: 0; bottom: 0;
   transform: translateX(-50%);
   height: 100%;
   width: var(--slider-track-height);
 }
 
-.slider-fill {
+.icen-slider-fill {
   position: absolute;
-  left: 0;
+  left: 0; /* guard:allow-physical 填充段起点/宽度由 behavior 按物理坐标内联写入（同 popover 模式），RTL 视觉暂不镜像 */
   top: 50%;
   transform: translateY(-50%);
   height: var(--slider-track-height);
-  border-radius: var(--radius-full);
-  background: var(--token-accent);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent);
   transition: width var(--icen-tx-normal);
 }
-.slider--vertical .slider-fill {
-  left: 50%;
+.icen-slider--vertical .icen-slider-fill {
+  left: 50%; /* guard:allow-physical 垂直变体水平居中（translateX(-50%) 配套） */
   top: auto; bottom: 0;
   transform: translateX(-50%);
   width: var(--slider-track-height);
@@ -94,20 +94,20 @@
   transition: height var(--icen-tx-normal);
 }
 
-/* 双滑块选中段：left = lo%、right = (100 - hi)% */
-.slider-range {
+/* 双滑块选中段：left/right 由 behavior 按物理坐标内联写入（lo% / 100-hi%），RTL 视觉暂不镜像 */
+.icen-slider-range {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   height: var(--slider-track-height);
-  border-radius: var(--radius-full);
-  background: var(--token-accent);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent);
   transition:
-    left var(--icen-tx-normal),
-    right var(--icen-tx-normal);
+    left var(--icen-tx-normal), /* guard:allow-physical 与 behavior 内联写入的物理 left 配套 */
+    right var(--icen-tx-normal); /* guard:allow-physical 与 behavior 内联写入的物理 right 配套 */
 }
-.slider--vertical .slider-range {
-  left: 50%;
+.icen-slider--vertical .icen-slider-range {
+  left: 50%; /* guard:allow-physical 垂直变体水平居中（translateX(-50%) 配套） */
   top: auto;
   transform: translateX(-50%);
   width: var(--slider-track-height);
@@ -117,40 +117,40 @@
     bottom var(--icen-tx-normal);
 }
 
-.slider-thumb {
+.icen-slider-thumb {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
   width: var(--slider-thumb-size);
   height: var(--slider-thumb-size);
-  border-radius: var(--radius-full);
-  background: var(--token-card);
-  border: 2px solid var(--token-accent);
-  box-shadow: var(--token-shadow-card);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-card);
+  border: 2px solid var(--icen-token-accent);
+  box-shadow: var(--icen-token-shadow-card);
   pointer-events: none;
   transition:
     transform var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast),
     border-color var(--icen-tx-fast);
 }
-.slider--vertical .slider-thumb {
+.icen-slider--vertical .icen-slider-thumb {
   top: auto;
-  left: 50%;
+  left: 50%; /* guard:allow-physical 垂直变体水平居中（translate(-50%) 配套） */
   transform: translate(-50%, 50%);
 }
-.slider:hover .slider-thumb {
-  border-color: var(--token-accent-deep, var(--token-accent));
+.icen-slider:hover .icen-slider-thumb {
+  border-color: var(--icen-token-accent-deep, var(--icen-token-accent));
 }
 /* 原生 input 透明，焦点环镜像到可见 thumb 上（消费 --icen-ring-soft） */
-.slider:focus-within .slider-thumb {
+.icen-slider:focus-within .icen-slider-thumb {
   transform: translate(-50%, -50%) scale(1.15);
-  box-shadow: var(--icen-ring-soft), var(--token-shadow-card);
+  box-shadow: var(--icen-ring-soft), var(--icen-token-shadow-card);
 }
-.slider--vertical:focus-within .slider-thumb {
+.icen-slider--vertical:focus-within .icen-slider-thumb {
   transform: translate(-50%, 50%) scale(1.15);
 }
 
-.slider-native {
+.icen-slider-native {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -163,32 +163,32 @@
   appearance: none;
   background: transparent;
 }
-.slider-native:disabled { cursor: not-allowed; }
-.slider-native:focus { outline: none; }
+.icen-slider-native:disabled { cursor: not-allowed; }
+.icen-slider-native:focus { outline: none; }
 
 /* 双滑块需要两个 native input 叠加，--z 错开避免相互拦截 */
-.slider--dual .slider-native[data-thumb='hi'] { z-index: 2; }
+.icen-slider--dual .icen-slider-native[data-icen-thumb='hi'] { z-index: 2; }
 
 /* 当前值标签 */
-.slider-value {
+.icen-slider-value {
   font-variant-numeric: tabular-nums;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
 
-.slider-row {
+.icen-slider-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--density-space-sm);
-  font-size: var(--density-font-size-sm);
-  color: var(--token-text-muted);
+  gap: var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-muted);
 }
-.slider-label { color: var(--token-text-muted); }
+.icen-slider-label { color: var(--icen-token-text-muted); }
 
 /* 刻度（behavior 可选渲染） */
-.slider-ticks {
+.icen-slider-ticks {
   position: absolute;
-  left: 0; right: 0;
+  inset-inline: 0;
   top: 50%;
   height: var(--slider-track-height);
   transform: translateY(-50%);
@@ -196,125 +196,125 @@
   justify-content: space-between;
   pointer-events: none;
 }
-.slider-tick {
+.icen-slider-tick {
   width: 1px;
   height: 100%;
-  background: color-mix(in srgb, var(--token-text) 12%, transparent);
+  background: color-mix(in srgb, var(--icen-token-text) 12%, transparent);
 }
 
 /* ── 带标签的刻度（marks）── */
-.slider-marks {
+.icen-slider-marks {
   position: relative;
   height: 20px;
   margin-top: 2px;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
 }
-.slider-mark {
+.icen-slider-mark {
   position: absolute;
   transform: translateX(-50%);
   white-space: nowrap;
   cursor: pointer;
   transition: color var(--icen-tx-fast);
 }
-.slider-mark:hover {
-  color: var(--token-accent);
+.icen-slider-mark:hover {
+  color: var(--icen-token-accent);
 }
-.slider-mark.is-active {
-  color: var(--token-accent);
+.icen-slider-mark.is-active {
+  color: var(--icen-token-accent);
   font-weight: 500;
 }
-/* 刻度上的大点（配合 marks 使用） */
-.slider-mark::before {
+/* 刻度上的大点（配合 marks 使用；left 由 behavior 按物理坐标内联写入） */
+.icen-slider-mark::before {
   content: '';
   position: absolute;
-  left: 50%;
+  left: 50%; /* guard:allow-physical 刻度点水平居中于 mark 标签（translateX(-50%) 配套） */
   top: -8px;
   width: 3px;
   height: 3px;
-  border-radius: var(--radius-full);
-  background: var(--token-text-faint);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-text-faint);
   transform: translateX(-50%);
   transition: background-color var(--icen-tx-fast);
 }
-.slider-mark:hover::before,
-.slider-mark.is-active::before {
-  background: var(--token-accent);
+.icen-slider-mark:hover::before,
+.icen-slider-mark.is-active::before {
+  background: var(--icen-token-accent);
 }
 
 /* ── 值提示气泡（拖拽时出现）── */
-.slider-tooltip {
+.icen-slider-tooltip {
   position: absolute;
   bottom: calc(50% + var(--slider-thumb-size));
   transform: translateX(-50%);
-  padding: 2px var(--density-space-xs);
-  background: var(--token-text);
-  color: var(--token-card-strong);
-  font-size: var(--density-font-size-xs);
+  padding: 2px var(--icen-density-space-xs);
+  background: var(--icen-token-text);
+  color: var(--icen-token-card-strong);
+  font-size: var(--icen-density-font-size-xs);
   font-variant-numeric: tabular-nums;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--icen-tx-fast);
   z-index: 3;
 }
-.slider-tooltip::after {
+.icen-slider-tooltip::after {
   content: '';
   position: absolute;
   top: 100%;
-  left: 50%;
+  left: 50%; /* guard:allow-physical 气泡尾巴水平居中（translateX(-50%) 配套） */
   transform: translateX(-50%);
   border: 4px solid transparent;
-  border-top-color: var(--token-text);
+  border-top-color: var(--icen-token-text);
 }
-.slider:active .slider-tooltip,
-.slider:focus-within .slider-tooltip {
+.icen-slider:active .icen-slider-tooltip,
+.icen-slider:focus-within .icen-slider-tooltip {
   opacity: 1;
 }
-.slider--vertical .slider-tooltip {
+.icen-slider--vertical .icen-slider-tooltip {
   bottom: auto;
-  left: calc(50% + var(--slider-thumb-size));
+  left: calc(50% + var(--slider-thumb-size)); /* guard:allow-physical 垂直变体：气泡位于轨道右侧（物理几何） */
   top: 50%;
   transform: translate(0, -50%);
 }
-.slider--vertical .slider-tooltip::after {
+.icen-slider--vertical .icen-slider-tooltip::after {
   top: 50%;
-  left: auto;
-  right: 100%;
+  left: auto; /* guard:allow-physical 垂直变体尾巴贴气泡物理左侧 */
+  right: 100%; /* guard:allow-physical 垂直变体尾巴指向左侧（物理几何） */
   transform: translateY(-50%);
   border-top-color: transparent;
-  border-right-color: var(--token-text);
+  border-right-color: var(--icen-token-text); /* guard:allow-physical 垂直变体左指箭头（物理几何） */
 }
 
 /* ── 滑块拖拽态（active 时放大） ── */
-.slider:active .slider-thumb {
+.icen-slider:active .icen-slider-thumb {
   transform: translate(-50%, -50%) scale(1.25);
 }
-.slider--vertical:active .slider-thumb {
+.icen-slider--vertical:active .icen-slider-thumb {
   transform: translate(-50%, 50%) scale(1.25);
 }
 
 /* ── 填充段带渐变（高级视觉） ── */
-.slider-fill--gradient,
-.slider-range--gradient {
+.icen-slider-fill--gradient,
+.icen-slider-range--gradient {
   background: linear-gradient(90deg,
-    color-mix(in srgb, var(--token-accent) 60%, transparent),
-    var(--token-accent));
+    color-mix(in srgb, var(--icen-token-accent) 60%, transparent),
+    var(--icen-token-accent));
 }
 
 /* ── 禁用态填充色变灰 ── */
-.slider.is-disabled .slider-fill,
-.slider.is-disabled .slider-range {
-  background: var(--token-fill-2);
+.icen-slider.is-disabled .icen-slider-fill,
+.icen-slider.is-disabled .icen-slider-range {
+  background: var(--icen-token-fill-2);
 }
-.slider.is-disabled .slider-thumb {
-  border-color: var(--token-text-faint);
+.icen-slider.is-disabled .icen-slider-thumb {
+  border-color: var(--icen-token-text-faint);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .slider-fill, .slider-range, .slider-thumb { transition: none; }
-  .slider-tooltip { transition: none; }
-  .slider-mark, .slider-mark::before { transition: none; }
+  .icen-slider-fill, .icen-slider-range, .icen-slider-thumb { transition: none; }
+  .icen-slider-tooltip { transition: none; }
+  .icen-slider-mark, .icen-slider-mark::before { transition: none; }
 }

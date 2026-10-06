@@ -1,0 +1,306 @@
+/*
+ * @icen.ai/ui — Component: cascader（级联选择）
+ * 与 behaviors/cascader.ts 配套（函数式 API：createCascader(el, opts) → handle）。
+ *
+ * 完整契约（createCascader 渲染进宿主 el；面板打开时 portal 到 document.body）：
+ *   <div class="icen-cascader [.is-open]" data-icen-cascader [data-icen-disabled]>
+ *     <button class="icen-cascader-trigger" role="combobox" aria-haspopup="listbox"
+ *             aria-expanded="false" aria-controls="<panelId>" [disabled]>
+ *       <span class="icen-cascader-value [.is-empty]">请选择 / 浙江 / 杭州</span>
+ *       <svg class="icen-cascader-chevron">…</svg>
+ *     </button>
+ *     <button class="icen-cascader-clear" aria-label="清除" [hidden]>×</button>  ← clearable；
+ *         与 trigger 同级（不能嵌套进 button），绝对定位叠进 trigger 行内末端侧
+ *     <div class="icen-cascader-panel" id="<panelId>" [hidden] data-icen-side="top|bottom">
+ *       <div class="icen-cascader-search">              ← opts.searchable 时渲染
+ *         <input class="icen-cascader-search-input" type="search" placeholder="搜索" />
+ *       </div>
+ *       <div class="icen-cascader-cols">                ← 多列区（搜索态 hidden）；列宽不足横向滚动
+ *         <ul class="icen-cascader-col" role="listbox" data-icen-level="0">
+ *           <li class="icen-cascader-item [.is-active|.is-focused|.is-selected|.is-disabled]"
+ *               role="option" aria-selected="false" tabindex="-1" data-icen-value="zj">
+ *             <span class="icen-cascader-item-label">浙江</span>
+ *             <svg class="icen-cascader-item-chevron">…</svg>   ← 有子级的项
+ *           </li>
+ *         </ul>
+ *       </div>
+ *       <ul class="icen-cascader-results" role="listbox" [hidden]>   ← 搜索态单列表
+ *         <li class="icen-cascader-result [.is-focused|.is-disabled]" role="option"
+ *             tabindex="-1" data-icen-index="0">
+ *           <span class="icen-cascader-result-part">浙江</span><i>/</i>
+ *           <span class="icen-cascader-result-label">杭州</span>
+ *         </li>
+ *       </ul>
+ *       <div class="icen-cascader-empty" [hidden]>无匹配</div>       ← opts.emptyLabel
+ *     </div>
+ *   </div>
+ *
+ * behavior 维护：
+ *   - .icen-cascader.is-open ↔ aria-expanded；panel portal 到 body（inline left/top/width/
+ *     max-height + data-icen-side）；外点 / Esc 关闭；window scroll/resize 跟随重定位
+ *   - 面板尺寸走全库统一 PanelSizing 契约（behaviors/popover.ts）：根 el 挂
+ *     data-icen-panel-width（固定宽，最高优先）/ data-icen-panel-min / data-icen-panel-max /
+ *     data-icen-panel-max-height（默认 240）
+ *   - 多列区：activePath 有子级即加列；列宽不足时 .icen-cascader-cols 横向滚动
+ *   - 搜索态（searchable + 搜索词非空）：多列区 hidden、结果单列表显示；每条 = 完整路径
+ *     面包屑（分隔符 <i> 为 muted 斜杠，末级 .icen-cascader-result-label 定值）；无命中
+ *     显示 .icen-cascader-empty
+ *   - 键盘：→ 进子级 / ← 回上级 / ↑↓ 列内移动 / Enter 定值或进子级 / Esc 关闭；
+ *     RTL（[dir="rtl"]）下 ←/→ 镜像；搜索态 ↑↓ 移动 .is-focused，Enter/点击定值
+ *   - 事件 icen:cascader-change { value: string[]; path: string[] }（path = 各级 label）
+ */
+
+.icen-cascader {
+  position: relative;
+  inline-size: 100%;
+}
+
+.icen-cascader-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-xs);
+  inline-size: 100%;
+  height: var(--icen-density-input-height-md);
+  padding: 0 var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-md);
+  text-align: start;
+  background: var(--icen-token-control);
+  color: var(--icen-token-text);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
+  cursor: pointer;
+  transition:
+    border-color var(--icen-tx-fast),
+    box-shadow var(--icen-tx-fast);
+}
+.icen-cascader-trigger:hover:not(:disabled) {
+  border-color: var(--icen-hover-border);
+}
+.icen-cascader-trigger:focus-visible {
+  outline: none;
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+.icen-cascader-trigger:disabled,
+.icen-cascader[data-icen-disabled] .icen-cascader-trigger,
+.icen-cascader[aria-disabled='true'] .icen-cascader-trigger {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.icen-cascader-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.icen-cascader-value.is-empty {
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+}
+
+.icen-cascader-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--icen-token-text-faint);
+  transition: transform var(--icen-tx-fast);
+}
+.icen-cascader.is-open .icen-cascader-chevron { transform: rotate(180deg); }
+
+/* 清除钮（与 trigger 同级，绝对定位叠进 trigger 行内末端侧、chevron 内侧） */
+.icen-cascader-clear {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: calc(var(--icen-density-space-sm) + 20px);
+  transform: translateY(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--icen-radius-xs);
+  background: transparent;
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+}
+.icen-cascader-clear:hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-1);
+}
+/* 有清除钮时 trigger 行内末端侧让位（clear 18px + chevron 14px + 间距） */
+.icen-cascader:has(.icen-cascader-clear) .icen-cascader-trigger { padding-inline-end: 52px; }
+
+/* 面板由 behavior portal 到 body：left/top/width/max-height 由 JS 按 trigger rect inline 写入；
+   data-icen-side="top|bottom" 标记翻侧方向。 */
+.icen-cascader-panel {
+  position: absolute;
+  z-index: var(--icen-z-popover);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  background: var(--icen-token-card-strong);
+  border: 1px solid var(--icen-token-outline);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-overlay);
+  transform-origin: top center;
+  animation: icen-pop-in var(--icen-tx-fast);
+}
+.icen-cascader-panel[data-icen-side='top'] { transform-origin: bottom center; }
+
+/* ── 搜索框（opts.searchable 时 behavior 渲染）── */
+.icen-cascader-search {
+  padding: 4px 4px 6px;
+  border-bottom: 1px solid var(--icen-token-outline-soft);
+  margin-bottom: 4px;
+  position: sticky;
+  top: 0;
+  background: var(--icen-token-card-strong);
+  z-index: 1;
+}
+.icen-cascader-search-input {
+  inline-size: 100%;
+  height: 30px;
+  padding: 0 var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-sm);
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
+}
+.icen-cascader-search-input:focus {
+  outline: none;
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-control-focus-shadow);
+}
+
+/* ── 多列区：每级一列，列宽不足横向滚动 ── */
+.icen-cascader-cols {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+}
+
+.icen-cascader-col {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+  min-inline-size: 132px;
+  flex-shrink: 0;
+}
+.icen-cascader-col + .icen-cascader-col {
+  border-inline-start: 1px solid var(--icen-token-outline-soft);
+}
+
+.icen-cascader-item {
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-xs);
+  padding: 6px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  border-radius: var(--icen-radius-sm);
+  color: var(--icen-token-text);
+  cursor: pointer;
+  transition:
+    background-color var(--icen-tx-fast),
+    color var(--icen-tx-fast);
+}
+.icen-cascader-item:hover:not(.is-disabled) { background: var(--icen-token-fill-1); }
+.icen-cascader-item.is-focused {
+  background: var(--icen-token-fill-2);
+}
+.icen-cascader-item.is-active {
+  color: var(--icen-token-accent);
+  font-weight: 500;
+  background: var(--icen-token-accent-subtle);
+}
+.icen-cascader-item.is-selected .icen-cascader-item-label::after {
+  content: '✓';
+  margin-inline-start: var(--icen-density-space-xs);
+  color: var(--icen-token-accent);
+}
+.icen-cascader-item.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.icen-cascader-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.icen-cascader-item-chevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--icen-token-text-faint);
+}
+
+/* RTL：子列在左，chevron 指向左（drill-in 方向随书写方向镜像） */
+[dir='rtl'] .icen-cascader-item-chevron { transform: scaleX(-1); }
+
+/* ── 搜索结果单列表（面包屑式完整路径；分隔符 muted）── */
+.icen-cascader-results {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+}
+.icen-cascader-result {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px var(--icen-density-space-sm);
+  font-size: var(--icen-density-font-size-sm);
+  border-radius: var(--icen-radius-sm);
+  color: var(--icen-token-text);
+  cursor: pointer;
+  transition: background-color var(--icen-tx-fast);
+}
+.icen-cascader-result:hover:not(.is-disabled) { background: var(--icen-token-fill-1); }
+.icen-cascader-result.is-focused { background: var(--icen-token-fill-2); }
+.icen-cascader-result.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.icen-cascader-result-part {
+  color: var(--icen-token-text-faint);
+}
+.icen-cascader-result-label {
+  color: var(--icen-token-text);
+  font-weight: 500;
+}
+.icen-cascader-result > i {
+  font-style: normal;
+  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+  margin-inline: 2px;
+}
+
+/* 空状态（搜索无命中） */
+.icen-cascader-empty {
+  padding: var(--icen-density-space-md);
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-faint);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-cascader-panel { animation: none; }
+  .icen-cascader-trigger,
+  .icen-cascader-chevron,
+  .icen-cascader-clear,
+  .icen-cascader-item,
+  .icen-cascader-result,
+  .icen-cascader-search-input { transition: none; }
+}

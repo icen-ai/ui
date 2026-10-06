@@ -17,25 +17,25 @@ export const KB_DOCS_PERM: ComponentDoc[] = [
     group: '知识库',
     desc: 'SharePoint 权限页范式的资源级 ACL 面板：继承 banner 三态（继承含父链 / 已断继承警示 / 例外 N 项 is-partial）、授权行主体五类（user/group/org/anyone/link，组行带「24 成员 · 由 IT 管理」注记）、显式 deny 一票否决置顶红（order:-1）、Limited Access 类系统行不可删（is-system 隐藏删除钮）、链接授权带范围与到期（is-expiring）、exposureCount 过度授权警示「对 1,204 人可见」（不去重计数）。renderKbAcl(el, model, opts?) 快照渲染；求值语义（先显式 deny → allow 并集 → 默认拒绝）由 kb-core evaluateAcl 提供。',
     demo: `<div id="kb-acl-demo">
-  <section class="kb-acl">
-    <div class="kb-acl-inherit">继承自：公司库 <span class="kb-acl-chain-link">›</span> 财务部空间 <span class="kb-meta">例外 1 项</span></div>
-    <div class="kb-acl-grant is-deny">
-      <span class="kb-acl-subject" data-kind="user">竞对黑名单</span>
-      <span class="kb-acl-role kb-chip">拒绝</span>
-      <span class="kb-acl-meta">直接 · 一票否决</span>
+  <section class="icen-kb-acl">
+    <div class="icen-kb-acl-inherit">继承自：公司库 <span class="icen-kb-acl-chain-link">›</span> 财务部空间 <span class="icen-kb-meta">例外 1 项</span></div>
+    <div class="icen-kb-acl-grant is-deny">
+      <span class="icen-kb-acl-subject" data-icen-kind="user">竞对黑名单</span>
+      <span class="icen-kb-acl-role icen-kb-chip">拒绝</span>
+      <span class="icen-kb-acl-meta">直接 · 一票否决</span>
     </div>
-    <div class="kb-acl-grant">
-      <span class="kb-acl-subject" data-kind="group">finance-team</span>
-      <span class="kb-acl-role kb-chip">可编辑</span>
-      <span class="kb-acl-meta">继承自 财务部空间 · 24 成员 · 由 IT 管理</span>
+    <div class="icen-kb-acl-grant">
+      <span class="icen-kb-acl-subject" data-icen-kind="group">finance-team</span>
+      <span class="icen-kb-acl-role icen-kb-chip">可编辑</span>
+      <span class="icen-kb-acl-meta">继承自 财务部空间 · 24 成员 · 由 IT 管理</span>
     </div>
-    <div class="kb-acl-grant is-system">
-      <span class="kb-acl-subject" data-kind="org">Limited Access</span>
-      <span class="kb-acl-role kb-chip">可查看</span>
-      <span class="kb-acl-meta">系统管理 · 不可手工增删</span>
+    <div class="icen-kb-acl-grant is-system">
+      <span class="icen-kb-acl-subject" data-icen-kind="org">Limited Access</span>
+      <span class="icen-kb-acl-role icen-kb-chip">可查看</span>
+      <span class="icen-kb-acl-meta">系统管理 · 不可手工增删</span>
     </div>
-    <footer class="kb-acl-foot">
-      <span class="kb-meta">对 <span class="kb-num">1,204</span> 人可见</span>
+    <footer class="icen-kb-acl-foot">
+      <span class="icen-kb-meta">对 <span class="icen-kb-num">1,204</span> 人可见</span>
     </footer>
   </section>
 </div>
@@ -91,10 +91,10 @@ if (host && kbAclMod) {
     ]
   });
   host.addEventListener('icen:kb-acl-inherit', function (e) {
-    if (log) log.textContent = 'icen:kb-acl-inherit · ' + (e.detail.action === 'break' ? '停止继承（本项转独立权限）' : '恢复继承（重新跟随父容器）');
+    if (log) log.textContent = 'icen:icen-kb-acl-inherit · ' + (e.detail.action === 'break' ? '停止继承（本项转独立权限）' : '恢复继承（重新跟随父容器）');
   });
   host.addEventListener('icen:kb-acl-remove', function (e) {
-    if (log) log.textContent = 'icen:kb-acl-remove · ' + (e.detail.subject ? e.detail.subject.label : '');
+    if (log) log.textContent = 'icen:icen-kb-acl-remove · ' + (e.detail.subject ? e.detail.subject.label : '');
   });
   host.addEventListener('icen:kb-acl-grant', function () {
     if (log) log.textContent = 'icen:kb-acl-grant · 打开主体选择器（宿主实现）';
@@ -107,15 +107,15 @@ if (host && kbAclMod) {
     group: '知识库',
     desc: 'SharePoint「Check Permissions」/ Jira Permission Helper 范式的 view-as 检查器（差异化组件——Confluence 连原因链都没做全，业界缺口即本组件定位）：固定身份集下拉（来自服务端验证 token，不接受自由输入——Kendra 自报身份教训）→ 结论（有效角色 / 无权限 / 被策略拒绝）+ 扁平原因链（继承 / 直接 / 链接来源逐条列出，不做树）+ 叠加规则说明（多来源并集取权限序最大；deny 一票否决置顶红）。renderKbWhoCan(el, { identities, entries, evaluate? }) → handle { setIdentity(id), getResult() }；evaluate 缺省 = kb-core evaluateAcl（先显式 deny → allow 并集 → 默认拒绝 fail-closed）。',
     demo: `<div id="kb-whocan-demo">
-  <div class="kb-whocan">
-    <div class="kb-whocan-bar"><span class="kb-meta">身份：固定身份集（服务端 token，不接受自由输入）</span></div>
-    <div class="kb-whocan-result">
-      <div class="kb-whocan-verdict">可编辑（Editor）</div>
-      <ul class="kb-whocan-chain">
-        <li class="kb-whocan-reason"><span class="kb-badge">继承</span> 财务部空间 · finance-team · Editor <span class="kb-meta">24 成员 · 由 IT 管理</span></li>
-        <li class="kb-whocan-reason"><span class="kb-badge">继承</span> 公司库 · 全体员工 · Viewer <span class="kb-meta">org</span></li>
+  <div class="icen-kb-whocan">
+    <div class="icen-kb-whocan-bar"><span class="icen-kb-meta">身份：固定身份集（服务端 token，不接受自由输入）</span></div>
+    <div class="icen-kb-whocan-result">
+      <div class="icen-kb-whocan-verdict">可编辑（Editor）</div>
+      <ul class="icen-kb-whocan-chain">
+        <li class="icen-kb-whocan-reason"><span class="icen-kb-badge">继承</span> 财务部空间 · finance-team · Editor <span class="icen-kb-meta">24 成员 · 由 IT 管理</span></li>
+        <li class="icen-kb-whocan-reason"><span class="icen-kb-badge">继承</span> 公司库 · 全体员工 · Viewer <span class="icen-kb-meta">org</span></li>
       </ul>
-      <div class="kb-whocan-rule">叠加规则：多来源并集 → Editor；无 Deny 生效</div>
+      <div class="icen-kb-whocan-rule">叠加规则：多来源并集 → Editor；无 Deny 生效</div>
     </div>
   </div>
 </div>
@@ -160,7 +160,7 @@ if (host && kbWhoCanMod) {
     const who = d.identity ? (d.identity.label || d.identity.user) : '';
     const role = d.decision && d.decision.role ? d.decision.role : '无权限（默认拒绝）';
     const denied = d.decision && d.decision.deniedBy ? ' · 被策略拒绝：' + d.decision.deniedBy.label : '';
-    if (log) log.textContent = 'icen:kb-whocan-check · ' + who + ' → ' + role + denied + '（原因链扁平清单）';
+    if (log) log.textContent = 'icen:icen-kb-whocan-check · ' + who + ' → ' + role + denied + '（原因链扁平清单）';
   });
 }`,
   },
@@ -169,17 +169,17 @@ if (host && kbWhoCanMod) {
     name: '访问申请流',
     group: '知识库',
     desc: 'Google Drive「请求访问」范式的访问申请流：被拒五件套（资源名 / 原因 / owner / 申请入口 / 切换身份）+ 申请表单（理由可必填、角色与时长、路由明示「请求将发送给：内容 owner 李四」——Confluence 十年路由踩坑的解）+ 九态状态机徽章族（idle → requested → pending_review → granted(expiresAt 倒计时) → expiring → expired → 重交；revoked 审批侧撤销；denied 不做刺眼红色终态——业界静默默契）+ mode="approver" 审批方视角（请求卡 + 批准选权限级 / 拒绝附留言）。createKbAccess(el, { request, mode?, onRequest?, onDecide? }) → handle { setState(next), getState() }；到期是一等公民：每条 grant 可带 expiresAt 三态呈现（永不过期 / 倒计时+续期 / 已过期+重交）。',
-    demo: `<div class="toolbar" style="margin-bottom:10px">
-  <button class="btn btn-sm" type="button" id="kb-access-advance">推进状态机 →</button>
+    demo: `<div class="icen-toolbar" style="margin-bottom:10px">
+  <button class="icen-btn icen-btn-sm" type="button" id="kb-access-advance">推进状态机 →</button>
 </div>
 <div id="kb-access-demo">
-  <div class="kb-access" data-state="idle">
-    <div class="kb-access-denied">
-      <div class="kb-access-title">2026 财务规划</div>
-      <p class="kb-access-why">你没有访问权限——「不知道」与「不能说」不可区分（GitHub 404 惯例），此处仅提示可申请。</p>
-      <div class="kb-access-owner">内容负责人：李四（财务部）</div>
+  <div class="icen-kb-access" data-icen-state="idle">
+    <div class="icen-kb-access-denied">
+      <div class="icen-kb-access-title">2026 财务规划</div>
+      <p class="icen-kb-access-why">你没有访问权限——「不知道」与「不能说」不可区分（GitHub 404 惯例），此处仅提示可申请。</p>
+      <div class="icen-kb-access-owner">内容负责人：李四（财务部）</div>
     </div>
-    <div class="kb-access-state"><span class="kb-chip" data-state="idle">未申请</span></div>
+    <div class="icen-kb-access-state"><span class="icen-kb-chip" data-icen-state="idle">未申请</span></div>
   </div>
 </div>
 <p class="demo-label" id="kb-access-log" style="margin-top:8px">点「推进状态机」：未申请 → 已提交（路由明示给内容负责人）→ 已开通（30 天到期倒计时）→ 已过期（中性「可重新申请」）→ 回到未申请</p>`,
@@ -243,20 +243,20 @@ if (host && kbAccessMod) {
     group: '知识库',
     desc: 'Microsoft Purview / Box 审计骨架的权限时间线：通道过滤 chips（全部 / 读取 / 权限变更 / 申请 / 系统）+ 导出 CSV；权限异味节（admin 治理发现六枚举：过度暴露 / 组织级链接 / 过宽组授权 / 敏感度错配 / 断继承 / 负责人缺位——源系统权限卫生问题，RAG 只是放大器）分高 / 中 / 低级；时间线行 actor 三类（human / app / system），读取与预览分列（Purview 范式）；break-glass 行常驻警示色 +「实时告警已通知安全团队」，审计粒度 ≥ 常规。renderKbAudit(el, { entries, hygiene? }) 快照 + initKbAudit(root?) document 级委托（通道过滤 / 导出 / 异味处置）；同用户同资源 5 分钟读取去重是数据侧纪律——UI 不重复渲染也不声明条数。',
     demo: `<div id="kb-audit-demo">
-  <div class="kb-audit">
-    <div class="kb-audit-bar">
-      <div class="kb-audit-channels">
-        <button class="kb-chip" type="button" aria-pressed="true">全部</button>
-        <button class="kb-chip" type="button" aria-pressed="false">读取</button>
-        <button class="kb-chip" type="button" aria-pressed="false">权限变更</button>
+  <div class="icen-kb-audit">
+    <div class="icen-kb-audit-bar">
+      <div class="icen-kb-audit-channels">
+        <button class="icen-kb-chip" type="button" aria-pressed="true">全部</button>
+        <button class="icen-kb-chip" type="button" aria-pressed="false">读取</button>
+        <button class="icen-kb-chip" type="button" aria-pressed="false">权限变更</button>
       </div>
     </div>
-    <div class="kb-audit-hygiene">
-      <div class="kb-hygiene is-high"><span class="kb-badge">过度暴露</span> 2026 财务规划 <span class="kb-meta">对 1,204 人可见</span> <button class="kb-hygiene-act kb-chip" type="button">处置</button></div>
+    <div class="icen-kb-audit-hygiene">
+      <div class="icen-kb-hygiene is-high"><span class="icen-kb-badge">过度暴露</span> 2026 财务规划 <span class="icen-kb-meta">对 1,204 人可见</span> <button class="icen-kb-hygiene-act icen-kb-chip" type="button">处置</button></div>
     </div>
-    <ol class="kb-audit-list">
-      <li class="kb-audit-entry is-breakglass"><span class="kb-audit-at kb-num">10-03 14:22</span><span class="kb-audit-actor" data-kind="app">系统审计员</span><span class="kb-audit-action kb-chip">应急访问</span><span class="kb-audit-detail">双人复核中</span></li>
-      <li class="kb-audit-entry"><span class="kb-audit-at kb-num">10-03 13:05</span><span class="kb-audit-actor" data-kind="human">张三</span><span class="kb-audit-action kb-chip">读取</span><span class="kb-audit-detail">全文读取</span></li>
+    <ol class="icen-kb-audit-list">
+      <li class="icen-kb-audit-entry is-breakglass"><span class="icen-kb-audit-at icen-kb-num">10-03 14:22</span><span class="icen-kb-audit-actor" data-icen-kind="app">系统审计员</span><span class="icen-kb-audit-action icen-kb-chip">应急访问</span><span class="icen-kb-audit-detail">双人复核中</span></li>
+      <li class="icen-kb-audit-entry"><span class="icen-kb-audit-at icen-kb-num">10-03 13:05</span><span class="icen-kb-audit-actor" data-icen-kind="human">张三</span><span class="icen-kb-audit-action icen-kb-chip">读取</span><span class="icen-kb-audit-detail">全文读取</span></li>
     </ol>
   </div>
 </div>
@@ -306,7 +306,7 @@ if (host && kbAuditMod) {
     if (log) log.textContent = 'icen:kb-audit-filter · ' + e.detail.channel;
   });
   host.addEventListener('icen:kb-audit-export', function (e) {
-    if (log) log.textContent = 'icen:kb-audit-export · ' + e.detail.channel + '（宿主生成 CSV）';
+    if (log) log.textContent = 'icen:icen-kb-audit-export · ' + e.detail.channel + '（宿主生成 CSV）';
   });
   host.addEventListener('icen:kb-hygiene-action', function (e) {
     if (log) log.textContent = 'icen:kb-hygiene-action · ' + (e.detail.issue ? e.detail.issue.resource : '');
@@ -319,27 +319,27 @@ if (host && kbAuditMod) {
     group: '知识库',
     desc: 'admin/审计专用的检索可见性对照器（安全对照组件，组件头常驻警示条：命中差异对照对普通用户构成泄露——任何随受限集合变化的可观察量都是侧信道）：固定身份集 × 同一查询的命中对照网格，每身份一列（有效角色 + 授权集合内安全计数 + 命中列表），可见性五级呈现（hidden 不渲染 / metadata 锁+标题+打码+申请 / restricted 附申请通道 / summary AI 摘要可见原文不可用 / full 正常）；过滤层徽标三态（pre ✓ 唯一安全基线——ANN 与 BM25 两侧同时生效 / post ⚠ 分数已可观察——缺陷层 / none ✕ fail-open——Kendra 教训）；教学段讲 volume leakage 与 padding 取整缓解。renderKbVisibility(el, { query, identities, hits, evaluateHit }) → handle { setFilterLayer(l), getVisibility(id, hit) }。',
     demo: `<div id="kb-visibility-demo">
-  <div class="kb-visibility">
-    <div class="kb-visibility-warn">admin 审计视图——勿嵌入终端用户界面</div>
-    <div class="kb-visibility-bar"><span class="kb-meta">身份 chip 组 · 查询回显 · 过滤层徽标（pre ✓ / post ⚠ / none ✕）</span></div>
-    <div class="kb-visibility-grid">
-      <div class="kb-visibility-col">
+  <div class="icen-kb-visibility">
+    <div class="icen-kb-visibility-warn">admin 审计视图——勿嵌入终端用户界面</div>
+    <div class="icen-kb-visibility-bar"><span class="icen-kb-meta">身份 chip 组 · 查询回显 · 过滤层徽标（pre ✓ / post ⚠ / none ✕）</span></div>
+    <div class="icen-kb-visibility-grid">
+      <div class="icen-kb-visibility-col">
         <header>张三 · 华东销售部</header>
-        <div class="kb-visibility-count kb-num">安全计数 4</div>
-        <div class="kb-visibility-hit" data-visibility="metadata"><span>2026 财务规划</span><span class="kb-visibility-snippet"></span></div>
+        <div class="icen-kb-visibility-count icen-kb-num">安全计数 4</div>
+        <div class="icen-kb-visibility-hit" data-icen-visibility="metadata"><span>2026 财务规划</span><span class="icen-kb-visibility-snippet"></span></div>
       </div>
-      <div class="kb-visibility-col">
+      <div class="icen-kb-visibility-col">
         <header>王五 · 财务部</header>
-        <div class="kb-visibility-count kb-num">安全计数 6</div>
-        <div class="kb-visibility-hit" data-visibility="full"><span>2026 财务规划</span><span class="kb-visibility-snippet">含 Q4 预算缺口与降本目标……</span></div>
+        <div class="icen-kb-visibility-count icen-kb-num">安全计数 6</div>
+        <div class="icen-kb-visibility-hit" data-icen-visibility="full"><span>2026 财务规划</span><span class="icen-kb-visibility-snippet">含 Q4 预算缺口与降本目标……</span></div>
       </div>
-      <div class="kb-visibility-col">
+      <div class="icen-kb-visibility-col">
         <header>系统审计员</header>
-        <div class="kb-visibility-count kb-num">安全计数 5</div>
-        <div class="kb-visibility-hit" data-visibility="summary"><span>并购意向简报</span><span class="kb-visibility-summary">拟收购标的与估值区间（AI 摘要可见，原文受限）</span></div>
+        <div class="icen-kb-visibility-count icen-kb-num">安全计数 5</div>
+        <div class="icen-kb-visibility-hit" data-icen-visibility="summary"><span>并购意向简报</span><span class="icen-kb-visibility-summary">拟收购标的与估值区间（AI 摘要可见，原文受限）</span></div>
       </div>
     </div>
-    <div class="kb-visibility-lesson">计数差异 = volume leakage（缓解只有 padding 取整）；post-filter 的分数已可观察；fail-open 是 Kendra 无 UserContext 的教训。</div>
+    <div class="icen-kb-visibility-lesson">计数差异 = volume leakage（缓解只有 padding 取整）；post-filter 的分数已可观察；fail-open 是 Kendra 无 UserContext 的教训。</div>
   </div>
 </div>
 <p class="demo-label" id="kb-visibility-log" style="margin-top:8px">切身份 chip / 过滤层徽标派发事件 · metadata 列打码、summary 列给 AI 摘要、hidden 不渲染 · 此对照仅 admin 审计可用</p>`,

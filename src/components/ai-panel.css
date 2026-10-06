@@ -2,171 +2,171 @@
  * @icen.ai/ui — Component: ai-panel（AI 任务面板族：todo / context / usage，与 behaviors/ai-panel.ts 配套）
  *
  * 完整 DOM 契约（类名与规格 §4.8/§4.9/§4.10 一致）：
- *   <div class="ai-todo" [.is-complete] [data-ai-todo-interactive]>
- *     <div class="ai-todo-head">
- *       <span class="ai-todo-progress">2/5</span>
- *       <div class="ai-todo-bar" role="progressbar" …><i style="width:40%"></i></div>
+ *   <div class="icen-ai-todo" [.is-complete] [data-icen-ai-todo-interactive]>
+ *     <div class="icen-ai-todo-head">
+ *       <span class="icen-ai-todo-progress">2/5</span>
+ *       <div class="icen-ai-todo-bar" role="progressbar" …><i style="width:40%"></i></div>
  *     </div>
- *     <div class="ai-todo-item is-pending|running|streaming|approval|done|error|cancelled
- *          [role="button" tabindex="0"]" data-index="0">
- *       <span class="ai-item-status"></span>                     <!-- 状态点，纯 CSS 由 .is-* 驱动 -->
- *       <span class="ai-todo-text">实现登录页</span>
- *       <span class="ai-todo-active">正在实现登录页…</span>     <!-- is-running 时替换 text（CSS 驱动） -->
+ *     <div class="icen-ai-todo-item is-pending|running|streaming|approval|done|error|cancelled
+ *          [role="button" tabindex="0"]" data-icen-index="0">
+ *       <span class="icen-ai-item-status"></span>                     <!-- 状态点，纯 CSS 由 .is-* 驱动 -->
+ *       <span class="icen-ai-todo-text">实现登录页</span>
+ *       <span class="icen-ai-todo-active">正在实现登录页…</span>     <!-- is-running 时替换 text（CSS 驱动） -->
  *     </div>
  *   </div>
  *
- *   <div class="ai-usage">
- *     <div class="ai-usage-bar" role="img" aria-label="…">
- *       <i class="ai-usage-seg ai-usage-seg--input|output|cache-read|cache-write|reasoning" style="width:35%"></i>…
+ *   <div class="icen-ai-usage">
+ *     <div class="icen-ai-usage-bar" role="img" aria-label="…">
+ *       <i class="icen-ai-usage-seg icen-ai-usage-seg--input|output|cache-read|cache-write|reasoning" style="width:35%"></i>…
  *     </div>
- *     <div class="ai-usage-legend">
- *       <span class="ai-usage-legend-item">
- *         <i class="ai-usage-dot ai-usage-seg--input"></i>
- *         <span class="ai-usage-legend-label">输入</span> <span class="ai-usage-legend-value">35k</span>
+ *     <div class="icen-ai-usage-legend">
+ *       <span class="icen-ai-usage-legend-item">
+ *         <i class="icen-ai-usage-dot icen-ai-usage-seg--input"></i>
+ *         <span class="icen-ai-usage-legend-label">输入</span> <span class="icen-ai-usage-legend-value">35k</span>
  *       </span>…
  *     </div>
- *     <div class="ai-usage-total">82k / 200k · 41%</div>
+ *     <div class="icen-ai-usage-total">82k / 200k · 41%</div>
  *   </div>
  *
- *   <aside class="ai-context [.ai-context--inline]" hidden role="dialog" aria-label="上下文">
- *     <div class="ai-context-head"><span>上下文</span>
- *       <button type="button" data-ai-context-close aria-label="关闭">×</button></div>
- *     <section class="ai-context-section"><h3>…</h3>
- *       <div class="ai-context-section-body">…renderAiContext 产物…</div>   <!-- 可选包裹，亦可直接放内容 -->
+ *   <aside class="icen-ai-context [.icen-ai-context--inline]" hidden role="dialog" aria-label="上下文">
+ *     <div class="icen-ai-context-head"><span>上下文</span>
+ *       <button type="button" data-icen-ai-context-close aria-label="关闭">×</button></div>
+ *     <section class="icen-ai-context-section"><h3>…</h3>
+ *       <div class="icen-ai-context-section-body">…renderAiContext 产物…</div>   <!-- 可选包裹，亦可直接放内容 -->
  *     </section>…
  *   </aside>
  *
- *   .ai-item 行（MCP / Skills，规格 §2 基元）：
- *   <div class="ai-item is-done|is-error" style="--ai-item-tint: var(--token-accent)">
- *     <span class="ai-item-icon">…svg…</span>
- *     <span class="ai-item-main">
- *       <span class="ai-item-title">github</span><span class="ai-item-sub">…</span>
+ *   .icen-ai-item 行（MCP / Skills，规格 §2 基元）：
+ *   <div class="icen-ai-item is-done|is-error" style="--ai-item-tint: var(--icen-token-accent)">
+ *     <span class="icen-ai-item-icon">…svg…</span>
+ *     <span class="icen-ai-item-main">
+ *       <span class="icen-ai-item-title">github</span><span class="icen-ai-item-sub">…</span>
  *     </span>
- *     <span class="ai-item-side"><span class="ai-item-status"></span><span class="ai-item-meta">12 工具</span></span>
+ *     <span class="icen-ai-item-side"><span class="icen-ai-item-status"></span><span class="icen-ai-item-meta">12 工具</span></span>
  *   </div>
  *
  * 依赖说明：
- *   - .ai-item 完整版在 ai-tool.css（S2）。此处按任务约定重新声明最小骨架（含 --ai-item-tint
+ *   - .icen-ai-item 完整版在 ai-tool.css（S2）。此处按任务约定重新声明最小骨架（含 --ai-item-tint
  *     局部变量与状态点），保证 ai-panel.css 单独引入时 todo/context 可用；两边类名/语义一致，
  *     同页面共存时后加载者覆盖同款属性，视觉不冲突。
  *   - keyframes ai-status-pulse 为组件局部定义（等同 pill.css 的 pill-pulse），
  *     时长走 var(--pill-pulse-duration, 1.5s)：pill.css 在场时与其同步，否则自洽。
- *   - blink keyframes 来自 tokens/colors.css（.animate-blink 同款，共享复用）。
- *   - base.css：--z-chrome / --icen-tx-* / --icen-ring。只消费 --token-* / --density-* / --radius-*。
+ *   - blink keyframes 来自 tokens/colors.css（.icen-animate-blink 同款，共享复用）。
+ *   - base.css：--icen-z-chrome / --icen-tx-* / --icen-ring。只消费 --icen-token-* / --icen-density-* / --icen-radius-*。
  */
 
-/* ══════════════ .ai-item 最小基元（自包含，兼容 ai-tool.css 完整版） ══════════════ */
+/* ══════════════ .icen-ai-item 最小基元（自包含，兼容 ai-tool.css 完整版） ══════════════ */
 
-.ai-item {
-  --ai-item-tint: var(--token-accent);
+.icen-ai-item {
+  --ai-item-tint: var(--icen-token-accent);
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-xs) var(--density-space-sm);
-  border-radius: var(--radius-sm);
-  font-size: var(--density-font-size-sm);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  border-radius: var(--icen-radius-sm);
+  font-size: var(--icen-density-font-size-sm);
   min-width: 0;
   align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
 }
 
-.ai-item-icon {
+.icen-ai-item-icon {
   flex-shrink: 0;
   display: inline-flex;
   color: var(--ai-item-tint);
 }
-.ai-item-icon svg {
+.icen-ai-item-icon svg {
   width: 15px;
   height: 15px;
 }
 
-.ai-item-main {
+.icen-ai-item-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
-.ai-item-title {
-  color: var(--token-text);
+.icen-ai-item-title {
+  color: var(--icen-token-text);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ai-item-sub {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-muted);
+.icen-ai-item-sub {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.ai-item-side {
+.icen-ai-item-side {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
 }
-.ai-item-meta {
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+.icen-ai-item-meta {
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
 }
 
-/* ── 状态点 .ai-item-status：纯 CSS 圆点，由 .is-* 驱动（ai-item 与 ai-todo-item 共用） ── */
+/* ── 状态点 .icen-ai-item-status：纯 CSS 圆点，由 .is-* 驱动（ai-item 与 ai-todo-item 共用） ── */
 
-.ai-item-status {
+.icen-ai-item-status {
   flex-shrink: 0;
   width: 8px;
   height: 8px;
-  border-radius: var(--radius-full);
-  border: 1.5px solid var(--token-text-faint);
+  border-radius: var(--icen-radius-full);
+  border: 1.5px solid var(--icen-token-text-faint);
   background: transparent;
 }
 
 /* pending：faint 空心点（默认态即空心） */
-.ai-item.is-pending > .ai-item-status,
-.ai-todo-item.is-pending > .ai-item-status { }
+.icen-ai-item.is-pending > .icen-ai-item-status,
+.icen-ai-todo-item.is-pending > .icen-ai-item-status { }
 
 /* running / streaming：accent 脉冲点 */
-.ai-item.is-running > .ai-item-status,
-.ai-todo-item.is-running > .ai-item-status,
-.ai-item.is-streaming > .ai-item-status,
-.ai-todo-item.is-streaming > .ai-item-status {
-  border-color: var(--token-accent);
-  background: var(--token-accent);
+.icen-ai-item.is-running > .icen-ai-item-status,
+.icen-ai-todo-item.is-running > .icen-ai-item-status,
+.icen-ai-item.is-streaming > .icen-ai-item-status,
+.icen-ai-todo-item.is-streaming > .icen-ai-item-status {
+  border-color: var(--icen-token-accent);
+  background: var(--icen-token-accent);
   animation: ai-status-pulse var(--pill-pulse-duration, 1.5s) ease-in-out infinite;
 }
 
 /* approval：warning 点 */
-.ai-item.is-approval > .ai-item-status,
-.ai-todo-item.is-approval > .ai-item-status {
-  border-color: var(--token-warning);
-  background: var(--token-warning);
+.icen-ai-item.is-approval > .icen-ai-item-status,
+.icen-ai-todo-item.is-approval > .icen-ai-item-status {
+  border-color: var(--icen-token-warning);
+  background: var(--icen-token-warning);
 }
 
 /* done：success 点 */
-.ai-item.is-done > .ai-item-status,
-.ai-todo-item.is-done > .ai-item-status {
-  border-color: var(--token-success);
-  background: var(--token-success);
+.icen-ai-item.is-done > .icen-ai-item-status,
+.icen-ai-todo-item.is-done > .icen-ai-item-status {
+  border-color: var(--icen-token-success);
+  background: var(--icen-token-success);
 }
 
 /* error：error 点 */
-.ai-item.is-error > .ai-item-status,
-.ai-todo-item.is-error > .ai-item-status {
-  border-color: var(--token-error);
-  background: var(--token-error);
+.icen-ai-item.is-error > .icen-ai-item-status,
+.icen-ai-todo-item.is-error > .icen-ai-item-status {
+  border-color: var(--icen-token-error);
+  background: var(--icen-token-error);
 }
 
 /* cancelled：faint 实心点 + 标题删除线（规格 §1） */
-.ai-item.is-cancelled > .ai-item-status,
-.ai-todo-item.is-cancelled > .ai-item-status {
-  border-color: var(--token-text-faint);
-  background: var(--token-text-faint);
+.icen-ai-item.is-cancelled > .icen-ai-item-status,
+.icen-ai-todo-item.is-cancelled > .icen-ai-item-status {
+  border-color: var(--icen-token-text-faint);
+  background: var(--icen-token-text-faint);
 }
-.ai-item.is-cancelled .ai-item-title,
-.ai-todo-item.is-cancelled .ai-todo-text {
+.icen-ai-item.is-cancelled .icen-ai-item-title,
+.icen-ai-todo-item.is-cancelled .icen-ai-todo-text {
   text-decoration: line-through;
 }
 
@@ -178,71 +178,71 @@
 
 /* ══════════════ ai-todo · 任务清单（§4.8） ══════════════ */
 
-.ai-todo {
+.icen-ai-todo {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
-  font-size: var(--density-font-size-sm);
+  gap: var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-sm);
   min-width: 0;
   align-self: stretch;  /* 输出容器宽度自稳定 */
 }
 
-.ai-todo-head {
+.icen-ai-todo-head {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   min-width: 0;
 }
 
-.ai-todo-progress {
+.icen-ai-todo-progress {
   flex-shrink: 0;
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-muted);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 /* 进度条：feedback progress 视觉（token 消费） */
-.ai-todo-bar {
+.icen-ai-todo-bar {
   flex: 1;
   height: 4px;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   overflow: hidden;
-  background: color-mix(in srgb, var(--token-line-soft) 40%, transparent);
+  background: color-mix(in srgb, var(--icen-token-line-soft) 40%, transparent);
 }
-.ai-todo-bar > i {
+.icen-ai-todo-bar > i {
   display: block;
   height: 100%;
-  border-radius: var(--radius-full);
-  background: var(--token-accent);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent);
   transition: width var(--icen-tx-slow);
 }
-.ai-todo.is-complete .ai-todo-bar > i {
-  background: var(--token-success);
+.icen-ai-todo.is-complete .icen-ai-todo-bar > i {
+  background: var(--icen-token-success);
 }
 
-.ai-todo-item {
+.icen-ai-todo-item {
   display: flex;
   align-items: center;
-  gap: var(--density-space-sm);
-  padding: 3px var(--density-space-xs);
-  border-radius: var(--radius-xs);
+  gap: var(--icen-density-space-sm);
+  padding: 3px var(--icen-density-space-xs);
+  border-radius: var(--icen-radius-xs);
   min-width: 0;
 }
 
 /* 交互模式（initAiTodo 升级 role=button） */
-.ai-todo-item[role='button'] {
+.icen-ai-todo-item[role='button'] {
   cursor: pointer;
   transition: background-color var(--icen-tx-fast);
 }
-.ai-todo-item[role='button']:hover {
-  background: var(--token-fill-1);
+.icen-ai-todo-item[role='button']:hover {
+  background: var(--icen-token-fill-1);
 }
-.ai-todo-item:focus-visible {
+.icen-ai-todo-item:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.ai-todo-text {
+.icen-ai-todo-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -250,45 +250,45 @@
 }
 
 /* activeForm：运行中替换式强调（Claude Code 模式） */
-.ai-todo-active {
+.icen-ai-todo-active {
   display: none;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--token-accent-deep);
+  color: var(--icen-token-accent-deep);
 }
-.ai-todo-item.is-running .ai-todo-text { display: none; }
-.ai-todo-item.is-running .ai-todo-active { display: inline; }
+.icen-ai-todo-item.is-running .icen-ai-todo-text { display: none; }
+.icen-ai-todo-item.is-running .icen-ai-todo-active { display: inline; }
 
 /* done/cancelled：淡化 + 删除线 */
-.ai-todo-item.is-done .ai-todo-text,
-.ai-todo-item.is-cancelled .ai-todo-text {
-  color: var(--token-text-faint);
+.icen-ai-todo-item.is-done .icen-ai-todo-text,
+.icen-ai-todo-item.is-cancelled .icen-ai-todo-text {
+  color: var(--icen-token-text-faint);
   text-decoration: line-through;
 }
 
 /* ══════════════ ai-usage · 用量条（§4.9） ══════════════ */
 
-.ai-usage {
+.icen-ai-usage {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-muted);
+  gap: var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-muted);
   min-width: 0;
   align-self: stretch;  /* 输出容器宽度自稳定 */
 }
 
-.ai-usage-bar {
+.icen-ai-usage-bar {
   display: flex;
   height: 6px;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
   overflow: hidden;
-  background: color-mix(in srgb, var(--token-line-soft) 40%, transparent);
+  background: color-mix(in srgb, var(--icen-token-line-soft) 40%, transparent);
 }
 
-.ai-usage-seg {
+.icen-ai-usage-seg {
   display: block;
   height: 100%;
   min-width: 0;
@@ -296,41 +296,41 @@
 }
 
 /* 配色契约：input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint */
-.ai-usage-seg--input       { background: var(--token-accent); }
-.ai-usage-seg--output      { background: var(--token-success); }
-.ai-usage-seg--cache-read  { background: var(--token-info); }
-.ai-usage-seg--cache-write { background: var(--token-warning); }
-.ai-usage-seg--reasoning   { background: var(--token-text-faint); }
+.icen-ai-usage-seg--input       { background: var(--icen-token-accent); }
+.icen-ai-usage-seg--output      { background: var(--icen-token-success); }
+.icen-ai-usage-seg--cache-read  { background: var(--icen-token-info); }
+.icen-ai-usage-seg--cache-write { background: var(--icen-token-warning); }
+.icen-ai-usage-seg--reasoning   { background: var(--icen-token-text-faint); }
 
 /* 图例：色点 + 标签 + 数值（缓存分列，计费诚实） */
-.ai-usage-legend {
+.icen-ai-usage-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--density-space-xs) var(--density-space-sm);
+  gap: var(--icen-density-space-xs) var(--icen-density-space-sm);
 }
-.ai-usage-legend-item {
+.icen-ai-usage-legend-item {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-variant-numeric: tabular-nums;
 }
-.ai-usage-dot {
+.icen-ai-usage-dot {
   flex-shrink: 0;
   width: 8px;
   height: 8px;
-  border-radius: var(--radius-full);
+  border-radius: var(--icen-radius-full);
 }
-.ai-usage-legend-label { color: var(--token-text-muted); }
-.ai-usage-legend-value { color: var(--token-text); font-weight: 500; }
+.icen-ai-usage-legend-label { color: var(--icen-token-text-muted); }
+.icen-ai-usage-legend-value { color: var(--icen-token-text); font-weight: 500; }
 
-.ai-usage-total {
+.icen-ai-usage-total {
   font-variant-numeric: tabular-nums;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
 }
 
 /* ══════════════ ai-usage-ring · 上下文窗口环形指示器（点击弹出完整分解） ══════════════ */
 
-.ai-usage-ring {
+.icen-ai-usage-ring {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -340,48 +340,48 @@
   padding: 0;
   border: 0;
   background: transparent;
-  border-radius: var(--radius-full);
-  color: var(--token-text-muted);
+  border-radius: var(--icen-radius-full);
+  color: var(--icen-token-text-muted);
   cursor: pointer;
   flex-shrink: 0;
   transition:
     color var(--icen-tx-fast),
     background-color var(--icen-tx-fast);
 }
-.ai-usage-ring:hover {
-  background: var(--token-fill-1);
-  color: var(--token-text);
+.icen-ai-usage-ring:hover {
+  background: var(--icen-token-fill-1);
+  color: var(--icen-token-text);
 }
-.ai-usage-ring:focus-visible {
+.icen-ai-usage-ring:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.ai-usage-ring > svg {
+.icen-ai-usage-ring > svg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   transform: rotate(-90deg); /* 12 点起笔 */
 }
-.ai-usage-ring-track {
+.icen-ai-usage-ring-track {
   fill: none;
-  stroke: var(--token-fill-2);
+  stroke: var(--icen-token-fill-2);
   stroke-width: 3;
 }
-.ai-usage-ring-fill {
+.icen-ai-usage-ring-fill {
   fill: none;
-  stroke: var(--token-accent);
+  stroke: var(--icen-token-accent);
   stroke-width: 3;
   stroke-linecap: round;
   transition:
     stroke-dasharray var(--icen-tx-slow),
     stroke var(--icen-tx-fast);
 }
-/* 状态档：<60% ok（accent）/ 60–85% warn / >85% hot */
-.ai-usage-ring.is-warn .ai-usage-ring-fill { stroke: var(--token-warning); }
-.ai-usage-ring.is-hot .ai-usage-ring-fill { stroke: var(--token-error); }
-.ai-usage-ring.is-hot {
+/* 状态档：<60% ok（icen-accent）/ 60–85% warn / >85% hot */
+.icen-ai-usage-ring.is-warn .icen-ai-usage-ring-fill { stroke: var(--icen-token-warning); }
+.icen-ai-usage-ring.is-hot .icen-ai-usage-ring-fill { stroke: var(--icen-token-error); }
+.icen-ai-usage-ring.is-hot {
   animation: ai-usage-ring-pulse var(--ai-usage-ring-pulse-duration, 1.6s) ease-in-out infinite;
 }
 @keyframes ai-usage-ring-pulse {
@@ -389,9 +389,9 @@
   50% { opacity: 0.55; }
 }
 
-.ai-usage-ring-pct {
+.icen-ai-usage-ring-pct {
   position: relative;
-  font-family: var(--font-mono);
+  font-family: var(--icen-font-mono);
   font-size: 9px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -400,84 +400,85 @@
 }
 
 /* 大号变体（消费方变体，常驻头部大号环；behavior 不产出，由使用方手写标记） */
-.ai-usage-ring--lg {
+.icen-ai-usage-ring--lg {
   width: 44px;
   height: 44px;
 }
-.ai-usage-ring--lg .ai-usage-ring-pct { font-size: 10px; }
+.icen-ai-usage-ring--lg .icen-ai-usage-ring-pct { font-size: 10px; }
 
-/* 弹层（复用 .popover 基座，内容区只补间距） */
-.ai-usage-popover {
+/* 弹层（复用 .icen-popover 基座，内容区只补间距） */
+.icen-ai-usage-popover {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-md);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-md);
 }
-.ai-usage-popover-title {
-  font-size: var(--density-font-size-sm);
+.icen-ai-usage-popover-title {
+  font-size: var(--icen-density-font-size-sm);
   font-weight: 600;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ai-usage-ring.is-hot { animation: none; }
-  .ai-usage-ring-fill { transition: none; }
+  .icen-ai-usage-ring.is-hot { animation: none; }
+  .icen-ai-usage-ring-fill { transition: none; }
 }
 
 /* ══════════════ ai-context · 上下文抽屉（§4.10） ══════════════ */
 
-.ai-context {
+.icen-ai-context {
   position: fixed;
-  inset: 0 0 0 auto;
-  width: min(360px, 92vw);
-  z-index: var(--z-chrome);
+  inset-block: 0;
+  inset-inline-end: 0; /* 贴视口行内末端侧（LTR 右侧 / RTL 镜像左侧） */
+  inline-size: min(360px, 92vw);
+  z-index: var(--icen-z-chrome);
   display: flex;
   flex-direction: column;
-  background: var(--token-surface);
-  border-left: 1px solid var(--token-line-soft);
-  box-shadow: var(--token-shadow-overlay);
-  transform: translateX(100%);
-  transition: transform var(--ai-context-duration, var(--duration-normal)) var(--ease-out);
+  background: var(--icen-token-surface);
+  border-inline-start: 1px solid var(--icen-token-line-soft);
+  box-shadow: var(--icen-token-shadow-overlay);
+  transform: translateX(100%); /* guard:allow-physical 隐藏位沿物理右缘滑出（LTR 抽屉侧），RTL 镜像规则翻为 translateX(-100%) */
+  transition: transform var(--ai-context-duration, var(--icen-duration-normal)) var(--icen-ease-out);
   overflow-y: auto;
 }
-.ai-context[hidden] {
+.icen-ai-context[hidden] {
   display: none;
 }
-.ai-context.is-open {
+.icen-ai-context.is-open {
   transform: translateX(0);
 }
 
 /* 页面流内嵌变体：不做 fixed、不滑入 */
-.ai-context--inline {
+.icen-ai-context--inline {
   position: static;
   inset: auto;
   width: auto;
   z-index: auto;
   transform: none;
   transition: none;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-md);
-  box-shadow: var(--token-shadow-elevated);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-elevated);
   overflow-y: visible;
 }
 
-.ai-context-head {
+.icen-ai-context-head {
   position: sticky;
   top: 0;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--density-space-sm);
-  padding: var(--density-space-sm) var(--density-space-md);
-  background: var(--token-surface);
-  border-bottom: 1px solid var(--token-line-soft);
-  font-size: var(--density-font-size-sm);
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  background: var(--icen-token-surface);
+  border-bottom: 1px solid var(--icen-token-line-soft);
+  font-size: var(--icen-density-font-size-sm);
   font-weight: 600;
-  color: var(--token-text);
+  color: var(--icen-token-text);
 }
 
-.ai-context-head [data-ai-context-close] {
+.icen-ai-context-head [data-icen-ai-context-close] {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -486,9 +487,9 @@
   height: 26px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-xs);
+  border-radius: var(--icen-radius-xs);
   background: none;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
@@ -496,233 +497,233 @@
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.ai-context-head [data-ai-context-close]:hover {
-  color: var(--token-text);
-  background: var(--token-fill-1);
+.icen-ai-context-head [data-icen-ai-context-close]:hover {
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-1);
 }
-.ai-context-head [data-ai-context-close]:focus-visible {
+.icen-ai-context-head [data-icen-ai-context-close]:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
-.ai-context-section {
+.icen-ai-context-section {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
-  padding: var(--density-space-sm) var(--density-space-md);
+  gap: var(--icen-density-space-xs);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
   min-width: 0;
 }
-.ai-context-section ~ .ai-context-section {
-  border-top: 1px solid var(--token-line-soft);
+.icen-ai-context-section ~ .icen-ai-context-section {
+  border-top: 1px solid var(--icen-token-line-soft);
 }
-.ai-context-section h3 {
+.icen-ai-context-section h3 {
   margin: 0;
-  font-size: var(--density-font-size-xs);
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 600;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
 }
-.ai-context-section-body {
+.icen-ai-context-section-body {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   min-width: 0;
 }
 
 /* ══════════════ ai-audit（renderAiAudit，规格 §12.2） ══════════════ */
 
 /*
- *   <div class="ai-audit">
- *     <div class="ai-audit-totals"><span class="ai-audit-totals-text">12 次请求 · 1 失败 · 1.2M tok · $0.42 · TTFT 240ms</span></div>
- *     <div class="ai-audit-models">
- *       <div class="ai-audit-model-row"><span class="ai-audit-model-name">kimi/kimi-k3</span>
- *         <span class="ai-audit-model-meta">8 次 · 900k tok · $0.31</span></div>…
+ *   <div class="icen-ai-audit">
+ *     <div class="ai-audit-totals"><span class="icen-ai-audit-totals-text">12 次请求 · 1 失败 · 1.2M tok · $0.42 · TTFT 240ms</span></div>
+ *     <div class="icen-ai-audit-models">
+ *       <div class="icen-ai-audit-model-row"><span class="icen-ai-audit-model-name">kimi/kimi-k3</span>
+ *         <span class="icen-ai-audit-model-meta">8 次 · 900k tok · $0.31</span></div>…
  *     </div>
- *     <div class="ai-audit-list">
- *       <div class="ai-audit-item is-done|is-error">
- *         <span class="ai-audit-dot"></span>
- *         <span class="ai-audit-item-main"><span class="ai-audit-item-model">kimi · kimi-k3</span>
- *           <span class="ai-audit-item-meta">14:03 · 1.2s · TTFT 240ms · 12.3k tok</span></span>
- *         <span class="ai-audit-item-error">网络请求失败：…</span>   <!-- 仅 is-error -->
+ *     <div class="icen-ai-audit-list">
+ *       <div class="icen-ai-audit-item is-done|is-error">
+ *         <span class="icen-ai-audit-dot"></span>
+ *         <span class="icen-ai-audit-item-main"><span class="icen-ai-audit-item-model">kimi · kimi-k3</span>
+ *           <span class="icen-ai-audit-item-meta">14:03 · 1.2s · TTFT 240ms · 12.3k tok</span></span>
+ *         <span class="icen-ai-audit-item-error">网络请求失败：…</span>   <!-- 仅 is-error -->
  *       </div>…
  *     </div>
- *     <button class="btn btn-sm ai-audit-clear">清除审计</button>
+ *     <button class="icen-btn icen-btn-sm icen-ai-audit-clear">清除审计</button>
  *   </div>
  */
 
-.ai-audit {
+.icen-ai-audit {
   display: flex;
   flex-direction: column;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   align-self: stretch;
   min-width: 0;
-  font-size: var(--density-font-size-sm);
+  font-size: var(--icen-density-font-size-sm);
 }
-.ai-audit-empty {
-  padding: var(--density-space-md);
+.icen-ai-audit-empty {
+  padding: var(--icen-density-space-md);
   text-align: center;
-  color: var(--token-text-faint);
-  font-size: var(--density-font-size-xs);
+  color: var(--icen-token-text-faint);
+  font-size: var(--icen-density-font-size-xs);
 }
 
 /* totals 行：等宽数字，faint 汇总 */
-.ai-audit-totals-text {
+.icen-ai-audit-totals-text {
   display: block;
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text-faint);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
 }
 
 /* byModel 分组行 */
-.ai-audit-models {
+.icen-ai-audit-models {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-.ai-audit-model-row {
+.icen-ai-audit-model-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   min-width: 0;
 }
-.ai-audit-model-name {
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-xs);
-  color: var(--token-text);
+.icen-ai-audit-model-name {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ai-audit-model-meta {
+.icen-ai-audit-model-meta {
   flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text-faint);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
 }
 
 /* 最近条目（最新在前） */
-.ai-audit-list {
+.icen-ai-audit-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
   max-height: 280px;
   overflow-y: auto;
 }
-.ai-audit-item {
+.icen-ai-audit-item {
   display: flex;
   align-items: baseline;
-  gap: var(--density-space-xs);
-  padding: 2px var(--density-space-xs);
-  border-radius: var(--radius-xs);
+  gap: var(--icen-density-space-xs);
+  padding: 2px var(--icen-density-space-xs);
+  border-radius: var(--icen-radius-xs);
   min-width: 0;
 }
-.ai-audit-item:hover {
-  background: var(--token-fill-1);
+.icen-ai-audit-item:hover {
+  background: var(--icen-token-fill-1);
 }
-.ai-audit-dot {
+.icen-ai-audit-dot {
   flex-shrink: 0;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--token-text-faint);
+  background: var(--icen-token-text-faint);
 }
-.ai-audit-item.is-done .ai-audit-dot {
-  background: var(--token-success);
+.icen-ai-audit-item.is-done .icen-ai-audit-dot {
+  background: var(--icen-token-success);
 }
-.ai-audit-item.is-error .ai-audit-dot {
-  background: var(--token-error);
+.icen-ai-audit-item.is-error .icen-ai-audit-dot {
+  background: var(--icen-token-error);
 }
-.ai-audit-item-main {
+.icen-ai-audit-item-main {
   display: flex;
   flex-direction: column;
   min-width: 0;
   flex: 1;
 }
-.ai-audit-item-model {
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text);
+.icen-ai-audit-item-model {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ai-audit-item-meta {
-  font-family: var(--font-mono);
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text-faint);
+.icen-ai-audit-item-meta {
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
 }
-.ai-audit-item-error {
+.icen-ai-audit-item-error {
   flex-shrink: 0;
   max-width: 45%;
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-error);
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-error);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ai-audit-item.is-error .ai-audit-item-model {
-  color: var(--token-error);
+.icen-ai-audit-item.is-error .icen-ai-audit-item-model {
+  color: var(--icen-token-error);
 }
 
-/* 清除钮（右对齐；视觉复用 .btn .btn-sm） */
-.ai-audit-clear {
+/* 清除钮（右对齐；视觉复用 .icen-btn .icen-btn-sm） */
+.icen-ai-audit-clear {
   align-self: flex-end;
 }
 
 /* ── 动效守卫 ── */
 
 @media (prefers-reduced-motion: reduce) {
-  .ai-todo-bar > i,
-  .ai-usage-seg { transition: none; }
-  .ai-context { transition: none; }
-  .ai-item-status { animation: none; }
+  .icen-ai-todo-bar > i,
+  .icen-ai-usage-seg { transition: none; }
+  .icen-ai-context { transition: none; }
+  .icen-ai-item-status { animation: none; }
 }
 
 /* ══════════════ ai-feedback · 回答反馈（§5.27，behaviors/ai-feedback.ts） ══════════════ */
 
 /*
- *   <div class="ai-feedback [.is-done]">
- *     <div class="ai-feedback-votes">
- *       <button class="ai-feedback-vote is-up [.is-picked]" aria-pressed>svg</button>
- *       <button class="ai-feedback-vote is-down [.is-picked]" aria-pressed>svg</button>
+ *   <div class="icen-ai-feedback [.is-done]">
+ *     <div class="icen-ai-feedback-votes">
+ *       <button class="icen-ai-feedback-vote is-up [.is-picked]" aria-pressed>svg</button>
+ *       <button class="icen-ai-feedback-vote is-down [.is-picked]" aria-pressed>svg</button>
  *     </div>
- *     <div class="ai-feedback-reasons" hidden>
- *       <button class="ai-feedback-chip [.is-picked]">答案有误</button>…
- *       <button class="ai-feedback-submit">提交</button>
+ *     <div class="icen-ai-feedback-reasons" hidden>
+ *       <button class="icen-ai-feedback-chip [.is-picked]">答案有误</button>…
+ *       <button class="icen-ai-feedback-submit">提交</button>
  *     </div>
- *     <div class="ai-feedback-done" hidden>感谢反馈，已关联到该条回答的追踪记录</div>
+ *     <div class="icen-ai-feedback-done" hidden>感谢反馈，已关联到该条回答的追踪记录</div>
  *   </div>
  *   双钮 28px；is-picked accent 边；.is-done 终态隐藏控件只留小字感谢文案。
  */
 
-.ai-feedback {
+.icen-ai-feedback {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--density-space-sm);
+  gap: var(--icen-density-space-sm);
   min-width: 0;
 }
 
-.ai-feedback-votes {
+.icen-ai-feedback-votes {
   display: inline-flex;
   gap: 4px;
 }
 
 /* 双钮：28px 方形图标钮 */
-.ai-feedback-vote {
+.icen-ai-feedback-vote {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-sm);
   background: transparent;
-  color: var(--token-text-muted);
+  color: var(--icen-token-text-muted);
   cursor: pointer;
   transition:
     color var(--icen-tx-fast),
@@ -730,50 +731,50 @@
     background-color var(--icen-tx-fast),
     opacity var(--icen-tx-fast);
 }
-.ai-feedback-vote svg {
+.icen-ai-feedback-vote svg {
   width: 14px;
   height: 14px;
 }
-.ai-feedback-vote:hover {
-  color: var(--token-text);
+.icen-ai-feedback-vote:hover {
+  color: var(--icen-token-text);
   border-color: var(--icen-hover-border);
-  background: var(--token-fill-1);
+  background: var(--icen-token-fill-1);
 }
-.ai-feedback-vote:focus-visible {
+.icen-ai-feedback-vote:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 /* 锁定：对侧禁用降透明；选中侧 accent 边 + 浅 accent 底 */
-.ai-feedback-vote:disabled {
+.icen-ai-feedback-vote:disabled {
   opacity: 0.45;
   cursor: default;
   background: transparent;
-  border-color: var(--token-line-soft);
+  border-color: var(--icen-token-line-soft);
 }
-.ai-feedback-vote.is-picked {
-  color: var(--token-accent);
-  border-color: var(--token-accent);
-  background: color-mix(in srgb, var(--token-accent) 10%, transparent);
+.icen-ai-feedback-vote.is-picked {
+  color: var(--icen-token-accent);
+  border-color: var(--icen-token-accent);
+  background: color-mix(in srgb, var(--icen-token-accent) 10%, transparent);
 }
 
 /* 踩因枚举 chips + 提交（点 👎 展开） */
-.ai-feedback-reasons {
+.icen-ai-feedback-reasons {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--density-space-xs);
+  gap: var(--icen-density-space-xs);
   min-width: 0;
 }
-.ai-feedback-reasons[hidden] {
+.icen-ai-feedback-reasons[hidden] {
   display: none;
 }
-.ai-feedback-chip {
+.icen-ai-feedback-chip {
   padding: 2px 10px;
-  border: 1px solid var(--token-line-soft);
-  border-radius: var(--radius-full);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-full);
   background: transparent;
-  color: var(--token-text-muted);
-  font-size: var(--density-font-size-xs);
+  color: var(--icen-token-text-muted);
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.5;
   cursor: pointer;
   transition:
@@ -781,28 +782,28 @@
     border-color var(--icen-tx-fast),
     background-color var(--icen-tx-fast);
 }
-.ai-feedback-chip:hover {
-  color: var(--token-text);
+.icen-ai-feedback-chip:hover {
+  color: var(--icen-token-text);
   border-color: var(--icen-hover-border);
 }
-.ai-feedback-chip:focus-visible {
+.icen-ai-feedback-chip:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.ai-feedback-chip.is-picked {
-  color: var(--token-accent);
-  border-color: var(--token-accent);
-  background: color-mix(in srgb, var(--token-accent) 10%, transparent);
+.icen-ai-feedback-chip.is-picked {
+  color: var(--icen-token-accent);
+  border-color: var(--icen-token-accent);
+  background: color-mix(in srgb, var(--icen-token-accent) 10%, transparent);
 }
 
 /* 提交钮：小号 ghost（accent 留给状态，非主行动不铺实底） */
-.ai-feedback-submit {
+.icen-ai-feedback-submit {
   padding: 2px 12px;
-  border: 1px solid var(--token-line);
-  border-radius: var(--radius-full);
+  border: 1px solid var(--icen-token-line);
+  border-radius: var(--icen-radius-full);
   background: transparent;
-  color: var(--token-text);
-  font-size: var(--density-font-size-xs);
+  color: var(--icen-token-text);
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.5;
   cursor: pointer;
   transition:
@@ -810,70 +811,70 @@
     border-color var(--icen-tx-fast),
     background-color var(--icen-tx-fast);
 }
-.ai-feedback-submit:hover {
-  color: var(--token-accent);
-  border-color: var(--token-accent);
-  background: color-mix(in srgb, var(--token-accent) 8%, transparent);
+.icen-ai-feedback-submit:hover {
+  color: var(--icen-token-accent);
+  border-color: var(--icen-token-accent);
+  background: color-mix(in srgb, var(--icen-token-accent) 8%, transparent);
 }
-.ai-feedback-submit:focus-visible {
+.icen-ai-feedback-submit:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
 
 /* 已提交终态：小字感谢文案，控件隐藏 */
-.ai-feedback-done {
-  font-size: var(--density-font-size-2xs);
-  color: var(--token-text-faint);
+.icen-ai-feedback-done {
+  font-size: var(--icen-density-font-size-2xs);
+  color: var(--icen-token-text-faint);
 }
-.ai-feedback-done[hidden] {
+.icen-ai-feedback-done[hidden] {
   display: none;
 }
-.ai-feedback.is-done .ai-feedback-votes,
-.ai-feedback.is-done .ai-feedback-reasons {
+.icen-ai-feedback.is-done .icen-ai-feedback-votes,
+.icen-ai-feedback.is-done .icen-ai-feedback-reasons {
   display: none;
 }
 
 /* ══════════════ ai-usage-metrics · 派生指标明细行（§5.27，renderAiUsage） ══════════════ */
 
 /* 图例下 mono 一行：TTFT 0.8s · 42 tok/s · finish: stop */
-.ai-usage-metrics {
-  font-family: var(--font-mono);
+.icen-ai-usage-metrics {
+  font-family: var(--icen-font-mono);
   font-size: 11.5px;
-  color: var(--token-text-faint);
+  color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
 }
 
 /* ══════════════ ai-todo-check · done 描边勾（§5.27，renderAiTodo） ══════════════ */
 
-/* 与 .ai-item-status 同位替换：done 时显勾隐点（:has 守卫——静态手写 DOM 无勾时保留状态点）；
+/* 与 .icen-ai-item-status 同位替换：done 时显勾隐点（:has 守卫——静态手写 DOM 无勾时保留状态点）；
  * pathLength=1 → stroke-dasharray 1，.is-anim 做 stroke-dashoffset 描边动画（480ms 一次不循环） */
-.ai-todo-check {
+.icen-ai-todo-check {
   position: relative;
   display: none;
   flex-shrink: 0;
   width: 8px;
   height: 8px;
-  color: var(--token-success);
+  color: var(--icen-token-success);
 }
-.ai-todo-check svg {
+.icen-ai-todo-check svg {
   position: absolute;
   inset: 0;
   margin: auto;
   width: 12px;
   height: 12px;
 }
-.ai-todo-check path {
+.icen-ai-todo-check path {
   stroke-dasharray: 1;
 }
-.ai-todo-item.is-done .ai-todo-check {
+.icen-ai-todo-item.is-done .icen-ai-todo-check {
   display: inline-flex;
 }
-.ai-todo-item.is-done:has(.ai-todo-check) > .ai-item-status {
+.icen-ai-todo-item.is-done:has(.icen-ai-todo-check) > .icen-ai-item-status {
   display: none;
 }
-.ai-todo-check.is-anim path {
-  animation: ai-todo-check-draw var(--ai-todo-check-duration, 480ms) var(--ease-out) 1 forwards;
+.icen-ai-todo-check.is-anim path {
+  animation: ai-todo-check-draw var(--ai-todo-check-duration, 480ms) var(--icen-ease-out) 1 forwards;
 }
 @keyframes ai-todo-check-draw {
   from {
@@ -887,13 +888,17 @@
 /* ── 动效守卫（§5.27 新增段） ── */
 
 @media (prefers-reduced-motion: reduce) {
-  .ai-feedback-vote,
-  .ai-feedback-chip,
-  .ai-feedback-submit {
+  .icen-ai-feedback-vote,
+  .icen-ai-feedback-chip,
+  .icen-ai-feedback-submit {
     transition: none;
   }
-  .ai-todo-check.is-anim path {
+  .icen-ai-todo-check.is-anim path {
     animation: none;
     stroke-dashoffset: 0;
   }
 }
+
+/* ── RTL：上下文抽屉隐藏位镜像（抽屉改贴行内末端左侧，滑出方向同步翻转） ── */
+:is([dir='rtl']) .icen-ai-context { transform: translateX(-100%); }
+:is([dir='rtl']) .icen-ai-context.is-open { transform: translateX(0); }

@@ -2,50 +2,50 @@
  * @icen.ai/ui — Behavior: kb-segment（分段策略表单 + 实时预览，与 components/kb-ingest.css 配套）
  *
  * DOM 契约（docs/spec/kb-family.md §5.7；数据契约 kb-core KbSegmentConfig / segmentText）：
- *   <div class="kb-segment">
- *     <div class="kb-segment-form">
- *       <div class="kb-segment-locked kb-notice" hidden>                 <!-- config.locked 时显示 -->
+ *   <div class="icen-kb-segment">
+ *     <div class="icen-kb-segment-form">
+ *       <div class="icen-kb-segment-locked icen-kb-notice" hidden>                 <!-- config.locked 时显示 -->
  *         lock svg 分段模式创建后不可更改，参数可随时调整
  *       </div>
- *       <label class="kb-field">
- *         <span class="kb-field-label">分段模式</span>
- *         <div class="kb-seg kb-segment-mode" role="radiogroup">        ← kb 域自持 segmented
- *           <button class="kb-seg-item [is-active]" role="radio" data-value="auto">自动</button>
- *           <button class="kb-seg-item" role="radio" data-value="custom">自定义</button>
- *           <button class="kb-seg-item" role="radio" data-value="parent-child">父子</button>
+ *       <label class="icen-kb-field">
+ *         <span class="icen-kb-field-label">分段模式</span>
+ *         <div class="icen-kb-seg kb-segment-mode" role="radiogroup">        ← kb 域自持 icen-segmented
+ *           <button class="icen-kb-seg-item [is-active]" role="radio" data-icen-value="auto">自动</button>
+ *           <button class="icen-kb-seg-item" role="radio" data-icen-value="custom">自定义</button>
+ *           <button class="icen-kb-seg-item" role="radio" data-icen-value="parent-child">父子</button>
  *         </div>
  *       </label>
- *       <label class="kb-field">
- *         <span class="kb-field-label">分隔符</span>
- *         <input class="kb-input kb-input--mono kb-segment-delimiter" placeholder="\n\n">
+ *       <label class="icen-kb-field">
+ *         <span class="icen-kb-field-label">分隔符</span>
+ *         <icen-input class="icen-kb-input icen-kb-input--mono kb-segment-delimiter" placeholder="\n\n">
  *       </label>
- *       <label class="kb-field">
- *         <span class="kb-field-label">最大长度</span>
- *         <input class="kb-input kb-segment-max" type="number" min="1">
+ *       <label class="icen-kb-field">
+ *         <span class="icen-kb-field-label">最大长度</span>
+ *         <icen-input class="icen-kb-input kb-segment-max" type="number" min="1">
  *       </label>
- *       <label class="kb-field">
- *         <span class="kb-field-label">重叠</span>
- *         <input class="kb-input kb-segment-overlap" type="number" min="0">
+ *       <label class="icen-kb-field">
+ *         <span class="icen-kb-field-label">重叠</span>
+ *         <icen-input class="icen-kb-input kb-segment-overlap" type="number" min="0">
  *       </label>
- *       <div class="kb-segment-overlap-error kb-notice" hidden>重叠需小于最大长度</div>
- *       <div class="kb-segment-clean">                                    ← kb-core KB_CLEAN_OPTIONS 三勾选
+ *       <div class="icen-kb-segment-overlap-error icen-kb-notice" hidden>重叠需小于最大长度</div>
+ *       <div class="icen-kb-segment-clean">                                    ← kb-core KB_CLEAN_OPTIONS 三勾选
  *         <label><input type="checkbox" value="collapse-blank">合并连续空行</label>
  *         <label><input type="checkbox" value="strip-url">去除链接</label>
  *         <label><input type="checkbox" value="strip-email">去除邮箱</label>
  *       </div>
- *       <div class="kb-segment-pc-notice kb-notice" hidden>子分段按长度自动生成</div>
+ *       <div class="kb-segment-pc-notice icen-kb-notice" hidden>子分段按长度自动生成</div>
  *     </div>
- *     <div class="kb-segment-preview">
- *       <div class="kb-segment-stats">
- *         <span class="kb-num">N 段</span><span class="kb-num">均长 x</span><span class="kb-num">≈y tokens</span>
+ *     <div class="icen-kb-segment-preview">
+ *       <div class="icen-kb-segment-stats">
+ *         <span class="icen-kb-num">N 段</span><span class="icen-kb-num">均长 x</span><span class="icen-kb-num">≈y tokens</span>
  *       </div>
- *       <div class="kb-segment-blocks">
- *         <div class="kb-segment-block">
- *           <span class="kb-num kb-segment-block-no">01</span>
- *           <div class="kb-segment-block-text [is-open]">…（CSS 截断 200px，点击展开）</div>
+ *       <div class="icen-kb-segment-blocks">
+ *         <div class="icen-kb-segment-block">
+ *           <span class="icen-kb-num icen-kb-segment-block-no">01</span>
+ *           <div class="icen-kb-segment-block-text [is-open]">…（CSS 截断 200px，点击展开）</div>
  *         </div>…（前 20 段）
  *       </div>
- *       <div class="kb-segment-more kb-notice" hidden>共 N 段，仅预览前 20 段</div>
+ *       <div class="kb-segment-more icen-kb-notice" hidden>共 N 段，仅预览前 20 段</div>
  *     </div>
  *   </div>
  *
@@ -56,7 +56,7 @@
  *     调 opts.onChange(config)（handle/事件双通道）。
  *   - locked（模式创建后锁定，Dify 纪律）：模式 segmented 禁用 + 顶部警示文案，
  *     其余参数（分隔符/长度/重叠/清洗）仍可随时调整。
- *   - 校验：重叠 ≥ 最大长度时给 .kb-segment-overlap-error 提示（不阻断预览：
+ *   - 校验：重叠 ≥ 最大长度时给 .icen-kb-segment-overlap-error 提示（不阻断预览：
  *     segmentText 内部对 overlap 自钳制，预览仍真实可用）。
  *   - parent-child 模式：提示「子分段按长度自动生成」（父段不再二次切分，见 kb-core）。
  *   - setConfig 为程序化赋值（同步表单 + 重算预览，不派事件）；getConfig 返回归一化副本。
@@ -74,6 +74,7 @@ import {
   type KbSegmentConfig,
 } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /* ── 域内小工具 ── */
 
@@ -89,14 +90,14 @@ function icon(parent: HTMLElement, svgStr: string): void {
 
 const MODES: Array<KbSegmentConfig['mode']> = ['auto', 'custom', 'parent-child'];
 const MODE_LABELS: Record<KbSegmentConfig['mode'], string> = {
-  auto: '自动',
-  custom: '自定义',
-  'parent-child': '父子',
+  auto: t('kbSegment.modeAuto'),
+  custom: t('kbSegment.modeCustom'),
+  'parent-child': t('kbSegment.modeParentChild'),
 };
 const CLEAN_LABELS: Record<KbCleanOption, string> = {
-  'collapse-blank': '合并连续空行',
-  'strip-url': '去除链接',
-  'strip-email': '去除邮箱',
+  'collapse-blank': t('kbSegment.cleanBlankLines'),
+  'strip-url': t('kbSegment.cleanLinks'),
+  'strip-email': t('kbSegment.cleanEmails'),
 };
 const PREVIEW_LIMIT = 20;
 
@@ -125,16 +126,16 @@ export interface KbSegmentHandle {
 /* ── 构建 ── */
 
 function buildModeSeg(cfg: KbSegmentConfig): HTMLElement {
-  const seg = h('div', 'kb-seg kb-segment-mode');
+  const seg = h('div', 'icen-kb-seg kb-segment-mode');
   seg.setAttribute('role', 'radiogroup');
-  seg.setAttribute('aria-label', '分段模式');
+  seg.setAttribute('aria-label', t('kbSegment.modeLabel'));
   MODES.forEach((m) => {
-    const item = h('button', `kb-seg-item kb-segment-mode-item${cfg.mode === m ? ' is-active' : ''}`);
+    const item = h('button', `icen-kb-seg-item kb-segment-mode-item${cfg.mode === m ? ' is-active' : ''}`);
     item.type = 'button';
     item.setAttribute('role', 'radio');
     item.setAttribute('aria-checked', String(cfg.mode === m));
     if (cfg.locked) item.disabled = true;
-    item.dataset.value = m;
+    item.dataset.icenValue = m;
     item.textContent = MODE_LABELS[m];
     seg.appendChild(item);
   });
@@ -142,14 +143,14 @@ function buildModeSeg(cfg: KbSegmentConfig): HTMLElement {
 }
 
 function buildCleanGroup(cfg: KbSegmentConfig): HTMLElement {
-  const group = h('div', 'kb-segment-clean');
+  const group = h('div', 'icen-kb-segment-clean');
   KB_CLEAN_OPTIONS.forEach((opt) => {
-    const label = h('label', 'kb-segment-clean-item');
+    const label = h('label', 'icen-kb-segment-clean-item');
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.value = opt;
     cb.checked = cfg.clean.includes(opt);
-    cb.dataset.kbSegmentClean = opt;
+    cb.dataset.icenKbSegmentClean = opt;
     label.appendChild(cb);
     label.appendChild(document.createTextNode(CLEAN_LABELS[opt]));
     group.appendChild(label);
@@ -191,74 +192,74 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
   };
 
   el.textContent = '';
-  el.classList.add('kb-segment-host');
-  const root = h('div', 'kb-segment');
+  el.classList.add('icen-kb-segment-host');
+  const root = h('div', 'icen-kb-segment');
 
   /* ── 左：表单 ── */
-  const form = h('div', 'kb-segment-form');
+  const form = h('div', 'icen-kb-segment-form');
 
-  const lockedNotice = h('div', 'kb-segment-locked kb-notice');
+  const lockedNotice = h('div', 'icen-kb-segment-locked icen-kb-notice');
   icon(lockedNotice, ICON_LOCK);
-  lockedNotice.appendChild(document.createTextNode('分段模式创建后不可更改，参数可随时调整'));
+  lockedNotice.appendChild(document.createTextNode(t('kbSegment.modeNote')));
   if (!cfg.locked) lockedNotice.hidden = true;
   form.appendChild(lockedNotice);
 
   /* 模式字段用 div 而非 label：内含按钮组，label 会把文本点击转发给首个按钮 */
-  const modeField = h('div', 'kb-field');
-  modeField.appendChild(h('span', 'kb-field-label', '分段模式'));
+  const modeField = h('div', 'icen-kb-field');
+  modeField.appendChild(h('span', 'icen-kb-field-label', t('kbSegment.modeLabel')));
   const modeSeg = buildModeSeg(cfg);
   modeField.appendChild(modeSeg);
   form.appendChild(modeField);
 
-  const delimField = h('label', 'kb-field');
-  delimField.appendChild(h('span', 'kb-field-label', '分隔符'));
-  const delimInput = h('input', 'kb-input kb-input--mono kb-segment-delimiter');
+  const delimField = h('label', 'icen-kb-field');
+  delimField.appendChild(h('span', 'icen-kb-field-label', t('kbSegment.separatorLabel')));
+  const delimInput = h('input', 'icen-kb-input icen-kb-input--mono kb-segment-delimiter');
   delimInput.type = 'text';
   delimInput.placeholder = '\\n\\n';
   delimInput.value = cfg.delimiter ?? '';
-  delimInput.setAttribute('aria-label', '分段分隔符');
+  delimInput.setAttribute('aria-label', t('kbSegment.separatorPlaceholder'));
   delimField.appendChild(delimInput);
   form.appendChild(delimField);
 
-  const maxField = h('label', 'kb-field');
-  maxField.appendChild(h('span', 'kb-field-label', '最大长度'));
-  const maxInput = h('input', 'kb-input kb-segment-max');
+  const maxField = h('label', 'icen-kb-field');
+  maxField.appendChild(h('span', 'icen-kb-field-label', t('kbSegment.maxLengthLabel')));
+  const maxInput = h('input', 'icen-kb-input kb-segment-max');
   maxInput.type = 'number';
   maxInput.min = '1';
   maxInput.step = '1';
   maxInput.value = String(cfg.maxLength);
-  maxInput.setAttribute('aria-label', '分段最大长度');
+  maxInput.setAttribute('aria-label', t('kbSegment.maxLengthPlaceholder'));
   maxField.appendChild(maxInput);
   form.appendChild(maxField);
 
-  const overlapField = h('label', 'kb-field');
-  overlapField.appendChild(h('span', 'kb-field-label', '重叠'));
-  const overlapInput = h('input', 'kb-input kb-segment-overlap');
+  const overlapField = h('label', 'icen-kb-field');
+  overlapField.appendChild(h('span', 'icen-kb-field-label', t('kbSegment.overlapLabel')));
+  const overlapInput = h('input', 'icen-kb-input kb-segment-overlap');
   overlapInput.type = 'number';
   overlapInput.min = '0';
   overlapInput.step = '1';
   overlapInput.value = String(cfg.overlap);
-  overlapInput.setAttribute('aria-label', '分段重叠');
+  overlapInput.setAttribute('aria-label', t('kbSegment.overlapPlaceholder'));
   overlapField.appendChild(overlapInput);
   form.appendChild(overlapField);
 
-  const overlapError = h('div', 'kb-segment-overlap-error kb-notice', '重叠需小于最大长度');
+  const overlapError = h('div', 'icen-kb-segment-overlap-error icen-kb-notice', t('kbSegment.overlapInvalid'));
   overlapError.hidden = true;
   form.appendChild(overlapError);
   form.appendChild(buildCleanGroup(cfg));
 
-  const pcNotice = h('div', 'kb-segment-pc-notice kb-notice', '子分段按长度自动生成');
+  const pcNotice = h('div', 'kb-segment-pc-notice icen-kb-notice', t('kbSegment.childNote'));
   pcNotice.hidden = cfg.mode !== 'parent-child';
   form.appendChild(pcNotice);
   root.appendChild(form);
 
   /* ── 右：预览 ── */
-  const preview = h('div', 'kb-segment-preview');
-  const stats = h('div', 'kb-segment-stats');
+  const preview = h('div', 'icen-kb-segment-preview');
+  const stats = h('div', 'icen-kb-segment-stats');
   preview.appendChild(stats);
-  const blocks = h('div', 'kb-segment-blocks');
+  const blocks = h('div', 'icen-kb-segment-blocks');
   preview.appendChild(blocks);
-  const more = h('div', 'kb-segment-more kb-notice');
+  const more = h('div', 'kb-segment-more icen-kb-notice');
   more.hidden = true;
   preview.appendChild(more);
   root.appendChild(preview);
@@ -268,7 +269,7 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
 
   const syncModeSeg = (): void => {
     modeSeg.querySelectorAll<HTMLElement>('.kb-segment-mode-item').forEach((it) => {
-      const on = it.dataset.value === cfg.mode;
+      const on = it.dataset.icenValue === cfg.mode;
       it.classList.toggle('is-active', on);
       it.setAttribute('aria-checked', String(on));
     });
@@ -279,7 +280,7 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
     delimInput.value = cfg.delimiter ?? '';
     maxInput.value = String(cfg.maxLength);
     overlapInput.value = String(cfg.overlap);
-    modeSeg.querySelectorAll<HTMLInputElement>('[data-kb-segment-clean]').forEach((cb) => {
+    modeSeg.querySelectorAll<HTMLInputElement>('[data-icen-kb-segment-clean]').forEach((cb) => {
       cb.checked = cfg.clean.includes(cb.value as KbCleanOption);
     });
     pcNotice.hidden = cfg.mode !== 'parent-child';
@@ -300,12 +301,12 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
   };
 
   const readForm = (): void => {
-    const mode = modeSeg.querySelector<HTMLElement>('.kb-segment-mode-item.is-active')?.dataset.value;
+    const mode = modeSeg.querySelector<HTMLElement>('.kb-segment-mode-item.is-active')?.dataset.icenValue;
     const delim = delimInput.value;
     const max = Math.floor(Number(maxInput.value));
     const overlap = Math.floor(Number(overlapInput.value));
     const clean = Array.from(
-      form.querySelectorAll<HTMLInputElement>('[data-kb-segment-clean]:checked'),
+      form.querySelectorAll<HTMLInputElement>('[data-icen-kb-segment-clean]:checked'),
     ).map((cb) => cb.value as KbCleanOption);
     cfg = normalizeSegmentConfig({
       mode: (mode === 'custom' || mode === 'parent-child' ? mode : 'auto'),
@@ -323,21 +324,21 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
     const item = t?.closest<HTMLElement>('.kb-segment-mode-item');
     if (!item || item.classList.contains('is-active')) return;
     readForm();
-    cfg = normalizeSegmentConfig({ ...cfg, mode: item.dataset.value as KbSegmentConfig['mode'] });
+    cfg = normalizeSegmentConfig({ ...cfg, mode: item.dataset.icenValue as KbSegmentConfig['mode'] });
     syncForm();
     apply();
   });
   listen(delimInput, 'input', () => { readForm(); apply(); });
   listen(maxInput, 'input', () => { readForm(); apply(); });
   listen(overlapInput, 'input', () => { readForm(); apply(); });
-  form.querySelectorAll<HTMLInputElement>('[data-kb-segment-clean]').forEach((cb) => {
+  form.querySelectorAll<HTMLInputElement>('[data-icen-kb-segment-clean]').forEach((cb) => {
     listen(cb, 'change', () => { readForm(); apply(); });
   });
 
   /* 预览块点击展开/收起（200px 截断的渐进披露） */
   listen(blocks, 'click', (e) => {
     const t = e.target instanceof Element ? e.target : null;
-    const text = t?.closest<HTMLElement>('.kb-segment-block-text');
+    const text = t?.closest<HTMLElement>('.icen-kb-segment-block-text');
     if (text) text.classList.toggle('is-open');
   });
 
@@ -349,19 +350,19 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
     blocks.textContent = '';
     const segs = segmentText(sample, cfg);
     const st = segmentStats(segs);
-    stats.appendChild(h('span', 'kb-num kb-segment-stat', `${st.count} 段`));
-    stats.appendChild(h('span', 'kb-num kb-segment-stat', `均长 ${st.avgLength}`));
-    stats.appendChild(h('span', 'kb-num kb-segment-stat', `≈${st.tokensEstimate} tokens`));
+    stats.appendChild(h('span', 'icen-kb-num icen-kb-segment-stat', t('kbSegment.segmentsCount', { p0: st.count })));
+    stats.appendChild(h('span', 'icen-kb-num icen-kb-segment-stat', t('kbSegment.avgLength', { p0: st.avgLength })));
+    stats.appendChild(h('span', 'icen-kb-num icen-kb-segment-stat', `≈${st.tokensEstimate} tokens`));
     segs.slice(0, PREVIEW_LIMIT).forEach((text, i) => {
-      const block = h('div', 'kb-segment-block');
-      block.appendChild(h('span', 'kb-num kb-segment-block-no', String(i + 1).padStart(2, '0')));
-      const body = h('div', 'kb-segment-block-text', text);
-      body.title = '点击展开/收起';
+      const block = h('div', 'icen-kb-segment-block');
+      block.appendChild(h('span', 'icen-kb-num icen-kb-segment-block-no', String(i + 1).padStart(2, '0')));
+      const body = h('div', 'icen-kb-segment-block-text', text);
+      body.title = t('kbSegment.toggleTip');
       block.appendChild(body);
       blocks.appendChild(block);
     });
-    if (!segs.length) blocks.appendChild(h('div', 'kb-empty', '样本为空，暂无可预览分段'));
-    more.textContent = segs.length > PREVIEW_LIMIT ? `共 ${segs.length} 段，仅预览前 ${PREVIEW_LIMIT} 段` : '';
+    if (!segs.length) blocks.appendChild(h('div', 'icen-kb-empty', t('kbSegment.empty')));
+    more.textContent = segs.length > PREVIEW_LIMIT ? t('kbSegment.previewNote', { p0: segs.length, p1: PREVIEW_LIMIT }) : '';
     more.hidden = segs.length <= PREVIEW_LIMIT;
   }
 

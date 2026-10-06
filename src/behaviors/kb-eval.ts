@@ -2,33 +2,33 @@
  * @icen.ai/ui — Behavior: kb-eval（评估 run 对比表，观测治理域；与 components/kb-ops.css 配套）
  *
  * DOM 契约（类名固定，docs/spec/kb-family.md §5.22）：
- *   <div class="kb-eval">
- *     <div class="kb-eval-bar">
- *       对比 <select class="kb-eval-run" data-run="a">…</select> vs <select class="kb-eval-run" data-run="b">…</select>
- *       [仅存在回归行时] <button class="kb-eval-filter" aria-pressed="false">仅看回归</button>
+ *   <div class="icen-kb-eval">
+ *     <div class="icen-kb-eval-bar">
+ *       对比 <icen-select class="icen-kb-eval-run" data-icen-run="a">…</icen-select> vs <icen-select class="icen-kb-eval-run" data-icen-run="b">…</icen-select>
+ *       [仅存在回归行时] <button class="icen-kb-eval-filter" aria-pressed="false">仅看回归</button>
  *     </div>
- *     <div class="kb-eval-summary">
- *       <span class="kb-eval-grade is-improvement|is-regression|is-tradeoff|is-tie">提升|回归|权衡|持平</span>
- *       <span class="kb-num">A 均分 0.62</span> → <span class="kb-num">B 均分 0.71</span>
- *       <span class="kb-num kb-eval-delta [is-up|is-down]">+9.0pp</span>
- *       <span class="kb-meta">N 行</span>
+ *     <div class="icen-kb-eval-summary">
+ *       <span class="icen-kb-eval-grade is-improvement|is-regression|is-tradeoff|is-tie">提升|回归|权衡|持平</span>
+ *       <span class="icen-kb-num">A 均分 0.62</span> → <span class="icen-kb-num">B 均分 0.71</span>
+ *       <span class="icen-kb-num icen-kb-eval-delta [is-up|is-down]">+9.0pp</span>
+ *       <span class="icen-kb-meta">N 行</span>
  *     </div>
- *     <div class="kb-eval-tablewrap"><div class="kb-eval-table">
- *       <div class="kb-eval-grid kb-eval-grid--head">输入 | 输出 A | 输出 B | 期望 | [指标名 span 3]×m</div>
- *       <div class="kb-eval-grid kb-eval-grid--head">… | [A][B][Δ]×m</div>
- *       <div class="kb-eval-item">
- *         <div class="kb-eval-grid kb-eval-rowline" role="button" tabindex="0" aria-expanded="false">
- *           <span class="kb-eval-cell kb-eval-cell--input"><span class="kb-eval-key">key</span><span title>input</span></span>
- *           <span class="kb-eval-cell">outputA 截断</span> <span class="kb-eval-cell">outputB 截断</span>
- *           <span class="kb-eval-cell">expected 截断</span>
- *           <span class="kb-num kb-eval-num">0.9</span><span class="kb-num kb-eval-num">0.8</span>
- *           <span class="kb-num kb-eval-num kb-eval-delta is-down">-0.1</span> ×m（null → '—'）
+ *     <div class="icen-kb-eval-tablewrap"><div class="icen-kb-eval-table">
+ *       <div class="icen-kb-eval-grid icen-kb-eval-grid--head">输入 | 输出 A | 输出 B | 期望 | [指标名 span 3]×m</div>
+ *       <div class="icen-kb-eval-grid icen-kb-eval-grid--head">… | [A][B][Δ]×m</div>
+ *       <div class="icen-kb-eval-item">
+ *         <div class="icen-kb-eval-grid icen-kb-eval-rowline" role="button" tabindex="0" aria-expanded="false">
+ *           <span class="icen-kb-eval-cell icen-kb-eval-cell--input"><span class="icen-kb-eval-key">key</span><span title>icen-input</span></span>
+ *           <span class="icen-kb-eval-cell">outputA 截断</span> <span class="icen-kb-eval-cell">outputB 截断</span>
+ *           <span class="icen-kb-eval-cell">expected 截断</span>
+ *           <span class="icen-kb-num icen-kb-eval-num">0.9</span><span class="icen-kb-num icen-kb-eval-num">0.8</span>
+ *           <span class="icen-kb-num icen-kb-eval-num icen-kb-eval-delta is-down">-0.1</span> ×m（null → '—'）
  *         </div>
- *         <div class="kb-eval-detail" hidden>
- *           <div class="kb-eval-detail-col"><div class="kb-eval-detail-label">输出 A</div>
- *             <pre class="kb-eval-detail-pre">公共前缀<span class="kb-eval-diff-del">A 独有（红）</span>公共后缀</pre></div>
- *           <div class="kb-eval-detail-col">…输出 B…<span class="kb-eval-diff-ins">B 独有（绿）</span>…</div>
- *           <div class="kb-eval-detail-expected">期望：…</div>
+ *         <div class="icen-kb-eval-detail" hidden>
+ *           <div class="icen-kb-eval-detail-col"><div class="icen-kb-eval-detail-label">输出 A</div>
+ *             <pre class="icen-kb-eval-detail-pre">公共前缀<span class="icen-kb-eval-diff-del">A 独有（红）</span>公共后缀</pre></div>
+ *           <div class="icen-kb-eval-detail-col">…输出 B…<span class="icen-kb-eval-diff-ins">B 独有（绿）</span>…</div>
+ *           <div class="icen-kb-eval-detail-expected">期望：…</div>
  *         </div>
  *       </div>…
  *     </div></div>
@@ -54,6 +54,7 @@ import {
   type KbEvalRow,
 } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /** 可选 run（下拉项） */
 export interface KbEvalRunRef {
@@ -70,10 +71,10 @@ export interface KbEvalCompareModel {
 }
 
 const GRADE_LABELS: Record<KbEvalGrade, string> = {
-  improvement: '提升',
-  regression: '回归',
-  tradeoff: '权衡',
-  tie: '持平',
+  improvement: t('kbEval.gradeImprovement'),
+  regression: t('kbEval.gradeRegression'),
+  tradeoff: t('kbEval.gradeTradeoff'),
+  tie: t('kbEval.gradeTie'),
 };
 
 /** 指标列推导：scoresA/scoresB 键的并集（首次出现序） */
@@ -146,8 +147,8 @@ function labelOf(runs: KbEvalRunRef[], id: string): string {
 }
 
 function buildRunSelect(runs: KbEvalRunRef[], selected: string, tag: string): HTMLSelectElement {
-  const sel = h('select', 'kb-eval-run');
-  sel.dataset.run = tag;
+  const sel = h('select', 'icen-kb-eval-run');
+  sel.dataset.icenRun = tag;
   if (!runs.length) {
     const o = h('option', undefined, '—');
     o.value = '';
@@ -164,7 +165,7 @@ function buildRunSelect(runs: KbEvalRunRef[], selected: string, tag: string): HT
 
 /** 截断单元格（CSS 省略号 + title 全文） */
 function truncCell(text: string): HTMLElement {
-  const c = h('span', 'kb-eval-cell', text);
+  const c = h('span', 'icen-kb-eval-cell', text);
   c.title = text;
   return c;
 }
@@ -172,7 +173,7 @@ function truncCell(text: string): HTMLElement {
 /** delta 单元格类名/文本（正 = is-up 绿，负 = is-down 红，null = '—'） */
 function deltaCell(d: number | null, digits: number): HTMLElement {
   const cls = d == null ? '' : d > 0 ? ' is-up' : d < 0 ? ' is-down' : '';
-  return h('span', `kb-num kb-eval-num kb-eval-delta${cls}`, d != null ? deltaLabel(d, digits) : '—');
+  return h('span', `icen-kb-num icen-kb-eval-num icen-kb-eval-delta${cls}`, d != null ? deltaLabel(d, digits) : '—');
 }
 
 /**
@@ -186,12 +187,12 @@ export function renderKbEvalCompare(el: HTMLElement, model: KbEvalCompareModel):
   const runA = runs[0]?.id ?? '';
   const runB = runs[1]?.id ?? runs[0]?.id ?? '';
 
-  el.className = 'kb-eval';
+  el.className = 'icen-kb-eval';
   el.replaceChildren();
 
   /* 头部：run 选择（+ 条件性「仅看回归」过滤钮，行构建后回填） */
-  const bar = h('div', 'kb-eval-bar');
-  bar.append(h('span', undefined, '对比'));
+  const bar = h('div', 'icen-kb-eval-bar');
+  bar.append(h('span', undefined, t('kbEval.compare')));
   const selA = buildRunSelect(runs, runA, 'a');
   const selB = buildRunSelect(runs, runB, 'b');
   const emitCompare = (): void => {
@@ -203,7 +204,7 @@ export function renderKbEvalCompare(el: HTMLElement, model: KbEvalCompareModel):
   el.append(bar);
 
   if (!model.rows.length) {
-    el.append(h('div', 'kb-empty', '没有对比数据'));
+    el.append(h('div', 'icen-kb-empty', t('kbEval.noData')));
     return el;
   }
 
@@ -212,43 +213,43 @@ export function renderKbEvalCompare(el: HTMLElement, model: KbEvalCompareModel):
   const meanB = overallMean(model.rows, 'scoresB');
   const delta = meanA != null && meanB != null ? meanB - meanA : null;
   const grade = evalGrade(delta);
-  const summary = h('div', 'kb-eval-summary');
-  summary.append(h('span', `kb-eval-grade is-${grade}`, GRADE_LABELS[grade]));
-  summary.append(h('span', 'kb-num', `A 均分 ${formatScore(meanA)}`));
-  summary.append(h('span', 'kb-meta', '→'));
-  summary.append(h('span', 'kb-num', `B 均分 ${formatScore(meanB)}`));
+  const summary = h('div', 'icen-kb-eval-summary');
+  summary.append(h('span', `icen-kb-eval-grade is-${grade}`, GRADE_LABELS[grade]));
+  summary.append(h('span', 'icen-kb-num', t('kbEval.avgA', { p0: formatScore(meanA) })));
+  summary.append(h('span', 'icen-kb-meta', '→'));
+  summary.append(h('span', 'icen-kb-num', t('kbEval.avgB', { p0: formatScore(meanB) })));
   const ppCell = deltaCell(delta != null ? delta * 100 : null, 1);
   if (delta != null) ppCell.append('pp'); /* 百分点差（percentage points） */
   summary.append(ppCell);
-  summary.append(h('span', 'kb-meta', `${model.rows.length} 行`));
+  summary.append(h('span', 'icen-kb-meta', t('common.rows', { p0: model.rows.length })));
   el.append(summary);
 
   /* 结果表（横向滚动容器 + 两行表头 + 行/展开体） */
-  const wrap = h('div', 'kb-eval-tablewrap');
-  const table = h('div', 'kb-eval-table');
+  const wrap = h('div', 'icen-kb-eval-tablewrap');
+  const table = h('div', 'icen-kb-eval-table');
   const template = evalGridTemplate(metrics);
 
-  const head1 = h('div', 'kb-eval-grid kb-eval-grid--head');
+  const head1 = h('div', 'icen-kb-eval-grid icen-kb-eval-grid--head');
   head1.style.gridTemplateColumns = template;
   head1.append(
-    h('span', 'kb-eval-h', '输入'),
-    h('span', 'kb-eval-h', `输出 ${labelOf(runs, runA)}`),
-    h('span', 'kb-eval-h', `输出 ${labelOf(runs, runB)}`),
-    h('span', 'kb-eval-h', '期望'),
+    h('span', 'icen-kb-eval-h', t('common.input')),
+    h('span', 'icen-kb-eval-h', t('kbEval.outputN', { p0: labelOf(runs, runA) })),
+    h('span', 'icen-kb-eval-h', t('kbEval.outputN', { p0: labelOf(runs, runB) })),
+    h('span', 'icen-kb-eval-h', t('kbEval.expected')),
   );
   for (const m of metrics) {
-    const g = h('span', 'kb-eval-h kb-eval-h--group', m);
+    const g = h('span', 'icen-kb-eval-h icen-kb-eval-h--group', m);
     g.style.gridColumn = 'span 3';
     head1.append(g);
   }
-  const head2 = h('div', 'kb-eval-grid kb-eval-grid--head');
+  const head2 = h('div', 'icen-kb-eval-grid icen-kb-eval-grid--head');
   head2.style.gridTemplateColumns = template;
-  for (let i = 0; i < 4; i++) head2.append(h('span', 'kb-eval-h'));
+  for (let i = 0; i < 4; i++) head2.append(h('span', 'icen-kb-eval-h'));
   for (let i = 0; i < metrics.length; i++) {
     head2.append(
-      h('span', 'kb-eval-h kb-eval-h--sub', 'A'),
-      h('span', 'kb-eval-h kb-eval-h--sub', 'B'),
-      h('span', 'kb-eval-h kb-eval-h--sub', 'Δ'),
+      h('span', 'icen-kb-eval-h icen-kb-eval-h--sub', 'A'),
+      h('span', 'icen-kb-eval-h icen-kb-eval-h--sub', 'B'),
+      h('span', 'icen-kb-eval-h icen-kb-eval-h--sub', 'Δ'),
     );
   }
   table.append(head1, head2);
@@ -260,15 +261,15 @@ export function renderKbEvalCompare(el: HTMLElement, model: KbEvalCompareModel):
   for (const row of model.rows) {
     const regression = rowIsRegression(row);
     hasRegression = hasRegression || regression;
-    const item = h('div', 'kb-eval-item');
-    const line = h('div', 'kb-eval-grid kb-eval-rowline');
+    const item = h('div', 'icen-kb-eval-item');
+    const line = h('div', 'icen-kb-eval-grid icen-kb-eval-rowline');
     line.style.gridTemplateColumns = template;
     line.tabIndex = 0;
     line.setAttribute('role', 'button');
     line.setAttribute('aria-expanded', 'false');
 
-    const inputCell = h('span', 'kb-eval-cell kb-eval-cell--input');
-    inputCell.append(h('span', 'kb-eval-key', row.key));
+    const inputCell = h('span', 'icen-kb-eval-cell icen-kb-eval-cell--input');
+    inputCell.append(h('span', 'icen-kb-eval-key', row.key));
     const inputText = h('span', undefined, row.input);
     inputText.title = row.input;
     inputCell.append(inputText);
@@ -277,31 +278,31 @@ export function renderKbEvalCompare(el: HTMLElement, model: KbEvalCompareModel):
       const a = row.scoresA?.[m] ?? null;
       const b = row.scoresB?.[m] ?? null;
       line.append(
-        h('span', 'kb-num kb-eval-num', formatScore(a)),
-        h('span', 'kb-num kb-eval-num', formatScore(b)),
+        h('span', 'icen-kb-num icen-kb-eval-num', formatScore(a)),
+        h('span', 'icen-kb-num icen-kb-eval-num', formatScore(b)),
         deltaCell(typeof a === 'number' && typeof b === 'number' ? b - a : null, 2),
       );
     }
 
     /* 展开体：双栏对照 + 字符级 diff + 期望 */
-    const detail = h('div', 'kb-eval-detail');
+    const detail = h('div', 'icen-kb-eval-detail');
     detail.hidden = true;
     const diff = diffInline(row.outputA ?? '', row.outputB ?? '');
-    const colA = h('div', 'kb-eval-detail-col');
-    colA.append(h('div', 'kb-eval-detail-label', '输出 A'));
-    const preA = h('pre', 'kb-eval-detail-pre');
-    appendDiffText(preA, diff.prefix, diff.aMid, 'kb-eval-diff-del', diff.suffix);
+    const colA = h('div', 'icen-kb-eval-detail-col');
+    colA.append(h('div', 'icen-kb-eval-detail-label', t('kbEval.outputA')));
+    const preA = h('pre', 'icen-kb-eval-detail-pre');
+    appendDiffText(preA, diff.prefix, diff.aMid, 'icen-kb-eval-diff-del', diff.suffix);
     colA.append(preA);
-    const colB = h('div', 'kb-eval-detail-col');
-    colB.append(h('div', 'kb-eval-detail-label', '输出 B'));
-    const preB = h('pre', 'kb-eval-detail-pre');
-    appendDiffText(preB, diff.prefix, diff.bMid, 'kb-eval-diff-ins', diff.suffix);
+    const colB = h('div', 'icen-kb-eval-detail-col');
+    colB.append(h('div', 'icen-kb-eval-detail-label', t('kbEval.outputB')));
+    const preB = h('pre', 'icen-kb-eval-detail-pre');
+    appendDiffText(preB, diff.prefix, diff.bMid, 'icen-kb-eval-diff-ins', diff.suffix);
     colB.append(preB);
     detail.append(colA, colB);
     if (row.expected) {
-      const exp = h('div', 'kb-eval-detail-expected');
-      exp.append(h('span', 'kb-eval-detail-label', '期望'));
-      exp.append(h('div', 'kb-eval-detail-pre', row.expected));
+      const exp = h('div', 'icen-kb-eval-detail-expected');
+      exp.append(h('span', 'icen-kb-eval-detail-label', t('kbEval.expected')));
+      exp.append(h('div', 'icen-kb-eval-detail-pre', row.expected));
       detail.append(exp);
     }
 
@@ -326,7 +327,7 @@ export function renderKbEvalCompare(el: HTMLElement, model: KbEvalCompareModel):
 
   /* 「仅看回归」过滤钮：存在回归行才显示（spec §5.22） */
   if (hasRegression) {
-    const btn = h('button', 'kb-eval-filter', '仅看回归');
+    const btn = h('button', 'icen-kb-eval-filter', t('kbEval.onlyRegression'));
     btn.type = 'button';
     btn.setAttribute('aria-pressed', 'false');
     btn.addEventListener('click', () => {

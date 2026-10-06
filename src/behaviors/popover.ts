@@ -47,9 +47,9 @@ export interface PopoverLayoutOptions {
 
 /* ═══════════ 面板尺寸统一契约（PanelSizing） ═══════════
    全库浮层面板共用同一套尺寸心智模型：
-   - 属性面（声明式，挂组件根/面板元素）：data-panel-width（固定宽，最高优先）/
-     data-panel-min（最小宽）/ data-panel-max（最大宽）/ data-panel-min-height /
-     data-panel-max-height（高度上限）
+   - 属性面（声明式，挂组件根/面板元素）：data-icen-panel-width（固定宽，最高优先）/
+     data-icen-panel-min（最小宽）/ data-icen-panel-max（最大宽）/ data-icen-panel-min-height /
+     data-icen-panel-max-height（高度上限）
    - 程序面（命令式）：PanelSizing 对象，经 resolvePanelSizing 与属性面合并（程序面优先）
    - 值域：正数 px（与布局引擎同构）；百分比/rem/CSS 变量不属于本契约
    消费方：select / dropdown / context-menu / date-picker / command-palette / modal /
@@ -68,11 +68,11 @@ export interface PanelSizing {
 }
 
 const PANEL_SIZING_ATTRS = {
-  width: 'data-panel-width',
-  minWidth: 'data-panel-min',
-  maxWidth: 'data-panel-max',
-  minHeight: 'data-panel-min-height',
-  maxHeight: 'data-panel-max-height',
+  width: 'data-icen-panel-width',
+  minWidth: 'data-icen-panel-min',
+  maxWidth: 'data-icen-panel-max',
+  minHeight: 'data-icen-panel-min-height',
+  maxHeight: 'data-icen-panel-max-height',
 } as const;
 
 /** 从元素读取 data-panel-* 尺寸属性（非法/缺失字段跳过，不抛异常）。 */
@@ -120,7 +120,7 @@ export function sizingToLayout<T extends { minWidth?: number; maxWidth?: number;
 
 /** 把尺寸契约内联到自建面板（dropdown / context-menu / date-picker 等 fixed 面板）。
  *  传 null 复位全部内联尺寸——单例面板跨实例复用时防「上次的设置串味」。
- *  视口守卫：width / maxWidth 一律夹到 视口宽 − 24px（窄屏上过大的 data-panel-width 不溢出，
+ *  视口守卫：width / maxWidth 一律夹到 视口宽 − 24px（窄屏上过大的 data-icen-panel-width 不溢出，
  *  与 computePopoverLayout 的 availableWidth 同一纪律，不再两套标准）。 */
 export function applyPanelSizing(panel: HTMLElement, sizing: PanelSizing | null): void {
   if (sizing == null) {
@@ -311,7 +311,7 @@ function relayout(state: OpenState): void {
   panel.style.top = `${layout.top}px`;
   panel.style.width = `${layout.width}px`;
   panel.style.maxHeight = `${layout.maxHeight}px`;
-  panel.dataset.side = layout.side;
+  panel.dataset.icenSide = layout.side;
   panel.style.visibility = state.prevVisibility;
 }
 
@@ -394,7 +394,7 @@ export function closePopover(panel: HTMLElement): void {
   panel.style.top = '';
   panel.style.width = '';
   panel.style.maxHeight = '';
-  delete panel.dataset.side;
+  delete panel.dataset.icenSide;
   if (state.placeholder.parentNode) {
     state.placeholder.parentNode.insertBefore(panel, state.placeholder);
     state.placeholder.remove();

@@ -2,31 +2,31 @@
  * @icen.ai/ui — Behavior: tabs（分区切换，与 components/tabs.css 配套，data 属性驱动）
  *
  * DOM 契约：
- *   <div data-tabs data-tabs-hash data-tabs-activation="manual">
- *     <nav class="tabs" role="tablist" data-tabs-ink>
- *       <button class="page-tab" role="tab" id="tab-overview" aria-controls="panel-overview"
- *               data-tab="overview" tabindex="0">总览</button>
- *       <button class="page-tab" role="tab" data-tab="billing" tabindex="-1">订阅</button>
- *     </nav>
- *     <section data-tab-panel="overview" role="tabpanel" aria-labelledby="tab-overview">…</section>
- *     <section data-tab-panel="billing" hidden>…</section>
+ *   <div data-icen-tabs data-icen-tabs-hash data-icen-tabs-activation="manual">
+ *     <icen-nav class="icen-tabs" role="tablist" data-icen-tabs-ink>
+ *       <button class="icen-page-tab" role="tab" id="tab-overview" aria-controls="panel-overview"
+ *               data-icen-tab="overview" tabindex="0">总览</button>
+ *       <button class="icen-page-tab" role="tab" data-icen-tab="billing" tabindex="-1">订阅</button>
+ *     </icen-nav>
+ *     <section data-icen-tab-panel="overview" role="tabpanel" aria-labelledby="tab-overview">…</section>
+ *     <section data-icen-tab-panel="billing" hidden>…</section>
  *   </div>
  *
  * 行为：
  *   - 点击 / Enter / Space 激活 tab；激活 = .is-active 类 + aria-selected=true +
  *     各 panel hidden 切换 + aria-labelledby 同步，并派发 icen:tab-change
  *     （detail { tab, panel, index }，bubbles）
- *   - 激活模式 data-tabs-activation="auto|manual"（默认 manual，现状）：
+ *   - 激活模式 data-icen-tabs-activation="auto|manual"（默认 manual，现状）：
  *     manual = ←/→/↑/↓/Home/End 只移动焦点不激活；auto = follow focus，方向键移动焦点即激活
- *   - 指示条：tablist（.tabs）挂 data-tabs-ink 时，行为层创建并移动 .tabs-ink 绝对定位条
+ *   - 指示条：tablist（.icen-tabs）挂 data-icen-tabs-ink 时，行为层创建并移动 .icen-tabs-ink 绝对定位条
  *     （宽 / translateX 内联定位属布局而非主题样式，同 popover 定位模式；
- *     高度 / 圆角 / 背景等视觉在 tabs.css 的 .tabs-ink 一节，transition 消费 --duration/--ease token；
+ *     高度 / 圆角 / 背景等视觉在 tabs.css 的 .icen-tabs-ink 一节，transition 消费 --duration/--ease token；
  *     窗口 resize 后自动重对齐；销毁时随监听一并回收）
- *   - data-tabs-hash 容器与 location.hash 同步（history.replaceState 写，不堆历史；
+ *   - data-icen-tabs-hash 容器与 location.hash 同步（history.replaceState 写，不堆历史；
  *     hashchange 跟随）；值 "push" 时改用 pushState（可回退），"false" 或未设 = 不启用
  *   - 同一容器重复 init 幂等；不可达 tab（disabled / aria-disabled）会被跳过
  *   - initTabs 返回销毁函数：移除容器监听、window hashchange/resize 与行为层创建的
- *     .tabs-ink（可重新 init）
+ *     .icen-tabs-ink（可重新 init）
  */
 
 import { emitIcen } from './events';
@@ -36,12 +36,12 @@ interface MarkedElement extends Element {
 }
 
 function tabButtons(container: Element): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>('[data-tab]'));
+  return Array.from(container.querySelectorAll<HTMLElement>('[data-icen-tab]'));
 }
 
 function tabNames(container: Element): string[] {
   return tabButtons(container)
-    .map((t) => t.getAttribute('data-tab'))
+    .map((t) => t.getAttribute('data-icen-tab'))
     .filter((n): n is string => n !== null);
 }
 
@@ -50,24 +50,24 @@ function currentHash(): string {
 }
 
 /**
- * data-tabs-hash 解析：未设或 "false" → 不启用（null）；
+ * data-icen-tabs-hash 解析：未设或 "false" → 不启用（null）；
  * "push" → pushState（可回退）；其余任意值（含空串，现状用法）→ replaceState。
  */
 function hashWriteMethod(container: Element): 'push' | 'replace' | null {
-  const raw = container.getAttribute('data-tabs-hash');
+  const raw = container.getAttribute('data-icen-tabs-hash');
   if (raw === null || raw === 'false') return null;
   return raw === 'push' ? 'push' : 'replace';
 }
 
 /**
- * 指示条对齐：把 tablist 内的 .tabs-ink 移到活动 tab 下方。
+ * 指示条对齐：把 tablist 内的 .icen-tabs-ink 移到活动 tab 下方。
  * 定位（宽 / translateX）内联写入——布局定位而非主题样式，同 popover 模式。
  */
 function syncInk(container: Element, name: string): void {
-  const btn = tabButtons(container).find((b) => b.getAttribute('data-tab') === name);
+  const btn = tabButtons(container).find((b) => b.getAttribute('data-icen-tab') === name);
   const tablist = btn?.parentElement;
   if (!btn || !tablist) return;
-  const ink = tablist.querySelector<HTMLElement>(':scope > .tabs-ink');
+  const ink = tablist.querySelector<HTMLElement>(':scope > .icen-tabs-ink');
   if (!ink) return;
   ink.style.width = `${btn.offsetWidth}px`;
   ink.style.transform = `translateX(${btn.offsetLeft}px)`;
@@ -78,7 +78,7 @@ function activate(container: Element, name: string, writeHash: boolean, emit = f
   let matched = false;
 
   buttons.forEach((t) => {
-    const on = t.getAttribute('data-tab') === name;
+    const on = t.getAttribute('data-icen-tab') === name;
     if (on) matched = true;
     t.classList.toggle('is-active', on);
     t.setAttribute('aria-selected', String(on));
@@ -87,13 +87,13 @@ function activate(container: Element, name: string, writeHash: boolean, emit = f
   if (!matched) return;
 
   let panel: HTMLElement | null = null;
-  container.querySelectorAll<HTMLElement>('[data-tab-panel]').forEach((p) => {
-    const isOn = p.getAttribute('data-tab-panel') === name;
+  container.querySelectorAll<HTMLElement>('[data-icen-tab-panel]').forEach((p) => {
+    const isOn = p.getAttribute('data-icen-tab-panel') === name;
     p.hidden = !isOn;
     if (isOn) {
       panel = p;
       if (!p.getAttribute('aria-labelledby')) {
-        const btn = buttons.find((b) => b.getAttribute('data-tab') === name);
+        const btn = buttons.find((b) => b.getAttribute('data-icen-tab') === name);
         if (btn?.id) p.setAttribute('aria-labelledby', btn.id);
       }
     }
@@ -109,7 +109,7 @@ function activate(container: Element, name: string, writeHash: boolean, emit = f
 
   /* 用户激活（点击/键盘/hash 跟随）才派发；初始化定位不派发 */
   if (emit) {
-    const index = buttons.findIndex((b) => b.getAttribute('data-tab') === name);
+    const index = buttons.findIndex((b) => b.getAttribute('data-icen-tab') === name);
     const tab = buttons[index] ?? null;
     emitIcen(container, 'icen:tab-change', { tab, panel, index });
   }
@@ -147,7 +147,7 @@ function setup(container: Element): (() => void) | undefined {
 
   const useHash = hashWriteMethod(container) !== null;
   /* 激活模式：默认 manual（方向键只移焦点）；auto = follow focus（移焦点即激活） */
-  const autoActivate = container.getAttribute('data-tabs-activation') === 'auto';
+  const autoActivate = container.getAttribute('data-icen-tabs-activation') === 'auto';
   const names = tabNames(container);
   // 校验通过后再置位：names 为空早退不置位，以便补上 tab 后重新 init 可重试
   if (names.length === 0) return;
@@ -162,16 +162,16 @@ function setup(container: Element): (() => void) | undefined {
   const tablist = buttons[0]?.parentElement;
   if (tablist && !tablist.getAttribute('role')) tablist.setAttribute('role', 'tablist');
 
-  /* 指示条：.tabs[data-tabs-ink] 时行为层创建 .tabs-ink（视觉规则在 tabs.css）。
+  /* 指示条：.icen-tabs[data-icen-tabs-ink] 时行为层创建 .icen-tabs-ink（视觉规则在 tabs.css）。
      初次定位先写内联再插入，避免首帧从 0 宽度过渡跳变。 */
   let ink: HTMLElement | null = null;
-  if (tablist instanceof HTMLElement && tablist.hasAttribute('data-tabs-ink')) {
+  if (tablist instanceof HTMLElement && tablist.hasAttribute('data-icen-tabs-ink')) {
     ink = document.createElement('div');
-    ink.className = 'tabs-ink';
+    ink.className = 'icen-tabs-ink';
     ink.setAttribute('aria-hidden', 'true');
     const initialBtn =
       buttons.find((b) => b.classList.contains('is-active')) ??
-      buttons.find((b) => b.getAttribute('data-tab') === names[0]);
+      buttons.find((b) => b.getAttribute('data-icen-tab') === names[0]);
     if (initialBtn) {
       ink.style.width = `${initialBtn.offsetWidth}px`;
       ink.style.transform = `translateX(${initialBtn.offsetLeft}px)`;
@@ -182,10 +182,10 @@ function setup(container: Element): (() => void) | undefined {
   const onClick = (ev: Event): void => {
     const target = ev.target;
     if (!(target instanceof Element)) return;
-    const btn = target.closest('[data-tab]');
-    if (!btn || btn.closest('[data-tabs]') !== container) return;
+    const btn = target.closest('[data-icen-tab]');
+    if (!btn || btn.closest('[data-icen-tabs]') !== container) return;
     if (btn instanceof HTMLElement && isDisabled(btn)) return;
-    const name = btn.getAttribute('data-tab');
+    const name = btn.getAttribute('data-icen-tab');
     if (name) activate(container, name, useHash, true);
   };
 
@@ -195,7 +195,7 @@ function setup(container: Element): (() => void) | undefined {
     if (!autoActivate) return;
     const target = tabButtons(container)[idx];
     if (!target || isDisabled(target)) return;
-    const name = target.getAttribute('data-tab');
+    const name = target.getAttribute('data-icen-tab');
     if (name) activate(container, name, useHash, true);
   };
 
@@ -203,8 +203,8 @@ function setup(container: Element): (() => void) | undefined {
     const kev = ev as KeyboardEvent;
     const target = kev.target;
     if (!(target instanceof Element)) return;
-    const btn = target.closest('[data-tab]');
-    if (!btn || btn.closest('[data-tabs]') !== container) return;
+    const btn = target.closest('[data-icen-tab]');
+    if (!btn || btn.closest('[data-icen-tabs]') !== container) return;
 
     const buttonsList = tabButtons(container);
     const currentIdx = buttonsList.indexOf(btn as HTMLElement);
@@ -238,7 +238,7 @@ function setup(container: Element): (() => void) | undefined {
       case ' ': {
         if (btn instanceof HTMLElement && !isDisabled(btn)) {
           kev.preventDefault();
-          const name = btn.getAttribute('data-tab');
+          const name = btn.getAttribute('data-icen-tab');
           if (name) activate(container, name, useHash, true);
         }
         break;
@@ -256,7 +256,7 @@ function setup(container: Element): (() => void) | undefined {
     const h = currentHash();
     if (names.includes(h)) initial = h;
   } else {
-    const n = container.querySelector('[data-tab].is-active')?.getAttribute('data-tab');
+    const n = container.querySelector('[data-icen-tab].is-active')?.getAttribute('data-icen-tab');
     if (n && names.includes(n)) initial = n;
   }
   activate(container, initial ?? names[0], false);
@@ -273,7 +273,7 @@ function setup(container: Element): (() => void) | undefined {
   /* 指示条随窗口 resize 重对齐（tab 换行 / 字号变化后宽度漂移） */
   const onResize = (): void => {
     const active = tabButtons(container).find((b) => b.classList.contains('is-active'));
-    const name = active?.getAttribute('data-tab');
+    const name = active?.getAttribute('data-icen-tab');
     if (name) syncInk(container, name);
   };
   if (ink && typeof window !== 'undefined') {
@@ -296,9 +296,9 @@ function setup(container: Element): (() => void) | undefined {
 }
 
 /**
- * 为 root 下每个 [data-tabs] 容器初始化（root 自身是 [data-tabs] 也算）。
+ * 为 root 下每个 [data-icen-tabs] 容器初始化（root 自身是 [data-icen-tabs] 也算）。
  * 返回销毁函数：调用后移除所有容器监听、window hashchange/resize 监听与行为层创建的
- * .tabs-ink 元素，并复位幂等标记（销毁后的容器可被再次 initTabs 重新接管）。
+ * .icen-tabs-ink 元素，并复位幂等标记（销毁后的容器可被再次 initTabs 重新接管）。
  * SSR 下返回 no-op 函数。
  */
 export function initTabs(root?: ParentNode): () => void {
@@ -306,8 +306,8 @@ export function initTabs(root?: ParentNode): () => void {
   if (typeof document !== 'undefined') {
     const scope = root ?? document;
     const containers: Element[] = [];
-    if (scope instanceof Element && scope.matches('[data-tabs]')) containers.push(scope);
-    containers.push(...Array.from(scope.querySelectorAll('[data-tabs]')));
+    if (scope instanceof Element && scope.matches('[data-icen-tabs]')) containers.push(scope);
+    containers.push(...Array.from(scope.querySelectorAll('[data-icen-tabs]')));
     for (const c of containers) {
       const cleanup = setup(c);
       if (cleanup) cleanups.push(cleanup);

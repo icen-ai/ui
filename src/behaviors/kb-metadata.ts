@@ -2,30 +2,30 @@
  * @icen.ai/ui — Behavior: kb-metadata（元数据管理：字段定义 + 值绑定，与 components/kb-ingest.css 配套）
  *
  * DOM 契约（docs/spec/kb-family.md §5.9）：
- *   <div class="kb-metadata">
- *     <table class="kb-metadata-table">
+ *   <div class="icen-kb-metadata">
+ *     <icen-table class="icen-kb-metadata-table">
  *       <thead><tr><th>字段</th><th>类型</th><th>值</th><th></th></tr></thead>
  *       <tbody>
- *         <tr class="kb-metadata-row [is-builtin]" data-key="title">
- *           <td class="kb-metadata-key">title <span class="kb-metadata-builtin-flag">内置</span></td>
- *           <td><span class="kb-badge kb-metadata-type">string</span></td>
- *           <td class="kb-metadata-value">
- *             builtin → 只读 span；自定义 → <input class="kb-input" data-kb-metadata-bind value="…">
+ *         <tr class="icen-kb-metadata-row [is-builtin]" data-icen-key="title">
+ *           <td class="icen-kb-metadata-key">title <span class="icen-kb-metadata-builtin-flag">内置</span></td>
+ *           <td><span class="icen-kb-badge icen-kb-metadata-type">string</span></td>
+ *           <td class="icen-kb-metadata-value">
+ *             builtin → 只读 span；自定义 → <icen-input class="icen-kb-input" data-icen-kb-metadata-bind value="…">
  *           </td>
- *           <td class="kb-metadata-ops">
- *             <button class="kb-btn" data-kb-metadata-remove>移除</button>   <!-- builtin 行不渲染 -->
+ *           <td class="icen-kb-metadata-ops">
+ *             <button class="icen-kb-btn" data-icen-kb-metadata-remove>移除</button>   <!-- builtin 行不渲染 -->
  *           </td>
  *         </tr>…
  *       </tbody>
- *     </table>
- *     <div class="kb-metadata-new">
- *       <input class="kb-input kb-input--mono kb-metadata-new-key" placeholder="字段名，如 department">
- *       <div class="kb-seg kb-metadata-type-pick" role="radiogroup">       ← kb 域自持 segmented
- *         <button class="kb-seg-item [is-active]" role="radio" data-value="string">string</button>
- *         <button class="kb-seg-item" role="radio" data-value="number">number</button>
- *         <button class="kb-seg-item" role="radio" data-value="time">time</button>
+ *     </icen-table>
+ *     <div class="icen-kb-metadata-new">
+ *       <icen-input class="icen-kb-input icen-kb-input--mono icen-kb-metadata-new-key" placeholder="字段名，如 department">
+ *       <div class="icen-kb-seg kb-metadata-type-pick" role="radiogroup">       ← kb 域自持 icen-segmented
+ *         <button class="icen-kb-seg-item [is-active]" role="radio" data-icen-value="string">string</button>
+ *         <button class="icen-kb-seg-item" role="radio" data-icen-value="number">number</button>
+ *         <button class="icen-kb-seg-item" role="radio" data-icen-value="time">time</button>
  *       </div>
- *       <button class="kb-btn" data-kb-metadata-define>新增字段</button>
+ *       <button class="icen-kb-btn" data-icen-kb-metadata-define>新增字段</button>
  *     </div>
  *   </div>
  *
@@ -42,6 +42,7 @@
 
 import { h } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /** 字段类型（徽标呈现；time = 日期时间口径） */
 export type KbMetadataType = 'string' | 'number' | 'time';
@@ -66,42 +67,42 @@ const TYPES: KbMetadataType[] = ['string', 'number', 'time'];
 /* ── 构建 ── */
 
 function buildRow(field: KbMetadataField, value: string | number | undefined): HTMLElement {
-  const row = h('tr', `kb-metadata-row${field.builtin ? ' is-builtin' : ''}`);
-  row.dataset.key = field.key;
+  const row = h('tr', `icen-kb-metadata-row${field.builtin ? ' is-builtin' : ''}`);
+  row.dataset.icenKey = field.key;
 
-  const keyTd = h('td', 'kb-metadata-key');
+  const keyTd = h('td', 'icen-kb-metadata-key');
   keyTd.textContent = field.key;
   if (field.label && field.label !== field.key) {
     keyTd.appendChild(document.createTextNode(' '));
-    keyTd.appendChild(h('span', 'kb-metadata-key-label', field.label));
+    keyTd.appendChild(h('span', 'icen-kb-metadata-key-label', field.label));
   }
-  if (field.builtin) keyTd.appendChild(h('span', 'kb-metadata-builtin-flag', '内置'));
+  if (field.builtin) keyTd.appendChild(h('span', 'icen-kb-metadata-builtin-flag', t('kbMetadata.builtIn')));
   row.appendChild(keyTd);
 
   const typeTd = h('td');
-  typeTd.appendChild(h('span', `kb-badge kb-metadata-type is-${field.type}`, field.type));
+  typeTd.appendChild(h('span', `icen-kb-badge icen-kb-metadata-type is-${field.type}`, field.type));
   row.appendChild(typeTd);
 
-  const valueTd = h('td', 'kb-metadata-value');
+  const valueTd = h('td', 'icen-kb-metadata-value');
   if (field.builtin) {
-    valueTd.appendChild(h('span', 'kb-metadata-readonly', value != null ? String(value) : '—'));
+    valueTd.appendChild(h('span', 'icen-kb-metadata-readonly', value != null ? String(value) : '—'));
   } else {
-    const input = h('input', 'kb-input kb-metadata-bind');
+    const input = h('input', 'icen-kb-input kb-metadata-bind');
     input.type = field.type === 'number' ? 'number' : 'text';
     input.value = value != null ? String(value) : '';
-    input.dataset.kbMetadataBind = '';
-    input.setAttribute('aria-label', `${field.key} 的值`);
+    input.dataset.icenKbMetadataBind = '';
+    input.setAttribute('aria-label', t('kbMetadata.valueOf', { p0: field.key }));
     valueTd.appendChild(input);
   }
   row.appendChild(valueTd);
 
-  const opsTd = h('td', 'kb-metadata-ops');
+  const opsTd = h('td', 'icen-kb-metadata-ops');
   if (!field.builtin) {
-    const rm = h('button', 'kb-btn');
+    const rm = h('button', 'icen-kb-btn');
     rm.type = 'button';
-    rm.dataset.kbMetadataRemove = '';
-    rm.textContent = '移除';
-    rm.setAttribute('aria-label', `移除字段 ${field.key}`);
+    rm.dataset.icenKbMetadataRemove = '';
+    rm.textContent = t('common.remove');
+    rm.setAttribute('aria-label', t('kbMetadata.removeField', { p0: field.key }));
     opsTd.appendChild(rm);
   }
   row.appendChild(opsTd);
@@ -109,32 +110,32 @@ function buildRow(field: KbMetadataField, value: string | number | undefined): H
 }
 
 function buildNewRow(): HTMLElement {
-  const bar = h('div', 'kb-metadata-new');
-  const keyInput = h('input', 'kb-input kb-input--mono kb-metadata-new-key');
+  const bar = h('div', 'icen-kb-metadata-new');
+  const keyInput = h('input', 'icen-kb-input icen-kb-input--mono icen-kb-metadata-new-key');
   keyInput.type = 'text';
-  keyInput.placeholder = '字段名，如 department';
-  keyInput.dataset.kbMetadataNewKey = '';
-  keyInput.setAttribute('aria-label', '新字段名');
+  keyInput.placeholder = t('kbMetadata.namePlaceholder');
+  keyInput.dataset.icenKbMetadataNewKey = '';
+  keyInput.setAttribute('aria-label', t('kbMetadata.nameLabel'));
   bar.appendChild(keyInput);
 
-  const pick = h('div', 'kb-seg kb-metadata-type-pick');
+  const pick = h('div', 'icen-kb-seg kb-metadata-type-pick');
   pick.setAttribute('role', 'radiogroup');
-  pick.setAttribute('aria-label', '新字段类型');
+  pick.setAttribute('aria-label', t('kbMetadata.typeLabel'));
   TYPES.forEach((t, i) => {
-    const item = h('button', `kb-seg-item kb-metadata-type-item${i === 0 ? ' is-active' : ''}`);
+    const item = h('button', `icen-kb-seg-item kb-metadata-type-item${i === 0 ? ' is-active' : ''}`);
     item.type = 'button';
     item.setAttribute('role', 'radio');
     item.setAttribute('aria-checked', String(i === 0));
-    item.dataset.value = t;
+    item.dataset.icenValue = t;
     item.textContent = t;
     pick.appendChild(item);
   });
   bar.appendChild(pick);
 
-  const define = h('button', 'kb-btn');
+  const define = h('button', 'icen-kb-btn');
   define.type = 'button';
-  define.dataset.kbMetadataDefine = '';
-  define.textContent = '新增字段';
+  define.dataset.icenKbMetadataDefine = '';
+  define.textContent = t('kbMetadata.addField');
   bar.appendChild(define);
   return bar;
 }
@@ -151,18 +152,18 @@ export function renderKbMetadata(el: HTMLElement, model: KbMetadataModel): HTMLE
   const values = model?.values ?? {};
   el.textContent = '';
 
-  const root = h('div', 'kb-metadata');
+  const root = h('div', 'icen-kb-metadata');
   const table = document.createElement('table');
-  table.className = 'kb-metadata-table';
+  table.className = 'icen-kb-metadata-table';
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
-  ['字段', '类型', '值', ''].forEach((label) => headRow.appendChild(h('th', 'kb-metadata-th', label)));
+  [t('kbMetadata.colField'), t('kbMetadata.colType'), t('kbMetadata.colValue'), ''].forEach((label) => headRow.appendChild(h('th', 'icen-kb-metadata-th', label)));
   thead.appendChild(headRow);
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   if (!fields.length) {
     const emptyRow = h('tr', 'kb-metadata-empty-row');
-    const td = h('td', 'kb-metadata-empty', '暂无元数据字段');
+    const td = h('td', 'icen-kb-metadata-empty', t('kbMetadata.empty'));
     td.colSpan = 4;
     emptyRow.appendChild(td);
     tbody.appendChild(emptyRow);
@@ -210,21 +211,21 @@ export function initKbMetadata(root?: ParentNode): () => void {
     if (!t) return;
 
     /* 移除字段：先派事件（行仍在树上可冒泡）再本地删行；builtin 行无按钮天然不可达 */
-    const rm = t.closest<HTMLElement>('[data-kb-metadata-remove]');
+    const rm = t.closest<HTMLElement>('[data-icen-kb-metadata-remove]');
     if (rm) {
-      const row = rm.closest<HTMLElement>('.kb-metadata-row[data-key]');
+      const row = rm.closest<HTMLElement>('.icen-kb-metadata-row[data-icen-key]');
       if (!row) return;
-      const key = row.dataset.key ?? '';
+      const key = row.dataset.icenKey ?? '';
       emitIcen(row, 'icen:kb-metadata-change', { action: 'remove', key });
       row.remove();
       return;
     }
 
     /* 新增字段：空 key 标 aria-invalid 不动作；成功则本地追加行 + 清空输入 */
-    const define = t.closest<HTMLElement>('[data-kb-metadata-define]');
+    const define = t.closest<HTMLElement>('[data-icen-kb-metadata-define]');
     if (define) {
-      const root2 = define.closest<HTMLElement>('.kb-metadata');
-      const keyInput = root2?.querySelector<HTMLInputElement>('[data-kb-metadata-new-key]');
+      const root2 = define.closest<HTMLElement>('.icen-kb-metadata');
+      const keyInput = root2?.querySelector<HTMLInputElement>('[data-icen-kb-metadata-new-key]');
       if (!root2 || !keyInput) return;
       const key = keyInput.value.trim();
       if (!key) {
@@ -233,8 +234,8 @@ export function initKbMetadata(root?: ParentNode): () => void {
       }
       keyInput.removeAttribute('aria-invalid');
       const active = root2.querySelector<HTMLElement>('.kb-metadata-type-item.is-active');
-      const type = (TYPES as string[]).includes(active?.dataset.value ?? '')
-        ? active?.dataset.value as KbMetadataType
+      const type = (TYPES as string[]).includes(active?.dataset.icenValue ?? '')
+        ? active?.dataset.icenValue as KbMetadataType
         : 'string';
       appendDefinedRow(root2, key, type);
       keyInput.value = '';
@@ -258,9 +259,9 @@ export function initKbMetadata(root?: ParentNode): () => void {
   /* 值绑定：input change（blur/Enter 均触发 change） */
   const onChange = (e: Event): void => {
     const t = e.target;
-    if (!(t instanceof HTMLInputElement) || !t.hasAttribute('data-kb-metadata-bind')) return;
-    const row = t.closest<HTMLElement>('.kb-metadata-row[data-key]');
-    if (row) emitIcen(row, 'icen:kb-metadata-change', { action: 'bind', key: row.dataset.key ?? '' });
+    if (!(t instanceof HTMLInputElement) || !t.hasAttribute('data-icen-kb-metadata-bind')) return;
+    const row = t.closest<HTMLElement>('.icen-kb-metadata-row[data-icen-key]');
+    if (row) emitIcen(row, 'icen:kb-metadata-change', { action: 'bind', key: row.dataset.icenKey ?? '' });
   };
 
   target.addEventListener('click', onClick);

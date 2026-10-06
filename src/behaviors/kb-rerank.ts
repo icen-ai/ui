@@ -3,26 +3,26 @@
  * 市场空白组件（docs/spec/kb-family.md §5.13）：直观回答「rerank 到底改了什么」。
  *
  * DOM 契约（render 快照渲染，返回挂载容器）：
- *   <div class="kb-rerank" data-kb-rerank [.is-off]>
- *     <div class="kb-rerank-head">
- *       <span class="kb-badge kb-rerank-model">…模型名…</span>
- *       <span class="kb-rerank-switch-label">重排对比</span>
- *       <button class="kb-switch" role="switch" aria-checked="true" data-kb-rerank-toggle></button>
+ *   <div class="icen-kb-rerank" data-icen-kb-rerank [.is-off]>
+ *     <div class="icen-kb-rerank-head">
+ *       <span class="icen-kb-badge kb-rerank-model">…模型名…</span>
+ *       <span class="icen-kb-rerank-switch-label">重排对比</span>
+ *       <button class="icen-kb-switch" role="switch" aria-checked="true" data-icen-kb-rerank-toggle></button>
  *     </div>
- *     <div class="kb-rerank-grid">                        ← grid 1fr 56px 1fr
- *       <div class="kb-rerank-colhead">重排前 <span class="kb-chip kb-chip--kind">cosine</span></div>
- *       <div class="kb-rerank-colhead kb-rerank-colhead--delta">Δ</div>
- *       <div class="kb-rerank-colhead">重排后 <span class="kb-chip kb-chip--kind">rerank</span></div>
- *       <div class="kb-rerank-row">                        ← display:contents，三格同排
- *         <div class="kb-rerank-col kb-rerank-col--before [.is-missing]>
- *           <span class="kb-rerank-rank kb-num">1</span>
- *           <span class="kb-rerank-title">…</span>
- *           <span class="kb-score">…bar + 值…</span>
+ *     <div class="icen-kb-rerank-grid">                        ← icen-grid 1fr 56px 1fr
+ *       <div class="icen-kb-rerank-colhead">重排前 <span class="icen-kb-chip icen-kb-chip--kind">cosine</span></div>
+ *       <div class="icen-kb-rerank-colhead icen-kb-rerank-colhead--delta">Δ</div>
+ *       <div class="icen-kb-rerank-colhead">重排后 <span class="icen-kb-chip icen-kb-chip--kind">rerank</span></div>
+ *       <div class="icen-kb-rerank-row">                        ← display:contents，三格同排
+ *         <div class="icen-kb-rerank-col kb-rerank-col--before [.is-missing]>
+ *           <span class="icen-kb-rerank-rank icen-kb-num">1</span>
+ *           <span class="icen-kb-rerank-title">…</span>
+ *           <span class="icen-kb-score">…bar + 值…</span>
  *         </div>
- *         <div class="kb-rerank-delta [.is-up|.is-down]">↑3 | ↓2 | —</div>
- *         <div class="kb-rerank-col kb-rerank-col--after [.is-missing]">…</div>
+ *         <div class="icen-kb-rerank-delta [.is-up|.is-down]">↑3 | ↓2 | —</div>
+ *         <div class="icen-kb-rerank-col icen-kb-rerank-col--after [.is-missing]">…</div>
  *       </div>…
- *       [<div class="kb-empty">…空态…</div>]
+ *       [<div class="icen-kb-empty">…空态…</div>]
  *     </div>
  *   </div>
  *
@@ -42,6 +42,7 @@ import {
   h, normalizeHit, formatScore, scorePercent, rerankDelta, type KbRetrievalHit, type KbScoreKind,
 } from './kb-core';
 import { emitIcen } from './events';
+import { t } from './i18n';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -87,31 +88,31 @@ export function renderKbRerankCompare(el: HTMLElement, opts: KbRerankCompareOpts
   const after = (opts.after ?? []).map((hit) => normalizeHit(hit as unknown as Record<string, unknown>));
 
   el.textContent = '';
-  const box = h('div', 'kb-rerank');
-  box.dataset.kbRerank = '';
+  const box = h('div', 'icen-kb-rerank');
+  box.dataset.icenKbRerank = '';
 
   /* ── 头部：模型徽标 + 开关 ── */
 
-  const head = h('div', 'kb-rerank-head');
-  const modelBadge = h('span', 'kb-badge kb-rerank-model', opts.model ? `rerank · ${opts.model}` : 'rerank');
-  const switchLabel = h('span', 'kb-rerank-switch-label kb-meta', '重排对比');
-  const switchBtn = h('button', 'kb-switch');
+  const head = h('div', 'icen-kb-rerank-head');
+  const modelBadge = h('span', 'icen-kb-badge kb-rerank-model', opts.model ? `rerank · ${opts.model}` : 'rerank');
+  const switchLabel = h('span', 'icen-kb-rerank-switch-label icen-kb-meta', t('kbRerank.compareTitle'));
+  const switchBtn = h('button', 'icen-kb-switch');
   switchBtn.type = 'button';
   switchBtn.role = 'switch';
-  switchBtn.dataset.kbRerankToggle = '';
+  switchBtn.dataset.icenKbRerankToggle = '';
   switchBtn.setAttribute('aria-checked', 'true');
-  switchBtn.setAttribute('aria-label', '启用重排对比');
+  switchBtn.setAttribute('aria-label', t('kbRerank.enableCompare'));
   head.append(modelBadge, switchLabel, switchBtn);
 
   /* ── 网格 ── */
 
-  const grid = h('div', 'kb-rerank-grid');
+  const grid = h('div', 'icen-kb-rerank-grid');
   const beforeKind: KbScoreKind | undefined = before[0]?.scoreKind;
-  const headL = h('div', 'kb-rerank-colhead', '重排前');
-  headL.appendChild(h('span', 'kb-chip kb-chip--kind', beforeKind ?? '未标'));
-  const headD = h('div', 'kb-rerank-colhead kb-rerank-colhead--delta', 'Δ');
-  const headR = h('div', 'kb-rerank-colhead', '重排后');
-  headR.appendChild(h('span', 'kb-chip kb-chip--kind', 'rerank'));
+  const headL = h('div', 'icen-kb-rerank-colhead', t('kbRerank.before'));
+  headL.appendChild(h('span', 'icen-kb-chip icen-kb-chip--kind', beforeKind ?? t('kbRerank.unmarked')));
+  const headD = h('div', 'icen-kb-rerank-colhead icen-kb-rerank-colhead--delta', 'Δ');
+  const headR = h('div', 'icen-kb-rerank-colhead', t('kbRerank.after'));
+  headR.appendChild(h('span', 'icen-kb-chip icen-kb-chip--kind', 'rerank'));
   grid.append(headL, headD, headR);
 
   const beforeMax = columnMax(before);
@@ -126,23 +127,23 @@ export function renderKbRerankCompare(el: HTMLElement, opts: KbRerankCompareOpts
   for (const [key] of beforeByKey) if (!afterByKey.has(key)) orderedKeys.push(key);
 
   if (!orderedKeys.length) {
-    grid.appendChild(h('div', 'kb-empty', '两侧均为空——运行检索后再对比'));
+    grid.appendChild(h('div', 'icen-kb-empty', t('kbRerank.empty')));
   }
 
   const scoreCell = (hit: KbRetrievalHit | undefined, kind: KbScoreKind | undefined, max: number): HTMLElement => {
-    const score = h('span', 'kb-score');
+    const score = h('span', 'icen-kb-score');
     if (hit) {
       const pct = scorePercent(hit.score, kind, max);
       if (pct != null) {
-        const barEl = h('span', 'kb-score-bar');
+        const barEl = h('span', 'icen-kb-score-bar');
         const fill = h('i');
         fill.style.width = `${pct.toFixed(1)}%`;
         barEl.appendChild(fill);
         score.appendChild(barEl);
       }
-      score.appendChild(h('span', 'kb-score-value', formatScore(hit.score)));
+      score.appendChild(h('span', 'icen-kb-score-value', formatScore(hit.score)));
     } else {
-      score.appendChild(h('span', 'kb-score-value', '—'));
+      score.appendChild(h('span', 'icen-kb-score-value', '—'));
     }
     return score;
   };
@@ -154,19 +155,19 @@ export function renderKbRerankCompare(el: HTMLElement, opts: KbRerankCompareOpts
     max: number,
     side: 'before' | 'after',
   ): HTMLElement => {
-    const cell = h('div', `kb-rerank-col kb-rerank-col--${side}`);
+    const cell = h('div', `icen-kb-rerank-col icen-kb-rerank-col--${side}`);
     if (!hit) {
       cell.classList.add('is-missing');
       cell.append(
-        h('span', 'kb-rerank-rank kb-num', '—'),
-        h('span', 'kb-rerank-missing', side === 'before' ? '新进' : '落选'),
-        h('span', 'kb-score'),
+        h('span', 'icen-kb-rerank-rank icen-kb-num', '—'),
+        h('span', 'icen-kb-rerank-missing', side === 'before' ? t('kbRerank.newIn') : t('kbRerank.dropped')),
+        h('span', 'icen-kb-score'),
       );
       return cell;
     }
     cell.append(
-      h('span', 'kb-rerank-rank kb-num', String(rank)),
-      h('span', 'kb-rerank-title', hitTitle(hit)),
+      h('span', 'icen-kb-rerank-rank icen-kb-num', String(rank)),
+      h('span', 'icen-kb-rerank-title', hitTitle(hit)),
       scoreCell(hit, kind, max),
     );
     return cell;
@@ -175,10 +176,10 @@ export function renderKbRerankCompare(el: HTMLElement, opts: KbRerankCompareOpts
   for (const key of orderedKeys) {
     const b = beforeByKey.get(key);
     const a = afterByKey.get(key);
-    const row = h('div', 'kb-rerank-row');
-    row.dataset.key = key;
+    const row = h('div', 'icen-kb-rerank-row');
+    row.dataset.icenKey = key;
 
-    const deltaCell = h('div', 'kb-rerank-delta');
+    const deltaCell = h('div', 'icen-kb-rerank-delta');
     if (b && a) {
       const delta = rerankDelta({ key, before: { rank: b.rank }, after: { rank: a.rank } });
       if (delta == null || delta === 0) {
@@ -186,11 +187,11 @@ export function renderKbRerankCompare(el: HTMLElement, opts: KbRerankCompareOpts
       } else if (delta < 0) {
         deltaCell.classList.add('is-up');
         deltaCell.textContent = `↑${Math.abs(delta)}`;
-        deltaCell.title = `上升 ${Math.abs(delta)} 位`;
+        deltaCell.title = t('kbRerank.up', { p0: Math.abs(delta) });
       } else {
         deltaCell.classList.add('is-down');
         deltaCell.textContent = `↓${delta}`;
-        deltaCell.title = `下降 ${delta} 位`;
+        deltaCell.title = t('kbRerank.down', { p0: delta });
       }
     } else {
       deltaCell.textContent = '—';

@@ -2,33 +2,33 @@
  * @icen.ai/ui — Behavior: kb-canvas（Agent 双栏工作台画布，与 components/kb-agent.css 配套）
  *
  * DOM 契约（createKbCanvas 构建，规格 docs/spec/kb-family.md §5.23）：
- *   <div class="kb-canvas" style="--kb-canvas-ratio: 0.42">
- *     <div class="kb-canvas-main">                    <!-- grid: 比例列 | 6px | 1fr -->
- *       <div class="kb-canvas-chat"></div>            <!-- 左：对话流（滚动容器，宿主节点 appendChild 挂入） -->
- *       <div class="kb-canvas-divider" role="separator" aria-orientation="vertical"
+ *   <div class="icen-kb-canvas" style="--kb-canvas-ratio: 0.42">
+ *     <div class="icen-kb-canvas-main">                    <!-- icen-grid: 比例列 | 6px | 1fr -->
+ *       <div class="icen-kb-canvas-chat"></div>            <!-- 左：对话流（滚动容器，宿主节点 appendChild 挂入） -->
+ *       <div class="icen-kb-canvas-divider" role="separator" aria-orientation="vertical"
  *            tabindex="0" aria-valuemin="20" aria-valuemax="80" aria-valuenow="42"></div>
- *       <div class="kb-canvas-doc"></div>             <!-- 右：文档/diff（滚动容器） -->
+ *       <div class="icen-kb-canvas-doc"></div>             <!-- 右：文档/diff（滚动容器） -->
  *     </div>
- *     <div class="kb-canvas-versions" hidden>         <!-- 底部版本时间轴（首个版本到达后展开） -->
- *       <button class="kb-canvas-ver [is-current]" data-version-id="v3">
- *         <i class="kb-canvas-ver-dot"></i>
- *         <span class="kb-canvas-ver-label">v3 · 批量改写</span>
- *         <span class="kb-canvas-ver-time kb-num">14 分钟前</span>
+ *     <div class="icen-kb-canvas-versions" hidden>         <!-- 底部版本时间轴（首个版本到达后展开） -->
+ *       <button class="icen-kb-canvas-ver [is-current]" data-icen-version-id="v3">
+ *         <i class="icen-kb-canvas-ver-dot"></i>
+ *         <span class="icen-kb-canvas-ver-label">v3 · 批量改写</span>
+ *         <span class="kb-canvas-ver-time icen-kb-num">14 分钟前</span>
  *       </button>…
  *     </div>
- *     <div class="kb-canvas-selbar" hidden>           <!-- 划词工具条（绝对定位于选区上方） -->
- *       <button class="kb-canvas-selbar-btn" data-instruction="改写">改写</button>…
+ *     <div class="icen-kb-canvas-selbar" hidden>           <!-- 划词工具条（绝对定位于选区上方） -->
+ *       <button class="icen-kb-canvas-selbar-btn" data-icen-instruction="改写">改写</button>…
  *     </div>
  *   </div>
  *
  * 交互：
- *   - 比例拖拽：pointer 拖 .kb-canvas-divider，rAF 批量更新 --kb-canvas-ratio
+ *   - 比例拖拽：pointer 拖 .icen-kb-canvas-divider，rAF 批量更新 --kb-canvas-ratio
  *     （范围 [minRatio, 1-minRatio]，默认初值 0.42 / minRatio 0.2；自实现，不依赖 split-pane）；
  *     ←/→ 键盘 ±0.02，Home/End 极值，双击复位 0.42（split-pane 心智）
  *   - 版本时间轴：click → icen:kb-canvas-version {versionId}；addVersion({current:true}) 抢占高亮
  *   - 划词工具条：setSelectionTools 注入工具后，onIcen('icen:text-select', {within}) 主通道
- *     （宿主 data-gestures="text-select" + initGestures）+ 原生 mouseup/Selection 兜底（宿主未启
- *     手势）；选中文本非空 → 浮 .kb-canvas-selbar（getBoundingClientRect 定位 + 宿主矩形夹取），
+ *     （宿主 data-icen-gestures="text-select" + initGestures）+ 原生 mouseup/Selection 兜底（宿主未启
+ *     手势）；选中文本非空 → 浮 .icen-kb-canvas-selbar（getBoundingClientRect 定位 + 宿主矩形夹取），
  *     1.5s 无操作（未 hover）或选区清空即消失；工具点击 → icen:kb-canvas-ai
  *     {instruction, selection:{text}}
  *   - addDiff(files)：ai-diff 复用（宿主传入 parseUnifiedDiff 产物），追加渲染到右栏
@@ -41,6 +41,7 @@ import type { KbCanvasVersion } from './kb-core';
 import { relativeTime } from './kb-core';
 import { renderAiDiff } from './ai-diff';
 import { emitIcen, onIcen } from './events';
+import { t } from './i18n';
 
 export interface KbCanvasOptions {
   /** 左栏最小占比（同时约束右栏 1-minRatio）；默认 0.2，钳制到 [0.05, 0.5] */
@@ -110,19 +111,19 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
   const maxR = 1 - minR;
   let ratio = clampNum(DEFAULT_RATIO, DEFAULT_RATIO, minR, maxR);
 
-  el.classList.add('kb-canvas');
+  el.classList.add('icen-kb-canvas');
 
   /* ── 结构 ── */
-  const main = h('div', 'kb-canvas-main');
-  const chat = h('div', 'kb-canvas-chat');
-  const divider = h('div', 'kb-canvas-divider');
-  const doc = h('div', 'kb-canvas-doc');
+  const main = h('div', 'icen-kb-canvas-main');
+  const chat = h('div', 'icen-kb-canvas-chat');
+  const divider = h('div', 'icen-kb-canvas-divider');
+  const doc = h('div', 'icen-kb-canvas-doc');
   main.append(chat, divider, doc);
 
-  const versions = h('div', 'kb-canvas-versions');
+  const versions = h('div', 'icen-kb-canvas-versions');
   versions.hidden = true;
 
-  const selbar = h('div', 'kb-canvas-selbar');
+  const selbar = h('div', 'icen-kb-canvas-selbar');
   selbar.hidden = true;
 
   el.append(main, versions, selbar);
@@ -136,9 +137,9 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
   /* ── 比例拖拽（rAF 批处理；touch-action:none 由 CSS 提供） ── */
   divider.setAttribute('role', 'separator');
   divider.setAttribute('aria-orientation', 'vertical');
-  divider.setAttribute('aria-label', '调整画布双栏比例');
+  divider.setAttribute('aria-label', t('kbCanvas.splitterAria'));
   divider.tabIndex = 0;
-  divider.title = '拖拽调整比例（←/→ 微调，双击复位）';
+  divider.title = t('kbCanvas.splitterTip');
 
   const applyRatio = (r: number): void => {
     ratio = Math.min(maxR, Math.max(minR, r));
@@ -226,9 +227,9 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
     'click',
     (e: Event) => {
       const t = e.target instanceof Element ? e.target : null;
-      const ver = t?.closest<HTMLElement>('.kb-canvas-ver');
+      const ver = t?.closest<HTMLElement>('.icen-kb-canvas-ver');
       if (!ver) return;
-      const versionId = ver.dataset.versionId ?? '';
+      const versionId = ver.dataset.icenVersionId ?? '';
       if (!versionId) return;
       emitIcen(ver, 'icen:kb-canvas-version', { versionId });
       opts.onVersion?.({ versionId });
@@ -292,7 +293,7 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
     armHide();
   };
 
-  /* 主通道：宿主 data-gestures="text-select"（+ initGestures）时经手势层派发 */
+  /* 主通道：宿主 data-icen-gestures="text-select"（+ initGestures）时经手势层派发 */
   onIcen(
     'icen:text-select',
     (e) => {
@@ -340,9 +341,9 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
     'click',
     (e: Event) => {
       const t = e.target instanceof Element ? e.target : null;
-      const btn = t?.closest<HTMLButtonElement>('.kb-canvas-selbar-btn');
+      const btn = t?.closest<HTMLButtonElement>('.icen-kb-canvas-selbar-btn');
       if (!btn) return;
-      const instruction = btn.dataset.instruction ?? '';
+      const instruction = btn.dataset.icenInstruction ?? '';
       if (!instruction) return;
       const detail = { instruction, selection: { text: selText } };
       emitIcen(el, 'icen:kb-canvas-ai', detail);
@@ -355,10 +356,10 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
   const rebuildSelbar = (): void => {
     selbar.textContent = '';
     for (const tool of tools) {
-      const btn = h('button', 'kb-canvas-selbar-btn');
+      const btn = h('button', 'icen-kb-canvas-selbar-btn');
       btn.type = 'button';
       btn.textContent = tool.label;
-      btn.dataset.instruction = tool.instruction;
+      btn.dataset.icenInstruction = tool.instruction;
       selbar.appendChild(btn);
     }
     if (selbar.hidden) return;
@@ -375,7 +376,7 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
     if (rafId) cancelAnimationFrame(rafId);
     hideTimer = null;
     rafId = 0;
-    el.classList.remove('kb-canvas', 'is-dragging');
+    el.classList.remove('icen-kb-canvas', 'is-dragging');
     el.style.removeProperty('--kb-canvas-ratio');
     el.textContent = '';
   };
@@ -389,26 +390,26 @@ export function createKbCanvas(el: HTMLElement, opts: KbCanvasOptions = {}): KbC
     },
     addDiff: (files) => {
       if (destroyed) return;
-      const wrap = h('div', 'kb-canvas-diff');
+      const wrap = h('div', 'icen-kb-canvas-diff');
       renderAiDiff(wrap, { files });
       doc.appendChild(wrap);
     },
     addVersion: (v) => {
       if (destroyed || !v || !v.id) return;
-      const ver = h('button', 'kb-canvas-ver');
+      const ver = h('button', 'icen-kb-canvas-ver');
       ver.type = 'button';
-      ver.dataset.versionId = String(v.id);
+      ver.dataset.icenVersionId = String(v.id);
       if (v.current === true) {
-        for (const prev of Array.from(versions.querySelectorAll('.kb-canvas-ver.is-current'))) {
+        for (const prev of Array.from(versions.querySelectorAll('.icen-kb-canvas-ver.is-current'))) {
           prev.classList.remove('is-current');
         }
         ver.classList.add('is-current');
       }
-      const dot = h('i', 'kb-canvas-ver-dot');
+      const dot = h('i', 'icen-kb-canvas-ver-dot');
       dot.setAttribute('aria-hidden', 'true');
       ver.appendChild(dot);
-      ver.appendChild(h('span', 'kb-canvas-ver-label', v.label ?? String(v.id)));
-      ver.appendChild(h('span', 'kb-canvas-ver-time kb-num', relativeTime(v.at)));
+      ver.appendChild(h('span', 'icen-kb-canvas-ver-label', v.label ?? String(v.id)));
+      ver.appendChild(h('span', 'kb-canvas-ver-time icen-kb-num', relativeTime(v.at)));
       versions.appendChild(ver);
       versions.hidden = false;
     },

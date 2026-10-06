@@ -2,47 +2,47 @@
  * @icen.ai/ui — Behavior: kb-sql（问数域 · 生成 SQL 卡片，与 components/kb-data.css 配套）
  *
  * DOM 契约（renderKbSql 构建，规格 docs/spec/kb-family.md §5.15）：
- *   <div class="kb-sql" data-kb-sql [.is-editing]>
- *     <div class="kb-sql-head">
- *       <span class="kb-sql-title">生成的 SQL</span>
- *       <span class="kb-badge kb-badge--admin">仅管理员可见</span>        <!-- visibility==='admin' -->
- *       <span class="kb-meta">postgres</span>                             <!-- dialect 有才渲 -->
- *       <span class="kb-sql-tables"><span class="kb-chip">orders</span>…</span>
- *       <span class="kb-sql-actions">
- *         <button type="button" class="kb-sql-btn" data-kb-sql-copy>复制</button>
- *         <button type="button" class="kb-sql-btn" data-kb-sql-edit>编辑重跑</button>  <!-- editable 才渲 -->
+ *   <div class="icen-kb-sql" data-icen-kb-sql [.is-editing]>
+ *     <div class="icen-kb-sql-head">
+ *       <span class="icen-kb-sql-title">生成的 SQL</span>
+ *       <span class="icen-kb-badge icen-kb-badge--admin">仅管理员可见</span>        <!-- visibility==='admin' -->
+ *       <span class="icen-kb-meta">postgres</span>                             <!-- dialect 有才渲 -->
+ *       <span class="icen-kb-sql-tables"><span class="icen-kb-chip">orders</span>…</span>
+ *       <span class="icen-kb-sql-actions">
+ *         <button type="button" class="icen-kb-sql-btn" data-icen-kb-sql-copy>复制</button>
+ *         <button type="button" class="icen-kb-sql-btn" data-icen-kb-sql-edit>编辑重跑</button>  <!-- editable 才渲 -->
  *       </span>
  *     </div>
- *     <pre class="kb-sql-code" data-kb-sql-code>…highlightSql 的 token 树…</pre>
- *     <div class="kb-sql-fix">                                            <!-- prevSql 存在且≠sql -->
- *       <div class="kb-sql-fix-head">
- *         <span class="kb-sql-fix-title">检测到上版报错，修复建议已就绪</span>
- *         <button type="button" class="kb-sql-btn kb-sql-btn--apply" data-kb-sql-apply>应用修复并重跑</button>
+ *     <pre class="icen-kb-sql-code" data-icen-kb-sql-code>…highlightSql 的 token 树…</pre>
+ *     <div class="icen-kb-sql-fix">                                            <!-- prevSql 存在且≠sql -->
+ *       <div class="icen-kb-sql-fix-head">
+ *         <span class="icen-kb-sql-fix-title">检测到上版报错，修复建议已就绪</span>
+ *         <button type="button" class="icen-kb-sql-btn icen-kb-sql-btn--apply" data-icen-kb-sql-apply>应用修复并重跑</button>
  *       </div>
- *       <div class="kb-sql-fix-diff">…makeSqlDiff → parseUnifiedDiff → renderAiDiff（默认展开）…</div>
+ *       <div class="icen-kb-sql-fix-diff">…makeSqlDiff → parseUnifiedDiff → renderAiDiff（默认展开）…</div>
  *     </div>
- *     <div class="kb-sql-editor" hidden>                                  <!-- initKbSql 编辑态切换 -->
- *       <textarea class="kb-sql-textarea" data-kb-sql-textarea" spellcheck="false"></textarea>
- *       <div class="kb-sql-editor-actions">
- *         <button type="button" class="kb-sql-btn" data-kb-sql-cancel>取消</button>
- *         <button type="button" class="kb-sql-btn kb-sql-btn--run" data-kb-sql-confirm>确认并重跑</button>
+ *     <div class="icen-kb-sql-editor" hidden>                                  <!-- initKbSql 编辑态切换 -->
+ *       <icen-textarea class="icen-kb-sql-textarea" data-icen-kb-sql-textarea" spellcheck="false"></icen-textarea>
+ *       <div class="icen-kb-sql-editor-actions">
+ *         <button type="button" class="icen-kb-sql-btn" data-icen-kb-sql-cancel>取消</button>
+ *         <button type="button" class="icen-kb-sql-btn icen-kb-sql-btn--run" data-icen-kb-sql-confirm>确认并重跑</button>
  *       </div>
  *     </div>
  *   </div>
  *
  * 行为：
- *   - highlightSql(sql)：零依赖 SQL 着色 → DocumentFragment（span.kb-sql-tok--kw/-str/-num/-fn/-cmt）；
+ *   - highlightSql(sql)：零依赖 SQL 着色 → DocumentFragment（span.icen-kb-sql-tok--kw/-str/-num/-fn/-cmt）；
  *     流式安全：未闭合字符串 / 块注释按普通文本 token 收尾，不吞后续输入
  *   - makeSqlDiff(a, b)：两段 SQL 的行级 unified diff 文本（LCS + 3 行上下文），纯函数、SSR 安全；
  *     交 parseUnifiedDiff + renderAiDiff 渲染（复用 ai-diff 域，不重复造 diff 视图）
  *   - renderKbSql(el, query, opts?)：快照渲染（重复调用整段重建）；opts 回调与事件双通道
  *   - initKbSql(root?)：幂等标记驱动（__icenKbSqlInit）+ 返回销毁函数；事件委托：
- *       · data-kb-sql-copy   → 复制当前 SQL（源=pre.textContent，即 token 拼接原文）
- *       · data-kb-sql-edit   → 进入编辑态（pre 藏、textarea 现，初值=当前 SQL）
- *       · data-kb-sql-confirm→ 退出编辑态并把 pre 重渲为新 SQL，
+ *       · data-icen-kb-sql-copy   → 复制当前 SQL（源=pre.textContent，即 token 拼接原文）
+ *       · data-icen-kb-sql-edit   → 进入编辑态（pre 藏、textarea 现，初值=当前 SQL）
+ *       · data-icen-kb-sql-confirm→ 退出编辑态并把 pre 重渲为新 SQL，
  *                              派 icen:kb-sql-edit {sql} + icen:kb-sql-rerun {sql}
- *       · data-kb-sql-cancel / Escape → 放弃编辑还原
- *       · data-kb-sql-apply  → 派 icen:kb-sql-rerun {sql}（sql=修复版）
+ *       · data-icen-kb-sql-cancel / Escape → 放弃编辑还原
+ *       · data-icen-kb-sql-apply  → 派 icen:kb-sql-rerun {sql}（sql=修复版）
  *       · textarea 内 Ctrl/Cmd+Enter 确认、Escape 取消
  *     修正卡的 diff 折叠/接受/拒绝复用 initAiDiff（同根委托，幂等共存）
  *   - 事件（events.ts 已登记）：icen:kb-sql-edit {sql} / icen:kb-sql-rerun {sql}
@@ -51,6 +51,7 @@
 import { h, svgIcon, type KbSqlQuery, normalizeSqlQuery } from './kb-core';
 import { emitIcen } from './events';
 import { parseUnifiedDiff, renderAiDiff, initAiDiff } from './ai-diff';
+import { t as icenT } from './i18n';
 
 /* ── 图标（单色线性 1.5px，一律经 svgIcon 消毒） ── */
 
@@ -181,7 +182,7 @@ function tokenizeSql(sql: string): SqlToken[] {
 
 /**
  * 零依赖 SQL 着色：关键词（大小写不敏感）/ 单引号字符串 / 行注释与块注释 / 数字 /
- * 函数名（后跟 "(" 的词）→ span token（.kb-sql-tok--kw/-str/-num/-fn/-cmt）。
+ * 函数名（后跟 "(" 的词）→ span token（.icen-kb-sql-tok--kw/-str/-num/-fn/-cmt）。
  * 纯 DOM 构造（createElement + textContent，无 innerHTML）；流式安全（未闭合
  * 字符串/注释按普通文本收尾，下一次重渲自然修正）。着色是语法层级信号，不是装饰。
  */
@@ -190,7 +191,7 @@ export function highlightSql(sql: string): DocumentFragment {
   for (const t of tokenizeSql(String(sql ?? ''))) {
     if (t.kind) {
       const span = document.createElement('span');
-      span.className = `kb-sql-tok--${t.kind}`;
+      span.className = `icen-kb-sql-tok--${t.kind}`;
       span.textContent = t.text;
       frag.appendChild(span);
     } else {
@@ -329,7 +330,7 @@ function iconBtn(
   const btn = h('button', cls);
   btn.type = 'button';
   btn.setAttribute(dataAttr, '');
-  const iconBox = h('span', 'kb-sql-btn-icon');
+  const iconBox = h('span', 'icen-kb-sql-btn-icon');
   const svg = svgIcon(icon);
   if (svg) iconBox.appendChild(svg);
   btn.appendChild(iconBox);
@@ -352,51 +353,51 @@ export function renderKbSql(
   const q = normalizeSqlQuery(query as Partial<KbSqlQuery>);
   el.textContent = '';
 
-  const card = h('div', 'kb-sql');
-  card.dataset.kbSql = '';
+  const card = h('div', 'icen-kb-sql');
+  card.dataset.icenKbSql = '';
 
   /* 头 */
-  const head = h('div', 'kb-sql-head');
-  head.appendChild(h('span', 'kb-sql-title', opts?.title ?? '生成的 SQL'));
-  if (q.visibility === 'admin') head.appendChild(h('span', 'kb-badge kb-badge--admin', '仅管理员可见'));
-  if (q.dialect) head.appendChild(h('span', 'kb-meta', q.dialect));
+  const head = h('div', 'icen-kb-sql-head');
+  head.appendChild(h('span', 'icen-kb-sql-title', opts?.title ?? icenT('kbSql.generated')));
+  if (q.visibility === 'admin') head.appendChild(h('span', 'icen-kb-badge icen-kb-badge--admin', icenT('kbSql.adminOnly')));
+  if (q.dialect) head.appendChild(h('span', 'icen-kb-meta', q.dialect));
   if (q.tables?.length) {
-    const tables = h('span', 'kb-sql-tables');
-    for (const t of q.tables) tables.appendChild(h('span', 'kb-chip', t));
+    const tables = h('span', 'icen-kb-sql-tables');
+    for (const t of q.tables) tables.appendChild(h('span', 'icen-kb-chip', t));
     head.appendChild(tables);
   }
-  const actions = h('span', 'kb-sql-actions');
-  actions.appendChild(iconBtn('kb-sql-btn', 'data-kb-sql-copy', ICON_COPY, '复制'));
-  if (q.editable) actions.appendChild(iconBtn('kb-sql-btn', 'data-kb-sql-edit', ICON_EDIT, '编辑重跑'));
+  const actions = h('span', 'icen-kb-sql-actions');
+  actions.appendChild(iconBtn('icen-kb-sql-btn', 'data-icen-kb-sql-copy', ICON_COPY, icenT('common.copy')));
+  if (q.editable) actions.appendChild(iconBtn('icen-kb-sql-btn', 'data-icen-kb-sql-edit', ICON_EDIT, icenT('kbSql.editRerun')));
   head.appendChild(actions);
   card.appendChild(head);
 
   /* 着色码块（pre.textContent 即当前 SQL 全文 —— 复制/编辑/修复重跑的单一事实源） */
-  const pre = h('pre', 'kb-sql-code');
-  pre.setAttribute('data-kb-sql-code', '');
+  const pre = h('pre', 'icen-kb-sql-code');
+  pre.setAttribute('data-icen-kb-sql-code', '');
   pre.appendChild(highlightSql(q.sql));
   card.appendChild(pre);
 
   /* 修正卡：prevSql 存在且 ≠ sql 才呈现（「修复已就绪」心智） */
   if (typeof q.prevSql === 'string' && q.prevSql !== q.sql) {
-    const fix = h('div', 'kb-sql-fix');
-    const fixHead = h('div', 'kb-sql-fix-head');
-    const fixTitle = h('span', 'kb-sql-fix-title');
+    const fix = h('div', 'icen-kb-sql-fix');
+    const fixHead = h('div', 'icen-kb-sql-fix-head');
+    const fixTitle = h('span', 'icen-kb-sql-fix-title');
     const warnSvg = svgIcon(ico('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>'));
     if (warnSvg) fixTitle.appendChild(warnSvg);
-    fixTitle.appendChild(h('span', '', '检测到上版报错，修复建议已就绪'));
+    fixTitle.appendChild(h('span', '', icenT('kbSql.fixReady')));
     fixHead.appendChild(fixTitle);
-    const applyBtn = iconBtn('kb-sql-btn kb-sql-btn--apply', 'data-kb-sql-apply', ICON_WRENCH, '应用修复并重跑');
+    const applyBtn = iconBtn('icen-kb-sql-btn icen-kb-sql-btn--apply', 'data-icen-kb-sql-apply', ICON_WRENCH, icenT('kbSql.applyFix'));
     fixHead.appendChild(applyBtn);
     fix.appendChild(fixHead);
 
-    const diffBox = h('div', 'kb-sql-fix-diff');
+    const diffBox = h('div', 'icen-kb-sql-fix-diff');
     renderAiDiff(diffBox, { files: parseUnifiedDiff(makeSqlDiff(q.prevSql, q.sql)) });
     /* 修正卡首屏即见差异（ai-diff 默认折叠是为长文件列表，此处单文件修复直出） */
-    diffBox.querySelectorAll<HTMLElement>('.ai-diff-file').forEach((file) => {
-      const body = file.querySelector<HTMLElement>('.ai-diff-body');
+    diffBox.querySelectorAll<HTMLElement>('.icen-ai-diff-file').forEach((file) => {
+      const body = file.querySelector<HTMLElement>('.icen-ai-diff-body');
       if (body) body.hidden = false;
-      file.querySelector<HTMLElement>('.ai-diff-head')?.setAttribute('aria-expanded', 'true');
+      file.querySelector<HTMLElement>('.icen-ai-diff-head')?.setAttribute('aria-expanded', 'true');
     });
     fix.appendChild(diffBox);
     card.appendChild(fix);
@@ -409,21 +410,21 @@ export function renderKbSql(
 
   /* 编辑态（预置隐藏；initKbSql 委托切换；确认走事件 + opts 回调双通道） */
   if (q.editable) {
-    const editor = h('div', 'kb-sql-editor');
+    const editor = h('div', 'icen-kb-sql-editor');
     editor.hidden = true;
     const ta = document.createElement('textarea');
-    ta.className = 'kb-sql-textarea';
-    ta.setAttribute('data-kb-sql-textarea', '');
+    ta.className = 'icen-kb-sql-textarea';
+    ta.setAttribute('data-icen-kb-sql-textarea', '');
     ta.spellcheck = false;
     editor.appendChild(ta);
 
-    const editorActions = h('div', 'kb-sql-editor-actions');
-    const cancelBtn = h('button', 'kb-sql-btn', '取消');
+    const editorActions = h('div', 'icen-kb-sql-editor-actions');
+    const cancelBtn = h('button', 'icen-kb-sql-btn', icenT('common.cancel'));
     cancelBtn.type = 'button';
-    cancelBtn.setAttribute('data-kb-sql-cancel', '');
-    const confirmBtn = h('button', 'kb-sql-btn kb-sql-btn--run', '确认并重跑');
+    cancelBtn.setAttribute('data-icen-kb-sql-cancel', '');
+    const confirmBtn = h('button', 'icen-kb-sql-btn icen-kb-sql-btn--run', icenT('kbSql.confirmRerun'));
     confirmBtn.type = 'button';
-    confirmBtn.setAttribute('data-kb-sql-confirm', '');
+    confirmBtn.setAttribute('data-icen-kb-sql-confirm', '');
     editorActions.appendChild(cancelBtn);
     editorActions.appendChild(confirmBtn);
     editor.appendChild(editorActions);
@@ -457,13 +458,13 @@ const noopDestroy = (): void => undefined;
 const copyTimers = new WeakMap<HTMLElement, number>();
 
 function flashCopied(textSpan: HTMLElement): void {
-  textSpan.textContent = '已复制';
+  textSpan.textContent = icenT('common.copied');
   const prev = copyTimers.get(textSpan);
   if (prev != null) clearTimeout(prev);
   copyTimers.set(
     textSpan,
     window.setTimeout(() => {
-      textSpan.textContent = '复制';
+      textSpan.textContent = icenT('common.copy');
       copyTimers.delete(textSpan);
     }, 1200),
   );
@@ -490,9 +491,9 @@ function copyText(text: string): void {
 }
 
 function setEditMode(card: HTMLElement, editing: boolean): void {
-  const pre = card.querySelector<HTMLElement>('.kb-sql-code');
-  const editor = card.querySelector<HTMLElement>('.kb-sql-editor');
-  const ta = card.querySelector<HTMLTextAreaElement>('.kb-sql-textarea');
+  const pre = card.querySelector<HTMLElement>('.icen-kb-sql-code');
+  const editor = card.querySelector<HTMLElement>('.icen-kb-sql-editor');
+  const ta = card.querySelector<HTMLTextAreaElement>('.icen-kb-sql-textarea');
   if (!pre || !editor || !ta) return;
   editor.hidden = !editing;
   pre.hidden = editing;
@@ -505,10 +506,10 @@ function setEditMode(card: HTMLElement, editing: boolean): void {
 
 /** 确认编辑：pre 重渲为新 SQL（更新单一事实源）→ 退出编辑态 → 派 edit + rerun */
 function confirmEdit(card: HTMLElement, source: Element): void {
-  const ta = card.querySelector<HTMLTextAreaElement>('.kb-sql-textarea');
+  const ta = card.querySelector<HTMLTextAreaElement>('.icen-kb-sql-textarea');
   const sql = ta?.value ?? '';
   if (!sql.trim()) return;
-  const pre = card.querySelector<HTMLElement>('.kb-sql-code');
+  const pre = card.querySelector<HTMLElement>('.icen-kb-sql-code');
   if (pre) {
     pre.textContent = '';
     pre.appendChild(highlightSql(sql));
@@ -534,15 +535,15 @@ export function initKbSql(root?: ParentNode): () => void {
   const target = scope as ParentNode & EventTarget;
 
   const currentSql = (card: HTMLElement): string =>
-    card.querySelector('.kb-sql-code')?.textContent ?? '';
+    card.querySelector('.icen-kb-sql-code')?.textContent ?? '';
 
   const onClick = (e: Event): void => {
     const t = e.target instanceof Element ? e.target : null;
     if (!t) return;
-    const card = t.closest<HTMLElement>('[data-kb-sql]');
+    const card = t.closest<HTMLElement>('[data-icen-kb-sql]');
     if (!card) return;
 
-    const copyBtn = t.closest<HTMLButtonElement>('[data-kb-sql-copy]');
+    const copyBtn = t.closest<HTMLButtonElement>('[data-icen-kb-sql-copy]');
     if (copyBtn) {
       copyText(currentSql(card));
       const label = copyBtn.querySelector('.kb-sql-btn-text');
@@ -550,23 +551,23 @@ export function initKbSql(root?: ParentNode): () => void {
       return;
     }
 
-    if (t.closest('[data-kb-sql-edit]')) {
+    if (t.closest('[data-icen-kb-sql-edit]')) {
       setEditMode(card, true);
       return;
     }
 
-    if (t.closest('[data-kb-sql-cancel]')) {
+    if (t.closest('[data-icen-kb-sql-cancel]')) {
       setEditMode(card, false);
       return;
     }
 
-    const confirmBtn = t.closest<HTMLButtonElement>('[data-kb-sql-confirm]');
+    const confirmBtn = t.closest<HTMLButtonElement>('[data-icen-kb-sql-confirm]');
     if (confirmBtn) {
       confirmEdit(card, confirmBtn);
       return;
     }
 
-    const applyBtn = t.closest<HTMLButtonElement>('[data-kb-sql-apply]');
+    const applyBtn = t.closest<HTMLButtonElement>('[data-icen-kb-sql-apply]');
     if (applyBtn) {
       emitIcen(applyBtn, 'icen:kb-sql-rerun', { sql: currentSql(card) });
     }
@@ -575,8 +576,8 @@ export function initKbSql(root?: ParentNode): () => void {
   const onKeydown = (e: Event): void => {
     const ke = e as KeyboardEvent;
     const t = ke.target instanceof Element ? ke.target : null;
-    if (!t || !t.matches('[data-kb-sql-textarea]')) return;
-    const card = t.closest<HTMLElement>('[data-kb-sql]');
+    if (!t || !t.matches('[data-icen-kb-sql-textarea]')) return;
+    const card = t.closest<HTMLElement>('[data-icen-kb-sql]');
     if (!card) return;
     if (ke.key === 'Escape') {
       ke.preventDefault();

@@ -2,14 +2,14 @@
  * @icen.ai/ui — Behavior: split-pane（分栏拖拽，与 components/split-pane.css 配套）
  *
  * 契约：
- *   <div class="split-pane [--vertical]" data-split-pane style="--split: 50%">
- *     <div class="split-pane-first">…</div>
- *     <div class="split-pane-divider" role="separator"></div>
- *     <div class="split-pane-second">…</div>
+ *   <div class="icen-split-pane [--vertical]" data-icen-split-pane style="--split: 50%">
+ *     <div class="icen-split-pane-first">…</div>
+ *     <div class="icen-split-pane-divider" role="separator"></div>
+ *     <div class="icen-split-pane-second">…</div>
  *   </div>
  *
  * 功能：
- *   - pointer 拖拽 .split-pane-divider 更新容器 --split 变量（百分比，范围 10–90）
+ *   - pointer 拖拽 .icen-split-pane-divider 更新容器 --split 变量（百分比，范围 10–90）
  *   - 双击分隔条复位到 50%
  *   - 键盘：←/→ 或 ↑/↓ 调整 2%；Home/End 复位极值
  *   - aria-valuenow / aria-valuemin / aria-valuemax 同步更新
@@ -17,9 +17,9 @@
  *     { value }（百分比数值，保留 1 位小数内的 number；拖拽过程中不派发）
  *
  * 可选 data-*：
- *   data-split-min="15"  最小百分比（默认 10）
- *   data-split-max="85"  最大百分比（默认 90）
- *   data-split-step="2"  键盘步长（默认 2）
+ *   data-icen-split-min="15"  最小百分比（默认 10）
+ *   data-icen-split-max="85"  最大百分比（默认 90）
+ *   data-icen-split-step="2"  键盘步长（默认 2）
  *
  * 同一元素重复 init 幂等；initSplitPane 返回销毁函数（移除 divider 全部监听并
  * 复位幂等标记，销毁后可重新 init）。SSR 下返回 no-op。
@@ -46,15 +46,15 @@ function setup(container: HTMLElement): (() => void) | undefined {
   const el = container as MarkedPane;
   if (el.__icenSplitPaneInit) return undefined;
 
-  const divider = el.querySelector<HTMLElement>('.split-pane-divider');
+  const divider = el.querySelector<HTMLElement>('.icen-split-pane-divider');
   // 校验通过后再置位：无 divider 早退不置位，以便补上 divider 后重新 init 可重试
   if (!divider) return undefined;
   el.__icenSplitPaneInit = true;
 
-  const min = numOr(el.dataset.splitMin, 10);
-  const max = numOr(el.dataset.splitMax, 90);
-  const step = numOr(el.dataset.splitStep, 2);
-  const vertical = el.classList.contains('split-pane--vertical');
+  const min = numOr(el.dataset.icenSplitMin, 10);
+  const max = numOr(el.dataset.icenSplitMax, 90);
+  const step = numOr(el.dataset.icenSplitStep, 2);
+  const vertical = el.classList.contains('icen-split-pane--vertical');
 
   const orientation = vertical ? 'vertical' : 'horizontal';
   divider.setAttribute('role', 'separator');
@@ -172,7 +172,7 @@ function setup(container: HTMLElement): (() => void) | undefined {
 }
 
 /**
- * 为 root 下每个 .split-pane[data-split-pane] 初始化（root 自身匹配也算）。
+ * 为 root 下每个 .icen-split-pane[data-icen-split-pane] 初始化（root 自身匹配也算）。
  * 返回销毁函数：移除本次初始化挂上的全部监听并复位幂等标记（销毁后可重新 init）。
  * SSR 下返回 no-op。
  */
@@ -181,8 +181,8 @@ export function initSplitPane(root?: ParentNode): () => void {
   if (typeof document !== 'undefined') {
     const scope = root ?? document;
     const panes: Element[] = [];
-    if (scope instanceof Element && scope.matches('.split-pane[data-split-pane]')) panes.push(scope);
-    panes.push(...Array.from(scope.querySelectorAll('.split-pane[data-split-pane]')));
+    if (scope instanceof Element && scope.matches('.icen-split-pane[data-icen-split-pane]')) panes.push(scope);
+    panes.push(...Array.from(scope.querySelectorAll('.icen-split-pane[data-icen-split-pane]')));
     for (const p of panes) {
       const cleanup = setup(p as HTMLElement);
       if (cleanup) cleanups.push(cleanup);
