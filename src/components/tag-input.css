@@ -138,3 +138,10 @@
   20%, 60% { transform: translateX(-3px); }
   40%, 80% { transform: translateX(3px); }
 }
+
+/* Stable secondary-action slot: reveal is optical rather than a width change. */
+@media (hover: hover) and (pointer: fine) {
+  .icen-tag-chip-x { opacity: 0; }
+  .icen-tag-chip:is(:hover,:focus-within) .icen-tag-chip-x { opacity: 1; }
+}
+@media (pointer: coarse) { .icen-tag-chip-x { min-inline-size: 28px; min-block-size: 28px; opacity: 1; } }

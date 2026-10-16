@@ -1,3 +1,4 @@
+import themes from '../../../src/tokens/themes.json';
 import { iconHTML } from '../../../src/behaviors/icons';
 /*
  * 组件文档注册表 —— 文档站单一数据源。
@@ -67,6 +68,7 @@ export interface ComponentDoc {
   name: string;
   group: string;
   desc: string;
+  summary?: string;
   demo: string;
   demoLayout?: 'center' | 'stretch';
   usage: string;
@@ -615,7 +617,7 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
     </div>
     <input type="hidden" data-icen-select-value name="city" />
   </div>
-  <p class="chart-cap" style="margin:14px 0 6px">多选（data-icen-select-multiple + data-icen-select-max="3"；chips 单项 × 悬停出现，右侧 × 清除全部）</p>
+  <p class="chart-cap" style="margin:14px 0 6px">多选（data-icen-select-multiple + data-icen-select-max="3"；移除按钮在悬停或聚焦时显现，可用键盘直接操作）</p>
   <div class="icen-select" data-icen-select data-icen-select-multiple data-icen-select-max="3" data-icen-select-placeholder="选择标签（最多 3 个）" style="width:100%;max-width:280px">
     <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="icen-select-value is-empty">选择标签（最多 3 个）</span>
@@ -639,9 +641,7 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
       ${svgChevron}
     </button>
     <div class="icen-select-panel" hidden>
-      <button class="icen-select-option" type="button" data-icen-value="clay"><span class="opt-dots" aria-hidden="true"><i style="background:#faf9f5"></i><i style="background:#d97757"></i><i style="background:#7a9cb0"></i></span>clay 陶土</button>
-      <button class="icen-select-option" type="button" data-icen-value="piano"><span class="opt-dots" aria-hidden="true"><i style="background:#f1eee6"></i><i style="background:#b89145"></i><i style="background:#566370"></i></span>piano 钢琴</button>
-      <button class="icen-select-option" type="button" data-icen-value="vangogh"><span class="opt-dots" aria-hidden="true"><i style="background:#e8ddb2"></i><i style="background:#1f527c"></i><i style="background:#476f45"></i></span>vangogh 梵高</button>
+      ${themes.map((theme) => `<button class="icen-select-option" type="button" data-icen-value="${theme.id}"><span class="icen-select-swatch" aria-hidden="true"><i style="background:${theme.light.bg}"></i><i style="background:${theme.light.accent}"></i><i style="background:${theme.light.cold}"></i></span>${theme.name}</button>`).join('\n      ')}
     </div>
     <input type="hidden" data-icen-select-value name="preset" />
   </div>
@@ -657,7 +657,7 @@ initSelect();
 
 <!-- 多选 + 上限 -->
 <div class="icen-select" data-icen-select data-icen-select-multiple data-icen-select-max="3">…</div>
-<!-- 多选：trigger 同级加 .select-clear（叠进右侧）清除全部；选中项渲染为 chips（单项 × 悬停出现） -->
+<!-- 多选：trigger 同级加 .icen-select-clear；选中标签与触发按钮为同级，移除按钮原生可聚焦 -->
 
 <!-- 富选项：.select-option 内可直接写任意 HTML（色卡 / 图标 / 多行） -->
 <!-- 面板尺寸（全库统一 PanelSizing 契约，浮层组件通用）：

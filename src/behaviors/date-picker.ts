@@ -294,7 +294,7 @@ function setupPicker(container: HTMLElement): () => void {
   const max = maxStr ? parseDateStr(maxStr) : null;
 
   // 找到 hidden input
-  const hidden = el.querySelector<HTMLInputElement>('icen-input[type="hidden"]');
+  const hidden = el.querySelector<HTMLInputElement>('input[type="hidden"], icen-input[type="hidden"]');
   const initialStr = hidden?.value ?? '';
   const initialDate = initialStr ? parseDateStr(initialStr) : null;
 

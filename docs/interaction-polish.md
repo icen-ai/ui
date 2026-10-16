@@ -164,3 +164,22 @@
 - 129 个已构建文档页 × 1440/390 两档宽度：脚本异常、页面横向溢出、按钮文字图标、空名称按钮均为 0。报告在 .ui-audit/report.json（忽略产物）。这只是默认状态基础巡检，不代表全部状态已经视觉验收。
 - verify：640 测试通过；19 条浏览器测试通过；站点构建 137 页。
 - 仍待：全组件展开/关闭/hover/focus/错误/空态/加载态，以及本真/像素 × 浅/深色的完整视觉和交互矩阵。逐项清单保持未勾选，不能以本轮基础扫描替代最终验收。
+
+### 第二轮：多选动作与示例文档
+
+- select / tree-select 的 chips 已移到 trigger 同级，移除用原生 button；支持 Tab、Enter、Space，移除后焦点进入下一项或回到 trigger。旧的 trigger 内 chips 标记会自动迁移。
+- 次要移除动作固定槽位，通过 opacity 显隐，不挤压正文；触屏常显并放大命中区域。补齐 select 的 listbox/option、多选与选中/禁用 ARIA 状态。达到选择上限时保留作者原有禁用选项。
+- 新增 revealPopoverItem，只滚指定菜单内部；select / tree-select 已使用。
+- 多选领域事件在 native hidden input 更新之后派发，清空后的焦点回到触发器。修复数字步进器及日期选择器查错原生 input 标签的问题。
+- 组件页提供简短说明与可展开的完整行为细节；窄屏侧栏折叠为原生文档导航，首屏优先呈现真实组件。移动顶栏的外观入口包含三个轴。
+- 真实 SVG 已覆盖文档导航、复制/完成、前后页图形；丰富选项色样的 CSS 随 select 分发，示例颜色直接来自主题目录。图标示例支持真实移除与撤销。
+- 第二轮验证：verify 645 测试通过；24 条 Playwright 浏览器回归通过；137 页站点构建通过；全站默认状态基础巡检仍为 129 页 × 两档宽度、0 问题。
+- 首批基础提交：715ba1d。第二批提交覆盖多选动作、文档首屏、移动导航和额外 native 表单绑定；版本保持 0.10.0，不发布。
+
+### 下一批待处理（保留完整目标）
+
+- 选择器进一步复核 Home/End、typeahead、搜索 active-descendant、动态数据、销毁/重新初始化与限额状态基线；其他 popup 内的 scrollIntoView 统一迁移。
+- Date picker / cascader / tree select / autocomplete / mentions：全部尺寸、搜索/空/加载/错误/禁用状态，完整键盘与两轴视觉矩阵。
+- dropdown / context-menu / popover / modal / command-palette / notification：开关动效、焦点、触屏与所有文档示例。
+- 标签、工具条、导航、分页、表格/图表、AI 与知识库逐一复核。大量原有 SVG 的 close/check/chevron 仍可进一步收敛到共享几何；不能把已迁移字符图标等同于完整图标审美验收。
+- 文档 ClientRouter 下各 behavior/create 句柄的卸载和重入，以及真实 native 表单绑定的系统性巡检。

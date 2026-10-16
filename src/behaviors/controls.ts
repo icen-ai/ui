@@ -226,7 +226,7 @@ export const initSwitch = createDelegatedInit({ click: onSwitchClick, keydown: o
 function stepStepper(btn: HTMLElement): void {
   const root = btn.closest<HTMLElement>('.icen-stepper');
   if (!root) return;
-  const input = root.querySelector<HTMLInputElement>('icen-input.icen-stepper-input, icen-input[type="number"]');
+  const input = root.querySelector<HTMLInputElement>('input.icen-stepper-input, input[type="number"], icen-input.icen-stepper-input, icen-input[type="number"]');
   if (!input || input.disabled) return;
   const step = Number(btn.getAttribute('data-icen-step')) || 1;
   const minAttr = input.min;

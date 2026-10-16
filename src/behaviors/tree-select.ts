@@ -20,14 +20,11 @@
  *     <button class="icen-tree-select-trigger" role="combobox" aria-haspopup="tree"
  *             aria-expanded="false" aria-controls="<panelId>" [disabled]>
  *       <span class="icen-tree-select-value [.is-empty]">请选择</span>
- *       <span class="icen-tree-select-chips" [hidden]>          ← multiple 时 behavior 渲染
- *         <span class="icen-tree-select-chip">前端
- *           <span class="icen-tree-select-chip-x" role="button" tabindex="-1" aria-label="移除">×</span>
- *         </span>
- *         <span class="icen-tree-select-chip icen-tree-select-chip--more">+2</span>
- *       </span>
  *       <svg class="icen-tree-select-chevron">…</svg>
  *     </button>
+ *     <span class="icen-tree-select-chips" [hidden]>          ← behavior 生成，与 trigger 同级
+ *       <span class="icen-tree-select-chip"><span>前端</span><button class="icen-tree-select-chip-x" type="button" aria-label="移除前端">…svg…</button></span>
+ *     </span>
  *     <button class="icen-tree-select-clear" aria-label="清除" hidden>×</button>  ← clearable；
  *         与 trigger 同级（不能嵌套进 button），绝对定位叠进 trigger 行内末端侧
  *     <div class="icen-tree-select-panel" id="<panelId>" hidden>
@@ -69,7 +66,7 @@
  */
 
 import { createIcon } from './icons';
-import { computePopoverLayout, resolvePanelSizing } from './popover';
+import { revealPopoverItem, computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
 import { t } from './i18n';
 
@@ -401,8 +398,8 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
       valueEl.classList.add('is-empty');
       valueEl.hidden = false;
       if (clearBtn) clearBtn.hidden = true;
-      const chips = trigger.querySelector('.icen-tree-select-chips');
-      if (chips) chips.remove();
+      const chips = root.querySelector<HTMLElement>('.icen-tree-select-chips');
+      if (chips) { chips.hidden = true; chips.replaceChildren(); }
       return;
     }
     if (!multiple) {
@@ -410,20 +407,33 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
       valueEl.classList.remove('is-empty');
       valueEl.hidden = false;
       if (clearBtn) clearBtn.hidden = false;
-      const chips = trigger.querySelector('.icen-tree-select-chips');
-      if (chips) chips.remove();
+      const chips = root.querySelector<HTMLElement>('.icen-tree-select-chips');
+      if (chips) { chips.hidden = true; chips.replaceChildren(); }
       return;
     }
     /* 多选：chips 接管显示（超过 3 个收 +N） */
     valueEl.classList.remove('is-empty');
     valueEl.hidden = true;
     if (clearBtn) clearBtn.hidden = false;
-    let chipsEl = trigger.querySelector<HTMLElement>('.icen-tree-select-chips');
+    let chipsEl = root.querySelector<HTMLElement>('.icen-tree-select-chips');
     if (!chipsEl) {
       chipsEl = document.createElement('span');
       chipsEl.className = 'icen-tree-select-chips';
-      trigger.insertBefore(chipsEl, chevron);
+      trigger.insertAdjacentElement('afterend',chipsEl);
+      const chips = chipsEl;
+      on(chips,'click',(event: MouseEvent) => {
+        const target = event.target instanceof Element ? event.target.closest<HTMLButtonElement>('.icen-tree-select-chip-x') : null;
+        if (!target) { trigger.click(); return; }
+        if (target.disabled) return;
+        event.preventDefault();event.stopPropagation();
+        const index = Array.from(chips.querySelectorAll('.icen-tree-select-chip-x')).indexOf(target);
+        selected.delete(target.dataset.icenValue!);
+        syncSelection();
+        const remaining = root.querySelectorAll<HTMLButtonElement>('.icen-tree-select-chip-x');
+        (remaining[Math.min(index,remaining.length-1)] ?? trigger).focus({preventScroll:true});
+      });
     }
+    chipsEl.hidden = false;
     chipsEl.textContent = '';
     const maxLabel = 3;
     const shown = nodes.slice(0, maxLabel);
@@ -433,21 +443,13 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
       const lb = document.createElement('span');
       lb.textContent = node.label;
       chip.appendChild(lb);
-      /* 单项 ×（hover chip 才出现）：span 而非 button——trigger 是 button，不能嵌套按钮；
-         指针通道；键盘/读屏的等价路径 = 面板反选 */
-      const x = document.createElement('span');
+      const x = document.createElement('button');
+      x.type = 'button';
       x.className = 'icen-tree-select-chip-x';
-      x.setAttribute('role', 'button');
-      x.setAttribute('tabindex', '-1');
-      x.setAttribute('aria-label', `移除 ${node.label}`);
+      x.dataset.icenValue = node.value;
+      x.disabled = opts.disabled === true;
+      x.setAttribute('aria-label', t('select.remove',{p0:node.label}));
       x.append(createIcon('close',{size:12})!);
-      on(x, 'pointerdown', (ev: PointerEvent) => ev.stopPropagation());
-      on(x, 'click', (ev: MouseEvent) => {
-        ev.stopPropagation();
-        ev.preventDefault();
-        selected.delete(node.value);
-        syncSelection();
-      });
       chip.appendChild(x);
       chipsEl.appendChild(chip);
     }
@@ -683,8 +685,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
       r.tabIndex = i === focusIdx ? 0 : -1;
       r.classList.toggle('is-focused', i === focusIdx);
     });
-    rows[focusIdx]?.focus();
-    rows[focusIdx]?.scrollIntoView({ block: 'nearest' });
+    if (rows[focusIdx]) revealPopoverItem(rows[focusIdx],panel,{focus:true});
   }
 
   function moveFocus(delta: number): void {

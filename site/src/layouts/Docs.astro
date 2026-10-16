@@ -16,6 +16,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ThemeRestore from '../components/ThemeRestore.astro';
 import { ClientRouter } from 'astro:transitions';
 import { COMPONENTS, GROUPS } from '../lib/components';
+import { iconHTML } from '../../../src/behaviors/icons';
 
 interface Props {
   title?: string;
@@ -27,6 +28,7 @@ const {
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, 'https://ui.icen.ai').toString();
 const path = Astro.url.pathname;
+const currentPage = COMPONENTS.find((component)=>path === `/components/${component.slug}/`)?.name ?? title.split(' · ')[0];
 const isActive = (href: string): boolean =>
   href === '/' ? path === '/' : path.startsWith(href);
 ---
@@ -51,6 +53,11 @@ const isActive = (href: string): boolean =>
     <SiteHeader />
     <div class="docs-shell">
       <aside class="docs-side">
+        <details class="docs-nav-disclosure" open>
+          <summary class="docs-nav-toggle">
+            <span>文档导航</span><span class="docs-nav-current">{currentPage}</span>
+            <Fragment set:html={iconHTML('chevron-down')} />
+          </summary>
         <nav class="docs-nav" aria-label="文档导航">
           <details class="docs-group" data-icen-group="开始">
             <summary class="docs-group-name">
@@ -85,6 +92,7 @@ const isActive = (href: string): boolean =>
             );
           })}
         </nav>
+        </details>
       </aside>
       <script is:inline data-astro-rerun>
         /* 侧栏折叠 + 滚动位（首帧前同步完成，无闪烁）：
@@ -96,6 +104,13 @@ const isActive = (href: string): boolean =>
         (() => {
           var side = document.querySelector('.docs-side');
           if (!side) return;
+          var disclosure = side.querySelector('.docs-nav-disclosure');
+          var breakpoint = window.matchMedia('(min-width: 860px)');
+          if (window.__docsNavResize) window.__docsNavResize();
+          var resizeNav = function () { if (disclosure) disclosure.open = breakpoint.matches; };
+          resizeNav();
+          breakpoint.addEventListener('change',resizeNav);
+          window.__docsNavResize = function () { breakpoint.removeEventListener('change',resizeNav); };
           var groups = Array.prototype.slice.call(document.querySelectorAll('.docs-group[data-icen-group]'));
 
           var memory = window.__docsNavOpen;

@@ -40,13 +40,14 @@
  */
 
 import { createIcon } from './icons';
-import { computePopoverLayout, resolvePanelSizing } from './popover';
+import { revealPopoverItem, computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
 import { t } from './i18n';
 
 interface MarkedSelect extends Element {
   __icenSelectInit?: boolean;
 }
+let selectSequence = 0;
 
 /** 当前打开的 select（模块级单例，同时只开一个）。 */
 interface OpenSelect {
@@ -138,6 +139,7 @@ function setup(container: Element): () => void {
 
   const isMultiple = container.hasAttribute('data-icen-select-multiple');
   const isSearchable = container.hasAttribute('data-icen-select-search');
+  if (isMultiple && !trigger.hasAttribute('aria-label') && !trigger.hasAttribute('aria-labelledby')) trigger.setAttribute('aria-label',container.getAttribute('data-icen-select-label') ?? t('select.fieldLabel'));
   const maxSelect = Number(container.getAttribute('data-icen-select-max')) || 0;
   /* 面板尺寸：统一 PanelSizing 契约（data-icen-panel-width 固定 / -min / -max 夹取 / -max-height 上限）。
      富选项（色卡/图标等多内容）场景用它们消除滚动条与折行。 */
@@ -177,6 +179,24 @@ function setup(container: Element): () => void {
   /** 获取所有选项按钮（不在分组容器内的也包含）。 */
   const allOptions = (): HTMLButtonElement[] =>
     Array.from(panel.querySelectorAll<HTMLButtonElement>('.icen-select-option'));
+  const originalDisabled = new WeakSet(allOptions().filter((option)=>option.disabled || option.matches('.is-disabled,[data-icen-disabled],[aria-disabled="true"]')));
+  panel.id ||= `icen-select-list-${++selectSequence}`;
+  panel.setAttribute('role','listbox');
+  panel.setAttribute('aria-label',trigger.getAttribute('aria-label') ?? (placeholder || t('select.fieldLabel')));
+  if (isMultiple) panel.setAttribute('aria-multiselectable','true');
+  trigger.setAttribute('aria-controls',panel.id);
+  trigger.setAttribute('aria-haspopup','listbox');
+  searchInput?.setAttribute('aria-label',t('select.searchPlaceholder'));
+  function syncOptionAria(): void {
+    allOptions().forEach((option)=>{
+      if (originalDisabled.has(option)) option.classList.add('is-disabled');
+      option.setAttribute('role','option');
+      option.setAttribute('aria-selected',String(option.classList.contains('is-selected')));
+      option.setAttribute('aria-disabled',String(option.classList.contains('is-disabled')));
+      option.tabIndex = -1;
+    });
+  }
+  syncOptionAria();
 
   /** 获取当前可见（未被搜索过滤）的选项。 */
   const visibleOptions = (): HTMLButtonElement[] =>
@@ -184,12 +204,12 @@ function setup(container: Element): () => void {
 
   const isOpen = (): boolean => !panel.hidden;
 
-  function setFocus(idx: number): void {
+  function setFocus(idx: number, moveDomFocus = false): void {
     const opts = visibleOptions();
     focusIdx = Math.max(-1, Math.min(idx, opts.length - 1));
     opts.forEach((o, i) => o.classList.toggle('is-focused', i === focusIdx));
     const cur = focusIdx >= 0 ? opts[focusIdx] : undefined;
-    cur?.scrollIntoView({ block: 'nearest' });
+    if (cur) revealPopoverItem(cur,panel,{focus:moveDomFocus});
   }
 
   function firstEnabled(): number {
@@ -205,7 +225,7 @@ function setup(container: Element): () => void {
       const opt = opts[n];
       if (opt && !opt.classList.contains('is-disabled')) break;
     }
-    setFocus(n);
+    setFocus(n,document.activeElement !== searchInput);
   }
 
   // ── 空状态元素（若面板内尚无 .icen-select-empty 则自动创建）──
@@ -280,7 +300,7 @@ function setup(container: Element): () => void {
   }
 
   function openPanel(): void {
-    if (isOpen()) return;
+    if (isOpen() || trigger.disabled || container.matches('[data-icen-disabled],[aria-disabled="true"]')) return;
     openSelect?.close();
     // portal：跳出祖先 overflow 裁切与 stacking context；只移一次，关闭不移回
     if (panel.parentElement !== document.body) document.body.appendChild(panel);
@@ -297,7 +317,7 @@ function setup(container: Element): () => void {
       setTimeout(() => searchInput?.focus(), 0);
     } else {
       const sel = allOptions().findIndex((o) => o.classList.contains('is-selected'));
-      setFocus(sel >= 0 ? sel : firstEnabled());
+      setFocus(sel >= 0 ? sel : firstEnabled(),true);
     }
   }
 
@@ -318,17 +338,19 @@ function setup(container: Element): () => void {
       .map((o) => o.getAttribute('data-icen-value') ?? '');
   }
 
+  let chipsClickBound = false;
   /** 多选：更新 trigger 显示（计数或前两项 + +N）。 */
   function updateMultiTrigger(): void {
     if (!valueEl) return;
     const selected = allOptions().filter((o) => o.classList.contains('is-selected'));
-    /* chips 容器惰性创建（trigger 内、valueEl 之后）；有选中时 valueEl 隐藏、chips 接管 */
-    let chipsEl = trigger.querySelector<HTMLElement>('.icen-select-chips');
+    /* Chips share the trigger's grid cell, but remain siblings so their remove
+       actions are real keyboard-focusable buttons rather than nested controls. */
+    let chipsEl = container.querySelector<HTMLElement>('.icen-select-chips');
     if (selected.length === 0) {
       valueEl.textContent = placeholder;
       valueEl.classList.add('is-empty');
       valueEl.hidden = false;
-      if (chipsEl) chipsEl.hidden = true;
+      if (chipsEl) { chipsEl.hidden = true; chipsEl.replaceChildren(); }
       container.removeAttribute('data-icen-value');
     } else {
       valueEl.classList.remove('is-empty');
@@ -336,7 +358,26 @@ function setup(container: Element): () => void {
       if (!chipsEl) {
         chipsEl = document.createElement('span');
         chipsEl.className = 'icen-select-chips';
-        valueEl.insertAdjacentElement('afterend', chipsEl);
+        trigger.insertAdjacentElement('afterend', chipsEl);
+      }
+      if (trigger.contains(chipsEl)) trigger.insertAdjacentElement('afterend',chipsEl);
+      if (!chipsClickBound) {
+        chipsClickBound = true;
+        const chips = chipsEl;
+        on(chips,'click',(event: MouseEvent) => {
+          const target = event.target instanceof Element ? event.target.closest<HTMLButtonElement>('.icen-select-chip-x') : null;
+          if (!target) { trigger.click(); return; }
+          if (target.disabled) return;
+          event.preventDefault();event.stopPropagation();
+          const buttons = Array.from(chips.querySelectorAll<HTMLButtonElement>('.icen-select-chip-x'));
+          const index = buttons.indexOf(target);
+          const option = allOptions().find((option)=>option.getAttribute('data-icen-value') === target.dataset.icenValue);
+          if (!option) return;
+          option.classList.remove('is-selected');
+          updateMultiTrigger();syncHiddenInput();
+          const remaining = chips.querySelectorAll<HTMLButtonElement>('.icen-select-chip-x');
+          (remaining[Math.min(index,remaining.length-1)] ?? trigger).focus({preventScroll:true});
+        });
       }
       chipsEl.hidden = false;
       chipsEl.textContent = '';
@@ -351,22 +392,13 @@ function setup(container: Element): () => void {
         const lb = document.createElement('span');
         lb.textContent = label;
         chip.appendChild(lb);
-        /* 单项 ×（hover chip 才出现）：span 而非 button——trigger 是 button，不能嵌套按钮；
-           指针通道；键盘/读屏的等价路径 = 面板反选 */
-        const x = document.createElement('span');
+        const x = document.createElement('button');
+        x.type = 'button';
         x.className = 'icen-select-chip-x';
-        x.setAttribute('role', 'button');
-        x.setAttribute('tabindex', '-1');
+        x.dataset.icenValue = o.getAttribute('data-icen-value') ?? '';
+        x.disabled = trigger.disabled || container.hasAttribute('data-icen-disabled') || container.getAttribute('aria-disabled') === 'true';
         x.setAttribute('aria-label', t('select.remove', { p0: label }));
         x.append(createIcon('close',{size:12})!);
-        on(x, 'pointerdown', (ev: PointerEvent) => ev.stopPropagation());
-        on(x, 'click', (ev: MouseEvent) => {
-          ev.stopPropagation();
-          ev.preventDefault();
-          o.classList.remove('is-selected');
-          updateMultiTrigger();
-          syncHiddenInput();
-        });
         chip.appendChild(x);
         chipsEl.appendChild(chip);
       }
@@ -385,23 +417,24 @@ function setup(container: Element): () => void {
       const atMax = selected.length >= maxSelect;
       allOptions().forEach((o) => {
         if (!o.classList.contains('is-selected')) {
-          o.classList.toggle('is-disabled', atMax);
+          o.classList.toggle('is-disabled', originalDisabled.has(o) || atMax);
         }
       });
     }
+    syncOptionAria();
   }
 
   function syncHiddenInput(): void {
+    syncOptionAria();
     const values = getSelectedValues();
     /* 领域事件走 icen: 契约；hidden input 的原生 change 保留给表单框架（双通道） */
     const label = allOptions()
       .filter((o) => o.classList.contains('is-selected'))
       .map((o) => (o.textContent ?? '').trim())
       .join(', ');
+    if (hiddenInput) hiddenInput.value = isMultiple ? values.join(',') : (values[0] ?? '');
     emitIcen(container, 'icen:select-change', { value: values[0] ?? '', values, label });
-    if (!hiddenInput) return;
-    hiddenInput.value = isMultiple ? values.join(',') : (values[0] ?? '');
-    hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    hiddenInput?.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   function choose(opt: HTMLButtonElement): void {
@@ -445,6 +478,7 @@ function setup(container: Element): () => void {
       allOptions().forEach((o) => o.classList.remove('is-selected'));
       updateMultiTrigger();
       syncHiddenInput();
+      trigger.focus({preventScroll:true});
     });
     on(clearBtn, 'pointerdown', (ev: PointerEvent) => ev.stopPropagation());
   }
@@ -478,6 +512,16 @@ function setup(container: Element): () => void {
     if (!(t instanceof Element)) return;
     const opt = t.closest('.icen-select-option');
     if (opt instanceof HTMLButtonElement && panel.contains(opt)) choose(opt);
+  });
+  on(panel,'keydown',(event:KeyboardEvent)=>{
+    if (event.target === searchInput) return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();moveFocus(event.key === 'ArrowDown' ? 1 : -1);
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();const option=visibleOptions()[focusIdx];if(option)choose(option);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();closePanel();trigger.focus({preventScroll:true});
+    }
   });
 
   // 悬停同步键盘焦点态，鼠标与键盘看到同一个 is-focused

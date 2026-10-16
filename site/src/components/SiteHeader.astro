@@ -44,6 +44,7 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
         <kbd class="nav-kbd">⌘K</kbd>
       </button>
       <span class="nav-sep" aria-hidden="true"></span>
+      <div id="appearance-mobile"><Fragment set:html={themeSwitcherHTML({kind:"all",display:"icon",size:"sm"})} /></div>
       <div id="preset-select"><Fragment set:html={themeSwitcherHTML({kind:"theme",display:"color-name",size:"sm"})} /></div>
       <div id="style-select"><Fragment set:html={themeSwitcherHTML({kind:"primitive",display:"name",size:"sm"})} /></div>
       <div id="dark-toggle"><Fragment set:html={themeSwitcherHTML({kind:"mode",display:"icon",size:"sm"})} /></div>

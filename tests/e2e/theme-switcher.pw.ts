@@ -8,7 +8,7 @@ test('homepage, header and component instances share all three axes through navi
   await page.locator('.presets-sec [data-icen-value="ink"]').click();
   await expect(page.locator('#preset-select .icen-theme-switcher-name')).toHaveText('墨');
   await page.locator('#preset-select button').first().click();
-  await page.locator('[role="dialog"] [data-icen-value="piano"]').click();
+  await page.locator('[role="dialog"]:visible [data-icen-value="piano"]').click();
   await expect(page.locator('.presets-sec [data-icen-value="piano"]')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('.presets-sec [data-icen-value="ink"]')).toHaveAttribute('aria-pressed','false');
   await page.goto('/components/theme-switcher/');
@@ -74,7 +74,7 @@ test('light/dark, pixel and mobile RTL are accessible and do not overflow', asyn
   await page.setViewportSize({width:390,height:844});
   await page.locator('html').evaluate((root)=>root.dir='rtl');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  await page.locator('#preset-select button').first().click();
+  await page.locator('#appearance-mobile button').first().click();
   const bounds=await page.locator('[role="dialog"]:visible').boundingBox();
   expect(bounds!.x).toBeGreaterThanOrEqual(0); expect(bounds!.x+bounds!.width).toBeLessThanOrEqual(390);
   await page.keyboard.press('Escape');

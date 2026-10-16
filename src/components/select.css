@@ -48,7 +48,7 @@
   inline-size: 100%;
 }
 
- .icen-select-trigger {
+.icen-select-trigger {
   position: relative;
   display: flex;
   align-items: center;
@@ -284,23 +284,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 0;
-  opacity: 0;
-  overflow: hidden;
-  margin-inline-start: 0;
-  color: var(--icen-token-text-faint);
-  border-radius: var(--icen-radius-full);
-  font-size: var(--icen-density-font-size-md);
-  line-height: 1;
+  flex: none;
+  inline-size: 16px;
+  block-size: 20px;
+  margin-inline-start: var(--icen-density-space-xs);
+  padding: 0;
+  border: 0;
+  border-radius: var(--icen-radius-xs);
+  background: transparent;
+  color: var(--icen-token-text-muted);
   cursor: pointer;
-  transition:
-    width var(--icen-tx-fast),
-    opacity var(--icen-tx-fast),
-    margin-inline-start var(--icen-tx-fast),
-    color var(--icen-tx-fast);
+  transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast), color var(--icen-tx-fast);
 }
-.icen-select-chip:hover .icen-select-chip-x,
-.icen-select-chip-x:focus-visible { width: 12px; opacity: 1; margin-inline-start: 4px; }
+.icen-select-chip-x:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
 .icen-select-chip-x:hover { color: var(--icen-token-error); }
 .icen-select-chip--more { color: var(--icen-token-text-muted); background: var(--icen-token-fill-1); }
 
@@ -330,3 +326,39 @@
 }
 
 .icen-select-trigger--sm, .icen-select-trigger--lg { padding-inline-end: calc(var(--icen-density-space-sm) + 24px); }
+
+/* The chips and trigger occupy one grid cell without nesting interactive elements. */
+.icen-select:has(> .icen-select-chips:not([hidden])) { display: grid; }
+.icen-select:has(> .icen-select-chips:not([hidden])) > .icen-select-trigger {
+  grid-area: 1 / 1;
+  block-size: auto;
+  min-block-size: var(--icen-density-input-height-md);
+  align-self: stretch;
+}
+.icen-select > .icen-select-chips {
+  position: relative;
+  grid-area: 1 / 1;
+  align-self: center;
+  min-block-size: var(--icen-density-input-height-md);
+  padding-block: var(--icen-density-space-xs);
+  padding-inline-start: var(--icen-density-space-sm);
+  padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  pointer-events: none;
+}
+.icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: calc(var(--icen-density-space-sm) + 52px); }
+.icen-select-chip { pointer-events: auto; }
+.icen-select-chip > span { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; }
+@media (hover: hover) and (pointer: fine) {
+  .icen-select-chip-x { opacity: 0; }
+  .icen-select-chip:is(:hover,:focus-within) .icen-select-chip-x { opacity: 1; }
+}
+@media (pointer: coarse) {
+  .icen-select-chip-x { min-inline-size: 44px; min-block-size: 44px; }
+  .icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: 84px; }
+}
+
+.icen-select-chips[hidden], .icen-select-clear[hidden] { display: none; }
+
+/* Optional rich-option color sample: copied markup works with select.css alone. */
+.icen-select-swatch { display: inline-flex; flex: none; inline-size: 36px; block-size: 18px; border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-xs); overflow: hidden; }
+.icen-select-swatch > i { flex: 1; }

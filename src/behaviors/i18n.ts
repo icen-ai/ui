@@ -852,6 +852,7 @@ export interface IcenLocale {
   'pagination.pageSize': string;
   'pagination.prev': string;
   /* ── select ── */
+  'select.fieldLabel': string;
   'select.noMatch': string;
   'select.remove': string;
   'select.searchPlaceholder': string;
@@ -1639,6 +1640,7 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'pagination.pageSize': '{p0} 条/页',
   'pagination.prev': '上一页',
   /* ── select ── */
+  'select.fieldLabel': '选择选项',
   'select.noMatch': '无匹配项',
   'select.remove': '移除 {p0}',
   'select.searchPlaceholder': '搜索…',
@@ -2426,6 +2428,7 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'pagination.pageSize': '{p0} / page',
   'pagination.prev': 'Previous page',
   /* ── select ── */
+  'select.fieldLabel': 'Select options',
   'select.noMatch': 'No matches',
   'select.remove': 'Remove {p0}',
   'select.searchPlaceholder': 'Search…',

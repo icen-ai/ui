@@ -11,6 +11,7 @@ import type { ComponentDoc } from './components';
 export const CASCADER_TREESELECT_DOCS: ComponentDoc[] = [
   {
     slug: 'cascader',
+    summary: '在省市区、目录或分类中逐级选择一条路径。支持跨级搜索和完整键盘操作。',
     name: '级联选择',
     group: '表单',
     desc: 'createCascader 装配级联选择：路径型选择（省/市/区、类目/子类目），值 = 路径值数组。多列面板逐级展开（当前路径高亮、有子级的项带 chevron、列宽不足横向滚动），点中间级只展开、叶子才定值（changeOnSelect: true 时任意级即定值）；searchable 面板内搜索跨级过滤，命中显示完整路径（面包屑式 muted 分隔符），无命中 empty 态（emptyLabel）。键盘 → 进子级 / ← 回上级（RTL 镜像）/ ↑↓ 移动 / Enter 定值 / Esc 关闭；trigger role=combobox，列 role=listbox、项 role=option。面板 portal 到 body，尺寸走全库 PanelSizing 契约（根挂 data-icen-panel-*）。事件 icen:cascader-change { value, path }（path = 各级 label，与 onChange 双通道）；clearable 清除、disabled 置灰、同 el 重复 create 先销毁旧实例。',
@@ -81,6 +82,7 @@ host.addEventListener('icen:cascader-change', function (e) {
   },
   {
     slug: 'tree-select',
+    summary: '从组织或分类树中选择一项或多项。支持父子联动、搜索与直接移除已选项。',
     name: '树选择',
     group: '表单',
     desc: 'createTreeSelect 装配树选择：组织架构 / 权限树这类层级多选或单选。面板内嵌树（平铺行 + --depth 缩进，--lined 连接线变体）：展开/折叠 chevron，单选任意级可选（leafOnly 仅叶子），多选 + checkable 三态勾选（父 = 子集并集，混合态诚实呈现，disabled 子不进值）；multiple trigger 显示 chips（超 3 个收 +N，单项 × 悬停移除）。searchable 过滤命中自动展开祖先、命中词 <mark> 高亮，无命中 empty 态。键盘 ↑↓ 移动 / → 展开进首子 / ← 折叠回父行 / Enter 激活 / Esc 关；trigger role=combobox，树 role=tree / 行 role=treeitem（aria-level/posinset/setsize、aria-expanded/selected/checked）。面板 portal + PanelSizing 契约同 cascader。事件 icen:tree-select-change { value, labels }（与 onChange 双通道）；handle.expandAll()/collapseAll()；同 el 重复 create 先销毁旧实例。',

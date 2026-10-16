@@ -178,7 +178,7 @@ describe('多选（data-icen-select-multiple）', () => {
     fire(options()[2]!, 'click');
     expect(panel().hidden).toBe(false); /* 多选不关面板 */
 
-    const chips = Array.from(trigger().querySelectorAll<HTMLElement>('.icen-select-chip'));
+    const chips = Array.from(document.querySelectorAll<HTMLElement>('.icen-select-chip'));
     expect(chips.map((c) => c.querySelector('span')!.textContent)).toEqual(['甲', '丙']); /* 首子 span 为标签，× 另挂 */
     expect(document.querySelector<HTMLElement>('.icen-select-value')!.hidden).toBe(true);
     expect((document.querySelector("[data-icen-select-value]") as unknown as { value: string }).value).toBe('a,c');
@@ -196,7 +196,7 @@ describe('多选（data-icen-select-multiple）', () => {
     expect(options()[2]!.classList.contains('is-disabled')).toBe(true);
     fire(options()[2]!, 'click');
     expect(options()[2]!.classList.contains('is-selected')).toBe(false);
-    expect(trigger().querySelectorAll('.icen-select-chip')).toHaveLength(2);
+    expect(document.querySelectorAll('.icen-select-chip')).toHaveLength(2);
     destroy();
   });
 

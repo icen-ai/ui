@@ -1,0 +1,50 @@
+import { expect, test } from 'bun:test';
+import { initSelect } from '../../src/behaviors/select';
+import { createTreeSelect } from '../../src/behaviors/tree-select';
+
+test('select chip removals are real sibling buttons; focus advances and a reused SSR chips slot hydrates',()=>{
+  const root=document.createElement('div');root.className='icen-select';root.setAttribute('data-icen-select','');root.setAttribute('data-icen-select-multiple','');
+  root.innerHTML='<button class="icen-select-trigger"><span class="icen-select-value is-empty">语言</span><span class="icen-select-chips"></span></button><div class="icen-select-panel" hidden><button class="icen-select-option is-selected" data-icen-value="ts">TypeScript</button><button class="icen-select-option is-selected" data-icen-value="js">JavaScript</button></div><input type="hidden" data-icen-select-value>';
+  document.body.append(root);const dispose=initSelect(root);
+  const trigger=root.querySelector<HTMLButtonElement>('.icen-select-trigger')!;
+  expect(trigger.querySelector('button,[role="button"]')).toBeNull();
+  let removes=root.querySelectorAll<HTMLButtonElement>('.icen-select-chip-x');
+  expect(removes).toHaveLength(2);expect(removes[0].tagName).toBe('BUTTON');expect(removes[0].tabIndex).toBe(0);
+  let formValueInsideEvent='';
+  root.addEventListener('icen:select-change',()=>{formValueInsideEvent=root.querySelector<HTMLInputElement>('input')!.value;});
+  removes[0].focus();removes[0].click();
+  expect(formValueInsideEvent).toBe('js');
+  removes=root.querySelectorAll<HTMLButtonElement>('.icen-select-chip-x');
+  expect(removes).toHaveLength(1);expect(document.activeElement).toBe(removes[0]);
+  removes[0].click();expect(document.activeElement).toBe(trigger);expect(root.querySelector<HTMLInputElement>('input')!.value).toBe('');
+  dispose();root.remove();
+});
+test('tree selection supports keyboard-accessible removal, focus recovery, clearing and disabled chips',()=>{
+  const root=document.createElement('div');document.body.append(root);
+  const handle=createTreeSelect(root,{nodes:[{value:'ts',label:'TypeScript'},{value:'js',label:'JavaScript'}],multiple:true,value:['ts','js']});
+  const trigger=root.querySelector<HTMLButtonElement>('.icen-tree-select-trigger')!;
+  expect(trigger.querySelector('button,[role="button"]')).toBeNull();
+  const first=root.querySelector<HTMLButtonElement>('.icen-tree-select-chip-x')!;first.focus();first.click();
+  expect(handle.getValue()).toEqual(['js']);expect(document.activeElement).toBe(root.querySelector('.icen-tree-select-chip-x'));
+  root.querySelector<HTMLButtonElement>('.icen-tree-select-chip-x')!.click();expect(document.activeElement).toBe(trigger);
+  handle.setValue(['ts']);expect(root.querySelectorAll('.icen-tree-select-chip-x')).toHaveLength(1);
+  handle.destroy();
+  const disabled=createTreeSelect(root,{nodes:[{value:'ts',label:'TypeScript'}],multiple:true,value:['ts'],disabled:true});
+  expect(root.querySelector<HTMLButtonElement>('.icen-tree-select-chip-x')!.disabled).toBe(true);
+  disabled.destroy();root.remove();
+});
+test('selection limits preserve authored disabled options and expose actual ARIA selection state',()=>{
+  const root=document.createElement('div');root.className='icen-select';root.setAttribute('data-icen-select','');root.setAttribute('data-icen-select-multiple','');root.setAttribute('data-icen-select-max','1');
+  root.innerHTML='<button class="icen-select-trigger"><span class="icen-select-value is-empty">语言</span></button><div class="icen-select-panel" hidden><button class="icen-select-option is-disabled" data-icen-value="locked">锁定</button><button class="icen-select-option" data-icen-value="ts">TypeScript</button><button class="icen-select-option" data-icen-value="js">JavaScript</button></div>';
+  document.body.append(root);const dispose=initSelect(root);
+  const trigger=root.querySelector<HTMLButtonElement>('.icen-select-trigger')!;trigger.click();
+  const panel=document.getElementById(trigger.getAttribute('aria-controls')!)!;
+  expect(panel.getAttribute('aria-multiselectable')).toBe('true');
+  panel.querySelector<HTMLButtonElement>('[data-icen-value="ts"]')!.click();
+  expect(panel.querySelector('[data-icen-value="ts"]')?.getAttribute('aria-selected')).toBe('true');
+  expect(panel.querySelector('[data-icen-value="js"]')?.getAttribute('aria-disabled')).toBe('true');
+  root.querySelector<HTMLButtonElement>('.icen-select-chip-x')!.click();
+  expect(panel.querySelector('[data-icen-value="js"]')?.getAttribute('aria-disabled')).toBe('false');
+  expect(panel.querySelector('[data-icen-value="locked"]')?.getAttribute('aria-disabled')).toBe('true');
+  dispose();root.remove();
+});

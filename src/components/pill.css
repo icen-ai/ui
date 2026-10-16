@@ -156,3 +156,10 @@
   .icen-pill--live::before { animation: none; }
   .icen-pill-close { transition: none; }
 }
+
+/* Stable secondary-action slot: reveal is optical rather than a width change. */
+@media (hover: hover) and (pointer: fine) {
+  .icen-pill-close { opacity: 0; }
+  .icen-pill:is(:hover,:focus-within) .icen-pill-close { opacity: 1; }
+}
+@media (pointer: coarse) { .icen-pill-close { min-inline-size: 28px; min-block-size: 28px; opacity: 1; } }

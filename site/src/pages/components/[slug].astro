@@ -4,6 +4,7 @@ import CodeBlock from '../../components/CodeBlock.astro';
 import PmInstall from '../../components/PmInstall.astro';
 import { COMPONENTS, cssFor, type ComponentDoc } from '../../lib/components';
 import { SLUGS } from '../../../../scripts/slugs.mjs';
+import { iconHTML } from '../../../../src/behaviors/icons';
 
 export function getStaticPaths() {
   return COMPONENTS.map((doc, i) => ({
@@ -18,6 +19,7 @@ interface Props {
   next?: ComponentDoc;
 }
 const { doc, prev, next } = Astro.props;
+const lead = doc.summary ?? (doc.desc.length > 160 ? (doc.desc.match(/^(.{1,156}?)[。；]/)?.[0] ?? `${doc.desc.slice(0,156).trim()}…`) : doc.desc);
 
 // kit 一行入口：CSS + behavior 自动带上。init 分两路：本组件模块的 init 走 kit 入口
 // （kit 对 behaviors/<slug>.mjs 是 export *，必然可导）；跨模块 init（如 kb-canvas 页的
@@ -43,10 +45,10 @@ const isKit = SLUGS.includes(doc.slug);
 const usageLang = /^\s*(import|const|\/\/)/.test(doc.usage) ? 'js' : 'html';
 const pageLink = `[${doc.name} · ICEN UI](https://ui.icen.ai/components/${doc.slug}/)`;
 
-const copySvg = `<svg class="ic-copy" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
-const checkSvg = `<svg class="ic-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
-const leftSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`;
-const rightSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
+const copySvg = iconHTML('copy',{size:13,className:'ic-copy'});
+const checkSvg = iconHTML('check',{size:13,className:'ic-check'});
+const leftSvg = iconHTML('chevron-left',{size:14});
+const rightSvg = iconHTML('chevron-right',{size:14});
 
 // 传给页面内联脚本的数据：< 转义防 </script> 提前闭合
 const bootData = JSON.stringify({
@@ -60,7 +62,7 @@ const bootData = JSON.stringify({
     <div class="doc-head-main">
       <nav class="doc-crumb">组件 / {doc.group} / <span class="icen-mono">{doc.slug}</span></nav>
       <h1 class="doc-title">{doc.name}</h1>
-      <p class="doc-desc">{doc.desc}</p>
+      <p class="doc-desc">{lead}</p>
     </div>
     <div class="doc-actions">
       <button class="doc-copy-page icen-copy-btn" type="button" data-icen-copy={pageLink} data-icen-copy-icon>
@@ -86,6 +88,12 @@ const bootData = JSON.stringify({
     <div class="demo-stage" data-demo-layout={doc.demoLayout} set:html={doc.demo} />
     <CodeBlock code={doc.demo} lang="html" collapsible />
   </section>
+  {lead !== doc.desc && (
+    <details class="doc-details">
+      <summary>行为与接口说明 <Fragment set:html={iconHTML('chevron-down')} /></summary>
+      <p>{doc.desc}</p>
+    </details>
+  )}
 
   <h2 class="doc-h2">安装</h2>
   <PmInstall />
@@ -108,13 +116,13 @@ const bootData = JSON.stringify({
     {prev ? (
       <a class="doc-pager-link" href={`/components/${prev.slug}/`}>
         <span class="doc-pager-label">上一个</span>
-        <span class="doc-pager-name">← {prev.name}</span>
+        <span class="doc-pager-name"><Fragment set:html={iconHTML('arrow-left',{size:14})} /> {prev.name}</span>
       </a>
     ) : <span />}
     {next ? (
       <a class="doc-pager-link doc-pager-next" href={`/components/${next.slug}/`}>
         <span class="doc-pager-label">下一个</span>
-        <span class="doc-pager-name">{next.name} →</span>
+        <span class="doc-pager-name">{next.name} <Fragment set:html={iconHTML('arrow-right',{size:14})} /></span>
       </a>
     ) : <span />}
   </nav>

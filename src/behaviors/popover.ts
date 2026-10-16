@@ -67,6 +67,24 @@ export interface PanelSizing {
   maxHeight?: number;
 }
 
+/** Reveal an item inside one explicit scrollport. Never scrolls document ancestors;
+ * use this instead of scrollIntoView for portalled menus and nested listboxes. */
+export function revealPopoverItem(item: HTMLElement, scrollport: HTMLElement, opts: {focus?: boolean; axis?: 'block' | 'inline' | 'both'} = {}): void {
+  if (typeof document === 'undefined') return;
+  if (opts.focus) item.focus({preventScroll:true});
+  const rect=item.getBoundingClientRect(), bounds=scrollport.getBoundingClientRect();
+  if (opts.axis !== 'inline') {
+    const top=bounds.top+scrollport.clientTop, bottom=top+scrollport.clientHeight;
+    if (rect.top<top) scrollport.scrollTop-=top-rect.top;
+    else if (rect.bottom>bottom) scrollport.scrollTop+=rect.bottom-bottom;
+  }
+  if (opts.axis === 'inline' || opts.axis === 'both') {
+    const left=bounds.left+scrollport.clientLeft, right=left+scrollport.clientWidth;
+    if (rect.left<left) scrollport.scrollLeft-=left-rect.left;
+    else if (rect.right>right) scrollport.scrollLeft+=rect.right-right;
+  }
+}
+
 const PANEL_SIZING_ATTRS = {
   width: 'data-icen-panel-width',
   minWidth: 'data-icen-panel-min',

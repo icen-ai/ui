@@ -8,17 +8,26 @@ export const ICON_DOC: ComponentDoc = {
   <p class="doc-note">同一个图形在不同字号下保持对齐。</p>
   <div class="demo-row">${[12,16,20,24,32].map((size)=>`<span>${iconHTML('check',{size})} ${size}px</span>`).join('')}</div>
   <p class="doc-note">次要动作保留固定槽位。悬停这一行，或按 Tab 聚焦，移除按钮显现；内容不会位移。</p>
-  <div class="icon-demo-quiet"><span>产品设计规范</span><button type="button" class="icen-icon-action" data-icen-reveal aria-label="移除规范">${iconHTML('close')}</button></div>`,
+  <div class="icon-demo-quiet" id="icon-demo-quiet"><span>产品设计规范</span><button type="button" class="icen-icon-action" data-icen-reveal aria-label="移除规范">${iconHTML('close')}</button></div>
+  <p id="icon-demo-removed" hidden role="status">规范已移除。<button type="button" class="icen-btn icen-btn-sm" id="icon-demo-undo">撤销</button></p>`,
+  script: `var row = document.getElementById('icon-demo-quiet');
+var status = document.getElementById('icon-demo-removed');
+var remove = row.querySelector('button');
+var undo = document.getElementById('icon-demo-undo');
+remove.addEventListener('click', function () { row.hidden = true; status.hidden = false; undo.focus(); });
+undo.addEventListener('click', function () { status.hidden = true; row.hidden = false; remove.focus(); });`,
   usage:`import { iconHTML, createIcon, registerIcon } from '@icen.ai/ui/kit/icon';
 
 // 在服务端模板中输出 SVG；所有标签和属性均转义。
 const html = iconHTML('chevron-down', { size: 16 });
 // 在已经有名称的按钮中，图标默认 aria-hidden，不重复朗读。
 button.setAttribute('aria-label', '关闭');
-button.append(createIcon('close'));
+const closeIcon = createIcon('close');
+if (closeIcon) button.append(closeIcon);
 
 // 独立图标提供 label 后自动带 role="img"。
-container.append(createIcon('check', { label: '已完成', size: 20 }));
+const completeIcon = createIcon('check', { label: '已完成', size: 20 });
+if (completeIcon) container.append(completeIcon);
 
 // 自有图形使用同一光学网格。只接受 SVG path，不执行脚本或注入 HTML。
 registerIcon('app-mark', 'M3 3h14v14H3Z');
