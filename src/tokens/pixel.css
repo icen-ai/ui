@@ -1,0 +1,47 @@
+/* 像素 / Pixel — a discrete grid, print-like contours and mechanical feedback.
+ * This is a primitive, never a palette: every color comes from the current theme.
+ * Native 12px CJK glyphs, 24/36/48px display sizes, four-pixel spacing, opaque
+ * materials, square corners and stepped shadows. No CRT haze or flashing noise.
+ */
+@font-face {
+  font-family: 'Icen Pixel';
+  src: url('../fonts/fusion-pixel-12px-zh-hans.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+:root[data-icen-style="pixel"], :root[data-icen-style="pixel"] [data-icen-preset] {
+  --icen-design-font: 'Icen Pixel', ui-monospace, 'Microsoft YaHei', monospace;
+  --icen-design-font-size: 12px;
+  --icen-design-space: 4px;
+  --icen-design-control-height: 40px;
+  --icen-design-glass-opacity: 100%;
+  --icen-design-glass-blur: 0px;
+  --icen-design-motion: 0;
+  --icen-radius-xs: 0px;
+  --icen-radius-sm: 0px;
+  --icen-radius-md: 0px;
+  --icen-radius-lg: 0px;
+  --icen-radius-xl: 0px;
+  --icen-radius-full: 0px;
+  --icen-font-body: var(--icen-design-font);
+  --icen-font-heading: var(--icen-design-font);
+  --icen-font-cjk: var(--icen-design-font);
+  --icen-font-mono: var(--icen-design-font);
+  --icen-letter-spacing-heading: 0;
+  --icen-line-height-body: 2;
+  --icen-line-height-heading: 1.5;
+  --icen-token-shadow-card: 2px 2px 0 var(--icen-token-line-strong);
+  --icen-token-shadow-elevated: 4px 4px 0 var(--icen-token-line-strong);
+  --icen-token-shadow-overlay: 8px 8px 0 var(--icen-token-line-strong);
+  --icen-token-shadow-inset: none;
+  --icen-token-material-light: 0 0 0 1px var(--icen-token-line-strong);
+  --icen-token-top-highlight: transparent;
+  --icen-press: translate(2px, 2px);
+  --icen-press-soft: translate(2px, 2px);
+  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-accent);
+  --icen-ring-soft: 0 0 0 2px var(--icen-token-accent);
+  --icen-control-focus-shadow: 0 0 0 2px var(--icen-token-accent);
+  --icen-ease-out: steps(1, end);
+  --icen-ease-bounce: steps(1, end);
+}

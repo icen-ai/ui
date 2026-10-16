@@ -573,15 +573,5 @@
 .icen-code-inline--warning { color: var(--icen-token-warning); }
 .icen-code-inline--error   { color: var(--icen-token-error); }
 
-/* 代码块（多行，非行内） */
-.icen-code-block {
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
-  background: var(--icen-token-bg-soft);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  font-family: var(--icen-font-mono);
-  font-size: var(--icen-density-font-size-sm);
-  color: var(--icen-token-text);
-  overflow-x: auto;
-  line-height: 1.6;
-}
+/* 代码块（多行，非行内）：v0.11 起升级为独立组件 code-block.css（标题栏/行号/折叠/diff/
+ * shiki 协同），本文件不再承载 .icen-code-block 样式。 */

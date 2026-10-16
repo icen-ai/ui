@@ -4,10 +4,16 @@ import '../../../src/tokens/style-profiles.css';
 import '../../../src/tokens/typography.css';
 import 'misans/lib/Normal/MiSansVF.min.css'; /* MiSans VF（150–700）56 片 unicode-range 分包，随构建自托管同源 */
 import '../../../src/base.css';
+import '../../../src/tokens/design.css';
+import '../../../src/tokens/pixel.css';
+import '../../../src/components/material.css';
 import '../../../src/components/btn.css';
 import '../../../src/components/pill.css';
 import '../../../src/components/select.css';
+import '../../../src/components/theme-switcher.css';
 import '../../../src/components/command-palette.css';
+import '../../../src/components/code-block.css'; /* 首页 CodeBlock（Docs 布局走 component-css 全量 glob） */
+import '../../../src/components/tooltip.css';
 import '../styles/site.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
@@ -24,7 +30,7 @@ const {
 const canonical = new URL(Astro.url.pathname, 'https://ui.icen.ai').toString();
 ---
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-icen-preset="benzhen" data-icen-style="benzhen">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

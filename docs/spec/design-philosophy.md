@@ -119,22 +119,22 @@ GitHub Primer 的语义色纪律、Radix Colors 的阶梯尺、Stripe 的"深档
 
 | 预设 | 材质隐喻 | 气质 | 关键决策 |
 |---|---|---|---|
+| **本真** Benzhen | 瓷面 × 柔光 | 清透、精确、安静 | 中性瓷白、冷蓝动作、冷调石墨夜间；独立于陶土 |
 | **clay** 陶土 | 手作陶器 × 牛皮纸 | 温暖、可信、工程感 | 纸白底 #faf9f5、陶土橙、hairline 半透明线、柔和投影。icen 门面，校准自 accounts 线上 |
 | **piano** 钢琴 | 象牙琴键 × 乌木 × 大漆 | 精致、对比、仪式感 | 高对比黑白骨架、金棕点缀（金底乌木字是 AA 设计）、漆面冷反光 glow |
 | **art** 艺术 | 画廊白墙 × 藏品 | 留白、策展、克制 | 大量留白、橙红点缀只给主角、阴影极柔 |
 | **vangogh** 梵高 | 麦田 × 星空 × 杏花 | 浓烈、厚涂、浪漫 | 高饱和黄蓝对撞；粉底深字（杏花气质）——亮色承深字而非白字 |
 | **ink** 墨 | 宣纸 × 墨 × 朱砂 | 东方、留白、书写感 | 冷灰墨阶、深青 accent、宋体标题最合身的一套 |
-| **retro** 复古 | 红白机 × 磷光终端 | 玩心、像素、硬核 | 零圆角、硬边、终端红/磷光绿、像素字体（retro profile 联动特效） |
 
 每套预设都必须是**完整 token 面**（12 base + glow + derived + semantic + fill + shadow + outline + depth + scrollbar），不是改六个色——换预设 = 换材质，不是换滤镜。新增第七套预设的完整清单见 `colors.css` 头注释与本文件 §11。
 
-## 9. 风格 profile（色彩之上的第二轴）
+## 9. 原语（与配色主题独立）
 
-- **modern**（默认）：中性现代几何——中档圆角、柔和阴影、正常动效。
-- **retro**：8-bit 像素化——零/微圆角、硬边双色投影、像素字体（Press Start 2P 西文 + 系统 CJK）、`image-rendering: pixelated`。
-- **terminal**：CRT 终端——零圆角、零阴影、mono 全量、扫描线/辉光（`retro-effects.css` 可选叠加）。
-
-profile 只改几何/字体/阴影硬度/渲染模式，**永不改颜色**——颜色是预设轴的职责（正交红线）。
+- **本真 benzhen**（默认）：连续几何、系统排版、轻盈材料、双层柔影。
+- **像素 pixel**：整数网格、中英文点阵、实色材料、直角与阶梯投影、机械按压。
+- modern / retro / terminal 原语与其 CRT 特效已删除；旧偏好迁移为本真。
+- 本真同时是一套独立的瓷白＋冷蓝主题，配色不继承陶土。六个主题均可与两套原语组合。
+- 最新架构、种子与配方以 `design-primitives.md` 为准。
 
 ## 10. 业界对标矩阵（我们取法谁，以及不抄什么）
 
@@ -168,7 +168,7 @@ profile 只改几何/字体/阴影硬度/渲染模式，**永不改颜色**—�
 
 高频旋钮清单：`accent 三档` / `radius 六档` / `--icen-density-*` 三族 / 字体三族 / `tx-*` 动效三档 / `--icen-token-text-muted|faint`。文档站「定制」页的主题工作台可在线调这些旋钮并生成这段 CSS。
 
-**② 预设作者面（写第七套）**：复制 `colors.css` 里 `[data-icen-preset="ink"]` + `[data-icen-preset="ink"][data-icen-theme="dark"]` 两块完整 token 面改名改写，注册进 `behaviors/theme.ts` 的 PRESETS 与文档站。要求：明暗双面完整、accent 三档实测 AA、语义五色齐备、depth 阶梯完整。
+**② 预设作者面（写第七套）**：在 `themes.json` 新增完整明暗色板与材料参数，运行 `bun run colors`；运行时、站点与导出自动同步。要求：明暗双面完整、accent 三档实测 AA、语义五色齐备、depth 阶梯完整。
 
 **③ 正交组合面**：`<html data-icen-preset="ink" data-icen-theme="dark" data-icen-style="terminal">` + 容器级 `data-icen-density="compact"`——四轴自由组合。
 

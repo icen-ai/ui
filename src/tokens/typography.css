@@ -1,7 +1,7 @@
 /*
  * @icen.ai/ui — Typography Tokens（icen canonical）
- * 美学基调：等宽数字精密感 × 衬线书卷气（宋体标题）
- * 默认（:root）即 icen 品牌形态；[data-icen-style="modern"] 显式回退 system-ui 栈（见 style-profiles.css）
+ * 默认排版：本真系统无衬线；代码/数字提供独立工具类。
+ * 像素原语的点阵排版在 pixel.css 中定义。
  * 工具类：.icen-font-math（数字密集区，"Numeric Math" 数学字体 + tabular-nums）
  */
 
@@ -18,11 +18,11 @@
 
 :root {
   /* ── icen 品牌字体栈 ──
-     body/mono：IBM Plex Mono（未安装时回退系统等宽，行为与 accounts 一致，不打包 webfont）
-     heading：CJK 宋体系（页面标题/品牌名的书卷气） */
-  --icen-font-body: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
-  --icen-font-mono: var(--icen-font-body);
-  --icen-font-heading: 'Songti SC', 'STSong', 'Noto Serif SC', 'Source Han Serif SC', SimSun, serif;
+     body：系统无衬线；mono：系统等宽
+     heading：跟随界面字体 */
+  --icen-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --icen-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --icen-font-heading: var(--icen-font-body);
   --icen-font-cjk: var(--icen-font-heading);
   --icen-line-height-body: 1.7;
   /* 独家定义（style-profiles.css 的 :root 不再重复；profile 差异化在各 .style-* 块覆盖） */
@@ -31,12 +31,12 @@
 
 /* ── 全局排版 ── */
 body {
-  font-family: "Numeric Math", var(--icen-font-body);
+  font-family: var(--icen-font-body);
   line-height: var(--icen-line-height-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "rlig" 1, "calt" 1;
-  font-variant-numeric: lining-nums tabular-nums;
+  font-variant-numeric: normal;
 }
 
 h1, h2, h3, h4, h5, h6 {

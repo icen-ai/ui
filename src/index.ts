@@ -13,6 +13,7 @@ export * from './behaviors/i18n';
 export * from './behaviors/toast';
 export * from './behaviors/tabs';
 export * from './behaviors/copy';
+export * from './behaviors/code-block';
 export * from './behaviors/input';
 /* controls 具名导出：模块内为 kit/segmented 转发的 initInput 若走 export * 会与
    input 的同名导出构成 ESM 歧义名（被静默剔除），故逐个具名带出 */
@@ -88,3 +89,8 @@ export * from './behaviors/kb-who-can';
 export * from './behaviors/kb-access';
 export * from './behaviors/kb-audit';
 export * from './behaviors/kb-visibility';
+export { PRIMITIVES, registerPrimitive, listPrimitives, setPrimitive } from './behaviors/theme';
+export { createDesign, designContrast, mountDesign, setDesign, prepareDesignChange } from './behaviors/design';
+export type { DesignDefinition, DesignPalette, CompiledDesign } from './behaviors/design';
+
+export * from './behaviors/theme-switcher';

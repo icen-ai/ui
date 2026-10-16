@@ -7,15 +7,16 @@ import { readdir, readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SLUGS, SLUG_INIT, SLUG_EXPORTS, SLUG_BEHAVIOR, EXTRA_CSS, cssOf } from './slugs.mjs';
+import { generateThemeColors } from './theme-colors.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SRC = join(ROOT, 'src');
 const DIST = join(ROOT, 'dist');
 
 // 进 tokens.css 拼合的核心 token 文件（按此顺序串接）
-const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css'];
+const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css', 'design.css', 'pixel.css'];
 // 可选 token 文件：单独拷贝、暴露 exports，但不进 tokens.css / ui.css 默认拼合
-const TOKEN_EXTRAS = ['retro-effects.css'];
+const TOKEN_EXTRAS: string[] = [];
 
 /* cascade layer 契约：层序声明必须出现在任何样式之前（tokens.css/ui.css 顶部） */
 const LAYER_ORDER = '@layer icen.tokens, icen.base, icen.components;';
@@ -27,6 +28,8 @@ async function readSrc(p: string) {
 
 await mkdir(join(DIST, 'tokens'), { recursive: true });
 await mkdir(join(DIST, 'components'), { recursive: true });
+await generateThemeColors();
+await writeFile(join(DIST,'tokens','themes.json'),await readSrc('tokens/themes.json'));
 
 // 1. tokens：按固定顺序拼合 + 单独拷贝
 let tokensBody = '';
@@ -35,8 +38,21 @@ for (const f of TOKEN_ORDER) {
   await writeFile(join(DIST, 'tokens', f), inLayer('icen.tokens', css));
   tokensBody += `\n/* ── tokens/${f} ── */\n${css}\n`;
 }
-const tokensOut = `/* @icen.ai/ui — tokens（colors + style-profiles + typography） */\n${LAYER_ORDER}\n${inLayer('icen.tokens', tokensBody)}`;
-await writeFile(join(DIST, 'tokens.css'), tokensOut);
+// Opt-in material adapters accompany tokens even for individual kit imports.
+const materialCss = await readSrc('components/material.css');
+const tokensOut = `/* @icen.ai/ui — tokens + opt-in design materials */\n${LAYER_ORDER}\n${inLayer('icen.tokens', tokensBody)}\n${inLayer('icen.components', materialCss)}`;
+const bundledTokens = tokensOut.replaceAll("url('../fonts/", "url('./fonts/");
+await writeFile(join(DIST, 'tokens.css'), bundledTokens);
+// Self-hosted, licensed font. Preserve the URL both in tokens/*.css and the bundle.
+async function copyFontTree(source: string, target: string): Promise<void> {
+  await mkdir(target, {recursive:true});
+  for (const entry of await readdir(source,{withFileTypes:true})) {
+    const from=join(source,entry.name), to=join(target,entry.name);
+    if(entry.isDirectory()) await copyFontTree(from,to);
+    else await writeFile(to,await readFile(from));
+  }
+}
+await copyFontTree(join(SRC,'fonts'),join(DIST,'fonts'));
 
 // 1b. token extras：按需引入的独立 token 层（如 retro-effects.css）
 for (const f of TOKEN_EXTRAS) {
@@ -64,7 +80,7 @@ const uiOut = `/* @icen.ai/ui — 全量（tokens + base + components） */\n${L
   + inLayer('icen.tokens', tokensBody)
   + inLayer('icen.base', `\n/* ── base.css ── */\n${base}\n`)
   + inLayer('icen.components', compBody);
-await writeFile(join(DIST, 'ui.css'), uiOut);
+await writeFile(join(DIST, 'ui.css'), uiOut.replaceAll("url('../fonts/", "url('./fonts/"));
 
 // 3b. kit 一行入口：dist/components/<slug>.mjs = import css + re-export behavior（有的话）
 //     消费侧 `import '@icen.ai/ui/kit/<slug>'` 即可，无需知道内部 CSS 合并文件名。

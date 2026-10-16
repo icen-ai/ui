@@ -14,6 +14,8 @@ import {
   setStyle,
   setTheme,
   toggleDark,
+  PRIMITIVES,
+  setPrimitive,
 } from '../../src/behaviors/theme';
 import { onIcen } from '../../src/behaviors/events';
 
@@ -33,9 +35,9 @@ describe('initTheme / setTheme / toggleDark（data 属性写入）', () => {
     const events: unknown[] = [];
     onIcen('icen:theme-change', (e) => events.push(e.detail));
     const t = initTheme(); /* 本文件首个应用调用：lastApplied 为 null → 不派发 */
-    expect(t.preset).toBe('clay');
-    expect(html().getAttribute('data-icen-preset')).toBe('clay');
-    expect(html().getAttribute('data-icen-style')).toBe('modern');
+    expect(t.preset).toBe('benzhen');
+    expect(html().getAttribute('data-icen-preset')).toBe('benzhen');
+    expect(html().getAttribute('data-icen-style')).toBe('benzhen');
     expect(html().hasAttribute('data-icen-theme')).toBe(false); /* 亮色 = 摘除属性 */
     expect(events).toHaveLength(0);
   });
@@ -48,14 +50,14 @@ describe('initTheme / setTheme / toggleDark（data 属性写入）', () => {
     setTheme({ dark: true });
     expect(html().getAttribute('data-icen-theme')).toBe('dark');
     expect(events).toHaveLength(1);
-    expect(events[0]).toEqual({ preset: 'clay', dark: true, style: 'modern' });
+    expect(events[0]).toEqual({ preset: 'benzhen', dark: true, style: 'benzhen' });
 
     setTheme({ dark: true }); /* 状态未变：不派发 */
     expect(events).toHaveLength(1);
 
     setTheme({ preset: 'piano', style: 'retro' });
     expect(html().getAttribute('data-icen-preset')).toBe('piano');
-    expect(html().getAttribute('data-icen-style')).toBe('retro');
+    expect(html().getAttribute('data-icen-style')).toBe('benzhen');
     expect(events).toHaveLength(2);
 
     setTheme({ dark: false }); /* 回到亮色：属性摘除 + 派发 */
@@ -63,50 +65,65 @@ describe('initTheme / setTheme / toggleDark（data 属性写入）', () => {
     expect(events).toHaveLength(3);
   });
 
-  test('toggleDark 翻转 getTheme 的 dark；setStyle 非法值回退 modern', () => {
+  test('toggleDark 翻转 getTheme 的 dark；setStyle 非法值回退本真', () => {
     initTheme();
     const before = getTheme().dark;
     const t1 = toggleDark();
     expect(t1.dark).toBe(!before);
     expect(toggleDark().dark).toBe(before); /* 翻回 */
 
-    expect(setStyle('terminal').style).toBe('terminal');
-    expect(setStyle('不存在的风格').style).toBe('modern');
+    expect(setStyle('terminal').style).toBe('benzhen');
+    expect(setStyle('不存在的风格').style).toBe('benzhen');
   });
 
-  test('非法枚举回退：preset 不在白名单回退 clay，style 不在三档回退 modern', () => {
+  test('非法枚举回退：preset 不在白名单回退本真，style 不在有效原语回退 modern', () => {
     initTheme();
     const t = setTheme({ preset: 'Dark', style: 'fancy' });
-    expect(t.preset).toBe('clay');
-    expect(t.style).toBe('modern');
-    expect(html().getAttribute('data-icen-preset')).toBe('clay');
+    expect(t.preset).toBe('benzhen');
+    expect(t.style).toBe('benzhen');
+    expect(html().getAttribute('data-icen-preset')).toBe('benzhen');
   });
 
   test('setTheme 持久化到 localStorage；getTheme 读回（坏数据回退默认）', () => {
     initTheme();
-    setTheme({ preset: 'ink', dark: true, style: 'terminal' });
+    setTheme({ preset: 'ink', dark: true, style: 'benzhen' });
     const raw = window.localStorage.getItem(STORAGE_KEY);
     expect(raw).not.toBeNull();
-    expect(getTheme()).toEqual({ preset: 'ink', dark: true, style: 'terminal' });
+    expect(getTheme()).toEqual({ preset: 'ink', dark: true, style: 'benzhen' });
 
     window.localStorage.setItem(STORAGE_KEY, '{broken');
-    expect(getTheme().preset).toBe('clay'); /* 坏 JSON 回退默认 */
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ preset: 'dark', dark: true, style: 'modern' }));
-    expect(getTheme().preset).toBe('clay'); /* 保留名 dark 非法 → 整体回退默认 */
+    expect(getTheme().preset).toBe('benzhen'); /* 坏 JSON 回退默认 */
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ preset: 'dark', dark: true, style: 'benzhen' }));
+    expect(getTheme().preset).toBe('benzhen'); /* 保留名 dark 非法 → 整体回退默认 */
   });
 
   test('applyTheme 只应用不持久化（与 setTheme 的差异）', () => {
     window.localStorage.clear();
     initTheme();
-    applyTheme({ preset: 'art', dark: false, style: 'modern' });
+    applyTheme({ preset: 'art', dark: false, style: 'benzhen' });
     expect(html().getAttribute('data-icen-preset')).toBe('art');
     expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull(); /* 未写存储 */
   });
 });
 
 describe('registerThemePreset / listThemePresets（自建预设开放白名单）', () => {
+  test('本真 and 像素 are built in; removed stored styles migrate without losing palette or dark mode', () => {
+    expect(PRIMITIVES).toEqual(['benzhen','pixel']);
+    for (const style of ['modern','retro','terminal']) {
+      window.localStorage.setItem(STORAGE_KEY,JSON.stringify({preset:'piano',dark:true,style}));
+      expect(getTheme()).toEqual({preset:'piano',dark:true,style:'benzhen'});
+      expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY)!)).toEqual({preset:'piano',dark:true,style:'benzhen'});
+      expect(setPrimitive(style).style).toBe('benzhen');
+    }
+  });
+  test('removed retro palette migrates to 本真 and preserves dark mode and pixel primitive',()=>{
+    window.localStorage.setItem(STORAGE_KEY,JSON.stringify({preset:'retro',dark:true,style:'pixel'}));
+    expect(getTheme()).toEqual({preset:'benzhen',dark:true,style:'pixel'});
+    expect(registerThemePreset('retro')).toBe(false);
+    expect(setTheme({preset:'retro'}).preset).toBe('benzhen');
+  });
   test('内置 6 套恒在；合法自建名注册后进入枚举（顺序稳定，内置在前）', () => {
-    expect(PRESETS).toEqual(['clay', 'piano', 'art', 'vangogh', 'ink', 'retro']);
+    expect(PRESETS).toEqual(['benzhen', 'clay', 'piano', 'art', 'vangogh', 'ink']);
     expect(registerThemePreset('ocean')).toBe(true);
     expect(listThemePresets()).toEqual([...PRESETS, 'ocean']);
   });

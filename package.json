@@ -18,7 +18,6 @@
     "./tokens/dtcg.json": "./dist/tokens/dtcg.json",
     "./ui.css": "./dist/ui.css",
     "./base.css": "./dist/base.css",
-    "./retro-effects.css": "./dist/retro-effects.css",
     "./tokens/*": "./dist/tokens/*",
     "./components/*": "./dist/components/*",
     "./registry.json": "./dist/registry.json"
@@ -63,7 +62,8 @@
     "pretest:e2e": "cd site && bun run build",
     "test": "bun test",
     "test:e2e": "playwright test",
-    "verify": "bunx tsc --noEmit && bun run guard && bun test && bun run build"
+    "verify": "bunx tsc --noEmit && bun run guard && bun test && bun run build",
+    "colors": "bun scripts/theme-colors.mjs"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.14.5",

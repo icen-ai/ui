@@ -1,0 +1,187 @@
+---
+import '../../../src/tokens/colors.css';
+import '../../../src/tokens/style-profiles.css';
+import '../../../src/tokens/typography.css';
+import '../../../src/base.css';
+import '../../../src/tokens/design.css';
+import '../../../src/tokens/pixel.css';
+import '../../../src/components/btn.css';
+import '../../../src/components/input.css';
+import '../../../src/components/segmented.css';
+import '../../../src/components/switch.css';
+import '../../../src/components/menu.css';
+import '../../../src/components/modal.css';
+import '../../../src/components/pill.css';
+import '../../../src/components/material.css';
+---
+<!doctype html>
+<html lang="zh-CN" data-icen-preset="benzhen">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="本真 · ICEN UI 原语体系。瓷白内容面、轻盈操作层，以及可以成为你品牌的设计规则。" />
+    <title>本真 · ICEN UI 原语工作室</title>
+  </head>
+  <body>
+    <a class="icen-skip-link" href="#studio-content">跳到内容</a>
+    <header class="studio-header" data-icen-material="chrome">
+      <a href="/primitives/" class="studio-wordmark">icen<span> / 原语工作室</span></a>
+      <div class="studio-header-actions"><label class="studio-muted">原语 <select id="primitive-control" aria-label="原语"><option value="benzhen">本真</option><option value="pixel">像素</option></select></label><button class="icen-btn icen-btn-ghost" id="theme-toggle" aria-pressed="false">深色模式</button></div>
+    </header>
+    <main id="studio-content" class="studio-layout">
+      <aside class="studio-inspector" aria-label="设计原语设置">
+        <p class="studio-eyebrow">ICEN DESIGN PRIMITIVES</p>
+        <h1>本真<span class="studio-period">。</span></h1>
+        <p class="studio-intro">让内容清楚，<br />让操作轻盈。</p>
+        <p class="studio-description">瓷白、柔光与克制的冷蓝色。把材质、几何和阅读节奏，收进一套可以属于你的规则。</p>
+        <div class="studio-controls">
+          <label>品牌强调色<input id="accent-control" type="color" value="#0062cc" /><span id="accent-value">#0062cc</span></label>
+          <label for="radius-control">控件圆角 <output id="radius-value">10 px</output></label>
+          <input id="radius-control" type="range" min="4" max="20" value="10" />
+          <label for="glass-control">操作层透光 <output id="glass-value">18%</output></label>
+          <input id="glass-control" type="range" min="0" max="30" value="18" />
+          <label for="density-control">布局密度</label>
+          <select id="density-control"><option value="normal">标准 · 从容清晰</option><option value="compact">紧凑 · 更多信息</option><option value="comfortable">宽松 · 更多留白</option></select>
+          <label class="studio-checkbox"><input id="opaque-control" type="checkbox" />减少透明效果</label>
+          <button class="icen-btn" id="reset-design">恢复本真</button>
+        </div>
+        <p class="studio-note">调节会同时作用于页面、菜单与弹窗。<br />小字号保持清晰，密度只改变节奏。</p>
+        <a class="studio-doc-link" href="#authoring">创建自己的原语方案 ↗</a>
+      </aside>
+      <div class="studio-stage">
+        <div class="studio-stage-heading"><div><p class="studio-eyebrow">在真实界面中感受</p><h2>安静，也有分寸。</h2></div><span class="studio-version">本真 / 预览</span></div>
+        <div class="studio-materials" aria-label="三种材料">
+          <div data-icen-material="content"><span class="studio-sample-symbol">Aa</span><strong>内容</strong><span>不透明，让阅读稳定</span></div>
+          <div class="studio-material-backdrop"><div data-icen-material="chrome"><span class="studio-sample-symbol">⌘</span><strong>操作</strong><span>透光，让层次轻盈</span></div></div>
+          <div class="studio-material-backdrop studio-material-offset"><div data-icen-material="floating"><span class="studio-sample-symbol">⋯</span><strong>浮层</strong><span>柔影，让距离可见</span></div></div>
+        </div>
+        <section class="studio-workbench" data-icen-material="content" aria-label="组件场景">
+          <div class="studio-workbench-nav"><div class="icen-segmented" role="tablist" aria-label="示例场景">
+            <button class="icen-segmented-item is-active" id="tab-settings" role="tab" aria-selected="true" aria-controls="scene-settings" data-scene="settings">账户设置</button>
+            <button class="icen-segmented-item" id="tab-workspace" role="tab" aria-selected="false" aria-controls="scene-workspace" tabindex="-1" data-scene="workspace">知识工作台</button>
+            <button class="icen-segmented-item" id="tab-chat" role="tab" aria-selected="false" aria-controls="scene-chat" tabindex="-1" data-scene="chat">AI 对话</button>
+          </div><button class="icen-btn icen-btn-ghost" id="menu-trigger" aria-haspopup="menu" aria-expanded="false">更多操作 ···</button></div>
+          <div id="scene-settings" role="tabpanel" aria-labelledby="tab-settings" class="studio-scene">
+            <div class="studio-section-title"><div><h3>个人资料</h3><p>你的名字，会出现在协作与分享中。</p></div><div class="studio-avatar" aria-hidden="true">林</div></div>
+            <form id="profile-form">
+              <div class="studio-form-grid"><label>显示名称<span class="icen-input-wrap"><input class="icen-input" name="displayName" value="林知白" required /></span></label><label>电子邮箱<span class="icen-input-wrap"><input class="icen-input" type="email" name="email" value="zhibai@example.com" required /></span></label></div>
+              <div class="studio-setting-row"><div><strong>产品动态</strong><p>只在有值得告诉你的变化时发送邮件。</p></div><button type="button" class="icen-switch" role="switch" aria-checked="true" aria-label="接收产品动态"><span class="icen-switch-thumb"></span></button></div>
+              <div class="studio-form-actions"><p id="save-status" role="status">资料仅用于此预览。</p><button class="icen-btn icen-btn-primary" type="submit">保存更改</button></div>
+            </form>
+          </div>
+          <div id="scene-workspace" role="tabpanel" aria-labelledby="tab-workspace" class="studio-scene" hidden>
+            <div class="studio-section-title"><div><h3>团队知识库</h3><p>最近更新的资料，随时可以接着读。</p></div><button class="icen-btn" data-icen-modal-open="new-note">新建笔记</button></div>
+            <div class="studio-search icen-input-wrap"><input class="icen-input" id="knowledge-search" type="search" placeholder="搜索资料" aria-label="搜索资料" /></div>
+            <table class="studio-table icen-table"><thead><tr><th>资料</th><th>更新日期</th><th>状态</th></tr></thead><tbody>
+              <tr><td>产品设计原则<span>设计规范 · 12 页</span></td><td>10 月 16 日</td><td><span class="icen-pill icen-pill--success">已同步</span></td></tr>
+              <tr><td>品牌语言与写作<span>内容指南 · 8 页</span></td><td>10 月 15 日</td><td><span class="icen-pill icen-pill--success">已同步</span></td></tr>
+              <tr><td>秋季产品访谈<span>用户研究 · 24 页</span></td><td>10 月 12 日</td><td><span class="icen-pill">草稿</span></td></tr>
+            </tbody></table><p id="search-status" class="studio-muted" role="status"></p>
+          </div>
+          <div id="scene-chat" role="tabpanel" aria-labelledby="tab-chat" class="studio-scene" hidden>
+            <div class="studio-section-title"><div><h3>一起，把想法变清楚。</h3><p>稳定的阅读，轻巧的工具反馈。</p></div><span class="studio-muted">新的对话</span></div>
+            <div class="studio-conversation" aria-live="polite"><p class="studio-message-user">好的界面，应该带来什么感受？</p><div><span class="studio-assistant-label">icen</span><p>你知道自己在哪里，也知道下一步可以做什么。<br />文字清楚，操作及时，界面给思考留下空间。</p><details><summary>已参考设计原则 · 2 条</summary><p>内容保持稳定；反馈紧随操作。</p></details></div></div>
+            <form id="chat-form" class="studio-composer"><label for="chat-input" class="icen-sr-only">继续对话</label><input id="chat-input" placeholder="从一个想法开始…" required /><button class="icen-btn icen-btn-primary" type="submit">发送</button></form>
+          </div>
+        </section>
+        <section class="studio-principles"><div><span>光</span><h3>柔和的边缘</h3><p>接触影交代落点，环境影交代高度。深色重新配光。</p></div><div><span>形</span><h3>有关系的几何</h3><p>相邻轮廓遵循同心关系；独立控件保留自己的形态。</p></div><div><span>字</span><h3>读起来更轻松</h3><p>系统字体，清晰中文。只有数据和代码使用等宽节奏。</p></div></section>
+        <section id="authoring" class="studio-authoring" data-icen-material="content"><div><p class="studio-eyebrow">属于你的设计</p><h2>一个名字，一组原语。</h2><p>以本真为起点，修改品牌色、几何与材质。共享配方会照顾现有组件。</p></div><pre><code id="design-export">&lt;html data-icen-preset="benzhen"&gt;
+
+/* 自己的 CSS，无需复制组件 */
+:root[data-icen-preset="my-brand"] &#123;
+  --icen-design-accent: #0062cc;
+  --icen-design-radius: 10px;
+&#125;</code></pre><button class="icen-btn" id="copy-design">复制当前配方</button><p id="copy-status" role="status"></p></section>
+        <footer class="studio-footer"><span>icen / 本真</span><span>精确，在每一处不经意。</span><a href="/primitives/">查看原语文档 ↗</a></footer>
+      </div>
+    </main>
+    <div class="icen-menu" id="studio-menu" role="menu" aria-label="更多操作" hidden><button class="icen-menu-item" role="menuitem" data-icen-modal-open="new-note">新建笔记</button><button class="icen-menu-item" role="menuitem" id="export-recipe">查看当前配方</button></div>
+    <div class="icen-modal-backdrop" data-icen-modal="new-note" hidden><section class="icen-modal" role="dialog" aria-modal="true" aria-labelledby="note-title"><div class="icen-modal-header"><h2 id="note-title" class="icen-modal-title">留下一点想法</h2><button class="icen-btn icen-btn-ghost" data-icen-modal-close aria-label="关闭">×</button></div><div class="icen-modal-body"><p>一个安静的空间，收好此刻的灵感。</p><label>笔记标题<span class="icen-input-wrap"><input class="icen-input" id="note-input" placeholder="例如：界面里的留白" /></span></label></div><div class="icen-modal-footer"><button class="icen-btn" data-icen-modal-close>取消</button><button class="icen-btn icen-btn-primary" id="save-note">保存笔记</button></div></section></div>
+    <script>
+      import { initModal, closeModal } from '../../../src/behaviors/modal';
+      import { initSwitch } from '../../../src/behaviors/controls';
+      import { createDesign, mountDesign, setDesign, prepareDesignChange } from '../../../src/behaviors/design';
+      import { openPopover, closePopover } from '../../../src/behaviors/popover';
+      initModal();
+      initSwitch();
+      const root = document.documentElement;
+      document.getElementById('primitive-control')?.addEventListener('change',(event)=>{prepareDesignChange();root.setAttribute('data-icen-style',(event.target as HTMLSelectElement).value);updateExport();});
+      const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+      let customAccent = '';
+      let removeBrand = () => {};
+      const themeButton = $<HTMLButtonElement>('theme-toggle');
+      themeButton.addEventListener('click', () => {
+        prepareDesignChange();
+        const dark = root.getAttribute('data-icen-theme') !== 'dark';
+        root.toggleAttribute('data-icen-theme', dark);
+        if (dark) root.setAttribute('data-icen-theme','dark');
+        themeButton.setAttribute('aria-pressed', String(dark));
+        themeButton.textContent = dark ? '浅色模式' : '深色模式';
+        if (!root.style.getPropertyValue('--icen-design-glass-opacity')) { glass.value=dark?'12':'18'; $('glass-value').textContent=`${glass.value}%`; }
+        updateExport();
+      });
+      const radius = $<HTMLInputElement>('radius-control');
+      const glass = $<HTMLInputElement>('glass-control');
+      const accent = $<HTMLInputElement>('accent-control');
+      function updateExport() {
+        const density=root.getAttribute('data-icen-density');
+        const opaque=root.getAttribute('data-icen-transparency');
+        $('design-export').textContent = `<html data-icen-preset="${customAccent ? 'my-brand' : 'benzhen'}" data-icen-style="${root.getAttribute('data-icen-style') || 'benzhen'}"${root.hasAttribute('data-icen-theme') ? ' data-icen-theme="dark"' : ''}${density ? ` data-icen-density="${density}"` : ''}${opaque ? ' data-icen-transparency="reduced"' : ''}>\n\n/* Import @icen.ai/ui/tokens.css first. */\n${customAccent ? $('brand-style')?.textContent || '' : ''}\n:root[data-icen-preset] {\n  --icen-design-radius: ${radius.value}px;${root.style.getPropertyValue('--icen-design-glass-opacity') ? `\n  --icen-design-glass-opacity: ${100 - Number(glass.value)}%;` : ''}\n}`;
+      }
+      radius.addEventListener('input', () => { root.style.setProperty('--icen-design-radius', `${radius.value}px`); $('radius-value').textContent = `${radius.value} px`; updateExport(); });
+      glass.addEventListener('input', () => { root.style.setProperty('--icen-design-glass-opacity', `${100 - Number(glass.value)}%`); $('glass-value').textContent = `${glass.value}%`; updateExport(); });
+      accent.addEventListener('input', () => {
+        const value = accent.value;
+        // A picker accepts every color. Use the chosen hue with a readable ink
+        // tone for light mode and a light tone for dark; compiler verifies pairs.
+        const rgb = [1,3,5].map((i) => parseInt(value.slice(i,i+2),16));
+        const mix = (amount: number, target: number) => '#' + rgb.map((v) => Math.round(v*(1-amount)+target*amount).toString(16).padStart(2,'0')).join('');
+        let compiled;
+        for (let step = 0; step <= 10; step++) {
+          try {
+            compiled = createDesign({ name:'my-brand', light:{canvas:'#f5f6f8',surface:'#ffffff',ink:'#202124',muted:'#616671',accent:mix(step/10,0),onAccent:'#ffffff'},dark:{canvas:'#15171b',surface:'#25282e',ink:'#f2f4f7',muted:'#aeb5c2',accent:mix(Math.max(.5,step/10),255),onAccent:'#10223c'} }); break;
+          } catch { /* Increase contrast, preserving the chosen hue family. */ }
+        }
+        if (!compiled) return;
+        removeBrand(); removeBrand = mountDesign(compiled); setDesign(compiled.name);
+        customAccent = value; $('accent-value').textContent = value;
+        const style = document.head.lastElementChild; if (style) style.id = 'brand-style';
+        updateExport();
+      });
+      $('density-control').addEventListener('change', (event) => {root.setAttribute('data-icen-density',(event.target as HTMLSelectElement).value);updateExport();});
+      $('opaque-control').addEventListener('change', (event) => { if ((event.target as HTMLInputElement).checked) root.setAttribute('data-icen-transparency','reduced'); else root.removeAttribute('data-icen-transparency'); updateExport(); });
+      $('reset-design').addEventListener('click', () => { removeBrand(); customAccent=''; setDesign('benzhen'); root.removeAttribute('style'); root.removeAttribute('data-icen-density'); root.removeAttribute('data-icen-transparency'); radius.value='10'; glass.value=root.hasAttribute('data-icen-theme')?'12':'18'; accent.value='#0062cc'; $('radius-value').textContent='10 px'; $('glass-value').textContent=`${glass.value}%`; $('accent-value').textContent='#0062cc'; $<HTMLSelectElement>('density-control').value='normal'; $<HTMLInputElement>('opaque-control').checked=false; updateExport(); });
+      const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-scene]'));
+      function selectTab(tab: HTMLButtonElement) { tabs.forEach((button) => { const active=button===tab; button.setAttribute('aria-selected',String(active)); button.classList.toggle('is-active',active); button.tabIndex=active ? 0 : -1; $(`scene-${button.dataset.scene}`).hidden=!active; }); }
+      tabs.forEach((tab,index) => { tab.addEventListener('click',()=>selectTab(tab)); tab.addEventListener('keydown',(event)=> { const direction=root.dir==='rtl' ? -1 : 1; let next=index; if(event.key==='ArrowRight') next=(index+direction+tabs.length)%tabs.length; else if(event.key==='ArrowLeft') next=(index-direction+tabs.length)%tabs.length; else if(event.key==='Home') next=0; else if(event.key==='End') next=tabs.length-1; else return; event.preventDefault(); selectTab(tabs[next]); tabs[next].focus(); }); });
+      $('profile-form').addEventListener('submit',(event)=>{ event.preventDefault(); $('save-status').textContent='已保存到本次预览。'; });
+      $('knowledge-search').addEventListener('input',(event)=>{ const query=(event.target as HTMLInputElement).value.trim(); let count=0; document.querySelectorAll<HTMLTableRowElement>('.studio-table tbody tr').forEach((row)=>{row.hidden=!(row.textContent||'').includes(query); if(!row.hidden)count++;}); $('search-status').textContent=`${count} 份资料`; });
+      const menuTrigger = $<HTMLButtonElement>('menu-trigger');
+      const menu = $('studio-menu');
+      menuTrigger.addEventListener('click',()=> { if (!menu.hidden) { closePopover(menu); return; } openPopover(menu,{anchor:menuTrigger,side:'bottom',align:'end',onClose:()=>{ menuTrigger.setAttribute('aria-expanded','false'); if(menu.contains(document.activeElement))menuTrigger.focus(); }}); menuTrigger.setAttribute('aria-expanded','true'); menu.querySelector<HTMLButtonElement>('button')?.focus(); });
+      menu.addEventListener('click',()=>closePopover(menu));
+      menu.addEventListener('keydown',(event)=>{const items=Array.from(menu.querySelectorAll<HTMLButtonElement>('button'));const index=items.indexOf(document.activeElement as HTMLButtonElement);if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();items[(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length].focus();}if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closePopover(menu);menuTrigger.focus();}if(event.key==='Tab')closePopover(menu);});
+      $('export-recipe').addEventListener('click',()=>{updateExport(); $('authoring').scrollIntoView({behavior:'smooth'});});
+      $('save-note').addEventListener('click',()=>{const title=$<HTMLInputElement>('note-input').value.trim(); if(!title){$<HTMLInputElement>('note-input').focus();return;} const row=document.createElement('tr'); [title,'刚刚','草稿'].forEach((text)=>{const cell=document.createElement('td');cell.textContent=text;row.append(cell);}); document.querySelector('.studio-table tbody')?.prepend(row);closeModal('new-note'); selectTab(tabs[1]);});
+      $('chat-form').addEventListener('submit',(event)=>{event.preventDefault();const input=$<HTMLInputElement>('chat-input');if(!input.value.trim())return;const message=document.createElement('p');message.className='studio-message-user';message.textContent=input.value;document.querySelector('.studio-conversation')?.append(message);const reply=document.createElement('p');reply.textContent='已记下这个想法。这是本地交互预览，尚未接入 AI 服务。';document.querySelector('.studio-conversation')?.append(reply);input.value='';});
+      $('copy-design').addEventListener('click',async()=>{updateExport();try{await navigator.clipboard.writeText($('design-export').textContent||'');$('copy-status').textContent='已复制当前配方。';}catch{$('copy-status').textContent='请选中上方配方手动复制。';}});
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  *{box-sizing:border-box} body{margin:0} button,input,select{font:inherit} button,a,input,select,summary{touch-action:manipulation} a{color:inherit;text-decoration:none} button{white-space:nowrap} [hidden]{display:none!important}
+  .studio-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 4vw;position:sticky;inset-block-start:0;z-index:var(--icen-z-chrome);border-radius:0!important;border-inline:0!important;border-block-start:0!important}
+  .studio-wordmark{font-size:24px;font-weight:650;letter-spacing:-1px}.studio-wordmark span{font-size:13px;color:var(--icen-token-text-muted);font-weight:400;letter-spacing:0;margin-inline-start:12px}.studio-header-actions{display:flex;align-items:center;gap:20px}.studio-muted{color:var(--icen-token-text-muted);font-size:13px}
+  .studio-layout{max-width:1440px;margin-inline:auto;padding:60px 4vw;display:grid;grid-template-columns:236px minmax(0,1fr);gap:64px}.studio-inspector{align-self:start;position:sticky;inset-block-start:112px}.studio-eyebrow{font-size:11px;letter-spacing:.1em;color:var(--icen-token-text-muted);font-weight:600;margin:0 0 16px}h1{font-size:58px;font-weight:550;letter-spacing:-3px!important;margin:0 0 20px}.studio-period{color:var(--icen-token-accent)}.studio-intro{font-size:23px;line-height:1.6;margin:0 0 16px;letter-spacing:-.02em}.studio-description{font-size:13px;line-height:1.9;color:var(--icen-token-text-muted);margin:0 0 32px;max-width:24em}
+  .studio-controls{border-block-start:1px solid var(--icen-token-line-soft);padding-block-start:24px;display:grid;gap:12px;font-size:13px}.studio-controls label{display:flex;align-items:center;gap:8px}.studio-controls output{margin-inline-start:auto;color:var(--icen-token-text-muted);font-size:12px;font-variant-numeric:tabular-nums}.studio-controls input[type=color]{inline-size:24px;block-size:24px;padding:0;border:0;background:none;margin-inline-start:auto}.studio-controls input[type=range]{inline-size:100%;accent-color:var(--icen-token-accent);margin:0 0 8px;min-block-size:24px}.studio-controls select{inline-size:100%;background:var(--icen-token-control);border:1px solid var(--icen-token-line);border-radius:var(--icen-radius-sm);color:var(--icen-token-text);padding:10px}.studio-controls .studio-checkbox{margin-block:8px}.studio-checkbox input{accent-color:var(--icen-token-accent)}.studio-note{font-size:11px;line-height:1.9;color:var(--icen-token-text-muted);margin-block:20px}.studio-doc-link{font-size:12px;color:var(--icen-token-accent-text)}
+  .studio-stage{min-inline-size:0}.studio-stage-heading{display:flex;align-items:center;justify-content:space-between;margin-block-end:30px}.studio-stage-heading h2{font-size:30px;font-weight:550;margin:0}.studio-version{font-size:12px;color:var(--icen-token-text-muted)}.studio-stage-heading .studio-eyebrow{margin-block-end:10px}
+  .studio-materials{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-block-end:32px}.studio-materials>div{min-inline-size:0}.studio-materials [data-icen-material]{display:flex;flex-direction:column;padding:22px;min-block-size:166px;gap:5px}.studio-sample-symbol{font-size:30px;font-weight:500;letter-spacing:-1px;margin-block-end:12px}.studio-materials strong{font-size:14px;font-weight:550}.studio-materials span:last-child{font-size:12px;color:var(--icen-token-text-muted)}.studio-material-backdrop{position:relative;padding-block-start:0;background:linear-gradient(125deg,var(--icen-token-bg-soft) 28%,var(--icen-token-accent-subtle) 29%,var(--icen-token-accent-subtle) 60%,var(--icen-token-bg-soft) 61%);border-radius:var(--icen-radius-lg)}.studio-material-offset{background:linear-gradient(60deg,var(--icen-token-bg-soft) 35%,var(--icen-token-info-muted) 36%,var(--icen-token-info-muted) 67%,var(--icen-token-bg-soft) 68%)}
+  .studio-workbench{overflow:visible;min-block-size:396px}.studio-workbench-nav{display:flex;align-items:center;justify-content:space-between;padding:var(--icen-density-space-lg);border-block-end:1px solid var(--icen-token-line-soft);gap:12px}.studio-scene{padding:var(--icen-density-space-2xl)}.studio-section-title{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-block-end:28px}.studio-section-title h3{font-size:21px;margin:0 0 8px;font-weight:550}.studio-section-title p,.studio-setting-row p{font-size:13px;color:var(--icen-token-text-muted);margin:0;line-height:1.7}.studio-avatar{display:grid;place-items:center;inline-size:48px;block-size:48px;background:var(--icen-token-accent-subtle);color:var(--icen-token-accent-text);border-radius:50%;font-size:19px}.studio-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--icen-density-space-xl)}.studio-form-grid label,.icen-modal-body label{display:grid;gap:var(--icen-density-space-sm);font-size:13px}.studio-setting-row{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-block:var(--icen-density-space-xl);padding-block:var(--icen-density-space-lg);border-block:1px solid var(--icen-token-line-soft)}.studio-setting-row strong{font-size:14px;font-weight:500;display:block;margin-block-end:4px}.studio-form-actions{display:flex;align-items:center;justify-content:space-between;gap:16px}.studio-form-actions p{font-size:12px;color:var(--icen-token-text-muted);margin:0}
+  .studio-search{max-inline-size:320px;margin-block-end:16px}.studio-table{inline-size:100%;border-collapse:collapse;font-size:13px}.studio-table th{text-align:start;color:var(--icen-token-text-muted);font-size:12px;font-weight:400;padding:8px 0}.studio-table td{padding:var(--icen-density-space-lg) 0;border-block-start:1px solid var(--icen-token-line-soft)}.studio-table td span:not(.icen-pill){display:block;font-size:12px;color:var(--icen-token-text-muted);margin-block-start:4px}.studio-table td:not(:first-child){white-space:nowrap}.studio-table th:first-child{inline-size:55%}
+  .studio-conversation{display:grid;gap:20px;font-size:14px;line-height:1.9;max-block-size:340px;overflow:auto}.studio-conversation p{margin:0}.studio-message-user{justify-self:end;padding:10px 16px;background:var(--icen-token-bg-soft);border-radius:var(--icen-radius-lg);max-inline-size:90%;overflow-wrap:anywhere}.studio-assistant-label{font-weight:650;font-size:14px;color:var(--icen-token-accent-text)}.studio-conversation details{margin-block-start:16px;color:var(--icen-token-text-muted);font-size:12px}.studio-conversation summary{cursor:pointer}.studio-composer{display:flex;gap:12px;margin-block-start:28px;padding:8px;background:var(--icen-token-control);border:1px solid var(--icen-token-line);border-radius:var(--icen-radius-lg)}.studio-composer input{min-inline-size:0;flex:1;padding-inline:8px;background:none;color:var(--icen-token-text);border:0;outline-offset:4px}
+  .studio-principles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-block:40px 48px}.studio-principles>div>span{font-size:12px;color:var(--icen-token-accent-text)}.studio-principles h3{font-size:14px;font-weight:550;margin:10px 0}.studio-principles p{font-size:12px;line-height:1.9;color:var(--icen-token-text-muted);margin:0}.studio-authoring{padding:32px}.studio-authoring h2{font-size:24px;font-weight:550;margin:0 0 12px}.studio-authoring p{font-size:13px;color:var(--icen-token-text-muted)}.studio-authoring pre{white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--icen-font-mono);background:var(--icen-token-bg-soft);padding:20px;border-radius:var(--icen-radius-md);font-size:12px;line-height:1.9;margin-block:24px}.studio-footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;padding-block-start:28px;font-size:11px;color:var(--icen-token-text-muted)}#studio-menu{min-inline-size:190px}input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--icen-token-accent);outline-offset:3px}#accent-value{font-size:11px;font-family:var(--icen-font-mono)}
+  @media(max-width:1100px){.studio-layout{gap:32px;grid-template-columns:210px minmax(0,1fr);padding-block:40px}.studio-materials [data-icen-material]{padding:16px}.studio-workbench-nav{flex-wrap:wrap}.studio-version{display:none}.studio-scene{padding:24px}}
+  @media(max-width:760px){.studio-layout{display:block;padding:28px 20px}.studio-inspector{position:static;margin-block-end:36px}.studio-description{max-width:42em}.studio-controls{grid-template-columns:1fr 1fr;column-gap:20px}.studio-controls>input[type=range]{grid-column:1/-1}.studio-controls>label[for=radius-control],.studio-controls>label[for=glass-control]{grid-column:1/-1}.studio-note{display:none}.studio-doc-link{display:inline-block;margin-block-start:20px}.studio-stage-heading h2{font-size:26px}.studio-header{padding:12px 20px}.studio-header-actions>.studio-muted{display:none}.studio-wordmark span{font-size:11px}.studio-form-grid{grid-template-columns:1fr;gap:16px}.studio-materials{gap:8px}.studio-materials [data-icen-material]{padding:14px 10px;min-block-size:150px}.studio-materials span:last-child{font-size:11px}.studio-scene{padding:20px}.studio-principles{gap:16px}.studio-authoring{padding:22px}.studio-table{font-size:12px}.studio-table td:nth-child(2),.studio-table th:nth-child(2){display:none}.studio-section-title h3{font-size:19px}.studio-form-actions{align-items:start}.studio-form-actions p{max-inline-size:10em}}
+  @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>

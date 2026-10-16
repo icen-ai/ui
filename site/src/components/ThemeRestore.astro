@@ -1,20 +1,22 @@
 ---
-// 防主题闪烁：首帧渲染前同步恢复 localStorage 主题 data 属性（Base / Docs 共用；契约同 src/behaviors/theme.ts）。
+// Restore palette + primitive before first paint; migrate removed style profiles.
 ---
 <script is:inline>
-  // 存储契约与 src/behaviors/theme.ts 一致：'icen.ui.theme' = {"preset","dark","style"}。
   (function () {
-    try {
-      var raw = localStorage.getItem('icen.ui.theme');
-      var t = raw ? JSON.parse(raw) : null;
-      var root = document.documentElement;
-      if (t && typeof t === 'object') {
-        if (typeof t.preset === 'string') root.setAttribute('data-icen-preset', t.preset);
-        if (t.dark === true) root.setAttribute('data-icen-theme', 'dark');
-        if (typeof t.style === 'string') root.setAttribute('data-icen-style', t.style);
-      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        root.setAttribute('data-icen-theme', 'dark'); // 无持久化时跟随系统明暗（同 theme.ts 的默认行为）
-      }
-    } catch (e) { /* 坏数据时保持默认，initTheme 会兜底 */ }
+    var root = document.documentElement;
+    var t = null;
+    try { t = JSON.parse(localStorage.getItem('icen.ui.theme') || 'null'); } catch (_) {}
+    var valid = t && typeof t === 'object' && typeof t.preset === 'string' && /^[a-z][a-z0-9-]{1,20}$/.test(t.preset) && t.preset !== 'dark' && !t.preset.startsWith('style-') && typeof t.dark === 'boolean';
+    var preset = valid && t.preset !== 'retro' ? t.preset : 'benzhen';
+    var dark = valid ? t.dark : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    root.setAttribute('data-icen-preset', preset);
+    var primitive = valid && t.style === 'pixel' ? 'pixel' : 'benzhen';
+    root.setAttribute('data-icen-style', primitive);
+    root.removeAttribute('data-icen-design');
+    if (dark) root.setAttribute('data-icen-theme','dark');
+    else root.removeAttribute('data-icen-theme');
+    if (valid && (t.style !== primitive || t.preset !== preset)) {
+      try { localStorage.setItem('icen.ui.theme',JSON.stringify({preset:preset,dark:dark,style:primitive})); } catch (_) {}
+    }
   })();
 </script>

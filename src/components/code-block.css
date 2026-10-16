@@ -1,0 +1,392 @@
+/*
+ * @icen.ai/ui — Component: code-block（多行代码块，与 code-inline 成对；behaviors/code-block 配套）
+ *
+ * 完整 DOM 契约（renderCodeBlock 构建或手写等效标记）：
+ *   <figure class="icen-code-block [icen-code-block--nonum] [icen-code-block--wrap] [icen-code-block--diff] [is-folded]">
+ *     <figcaption class="icen-code-block-head">
+ *       <span class="icen-code-block-id">
+ *         <span class="icen-code-block-icon">svg（文件/终端/分支图标）</span>
+ *         <span class="icen-code-block-file">src/app.ts</span>   <!-- 或 .icen-code-block-lang（语言徽标，二选一） -->
+ *         <span class="icen-code-block-title">说明标题</span>    <!-- 可选 -->
+ *       </span>
+ *       <span class="icen-code-block-actions">
+ *         <button type="button" class="icen-code-block-btn [is-on]" data-icen-code-block-num
+ *                 aria-pressed="true|false" data-icen-tooltip="隐藏行号" data-icen-tooltip-side="bottom">svg</button>
+ *         <button type="button" class="icen-code-block-btn [is-on]" data-icen-code-block-wrap
+ *                 aria-pressed="true|false" data-icen-tooltip="自动换行" data-icen-tooltip-side="bottom">svg</button>
+ *         <button type="button" class="icen-code-block-btn" data-icen-code-block-fold
+ *                 aria-expanded="true|false" data-icen-tooltip="折叠代码" data-icen-tooltip-side="bottom">svg</button>  <!-- 仅可折叠块 -->
+ *         <button type="button" class="icen-code-block-btn" data-icen-code-block-copy
+ *                 data-icen-tooltip="复制" data-icen-tooltip-side="bottom">
+ *           <span class="icen-code-block-btn-icon">svg 复制</span>
+ *           <span class="icen-code-block-btn-check">svg 对勾</span>   <!-- .is-done 时 CSS 切换 -->
+ *         </button>
+ *       </span>
+ *     </figcaption>
+ *     <pre [data-icen-dual-theme]><code>
+ *       <span class="icen-code-block-line [icen-code-block-line--hl|--add|--del|--ctx|--meta]">…</span>…
+ *     </code></pre>
+ *     <button type="button" class="icen-code-block-tail">                       <!-- 仅可折叠块 -->
+ *       <span class="icen-code-block-count">共 42 行</span>
+ *       <span class="icen-code-block-less">收起</span>
+ *       <span class="icen-code-block-tail-icon">svg chevron</span>
+ *     </button>
+ *   </figure>
+ *
+ * 要点：
+ *   - 行号 = CSS counter（.icen-code-block-line::before）；--nonum 渐隐 gutter；diff 模式
+ *     旧/新双计数（dl-o / dl-n，counter-set 由 renderCodeBlock 内联写入或手写等效）。
+ *   - 折叠：根加 .is-folded（pre max-height 264px + 底部渐隐 mask；点击 pre/tail/折叠钮均展开）。
+ *   - shiki 双主题：pre 加 data-icen-dual-theme（renderCodeBlock 注入 --shiki-dark 时自动打上），
+ *     暗色下 span 切 var(--shiki-dark)；pre 背景一律由容器接管（shiki 内联背景被覆写）。
+ *   - 外边距不设（文档流节奏归消费方）；代码面物理 LTR（direction: ltr，RTL 页面不镜像）。
+ */
+
+/* ══════════════ 容器 ══════════════ */
+
+.icen-code-block {
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-lg);
+  background: color-mix(in srgb, var(--icen-token-text) 5%, var(--icen-token-bg));
+  overflow: hidden;
+}
+
+.icen-code-block > pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: var(--icen-density-space-sm) 0;
+  background: transparent !important; /* guard:allow-important shiki 主题自带内联背景，容器统一接管 */
+  color: var(--icen-token-text);
+  font-family: var(--icen-font-mono);
+  font-size: var(--icen-density-font-size-md);
+  line-height: 1.5;
+  overflow-x: auto;
+  transition: max-height var(--icen-duration-slow) var(--icen-ease-out);
+  direction: ltr;
+  text-align: start;
+}
+
+.icen-code-block pre code {
+  display: block;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* ══════════════ 标题栏 ══════════════ */
+
+.icen-code-block-head {
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-md);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  border-bottom: 1px solid var(--icen-token-line-soft);
+  font-size: var(--icen-density-font-size-sm);
+  line-height: 1.4;
+  color: var(--icen-token-text-faint);
+}
+
+.icen-code-block-id {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--icen-density-space-xs);
+  min-width: 0;
+}
+
+.icen-code-block-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.icen-code-block-icon svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.icen-code-block-file,
+.icen-code-block-lang {
+  font-family: var(--icen-font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--icen-token-text);
+}
+
+.icen-code-block-lang {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.icen-code-block-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--icen-token-text-faint);
+}
+.icen-code-block-title::before {
+  content: '·';
+  margin-inline-end: var(--icen-density-space-xs);
+  color: var(--icen-token-line-strong);
+}
+
+.icen-code-block-actions {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* ══════════════ 工具钮 ══════════════ */
+
+.icen-code-block-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--icen-radius-xs);
+  color: var(--icen-token-text-faint);
+  cursor: pointer;
+  opacity: 0.45;
+  transition:
+    opacity var(--icen-duration-fast) var(--icen-ease-out),
+    color var(--icen-duration-fast) var(--icen-ease-out),
+    background-color var(--icen-duration-fast) var(--icen-ease-out);
+}
+.icen-code-block-btn svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.icen-code-block-head:hover .icen-code-block-btn,
+.icen-code-block-btn:focus-visible {
+  opacity: 1;
+}
+
+.icen-code-block-btn:hover {
+  color: var(--icen-token-accent);
+  background: color-mix(in srgb, var(--icen-token-text) 7%, transparent);
+}
+
+.icen-code-block-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.icen-code-block-btn.is-on {
+  color: var(--icen-token-accent);
+  opacity: 0.9;
+}
+
+.icen-code-block-btn-icon,
+.icen-code-block-btn-check {
+  display: inline-flex;
+}
+
+/* 复制钮图标切换：默认剪贴板，.is-done 后 1.5s 内显对勾（与 copy 组件同款原地反馈） */
+[data-icen-code-block-copy] .icen-code-block-btn-check {
+  display: none;
+}
+[data-icen-code-block-copy].is-done .icen-code-block-btn-check {
+  display: inline-flex;
+}
+[data-icen-code-block-copy].is-done .icen-code-block-btn-icon {
+  display: none;
+}
+
+/* 折叠钮 chevron：展开态朝上（收起指向），折叠态朝下（展开指向） */
+[data-icen-code-block-fold] .icen-code-block-btn-icon {
+  transition: transform var(--icen-duration-normal) var(--icen-ease-out);
+}
+.icen-code-block:not(.is-folded) [data-icen-code-block-fold] .icen-code-block-btn-icon {
+  transform: rotate(180deg);
+}
+
+/* ══════════════ 行与行号 ══════════════ */
+
+.icen-code-block .icen-code-block-line {
+  display: block;
+  padding-inline: var(--icen-density-space-lg);
+}
+
+.icen-code-block pre {
+  counter-reset: icen-code-block-line;
+}
+
+.icen-code-block .icen-code-block-line {
+  counter-increment: icen-code-block-line;
+}
+
+/* 行号 gutter 定宽（--cb-gutter 由 renderCodeBlock 按最大行号位数写入，缺省 2ch）：
+   定宽保证各行代码起点对齐——否则 1/2 位数行各占实际数字宽，关号后（opacity 只藏内容
+   不收宽度）与 ≥100 行（3 位撑破 min-width）都会错位。超宽数字向左溢出（吃 padding），
+   不压代码；手写标记的 100+ 行块请自设 --cb-gutter: 3ch。 */
+.icen-code-block .icen-code-block-line::before {
+  content: counter(icen-code-block-line);
+  display: inline-block;
+  width: var(--cb-gutter, 2ch);
+  margin-inline-end: var(--icen-density-space-md);
+  text-align: end;
+  white-space: nowrap;
+  color: var(--icen-token-text-faint);
+  user-select: none;
+  transition:
+    opacity var(--icen-duration-normal) var(--icen-ease-out),
+    width var(--icen-duration-normal) var(--icen-ease-out),
+    margin var(--icen-duration-normal) var(--icen-ease-out);
+}
+
+.icen-code-block--nonum .icen-code-block-line::before {
+  opacity: 0;
+  width: 0;
+  margin-inline-end: 0;
+}
+
+.icen-code-block--wrap pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 高亮行：accent 微底 + 行首 2px 指示条 */
+.icen-code-block .icen-code-block-line--hl {
+  background: color-mix(in srgb, var(--icen-token-accent) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--icen-token-accent);
+}
+
+/* ══════════════ 折叠 ══════════════ */
+
+.icen-code-block.is-folded > pre {
+  max-height: 264px;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 97%);
+  mask-image: linear-gradient(to bottom, #000 58%, transparent 97%);
+}
+
+.icen-code-block-tail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--icen-density-space-xs);
+  width: 100%;
+  padding: var(--icen-density-space-xs) 0 var(--icen-density-space-sm);
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--icen-token-line-soft);
+  font: inherit;
+  font-size: var(--icen-density-font-size-sm);
+  color: var(--icen-token-text-faint);
+  cursor: pointer;
+  transition: color var(--icen-duration-fast) var(--icen-ease-out);
+}
+
+.icen-code-block-tail:hover {
+  color: var(--icen-token-accent);
+}
+
+.icen-code-block-tail:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring);
+}
+
+.icen-code-block-less {
+  display: none;
+}
+
+.icen-code-block:not(.is-folded) > .icen-code-block-tail .icen-code-block-count {
+  display: none;
+}
+
+.icen-code-block:not(.is-folded) > .icen-code-block-tail .icen-code-block-less {
+  display: inline;
+}
+
+.icen-code-block-tail-icon {
+  display: inline-flex;
+  transition: transform var(--icen-duration-normal) var(--icen-ease-out);
+}
+.icen-code-block-tail-icon svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+.icen-code-block:not(.is-folded) > .icen-code-block-tail .icen-code-block-tail-icon {
+  transform: rotate(180deg);
+}
+
+/* ══════════════ diff：行级语义（旧号/新号双计数 + 红绿 tint） ══════════════ */
+
+.icen-code-block--diff pre {
+  counter-reset: icen-cb-dl-o 0 icen-cb-dl-n 0;
+}
+
+.icen-code-block--diff .icen-code-block-line {
+  counter-increment: none;
+}
+
+.icen-code-block--diff .icen-code-block-line--ctx,
+.icen-code-block--diff .icen-code-block-line--add {
+  counter-increment: icen-cb-dl-n;
+}
+
+.icen-code-block--diff .icen-code-block-line--del {
+  counter-increment: icen-cb-dl-o;
+}
+
+.icen-code-block--diff .icen-code-block-line--ctx::before,
+.icen-code-block--diff .icen-code-block-line--add::before {
+  content: counter(icen-cb-dl-n);
+}
+
+.icen-code-block--diff .icen-code-block-line--del::before {
+  content: counter(icen-cb-dl-o);
+}
+
+.icen-code-block--diff .icen-code-block-line--meta::before {
+  content: '';
+}
+
+.icen-code-block--diff .icen-code-block-line--meta {
+  color: var(--icen-token-text-faint);
+}
+
+.icen-code-block--diff .icen-code-block-line--add {
+  background: color-mix(in srgb, var(--icen-token-success) 9%, transparent);
+  box-shadow: inset 2px 0 0 var(--icen-token-success);
+}
+
+.icen-code-block--diff .icen-code-block-line--del {
+  background: color-mix(in srgb, var(--icen-token-error) 9%, transparent);
+  box-shadow: inset 2px 0 0 var(--icen-token-error);
+}
+
+/* ══════════════ shiki 高亮协同 ══════════════ */
+
+/* 双主题 shiki（themes: { light, dark } 产出 --shiki-dark 变量）：暗色下切暗色 token 色 */
+[data-icen-theme="dark"] .icen-code-block [data-icen-dual-theme] span {
+  /* guard:allow-important 覆写 shiki 逐 span 内联 color（内联样式仅 !important 可压） */
+  color: var(--shiki-dark) !important;
+}
+
+/* ══════════════ 动效守卫 ══════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-code-block > pre,
+  .icen-code-block-btn,
+  [data-icen-code-block-fold] .icen-code-block-btn-icon,
+  .icen-code-block .icen-code-block-line::before,
+  .icen-code-block-tail,
+  .icen-code-block-tail-icon {
+    transition: none;
+  }
+}

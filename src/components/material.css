@@ -1,0 +1,187 @@
+/* Material contract (default 本真 primitive; theme via data-icen-preset):
+ * <section data-icen-material="content|chrome|floating">arbitrary content</section>
+ * content = opaque reading; chrome = translucent navigation; floating = temporary
+ * operations. HTML primitives need no JS. Existing components consume the same
+ * recipes automatically. Force opaque via html[data-icen-transparency="reduced"].
+ * This file ships with tokens.css as well as ui.css; kit consumers need no extras.
+ */
+:root[data-icen-design-changing] *,
+:root[data-icen-design-changing] *::before,
+:root[data-icen-design-changing] *::after {
+  transition: none !important; /* guard:allow-important palette changes must not pass through unreadable intermediate colors */
+}
+:root body {
+  font-family: var(--icen-font-body);
+  font-variant-numeric: normal;
+  font-size: var(--icen-density-font-size-md);
+  line-height: var(--icen-line-height-body);
+  letter-spacing: var(--icen-letter-spacing-body);
+  background: var(--icen-token-canvas);
+  color: var(--icen-token-text);
+}
+:root :is(h1,h2,h3,h4,h5,h6) {
+  font-family: var(--icen-font-heading);
+  letter-spacing: var(--icen-letter-spacing-heading);
+  line-height: var(--icen-line-height-heading);
+  text-wrap: balance;
+}
+:root :is(button,input,textarea,select) { font-family: var(--icen-font-body); }
+:root [data-icen-material] {
+  background: var(--icen-token-surface);
+  color: var(--icen-token-text);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-lg);
+}
+:root :is([data-icen-material="content"],.icen-card) {
+  background: var(--icen-token-surface);
+  box-shadow: none;
+}
+/* Opaque fallback is the default. Enable transparency only with browser support. */
+:root :is([data-icen-material="chrome"],[data-icen-material="floating"],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
+  background: var(--icen-token-surface);
+  border-color: var(--icen-token-material-edge);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:root [data-icen-material="chrome"] { box-shadow: var(--icen-token-material-light); }
+:root .icen-nav[data-icen-scroll-reactive]:not(.is-scrolled) {
+  background: var(--icen-token-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root :is([data-icen-material="chrome"],[data-icen-material="floating"],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
+    background: var(--icen-token-surface-glass);
+    backdrop-filter: blur(var(--icen-design-glass-blur)) saturate(1.15);
+    -webkit-backdrop-filter: blur(var(--icen-design-glass-blur)) saturate(1.15);
+  }
+}
+:root .icen-nav { box-shadow: var(--icen-token-material-light); }
+:root .icen-btn {
+  --btn-border-hover: var(--icen-token-line);
+  gap: var(--icen-density-space-sm);
+  border-radius: var(--icen-radius-md);
+  letter-spacing: 0;
+}
+:root .icen-btn-primary { --btn-border-hover: var(--icen-token-accent-strong); }
+:root :is(.icen-btn-ghost,.icen-btn-link) { --btn-border-hover: transparent; }
+:root .icen-btn-link { --btn-fg: var(--icen-token-accent-text); }
+:root .icen-btn-primary:hover:not(:focus-visible) { box-shadow: none; }
+:root .icen-btn:active { transform: var(--icen-press-soft); }
+:root .icen-btn-danger:hover { color: var(--icen-token-error); background: var(--icen-token-error-muted); }
+:root .icen-segmented { padding: var(--icen-density-space-xs); gap: var(--icen-density-space-xs); }
+:root .icen-segmented-item { border-radius: max(0px, calc(var(--icen-radius-md) - var(--icen-density-space-xs) - 1px)); }
+:root :is(.icen-segmented-item.is-active,.icen-segmented-item[aria-checked="true"],.icen-toggle-group-btn.is-active) {
+  background: var(--icen-token-surface);
+  color: var(--icen-token-text);
+  box-shadow: var(--icen-token-shadow-card);
+}
+:root :is(.icen-menu,.icen-popover,.icen-select-panel) { border-radius: var(--icen-radius-lg); }
+:root .icen-modal {
+  border-radius: var(--icen-radius-xl);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-overlay);
+}
+:root :is(.icen-modal-backdrop,.icen-command-palette-backdrop) {
+  background: var(--icen-token-scrim);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:root .icen-card--elevated { box-shadow: var(--icen-token-shadow-card); }
+:root .icen-card--interactive:hover { transform: none; border-color: var(--icen-token-line); }
+:root .icen-card--interactive:focus-within { box-shadow: var(--icen-ring); }
+:root .icen-switch-thumb { background: var(--icen-token-text-muted); }
+:root .icen-switch[aria-checked="true"] .icen-switch-thumb { background: var(--icen-token-on-accent); }
+:root .icen-input-wrap--sm { padding-inline: var(--icen-density-space-sm); }
+/* Data readability is explicit, never applied to every numeral in prose. */
+:root :is(.icen-numeric,.icen-table,.icen-datatable,.icen-stat-num) { font-variant-numeric: lining-nums tabular-nums; }
+/* Any translucent material has an opaque alternative, including native controls. */
+:root[data-icen-transparency="reduced"] :is([data-icen-material],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
+  background: var(--icen-token-surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root :is([data-icen-material],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
+    background: var(--icen-token-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root *, :root *::before, :root *::after {
+    animation-duration: .01ms !important; /* guard:allow-important accessibility override must beat component animation */
+    transition-duration: .01ms !important; /* guard:allow-important accessibility override must beat component transition */
+    scroll-behavior: auto !important; /* guard:allow-important reduced motion includes scrolling */
+  }
+}
+@media (pointer: coarse) {
+  :root :is(.icen-btn,.icen-segmented-item,.icen-menu-item,.icen-modal-close) { min-block-size: var(--icen-density-input-height-md); }
+  /* Preserve the switch's visual geometry, expand its pointer target instead. */
+  :root .icen-switch::before {
+    content: '';
+    position: absolute;
+    inset-block: calc((100% - 44px) / 2);
+    inset-inline: 0;
+  }
+}
+@media (forced-colors: active) {
+  :root :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  :root :is([data-icen-material],.icen-menu,.icen-popover,.icen-card--glass) {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  :root .icen-segmented-item[aria-checked="true"] { outline: 2px solid Highlight; }
+}
+
+/* Pixel adapters: inherit palette, replace surface physics. */
+:root[data-icen-style="pixel"] :is([data-icen-material],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
+  background: var(--icen-token-surface);
+  border-color: var(--icen-token-line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:root[data-icen-style="pixel"] :is(.icen-btn,.icen-input-wrap,.icen-textarea-wrap,.icen-select-trigger,.icen-segmented,[data-icen-material],.icen-card,.icen-modal) {
+  border-width: 2px;
+  border-radius: var(--icen-radius-md);
+}
+:root[data-icen-style="pixel"] :is(.icen-btn,.icen-input-wrap,.icen-select-trigger) { box-shadow: var(--icen-token-shadow-card); }
+:root[data-icen-style="pixel"] :is(.icen-btn-ghost,.icen-btn-link) { box-shadow: none; }
+:root[data-icen-style="pixel"] .icen-btn:active:not(:disabled):not([aria-disabled="true"]) { box-shadow: none; }
+:root[data-icen-style="pixel"] .icen-btn:focus-visible { box-shadow: var(--icen-ring); }
+:root[data-icen-style="pixel"] .icen-input-wrap:focus-within { box-shadow: var(--icen-control-focus-shadow); }
+:root[data-icen-style="pixel"] :is(h1,h2,h3,h4,h5,h6) { font-weight: 400; letter-spacing: 0; }
+:root[data-icen-style="pixel"] h1 { font-size: 48px; }
+:root[data-icen-style="pixel"] :is(h2,h3) { font-size: 24px; }
+:root[data-icen-style="pixel"] :is(button,input,select,textarea) { font-weight: 400; }
+:root[data-icen-style="pixel"] .icen-segmented-item { border-radius: var(--icen-radius-md); }
+:root[data-icen-style="pixel"] :is(.icen-switch,.icen-switch-thumb) { border-radius: var(--icen-radius-md); }
+:root[data-icen-style="pixel"] :is(.icen-avatar,.icen-stat-icon) { border-radius: var(--icen-radius-md); }
+/* Halftone is reserved for selected/structural surfaces, never under long text. */
+:root[data-icen-style="pixel"] .icen-segmented {
+  background-color: var(--icen-token-bg-soft);
+  background-image: repeating-linear-gradient(135deg,transparent 0 2px,var(--icen-token-line-soft) 2px 3px,transparent 3px 5px);
+}
+:root[data-icen-style="pixel"] :is(.icen-toast,.icen-notification,.icen-tooltip,.icen-date-picker-panel,.icen-menu,.icen-popover) {
+  border: 2px solid var(--icen-token-line-strong);
+  box-shadow: var(--icen-token-shadow-elevated);
+}
+:root[data-icen-style="pixel"] :is(.icen-menu-item,.icen-select-option) { border-radius: var(--icen-radius-md); }
+:root[data-icen-style="pixel"] :is(.icen-menu-item,.icen-select-option).is-focused {
+  outline: 2px solid var(--icen-token-accent);
+  outline-offset: -2px;
+}
+:root[data-icen-style="pixel"] :is(.icen-progress-track,.icen-slider-track) {
+  border: 1px solid var(--icen-token-line-strong);
+  border-radius: var(--icen-radius-md);
+  background-image: repeating-linear-gradient(90deg,transparent 0 3px,var(--icen-token-line-soft) 3px 4px);
+}
+/* Standalone outline, including when shadows disappear in forced colors. */
+:root[data-icen-style="pixel"] :focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 3px; }
+@media (max-width: 640px) {
+  :root[data-icen-style="pixel"] h1 { font-size: 36px; }
+}

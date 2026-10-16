@@ -268,6 +268,31 @@ export interface IcenLocale {
   'charts.seriesName': string;
   'charts.showLegend': string;
   'charts.value': string;
+  /* ── themeSwitcher ── */
+  'themeSwitcher.appearance': string;
+  'themeSwitcher.theme': string;
+  'themeSwitcher.primitive': string;
+  'themeSwitcher.mode': string;
+  'themeSwitcher.light': string;
+  'themeSwitcher.dark': string;
+  'themeSwitcher.benzhen': string;
+  'themeSwitcher.clay': string;
+  'themeSwitcher.piano': string;
+  'themeSwitcher.art': string;
+  'themeSwitcher.vangogh': string;
+  'themeSwitcher.ink': string;
+  'themeSwitcher.pixel': string;
+  /* ── codeBlock ── */
+  'codeBlock.collapse': string;
+  'codeBlock.copy': string;
+  'codeBlock.foldCollapse': string;
+  'codeBlock.foldExpand': string;
+  'codeBlock.linesTotal': string;
+  'codeBlock.numHide': string;
+  'codeBlock.numShow': string;
+  'codeBlock.tailAria': string;
+  'codeBlock.wrapOff': string;
+  'codeBlock.wrapOn': string;
   /* ── common ── */
   'common.accept': string;
   'common.add': string;
@@ -1028,6 +1053,31 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'charts.seriesName': '系列{p0}',
   'charts.showLegend': '显示图例',
   'charts.value': '数值',
+  /* ── themeSwitcher ── */
+  'themeSwitcher.appearance': '外观',
+  'themeSwitcher.theme': '主题',
+  'themeSwitcher.primitive': '原语',
+  'themeSwitcher.mode': '明暗',
+  'themeSwitcher.light': '浅色',
+  'themeSwitcher.dark': '深色',
+  'themeSwitcher.benzhen': '本真',
+  'themeSwitcher.clay': '陶土',
+  'themeSwitcher.piano': '钢琴',
+  'themeSwitcher.art': '艺术',
+  'themeSwitcher.vangogh': '梵高',
+  'themeSwitcher.ink': '墨',
+  'themeSwitcher.pixel': '像素',
+  /* ── codeBlock ── */
+  'codeBlock.collapse': '收起',
+  'codeBlock.copy': '复制',
+  'codeBlock.foldCollapse': '折叠代码',
+  'codeBlock.foldExpand': '展开代码',
+  'codeBlock.linesTotal': '共 {p0} 行',
+  'codeBlock.numHide': '隐藏行号',
+  'codeBlock.numShow': '显示行号',
+  'codeBlock.tailAria': '展开或收起代码',
+  'codeBlock.wrapOff': '关闭换行',
+  'codeBlock.wrapOn': '自动换行',
   /* ── common ── */
   'common.accept': '接受',
   'common.add': '新增',
@@ -1788,6 +1838,31 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'charts.seriesName': 'Series {p0}',
   'charts.showLegend': 'Show legend',
   'charts.value': 'Value',
+  /* ── themeSwitcher ── */
+  'themeSwitcher.appearance': 'Appearance',
+  'themeSwitcher.theme': 'Theme',
+  'themeSwitcher.primitive': 'Primitive',
+  'themeSwitcher.mode': 'Color mode',
+  'themeSwitcher.light': 'Light',
+  'themeSwitcher.dark': 'Dark',
+  'themeSwitcher.benzhen': 'Benzhen',
+  'themeSwitcher.clay': 'Clay',
+  'themeSwitcher.piano': 'Piano',
+  'themeSwitcher.art': 'Art',
+  'themeSwitcher.vangogh': 'Van Gogh',
+  'themeSwitcher.ink': 'Ink',
+  'themeSwitcher.pixel': 'Pixel',
+  /* ── codeBlock ── */
+  'codeBlock.collapse': 'Collapse',
+  'codeBlock.copy': 'Copy',
+  'codeBlock.foldCollapse': 'Collapse code',
+  'codeBlock.foldExpand': 'Expand code',
+  'codeBlock.linesTotal': '{p0} lines total',
+  'codeBlock.numHide': 'Hide line numbers',
+  'codeBlock.numShow': 'Show line numbers',
+  'codeBlock.tailAria': 'Expand or collapse code',
+  'codeBlock.wrapOff': 'Disable wrapping',
+  'codeBlock.wrapOn': 'Wrap lines',
   /* ── common ── */
   'common.accept': 'Accept',
   'common.add': 'Add',

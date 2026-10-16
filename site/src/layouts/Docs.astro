@@ -2,7 +2,11 @@
 import '../../../src/tokens/colors.css';
 import '../../../src/tokens/style-profiles.css';
 import '../../../src/tokens/typography.css';
+import 'misans/lib/Normal/MiSansVF.min.css'; /* 全站中文统一 MiSans（56 片 unicode-range 动态切片懒加载，与 Base 布局同源） */
 import '../../../src/base.css';
+import '../../../src/tokens/design.css';
+import '../../../src/tokens/pixel.css';
+import '../../../src/components/material.css';
 import '../lib/component-css';
 import '../styles/site.css';
 import SiteHeader from '../components/SiteHeader.astro';
@@ -25,7 +29,7 @@ const isActive = (href: string): boolean =>
   href === '/' ? path === '/' : path.startsWith(href);
 ---
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-icen-preset="benzhen" data-icen-style="benzhen">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

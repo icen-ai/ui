@@ -1,81 +1,72 @@
 /*
- * 文档站轻量语法高亮 —— 单行 token 化，输出带 .tok-* class 的 HTML。
- * 不做完整 parser：每行独立扫描（多行注释/字符串不跨行，文档代码片段足够）。
- * token 颜色由 site.css 的 .tok-* 规则定义，全部消费语义 --icen-token-*。
+ * 文档站语法高亮 —— shiki 双主题（与 icen-ai/blog 同款：github-light-default ×
+ * github-dark-default），构建期（Astro SSR）执行，浏览器零 JS 零包体。
+ * token 色内联在 span 的 color/--shiki-dark 变量里；暗色切换由组件 CSS
+ * （[data-icen-theme="dark"] [data-icen-dual-theme] span → var(--shiki-dark)）接管。
+ * 高亮器单例惰性创建，站点构建进程内复用；未注册语言按需 loadLanguage。
  */
+import { createHighlighter, type Highlighter } from 'shiki';
 
-export type CodeLang = 'html' | 'js' | 'ts' | 'css' | 'bash';
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-interface Rule {
-  re: RegExp;
-  /** group index → token class；键 0 表示整段匹配一个 token。 */
-  map: Record<number, string>;
-}
-
-function scan(line: string, rule: Rule): string {
-  let out = '';
-  let last = 0;
-  rule.re.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = rule.re.exec(line)) !== null) {
-    out += escapeHtml(line.slice(last, m.index));
-    const whole = m[0];
-    if (rule.map[0] !== undefined) {
-      out += `<span class="${rule.map[0]}">${escapeHtml(whole)}</span>`;
-    } else {
-      /* 按捕获组在 whole 内的顺序切分，逐组包 token（未映射组原样转义） */
-      let inner = '';
-      let cur = 0;
-      for (let gi = 1; gi < m.length; gi++) {
-        const g = m[gi];
-        if (g === undefined) continue;
-        const at = whole.indexOf(g, cur);
-        if (at === -1) continue;
-        inner += escapeHtml(whole.slice(cur, at));
-        const cls = rule.map[gi];
-        inner += cls ? `<span class="${cls}">${escapeHtml(g)}</span>` : escapeHtml(g);
-        cur = at + g.length;
-      }
-      inner += escapeHtml(whole.slice(cur));
-      out += inner;
-    }
-    last = m.index + whole.length;
-    if (whole.length === 0) rule.re.lastIndex += 1; // 防零宽死循环
-  }
-  out += escapeHtml(line.slice(last));
-  return out;
-}
-
-const RULES: Record<string, Rule> = {
-  html: {
-    re: /(<!--[\s\S]*?-->)|(<\/?[\w-]+|\/?>)|([\w-]+)(=)("[^"]*")/g,
-    map: { 1: 'tok-com', 2: 'tok-tag', 3: 'tok-attr', 5: 'tok-str' },
-  },
-  js: {
-    re: /(\/\/.*$)|('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)|\b(import|from|export|default|const|let|var|function|return|new|await|async|if|else|for|while|of|in|typeof|void|null|undefined|true|false|this|class|extends)\b|\b(\d+(?:\.\d+)?)\b/g,
-    map: { 1: 'tok-com', 2: 'tok-str', 3: 'tok-kw', 4: 'tok-num' },
-  },
-  css: {
-    re: /(\/\*[\s\S]*?\*\/)|("[^"]*")|(@[\w-]+)|(--[\w-]+)|([.#][\w-]+)|([\w-]+)(?=\s*:)/g,
-    map: { 1: 'tok-com', 2: 'tok-str', 3: 'tok-kw', 4: 'tok-var', 5: 'tok-tag', 6: 'tok-attr' },
-  },
-  bash: {
-    re: /(#.*$)|("[^"]*")|\b(bun|bunx|pnpm|npm|npx|yarn|git|cd|add|install|dlx|run|import)(?=\s|'|"|$)/g,
-    map: { 1: 'tok-com', 2: 'tok-str', 3: 'tok-kw' },
-  },
+/** 站内出现的语言别名 → shiki 语言 id */
+const LANG_ALIAS: Record<string, string> = {
+  ts: 'typescript',
+  js: 'javascript',
+  jsx: 'jsx',
+  tsx: 'tsx',
+  vue: 'html',
+  astro: 'html',
+  sh: 'bash',
+  shell: 'bash',
+  console: 'bash',
+  zsh: 'bash',
 };
 
-/** 单行高亮，返回 HTML。未知 lang 仅转义。 */
-export function highlightLine(line: string, lang: CodeLang | string): string {
-  const rule = RULES[lang === 'ts' ? 'js' : lang];
-  return rule ? scan(line, rule) : escapeHtml(line);
+const THEMES = { light: 'github-light-default', dark: 'github-dark-default' } as const;
+const BASE_LANGS = ['typescript', 'javascript', 'html', 'css', 'bash', 'json', 'txt'] as const;
+
+let highlighterPromise: Promise<Highlighter> | undefined;
+
+function getHighlighter(): Promise<Highlighter> {
+  highlighterPromise ??= createHighlighter({
+    themes: [THEMES.light, THEMES.dark],
+    langs: [...BASE_LANGS],
+  });
+  return highlighterPromise;
 }
 
-/** 整段代码 → 每行一个 HTML 字符串（供 CodeBlock 包行号）。 */
-export function highlightLines(code: string, lang: CodeLang | string): string[] {
-  return code.replace(/\n$/, '').split('\n').map((l) => highlightLine(l, lang));
+/** 站内语言别名归一（未知名兜底 txt——shiki 对未知语言抛错，文档示例不值得为此炸构建） */
+export function normalizeLang(lang: string): string {
+  const l = LANG_ALIAS[lang?.toLowerCase()] ?? lang?.toLowerCase();
+  return l || 'txt';
+}
+
+async function render(code: string, lang: string): Promise<string> {
+  const highlighter = await getHighlighter();
+  let l = normalizeLang(lang);
+  if (!highlighter.getLoadedLanguages().includes(l)) {
+    try {
+      await highlighter.loadLanguage(l as Parameters<Highlighter['loadLanguage']>[0]);
+    } catch {
+      l = 'txt';
+    }
+  }
+  return highlighter.codeToHtml(code.replace(/\n$/, ''), { lang: l, themes: THEMES });
+}
+
+/**
+ * 代码 → shiki 双主题完整 <pre> HTML（.line 行 span 与 --shiki-dark 变量内联）。
+ * 输出交给 ui 包 codeBlockHTML({ html }) 采纳（剥背景 / .line 归一 / 双主题钩子）。
+ */
+export async function shikiPre(code: string, lang: string): Promise<string> {
+  return render(code, lang);
+}
+
+/**
+ * 代码 → 只取 shiki 的 <code> 内层（无 pre 壳、无背景）——给 PmInstall 这类
+ * 自带外壳的紧凑展示位用；token 色 / 双主题变量照常内联。
+ */
+export async function shikiInner(code: string, lang: string): Promise<string> {
+  const full = await render(code, lang);
+  const m = /<code[^>]*>([\s\S]*)<\/code>/.exec(full);
+  return m ? m[1]! : '';
 }

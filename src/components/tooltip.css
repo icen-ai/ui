@@ -13,7 +13,7 @@
 [data-icen-tooltip] { position: relative; --tooltip-delay: 400ms; }
 
 [data-icen-tooltip]::after {
-  content: attr(data-tooltip);
+  content: attr(data-icen-tooltip);
   position: absolute;
   z-index: var(--icen-z-tooltip);
   width: max-content;

@@ -39,7 +39,7 @@ const FIX_HINTS: Record<string, string> = {
   'color-contrast':
     'clay 的 muted 灰 #9d9b93 对纸白仅 2.78:1（WCAG AA 需 4.5:1）——调 --icen-token-text-muted 基值或站壳 site.css 的次级文字色；tok-* 高亮色需按背景重校',
   'label-content-name-mismatch':
-    'SiteHeader 品牌链的可见文案未进可访问名（aria-label 覆盖），风格 select trigger 的 aria-label="风格" 不含可见值——可访问名须含可见文本（site/src/components/SiteHeader.astro）',
+    'SiteHeader 品牌链的可见文案未进可访问名（aria-label 覆盖）——可访问名须含可见文本（site/src/components/SiteHeader.astro）',
   'scrollable-region-focusable':
     '代码块 pre 溢出滚动但无 tabindex="0"——站点 CodeBlock 给可滚动区加键盘入口（site/src/components/CodeBlock.astro）',
   'svg-img-alt':
@@ -167,13 +167,13 @@ test('modal: 打开对话框后扫描', async ({ page }) => {
   await expect(dialog).toBeHidden();
 });
 
-test('kb: 展开 select 面板后扫描', async ({ page }) => {
+test('kb: 展开外观面板后扫描', async ({ page }) => {
   await page.goto('/kb/', { waitUntil: 'networkidle' });
   await page.locator('.icen-kb-chain-label').first().waitFor({ timeout: 15_000 });
   await page.waitForTimeout(3000); // 首屏模拟流落定，避免整页扫描时序抖动
   await installAxe(page);
-  await page.locator('#preset-select .icen-select-trigger').click();
-  const panel = page.locator('.icen-select-panel >> visible=true'); // 面板 portal 到 body（浮层态）
+  await page.locator('#preset-select .icen-theme-switcher-trigger').click();
+  const panel = page.locator('[role="dialog"]:visible'); // 面板 portal 到 body（浮层态）
   await expect(panel).toBeVisible();
   await assertA11y(page, 'kb-select-panel');
   await page.keyboard.press('Escape');

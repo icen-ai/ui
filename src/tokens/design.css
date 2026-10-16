@@ -1,0 +1,104 @@
+/* 本真 primitive: geometry, type, rhythm and lighting. Color palettes live in themes.json. */
+:root {
+  --icen-design-radius: 10px;
+  --icen-design-space: 4px;
+  --icen-design-control-height: 40px;
+  --icen-design-font-size: 14px;
+  --icen-design-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --icen-design-glass-blur: 20px;
+  --icen-design-motion: 1;
+}
+
+/* Materials and geometry belong to the primitive, across every palette. */
+:root, [data-icen-preset], [data-icen-theme="dark"] {
+  --icen-token-surface-glass: color-mix(in srgb, var(--icen-token-surface) var(--icen-design-glass-opacity), transparent);
+  /* Two distances: contact + ambient. Edge light is a separate material property. */
+  --icen-token-shadow-card: 0 1px 3px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent), 0 5px 16px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .5), transparent);
+  --icen-token-shadow-elevated: 0 2px 5px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent), 0 12px 32px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent);
+  --icen-token-shadow-overlay: 0 3px 8px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent), 0 24px 64px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent);
+  --icen-token-top-highlight: color-mix(in srgb, var(--icen-design-light) var(--icen-design-highlight-strength), transparent);
+  --icen-token-shadow-inset: inset 0 1px 0 var(--icen-token-top-highlight);
+  --icen-token-shadow-popover: var(--icen-token-shadow-elevated);
+  --icen-token-material-edge: color-mix(in srgb, var(--icen-token-text) var(--icen-design-edge-strength), transparent);
+  --icen-token-material-light: inset 0 1px 0 var(--icen-token-top-highlight);
+  --icen-token-scrim: color-mix(in srgb, var(--icen-design-shadow-color) 32%, transparent);
+}
+
+:root {
+  --icen-design-light: #ffffff;
+  --icen-radius-xs: max(0px, calc(var(--icen-design-radius) - 6px));
+  --icen-radius-sm: max(0px, calc(var(--icen-design-radius) - 2px));
+  --icen-radius-md: var(--icen-design-radius);
+  --icen-radius-lg: calc(var(--icen-design-radius) + 6px);
+  --icen-radius-xl: calc(var(--icen-design-radius) + 14px);
+  --icen-radius-full: 999px;
+  --icen-font-body: var(--icen-design-font);
+  --icen-font-heading: var(--icen-design-font);
+  --icen-font-cjk: var(--icen-design-font);
+  --icen-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --icen-font-mono-paper: var(--icen-font-mono);
+  --icen-line-height-body: 1.55;
+  --icen-line-height-heading: 1.25;
+  --icen-letter-spacing-body: 0;
+  --icen-letter-spacing-heading: -.02em;
+  --icen-duration-fast: calc(120ms * var(--icen-design-motion));
+  --icen-duration-normal: calc(200ms * var(--icen-design-motion));
+  --icen-duration-slow: calc(280ms * var(--icen-design-motion));
+  --icen-ease-out: cubic-bezier(.2, .8, .2, 1);
+  --icen-ease-bounce: var(--icen-ease-out);
+  --icen-hover-border: var(--icen-token-line);
+  --icen-hover-border-strong: var(--icen-token-line-strong);
+  --icen-press: scale(.985);
+  --icen-press-soft: scale(.99);
+  --icen-disabled-opacity: .48;
+  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-accent);
+  --icen-ring-soft: 0 0 0 3px var(--icen-token-accent-subtle);
+  --icen-control-focus-border: var(--icen-token-accent);
+  --icen-control-focus-shadow: var(--icen-token-shadow-inset), var(--icen-ring-soft);
+}
+
+/* Density changes rhythm and row height, never shrinks reading text. Re-declare
+ * recipes at the density boundary so inherited resolved variables cannot freeze. */
+:root,
+:root [data-icen-density] {
+  --icen-design-density-scale: 1;
+  --icen-design-density-offset: 0px;
+  --icen-density-space-xs: calc(var(--icen-design-space) * var(--icen-design-density-scale));
+  --icen-density-space-sm: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 2);
+  --icen-density-space-md: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 3);
+  --icen-density-space-lg: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 4);
+  --icen-density-space-xl: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 6);
+  --icen-density-space-2xl: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 8);
+  --icen-density-space-3xl: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 12);
+  --icen-density-space-4xl: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 16);
+  --icen-density-input-height-sm: max(28px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 8px));
+  --icen-density-input-height-md: calc(var(--icen-design-control-height) + var(--icen-design-density-offset));
+  --icen-density-input-height-lg: calc(var(--icen-design-control-height) + var(--icen-design-density-offset) + 8px);
+  --icen-density-font-size-2xs: max(12px, calc(var(--icen-design-font-size) - 2px));
+  --icen-density-font-size-xs: max(12px, calc(var(--icen-design-font-size) - 2px));
+  --icen-density-font-size-sm: max(12px, calc(var(--icen-design-font-size) - 1px));
+  --icen-density-font-size-md: var(--icen-design-font-size);
+  --icen-density-font-size-lg: calc(var(--icen-design-font-size) + 2px);
+  --icen-density-font-size-xl: calc(var(--icen-design-font-size) + 6px);
+  --icen-density-font-size-2xl: calc(var(--icen-design-font-size) + 12px);
+}
+:root[data-icen-density="compact"],
+:root [data-icen-density="compact"] {
+  --icen-design-density-scale: .75;
+  --icen-design-density-offset: -6px;
+}
+:root[data-icen-density="comfortable"],
+:root [data-icen-density="comfortable"] {
+  --icen-design-density-scale: 1.25;
+  --icen-design-density-offset: 4px;
+}
+@media (pointer: coarse) {
+  :root, :root [data-icen-density] {
+    --icen-density-input-height-sm: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 8px));
+    --icen-density-input-height-md: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset)));
+    --icen-density-input-height-lg: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) + 8px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --icen-design-motion: 0; }
+}

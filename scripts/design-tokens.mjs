@@ -1,3 +1,4 @@
+import themes from '../src/tokens/themes.json' with {type:'json'};
 // scripts/design-tokens.mjs — 把 dist/tokens/dtcg.json（bun run dtcg 的产物）再导出为
 // 设计工具形态，补设计-开发闭环的最后一公里。运行：bun run design-tokens
 //   → dist/tokens/tokens-studio.json   Tokens Studio（Figma 插件）原生格式
@@ -29,7 +30,7 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DTCG_PATH = join(ROOT, 'dist', 'tokens', 'dtcg.json');
 const OUT_DIR = join(ROOT, 'dist', 'tokens');
 
-const PRESETS = ['clay', 'piano', 'art', 'vangogh', 'ink', 'retro'];
+const PRESETS = themes.map((theme)=>theme.id);
 const MODES = ['light', 'dark'];
 
 // ── 0. 自举：dtcg 产物不存在则先生成（只读 src/tokens/，与 dist 构建无依赖） ──

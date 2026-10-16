@@ -109,7 +109,7 @@ describe('RTL 静态断言：逻辑属性落在 CSS 源里', () => {
   });
 
   test('tokens 层物理方向已清零（style-profiles / retro-effects 命中均为豁免注释）', async () => {
-    for (const rel of ['tokens/style-profiles.css', 'tokens/retro-effects.css']) {
+    for (const rel of ['tokens/style-profiles.css', 'tokens/design.css']) {
       const css = await readSrc(rel);
       const codeLines = css.split('\n').filter((l) => !l.includes('guard:allow-physical'));
       const leftover = codeLines.filter((l) =>

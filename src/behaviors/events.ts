@@ -128,6 +128,7 @@ export interface IcenEventMap {
   'icen:split-change': { value: number };
   'icen:copy-success': { text: string };
   'icen:copy-error': { text: string; reason: string };
+  'icen:code-block-toggle': { el: HTMLElement; action: 'num' | 'wrap' | 'fold'; value: boolean };
   'icen:back-top': Record<string, never>;
 
   /* 浮层与菜单 */

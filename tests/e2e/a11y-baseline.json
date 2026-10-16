@@ -211,9 +211,6 @@
     ]
   },
   "kb-select-panel": {
-    "aria-required-children": [
-      ".nav-panel--preset"
-    ],
     "color-contrast": [
       ".kbws-ver",
       "section[data-icen-*] > .kbws-split > .kbws-main > .kbws-sec-h > .icen-kb-meta",

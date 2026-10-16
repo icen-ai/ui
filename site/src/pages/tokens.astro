@@ -1,15 +1,9 @@
 ---
+import themes from '../../../src/tokens/themes.json';
 import Docs from '../layouts/Docs.astro';
 
 // 每个预设展示：亮/暗两个色板条 + 在该预设上下文里的组件小样
-const presets = [
-  { id: 'clay',    name: 'clay · 陶土（icen 品牌）' },
-  { id: 'piano',   name: 'piano · 钢琴' },
-  { id: 'art',     name: 'art · 艺术' },
-  { id: 'vangogh', name: 'vangogh · 梵高' },
-  { id: 'ink',     name: 'ink · 墨' },
-  { id: 'retro',   name: 'retro · 复古' },
-];
+const presets = themes.map((t)=>({id:t.id,name:t.label,summary:t.summary,material:t.material}));
 
 const swatches = [
   'bg', 'bg-soft', 'surface', 'surface-strong',
@@ -18,14 +12,15 @@ const swatches = [
 ];
 ---
 
-<Docs title="色彩预设 · ICEN UI">
-  <h1 class="page-title">色彩预设</h1>
-  <p class="page-sub">6 套预设 × 明暗双模。每套都定义完整的 <code>--icen-token-*</code> 色彩面，组件全部消费 token，换肤零改动。导航栏可实时切换全站预设与明暗。</p>
+<Docs title="主题 · ICEN UI">
+  <h1 class="page-title">主题</h1>
+  <p class="page-sub">6 套主题 × 明暗双模。每套都定义完整的 <code>--icen-token-*</code> 色彩面，组件全部消费 token，换肤零改动。导航栏可实时切换全站预设与明暗。</p>
 
   {presets.map((p) => (
     <section class="icen-panel">
       <div class="icen-panel-title"><span>{p.name}</span><code>[data-icen-preset="{p.id}"]</code></div>
       <div class="icen-panel-body">
+        <p class="theme-story">{p.summary}<span>{p.material}</span></p>
         <div class="palette-pair">
           <div data-icen-preset={p.id}>
             <div class="palette-label">亮色</div>
@@ -46,7 +41,7 @@ const swatches = [
               <span class="icen-pill icen-pill--error">错误</span>
             </div>
           </div>
-          <div class={`${p.id} dark`}>
+          <div data-icen-preset={p.id} data-icen-theme="dark">
             <div class="palette-label">暗色</div>
             <div class="swatch-grid">
               {swatches.map((s) => (
@@ -95,6 +90,7 @@ const swatches = [
     </div>
   </section>
 
+  <style>.theme-story {line-height:1.8;margin:0 0 24px;color:var(--icen-token-text)} .theme-story span {display:block;font-size:12px;color:var(--icen-token-text-muted);margin-top:4px}</style>
   <script>
     // 计算并展示每个色块的实际颜色值（getComputedStyle 读解析后的 token）；
     // page-load 驱动：ClientRouter 换页后对新 DOM 重算
@@ -124,7 +120,7 @@ const swatches = [
   .export-sub { color: var(--icen-token-text-muted); font-size: 13px; line-height: 1.7; margin: 0 0 12px; max-width: 720px; }
   .export-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
   .export-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; font-size: 13px; }
-  .export-row > code { flex: 0 0 auto; font-size: 12px; color: var(--icen-token-accent); }
+  .export-row > code { flex: 0 0 auto; font-size: 12px; color: var(--icen-token-accent-text); }
   .export-row > span { color: var(--icen-token-text-muted); }
   .export-note { margin-bottom: 0; font-size: 12px; color: var(--icen-token-text-faint); }
 </style>

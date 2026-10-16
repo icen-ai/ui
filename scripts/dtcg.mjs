@@ -20,15 +20,18 @@
 // 版本门：--dtcg-version 目前仅接受 classic；TR 2025.10 是预览草案（官方标注 Do not attempt to implement），
 // 留此参数作为未来升级入口，不实现其对象值语法/$ref/$deprecated。
 
+import themes from '../src/tokens/themes.json' with {type:'json'};
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { generateThemeColors } from './theme-colors.mjs';
+await generateThemeColors();
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 // ── 与 build-css.ts 的 TOKEN_ORDER 保持一致 ──
-const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css'];
-const PRESETS = ['clay', 'piano', 'art', 'vangogh', 'ink', 'retro'];
+const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css', 'design.css', 'pixel.css'];
+const PRESETS = themes.map((theme)=>theme.id);
 
 // 变量名前缀 → (子组, $type)。类型来自命名语义，不从值猜。
 const GROUP_RULES = [
@@ -99,31 +102,21 @@ for (const m of noComments.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
 
   // 选择器分类：仅接受单选择器块的 :root / [data-icen-theme="dark"] /
   // [data-icen-preset="<预设>"] / [data-icen-preset="<预设>"][data-icen-theme="dark"]（两段复合任意顺序）
-  const parts = selector.split(',').map((s) => s.trim()).filter(Boolean);
-  let role = null;
-  if (parts.length === 1) {
-    const p = parts[0];
-    if (p === ':root') role = { tier: 0, kind: 'root' };
-    else {
-      const presetM = p.match(/\[data-icen-preset="([a-z][\w-]*)"\]/);
-      const darkM = /\[data-icen-theme="dark"\]/.test(p);
-      const isPresetForm = /^\[data-icen-(preset="[a-z][\w-]*"|theme="dark")\](\[data-icen-(preset="[a-z][\w-]*"|theme="dark")\])?$/.test(p);
-      if (isPresetForm) {
-        if (presetM && darkM) {
-          if (PRESETS.includes(presetM[1])) role = { tier: 2, kind: 'preset-dark', preset: presetM[1], mode: 'dark' };
-        } else if (presetM) {
-          if (PRESETS.includes(presetM[1])) role = { tier: 1, kind: 'preset', preset: presetM[1] };
-        } else if (darkM) {
-          role = { tier: 1, kind: 'dark' };
-        }
-      }
+  // :is() lists in the default palette recipe are not selector-list commas.
+  const parts = selector.includes(':is(') ? [selector.slice(selector.lastIndexOf(', ') + 2)] : selector.split(',').map((s) => s.trim());
+  let recognized = false;
+  for (let p of parts) {
+    p = p.replace(/^:root(?=\[)/,'');
+    let role = null;
+    if (p === ':root') role = {tier:0,kind:'root'};
+    else if (p === '[data-icen-theme="dark"]') role = {tier:1,kind:'dark'};
+    else if (/^\[data-icen-preset="[a-z][\w-]*"\](\[data-icen-theme="dark"\])?$/.test(p)) {
+      const preset = p.match(/preset="([a-z][\w-]*)"/)[1];
+      if (PRESETS.includes(preset)) role = p.includes('theme="dark"') ? {tier:2,kind:'preset-dark',preset,mode:'dark'} : {tier:1,kind:'preset',preset};
     }
+    if (role) { blocks.push({idx:blockIdx++,...role,decls}); recognized = true; }
   }
-  if (!role) {
-    ignoredDecls.set(selector, (ignoredDecls.get(selector) ?? 0) + decls.size);
-    continue;
-  }
-  blocks.push({ idx: blockIdx++, ...role, decls });
+  if (!recognized) ignoredDecls.set(selector,(ignoredDecls.get(selector)??0)+decls.size);
 }
 
 /** (预设, 模式) 的有效级联：收集适用块 → 按 (特异性层, 源序) 应用，后者覆盖前者 */
@@ -205,6 +198,16 @@ function parseNumber(v) {
 
 function ruleFor(name) {
   // 名字里带 shadow 的（token-shadow-* / shadow-*）一律按 box-shadow 处理 → 不可表示
+  if (name.startsWith('--icen-design-')) {
+    const token=name.slice('--icen-design-'.length);
+    const dimensions=['radius','space','control-height','font-size','glass-blur'];
+    const colors=['canvas','surface','raised','ink','muted','faint','accent','accent-strong','accent-text','on-accent','cold','success','warning','error','info','light'];
+    if(dimensions.includes(token)) return {group:'design',type:'dimension',token};
+    if(colors.includes(token)) return {group:'design',type:'color',token};
+    if(token==='font') return {group:'design',type:'fontFamily',token};
+    if(token==='motion') return {group:'design',type:'number',token};
+    return null;
+  }
   if (name.includes('shadow')) return { group: 'shadow', type: 'shadow' };
   for (const [prefix, group, type] of GROUP_RULES) {
     if (name.startsWith('--' + prefix)) return { group, type, token: name.slice(2 + prefix.length) };
@@ -226,8 +229,8 @@ const out = {
       source: 'src/tokens/{colors,style-profiles,typography}.css（同 build-css.ts 的 TOKEN_ORDER）',
       exclusions: [
         'box-shadow 值与 color-mix() 派生色不可表示为经典版标量 → 跳过（见 ai.icen.skipped）',
-        '.style-modern/.style-retro/.style-terminal 是与预设正交的风格层，不在 预设×明暗 矩阵内',
-        'src/tokens/retro-effects.css 为按需 extras 层（不进 tokens.css），不在导出范围',
+        '本真/像素原语与主题独立，预设×明暗矩阵导出默认本真原语',
+        '已删除复古主题与旧 CRT 特效',
       ],
     },
     'ai.icen.skipped': {},

@@ -43,7 +43,11 @@ interface CopyOutcome {
   reason?: string;
 }
 
-async function copyText(text: string): Promise<CopyOutcome> {
+/**
+ * 写剪贴板（clipboard API 优先，execCommand 回退）；成功/失败带原因的结构化结果。
+ * v0.11 起导出：code-block 等组件复用同一回退链与文案，不再各写一份。
+ */
+export async function copyText(text: string): Promise<CopyOutcome> {
   const hasApi = typeof navigator !== 'undefined' && !!navigator.clipboard?.writeText;
   if (hasApi) {
     try {

@@ -1,4 +1,5 @@
 ---
+import { themeSwitcherHTML } from '../../../src/behaviors/theme-switcher';
 import Base from '../layouts/Base.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import PmInstall from '../components/PmInstall.astro';
@@ -28,14 +29,6 @@ const GROUP_LINK: Record<string, string> = {
 };
 
 /* 预设色板：展示内容为各预设自身的基值（色值即数据，非 UI 样式） */
-const PRESET_SWATCHES = [
-  { id: 'clay',    name: 'clay 陶土',    bg: '#faf9f5', accent: '#d97757', cold: '#7a9cb0' },
-  { id: 'piano',   name: 'piano 钢琴',   bg: '#f1eee6', accent: '#b89145', cold: '#566370' },
-  { id: 'art',     name: 'art 艺术',     bg: '#dce8e3', accent: '#d66f4f', cold: '#4f8f90' },
-  { id: 'vangogh', name: 'vangogh 梵高', bg: '#e8ddb2', accent: '#1f527c', cold: '#476f45' },
-  { id: 'ink',     name: 'ink 墨',       bg: '#f5f2ed', accent: '#5b7a5e', cold: '#6b7e8a' },
-  { id: 'retro',   name: 'retro 复古',   bg: '#f0f0e8', accent: '#d03030', cold: '#3030a0' },
-] as const;
 
 import { readdirSync } from 'node:fs';
 import { SLUGS } from '../../../scripts/slugs.mjs';
@@ -59,7 +52,6 @@ const featureIcons = {
   layers: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>`,
   box: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></svg>`,
 };
-const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 ---
 
 <Base title="ICEN UI · 为 AI 时代而生的设计系统">
@@ -342,19 +334,9 @@ const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="no
     <div class="sec-head">
       <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>TOKENS · 三层正交</p>
       <h2 class="sec-title">一套 tokens，六副面孔</h2>
-      <p class="sec-desc">色彩预设 × 明暗 × 风格 profile 互不耦合。点一张色板 —— 整站包括上面的每张卡片，即刻换肤。</p>
+      <p class="sec-desc">主题、原语与明暗自由组合。点一张色卡，首页、顶部和所有组件同步变换。</p>
     </div>
-    <div class="preset-grid" role="group" aria-label="切换色彩预设">
-      {PRESET_SWATCHES.map((p) => (
-        <button class="preset-chip" type="button" data-preset={p.id} aria-pressed="false">
-          <span class="preset-check" aria-hidden="true"><Fragment set:html={presetCheckSvg} /></span>
-          <span class="preset-dots" aria-hidden="true">
-            <i style={`background:${p.bg}`}></i><i style={`background:${p.accent}`}></i><i style={`background:${p.cold}`}></i>
-          </span>
-          <span class="preset-name">{p.name}</span>
-        </button>
-      ))}
-    </div>
+    <Fragment set:html={themeSwitcherHTML({kind:"theme",layout:"inline",size:"lg"})} />
     <p class="preset-hint">{COMPONENTS.length} 个组件共享同一套 <code>--icen-token-*</code> —— 换肤不改一行组件代码。</p>
   </section>
 
@@ -427,7 +409,7 @@ const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="no
     import { initInput } from '../../../src/behaviors/input.ts';
     import { initSlider } from '../../../src/behaviors/slider.ts';
     import { initCopy } from '../../../src/behaviors/copy.ts';
-    import { getTheme, setTheme } from '../../../src/behaviors/theme.ts';
+
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -611,30 +593,6 @@ const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="no
       stage.addEventListener('pointerleave', () => { tx = 0; ty = 0; kick(); });
     }
 
-    /* ── 预设色板：点击换肤 + 双向同步（头部 select 换肤时经 MutationObserver 回同步色板） ── */
-    const presetChips = document.querySelectorAll('.preset-chip[data-preset]');
-    const reflectPreset = (p) => {
-      presetChips.forEach((c) => {
-        const on = c.getAttribute('data-preset') === p;
-        c.classList.toggle('is-active', on);
-        c.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
-    };
-    reflectPreset(getTheme().preset);
-    presetChips.forEach((c) => c.addEventListener('click', () => {
-      const p = c.getAttribute('data-preset');
-      if (!p) return;
-      setTheme({ preset: p });
-      reflectPreset(p);
-      /* 同步头部 preset select 的展示态（复用其 change 监听，幂等） */
-      const input = document.querySelector('#preset-select input[data-icen-select-value]');
-      if (input && input.value !== p) {
-        input.value = p;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    }));
-    new MutationObserver(() => reflectPreset(getTheme().preset))
-      .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   </script>
 </Base>
 
@@ -1061,68 +1019,6 @@ const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="no
 
   /* ═══ 预设换肤带 ═══ */
   .presets-sec { padding: 88px 0 8px; }
-  .preset-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 14px;
-  }
-  .preset-chip {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 11px;
-    padding: 20px 12px 15px;
-    font: inherit;
-    background: var(--icen-token-surface);
-    border: 1px solid var(--icen-token-line-soft);
-    border-radius: var(--icen-radius-lg);
-    cursor: pointer;
-    transition:
-      transform var(--icen-duration-fast) var(--icen-ease-out),
-      border-color var(--icen-duration-fast) var(--icen-ease-out),
-      box-shadow var(--icen-duration-fast) var(--icen-ease-out);
-  }
-  .preset-chip:hover {
-    transform: translateY(-3px);
-    border-color: var(--icen-token-line);
-    box-shadow: var(--icen-token-shadow-elevated);
-  }
-  .preset-chip:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 2px; }
-  .preset-chip.is-active {
-    border-color: var(--icen-token-accent);
-    box-shadow: 0 0 0 3px var(--icen-token-accent-glow);
-  }
-  .preset-dots { display: flex; }
-  .preset-dots i {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    border: 2px solid var(--icen-token-surface);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
-    margin-left: -7px;
-  }
-  .preset-dots i:first-child { margin-left: 0; }
-  .preset-name {
-    font-family: var(--icen-font-mono);
-    font-size: 11.5px;
-    color: var(--icen-token-text-muted);
-    letter-spacing: 0.3px;
-  }
-  .preset-check {
-    position: absolute;
-    top: 8px; right: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 17px; height: 17px;
-    border-radius: 50%;
-    background: var(--icen-token-accent);
-    color: var(--icen-token-on-accent);
-    opacity: 0;
-    transform: scale(0.4);
-    transition: opacity var(--icen-duration-fast) var(--icen-ease-out), transform var(--icen-duration-fast) var(--icen-ease-bounce);
-  }
-  .preset-chip.is-active .preset-check { opacity: 1; transform: scale(1); }
   .preset-hint {
     text-align: center;
     margin: 20px 0 0;
@@ -1243,7 +1139,6 @@ const presetCheckSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="no
     .hero { padding: 64px 0 40px; }
     .hero-stat { border-left: 0; padding: 4px 16px; }
     .install-chip { width: 100%; justify-content: center; }
-    .preset-grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 560px) {
     .f-canvas { grid-template-columns: 1fr; }

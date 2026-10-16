@@ -6,7 +6,7 @@
 /** 全部组件 slug（顺序即文档站侧栏顺序，仅供 CLI list 展示）。 */
 export const SLUGS = [
   // 基础
-  'btn', 'panel', 'pill', 'tag', 'tabs', 'stat', 'toast', 'toolbar', 'split-pane',
+  'theme-switcher', 'btn', 'panel', 'pill', 'tag', 'tabs', 'stat', 'toast', 'toolbar', 'split-pane',
   // 表单
   'form', 'input', 'select', 'slider', 'tag-input', 'switch', 'segmented', 'upload', 'date-picker', 'form-validate',
   'cascader', 'tree-select', 'mentions', 'autocomplete',
@@ -14,7 +14,7 @@ export const SLUGS = [
   'modal', 'dropdown', 'context-menu', 'popover', 'tooltip', 'command-palette',
   // 数据展示
   'card', 'empty', 'avatar', 'media-card', 'rating', 'kbd', 'list', 'accordion',
-  'timeline', 'desc', 'tree', 'carousel', 'badge', 'scroll-area',
+  'timeline', 'desc', 'tree', 'carousel', 'badge', 'scroll-area', 'code-block',
   // 表格
   'table', 'datatable',
   // 图表（umbrella + 细分类型，按需安装）
@@ -116,6 +116,7 @@ export const MERGED_CSS = {
 
 /** slug → behavior 的 init 函数名（有 init 契约的组件）。 */
 export const SLUG_INIT = {
+  'theme-switcher': 'initThemeSwitcher',
   accordion: 'initAccordion',
   'ai-chat': 'initAiChat',
   'ai-composer': 'initAiComposer',
@@ -125,6 +126,7 @@ export const SLUG_INIT = {
   'ai-todo': 'initAiTodo',
   'ai-tool-call': 'initAiTool',
   carousel: 'initCarousel',
+  'code-block': 'initCodeBlock',
   'context-menu': 'initContextMenu',
   copy: 'initCopy',
   'command-palette': 'initCommandPalette',
@@ -172,6 +174,7 @@ export const SLUG_INIT = {
 
 /** 有 behavior 但无 init（函数式 API）的 slug → 导出函数提示（CLI 输出用）。 */
 export const SLUG_EXPORTS = {
+  'theme-switcher': ['createThemeSwitcher', 'themeSwitcherHTML'],
   notification: ['notify'],
   toast: ['toast'],
   // ── 表单/导航控件族：交互在 controls.ts（behavior 映射见 SLUG_BEHAVIOR）──
@@ -191,6 +194,7 @@ export const SLUG_EXPORTS = {
     'inferChartType', 'chartFormatValue', 'registerChartTone',
   ],
   datatable: ['createTable'],
+  'code-block': ['renderCodeBlock', 'codeBlockHTML'],
   // ── 图表细分类型：仅导出该类型的渲染函数 ──
   'chart-line': ['renderLine'],
   'chart-bar': ['renderVBar', 'renderHBar'],
@@ -260,6 +264,8 @@ export const SLUG_BEHAVIOR = {
 /** slug → kit 入口需附加引入的其他 CSS（如 datatable 右键菜单依赖 menu.css）。 */
 export const EXTRA_CSS = {
   datatable: ['menu.css'],
+  // code-block 工具钮的 data-icen-tooltip 气泡由 tooltip.css 提供（纯 CSS 组件）
+  'code-block': ['tooltip.css'],
   // charts umbrella：引入全部细分类型 CSS，一条 import 拿到所有图表样式
   charts: [
     'chart-line.css', 'chart-bar.css', 'chart-pie.css', 'chart-radar.css',

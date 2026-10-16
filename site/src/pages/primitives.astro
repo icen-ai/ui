@@ -77,9 +77,11 @@ const tokens = [
   </nav>
 
   <h1 class="page-title">原语（统一抽象层）</h1>
+  <p class="page-desc"><strong>本真</strong>：连续几何、轻盈材料、系统排版。<strong>像素</strong>：整数网格、点阵字体、阶梯投影。使用顶部「原语」切换；配色主题独立保留。</p>
+  <p class="page-desc"><a href="/benzhen/">进入「本真」原语工作室 ↗</a> · 体验材料、字体、几何与密度，实时调节并导出品牌配方。</p>
   <p class="page-desc">
     所有 {componentCount} 个组件共享同一套抽象：(1) <strong>6 个交互基元 class</strong>（HTML 显式组合 API）+
-    (2) <strong><code>--icen-*</code> 原语 token 层</strong>（CSS 自洽消费）。风格 profile 只需覆盖少数变量，
+    (2) <strong><code>--icen-*</code> 原语 token 层</strong>（CSS 自洽消费）。原语 只需覆盖少数变量，
     全局 {componentCount} 个组件自动换肤。
   </p>
 
@@ -106,10 +108,10 @@ const tokens = [
   <section class="icen-panel">
     <div class="icen-panel-title"><span>--icen-* 原语 token</span><span>变量层</span></div>
     <div class="icen-panel-body">
-      <p class="icen-dim">所有组件消费这组原语变量；切换风格 profile（如 [data-icen-style="retro"]）只覆盖这里的少数变量即可全局生效。</p>
+      <p class="icen-dim">所有组件消费这组原语变量；切换原语（如 data-icen-style="pixel"）只覆盖这里的少数变量即可全局生效。</p>
       <table class="icen-table icen-table--compact">
         <thead>
-          <tr><th>变量</th><th>说明</th><th>值（modern 风格）</th></tr>
+          <tr><th>变量</th><th>说明</th><th>值（本真原语）</th></tr>
         </thead>
         <tbody>
           {tokens.map((t) => (

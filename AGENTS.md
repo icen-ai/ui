@@ -19,7 +19,7 @@
 ## v0.10 命名空间契约（类名防冲突——与任何第三方 CSS 共存零冲突）
 
 - **类名一律 `icen-` 前缀**（`.icen-btn` / `.icen-modal` / `.icen-kb-citation`…）；唯一例外是状态类 `.is-*`——纪律是 `.is-*` 永不单独出现在选择器里，永远与根类复合（`.icen-tab.is-active`），因此天然隔离。
-- **主题层是 data 属性，不是类**：`<html data-icen-preset="piano" data-icen-theme="dark" data-icen-style="retro">`（旧 `[data-icen-preset="piano"]`/`[data-icen-theme="dark"]`/`.style-*` 类形态已废弃——`[data-icen-theme="dark"]` 是全业界最危险的类名）。自建第 7 套预设 = 写 `[data-icen-preset="<name>"]` 与 `[data-icen-preset="<name>"][data-icen-theme="dark"]` 两块完整 token 面。
+- **主题层是 data 属性，不是类**：`<html data-icen-preset="piano" data-icen-theme="dark" data-icen-style="pixel">`（旧 `[data-icen-preset="piano"]`/`[data-icen-theme="dark"]`/`.style-*` 类形态已废弃——`[data-icen-theme="dark"]` 是全业界最危险的类名）。自建第 7 套预设 = 写 `[data-icen-preset="<name>"]` 与 `[data-icen-preset="<name>"][data-icen-theme="dark"]` 两块完整 token 面。
 - **库 data 钩子一律 `data-icen-*`**（`[data-icen-tabs]`、`data-icen-copy`、`data-icen-panel-width`…235 个全量）；**全局 CSS 变量七族一律 `--icen-*`**（`--icen-token-*/--icen-density-*/--icen-radius-*/--icen-duration-*/--icen-ease-*/--icen-z-*/--icen-font-*`）；组件作用域变量（`--btn-*`/`--ai-*`/`--kb-*`）不前缀——它们只随根类作用于子树，根类已前缀即继承链已隔离。
 - **cascade layers**：全部产物 CSS 包在 `@layer icen.tokens / icen.base / icen.components`——消费方自己的无层样式永远赢库样式（放心覆盖）；层序由 tokens.css 顶部声明锚定。
 - **v0.9 → v0.10 迁移**：消费方跑 `bunx @icen.ai/ui migrate src --write`（包内自带 codemod，读 dist/migrate-map.json；歧义 token 保守跳过并给人工清单）。
@@ -209,16 +209,25 @@ const filter = createKbFilter(el, { node, fields, onChange: (node, valid) => {..
 
 # 第二段 · 本仓库开发约定
 
+## 完整设计原语（本真 / Benzhen）
+
+- 默认主题与默认原语均为本真。主题走 `data-icen-preset`（本真＋另外五个主题）；原语走 `data-icen-style`（本真／像素）。两轴独立；旧 modern/retro/terminal 偏好迁移到本真，保留配色与明暗。没有第四条 design 轴。
+- 配色目录唯一事实源：`src/tokens/themes.json`；colors.css 由 `bun run colors`（scripts/theme-colors.mjs）生成，禁止手改。六套主题：本真／陶土／钢琴／艺术／梵高／墨。运行时、文档站、导出均直接消费目录。
+- 单一事实源：`src/tokens/design.css`（作者种子→旧语义角色映射），`src/components/material.css`（三类材料与组件适配），`src/behaviors/design.ts`（可选 `createDesign/mountDesign/setDesign`）。材料适配随 tokens.css 分发，kit 单独引入同样成立。
+- 品牌作者优先修改 `--icen-design-*` 少量种子，避免复制组件 CSS。完整规则与明暗品牌示例见 `docs/spec/design-primitives.md`；交互工作室 `/benzhen/`。
+- 材料 API：`data-icen-material="content|chrome|floating"`。内容面不透明；操作/临时面条件启用磨砂，提供 reduced-transparency 与 forced-colors 降级。密度变化不缩小文字，触摸目标至少 44px。
+- 验证原语变更：`bun run verify` + 文档站构建 + `bunx playwright test tests/e2e/design.pw.ts`（真实产物、定制、portal、明暗、移动与 axe）。
+
 ## 项目概览
 
 `@icen.ai/ui` = Icen Design System 的单一事实源：设计 tokens + 无框架组件 CSS + 行为 JS。生态内所有前端（accounts / skill / editor / 未来 `*.icen.ai`）从这里取设计资产，**不允许在消费项目里另起一套样式**。
 
 三层正交架构（移植自 opengal，见其 `docs/spec/theme-system.md`）：
-- **色彩预设**（`src/tokens/colors.css`）：`clay`（默认）/ `piano` / `art` / `vangogh` / `ink` / `retro`，各含 `[data-icen-theme="dark"]`；以 `data-icen-preset` 挂在 `<html>` 上，clay 是 `:root` 默认
-- **风格配置**（`src/tokens/style-profiles.css`）：`[data-icen-style="modern"]` / `[data-icen-style="retro"]` / `[data-icen-style="terminal"]`；density / motion / typography / radius 全 token 化，与色彩正交
+- **色彩预设**（`src/tokens/colors.css`）：`benzhen`（默认）/ `clay`/ `piano` / `art` / `vangogh` / `ink`，各含 `[data-icen-theme="dark"]`；以 `data-icen-preset` 挂在 `<html>` 上，本真是默认
+- **原语**（`src/tokens/design.css` / `pixel.css`）：本真 benzhen（默认）与像素 pixel，控制几何、字体、材料、节奏与反馈；不覆盖选中的配色主题。
 - **明暗**：`[data-icen-theme="dark"]` 类，与预设组合（`class="piano dark"`）
 
-icen canonical：`clay` 亮色 + IBM Plex Mono/CJK 宋体（`src/tokens/typography.css`）。**clay 基值已原地校准为 accounts.icen.ai 线上视觉**（纸白底 #faf9f5、半透明线条、绿 #3d8a5a/黄 #b8860b/红 #c0392b）——改它 = 改全生态的品牌脸，慎重。
+icen 默认：本真主题（瓷白＋冷蓝）＋本真原语。陶土仍作为独立配色主题保留，不是本真主题的来源。
 
 **accent 明度三档契约（v0.10 收口，WCAG AA 硬达标）**：`--icen-token-accent`（亮档，品牌色——图标/边框/数据可视化等纯图形面）/ `--icen-token-accent-strong`（**承文本填充档**——实心按钮/选中态/徽标等 accent 底承 on-accent 文字的面一律用它，12 面实测 4.79–10.84 全过 AA）/ `--icen-token-accent-text`（浅底上的文字橙——链接/弱强调文本）。`--icen-token-on-accent` 是 accent 填充上的文字色：亮底深字（clay dark/vangogh/piano 的「亮填充+深字」Material You 惯例）或深底白字。新增承文本填充面禁止直接消费 accent 亮档。
 
@@ -238,11 +247,11 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 
 ## 规模
 
-- **68 个组件 CSS**（charts 基座 + 13 个细分图表 CSS（+v0.9 chart-graph/map）+ 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel + v0.9：kb.css 基座 + 7 个 kb 域文件（ground/ingest/search/data/ops/agent/perm）+ v0.10：form-validate.css 校验层 + mentions/autocomplete.css）
-- **73 个 behaviors TS**（v0.9：+ai-threads/ai-feedback/ai-branch +kb-core 契约层 +31 个 kb-*——含权限域 kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility；v0.10：+form-validate 校验层 +mentions/autocomplete；+i18n 文案注册表后 74 个）
-- **117 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单；v0.9 新增 37：kb 总集 + 31 kb-* + ai-threads/ai-feedback/ai-branch + chart-graph/chart-map；v0.10 新增 3：form-validate + mentions/autocomplete）
+- **69 个组件 CSS**（charts 基座 + 13 个细分图表 CSS（+v0.9 chart-graph/map）+ 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel + v0.9：kb.css 基座 + 7 个 kb 域文件（ground/ingest/search/data/ops/agent/perm）+ v0.10：form-validate.css 校验层 + mentions/autocomplete.css + theme-switcher.css 外观切换）
+- **75 个 behaviors TS**（v0.9：+ai-threads/ai-feedback/ai-branch +kb-core 契约层 +31 个 kb-*——含权限域 kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility；v0.10：+form-validate 校验层 +mentions/autocomplete +i18n 文案注册表；+theme-switcher 外观切换）
+- **121 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单；v0.9 新增 37：kb 总集 + 31 kb-* + ai-threads/ai-feedback/ai-branch + chart-graph/chart-map；v0.10 新增 3：form-validate + mentions/autocomplete；+theme-switcher）
 - **测试与守卫**：`bun run verify` = tsc + guard + test + build；500+ 测试（bun test + happy-dom，tests/unit 纯契约 + tests/dom 委托行为 + tests/kb-conformance 权限诚实呈现 + tests/{unit,dom}/i18n 本地化契约与零 CJK 渲染验收）；8 项纪律守卫（CSS/registry/事件/行为/命名空间/权限域/RTL 逻辑属性/类名同步），CI 全挂
-- **4 个 token 文件**：colors.css（6 预设 × 明暗）、style-profiles.css（modern/retro/terminal）、typography.css、retro-effects.css（可选）
+- **5 个 token 文件**：colors.css、style-profiles.css（公共兜底）、typography.css、design.css（本真与共享配方）、pixel.css（像素）。旧 retro-effects 已删除。
 
 ## 发布（OIDC Trusted Publishing，已配好）
 
@@ -253,7 +262,7 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 ## 约定
 
 - **组件只消费 `--icen-token-*`，不写死颜色/圆角/阴影/字体/时长/间距**（radius 用 `--icen-radius-*`、阴影用 `--icen-token-shadow-*`、动效用 `--icen-duration-*`/`--icen-ease-*`、间距用 `--icen-density-*`、字号用 `--icen-density-font-size-*`、控件高度用 `--icen-density-input-height-*`）。
-- **圆角几何契约（guard 第 1 项强制，哲学全文在 `docs/spec/design-philosophy.md` §2）**：六档职责 xs 微件内角 / sm 控件 / md 默认容器 / lg 卡片面板 / xl 页面级 / full 胶囊。**同心圆法则**：嵌套圆角共圆心，`R_inner = R_outer − gap`，写 `calc(var(--icen-radius-<外档>) - <间距>)`；同心结果 <0 时内层直角，禁止 1–3px 近似圆角差。**`full`（跑道形）只给胶囊语义件**（pill/badge/chip/switch/进度轨道），容器永不用 full；**`50%` 只给几何正圆**（avatar/状态点/图标底）。禁裸 999px、禁撞档裸值 6/8/10/12/16px；bar/dot/track 等图形级微构件的 1–5px 裸值须行尾 `/* guard:allow-radius 理由 */` 登记。terminal/retro profile 把六档归零——正交归零依赖组件零物理值。
+- **圆角几何契约（guard 第 1 项强制，哲学全文在 `docs/spec/design-philosophy.md` §2）**：六档职责 xs 微件内角 / sm 控件 / md 默认容器 / lg 卡片面板 / xl 页面级 / full 胶囊。**同心圆法则**：嵌套圆角共圆心，`R_inner = R_outer − gap`，写 `calc(var(--icen-radius-<外档>) - <间距>)`；同心结果 <0 时内层直角，禁止 1–3px 近似圆角差。**`full`（跑道形）只给胶囊语义件**（pill/badge/chip/switch/进度轨道），容器永不用 full；**`50%` 只给几何正圆**（avatar/状态点/图标底）。禁裸 999px、禁撞档裸值 6/8/10/12/16px；bar/dot/track 等图形级微构件的 1–5px 裸值须行尾 `/* guard:allow-radius 理由 */` 登记。像素原语把六档归零——正交归零依赖组件零物理值。
 - 语义色纪律：仅绿 `--icen-token-success` / 黄 `--icen-token-warning` / 红 `--icen-token-error` / 信息 `--icen-token-info` + 品牌 `--icen-token-accent`。
 - **类名规范（0.6.0 收敛，breaking；下列旧名映射为历史记录，v0.10 起全部类名再统一加 `icen-` 前缀——见第一段「v0.10 命名空间契约」）**：
   - 语义修饰符只认 `--success/--warning/--error/--info`：pill `.ok/.warn/.bad/.icen-accent` → `.icen-pill--success/.icen-pill--warning/.icen-pill--error/.icen-pill--accent`；toast 类 `.ok/.err/.warn` → `.icen-toast--success/.icen-toast--error/.icen-toast--warning`（JS 方法 `toast.ok()` 等不变）+ 新增 `.icen-toast--info`；notification `.notif--*` → `.notification--*`；stat `.icon--ok/.icon--warn/.icon--bad` → `.icen-icon--success/.icen-icon--warning/.icen-icon--error`，`.icen-stat-num.icen-accent/.warn/.bad/.info` → `.icen-stat-num--accent/--warning/--error/--info`。
@@ -261,7 +270,7 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
   - 根类去前缀：`.panel-block` → `.icen-panel`、`.admin-table` → `.icen-table`、`.page-tabs/.admin-tabs` → `.icen-tabs`。
   - tabs.css 的 `--scroll` 变体已删除（违反「tab 条永不滚动」纪律）。
 - 滚动条纪律：全局细薄无上下箭头（`base.css` 统一负责，组件不再写滚动条样式）；tab 条类组件**永不滚动**（`flex-wrap: wrap`）。
-- **交互基元**：`base.css` 提供 6 个组件地基 `.icen-pressable` / `.icen-control` / `.icen-field` / `.icen-lift` / `.icen-surface-elevated` / `.icen-focus-ring`。`style-profiles.css` 的 `[data-icen-style="retro"]` 段选择器引用这 6 个类名——改名必须同步修 style-profiles.css，否则 retro 风格失效。共享 keyframes（`icen-pop-in` / `icen-spin` / `icen-skeleton-pulse`）也在 base.css，组件动画复用、不各自重定义。
+- **交互基元**：`base.css` 提供 6 个组件地基 `.icen-pressable` / `.icen-control` / `.icen-field` / `.icen-lift` / `.icen-surface-elevated` / `.icen-focus-ring`。原语适配集中在 material.css，像素参数集中在 pixel.css。共享 keyframes（`icen-pop-in` / `icen-spin` / `icen-skeleton-pulse`）也在 base.css，组件动画复用、不各自重定义。
 - **z-index 标尺**：浮层一律 portal 到 body，z-index 取 `--icen-z-base/raised/sticky/chrome/toast/banner/dialog/popover/tooltip/fx`（0.6.0 新增 `--icen-z-fx`，retro-effects 特效层用）。
 - **浮层 portal 家族**：popover / dropdown / context-menu / command-palette / date-picker / **select**（0.6.0 起 panel 也 portal 到 body，与 popover 共用定位模式）。
 - **凹槽 × 尺寸 × 事件三契约（全库统一心智模型，v0.8 收敛）**：
@@ -283,7 +292,7 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 - **skill `icen-ui` 源在本仓库**（`skill/icen-ui/`，SKILL.md + 中英产品页）：只写 WHEN/WHICH 场景配方，不抄 API 签名（事实层在 AGENTS.md/.d.mts）。改完跑 `bun scripts/sync-skill.mjs` 单向同步到兄弟仓库 `../skill/skills/icen-ui/`（skill 仓库那份是产物，勿手改），在该仓库提交 push 后 CI 自动上 skill.icen.ai；`--check` 可挂 CI 防漂移。
 - 文档站字体体系（site.css 顶部）：prose/站壳 = `--site-font-sans`（系统无衬线），demo 区 = `--site-font-mono`（Plex Mono + CJK 无衬线回退），展示级大标题才用 `--icen-font-heading` 宋体——小字号中文一律不走宋体/通用 monospace 回退。
 - CSS 产物由 `scripts/build-css.ts` 生成，**不要手改 dist/**。`tokensExtras`（如 retro-effects.css）单独拷贝、暴露 exports，**不**进 `tokens.css`/`ui.css` 默认拼合。
-- clay 的 12 基值 token 改动属于品牌级变更；新增色彩预设 = 在 colors.css 加 `.<name>` + `.<name>[data-icen-theme="dark"]` 两块完整 token 面（仿照现有 6 套），并注册到 `src/behaviors/theme.ts` 的 PRESETS 与文档站。
+- clay 的 12 基值 token 改动属于品牌级变更；新增内置主题 = 编辑 themes.json，再运行 bun run colors；运行时和站点自动读取目录，不维护重复名单。外部品牌仍可通过 createDesign 编译 CSS 或覆盖语义 token。
 - 文档分组（`site/src/lib/components.ts` 的 `GROUPS`）= 侧栏顺序 = 索引页分组顺序：基础 / AI 原生 / 知识库 / 表单 / 数据展示 / 图表 / 浮层 / 反馈 / 导航（v0.9 调整：知识库上移第三位；v0.8：AI 上移第二位做拉新门面；「表格」并入数据展示；AI 组更名「AI 原生」）。侧栏分组为 `<details>` 折叠（可多开，首访全开，localStorage `icen.docs.icen-nav.groups` 记忆，深链自动展开当前组）。kb 族文档数据在 `site/src/lib/kb-docs-{ground-ingest,search-data,ops-agent,perm}.ts` 四片段（避免巨文件冲突），`components.ts` 统一 push 进 COMPONENTS；`/kb` 的参考标签数据在 `site/src/lib/kb-references.ts`（32 条文献锚点 + 发表时间——设计决策可回溯，升级时先回源头）。
 - **反馈三件正交**：`toast`（瞬时 2.6s 右下角）/ `alert`（内嵌页面流）/ `notification`（持久右上角栈，工程级——进度通知/confirm Promise/多按钮/hover 暂停/倒计时/优先级置顶/已读未读/持久化/多容器 createNotificationCenter）——三者各司其职不互相替代；`copy` 是原地按钮反馈（区别于 toast 的全局通知）。JS 词表已统一为 `toast.success/error`（ok/err 为 deprecated 别名，下大版本删）
 - **徽章三件正交**：`pill`（行内状态徽章，语义色）/ `tag`（中性展示标签，可选关闭按钮与选中态）/ `badge`（角标式数字/圆点，挂外层元素角上，外层需 `position: relative`）。

@@ -1,5 +1,5 @@
 ---
-import { highlightLines } from '../lib/highlight';
+import { shikiInner } from '../lib/highlight';
 
 interface Props {
   pkg?: string;
@@ -29,14 +29,14 @@ const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
       ))}
     </nav>
   </div>
-  {managers.map((m, i) => (
+  {await Promise.all(managers.map(async (m, i) => (
     <div class="pm-panel" data-icen-tab-panel={m.id} hidden={i !== 0}>
-      <pre><code>{highlightLines(m.cmd, 'bash').map((l) => <span class="cl" set:html={l} />)}</code></pre>
+      <pre data-icen-dual-theme><code set:html={await shikiInner(m.cmd, 'bash')} /></pre>
       <button class="icen-copy-btn icen-copy-btn--icon pm-copy" type="button" data-icen-copy={m.cmd} data-icen-copy-icon aria-label="复制命令">
         <Fragment set:html={copySvg + checkSvg} />
       </button>
     </div>
-  ))}
+  )))}
 </div>
 
 <script>

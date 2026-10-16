@@ -5,6 +5,7 @@
  * （toast / charts / popover 无 init，靠 script 字段做额外接线）。
  */
 
+import { THEME_SWITCHER_DOC } from './theme-switcher-docs';
 import { cssOf } from '../../../scripts/slugs.mjs';
 import { KB_DOCS_GROUND_INGEST } from './kb-docs-ground-ingest';
 import { KB_DOCS_SEARCH_DATA } from './kb-docs-search-data';
@@ -15,6 +16,49 @@ import { DATATABLE_V2_DOCS } from './datatable-v2-docs';
 import { CHARTS_V2_DOCS } from './charts-v2-docs';
 import { CASCADER_TREESELECT_DOCS } from './cascader-treeselect-docs';
 import { MENTIONS_AUTOCOMPLETE_DOCS } from './mentions-autocomplete-docs';
+import { shikiPre } from './highlight';
+import { codeBlockHTML } from '../../../src/behaviors/code-block';
+
+/* ── code-block 组件页 demo：构建期 shiki 双主题 + codeBlockHTML 直出（静态零脚本） ── */
+const CB_TS = await shikiPre(
+  [
+    "import { renderChart } from '@icen.ai/ui/behaviors/charts';",
+    "import { initTabs, initCopy } from '@icen.ai/ui/behaviors/tabs';",
+    '',
+    'const chart = renderChart(el, {',
+    "  type: 'line',",
+    "  labels: ['v0.8', 'v0.9', 'v0.10', 'v0.11'],",
+    "  series: [{ name: '组件', values: [58, 96, 117, 120] }],",
+    '});',
+    'initTabs();',
+    'initCopy();',
+  ].join('\n'),
+  'ts',
+);
+const CB_BASH = await shikiPre(
+  Array.from({ length: 42 }, (_, i) => `pipeline.step(${i + 1})  # 流水线第 ${i + 1} 步`).join('\n'),
+  'bash',
+);
+const CB_DEMO =
+  codeBlockHTML({ html: CB_TS, lang: 'ts', file: 'src/boot.ts', title: 'shiki 双主题高亮', lines: [4], num: true }) +
+  '\n\n<div style="height:14px"></div>\n\n' +
+  codeBlockHTML({ html: CB_BASH, lang: 'bash', title: '超 30 行自动折叠' }) +
+  '\n\n<div style="height:14px"></div>\n\n' +
+  codeBlockHTML({
+    code: [
+      '@@ -1,4 +1,6 @@',
+      ' import { h } from "./ai-core";',
+      '-const version = "0.10.0";',
+      '+const version = "0.11.0";',
+      '+const codeBlock = true;',
+      ' ',
+      ' export function boot() {',
+      '   return h("div", "", version);',
+      ' }',
+    ].join('\n'),
+    lang: 'diff',
+    title: 'diff：旧/新双行号',
+  });
 
 export interface ComponentDoc {
   slug: string;
@@ -56,6 +100,7 @@ const inboxSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const avatarImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' fill='%23d97757'/><circle cx='24' cy='18' r='8' fill='%23fffdf9'/><path d='M8 44c3-10 10-14 16-14s13 4 16 14z' fill='%23fffdf9'/></svg>`;
 
 export const COMPONENTS: ComponentDoc[] = [
+  THEME_SWITCHER_DOC,
   /* ══════════ 基础 ══════════ */
   {
     slug: 'btn',
@@ -1750,6 +1795,33 @@ document.getElementById('notif-clear')?.addEventListener('click', () => {
 <code class="icen-code-inline">行内代码</code>`,
   },
   {
+    slug: 'code-block',
+    name: '代码块',
+    group: '数据展示',
+    desc: '与 code-inline 成对的多行代码块（v0.11 起，移植自 icen-ai/blog）：标题栏（文件名/语言徽标 + 说明标题 + 工具钮）、CSS counter 行号（可切换、定宽 gutter 对齐）、高亮行、diff 旧/新双行号 + 红绿底、超阈值折叠（底部渐隐 + 展开条）、整块复制（复用 copy 的 execCommand 回退链）。双渲染口：renderCodeBlock（浏览器 DOM，code 纯文本逐行 textContent / html 可信槽位）与 codeBlockHTML（SSR 字符串，构建期直出同构标记——本站的 CodeBlock 即「shiki 双主题高亮 + codeBlockHTML」）。shiki 输出原样可吃：.line 自动归一、内联背景剥除、--shiki-dark 检出即打 data-icen-dual-theme（暗色自动切深色 token）；工具钮气泡走 tooltip 组件。切换类操作派 icen:code-block-toggle { el, action: num|wrap|fold, value }，复制派 icen:copy-success / icen:copy-error。下方三个示例均为构建期 shiki 双主题渲染，暗色模式试试。',
+    demo: CB_DEMO,
+    usage: `import { renderCodeBlock, codeBlockHTML, initCodeBlock } from '@icen.ai/ui/behaviors/code-block';
+
+// 浏览器端（DOM）：code 纯文本逐行 textContent（安全路径）；html 为可信高亮槽位
+renderCodeBlock(el, {
+  code: 'const a = 1;',      // 或 html: shikiOutput
+  lang: 'ts',                // diff/patch 进 diff 模式（默认显示行号）
+  file: 'src/app.ts',        // 文件名徽标（优先于 lang 徽标）
+  title: '入口', lines: [1], // 说明标题 + 高亮行（1 基）
+  num: true, wrap: false,    // 初始行号 / 换行
+  fold: 20,                  // true 强制折叠 / false 永不 / 数字 = 超过 N 行折叠（缺省 30）
+});
+initCodeBlock();             // 行号/换行/折叠/复制 委托，页面级一次
+
+// SSR/构建期（Astro/JSX）：shiki 双主题高亮 + codeBlockHTML 直出整串标记（文档站 CodeBlock 即此方案）
+const html = codeBlockHTML({ html: shikiHighlighted, lang: 'ts', file: 'src/app.ts', num: true });
+// → <figure class="icen-code-block">…，set:html 注入即可（交互仍由 initCodeBlock 接管）
+
+<!-- 或手写标记：figure.icen-code-block 契约见 code-block.css 头注释 -->`,
+    behaviors: ['code-block'],
+    behaviorInit: { 'code-block': 'initCodeBlock' },
+  },
+  {
     slug: 'list',
     name: '列表',
     group: '数据展示',
@@ -1776,7 +1848,7 @@ document.getElementById('notif-clear')?.addEventListener('click', () => {
   </div>
   <div class="icen-accordion-item">
     <button class="icen-accordion-trigger" type="button" aria-expanded="false"><span>如何切换色彩预设？</span>${accChevron}</button>
-    <div class="icen-accordion-panel"><div class="icen-accordion-panel-inner">预设类挂在 html 上：clay（默认）/ piano / art / vangogh / ink / retro，各含 .dark 变体，可与 .style-* 风格配置正交组合。</div></div>
+    <div class="icen-accordion-panel"><div class="icen-accordion-panel-inner">预设类挂在 html 上：benzhen 本真（默认）/ clay / piano / art / vangogh / ink / retro；明暗用 data-icen-theme，原语用 data-icen-style="benzhen|pixel"，两轴独立。</div></div>
   </div>
   <div class="icen-accordion-item">
     <button class="icen-accordion-trigger" type="button" aria-expanded="false"><span>组件可以直接写死颜色吗？</span>${accChevron}</button>

@@ -124,7 +124,7 @@ function setup(container: Element): () => void {
   const triggerEl = container.querySelector<HTMLButtonElement>('.icen-select-trigger');
   const panelEl = container.querySelector<HTMLElement>('.icen-select-panel');
   const valueEl = container.querySelector<HTMLElement>('.icen-select-value');
-  const hiddenInput = container.querySelector<HTMLInputElement>('icen-input[data-icen-select-value]');
+  const hiddenInput = container.querySelector<HTMLInputElement>('input[data-icen-select-value], icen-input[data-icen-select-value]');
   if (!triggerEl || !panelEl) return () => {};
   /* 幂等标记在校验通过后才置位：异步渲染中途 trigger/panel 尚未就位时不占坑，
      渲染完成后的容器还能被后续 init 接管（提前置位会让它永不再接线） */

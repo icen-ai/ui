@@ -1,0 +1,87 @@
+/* Appearance control: .icen-theme-switcher; --xs/--sm/default/--lg sizes.
+ * data-icen-display=icon|color|color-name|name|swatch|swatch-name.
+ * data-icen-layout=inline exposes the same choices as a settings panel.
+ * All rendering is owned by theme-switcher.ts; CSS has no behavior dependency. */
+.icen-theme-switcher {
+  --switcher-height: var(--icen-density-input-height-md);
+  --switcher-font: var(--icen-density-font-size-md);
+  display: inline-flex;
+  max-inline-size: 100%;
+  vertical-align: middle;
+  font-family: var(--icen-font-body);
+  font-size: var(--switcher-font);
+  color: var(--icen-token-text);
+}
+.icen-theme-switcher--xs { --switcher-height: calc(var(--icen-density-input-height-sm) - 4px); --switcher-font: var(--icen-density-font-size-sm); }
+.icen-theme-switcher--sm { --switcher-height: var(--icen-density-input-height-sm); --switcher-font: var(--icen-density-font-size-sm); }
+.icen-theme-switcher--lg { --switcher-height: var(--icen-density-input-height-lg); }
+.icen-theme-switcher-trigger,
+.icen-theme-switcher-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--icen-density-space-sm);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-surface);
+  color: var(--icen-token-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--icen-tx-fast), border-color var(--icen-tx-fast);
+}
+.icen-theme-switcher-trigger { min-block-size: var(--switcher-height); padding: 0 var(--icen-density-space-sm); white-space: nowrap; }
+.icen-theme-switcher-trigger:hover,
+.icen-theme-switcher-option:hover { background: var(--icen-token-surface-hover); border-color: var(--icen-token-line); }
+.icen-theme-switcher-trigger:focus-visible,
+.icen-theme-switcher-option:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 3px; }
+.icen-theme-switcher-trigger[aria-expanded="true"] { border-color: var(--icen-token-accent); }
+.icen-theme-switcher-sample { display: inline-flex; flex: 0 0 auto; inline-size: 40px; block-size: 20px; overflow: hidden; border: 1px solid var(--icen-token-line); border-radius: var(--icen-radius-sm); }
+.icen-theme-switcher-sample i { display: block; flex: 1; }
+.icen-theme-switcher-symbol { display: inline-flex; align-items: center; justify-content: center; inline-size: 20px; font-size: 20px; line-height: 1; }
+.icen-theme-switcher-chevron { font-size: var(--icen-density-font-size-sm); color: var(--icen-token-text-muted); }
+.icen-theme-switcher[data-icen-display="icon"] .icen-theme-switcher-trigger,
+.icen-theme-switcher[data-icen-display="color"] .icen-theme-switcher-trigger { inline-size: var(--switcher-height); padding: 0; }
+.icen-theme-switcher[data-icen-display="icon"] .icen-theme-switcher-name,
+.icen-theme-switcher[data-icen-display="color"] .icen-theme-switcher-name,
+.icen-theme-switcher[data-icen-display="swatch"] .icen-theme-switcher-name,
+.icen-theme-switcher[data-icen-display="icon"] .icen-theme-switcher-chevron,
+.icen-theme-switcher[data-icen-display="color"] .icen-theme-switcher-chevron { display: none; }
+.icen-theme-switcher[data-icen-display="name"] .icen-theme-switcher-trigger > .icen-theme-switcher-sample,
+.icen-theme-switcher[data-icen-display="name"] .icen-theme-switcher-trigger > .icen-theme-switcher-symbol { display: none; }
+.icen-theme-switcher:is([data-icen-display="icon"],[data-icen-display="color"],[data-icen-display="color-name"]) .icen-theme-switcher-trigger .icen-theme-switcher-sample { inline-size: 18px; block-size: 18px; border-radius: var(--icen-radius-full); transform: rotate(-35deg); }
+.icen-theme-switcher:is([data-icen-display="icon"],[data-icen-display="color"],[data-icen-display="color-name"]) .icen-theme-switcher-trigger .icen-theme-switcher-sample i:last-child { display: none; }
+.icen-theme-switcher-panel {
+  position: fixed;
+  z-index: var(--icen-z-popover);
+  box-sizing: border-box;
+  padding: var(--icen-density-space-md);
+  overflow: auto;
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-lg);
+  background: var(--icen-token-surface);
+  color: var(--icen-token-text);
+  box-shadow: var(--icen-token-shadow-overlay);
+  font: var(--icen-density-font-size-sm)/1.5 var(--icen-font-body);
+}
+.icen-theme-switcher-panel[hidden] { display: none; }
+.icen-theme-switcher-section + .icen-theme-switcher-section { margin-block-start: var(--icen-density-space-md); padding-block-start: var(--icen-density-space-md); border-block-start: 1px solid var(--icen-token-line-soft); }
+.icen-theme-switcher-heading { margin: 0 0 var(--icen-density-space-sm); font-size: var(--icen-density-font-size-sm); font-weight: 500; color: var(--icen-token-text-muted); }
+.icen-theme-switcher-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--icen-density-space-sm); }
+.icen-theme-switcher-option { position: relative; min-block-size: var(--icen-density-input-height-md); padding: var(--icen-density-space-sm); }
+.icen-theme-switcher-options--theme .icen-theme-switcher-option { flex-direction: column; align-items: stretch; gap: var(--icen-density-space-sm); text-align: start; }
+.icen-theme-switcher-options--theme .icen-theme-switcher-sample { inline-size: 100%; block-size: 28px; }
+.icen-theme-switcher-option[aria-pressed="true"] { border-color: var(--icen-token-accent); background: var(--icen-token-accent-faint); }
+.icen-theme-switcher-check { display: none; margin-inline-start: auto; color: var(--icen-token-accent-text); }
+.icen-theme-switcher-option[aria-pressed="true"] > .icen-theme-switcher-check { display: inline; }
+.icen-theme-switcher-options--theme .icen-theme-switcher-check { position: absolute; inset-inline-end: var(--icen-density-space-sm); inset-block-end: var(--icen-density-space-sm); }
+.icen-theme-switcher[data-icen-layout="inline"] { display: block; }
+.icen-theme-switcher[data-icen-layout="inline"] > .icen-theme-switcher-panel { position: static; inline-size: 100%; box-shadow: none; background: var(--icen-token-surface); }
+.icen-theme-switcher[data-icen-layout="inline"] .icen-theme-switcher-options--theme { grid-template-columns: repeat(auto-fit,minmax(min(100%,120px),1fr)); }
+@media (pointer: coarse) {
+  .icen-theme-switcher-trigger { min-block-size: 44px; min-inline-size: 44px; }
+  .icen-theme-switcher-option { min-block-size: 44px; }
+}
+@media (forced-colors: active) {
+  .icen-theme-switcher-option[aria-pressed="true"] { outline: 2px solid Highlight; }
+}

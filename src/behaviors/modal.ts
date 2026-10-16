@@ -22,7 +22,7 @@ import { emitIcen } from './events';
 
 /** 焦点陷阱的可聚焦元素选择器（modal / command-palette 焦点陷阱全库共用）。 */
 export const FOCUSABLE =
-  'button:not([disabled]), [href], icen-input:not([disabled]), icen-select:not([disabled]), icen-textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), audio, video, details>summary';
+  'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), icen-input:not([disabled]), icen-select:not([disabled]), icen-textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), audio, video, details>summary';
 
 /** openModal 可选项。 */
 export interface ModalOpenOptions {

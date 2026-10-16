@@ -1,4 +1,5 @@
 ---
+import themes from '../../../src/tokens/themes.json';
 import Docs from '../layouts/Docs.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 ---
@@ -10,9 +11,9 @@ import CodeBlock from '../components/CodeBlock.astro';
   <h2 class="doc-h2">主题：三层正交，全部 data 属性</h2>
   <p class="doc-note">
     色彩预设 × 明暗 × 风格三层正交，全部挂在 <code>&lt;html&gt;</code> 的 data 属性上（不再是类——<code>[data-icen-theme="dark"]</code> 是全业界最危险的类名，v0.10 起废弃类形态）：
-    <code>data-icen-preset</code>（clay 默认 / piano / art / vangogh / ink / retro）· <code>data-icen-theme="dark"</code>（摘除即亮色）· <code>data-icen-style</code>（modern / retro / terminal）。
+    <code>data-icen-preset</code>（benzhen 默认 / clay / piano / art / vangogh / ink）· <code>data-icen-theme="dark"</code>（摘除即亮色）· <code>data-icen-style</code>（benzhen 本真 / pixel 像素）。
   </p>
-  <CodeBlock lang="html" code={`<html data-icen-preset="piano" data-icen-theme="dark" data-icen-style="retro">
+  <CodeBlock lang="html" code={`<html data-icen-preset="piano" data-icen-theme="dark" data-icen-style="benzhen">
 
 <!-- 运行时切换（含持久化与系统跟随）： -->
 <script>
@@ -21,8 +22,8 @@ import { initTheme, setTheme, toggleDark, setStyle, registerThemePreset } from '
 initTheme();                          // 尽早调用（读 localStorage 防闪烁；无偏好时跟随系统）
 toggleDark();                         // 明暗
 setTheme({ preset: 'piano' });        // 色彩预设
-setStyle('retro');                    // 风格 profile（与色彩正交）
-registerThemePreset('brand');         // 自建第 7 套：自家 CSS 写好 token 面即可
+setStyle('benzhen');                    // 原语（与色彩正交）
+registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 token 面即可
 </script>`} />
   <p class="doc-note">
     自建预设 = 在自家 CSS 写两块完整 token 面：<code>[data-icen-preset="brand"]</code> 与
@@ -41,16 +42,11 @@ registerThemePreset('brand');         // 自建第 7 套：自家 CSS 写好 tok
         <label class="tw-label" for="tw-preset">色彩预设</label>
         <div class="icen-select" data-icen-select id="tw-preset-wrap" style="width:100%">
           <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
-            <span class="icen-select-value">clay · 陶土（默认）</span>
+            <span class="icen-select-value">本真（默认）</span>
             <svg class="icen-select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="icen-select-panel" hidden>
-            <button class="icen-select-option" type="button" data-icen-value="clay">clay · 陶土（默认）</button>
-            <button class="icen-select-option" type="button" data-icen-value="piano">piano · 钢琴</button>
-            <button class="icen-select-option" type="button" data-icen-value="art">art · 艺术</button>
-            <button class="icen-select-option" type="button" data-icen-value="vangogh">vangogh · 梵高</button>
-            <button class="icen-select-option" type="button" data-icen-value="ink">ink · 墨</button>
-            <button class="icen-select-option" type="button" data-icen-value="retro">retro · 复古</button>
+            {themes.map((theme)=><button class="icen-select-option" type="button" data-icen-value={theme.id}>{theme.label}</button>)}
           </div>
         </div>
       </div>
@@ -62,11 +58,10 @@ registerThemePreset('brand');         // 自建第 7 套：自家 CSS 写好 tok
         </div>
       </div>
       <div class="tw-field">
-        <span class="tw-label" id="tw-style-label">风格 profile</span>
+        <span class="tw-label" id="tw-style-label">原语</span>
         <div class="icen-segmented" role="radiogroup" aria-labelledby="tw-style-label" data-icen-segmented>
-          <button class="icen-segmented-item is-active" role="radio" aria-checked="true" data-icen-value="" type="button">modern</button>
-          <button class="icen-segmented-item" role="radio" aria-checked="false" data-icen-value="retro" type="button">retro 像素</button>
-          <button class="icen-segmented-item" role="radio" aria-checked="false" data-icen-value="terminal" type="button">terminal 终端</button>
+          <button class="icen-segmented-item is-active" role="radio" aria-checked="true" data-icen-value="benzhen" type="button">本真</button>
+          <button class="icen-segmented-item" role="radio" aria-checked="false" data-icen-value="pixel" type="button">像素</button>
         </div>
       </div>
       <div class="tw-field">
@@ -231,7 +226,7 @@ bunx @icen.ai/ui migrate src --write
       if (!preview || !out) return; /* 不在本页则静默退场 */
       initSelect(); initSegmented(); initCopy(); /* 全部幂等 */
 
-      const state = { preset: 'clay', theme: '', style: '', density: '', accent: '', radius: null };
+      const state = { preset: 'benzhen', theme: '', style: 'benzhen', density: '', accent: '', radius: null };
       const touched = { accent: false, radius: false };
 
       const lum = (hex) => {

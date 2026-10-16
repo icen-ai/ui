@@ -15,7 +15,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const PRESETS = ['clay', 'piano', 'art', 'vangogh', 'ink', 'retro'];
+const PRESETS = ['benzhen', 'clay', 'piano', 'art', 'vangogh', 'ink'];
 
 type TokensStudio = {
   $themes: { id: string; name: string; selectedTokenSets: Record<string, string> }[];
@@ -91,7 +91,8 @@ describe('tokens-studio.json', () => {
     const clayLight = ts['clay/light'] as Record<string, any>;
     expect(clayLight.token.$type).toBe('color');
     expect(clayLight.radius.$type).toBe('dimension');
-    expect(clayLight.token.bg.$value).toBe('#faf9f5');
+    expect(clayLight.design.canvas.$value).toBe('#faf7f2');
+    expect(clayLight.token.bg.$value).toBe('{clay.light.design.canvas}');
     expect(clayLight.token.canvas.$value).toBe('{clay.light.token.bg}');
     expect(clayLight.token.accent.$extensions['ai.icen.raw']).toBe('--icen-token-accent');
   });
@@ -118,9 +119,11 @@ describe('figma.variables.json', () => {
         expect(ids.has(v.id)).toBe(false);
         ids.add(v.id);
       }
-      expect(col.variables.length).toBeGreaterThan(80);
+      // Require the actual exported contract rather than an incidental token count.
+      for (const required of ['token/bg','token/text','token/accent','font/body','design/space']) {
+        expect(col.variables.some((v)=>v.name===required),`${preset} must export ${required}`).toBe(true);
+      }
     }
-    expect(total).toBeGreaterThan(500);
   });
 
   test('COLOR 值 {r,g,b,a} 全部在 [0,1]；FLOAT 为 number；STRING 为 string', () => {
@@ -154,9 +157,9 @@ describe('figma.variables.json', () => {
     expect(stringCount).toBeGreaterThan(0);
   });
 
-  test('dimension 以 px 数值表示，rem 源值按 ×16 换算（0.25rem → 4）', () => {
+  test('dimension 保留原语空间种子 4px；计算式密度按诚实跳过规则处理', () => {
     const clay = fv.variableCollections[0];
-    const spaceXs = clay.variables.find((v) => v.name === 'density/space-xs');
+    const spaceXs = clay.variables.find((v) => v.name === 'design/space');
     expect(spaceXs?.type).toBe('FLOAT');
     expect(spaceXs?.valuesByMode.light).toBe(4);
   });
@@ -205,11 +208,9 @@ describe('诚实跳过', () => {
     expect(fvRaw).not.toContain('bg/hover');
   });
 
-  test('仅单模式存在的 token 不进 Figma 产物（Figma 变量要求所有 mode 有值），且被打印', () => {
-    // clay 的 dark-only 静音色在上游 dtcg 已验证存在（dark 导出多于 light）
-    expect(runLog).toContain('单模式 token');
-    expect(runLog).toContain('token/success-muted');
-    // 只断言 clay collection（piano 等预设的 success-muted 两模式齐全，是合法变量）
+  test('derived semantic fills are consistently skipped in both modes', () => {
+    expect(runLog).toContain('--icen-token-success-muted');
+    expect(runLog).toContain('--icen-token-error-muted');
     const clay = fv.variableCollections.find((c) => c.name === 'icen / clay');
     const clayNames = new Set(clay?.variables.map((v) => v.name));
     expect(clayNames.has('token/success-muted')).toBe(false);

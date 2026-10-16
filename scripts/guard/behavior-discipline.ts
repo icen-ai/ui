@@ -17,6 +17,11 @@ const INNER_HTML_ALLOWLIST: Array<{ file: string; pattern: RegExp; reason: strin
     pattern: /icon\.innerHTML = entry\.icon/,
     reason: '图标槽位契约：entry.icon 是调用方提供的可信 SVG 标记（非用户文本），语义即「注入标记」而非「写文本」',
   },
+  {
+    file: 'code-block.ts',
+    pattern: /box\.innerHTML = html/,
+    reason: '高亮槽位契约（同 context-menu icon）：opts.html 是调用方自己的高亮器（shiki 等）输出，纯文本路径仍逐行 textContent',
+  },
 ];
 
 /** 形如 innerHTML = <右值> 的赋值（排除 == / === 比较） */

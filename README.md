@@ -1,12 +1,12 @@
 # @icen.ai/ui — Icen Design System
 
-icen.ai 全生态的统一设计系统：**设计 tokens（6 色彩预设 × 明暗双模 × 3 风格 profile）+ 无框架组件 CSS（66 组件）+ 行为 JS（72 behaviors，含 i18n 文案注册表）+ 统一事件体系 + AI 原生组件族 + 知识库组件族 + 图表通用层 + AI 工具体系 + React/Vue 官方薄封装**。工程形态与 `@icen.ai/cli` 一致（Bun + TS + tsup + ESM + MIT）。
+icen.ai 全生态的统一设计系统：**设计 tokens（6 主题 × 明暗双模 × 本真/像素原语）+ 无框架组件 CSS（66 组件）+ 行为 JS（72 behaviors，含 i18n 文案注册表）+ 统一事件体系 + AI 原生组件族 + 知识库组件族 + 图表通用层 + AI 工具体系 + React/Vue 官方薄封装**。工程形态与 `@icen.ai/cli` 一致（Bun + TS + tsup + ESM + MIT）。
 
 > **v0.10（2026-10-06）**：契约冻结。命名空间全量前缀化（`.icen-*` 类名 / `data-icen-*` 钩子 / `--icen-*` 变量十五族 / 主题层改 data 属性）+ 产物全部进 cascade layers——与任何第三方 CSS 共存零冲突。v0.x 迁移跑包内 codemod：`bunx @icen.ai/ui migrate src --write`。破坏性明细与理由见 [CHANGELOG](./CHANGELOG.md)。
 
-- 色彩预设：`clay`（默认，陶土橙 × 纸白 = icen 品牌）/ `piano` / `art` / `vangogh` / `ink` / `retro`，各含 `[data-icen-theme="dark"]` 变体
-- 风格配置：`[data-icen-style="modern"]` / `[data-icen-style="retro"]` / `[data-icen-style="terminal"]`（几何 / 密度 / 动效 / 字体 token，与色彩正交）
-- 可选效果层：`retro-effects.css`（CRT 扫描线 / 颗粒 / 像素边框 / 打字机光标 —— 仅 `[data-icen-style="retro"]` 激活时生效，按需 import）
+- 色彩预设：`benzhen`（默认，瓷白 × 冷蓝）/ `clay`（陶土）/ `piano` / `art` / `vangogh` / `ink`，各含 `[data-icen-theme="dark"]` 变体
+- 原语：`benzhen` 本真（默认）/ `pixel` 像素，统一几何、材料、字体、节奏与反馈；使用顶部原语菜单切换。
+- 旧 modern / retro / terminal 原语与 retro-effects 已删除，旧偏好自动迁移到本真，保留配色主题与明暗。
 - 组件：btn / form / input / select / slider / switch / tag-input / upload / modal / popover / tooltip / menu（含 dropdown + context-menu）/ tabs / nav / sidebar / breadcrumb / pagination / steps / segmented / accordion / tree / carousel / charts / table / stat / card / panel / pill / tag / badge / empty / feedback / content / media / toolbar / split-pane / date-picker / command-palette / notification / copy / scroll-area / back-top / datatable / layout / form-validate（66 个组件 CSS：charts 基座 + 13 个细分图表 kit + kb.css 基座 + 7 个 kb 域文件 + 4 个 AI 族合并文件）；浮层尺寸统一 PanelSizing 契约（`data-icen-panel-width/-min/-max/-min-height/-max-height` 属性面 + 程序面对象，含视口夹取）
 - 图表通用层（v0.8；v0.10 重度场景增强）：`renderChart(el, spec)` 统一入口——纯 JSON 规格（type 缺省自动推断；data[] + dims 任意维度透视）、多系列折线/分组堆叠柱、内置 tooltip、`icen:chart-hover/click/dblclick/contextmenu` 交互事件族、图例点击切换系列；贡献日历 renderCalendar + 散点气泡 renderScatter；**v0.10**：LTTB 降采样（`spec.downsample` + 抽样诚实提示）、缩放/刷选（`spec.zoom` + `icen:chart-zoom`）、标记线/点（`spec.marks` 纯 JSON）、流式追加（`handle.append`）、PNG 导出（`handle.toDataURL`）、加载骨架（`spec.loading`）
 - AI 原生组件族（v0.7，14 个 slug）：ai-chat（会话容器）/ ai-message（消息行）/ ai-reasoning（推理块，流式展开完成后自动折叠一次）/ ai-composer（输入台）/ ai-tool-call（工具调用卡）/ ai-subagent（子智能体卡）/ ai-diff（差异审阅）/ ai-files（文件标签）/ ai-todo（任务清单）/ ai-context（上下文抽屉）/ ai-usage（用量条）/ ai-threads（会话线程树）/ ai-feedback（👍👎 + 理由）/ ai-branch（消息分支切换）——共享 7 态状态机与 kind 注册表，事件统一 `icen:ai-*` 前缀
@@ -43,12 +43,12 @@ bun add @icen.ai/ui
 ```css
 @import '@icen.ai/ui/tokens.css';
 @import '@icen.ai/ui/ui.css';   /* tokens + base + 全部组件；也可按 ./components/btn.css 单引 */
-/* 可选：仅 [data-icen-style="retro"] 下生效的像素效果层 */
-@import '@icen.ai/ui/retro-effects.css';
+/* 本真与像素原语均内置于 tokens.css */
+/* 像素原语已随 tokens.css 提供；无需特效层。 */
 ```
 
 ```html
-<html data-icen-preset="piano" data-icen-theme="dark">   <!-- 预设 + 可选明暗；clay 为 :root 默认 -->
+<html data-icen-preset="piano" data-icen-theme="dark">   <!-- 预设 + 可选明暗；本真为默认主题与原语 -->
 ```
 
 ```ts
@@ -63,7 +63,7 @@ import {
 } from '@icen.ai/ui';
 
 initTheme();                       // 尽早调用（或内联同步脚本防闪烁，见 accounts Base.astro）
-setStyle('retro');                 // 切风格画像（modern/retro），与主题正交
+setPrimitive('pixel');            // 切原语，与配色主题独立
 registerThemePreset('brand');       // 登记自建预设（宿主 CSS 先写好 .brand/.brand[data-icen-theme="dark"] token 面）
 listThemePresets();                // 枚举全部预设（含注册的），UI 切换器用
 initTabs();                        // [data-icen-tabs] > [data-icen-tab] + [data-icen-tab-panel] 契约；切换派发 icen:tab-change
@@ -110,7 +110,7 @@ bun install
 bun run build   # tsup（behaviors → dist/*.mjs + .d.mts 类型面）+ scripts/dts-ext.mjs + scripts/build-css.ts（css → dist/）
 ```
 
-产物：`dist/tokens.css`（colors + style-profiles + typography 拼合）、`dist/ui.css`（tokens+base+组件）、`dist/base.css`、`dist/retro-effects.css`（按需）、`dist/tokens/*`、`dist/components/*`、`dist/behaviors/*.mjs` + `.d.mts`（66 个声明，JSDoc 约束注释存活）、`dist/index.mjs`、`dist/registry.json`（含 tokens/tokensExtras/base/components/behaviors 清单）。
+产物：`dist/tokens.css`（colors + style-profiles + typography 拼合）、`dist/ui.css`（tokens+base+组件）、`dist/base.css`、`dist/tokens/*`、`dist/components/*`、`dist/behaviors/*.mjs` + `.d.mts`（66 个声明，JSDoc 约束注释存活）、`dist/index.mjs`、`dist/registry.json`（含 tokens/tokensExtras/base/components/behaviors 清单）。
 
 ## DTCG 标准导出（设计 tokens 的互操作层）
 
@@ -119,7 +119,7 @@ bun run build   # tsup（behaviors → dist/*.mjs + .d.mts 类型面）+ scripts
 - **结构**：`{ $description, clay: { light: {…}, dark: {…} }, piano: {…}, … }`——每个 (预设, 明/暗) 是该组合下的**有效级联结果**（:root → [data-icen-theme="dark"]/.预设 → .预设[data-icen-theme="dark"]，按特异性分层、同层按源序）；子组按变量前缀划分并提升组级 `$type`（token 级 `$type` 恒最高优先）。
 - **经典版标量**：颜色 `#rrggbb[aa]`（rgba 自动换算）、尺寸 `"1rem"`/`"36px"`、时长 `"150ms"`、字体栈 string[]、缓动四元数组、行高 number；`var()` 引用导出为规范别名 `{clay.light.token.icen-accent}`（引用目标保证在文件内，链式合法、无环）。
 - **类型只从变量名语义映射**（规范禁止工具从值猜类型），每个 token 保留 `$extensions['ai.icen.raw']` = 原始 CSS 自定义属性名。
-- **诚实失败**：`color-mix()` 派生色、box-shadow 值在经典版无对应标量，指向它们的桥接别名随之断链——一律**跳过并打印清单**（同时记录在顶层 `$extensions['ai.icen.skipped']`），不猜、不计算。`[data-icen-style="modern"]/[data-icen-preset="retro"]/.terminal` 是与预设正交的风格层，`retro-effects.css` 是按需 extras，均不在 预设×明暗 矩阵内（按设计排除）。
+- **诚实失败**：`color-mix()` 派生色、box-shadow 值在经典版无对应标量，指向它们的桥接别名随之断链——一律**跳过并打印清单**（同时记录在顶层 `$extensions['ai.icen.skipped']`），不猜、不计算。原语配置独立于主题×明暗导出矩阵；计算式 token 按不猜测原则明确跳过。
 - **注意顺序**：tsup 会清空 dist，`dtcg` 必须在 `bun run build` **之后**运行（它不依赖 dist、只读 `src/tokens/`，但产物落在 dist 内）。脚本不并入默认 build，纯增量可选手动生成；若要随 npm 包分发，把 `bun run dtcg` 加进发布链（CI 或 prepublishOnly）即可。
 
 ## 设计工具导出（Tokens Studio / Figma Variables）
@@ -134,10 +134,8 @@ bun run build   # tsup（behaviors → dist/*.mjs + .d.mts 类型面）+ scripts
 
 ```
 src/tokens/colors.css          # 6 预设 × 明暗（clay 基值已校准到 accounts.icen.ai 视觉）
-src/tokens/style-profiles.css  # density/motion/typography + [data-icen-style="modern"]/[data-icen-preset="retro"]/.terminal
-                               #   retro 段选择器引用 base.css 的 .icen-pressable/.icen-control/.icen-lift
+src/tokens/style-profiles.css  # 公共兜底；本真在 design.css，像素在 pixel.css
 src/tokens/typography.css      # icen canonical 字体栈（IBM Plex Mono + CJK 宋体）
-src/tokens/retro-effects.css   # 可选效果层：CRT/扫描线/像素工具类（不进 tokens.css 拼合）
 src/base.css                   # 元素基线 + 滚动条 + z-index 标尺 + 6 个交互基元
                                #   .icen-pressable / .icen-control / .icen-field / .icen-lift / .icen-surface-elevated / .icen-focus-ring
                                #   + a11y 工具类 .icen-sr-only / .icen-skip-link + 工具类 .icen-mono/.icen-dim/.icen-faint/.icen-numeric
@@ -159,3 +157,10 @@ site/                          # 文档站骨架（ui.icen.ai，独立 Astro 应
 - **vendor 复制**：accounts 目前走这条路——`bun run sync:ui`（accounts 仓库内）把本仓库 `dist/` 复制到 `src/styles/vendor/icen/`，布局里 import 对应 CSS/JS。适合需要锁定版本或离线构建的场景。
 
 给 AI 代理的文档层：npm 包内 `AGENTS.md`（消费方速查）+ `dist/**/*.d.mts`（类型真相）；站点 <https://ui.icen.ai/llms.txt>（索引）与 `/llms-full.txt`（全文 + 类型面快照）；场景配方 skill `icen-ui`（skill.icen.ai）。
+## 本真 · 完整设计原语
+
+主题目录的单一事实源是 `src/tokens/themes.json`：本真、陶土、钢琴、艺术、梵高、墨，均含完整明暗色板与材料参数。修改后执行 `bun run colors`；构建也会自动生成 colors.css。切换器、页脚、示例与设计工具导出共享同一目录。复古主题已移除，旧偏好回退本真并保留原语和明暗。
+
+在 `<html data-icen-preset="benzhen">` 启用本真：瓷白内容面、轻盈磨砂操作层、系统排版和统一的几何节奏。引入 `@icen.ai/ui/tokens.css` 后，现有组件直接消费同一套原语。自定义品牌只需覆盖 `--icen-design-*` 种子，也可用 `createDesign` 编译带明暗与对比度验证的品牌配方。
+
+设计规范与接入示例见 [设计原语](docs/spec/design-primitives.md)，本地文档站 `/benzhen/` 提供实时调节与真实场景预览。

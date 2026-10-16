@@ -130,7 +130,7 @@ body {
 }
 
 a {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
   text-decoration: none;
   transition: color var(--icen-duration-fast) var(--icen-ease-out);
 }

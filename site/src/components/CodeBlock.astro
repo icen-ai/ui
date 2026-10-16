@@ -1,48 +1,31 @@
 ---
-import { highlightLines } from '../lib/highlight';
+/*
+ * 文档站代码展示 —— @icen.ai/ui code-block 组件（blog 同款）：
+ * shiki 双主题高亮（构建期）→ codeBlockHTML 字符串渲染（figure.icen-code-block 全家：
+ * 标题栏/行号开关/换行/折叠/复制），交互由 initCodeBlock 事件委托接管。
+ * 暗色切换由组件 CSS 的 [data-icen-dual-theme] 钩子自动生效。
+ */
+import { shikiPre } from '../lib/highlight';
+import { codeBlockHTML } from '../../../src/behaviors/code-block';
 
 interface Props {
   code: string;
   lang?: string;
-  /** 折叠为固定高度 + 底部渐隐，点「展开代码」放开（shadcn View Code 式） */
+  file?: string;
+  title?: string;
+  /** 初始显示行号（缺省隐藏，与 blog 正文一致——读者可用工具钮开） */
+  num?: boolean;
+  /** 强制折叠为固定高度 + 底部渐隐（超阈值自动折叠不需要此开关） */
   collapsible?: boolean;
-  /** 无外边距/边框/圆角，用于嵌在卡片内部 */
-  flat?: boolean;
 }
-const { code, lang = 'bash', collapsible = false, flat = false } = Astro.props;
-const lines = highlightLines(code, lang);
-const copySvg = `<svg class="ic-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
-const checkSvg = `<svg class="ic-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
-const chevron = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+const { code, lang = 'bash', file, title, num = false, collapsible = false } = Astro.props;
+const pre = await shikiPre(code, lang);
+const html = codeBlockHTML({ html: pre, lang, file, title, num, fold: collapsible || undefined });
 ---
-<div class:list={['code-collapse', { 'is-collapsible': collapsible }]}>
-  <div class:list={['codeblock', { 'codeblock--flat': flat }]}>
-    <button class="icen-copy-btn icen-copy-btn--icon" type="button" data-icen-copy={code} data-icen-copy-icon aria-label="复制代码">
-      <Fragment set:html={copySvg + checkSvg} />
-    </button>
-    <pre tabindex="0"><code>{lines.map((l) => <span class="cl" set:html={l || ' '} />)}</code></pre>
-  </div>
-  {collapsible && (
-    <button class="code-toggle" type="button" aria-expanded="false">
-      <span class="code-toggle-label" data-icen-label="more">展开代码 <Fragment set:html={chevron} /></span>
-      <span class="code-toggle-label" data-icen-label="less">收起 <Fragment set:html={chevron} /></span>
-    </button>
-  )}
-</div>
+<Fragment set:html={html} />
 
 <script>
-  import { initCopy } from '../../../src/behaviors/copy.ts';
-  initCopy();
-
-  // View Code 折叠/展开（事件委托；copy 的 init 幂等，多实例安全）
-  document.addEventListener('click', (ev) => {
-    const t = ev.target;
-    if (!(t instanceof Element)) return;
-    const btn = t.closest('.code-toggle');
-    if (!btn) return;
-    const wrap = btn.closest('.code-collapse');
-    if (!wrap) return;
-    const open = wrap.classList.toggle('is-open');
-    btn.setAttribute('aria-expanded', String(open));
-  });
+  import { initCodeBlock } from '../../../src/behaviors/code-block';
+  // 文档级事件委托、幂等；ClientRouter 客户端换页后 document 上的监听持续生效
+  initCodeBlock();
 </script>
