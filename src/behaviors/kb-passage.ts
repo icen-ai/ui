@@ -40,6 +40,7 @@
  * SVG 一律经 kb-core 转发的 svgIcon() 消毒。
  */
 
+import { createIcon } from './icons';
 import { h, normalizeCitation, svgIcon, getKbSourceType, type KbCitation, type KbLocation } from './kb-core';
 import { emitIcen } from './events';
 import { KB_ICON_LOCK } from './kb-citation';
@@ -131,7 +132,8 @@ export function createKbPassage(el: HTMLElement, opts?: KbPassageOptions): KbPas
   titleWrap.appendChild(titleEl);
   titleWrap.appendChild(locEl);
   head.appendChild(titleWrap);
-  const closeBtn = h('button', 'icen-kb-passage-close', '×');
+  const closeBtn = h('button', 'icen-kb-passage-close');
+  closeBtn.append(createIcon('close')!);
   closeBtn.type = 'button';
   closeBtn.dataset.icenKbPassageClose = '';
   closeBtn.setAttribute('aria-label', t('kbPassage.close'));

@@ -48,7 +48,8 @@
   inline-size: 100%;
 }
 
-.icen-select-trigger {
+ .icen-select-trigger {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--icen-density-space-xs);
@@ -66,6 +67,7 @@
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
+  padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
 }
 .icen-select-trigger:hover:not(:disabled) {
   border-color: var(--icen-hover-border);
@@ -107,10 +109,15 @@
 }
 
 .icen-select-chevron {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  color: var(--icen-token-text-faint);
+  position: absolute;
+  inset-inline-end: var(--icen-density-space-sm);
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  color: var(--icen-token-text-muted);
+  pointer-events: none;
   transition: transform var(--icen-tx-fast);
 }
 .icen-select.is-open .icen-select-chevron { transform: rotate(180deg); }
@@ -122,10 +129,10 @@
   z-index: var(--icen-z-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px;
+  padding: var(--icen-density-space-sm);
   background: var(--icen-token-card-strong);
   border: 1px solid var(--icen-token-outline);
-  border-radius: var(--icen-radius-md);
+  border-radius: var(--icen-radius-lg);
   box-shadow: var(--icen-token-shadow-overlay);
   transform-origin: top center;
   animation: icen-pop-in var(--icen-tx-fast);
@@ -156,16 +163,23 @@
   color: var(--icen-token-text);
 }
 .icen-select-option.is-selected {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
   font-weight: 500;
   background: var(--icen-token-accent-subtle);
 }
-.icen-select-option.is-selected::after {
-  content: '✓';
+.icen-select-option::after {
+  opacity: 0;
+  transition: opacity var(--icen-tx-fast);
+  content: '';
+  inline-size: 16px;
+  block-size: 16px;
+  background: currentColor;
+  mask: var(--icen-token-icon-check) center / contain no-repeat;
   margin-inline-start: auto;
   flex-shrink: 0;
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
 }
+.icen-select-option.is-selected::after { opacity: 1; }
 .icen-select-option.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -222,32 +236,28 @@
 /* ── 多选清除按钮（与 trigger 同级，绝对定位叠进 trigger 行内末端侧、chevron 内侧） ── */
 .icen-select-clear {
   position: absolute;
-  top: 50%;
-  inset-inline-end: calc(var(--icen-density-space-sm) + 20px);
-  transform: translateY(-50%);
-  z-index: 1;
+  inset-block-start: 50%;
+  inset-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  translate: 0 -50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  inline-size: 24px;
+  block-size: 24px;
   padding: 0;
   border: 0;
-  border-radius: var(--icen-radius-xs);
+  border-radius: var(--icen-radius-sm);
   background: transparent;
-  color: var(--icen-token-text-faint);
-  font-size: var(--icen-density-font-size-lg);
-  line-height: 1;
+  color: var(--icen-token-text-muted);
   cursor: pointer;
-  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+  transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast), color var(--icen-tx-fast);
 }
 .icen-select-clear:hover {
   color: var(--icen-token-text);
   background: var(--icen-token-fill-1);
 }
 /* 有清除钮时 trigger 行内末端侧让位（clear 18px + chevron 14px + 间距） */
-.icen-select:has(.icen-select-clear) .icen-select-trigger { padding-inline-end: 52px; }
+.icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + 52px); }
 
 /* ── 多选 chips（tag 式展示；× 仅 hover 对应 chip 时出现） ── */
 .icen-select-chips {
@@ -303,28 +313,20 @@
   flex-wrap: wrap;
 }
 
-/* 多选项 checkbox 指示器（选项起始缘侧；panel portal 到 body，属性在 panel 上） */
-.icen-select-panel[data-icen-select-multiple] .icen-select-option::before {
-  content: '';
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  border: 1.5px solid var(--icen-token-outline);
-  border-radius: var(--icen-radius-xs);
-  transition: background-color var(--icen-tx-fast), border-color var(--icen-tx-fast);
-}
-.icen-select-panel[data-icen-select-multiple] .icen-select-option.is-selected::before {
-  background: var(--icen-token-accent);
-  border-color: var(--icen-token-accent);
-}
-.icen-select-panel[data-icen-select-multiple] .icen-select-option.is-selected::after {
-  content: '✓';
-  margin-inline-start: auto;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .icen-select-panel { animation: none; }
   .icen-select-search-input,
   .icen-select-chip-x,
   .icen-select-clear { transition: none; }
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .icen-select-clear:not([hidden]) { opacity: 0; pointer-events: none; }
+  .icen-select:is(:hover,:focus-within) .icen-select-clear:not([hidden]) { opacity: 1; pointer-events: auto; }
+}
+@media (pointer: coarse) {
+  .icen-select-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: 32px; }
+  .icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: 84px; }
+}
+
+.icen-select-trigger--sm, .icen-select-trigger--lg { padding-inline-end: calc(var(--icen-density-space-sm) + 24px); }

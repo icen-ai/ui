@@ -1,3 +1,4 @@
+import { createIcon } from './icons';
 import { t } from './i18n';
 import { parseSvg } from './svg-parse';
 /*
@@ -236,7 +237,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
     closeBtn.setAttribute('aria-label', t('common.close'));
     const svg = closeSvg();
     if (svg) closeBtn.appendChild(svg);
-    else closeBtn.textContent = '×';
+    else closeBtn.replaceChildren(createIcon('close')!);
     closeBtn.addEventListener('click', remove);
     el.appendChild(closeBtn);
   }

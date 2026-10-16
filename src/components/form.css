@@ -206,7 +206,14 @@
 
 /* 字段成功态 */
 .icen-form-field[data-icen-valid='true'] .icen-form-label::after {
-  content: '✓';
+  content: '';
+  display: inline-block;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  vertical-align: middle;
+  background: currentColor;
+  mask: var(--icen-token-icon-check) center / contain no-repeat;
   margin-inline-start: 4px;
   color: var(--icen-token-success);
   font-weight: 700;

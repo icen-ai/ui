@@ -73,7 +73,14 @@
   line-height: 1;
   user-select: none;
 }
-.icen-breadcrumb-sep::after { content: '›'; }
+.icen-breadcrumb-sep::after { content: '';
+  display: inline-block;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  vertical-align: middle;
+  background: currentColor;
+  mask: var(--icen-token-icon-chevron-right) center / contain no-repeat; }
 
 .icen-breadcrumb-current {
   display: inline-flex;
@@ -107,7 +114,14 @@
 
 /* ── 面包屑分隔符变体 ── */
 .icen-breadcrumb--slash .icen-breadcrumb-sep::after { content: '/'; }
-.icen-breadcrumb--arrow .icen-breadcrumb-sep::after { content: '→'; }
+.icen-breadcrumb--arrow .icen-breadcrumb-sep::after { content: '';
+  display: inline-block;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  vertical-align: middle;
+  background: currentColor;
+  mask: var(--icen-token-icon-arrow-right) center / contain no-repeat; }
 .icen-breadcrumb--dot .icen-breadcrumb-sep::after { content: '·'; font-size: 1.2em; }
 
 /* ── 面包屑尺寸变体 ── */
@@ -125,5 +139,5 @@
 }
 
 /* ── RTL：分隔符方向镜像（› / → 指向行进方向，RTL 下行进朝左）── */
-:is([dir='rtl']) .icen-breadcrumb-sep::after { content: '‹'; }
-:is([dir='rtl']) .icen-breadcrumb--arrow .icen-breadcrumb-sep::after { content: '←'; }
+:is([dir='rtl']) .icen-breadcrumb-sep::after { transform: scaleX(-1); }
+:is([dir='rtl']) .icen-breadcrumb--arrow .icen-breadcrumb-sep::after { transform: scaleX(-1); }

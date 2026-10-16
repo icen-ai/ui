@@ -65,6 +65,7 @@
  *   先 destroy 旧实例（WeakMap 级幂等）；destroy 摘除 portal + 全部监听。
  */
 
+import { createIcon } from './icons';
 import { computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
 import { t } from './i18n';
@@ -77,6 +78,9 @@ export interface CascaderOption {
 }
 
 export interface CascaderOptions {
+  /** Accessible field name; defaults to placeholder. */
+  label?: string;
+  size?: 'sm' | 'md' | 'lg';
   options: CascaderOption[];
   /** 初值 = 路径值数组（任一级失配则忽略） */
   value?: string[];
@@ -232,19 +236,7 @@ function unbindOpenListeners(): void {
 const instances = new WeakMap<HTMLElement, () => void>();
 
 /** 右指 chevron（SVG，currentColor 随 token 走）。 */
-function chevronSvg(): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('fill', 'none');
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', 'M6 4l4 4-4 4');
-  path.setAttribute('stroke', 'currentColor');
-  path.setAttribute('stroke-width', '1.5');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  svg.appendChild(path);
-  return svg;
-}
+function chevronSvg(): SVGSVGElement { return createIcon('chevron-right')!; }
 
 export function createCascader(el: HTMLElement, opts: CascaderOptions): CascaderHandle {
   if (typeof document === 'undefined') return noopHandle();
@@ -279,6 +271,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   el.textContent = '';
   const root = document.createElement('div');
   root.className = 'icen-cascader';
+  if (opts.size && opts.size !== 'md') root.classList.add('icen-cascader--' + opts.size);
   root.setAttribute('data-icen-cascader', '');
   if (opts.disabled) root.setAttribute('data-icen-disabled', '');
 
@@ -288,11 +281,12 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   trigger.setAttribute('role', 'combobox');
   trigger.setAttribute('aria-haspopup', 'listbox');
   trigger.setAttribute('aria-expanded', 'false');
+  trigger.setAttribute('aria-label',opts.label ?? placeholder);
   if (opts.disabled) trigger.disabled = true;
 
   const valueEl = document.createElement('span');
   valueEl.className = 'icen-cascader-value';
-  const chevron = chevronSvg();
+  const chevron = createIcon('chevron-down')!;
   chevron.classList.add('icen-cascader-chevron');
   trigger.appendChild(valueEl);
   trigger.appendChild(chevron);
@@ -301,10 +295,13 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   if (opts.clearable) {
     clearBtn = document.createElement('button');
     clearBtn.type = 'button';
+    clearBtn.disabled = opts.disabled === true;
     clearBtn.className = 'icen-cascader-clear';
     clearBtn.setAttribute('aria-label', '清除');
     clearBtn.hidden = true;
-    clearBtn.textContent = '×';
+    clearBtn.append(createIcon('close')!);
+    clearBtn.classList.add('icen-icon-action');
+    clearBtn.setAttribute('data-icen-reveal','');
     root.appendChild(clearBtn);
   }
 
@@ -343,7 +340,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   emptyEl.hidden = true;
   panel.appendChild(emptyEl);
 
-  root.appendChild(trigger);
+  root.insertBefore(trigger,clearBtn);
   root.appendChild(panel);
   el.appendChild(root);
 
@@ -352,7 +349,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
 
   /** 面板宽：固定 > max 收窄 > min 放宽 > trigger 宽（与 select 同规则）。 */
   function resolvedPanelWidth(triggerWidth: number): number {
-    let w = triggerWidth;
+    let w = Math.max(triggerWidth, cols.children.length * 160 + 16);
     if (panelSizing.minWidth != null) w = Math.max(w, panelSizing.minWidth);
     if (panelSizing.maxWidth != null) w = Math.min(w, panelSizing.maxWidth);
     if (panelSizing.width != null) w = panelSizing.width;
@@ -470,6 +467,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     const colEl = cols.children[focus.col];
     const count = colEl ? colEl.querySelectorAll('.icen-cascader-item').length : 0;
     focus.idx = Math.max(0, Math.min(focus.idx, Math.max(0, count - 1)));
+    if (isOpen()) positionPanel();
   }
 
   function renderResults(): void {
@@ -536,8 +534,15 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     if (!colEl) return;
     const items = Array.from(colEl.querySelectorAll<HTMLElement>('.icen-cascader-item'));
     const item = items[focus.idx];
-    item?.focus();
-    item?.scrollIntoView({ block: 'nearest' });
+    if (!item) return;
+    item.focus({preventScroll:true});
+    // A portalled menu must scroll its own viewports, never the document behind it.
+    const rowRect = item.getBoundingClientRect(), panelRect = panel.getBoundingClientRect();
+    if (rowRect.top < panelRect.top) panel.scrollTop -= panelRect.top-rowRect.top;
+    else if (rowRect.bottom > panelRect.bottom) panel.scrollTop += rowRect.bottom-panelRect.bottom;
+    const colRect = colEl.getBoundingClientRect(), colsRect = cols.getBoundingClientRect();
+    if (colRect.left < colsRect.left) cols.scrollLeft -= colsRect.left-colRect.left;
+    else if (colRect.right > colsRect.right) cols.scrollLeft += colRect.right-colsRect.right;
   }
 
   function moveVertical(delta: number): void {
@@ -627,6 +632,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
         minWidth: panelWidth,
         maxWidth: panelWidth,
         maxHeight: panelSizing.maxHeight ?? PANEL_MAX_HEIGHT,
+        contentHeightHint: panel.scrollHeight,
       },
     );
     panel.style.left = `${layout.left + window.scrollX}px`;

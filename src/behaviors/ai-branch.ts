@@ -21,6 +21,7 @@
  * SSR 下 render 原样返回挂载元素、init 为 no-op。
  */
 
+import { createIcon } from './icons';
 import { h } from './ai-core';
 import { emitIcen } from './events';
 import { t } from './i18n';
@@ -69,7 +70,8 @@ export function renderAiBranch(el: HTMLElement, model: AiBranchModel): HTMLEleme
   root.setAttribute('role', 'group');
   root.setAttribute('aria-label', t('aiBranch.version'));
 
-  const prev = h('button', 'icen-ai-branch-prev', '‹');
+  const prev = h('button', 'icen-ai-branch-prev');
+  prev.append(createIcon('chevron-left')!);
   prev.type = 'button';
   prev.setAttribute('aria-label', t('aiBranch.prevVersion'));
   prev.disabled = index <= 0;
@@ -77,7 +79,8 @@ export function renderAiBranch(el: HTMLElement, model: AiBranchModel): HTMLEleme
 
   root.appendChild(h('span', 'icen-ai-branch-page', `${index + 1}/${count}`));
 
-  const next = h('button', 'icen-ai-branch-next', '›');
+  const next = h('button', 'icen-ai-branch-next');
+  next.append(createIcon('chevron-right')!);
   next.type = 'button';
   next.setAttribute('aria-label', t('aiBranch.nextVersion'));
   next.disabled = index >= count - 1;

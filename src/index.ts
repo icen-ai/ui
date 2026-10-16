@@ -94,3 +94,7 @@ export { createDesign, designContrast, mountDesign, setDesign, prepareDesignChan
 export type { DesignDefinition, DesignPalette, CompiledDesign } from './behaviors/design';
 
 export * from './behaviors/theme-switcher';
+
+export * from './behaviors/icons';
+
+export * from './behaviors/panel';

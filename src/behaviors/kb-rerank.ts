@@ -1,3 +1,4 @@
+import { createIcon } from './icons';
 /*
  * @icen.ai/ui — Behavior: kb-rerank（rerank A/B 对比，与 components/kb-search.css 配套）
  * 市场空白组件（docs/spec/kb-family.md §5.13）：直观回答「rerank 到底改了什么」。
@@ -186,11 +187,11 @@ export function renderKbRerankCompare(el: HTMLElement, opts: KbRerankCompareOpts
         deltaCell.textContent = '—';
       } else if (delta < 0) {
         deltaCell.classList.add('is-up');
-        deltaCell.textContent = `↑${Math.abs(delta)}`;
+        deltaCell.append(createIcon('arrow-up',{size:12})!,document.createTextNode(String(Math.abs(delta))));
         deltaCell.title = t('kbRerank.up', { p0: Math.abs(delta) });
       } else {
         deltaCell.classList.add('is-down');
-        deltaCell.textContent = `↓${delta}`;
+        deltaCell.append(createIcon('arrow-down',{size:12})!,document.createTextNode(String(delta)));
         deltaCell.title = t('kbRerank.down', { p0: delta });
       }
     } else {

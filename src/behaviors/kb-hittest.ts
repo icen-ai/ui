@@ -44,6 +44,7 @@
  * 渲染纪律：只写 textContent/createElement，禁 innerHTML；SVG 经 kb-core svgIcon 消毒。
  */
 
+import { createIcon } from './icons';
 import {
   h, svgIcon, hitTestStats, formatScore, formatPercent, type KbHitTestCase, type KbHitStats,
 } from './kb-core';
@@ -236,10 +237,14 @@ export function createKbHitTest(el: HTMLElement, opts: KbHitTestOpts = {}): KbHi
       }
       if (!ids.length) expected.appendChild(h('span', 'icen-kb-chip', t('kbHittest.noExpectation')));
 
-      const result = h('span', 'icen-kb-hittest-result icen-kb-num', passed === true ? '✓' : passed === false ? '✗' : '—');
+      const result = h('span', 'icen-kb-hittest-result icen-kb-num', passed === undefined ? '—' : '');
+      if (passed !== undefined) result.append(createIcon(passed ? 'check' : 'close')!);
       result.title = passed === undefined ? t('kbHittest.notRun') : passed ? t('kbHittest.expectHit') : t('kbHittest.expectMiss');
 
-      const remove = h('button', 'icen-kb-hittest-remove', '×');
+      result.setAttribute('role','img');
+      result.setAttribute('aria-label',result.title);
+      const remove = h('button', 'icen-kb-hittest-remove');
+  remove.append(createIcon('close')!);
       remove.type = 'button';
       remove.title = t('kbHittest.deleteQuestion');
       remove.setAttribute('aria-label', t('kbHittest.deleteQuestion'));

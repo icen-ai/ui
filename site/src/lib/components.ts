@@ -1,3 +1,4 @@
+import { iconHTML } from '../../../src/behaviors/icons';
 /*
  * 组件文档注册表 —— 文档站单一数据源。
  * demo / script 拆解自原四个合集演示页（forms / overlays / data / navig）与 components 合集页。
@@ -5,6 +6,7 @@
  * （toast / charts / popover 无 init，靠 script 字段做额外接线）。
  */
 
+import { ICON_DOC } from './icon-docs';
 import { THEME_SWITCHER_DOC } from './theme-switcher-docs';
 import { cssOf } from '../../../scripts/slugs.mjs';
 import { KB_DOCS_GROUND_INGEST } from './kb-docs-ground-ingest';
@@ -66,6 +68,7 @@ export interface ComponentDoc {
   group: string;
   desc: string;
   demo: string;
+  demoLayout?: 'center' | 'stretch';
   usage: string;
   behaviors?: string[];
   behaviorInit?: Record<string, string | string[]>;
@@ -100,6 +103,7 @@ const inboxSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const avatarImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' fill='%23d97757'/><circle cx='24' cy='18' r='8' fill='%23fffdf9'/><path d='M8 44c3-10 10-14 16-14s13 4 16 14z' fill='%23fffdf9'/></svg>`;
 
 export const COMPONENTS: ComponentDoc[] = [
+  ICON_DOC,
   THEME_SWITCHER_DOC,
   /* ══════════ 基础 ══════════ */
   {
@@ -190,18 +194,8 @@ export const COMPONENTS: ComponentDoc[] = [
   <div class="icen-panel-body">…内容…</div>
   <div class="icen-panel-foot">…底栏…</div>
 </div>`,
-    script: `// 可折叠面板的演示接线
-document.querySelectorAll('.icen-panel--collapsible').forEach((panel) => {
-  const toggle = panel.querySelector('.icen-panel-toggle');
-  const title = panel.querySelector('.icen-panel-title');
-  const handler = () => {
-    panel.classList.toggle('is-collapsed');
-    const collapsed = panel.classList.contains('is-collapsed');
-    toggle?.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-  };
-  toggle?.addEventListener('click', (ev) => ev.stopPropagation());
-  title?.addEventListener('click', handler);
-});`,
+    behaviors: ['panel'],
+    behaviorInit: {panel:'initPanel'},
   },
   {
     slug: 'pill',
@@ -257,7 +251,7 @@ document.querySelectorAll('.icen-panel--collapsible').forEach((panel) => {
 <span class="icen-tag icen-tag--accent">品牌色</span>
 <span class="icen-tag">
   <span class="icen-tag-label">可移除</span>
-  <button class="icen-tag-close" type="button" aria-label="移除">×</button>
+  <button class="icen-tag-close" type="button" aria-label="移除">${iconHTML('close')}</button>
 </span>
 <!-- 语义色：tag--accent/success/warning/error/info；尺寸：tag--sm/lg -->`,
     script: `// 关闭按钮的演示接线（实际由消费方决定是否从 DOM 移除）
@@ -627,7 +621,7 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
       <span class="icen-select-value is-empty">选择标签（最多 3 个）</span>
       ${svgChevron}
     </button>
-    <button class="icen-select-clear" type="button" aria-label="清除全部" hidden>×</button>
+    <button class="icen-select-clear" type="button" aria-label="清除全部" hidden>${iconHTML('close')}</button>
     <div class="icen-select-panel" hidden>
       <button class="icen-select-option" type="button" data-icen-value="ts">TypeScript</button>
       <button class="icen-select-option" type="button" data-icen-value="react">React</button>
@@ -948,7 +942,7 @@ COMPONENTS.push(
         <h3 class="icen-modal-title">小号对话框</h3>
         <p class="icen-modal-description">max-width 360px，Esc / 点击遮罩可关闭</p>
       </div>
-      <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">×</button>
+      <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
       <p>焦点已锁定在对话框内：Tab 会在关闭钮与底部按钮之间循环，关闭后焦点还原到触发按钮。</p>
@@ -967,7 +961,7 @@ COMPONENTS.push(
         <h3 class="icen-modal-title">默认对话框</h3>
         <p class="icen-modal-description">max-width 480px</p>
       </div>
-      <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">×</button>
+      <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
       <p>面板进场为 dialogScaleIn 200ms：scale(.96) translateY(8px) → scale(1) translateY(0)。</p>
@@ -987,7 +981,7 @@ COMPONENTS.push(
         <h3 class="icen-modal-title">大号对话框</h3>
         <p class="icen-modal-description">max-width 640px，内容超高时 modal-body 内部滚动</p>
       </div>
-      <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">×</button>
+      <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
       <p>背景已滚动锁定（body overflow 关闭时恢复旧值）。</p>
@@ -1006,7 +1000,7 @@ COMPONENTS.push(
         <h3 class="icen-modal-title">右侧 Sheet</h3>
         <p class="icen-modal-description">宽 360px，translateX(40px) 滑入</p>
       </div>
-      <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">×</button>
+      <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
       <p>Sheet 变体：modal--sheet-left / right / top / bottom，圆角只保留非贴边侧。</p>
@@ -1030,7 +1024,7 @@ closeModal('confirm');  // 编程关闭；开合均派 icen:modal-open / icen:mo
     group: '浮层',
     desc: 'trigger + [data-icen-dropdown-menu] 模板；面板 fixed 定位在 trigger 下方 4px，视口 12px margin 内 clamp，空间不足翻上。',
     demo: `<div class="dropdown" data-icen-dropdown>
-  <button class="icen-btn dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="menu">操作 ▾</button>
+  <button class="icen-btn dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="menu">操作 ${iconHTML('chevron-down')}</button>
   <div data-icen-dropdown-menu hidden>
     <div class="icen-menu-label">文件</div>
     <button class="icen-menu-item icen-pressable" id="dd-rename">
@@ -1099,7 +1093,7 @@ registerContextMenu('demo-file', [
     group: '浮层',
     desc: 'computePopoverLayout 纯函数选侧（prefer → 翻对侧 → 取大侧）；openPopover 负责 portal、跟随重算与外点/Esc 关闭。',
     demo: `<div class="demo-row">
-  <button class="icen-btn" id="popover-demo-trigger">筛选 ▾</button>
+  <button class="icen-btn" id="popover-demo-trigger">筛选 ${iconHTML('chevron-down')}</button>
 </div>
 <div class="icen-popover" id="popover-demo-panel" hidden>
   <div class="icen-form-field">
@@ -1359,7 +1353,7 @@ COMPONENTS.push(
     <p class="icen-alert-title">标题</p>
     <div class="icen-alert-body">正文</div>
   </div>
-  <button class="icen-alert-close" type="button" aria-label="关闭">×</button>
+  <button class="icen-alert-close" type="button" aria-label="关闭">${iconHTML('close')}</button>
 </div>`,
     script: `// alert 关闭是页面级演示（非组件 behavior）：点击移除整条
 document.querySelectorAll('.icen-alert-close').forEach((btn) => {
@@ -2864,7 +2858,7 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
     group: '导航',
     desc: '纯样式契约（翻页逻辑归消费方）：1 … 4 [5] 6 … 12 静态演示，含禁用态与省略号。',
     demo: `<nav class="icen-pagination" aria-label="分页">
-  <button class="icen-page-btn icen-motion is-disabled" aria-label="上一页">‹</button>
+  <button class="icen-page-btn icen-motion is-disabled" aria-label="上一页">${iconHTML('chevron-left')}</button>
   <button class="icen-page-btn icen-motion">1</button>
   <span class="icen-page-ellipsis">…</span>
   <button class="icen-page-btn icen-motion">4</button>
@@ -2872,12 +2866,12 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
   <button class="icen-page-btn icen-motion">6</button>
   <span class="icen-page-ellipsis">…</span>
   <button class="icen-page-btn icen-motion">12</button>
-  <button class="icen-page-btn icen-motion" aria-label="下一页">›</button>
+  <button class="icen-page-btn icen-motion" aria-label="下一页">${iconHTML('chevron-right')}</button>
 </nav>`,
     usage: `<nav class="icen-pagination" aria-label="分页">
-  <button class="icen-page-btn icen-motion is-disabled" aria-label="上一页">‹</button>
+  <button class="icen-page-btn icen-motion is-disabled" aria-label="上一页">${iconHTML('chevron-left')}</button>
   <button class="icen-page-btn icen-motion is-active" aria-current="page">1</button>
-  <button class="icen-page-btn icen-motion" aria-label="下一页">›</button>
+  <button class="icen-page-btn icen-motion" aria-label="下一页">${iconHTML('chevron-right')}</button>
 </nav>`,
 
     behaviors: ['controls'],
@@ -2891,7 +2885,7 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
     demo: `<ol class="icen-steps">
   <li class="icen-step icen-step--finish">
     <span class="icen-step-line"></span>
-    <span class="icen-step-dot">✓</span>
+    <span class="icen-step-dot">${iconHTML('check')}</span>
     <div class="icen-step-body">
       <div class="icen-step-title">注册账号</div>
       <div class="icen-step-desc">邮箱验证通过</div>
@@ -2899,7 +2893,7 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
   </li>
   <li class="icen-step icen-step--finish">
     <span class="icen-step-line"></span>
-    <span class="icen-step-dot">✓</span>
+    <span class="icen-step-dot">${iconHTML('check')}</span>
     <div class="icen-step-body">
       <div class="icen-step-title">实名认证</div>
       <div class="icen-step-desc">审核已完成</div>
@@ -2925,7 +2919,7 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
 <ol class="icen-steps icen-steps--vertical" style="margin-top:20px">
   <li class="icen-step icen-step--finish">
     <span class="icen-step-line"></span>
-    <span class="icen-step-dot">✓</span>
+    <span class="icen-step-dot">${iconHTML('check')}</span>
     <div class="icen-step-body">
       <div class="icen-step-title">创建项目</div>
       <div class="icen-step-desc">仓库初始化完成</div>
@@ -2951,7 +2945,7 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
     usage: `<ol class="icen-steps">
   <li class="icen-step icen-step--finish">
     <span class="icen-step-line"></span>
-    <span class="icen-step-dot">✓</span>
+    <span class="icen-step-dot">${iconHTML('check')}</span>
     <div class="icen-step-body">
       <div class="icen-step-title">已完成</div>
       <div class="icen-step-desc">描述</div>

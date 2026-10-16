@@ -247,7 +247,7 @@ export function computePopoverLayout(
   const minHeight = Math.min(Math.max(80, opts.minHeight ?? DEFAULT_MIN_HEIGHT), availableHeight);
   const requestedMaxHeight = Math.max(minHeight, opts.maxHeight ?? DEFAULT_MAX_HEIGHT);
   const fallbackHeight = Math.min(260, requestedMaxHeight);
-  const contentHeight = Math.max(opts.contentHeightHint ?? 0, fallbackHeight);
+  const contentHeight = opts.contentHeightHint != null && opts.contentHeightHint > 0 ? opts.contentHeightHint : fallbackHeight;
   const desiredHeight = clamp(contentHeight, minHeight, Math.min(requestedMaxHeight, availableHeight));
   /* 选侧：优先侧放得下用优先侧，放不下翻对侧，两侧都放不下取空间大者 */
   const side = chooseSide(preferredSide, availableTop, availableBottom, desiredHeight);

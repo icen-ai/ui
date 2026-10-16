@@ -68,6 +68,7 @@
  *   先 destroy 旧实例（WeakMap 级幂等）；destroy 摘除 portal + 全部监听。
  */
 
+import { createIcon } from './icons';
 import { computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
 import { t } from './i18n';
@@ -80,6 +81,9 @@ export interface TreeNode {
 }
 
 export interface TreeSelectOptions {
+  /** Accessible field name; defaults to placeholder. */
+  label?: string;
+  size?: 'sm' | 'md' | 'lg';
   nodes: TreeNode[];
   /** 初值（多选数组；单选取首个有效值） */
   value?: string[];
@@ -261,35 +265,8 @@ function unbindOpenListeners(): void {
 /** 同 el 重复 create：先销毁旧实例再重建（WeakMap 级幂等，不占 el 属性命名空间）。 */
 const instances = new WeakMap<HTMLElement, () => void>();
 
-/** 下指 chevron（SVG，currentColor 随 token 走）。 */
-function chevronSvg(): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('fill', 'none');
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', 'M4 6l4 4 4-4');
-  path.setAttribute('stroke', 'currentColor');
-  path.setAttribute('stroke-width', '1.5');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  svg.appendChild(path);
-  return svg;
-}
-
 /** 右指 chevron（分支展开 toggle）。 */
-function branchChevronSvg(): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 16 16');
-  svg.setAttribute('fill', 'none');
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', 'M6 4l4 4-4 4');
-  path.setAttribute('stroke', 'currentColor');
-  path.setAttribute('stroke-width', '1.5');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  svg.appendChild(path);
-  return svg;
-}
+function branchChevronSvg(): SVGSVGElement { return createIcon('chevron-right')!; }
 
 export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): TreeSelectHandle {
   if (typeof document === 'undefined') return noopHandle();
@@ -327,6 +304,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   el.textContent = '';
   const root = document.createElement('div');
   root.className = 'icen-tree-select';
+  if (opts.size && opts.size !== 'md') root.classList.add('icen-tree-select--' + opts.size);
   root.setAttribute('data-icen-tree-select', '');
   if (opts.disabled) root.setAttribute('data-icen-disabled', '');
 
@@ -336,11 +314,12 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   trigger.setAttribute('role', 'combobox');
   trigger.setAttribute('aria-haspopup', 'tree');
   trigger.setAttribute('aria-expanded', 'false');
+  trigger.setAttribute('aria-label',opts.label ?? placeholder);
   if (opts.disabled) trigger.disabled = true;
 
   const valueEl = document.createElement('span');
   valueEl.className = 'icen-tree-select-value';
-  const chevron = chevronSvg();
+  const chevron = createIcon('chevron-down')!;
   chevron.classList.add('icen-tree-select-chevron');
   trigger.appendChild(valueEl);
   trigger.appendChild(chevron);
@@ -349,10 +328,13 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   if (opts.clearable) {
     clearBtn = document.createElement('button');
     clearBtn.type = 'button';
+    clearBtn.disabled = opts.disabled === true;
     clearBtn.className = 'icen-tree-select-clear';
     clearBtn.setAttribute('aria-label', '清除');
     clearBtn.hidden = true;
-    clearBtn.textContent = '×';
+    clearBtn.append(createIcon('close')!);
+    clearBtn.classList.add('icen-icon-action');
+    clearBtn.setAttribute('data-icen-reveal','');
     root.appendChild(clearBtn);
   }
 
@@ -386,7 +368,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   emptyEl.hidden = true;
   panel.appendChild(emptyEl);
 
-  root.appendChild(trigger);
+  root.insertBefore(trigger,clearBtn);
   root.appendChild(panel);
   el.appendChild(root);
 
@@ -458,7 +440,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
       x.setAttribute('role', 'button');
       x.setAttribute('tabindex', '-1');
       x.setAttribute('aria-label', `移除 ${node.label}`);
-      x.textContent = '×';
+      x.append(createIcon('close',{size:12})!);
       on(x, 'pointerdown', (ev: PointerEvent) => ev.stopPropagation());
       on(x, 'click', (ev: MouseEvent) => {
         ev.stopPropagation();

@@ -39,7 +39,8 @@
 .icen-theme-switcher-sample { display: inline-flex; flex: 0 0 auto; inline-size: 40px; block-size: 20px; overflow: hidden; border: 1px solid var(--icen-token-line); border-radius: var(--icen-radius-sm); }
 .icen-theme-switcher-sample i { display: block; flex: 1; }
 .icen-theme-switcher-symbol { display: inline-flex; align-items: center; justify-content: center; inline-size: 20px; font-size: 20px; line-height: 1; }
-.icen-theme-switcher-chevron { font-size: var(--icen-density-font-size-sm); color: var(--icen-token-text-muted); }
+.icen-theme-switcher-chevron { inline-size: 14px; block-size: 14px; flex: none; color: var(--icen-token-text-muted); transition: transform var(--icen-tx-fast); }
+.icen-theme-switcher-trigger[aria-expanded="true"] .icen-theme-switcher-chevron { transform: rotate(180deg); }
 .icen-theme-switcher[data-icen-display="icon"] .icen-theme-switcher-trigger,
 .icen-theme-switcher[data-icen-display="color"] .icen-theme-switcher-trigger { inline-size: var(--switcher-height); padding: 0; }
 .icen-theme-switcher[data-icen-display="icon"] .icen-theme-switcher-name,
@@ -72,8 +73,8 @@
 .icen-theme-switcher-options--theme .icen-theme-switcher-option { flex-direction: column; align-items: stretch; gap: var(--icen-density-space-sm); text-align: start; }
 .icen-theme-switcher-options--theme .icen-theme-switcher-sample { inline-size: 100%; block-size: 28px; }
 .icen-theme-switcher-option[aria-pressed="true"] { border-color: var(--icen-token-accent); background: var(--icen-token-accent-faint); }
-.icen-theme-switcher-check { display: none; margin-inline-start: auto; color: var(--icen-token-accent-text); }
-.icen-theme-switcher-option[aria-pressed="true"] > .icen-theme-switcher-check { display: inline; }
+.icen-theme-switcher-check { display: inline-flex; flex: none; inline-size: 16px; block-size: 16px; opacity: 0; margin-inline-start: auto; color: var(--icen-token-accent-text); transition: opacity var(--icen-tx-fast); }
+.icen-theme-switcher-option[aria-pressed="true"] > .icen-theme-switcher-check { opacity: 1; }
 .icen-theme-switcher-options--theme .icen-theme-switcher-check { position: absolute; inset-inline-end: var(--icen-density-space-sm); inset-block-end: var(--icen-density-space-sm); }
 .icen-theme-switcher[data-icen-layout="inline"] { display: block; }
 .icen-theme-switcher[data-icen-layout="inline"] > .icen-theme-switcher-panel { position: static; inline-size: 100%; box-shadow: none; background: var(--icen-token-surface); }
@@ -85,3 +86,14 @@
 @media (forced-colors: active) {
   .icen-theme-switcher-option[aria-pressed="true"] { outline: 2px solid Highlight; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-theme-switcher-chevron, .icen-theme-switcher-check, .icen-theme-switcher-trigger, .icen-theme-switcher-option { transition: none; }
+}
+
+/* Compact menu cards keep all three axes visible in ordinary desktop viewports. */
+.icen-theme-switcher-panel[role="dialog"] .icen-theme-switcher-section + .icen-theme-switcher-section { margin-block-start: var(--icen-density-space-sm); padding-block-start: var(--icen-density-space-sm); }
+.icen-theme-switcher-panel[role="dialog"] .icen-theme-switcher-options--theme .icen-theme-switcher-option { gap: var(--icen-density-space-xs); }
+.icen-theme-switcher-panel[role="dialog"] .icen-theme-switcher-options--theme .icen-theme-switcher-sample { block-size: 24px; }
+
+.icen-theme-switcher-panel[role="dialog"] .icen-theme-switcher-section:has(.icen-theme-switcher-options--mode) .icen-theme-switcher-heading { display: none; }

@@ -7,7 +7,7 @@ export const ICEN_EVENT_TYPES = [
   'icen:click', 'icen:dblclick', 'icen:contextmenu', 'icen:longpress', 'icen:text-select',
   'icen:chart-hover', 'icen:chart-click', 'icen:chart-dblclick', 'icen:chart-contextmenu',
   'icen:chart-legend-toggle', 'icen:chart-legend-visibility', 'icen:chart-zoom',
-  'icen:tab-change', 'icen:tags-change', 'icen:otp-complete',
+  'icen:panel-toggle', 'icen:tab-change', 'icen:tags-change', 'icen:otp-complete',
   'icen:slider-input', 'icen:slider-change', 'icen:switch-change', 'icen:check-change',
   'icen:stepper-change', 'icen:segmented-change', 'icen:step-change', 'icen:rating-change',
   'icen:page-change', 'icen:sort-change', 'icen:nav-select', 'icen:sidebar-toggle',

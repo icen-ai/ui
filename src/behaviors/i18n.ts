@@ -396,6 +396,8 @@ export interface IcenLocale {
   /* ── input ── */
   'input.hidePassword': string;
   'input.otpPosition': string;
+  'panel.expand': string;
+  'panel.collapse': string;
   'input.showPassword': string;
   /* ── kbAccess ── */
   'kbAccess.approveTip': string;
@@ -1181,6 +1183,8 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   /* ── input ── */
   'input.hidePassword': '隐藏密码',
   'input.otpPosition': '第 {p0} 位，共 {p1} 位',
+  'panel.expand': '展开',
+  'panel.collapse': '折叠',
   'input.showPassword': '显示密码',
   /* ── kbAccess ── */
   'kbAccess.approveTip': '批准该访问申请',
@@ -1966,6 +1970,8 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   /* ── input ── */
   'input.hidePassword': 'Hide password',
   'input.otpPosition': 'Digit {p0} of {p1}',
+  'panel.expand': 'Expand',
+  'panel.collapse': 'Collapse',
   'input.showPassword': 'Show password',
   /* ── kbAccess ── */
   'kbAccess.approveTip': 'Approve this access request',

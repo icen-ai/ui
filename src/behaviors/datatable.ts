@@ -1,3 +1,4 @@
+import { createIcon } from './icons';
 /*
  * @icen.ai/ui — Behavior: datatable（数据表格，与 components/datatable.css 配套）
  *
@@ -789,7 +790,7 @@ export function createTable<Row = Record<string, unknown>>(
         cell.setAttribute('aria-sort', active ? (sorts[si]!.dir === 'asc' ? 'ascending' : 'descending') : 'none');
         const arrow = document.createElement('span');
         arrow.className = 'icen-dt-sort';
-        arrow.textContent = active ? (sorts[si]!.dir === 'asc' ? '↑' : '↓') : '↕';
+        arrow.append(createIcon(active ? (sorts[si]!.dir === 'asc' ? 'arrow-up' : 'arrow-down') : 'sort',{size:14})!);
         if (active) arrow.classList.add('is-active');
         cell.appendChild(arrow);
         if (active && sorts.length > 1) {
@@ -1870,13 +1871,14 @@ export function createTable<Row = Record<string, unknown>>(
     });
     pager.appendChild(sizeSel);
 
-    const pageBtn = (label: string, target: number, opts2: { disabled?: boolean; active?: boolean; aria?: string } = {}): HTMLButtonElement => {
+    const pageBtn = (label: string, target: number, opts2: { disabled?: boolean; active?: boolean; aria?: string; icon?: string } = {}): HTMLButtonElement => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'icen-dt-page-btn';
       if (opts2.active) b.classList.add('is-active');
       b.disabled = opts2.disabled === true;
-      b.textContent = label;
+      if (opts2.icon) b.append(createIcon(opts2.icon)!);
+      else b.textContent = label;
       if (opts2.aria) b.setAttribute('aria-label', opts2.aria);
       b.addEventListener('click', () => {
         page = target;
@@ -1887,7 +1889,7 @@ export function createTable<Row = Record<string, unknown>>(
       return b;
     };
 
-    pager.appendChild(pageBtn('‹', page - 1, { disabled: page <= 1, aria: t('pagination.prev') }));
+    pager.appendChild(pageBtn('', page - 1, { icon: 'chevron-left', disabled: page <= 1, aria: t('pagination.prev') }));
     const win: number[] = [];
     for (let p = 1; p <= pages; p++) {
       if (p === 1 || p === pages || Math.abs(p - page) <= 2) win.push(p);
@@ -1903,7 +1905,7 @@ export function createTable<Row = Record<string, unknown>>(
       pager.appendChild(pageBtn(String(p), p, { active: p === page }));
       last = p;
     }
-    pager.appendChild(pageBtn('›', page + 1, { disabled: page >= pages, aria: t('pagination.next') }));
+    pager.appendChild(pageBtn('', page + 1, { icon: 'chevron-right', disabled: page >= pages, aria: t('pagination.next') }));
 
     foot.appendChild(pager);
   }

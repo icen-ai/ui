@@ -16,6 +16,7 @@
  * 幂等标记，销毁后可重新 init；销毁至重 init 之间残留 chip 的点击不派发）。SSR 下返回 no-op。
  */
 
+import { createIcon } from './icons';
 import { emitIcen } from './events';
 import { t } from './i18n';
 
@@ -96,7 +97,7 @@ function setup(wrap: HTMLElement): (() => void) | undefined {
     const x = document.createElement('button');
     x.type = 'button';
     x.className = 'icen-tag-chip-x icen-focus-ring';
-    x.textContent = '×';
+    x.append(createIcon('close',{size:12})!);
     x.setAttribute('aria-label', t('tagInput.remove', { p0: tag }));
     // 防 input blur 抢跑：blur 会先提交草稿，再轮到 remove，顺序会乱
     x.addEventListener('mousedown', (ev) => ev.preventDefault());

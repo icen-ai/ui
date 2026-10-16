@@ -1,3 +1,4 @@
+import { createIcon } from './icons';
 /*
  * @icen.ai/ui — Behavior: kb-retrieval（检索 playground，与 components/kb-search.css 配套）
  *
@@ -307,12 +308,14 @@ export function createKbRetrieval(el: HTMLElement, opts: KbRetrievalOpts = {}): 
     modeButtons.set(mode, btn);
   }
 
-  const topKDown = h('button', 'icen-kb-step-btn', '−');
+  const topKDown = h('button', 'icen-kb-step-btn');
+  topKDown.append(createIcon('minus')!);
   topKDown.type = 'button';
   topKDown.dataset.icenStep = '-1';
   topKDown.setAttribute('aria-label', icenT('kbRetrieval.decreaseTopK'));
   const topKValue = h('span', 'icen-kb-step-value icen-kb-num');
-  const topKUp = h('button', 'icen-kb-step-btn', '+');
+  const topKUp = h('button', 'icen-kb-step-btn');
+  topKUp.append(createIcon('plus')!);
   topKUp.type = 'button';
   topKUp.dataset.icenStep = '1';
   topKUp.setAttribute('aria-label', icenT('kbRetrieval.increaseTopK'));

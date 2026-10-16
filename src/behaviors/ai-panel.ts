@@ -66,6 +66,7 @@
  *     快照渲染，数据更新后重调。
  */
 
+import { createIcon } from './icons';
 import {
   AI_STATUSES,
   aiStatusLabel,
@@ -605,7 +606,8 @@ export function renderAiContext(el: HTMLElement, model: AiContextModel): HTMLEle
   /* head */
   const head = h('div', 'icen-ai-context-head');
   head.appendChild(h('span', '', icenT('aiPanel.context')));
-  const closeBtn = h('button', '', '×');
+  const closeBtn = h('button', '');
+  closeBtn.append(createIcon('close')!);
   closeBtn.type = 'button';
   closeBtn.setAttribute('data-icen-ai-context-close', '');
   closeBtn.setAttribute('aria-label', icenT('common.close'));

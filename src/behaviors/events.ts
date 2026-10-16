@@ -143,6 +143,7 @@ export interface IcenEventMap {
   'icen:date-change': { value: string; date: Date | null };
 
   /* 结构化交互 */
+  'icen:panel-toggle': { panel: HTMLElement; expanded: boolean };
   'icen:accordion-toggle': { item: HTMLElement; index: number; open: boolean };
   'icen:tree-select': { node: HTMLElement };
   'icen:tree-toggle': { node: HTMLElement; open: boolean };

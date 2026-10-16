@@ -1,3 +1,4 @@
+import { iconHTML } from '../../../src/behaviors/icons';
 /* 知识库族组件文档 —— 权限域（kb-perm）分片。 */
 import type { ComponentDoc } from './components';
 
@@ -18,7 +19,7 @@ export const KB_DOCS_PERM: ComponentDoc[] = [
     desc: 'SharePoint 权限页范式的资源级 ACL 面板：继承 banner 三态（继承含父链 / 已断继承警示 / 例外 N 项 is-partial）、授权行主体五类（user/group/org/anyone/link，组行带「24 成员 · 由 IT 管理」注记）、显式 deny 一票否决置顶红（order:-1）、Limited Access 类系统行不可删（is-system 隐藏删除钮）、链接授权带范围与到期（is-expiring）、exposureCount 过度授权警示「对 1,204 人可见」（不去重计数）。renderKbAcl(el, model, opts?) 快照渲染；求值语义（先显式 deny → allow 并集 → 默认拒绝）由 kb-core evaluateAcl 提供。',
     demo: `<div id="kb-acl-demo">
   <section class="icen-kb-acl">
-    <div class="icen-kb-acl-inherit">继承自：公司库 <span class="icen-kb-acl-chain-link">›</span> 财务部空间 <span class="icen-kb-meta">例外 1 项</span></div>
+    <div class="icen-kb-acl-inherit">继承自：公司库 <span class="icen-kb-acl-chain-link">${iconHTML('chevron-right')}</span> 财务部空间 <span class="icen-kb-meta">例外 1 项</span></div>
     <div class="icen-kb-acl-grant is-deny">
       <span class="icen-kb-acl-subject" data-icen-kind="user">竞对黑名单</span>
       <span class="icen-kb-acl-role icen-kb-chip">拒绝</span>

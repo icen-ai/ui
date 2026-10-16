@@ -1,3 +1,4 @@
+import { createIcon } from './icons';
 /*
  * @icen.ai/ui — Behavior: ai-threads（AI 会话列表，与 components/ai-chat.css 的 .icen-ai-threads 段配套）
  *
@@ -97,7 +98,8 @@ function buildThread(item: AiThreadItem, activeKey?: string): HTMLElement {
   row.appendChild(h('span', 'icen-ai-thread-label', item.label));
 
   /* 动作钮：只做事件挂载点（菜单本体由宿主实现），不吞选择点击之外的语义 */
-  const action = h('button', 'icen-ai-thread-action', '···');
+  const action = h('button', 'icen-ai-thread-action');
+  action.append(createIcon('more')!);
   action.type = 'button';
   action.setAttribute('aria-label', t('aiThreads.actionsAria'));
   action.setAttribute('data-icen-thread-action', 'rename');

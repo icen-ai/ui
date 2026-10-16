@@ -165,3 +165,17 @@ Apple 研究参考：[Materials](https://developer.apple.com/design/human-interf
 每套显式配置 bg / surface / raised 三层，正文／辅助／次要文字、文字强调和四类语义色在三层均验证 4.5:1；按钮另验 accentStrong × onAccent。图形强调、按钮填充、文字强调分别配置，使用原语或更换主题不会混淆其职责。
 
 原始目录可通过 `@icen.ai/ui/tokens/themes.json` 读取。编辑本仓库主题先改目录，再运行 `bun run colors`；CSS 构建和 DTCG 导出也会确保生成文件新鲜。自定义品牌 API 会自动补齐强调色三个角色，手写 CSS 时应明确同时配置这三档。
+
+## 操作符号与显隐节奏
+
+界面图标采用同一套原创 SVG 光学网格。DOM、SSR 和 CSS mask 读取同一份路径，避免图标字体受平台字形、基线和字重影响。共享入口：
+
+```ts
+import { createIcon, iconHTML } from '@icen.ai/ui/kit/icon';
+button.append(createIcon('close')); // button 自己提供 aria-label
+const html = iconHTML('check', { size: 16, label: '已完成' });
+```
+
+次要操作占用稳定的命中槽位，通过 opacity 和轻微缩放出现；不会推开内容。键盘 focus-within 与 hover 等价，触屏没有 hover 时持续可见。主要入口与关键状态持续可见。多动作控件分别保留展开和清除槽位，不能通过重复末端 padding 把图标挤入文字区。级联面板按列扩展并限制在视口内，内部滚动不得带动文档。
+
+图形保持克制、可辨认和对齐；参考 [Apple 的按钮设计指引](https://developer.apple.com/design/human-interface-guidelines/buttons) 中关于跨尺寸一致性的原则。具体 SVG 路径是本库自己的绘制，不依赖平台字体。

@@ -24,6 +24,7 @@
  * 滚动 / resize 重定位监听随面板关闭一并移除。
  */
 
+import { createIcon } from './icons';
 import { applyPanelSizing, computePopoverLayout, readPanelSizing } from './popover';
 import { emitIcen } from './events';
 import { t } from './i18n';
@@ -175,7 +176,7 @@ function renderCalendar(
   prevBtn.type = 'button';
   prevBtn.className = 'icen-date-picker-nav';
   prevBtn.setAttribute('aria-label', t('datePicker.prevMonth'));
-  prevBtn.textContent = '‹';
+  prevBtn.append(createIcon('chevron-left')!);
   const title = document.createElement('span');
   title.className = 'icen-date-picker-title';
   title.textContent = t('datePicker.yearMonth', { p0: year, p1: month + 1 });
@@ -183,7 +184,7 @@ function renderCalendar(
   nextBtn.type = 'button';
   nextBtn.className = 'icen-date-picker-nav';
   nextBtn.setAttribute('aria-label', t('datePicker.nextMonth'));
-  nextBtn.textContent = '›';
+  nextBtn.append(createIcon('chevron-right')!);
   head.append(prevBtn, title, nextBtn);
 
   const weekdays = document.createElement('div');

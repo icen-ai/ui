@@ -54,6 +54,7 @@
  *   - is-off 行整体降透明度（CSS）；渲染只写 textContent / createElement，SVG 过 svgIcon()。
  */
 
+import { createIcon } from './icons';
 import {
   h,
   normalizeChunk,
@@ -137,7 +138,7 @@ function buildKeywordChip(word: string): HTMLElement {
   x.type = 'button';
   x.dataset.icenKbChunkKeywordRemove = '';
   x.setAttribute('aria-label', icenT('kbChunks.removeKeyword', { p0: word }));
-  x.textContent = '×';
+  x.replaceChildren(createIcon('close')!);
   chip.appendChild(x);
   return chip;
 }

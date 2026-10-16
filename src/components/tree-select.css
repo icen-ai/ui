@@ -56,7 +56,8 @@
   inline-size: 100%;
 }
 
-.icen-tree-select-trigger {
+ .icen-tree-select-trigger {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--icen-density-space-xs);
@@ -76,6 +77,7 @@
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
+  padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
 }
 .icen-tree-select-trigger:hover:not(:disabled) {
   border-color: var(--icen-hover-border);
@@ -105,10 +107,15 @@
 }
 
 .icen-tree-select-chevron {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  color: var(--icen-token-text-faint);
+  position: absolute;
+  inset-inline-end: var(--icen-density-space-sm);
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  color: var(--icen-token-text-muted);
+  pointer-events: none;
   transition: transform var(--icen-tx-fast);
 }
 .icen-tree-select.is-open .icen-tree-select-chevron { transform: rotate(180deg); }
@@ -116,30 +123,27 @@
 /* 清除钮（与 trigger 同级，绝对定位叠进 trigger 行内末端侧、chevron 内侧） */
 .icen-tree-select-clear {
   position: absolute;
-  top: 50%;
-  inset-inline-end: calc(var(--icen-density-space-sm) + 20px);
-  transform: translateY(-50%);
-  z-index: 1;
+  inset-block-start: 50%;
+  inset-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  translate: 0 -50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  inline-size: 24px;
+  block-size: 24px;
   padding: 0;
   border: 0;
-  border-radius: var(--icen-radius-xs);
+  border-radius: var(--icen-radius-sm);
   background: transparent;
-  color: var(--icen-token-text-faint);
-  font-size: var(--icen-density-font-size-lg);
-  line-height: 1;
+  color: var(--icen-token-text-muted);
   cursor: pointer;
-  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+  transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast), color var(--icen-tx-fast);
 }
 .icen-tree-select-clear:hover {
   color: var(--icen-token-text);
   background: var(--icen-token-fill-1);
 }
-.icen-tree-select:has(.icen-tree-select-clear) .icen-tree-select-trigger { padding-inline-end: 52px; }
+.icen-tree-select:has(.icen-tree-select-clear:not([hidden])) .icen-tree-select-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + 52px); }
 
 /* ── 多选 chips（tag 式展示；× 仅 hover 对应 chip 时出现）── */
 .icen-tree-select-chips {
@@ -193,10 +197,10 @@
   z-index: var(--icen-z-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px;
+  padding: var(--icen-density-space-sm);
   background: var(--icen-token-card-strong);
   border: 1px solid var(--icen-token-outline);
-  border-radius: var(--icen-radius-md);
+  border-radius: var(--icen-radius-lg);
   box-shadow: var(--icen-token-shadow-overlay);
   transform-origin: top center;
   animation: icen-pop-in var(--icen-tx-fast);
@@ -314,7 +318,11 @@
   border-color: var(--icen-token-accent);
 }
 .icen-tree-select-row.is-checked .icen-tree-select-check::after {
-  content: '✓';
+  content: '';
+  inline-size: 16px;
+  block-size: 16px;
+  background: currentColor;
+  mask: var(--icen-token-icon-check) center / contain no-repeat;
   font-size: var(--icen-density-font-size-2xs);
   line-height: 1;
   color: var(--icen-token-on-accent);
@@ -383,3 +391,15 @@
   .icen-tree-select-check,
   .icen-tree-select-search-input { transition: none; }
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .icen-tree-select-clear:not([hidden]) { opacity: 0; pointer-events: none; }
+  .icen-tree-select:is(:hover,:focus-within) .icen-tree-select-clear:not([hidden]) { opacity: 1; pointer-events: auto; }
+}
+@media (pointer: coarse) {
+  .icen-tree-select-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: 32px; }
+  .icen-tree-select:has(.icen-tree-select-clear:not([hidden])) .icen-tree-select-trigger { padding-inline-end: 84px; }
+}
+
+.icen-tree-select--sm .icen-tree-select-trigger { block-size: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-tree-select--lg .icen-tree-select-trigger { block-size: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }

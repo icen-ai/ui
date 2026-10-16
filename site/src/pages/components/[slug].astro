@@ -83,7 +83,7 @@ const bootData = JSON.stringify({
   </div>
 
   <section class="demo-panel">
-    <div class="demo-stage" set:html={doc.demo} />
+    <div class="demo-stage" data-demo-layout={doc.demoLayout} set:html={doc.demo} />
     <CodeBlock code={doc.demo} lang="html" collapsible />
   </section>
 
@@ -183,6 +183,7 @@ const bootData = JSON.stringify({
           throw err;
         }
       }
+      document.querySelector('.demo-stage')?.setAttribute('data-icen-demo-ready','');
     }
   </script>
 </Docs>

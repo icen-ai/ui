@@ -683,3 +683,15 @@ body {
   #preset-select .icen-theme-switcher-name, #preset-select .icen-theme-switcher-chevron { display: none; }
   .nav-controls { gap: 4px; }
 }
+
+.icon-demo-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 12px; }
+.icon-demo-cell { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.icon-demo-cell code { font-size: 12px; }
+.icon-demo-quiet { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-md); }
+
+.demo-stage[data-demo-layout="stretch"] { align-items: stretch; }
+.demo-stage[data-demo-layout="stretch"] .demo-row { justify-content: flex-start; }
+@media (max-width: 600px) { .demo-stage { padding: 24px 16px; } }
+
+/* Package paths and API names in prose must wrap without clipping code samples. */
+.docs-main :is(.doc-desc,.doc-note,.demo-label,.page-desc) { overflow-wrap: anywhere; }

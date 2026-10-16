@@ -1,3 +1,4 @@
+import { createIcon } from './icons';
 /*
  * @icen.ai/ui — Behavior: ai-tools（AI 工具体系：UI 能力注册为模型可调用的工具）
  *
@@ -681,7 +682,7 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
     const chevron = document.createElement('span');
     chevron.className = 'icen-ai-tools-item-chevron';
     chevron.setAttribute('aria-hidden', 'true');
-    chevron.textContent = '▾';
+    chevron.replaceChildren(createIcon('chevron-down')!);
     const label = document.createElement('span');
     label.className = 'icen-ai-tools-item-name';
     label.textContent = def.name;
@@ -696,7 +697,7 @@ export function createAiToolArea(el: HTMLElement, opts: AiToolAreaOptions = {}):
     remove.setAttribute('role', 'button');
     remove.tabIndex = 0; /* span 非原生按钮，键盘可达需手动补 */
     remove.setAttribute('aria-label', t('aiTools.removeMount', { p0: def.name }));
-    remove.textContent = '×';
+    remove.replaceChildren(createIcon('close')!);
     const body = document.createElement('div');
     body.className = 'icen-ai-tools-item-body';
     body.style.minHeight = `${opts.itemMinHeight ?? 240}px`;

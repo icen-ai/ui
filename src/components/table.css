@@ -119,13 +119,34 @@
   user-select: none;
 }
 .icen-table th[data-icen-sort]::after {
-  content: '↕';
+  content: '';
+  display: inline-block;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  vertical-align: middle;
+  background: currentColor;
+  mask: var(--icen-token-icon-sort) center / contain no-repeat;
   margin-inline-start: var(--icen-density-space-xs);
   color: var(--icen-token-text-faint);
   opacity: 0.6;
 }
-.icen-table th[data-icen-sort='asc']::after { content: '↑'; opacity: 1; color: var(--icen-token-accent); }
-.icen-table th[data-icen-sort='desc']::after { content: '↓'; opacity: 1; color: var(--icen-token-accent); }
+.icen-table th[data-icen-sort='asc']::after { content: '';
+  display: inline-block;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  vertical-align: middle;
+  background: currentColor;
+  mask: var(--icen-token-icon-arrow-up) center / contain no-repeat; opacity: 1; color: var(--icen-token-accent); }
+.icen-table th[data-icen-sort='desc']::after { content: '';
+  display: inline-block;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  vertical-align: middle;
+  background: currentColor;
+  mask: var(--icen-token-icon-arrow-down) center / contain no-repeat; opacity: 1; color: var(--icen-token-accent); }
 
 /* ── 斑马纹 ── */
 .icen-table--zebra tbody tr:nth-child(odd) {

@@ -162,3 +162,10 @@ button.icen-tag,
 @media (prefers-reduced-motion: reduce) {
   .icen-tag, .icen-tag-close { transition: none; }
 }
+
+/* Reveal only the secondary action; its fixed slot keeps the label still. */
+@media (hover: hover) and (pointer: fine) {
+  .icen-tag-close { opacity: 0; transform: scale(.88); transition: opacity var(--icen-tx-fast), transform var(--icen-tx-fast), background-color var(--icen-tx-fast); }
+  .icen-tag:is(:hover,:focus-within) .icen-tag-close { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .icen-tag-close { transition: none; transform: none; } }

@@ -48,7 +48,7 @@ function trackComposing(target: Element): () => boolean {
 /* ── 清除钮 ── */
 function setupClear(wrap: Element): void {
   const btn = wrap.querySelector('.icen-input-clear');
-  const field = wrap.querySelector<HTMLInputElement>('icen-input.icen-input, icen-textarea.icen-textarea');
+  const field = wrap.querySelector<HTMLInputElement>('input.icen-input, textarea.icen-textarea');
   if (!btn || !field) return;
   btn.addEventListener('click', () => {
     field.value = '';
@@ -60,7 +60,7 @@ function setupClear(wrap: Element): void {
 /* ── 密码可见切换 ── */
 function setupPasswordToggle(wrap: Element): void {
   const btn = wrap.querySelector('.icen-input-pw-toggle');
-  const field = wrap.querySelector<HTMLInputElement>('input.input');
+  const field = wrap.querySelector<HTMLInputElement>('input.icen-input');
   if (!btn || !field) return;
   const iconShow = btn.querySelector<HTMLElement>('[data-icen-icon="show"]');
   const iconHide = btn.querySelector<HTMLElement>('[data-icen-icon="hide"]');
@@ -186,6 +186,8 @@ function setupMask(field: HTMLInputElement): void {
         }
       } else {
         result += slot;
+        // Existing separators are presentation, not an extra input character.
+        if (rawChars[rawIdx] === slot) rawIdx++;
       }
     }
     return result;
@@ -201,42 +203,22 @@ function setupMask(field: HTMLInputElement): void {
   }
 
   // 记录上次格式化后的值，避免光标跳动
-  let lastFormatted = applyMask(field.value);
-  field.value = lastFormatted;
-  field.setAttribute('data-icen-raw-value', extractRaw(lastFormatted));
+  const initialFormatted = applyMask(field.value);
+  field.value = initialFormatted;
+  field.setAttribute('data-icen-raw-value', extractRaw(initialFormatted));
 
   field.addEventListener('input', () => {
     if (isComposing()) return;
     const cursorPos = field.selectionStart ?? 0;
-    const oldRaw = extractRaw(lastFormatted);
-    // 新增了多少个字符 → 预估 raw input
     const newFull = field.value;
-    const newRaw = extractRaw(newFull);
-    // 用户可能删了字符 → raw 变短 → 掩码也应该收缩
-    const formatted = applyMask(newRaw);
+    // Format both pasted raw text and an edited formatted value. Extracting by
+    // mask position before formatting would discard real characters on paste.
+    const formatted = applyMask(newFull);
     field.value = formatted;
     field.setAttribute('data-icen-raw-value', extractRaw(formatted));
-    lastFormatted = formatted;
 
-    // 光标定位：跟在最后一个新输入位之后
-    const rawDelta = newRaw.length - oldRaw.length;
-    let targetCursor = cursorPos;
-    if (rawDelta > 0) {
-      // 向前找到下一个输入位末尾
-      let count = 0;
-      for (let i = 0; i < formatted.length; i++) {
-        if (isInputSlot(maskChars[i])) {
-          count++;
-          if (count >= newRaw.length) {
-            targetCursor = i + 1;
-            break;
-          }
-        }
-      }
-    } else if (rawDelta < 0) {
-      // 删除：光标停在删除点
-      targetCursor = Math.min(cursorPos, formatted.length);
-    }
+    // Preserve the insertion point when editing in the middle of a value.
+    const targetCursor = Math.min(applyMask(newFull.slice(0,cursorPos)).length,formatted.length);
     field.setSelectionRange(targetCursor, targetCursor);
   });
 
@@ -359,7 +341,7 @@ export function initInput(root?: ParentNode): void {
 
   // 字符计数器：所有有 maxlength / data-icen-count 的 input/textarea
   const countedFields: (HTMLInputElement | HTMLTextAreaElement)[] = [];
-  if (scope instanceof Element) {
+  {
     const fields = Array.from(scope.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
       'input[maxlength], input[data-icen-count], textarea[maxlength], textarea[data-icen-count]',
     ));
@@ -372,7 +354,7 @@ export function initInput(root?: ParentNode): void {
 
   // 输入掩码：有 data-icen-mask 的 input
   const maskedInputs: HTMLInputElement[] = [];
-  if (scope instanceof Element) {
+  {
     maskedInputs.push(...Array.from(scope.querySelectorAll<HTMLInputElement>('input[data-icen-mask]')));
     if (scope instanceof HTMLInputElement && scope.hasAttribute('data-icen-mask')) maskedInputs.push(scope);
   }
@@ -380,7 +362,7 @@ export function initInput(root?: ParentNode): void {
 
   // 自动 trim
   const trimFields: (HTMLInputElement | HTMLTextAreaElement)[] = [];
-  if (scope instanceof Element) {
+  {
     trimFields.push(...Array.from(scope.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-icen-trim]')));
     if ((scope instanceof HTMLInputElement || scope instanceof HTMLTextAreaElement) && scope.hasAttribute('data-icen-trim')) {
       trimFields.push(scope);

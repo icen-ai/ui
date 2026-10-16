@@ -1,6 +1,7 @@
 /** Reusable global appearance control. SSR markup, DOM renderer and declarative init
  * share one tree; all instances consume theme.ts and never keep private theme state. */
 import themes from '../tokens/themes.json';
+import { iconAttributes, iconPath, type IconName } from './icons';
 import { getCurrentTheme, initTheme, listPrimitives, listThemePresets, setTheme, toggleDark, type ThemeState } from './theme';
 import { openPopover, closePopover, readPanelSizing, type PanelSizing } from './popover';
 import { t } from './i18n';
@@ -22,8 +23,8 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 function serialize(tree: Tree): string {
   return `<${tree.tag}${Object.entries(tree.attrs ?? {}).map(([k,v]) => ` ${k}="${esc(v)}"`).join('')}>${(tree.children ?? []).map((c) => typeof c === 'string' ? esc(c) : serialize(c)).join('')}</${tree.tag}>`;
 }
-function materialize(tree: Tree): HTMLElement {
-  const el = document.createElement(tree.tag);
+function materialize(tree: Tree): HTMLElement | SVGElement {
+  const el = ['svg','path'].includes(tree.tag) ? document.createElementNS('http://www.w3.org/2000/svg',tree.tag) : document.createElement(tree.tag);
   for (const [k,v] of Object.entries(tree.attrs ?? {})) el.setAttribute(k,v);
   for (const child of tree.children ?? []) el.append(typeof child === 'string' ? document.createTextNode(child) : materialize(child));
   return el;
@@ -43,13 +44,16 @@ function sample(id: string, dark: boolean): Tree {
   return node('span', { class: 'icen-theme-switcher-sample', 'aria-hidden': 'true' },
     ...[palette?.bg ?? 'var(--icen-token-bg)', palette?.accent ?? 'var(--icen-token-accent)', palette?.cold ?? 'var(--icen-token-cold)'].map((color) => node('i', { style: `background:${color}` })));
 }
+function symbol(name: IconName, className: string): Tree {
+  return node('svg',iconAttributes({className}),node('path',{d:iconPath(name)!}));
+}
 function triggerChildren(o: ThemeSwitcherOptions, state: ThemeState): Tree[] {
   const kind = o.kind ?? 'all';
   const label = kind === 'primitive' ? name(state.style,o) : kind === 'mode' ? t(state.dark ? 'themeSwitcher.dark' : 'themeSwitcher.light') : name(state.preset,o);
   return [
-    kind === 'primitive' ? node('span', { class: 'icen-theme-switcher-symbol', 'aria-hidden': 'true' }, state.style === 'pixel' ? '▦' : '◈') : kind === 'mode' ? node('span', { class: 'icen-theme-switcher-symbol', 'aria-hidden': 'true' }, state.dark ? '☾' : '☀') : sample(state.preset,state.dark),
+    kind === 'primitive' ? symbol(state.style === 'pixel' ? 'pixel' : 'benzhen','icen-theme-switcher-symbol') : kind === 'mode' ? symbol(state.dark ? 'moon' : 'sun','icen-theme-switcher-symbol') : sample(state.preset,state.dark),
     node('span', { class: 'icen-theme-switcher-name' }, label),
-    ...(kind === 'mode' ? [] : [node('span', { class: 'icen-theme-switcher-chevron', 'aria-hidden': 'true' }, '⌄')]),
+    ...(kind === 'mode' ? [] : [symbol('chevron-down','icen-theme-switcher-chevron')]),
   ];
 }
 function section(kind: 'theme' | 'primitive' | 'mode', o: ThemeSwitcherOptions, state: ThemeState): Tree {
@@ -59,9 +63,9 @@ function section(kind: 'theme' | 'primitive' | 'mode', o: ThemeSwitcherOptions, 
     node('p', { class: 'icen-theme-switcher-heading' }, axisName(kind)),
     node('div', { class: `icen-theme-switcher-options icen-theme-switcher-options--${kind}`, role: 'group', 'aria-label': axisName(kind) },
       ...ids.map((id) => node('button', { type: 'button', class: 'icen-theme-switcher-option', 'data-icen-axis': kind, 'data-icen-value': id, 'aria-pressed': String(id === active) },
-        ...(kind === 'theme' ? [sample(id,state.dark)] : [node('span', { class: 'icen-theme-switcher-symbol', 'aria-hidden': 'true' }, kind === 'primitive' ? id === 'pixel' ? '▦' : '◈' : id === 'dark' ? '☾' : '☀')]),
+        ...(kind === 'theme' ? [sample(id,state.dark)] : [symbol(kind === 'primitive' ? id === 'pixel' ? 'pixel' : 'benzhen' : id === 'dark' ? 'moon' : 'sun','icen-theme-switcher-symbol')]),
         node('span', {class:'icen-theme-switcher-option-name'}, kind === 'mode' ? t(id === 'dark' ? 'themeSwitcher.dark' : 'themeSwitcher.light') : name(id,o)),
-        node('span', { class: 'icen-theme-switcher-check', 'aria-hidden': 'true' }, '✓'),
+        symbol('check','icen-theme-switcher-check'),
       )),
     ),
   );
@@ -72,7 +76,7 @@ function tree(input: ThemeSwitcherOptions, state: ThemeState): Tree {
   return node('div', { class: `icen-theme-switcher icen-theme-switcher--${o.size}`, 'data-icen-theme-switcher': '', 'data-icen-kind': o.kind, 'data-icen-display': o.display, 'data-icen-size':o.size, 'data-icen-layout': inline ? 'inline' : 'menu', ...(o.labels ? {'data-icen-labels':JSON.stringify(o.labels)} : {}), ...Object.fromEntries(Object.entries(o.sizing ?? {}).map(([key,value]) => [`data-icen-panel-${({minWidth:'min',maxWidth:'max',minHeight:'min-height',maxHeight:'max-height'} as Record<string,string>)[key] ?? key}`,String(value)])) },
     ...(!inline ? [node('button', { class: 'icen-theme-switcher-trigger', type: 'button', 'aria-label': axisName(o.kind), ...(o.kind === 'mode' ? { 'aria-pressed': String(state.dark) } : { 'aria-haspopup': 'dialog', 'aria-expanded': 'false' }) }, ...triggerChildren(o,state))] : []),
     ...(o.kind !== 'mode' ? [node('div', { class: 'icen-theme-switcher-panel', 'data-icen-material': 'floating', ...(!inline ? { hidden: '', role: 'dialog', 'aria-label': axisName(o.kind) } : {}) },
-      ...(o.kind === 'all' ? (['theme','primitive','mode'] as const) : [o.kind]).map((axis) => section(axis,o,state)),
+      ...(o.kind === 'all' ? (['mode','theme','primitive'] as const) : [o.kind]).map((axis) => section(axis,o,state)),
     )] : []),
   );
 }
@@ -121,7 +125,7 @@ function bind(root: HTMLElement, o: ThemeSwitcherOptions): ThemeSwitcherHandle {
     if (!panel || !trigger) return;
     if (opened) { close(); return; }
     opened = true; trigger.setAttribute('aria-expanded','true');
-    openPopover(panel, { anchor: trigger, align: 'end', minWidth: 260, maxWidth: 320, sizing: o.sizing, onClose: () => { opened = false; trigger.setAttribute('aria-expanded','false'); } });
+    openPopover(panel, { anchor: trigger, align: 'end', minWidth: 260, maxWidth: 320, maxHeight: 560, contentHeightHint: o.kind === 'all' ? 480 : panel.scrollHeight, sizing: o.sizing, onClose: () => { opened = false; trigger.setAttribute('aria-expanded','false'); } });
     (panel.querySelector<HTMLButtonElement>('[aria-pressed="true"]') ?? panel.querySelector<HTMLButtonElement>('button'))?.focus();
   };
   const triggerClick = () => { if (o.kind === 'mode') toggleDark(); else open(); };
@@ -182,7 +186,7 @@ export function createThemeSwitcher(el: HTMLElement, o: ThemeSwitcherOptions = {
   if (typeof document === 'undefined') return {destroy() {}};
   el.querySelectorAll<HTMLElement>('[data-icen-theme-switcher]').forEach((root) => handles.get(root)?.destroy());
   if (!document.documentElement.hasAttribute('data-icen-style')) initTheme();
-  const root = materialize(tree(o,getCurrentTheme())); el.replaceChildren(root);
+  const root = materialize(tree(o,getCurrentTheme())) as HTMLElement; el.replaceChildren(root);
   const handle = bind(root,options(o));
   return { destroy() { handle.destroy(); root.remove(); } };
 }

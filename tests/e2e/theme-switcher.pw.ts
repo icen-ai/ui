@@ -37,8 +37,8 @@ test('portalled appearance menus support keyboard, focus return, view constraint
   await trigger.focus(); await page.keyboard.press('ArrowDown');
   const dialog=page.locator('[role="dialog"]:visible');
   await expect(dialog).toBeVisible();
-  await expect(dialog.locator('[data-icen-value="benzhen"]').first()).toBeFocused();
-  await page.keyboard.press('End'); await expect(dialog.locator('[data-icen-value="dark"]')).toBeFocused();
+  await expect(dialog.locator('[data-icen-value="light"]').first()).toBeFocused();
+  await page.keyboard.press('End'); await expect(dialog.locator('[data-icen-value="pixel"]')).toBeFocused();
   await page.keyboard.press('Tab'); await expect(dialog.locator('button').first()).toBeFocused();
   await dialog.locator('[data-icen-value="ink"]').click();
   await expect(dialog).toBeVisible();

@@ -67,6 +67,7 @@
  * SSR 下为 no-op；文本一律 textContent，禁 innerHTML。
  */
 
+import { createIcon } from './icons';
 import { formatTokens, contextEstimate, svgIcon, addUsage, type AiUsage } from './ai-core';
 import { closePopover, openPopover, resolvePanelSizing, type PanelSizing } from './popover';
 import { renderAiUsageRing, renderAiTodo, type AiUsageRingOpts } from './ai-panel';
@@ -322,7 +323,7 @@ function makeChip(text: string, removable: boolean, ariaLabel: string): HTMLElem
     remove.type = 'button';
     remove.className = 'icen-ai-composer-chip-remove';
     remove.setAttribute('aria-label', ariaLabel);
-    remove.textContent = '×';
+    remove.replaceChildren(createIcon('close')!);
     chip.appendChild(remove);
   }
   return chip;

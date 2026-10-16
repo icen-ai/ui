@@ -6,6 +6,7 @@ export const THEME_SWITCHER_DOC: ComponentDoc = {
   name: '外观切换',
   group: '基础',
   desc: '主题、原语、明暗，共享一个全局状态。图标、双色圆、色卡与名称六种展示，四档尺寸，适合顶栏、侧栏、浮动工具条与设置页。这里的所有实例都是真实控件，改一处，整页与顶部同步。',
+  demoLayout: 'stretch',
   demo: `<section aria-label="展示形态">
     <h3>从一枚色样，到完整的外观入口</h3>
     <p class="doc-note">每个入口都包含主题、原语和明暗。紧凑时隐藏名称，展开后保留完整选择。</p>

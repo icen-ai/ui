@@ -249,9 +249,9 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 
 - **69 个组件 CSS**（charts 基座 + 13 个细分图表 CSS（+v0.9 chart-graph/map）+ 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel + v0.9：kb.css 基座 + 7 个 kb 域文件（ground/ingest/search/data/ops/agent/perm）+ v0.10：form-validate.css 校验层 + mentions/autocomplete.css + theme-switcher.css 外观切换）
 - **75 个 behaviors TS**（v0.9：+ai-threads/ai-feedback/ai-branch +kb-core 契约层 +31 个 kb-*——含权限域 kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility；v0.10：+form-validate 校验层 +mentions/autocomplete +i18n 文案注册表；+theme-switcher 外观切换）
-- **121 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单；v0.9 新增 37：kb 总集 + 31 kb-* + ai-threads/ai-feedback/ai-branch + chart-graph/chart-map；v0.10 新增 3：form-validate + mentions/autocomplete；+theme-switcher）
-- **测试与守卫**：`bun run verify` = tsc + guard + test + build；500+ 测试（bun test + happy-dom，tests/unit 纯契约 + tests/dom 委托行为 + tests/kb-conformance 权限诚实呈现 + tests/{unit,dom}/i18n 本地化契约与零 CJK 渲染验收）；8 项纪律守卫（CSS/registry/事件/行为/命名空间/权限域/RTL 逻辑属性/类名同步），CI 全挂
-- **5 个 token 文件**：colors.css、style-profiles.css（公共兜底）、typography.css、design.css（本真与共享配方）、pixel.css（像素）。旧 retro-effects 已删除。
+- **122 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单；v0.9 新增 37：kb 总集 + 31 kb-* + ai-threads/ai-feedback/ai-branch + chart-graph/chart-map；v0.10 新增 3：form-validate + mentions/autocomplete；+theme-switcher）
+- **测试与守卫**：`bun run verify` = tsc + guard + test + build；500+ 测试（bun test + happy-dom，tests/unit 纯契约 + tests/dom 委托行为 + tests/kb-conformance 权限诚实呈现 + tests/{unit,dom}/i18n 本地化契约与零 CJK 渲染验收）；9 项纪律守卫（CSS/registry/事件/行为/命名空间/权限域/RTL 逻辑属性/类名同步/操作图标），CI 全挂
+- **6 个 token 文件**：colors.css、style-profiles.css（公共兜底）、typography.css、design.css（本真与共享配方）、pixel.css（像素）、icon-masks.css（共享 SVG 路径生成的静态图形）。旧 retro-effects 已删除。
 
 ## 发布（OIDC Trusted Publishing，已配好）
 
@@ -348,3 +348,11 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 - **分数条纪律**：`.icen-kb-score-bar` 是定宽轨道（域 CSS 内 `flex: 0 0 64px` 量级）+ `i` inline width 百分比——禁止让轨道随数值文本伸缩（曾导致 0.49 与 0.13 等长的失真）。
 - **DOM 骨架与事件**：每个组件的冻结骨架与函数名在规格 §4/§5；`createX(el, opts) → handle`（含 destroy）、`renderX(el, data)` 快照渲染、`initX(root?)` document 委托幂等——与全库三契约（凹槽/尺寸/事件）同一心智。
 - **/kb 工作台**（`site/src/pages/kb.astro` + `site/src/lib/kb-showcase.ts`）：mock 数据与接线全在 showcase 模块；八标签 = 问答 / 摄取 / 检索 / 问数 / 观测 / 权限 / Agent / 参考（参考为静态 SSR，数据在 kb-references.ts）。改 mock 数据只动 kb-showcase.ts；页面脚本遵守 `astro:page-load` 驱动约定。
+
+## 图标与次要操作
+
+- `behaviors/icons.ts` 是界面操作符号的唯一几何源：`createIcon` 返回真实 SVG DOM，`iconHTML` 输出安全 SSR 标记；消费方一行入口 `kit/icon`，不使用图标字体或 Unicode 字形代替操作图标。CSS 指示器用 `--icen-token-icon-*` masks，由 `scripts/icon-masks.ts` 同源生成，构建会重算。
+- 所有图形采用 20×20 光学网格、1.6 线宽；图标默认 decorative，独立图标传 label。方向镜像由具体组件决定。自定义路径走 registerIcon，不允许覆盖内置符号。
+- 次要操作可用 `.icen-icon-action[data-icen-reveal]`：固定槽位，父级 hover/focus-within 显现，触屏常显。不要隐藏主入口或重要状态；避免用宽度从 0 展开挤动正文。
+- 可折叠面板用 `initPanel`，程序化更新用 `setPanelExpanded`；用户操作派 `icen:panel-toggle`。标题区保留真正的原生 button，其他标题操作不触发折叠。
+- 全组件精修进度与尚待验证的矩阵见 `docs/interaction-polish.md`。全站文档基础巡检：build 后运行 `node scripts/audit-ui.mjs`，报告到忽略目录 `.ui-audit/`；它只提供基础证据，不替代展开状态的交互验收。

@@ -77,6 +77,7 @@
  * 渲染只写 textContent/createElement（禁 innerHTML），SVG 一律经 kb-core 转发的 svgIcon() 消毒。
  */
 
+import { createIcon } from './icons';
 import {
   formatCount,
   h,
@@ -197,7 +198,8 @@ function buildAclRow(entry: KbAclEntry, now: Date): HTMLElement {
   }
   if (entry.system) metaBits.push(icenT('kbAcl.systemBadge'));
 
-  const remove = h('button', 'icen-kb-acl-remove', '×');
+  const remove = h('button', 'icen-kb-acl-remove');
+  remove.append(createIcon('close')!);
   remove.type = 'button';
   remove.dataset.icenAclRemove = '';
   remove.setAttribute('aria-label', icenT('kbAcl.removeEntry', { p0: entry.subject.label }));

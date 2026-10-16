@@ -89,7 +89,14 @@
 }
 /* chevron：闭合态 rotate(-90deg)，展开回正 */
 .icen-sidebar-group-title::after {
-  content: '▾';
+  content: '';
+  display: inline-block;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  vertical-align: middle;
+  background: currentColor;
+  mask: var(--icen-token-icon-chevron-down) center / contain no-repeat;
   font-size: var(--icen-density-font-size-sm);
   line-height: 1;
   color: var(--icen-token-text-muted);

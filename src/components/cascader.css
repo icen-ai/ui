@@ -55,7 +55,8 @@
   inline-size: 100%;
 }
 
-.icen-cascader-trigger {
+ .icen-cascader-trigger {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--icen-density-space-xs);
@@ -73,6 +74,7 @@
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
+  padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
 }
 .icen-cascader-trigger:hover:not(:disabled) {
   border-color: var(--icen-hover-border);
@@ -102,10 +104,15 @@
 }
 
 .icen-cascader-chevron {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  color: var(--icen-token-text-faint);
+  position: absolute;
+  inset-inline-end: var(--icen-density-space-sm);
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  inline-size: 16px;
+  block-size: 16px;
+  flex: none;
+  color: var(--icen-token-text-muted);
+  pointer-events: none;
   transition: transform var(--icen-tx-fast);
 }
 .icen-cascader.is-open .icen-cascader-chevron { transform: rotate(180deg); }
@@ -113,31 +120,28 @@
 /* 清除钮（与 trigger 同级，绝对定位叠进 trigger 行内末端侧、chevron 内侧） */
 .icen-cascader-clear {
   position: absolute;
-  top: 50%;
-  inset-inline-end: calc(var(--icen-density-space-sm) + 20px);
-  transform: translateY(-50%);
-  z-index: 1;
+  inset-block-start: 50%;
+  inset-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  translate: 0 -50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  inline-size: 24px;
+  block-size: 24px;
   padding: 0;
   border: 0;
-  border-radius: var(--icen-radius-xs);
+  border-radius: var(--icen-radius-sm);
   background: transparent;
-  color: var(--icen-token-text-faint);
-  font-size: var(--icen-density-font-size-lg);
-  line-height: 1;
+  color: var(--icen-token-text-muted);
   cursor: pointer;
-  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+  transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast), color var(--icen-tx-fast);
 }
 .icen-cascader-clear:hover {
   color: var(--icen-token-text);
   background: var(--icen-token-fill-1);
 }
 /* 有清除钮时 trigger 行内末端侧让位（clear 18px + chevron 14px + 间距） */
-.icen-cascader:has(.icen-cascader-clear) .icen-cascader-trigger { padding-inline-end: 52px; }
+.icen-cascader:has(.icen-cascader-clear:not([hidden])) .icen-cascader-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + 52px); }
 
 /* 面板由 behavior portal 到 body：left/top/width/max-height 由 JS 按 trigger rect inline 写入；
    data-icen-side="top|bottom" 标记翻侧方向。 */
@@ -146,10 +150,10 @@
   z-index: var(--icen-z-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px;
+  padding: var(--icen-density-space-sm);
   background: var(--icen-token-card-strong);
   border: 1px solid var(--icen-token-outline);
-  border-radius: var(--icen-radius-md);
+  border-radius: var(--icen-radius-lg);
   box-shadow: var(--icen-token-shadow-overlay);
   transform-origin: top center;
   animation: icen-pop-in var(--icen-tx-fast);
@@ -194,8 +198,8 @@
   list-style: none;
   margin: 0;
   padding: 0 4px;
-  min-inline-size: 132px;
-  flex-shrink: 0;
+  min-inline-size: 144px;
+  flex: 1 0 144px;
 }
 .icen-cascader-col + .icen-cascader-col {
   border-inline-start: 1px solid var(--icen-token-outline-soft);
@@ -219,14 +223,20 @@
   background: var(--icen-token-fill-2);
 }
 .icen-cascader-item.is-active {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
   font-weight: 500;
   background: var(--icen-token-accent-subtle);
 }
-.icen-cascader-item.is-selected .icen-cascader-item-label::after {
-  content: '✓';
+.icen-cascader-item.is-selected:not(:has(.icen-cascader-item-chevron))::after {
+  display: inline-block;
+  flex: none;
+  content: '';
+  inline-size: 16px;
+  block-size: 16px;
+  background: currentColor;
+  mask: var(--icen-token-icon-check) center / contain no-repeat;
   margin-inline-start: var(--icen-density-space-xs);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
 }
 .icen-cascader-item.is-disabled {
   opacity: 0.4;
@@ -304,3 +314,15 @@
   .icen-cascader-result,
   .icen-cascader-search-input { transition: none; }
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .icen-cascader-clear:not([hidden]) { opacity: 0; pointer-events: none; }
+  .icen-cascader:is(:hover,:focus-within) .icen-cascader-clear:not([hidden]) { opacity: 1; pointer-events: auto; }
+}
+@media (pointer: coarse) {
+  .icen-cascader-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: 32px; }
+  .icen-cascader:has(.icen-cascader-clear:not([hidden])) .icen-cascader-trigger { padding-inline-end: 84px; }
+}
+
+.icen-cascader--sm .icen-cascader-trigger { block-size: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-cascader--lg .icen-cascader-trigger { block-size: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }

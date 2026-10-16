@@ -284,8 +284,8 @@ html {
        （方向语义不同：按 data-icen-side 反向位移），不并入 icen-pop-in。
    ══════════════════════════════════════════════════════════════ */
 @keyframes icen-pop-in {
-  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes icen-spin {
   to { transform: rotate(360deg); }

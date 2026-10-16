@@ -6,7 +6,7 @@
 /** 全部组件 slug（顺序即文档站侧栏顺序，仅供 CLI list 展示）。 */
 export const SLUGS = [
   // 基础
-  'theme-switcher', 'btn', 'panel', 'pill', 'tag', 'tabs', 'stat', 'toast', 'toolbar', 'split-pane',
+  'icon', 'theme-switcher', 'btn', 'panel', 'pill', 'tag', 'tabs', 'stat', 'toast', 'toolbar', 'split-pane',
   // 表单
   'form', 'input', 'select', 'slider', 'tag-input', 'switch', 'segmented', 'upload', 'date-picker', 'form-validate',
   'cascader', 'tree-select', 'mentions', 'autocomplete',
@@ -116,6 +116,7 @@ export const MERGED_CSS = {
 
 /** slug → behavior 的 init 函数名（有 init 契约的组件）。 */
 export const SLUG_INIT = {
+  panel: 'initPanel',
   'theme-switcher': 'initThemeSwitcher',
   accordion: 'initAccordion',
   'ai-chat': 'initAiChat',
@@ -174,6 +175,8 @@ export const SLUG_INIT = {
 
 /** 有 behavior 但无 init（函数式 API）的 slug → 导出函数提示（CLI 输出用）。 */
 export const SLUG_EXPORTS = {
+  panel: ['setPanelExpanded'],
+  icon: ['ICON_PATHS', 'iconPath', 'iconHTML', 'createIcon', 'registerIcon'],
   'theme-switcher': ['createThemeSwitcher', 'themeSwitcherHTML'],
   notification: ['notify'],
   toast: ['toast'],
@@ -227,6 +230,7 @@ export function cssOf(slug) {
  * charts 细分类型的 behavior 统一在 charts.ts，slug 与文件名不同。
  */
 export const SLUG_BEHAVIOR = {
+  icon: 'icons',
   // ── 表单/导航控件族：交互在 controls.ts ──
   // segmented 无独立 behavior 文件：分段/步进在 controls.ts，OTP 仍在 input.ts
   // （controls.ts re-export initInput，kit/segmented 经 SLUG_EXPORTS 一并带出）

@@ -39,6 +39,7 @@
  *   dropdown.ts），同时只开一个 panel。
  */
 
+import { createIcon } from './icons';
 import { computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
 import { t } from './i18n';
@@ -132,6 +133,8 @@ function setup(container: Element): () => void {
   // 闭包内不保留 narrowing，转为非空常量
   const trigger = triggerEl;
   const panel = panelEl;
+  const arrow = trigger.querySelector('.icen-select-chevron');
+  if (arrow) arrow.replaceWith(createIcon('chevron-down',{className:'icen-select-chevron'})!);
 
   const isMultiple = container.hasAttribute('data-icen-select-multiple');
   const isSearchable = container.hasAttribute('data-icen-select-search');
@@ -355,7 +358,7 @@ function setup(container: Element): () => void {
         x.setAttribute('role', 'button');
         x.setAttribute('tabindex', '-1');
         x.setAttribute('aria-label', t('select.remove', { p0: label }));
-        x.textContent = '×';
+        x.append(createIcon('close',{size:12})!);
         on(x, 'pointerdown', (ev: PointerEvent) => ev.stopPropagation());
         on(x, 'click', (ev: MouseEvent) => {
           ev.stopPropagation();
@@ -431,6 +434,11 @@ function setup(container: Element): () => void {
 
   // ── 清除全部按钮（多选可选；与 trigger 同级叠放右侧，不能嵌套进 button）──
   const clearBtn = container.querySelector<HTMLElement>('.icen-select-clear');
+  if (clearBtn) {
+    clearBtn.replaceChildren(createIcon('close')!);
+    clearBtn.classList.add('icen-icon-action');
+    clearBtn.setAttribute('data-icen-reveal','');
+  }
   if (clearBtn && isMultiple) {
     on(clearBtn, 'click', (ev: MouseEvent) => {
       ev.stopPropagation();

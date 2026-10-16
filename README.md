@@ -164,3 +164,5 @@ site/                          # 文档站骨架（ui.icen.ai，独立 Astro 应
 在 `<html data-icen-preset="benzhen">` 启用本真：瓷白内容面、轻盈磨砂操作层、系统排版和统一的几何节奏。引入 `@icen.ai/ui/tokens.css` 后，现有组件直接消费同一套原语。自定义品牌只需覆盖 `--icen-design-*` 种子，也可用 `createDesign` 编译带明暗与对比度验证的品牌配方。
 
 设计规范与接入示例见 [设计原语](docs/spec/design-primitives.md)，本地文档站 `/benzhen/` 提供实时调节与真实场景预览。
+
+外观与操作图标：`@icen.ai/ui/kit/theme-switcher` 提供多尺寸全局外观切换；`@icen.ai/ui/kit/icon` 提供 `createIcon / iconHTML / registerIcon`。可折叠面板使用 `@icen.ai/ui/kit/panel` 的 `initPanel`，无需逐页编写折叠接线。

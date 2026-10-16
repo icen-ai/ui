@@ -45,6 +45,7 @@
  * 渲染纪律：只写 textContent/createElement，禁 innerHTML；SVG 经 kb-core svgIcon 消毒。
  */
 
+import { createIcon } from './icons';
 import { h, normalizeFilterNode, filterToMongo, filterToOData, KB_FILTER_OPS, type KbFilterNode, type KbFilterOp } from './kb-core';
 import { emitIcen } from './events';
 import { t } from './i18n';
@@ -217,7 +218,8 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
     value.placeholder = rule.op === 'in' ? t('kbFilter.valuePlaceholder') : t('kbFilter.valueLabel');
     value.setAttribute('aria-label', t('kbFilter.valueAria'));
     if (rule.op === 'exists') value.disabled = true;
-    const del = h('button', 'icen-kb-filter-act is-danger', '×');
+    const del = h('button', 'icen-kb-filter-act is-danger');
+  del.append(createIcon('close')!);
     del.type = 'button';
     del.dataset.icenAct = 'del-rule';
     del.title = t('kbFilter.deleteRule');
