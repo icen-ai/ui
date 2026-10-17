@@ -437,6 +437,13 @@
 - 守卫机制深挖：css-discipline 的圆角登记配对依赖 stripComments 后的行号映射，删注释行会让配对漂移——受影响的三处（ai-tool/kb-ops spinner/进度条）登记注释归位行尾；ai-tool.css 与 kb-ops.css 两个历史 CRLF blob 顺带归一 LF（一次性整文件 diff）。
 - 验证：2 条浏览器专项（reasoning caret mask 几何 + 展开旋转 + RTL 镜像；工具完成态与 trace caret 同构）。全量：verify 764 测试、149 条浏览器回归、129 页×两档巡检 0 问题。
 
+### 第二十七轮：AI 族交互验收与 ai-chat 示例的密度接线修复
+
+- 新增 AI 族浏览器验收面（此前几乎为零）：ai-chat 发消息→零接线流式回包→reasoning 折叠（mask caret）→密度三档切换；ai-tool-call 模拟执行状态机与审批卡；ai-composer 的 IME 保护/命令层/引用弹层；ai-threads 分组折叠与条目激活。
+- 抓到真示例 bug：密度按钮挂的是 data-ai-density，示例脚本却读 data-icen-density——永远回落 normal，密度三档从未生效。修正 + 补上换页清理 return。
+- 验证：4 条 AI 族专项全过；全量 verify 764 测试、153 条浏览器回归、129 页×两档巡检 0 问题。
+- 尚待：AI 族其余条目（ai-diff/ai-files/ai-context/ai-usage/ai-feedback/ai-branch/ai-subagent）与 kb 族 30 个的视觉矩阵仍未逐项走完；不勾选。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。

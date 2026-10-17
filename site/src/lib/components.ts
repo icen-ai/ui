@@ -3859,15 +3859,17 @@ if (composer && scrollEl) {
   aiComposerMod.bindComposer(composer, { client: client, messages: scrollEl, usage: { from: 'context' } });
 }
 
-/* 密度三档切换 */
+/* 密度三档切换（ac 统一回收；换页不残留） */
+const densityCtl = new AbortController();
 document.querySelectorAll('[data-ai-density]').forEach(function (btn) {
   btn.addEventListener('click', function () {
-    chatEl?.setAttribute('data-icen-density', btn.getAttribute('data-icen-density') || 'normal');
+    chatEl?.setAttribute('data-icen-density', btn.getAttribute('data-ai-density') || 'normal');
     document.querySelectorAll('[data-ai-density]').forEach(function (b) {
       b.classList.toggle('icen-btn-primary', b === btn);
     });
-  });
-});`,
+  }, { signal: densityCtl.signal });
+});
+return () => densityCtl.abort();`,
   },
   {
     slug: 'ai-message',
