@@ -127,8 +127,8 @@ export const COMPONENTS: ComponentDoc[] = [
   <button class="icen-btn icen-btn-lg">大号</button>
 </div>
 <div class="demo-row" style="margin-top:14px">
-  <button class="icen-btn icen-btn-primary"><svg class="icen-btn-icon-start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新建项目</button>
-  <button class="icen-btn icen-btn-icon" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/></svg></button>
+  <button class="icen-btn icen-btn-primary">${iconHTML('plus',{className:'icen-btn-icon-start'})}新建项目</button>
+  <button class="icen-btn icen-btn-icon" aria-label="设置">${iconHTML('settings')}</button>
   <button class="icen-btn icen-btn-sm is-loading" aria-busy="true">加载中</button>
   <button class="icen-btn is-error">错误态</button>
   <button class="icen-btn icen-btn-block">通栏按钮</button>
@@ -181,7 +181,7 @@ export const COMPONENTS: ComponentDoc[] = [
       <span class="icen-panel-subtitle">点击标题栏展开/折叠</span>
     </div>
     <div class="icen-panel-title-actions">
-      <button class="icen-panel-toggle" aria-expanded="true" type="button"><svg class="icen-panel-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button class="icen-panel-toggle" aria-expanded="true" type="button">${iconHTML('chevron-down',{className:'icen-panel-toggle-icon'})}</button>
     </div>
   </div>
   <div class="icen-panel-body">点击右上角箭头可折叠/展开此面板内容。</div>
@@ -300,12 +300,12 @@ initTabs(); // 激活态挂 .is-active；切换时容器派发 icen:tab-change�
   <div class="icen-stat-card icen-stat-card--interactive">
     <div class="icen-stat-head">
       <span class="icen-stat-label">用户总数</span>
-      <span class="icen-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      <span class="icen-stat-icon">${iconHTML('users')}</span>
     </div>
     <div class="icen-stat-body">
       <div class="icen-stat-num">1,280</div>
       <div class="icen-stat-delta icen-up">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 15 6-6 6 6"/></svg>
+        ${iconHTML('trend-up')}
         +12.4% <span class="icen-stat-period">比上周</span>
       </div>
     </div>
@@ -313,11 +313,11 @@ initTabs(); // 激活态挂 .is-active；切换时容器派发 icen:tab-change�
   <div class="icen-stat-card icen-stat-card--interactive">
     <div class="icen-stat-head">
       <span class="icen-stat-label">可用性</span>
-      <span class="icen-stat-icon icen-icon--success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></span>
+      <span class="icen-stat-icon icen-icon--success">${iconHTML('circle-check')}</span>
     </div>
     <div class="icen-stat-body">
       <div class="icen-stat-num icen-stat-num--accent">96.2%</div>
-      <div class="icen-stat-delta icen-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 15 6-6 6 6"/></svg> +2.1%</div>
+      <div class="icen-stat-delta icen-up">${iconHTML('trend-up')} +2.1%</div>
     </div>
     <div class="icen-stat-progress">
       <svg class="icen-stat-ring" viewBox="0 0 36 36">
@@ -329,17 +329,17 @@ initTabs(); // 激活态挂 .is-active；切换时容器派发 icen:tab-change�
   <div class="icen-stat-card icen-stat-card--interactive">
     <div class="icen-stat-head">
       <span class="icen-stat-label">待处理告警</span>
-      <span class="icen-stat-icon icen-icon--error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+      <span class="icen-stat-icon icen-icon--error">${iconHTML('triangle-alert')}</span>
     </div>
     <div class="icen-stat-body">
       <div class="icen-stat-num icen-stat-num--warning">12</div>
-      <div class="icen-stat-delta icen-down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 9-6 6-6-6"/></svg> -3 <span class="icen-stat-period">比昨日</span></div>
+      <div class="icen-stat-delta icen-down">${iconHTML('trend-down')} -3 <span class="icen-stat-period">比昨日</span></div>
     </div>
   </div>
   <div class="icen-stat-card icen-stat-card--horizontal">
     <div class="icen-stat-head">
       <span class="icen-stat-label">请求/秒</span>
-      <span class="icen-stat-icon icen-icon--info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+      <span class="icen-stat-icon icen-icon--info">${iconHTML('activity')}</span>
     </div>
     <div class="icen-stat-body">
       <div class="icen-stat-num">8,452</div>
@@ -412,14 +412,14 @@ return () => toast.dismiss();`,
     desc: '横向承载按钮 / 控件的容器。与 segmented 区别——toolbar 是宽松容器（可分组、可分隔、可换行），segmented 是紧贴互斥分段选择。',
     demo: `<div class="icen-toolbar" style="margin-bottom:14px">
   <div class="icen-toolbar-group">
-    <button class="icen-btn icen-btn-sm" aria-label="加粗"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/></svg></button>
-    <button class="icen-btn icen-btn-sm" aria-label="斜体"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg></button>
-    <button class="icen-btn icen-btn-sm" aria-label="下划线"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg></button>
+    <button class="icen-btn icen-btn-sm" aria-label="加粗">${iconHTML('bold',{size:14})}</button>
+    <button class="icen-btn icen-btn-sm" aria-label="斜体">${iconHTML('italic',{size:14})}</button>
+    <button class="icen-btn icen-btn-sm" aria-label="下划线">${iconHTML('underline',{size:14})}</button>
   </div>
   <span class="icen-toolbar-separator"></span>
   <div class="icen-toolbar-group">
-    <button class="icen-btn icen-btn-sm" aria-label="左对齐"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="15" y1="12" y2="12"/><line x1="3" x2="18" y1="18" y2="18"/></svg></button>
-    <button class="icen-btn icen-btn-sm" aria-label="居中"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="6" x2="18" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+    <button class="icen-btn icen-btn-sm" aria-label="左对齐">${iconHTML('align-left',{size:14})}</button>
+    <button class="icen-btn icen-btn-sm" aria-label="居中">${iconHTML('align-center',{size:14})}</button>
   </div>
   <span class="icen-toolbar-spacer"></span>
   <span class="icen-toolbar-label icen-accent">3 项已选</span>
@@ -1472,7 +1472,7 @@ COMPONENTS.push(
 </div>
 <div class="demo-row" style="align-items:flex-start;gap:16px;margin-top:16px">
   <div class="icen-empty icen-empty--error" style="flex:1;min-width:200px">
-    <div class="icen-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></div>
+    <div class="icen-empty-icon">${iconHTML('circle-error')}</div>
     <p class="icen-empty-title">加载失败</p>
     <p class="icen-empty-desc">数据获取异常，请稍后重试</p>
     <div class="icen-empty-action"><button class="icen-btn icen-btn-sm icen-btn-primary">重试</button></div>
@@ -2330,7 +2330,7 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     <span class="icen-badge icen-badge--bottom icen-badge--dot icen-badge--warning"></span>
   </span>
   <span class="icen-badge-host">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--icen-token-text-muted)"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    ${iconHTML('bell',{size:22})}
     <span class="icen-badge icen-badge--sm icen-badge--error">5</span>
   </span>
 </div>`,
@@ -3098,7 +3098,7 @@ COMPONENTS.push(
   </div>
   <div class="icen-nav-right">
     <button class="icen-nav-btn icen-nav-btn--icon icen-motion icen-pressable icen-focus-ring" aria-label="搜索">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      ${iconHTML('search')}
     </button>
     <span class="icen-nav-divider"></span>
     <button class="icen-nav-btn icen-motion icen-pressable icen-focus-ring">登录</button>
@@ -3119,11 +3119,11 @@ initNav(); // scrollY > 12 时给 .nav[data-icen-scroll-reactive] 加 .is-scroll
     <button class="icen-sidebar-group-title" aria-expanded="true">快速开始</button>
     <div class="icen-sidebar-group-panel"><div class="icen-sidebar-group-panel-inner">
       <a class="icen-sidebar-item" href="#">
-        <svg class="icen-sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9"/><path d="m16 19 2 2 4-4"/></svg>
+        ${iconHTML('file',{className:'icen-sidebar-item-icon'})}
         <span>安装</span>
       </a>
       <a class="icen-sidebar-item is-active" href="#">
-        <svg class="icen-sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
+        ${iconHTML('rocket',{className:'icen-sidebar-item-icon'})}
         <span>快速上手</span>
       </a>
     </div></div>
@@ -3132,7 +3132,7 @@ initNav(); // scrollY > 12 时给 .nav[data-icen-scroll-reactive] 加 .is-scroll
     <button class="icen-sidebar-group-title" aria-expanded="false">进阶指南</button>
     <div class="icen-sidebar-group-panel"><div class="icen-sidebar-group-panel-inner">
       <a class="icen-sidebar-item" href="#">
-        <svg class="icen-sidebar-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        ${iconHTML('file',{className:'icen-sidebar-item-icon'})}
         <span>更新日志</span>
       </a>
     </div></div>
@@ -3600,7 +3600,7 @@ async function play() {
   [['docs/history.md', 'is-added'], ['docs/spec/ai-native.md', 'is-modified'], ['src/behaviors/ai-tools.ts', 'is-added']].forEach(function (f) {
     const chip = document.createElement('span'); chip.className = 'icen-ai-file-chip ' + f[1];
     const ic = document.createElement('span'); ic.className = 'icen-ai-file-icon';
-    const sv = M.core.svgIcon('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>');
+    const sv = M.core.svgIcon('${iconHTML('file')}');
     if (sv) ic.appendChild(sv);
     chip.append(ic, document.createTextNode(f[0]));
     filesRow.appendChild(chip);
@@ -3733,7 +3733,7 @@ refreshAudit();`,
     </div>
     <div class="icen-ai-tool icen-ai-tool--shell is-done" data-icen-ai-id="demo-chat-shell" data-icen-ai-kind="shell">
       <button class="icen-ai-tool-head" type="button" aria-expanded="false">
-        <span class="icen-ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></span>
+        <span class="icen-ai-item-icon" aria-hidden="true">${iconHTML('terminal')}</span>
         <span class="icen-ai-item-main">
           <span class="icen-ai-item-title">Shell</span>
           <span class="icen-ai-item-sub">bun run build</span>
@@ -3867,8 +3867,8 @@ document.querySelectorAll('[data-ai-density]').forEach(function (btn) {
       <div class="icen-ai-msg-meta">12:04 · 34 tok</div>
     </div>
     <div class="icen-ai-msg-actions">
-      <button type="button" data-icen-ai-msg-action="copy" aria-label="复制"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg></button>
-      <button type="button" data-icen-ai-msg-action="retry" aria-label="重试"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
+      <button type="button" data-icen-ai-msg-action="copy" aria-label="复制">${iconHTML('copy')}</button>
+      <button type="button" data-icen-ai-msg-action="retry" aria-label="重试">${iconHTML('refresh')}</button>
     </div>
   </div>
   <div class="icen-ai-msg icen-ai-msg--system" style="margin-bottom:10px">
@@ -4160,7 +4160,7 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
     demo: `<div style="display:flex;flex-direction:column;gap:8px;width:100%">
   <div class="icen-ai-tool icen-ai-tool--shell is-done" data-icen-ai-id="demo-t1" data-icen-ai-kind="shell">
     <button class="icen-ai-tool-head" type="button" aria-expanded="false">
-      <span class="icen-ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg></span>
+      <span class="icen-ai-item-icon" aria-hidden="true">${iconHTML('terminal')}</span>
       <span class="icen-ai-item-main"><span class="icen-ai-item-title">Shell</span><span class="icen-ai-item-sub">bun run build</span></span>
       <span class="icen-ai-item-status" role="img" aria-label="完成"></span>
       <span class="icen-ai-item-meta">3.2s</span>
@@ -4172,7 +4172,7 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
   </div>
   <div class="icen-ai-tool icen-ai-tool--read is-done" data-icen-ai-id="demo-t2" data-icen-ai-kind="read">
     <button class="icen-ai-tool-head" type="button" aria-expanded="false">
-      <span class="icen-ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+      <span class="icen-ai-item-icon" aria-hidden="true">${iconHTML('file')}</span>
       <span class="icen-ai-item-main"><span class="icen-ai-item-title">Read</span><span class="icen-ai-item-sub">src/utils/date.ts:1-50</span></span>
       <span class="icen-ai-item-status" role="img" aria-label="完成"></span>
       <span class="icen-ai-item-meta">0.4s</span>
@@ -4184,7 +4184,7 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
   </div>
   <div class="icen-ai-tool icen-ai-tool--mcp is-running" data-icen-ai-id="demo-t3" data-icen-ai-kind="mcp">
     <button class="icen-ai-tool-head" type="button" aria-expanded="false">
-      <span class="icen-ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 6h.01"/><path d="M6 18h.01"/></svg></span>
+      <span class="icen-ai-item-icon" aria-hidden="true">${iconHTML('server')}</span>
       <span class="icen-ai-item-main"><span class="icen-ai-item-title">MCP</span><span class="icen-ai-item-sub">github · create_issue</span></span>
       <span class="icen-ai-item-status" role="img" aria-label="执行中"></span>
       <span class="icen-ai-item-meta">2.8s</span>
@@ -4195,7 +4195,7 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
   </div>
   <div class="icen-ai-tool icen-ai-tool--edit is-approval" data-icen-ai-id="demo-t4" data-icen-ai-kind="edit">
     <button class="icen-ai-tool-head" type="button" aria-expanded="false">
-      <span class="icen-ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>
+      <span class="icen-ai-item-icon" aria-hidden="true">${iconHTML('edit')}</span>
       <span class="icen-ai-item-main"><span class="icen-ai-item-title">Edit</span><span class="icen-ai-item-sub">src/config.ts:12</span></span>
       <span class="icen-ai-item-status" role="img" aria-label="待人确认"></span>
       <span class="icen-ai-item-meta"></span>
@@ -4211,7 +4211,7 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
   </div>
   <div class="icen-ai-tool icen-ai-tool--rm is-error" data-icen-ai-id="demo-t5" data-icen-ai-kind="rm">
     <button class="icen-ai-tool-head" type="button" aria-expanded="false">
-      <span class="icen-ai-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+      <span class="icen-ai-item-icon" aria-hidden="true">${iconHTML('trash')}</span>
       <span class="icen-ai-item-main"><span class="icen-ai-item-title">Rm</span><span class="icen-ai-item-sub">dist/cache.json</span></span>
       <span class="icen-ai-item-status" role="img" aria-label="失败"></span>
       <span class="icen-ai-item-meta">0.1s</span>
@@ -4397,7 +4397,7 @@ h.update({ status: 'done', durationMs: 12400, output: 'auth 模块共 3 个入�
 aiCoreMod.registerAiKind('deploy', {
   label: 'Deploy',
   tint: 'warning',
-  icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
+  icon: '${iconHTML('rocket')}',
   summarize: function (input) { return '部署到 ' + ((input && input.target) || '?'); },
 });
 /* 运行中的子代理：活动流随时间推进 */
@@ -4526,12 +4526,12 @@ host?.addEventListener('icen:ai-diff-reject', function (e) {
     group: 'AI 原生',
     desc: '文件 chips .ai-file-chip（纯 CSS 族，无 behavior）：is-added / is-modified / is-deleted 三态 × 类型修饰类（--ts/--js/--css/--json/--md/--img/--other，图标由消费方注入 svg）；renderAiContext 的文件区复用同款 chips。',
     demo: `<div class="icen-ai-files">
-  <span class="icen-ai-file-chip is-added icen-ai-file-chip--ts"><span class="icen-ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/></svg></span>src/utils/format.ts</span>
-  <span class="icen-ai-file-chip is-modified icen-ai-file-chip--css"><span class="icen-ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/><path d="M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/></svg></span>src/components/ai-chat.css</span>
-  <span class="icen-ai-file-chip is-modified icen-ai-file-chip--json"><span class="icen-ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/><path d="M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/></svg></span>package.json</span>
-  <span class="icen-ai-file-chip is-modified icen-ai-file-chip--md"><span class="icen-ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span>README.md</span>
-  <span class="icen-ai-file-chip is-deleted icen-ai-file-chip--js"><span class="icen-ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/></svg></span>scripts/old-build.js</span>
-  <span class="icen-ai-file-chip is-added icen-ai-file-chip--img"><span class="icen-ai-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span>assets/cover.png</span>
+  <span class="icen-ai-file-chip is-added icen-ai-file-chip--ts"><span class="icen-ai-file-icon">${iconHTML('file')}</span>src/utils/format.ts</span>
+  <span class="icen-ai-file-chip is-modified icen-ai-file-chip--css"><span class="icen-ai-file-icon">${iconHTML('file')}</span>src/components/ai-chat.css</span>
+  <span class="icen-ai-file-chip is-modified icen-ai-file-chip--json"><span class="icen-ai-file-icon">${iconHTML('file')}</span>package.json</span>
+  <span class="icen-ai-file-chip is-modified icen-ai-file-chip--md"><span class="icen-ai-file-icon">${iconHTML('file')}</span>README.md</span>
+  <span class="icen-ai-file-chip is-deleted icen-ai-file-chip--js"><span class="icen-ai-file-icon">${iconHTML('file')}</span>scripts/old-build.js</span>
+  <span class="icen-ai-file-chip is-added icen-ai-file-chip--img"><span class="icen-ai-file-icon">${iconHTML('file')}</span>assets/cover.png</span>
 </div>
 <p class="demo-label" style="margin-top:8px">纯 CSS 族：is-added（绿）/ is-modified（accent）/ is-deleted（红，删除线）× 文件类型图标 · renderAiContext 文件区同款</p>`,
     usage: `<!-- 纯 CSS 组件，无 behavior；文件图标由消费方注入 svg -->

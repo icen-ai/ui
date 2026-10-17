@@ -382,6 +382,13 @@
 - 验证：3 条浏览器专项（隐式显隐与布局稳定、双模式 axe + 20px 几何、触屏 RTL 44px 与零横向溢出）全过；verify 756 测试、137 条浏览器回归、129 页×两档巡检 0 问题。
 - 尚待：编辑器域图标族（bold/italic/underline/align-* 等，toolbar 示例在用 24px 手写件）需专门设计一批；其余约 22 处手写 SVG 散在 kb/ai 示例与首页（index.astro 自带常量）；alert 的 banner/inline 变体与 forced-colors 矩阵未全覆盖，alert/result 暂不勾选。
 
+### 第二十轮：编辑器图标族与示例手写 SVG 清零
+
+- 共享图标集一次扩充 13 枚原创 20px 几何：编辑器族 bold / italic / underline / align-left / align-center / align-right / list；数据域 users / activity / trend-up / trend-down / bell / rocket / server；AI 域 sparkle / chart-line / layers / box。
+- 示例手写 SVG 清零：components.ts 剩余 21 处（btn/panel/stat 趋势/empty/badge 铃/nav 搜索/sidebar/AI 项与消息动作/kb svgIcon/文件芯片）全部迁移到 iconHTML；index.astro 首页常量（copy/check/search/star/rocket/featureIcons）同步迁移并补 frontmatter 导入。全站示例不再存在 24px 手写网格。
+- 视觉基线零变更：共享几何与原手写件在各场景光学兼容（1% 容差内），e2e 视觉套件无需重基线。
+- 验证：verify 756 测试、137 条浏览器回归、129 页×两档巡检 0 问题。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。
