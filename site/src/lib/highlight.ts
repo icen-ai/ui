@@ -6,6 +6,7 @@
  * 高亮器单例惰性创建，站点构建进程内复用；未注册语言按需 loadLanguage。
  */
 import { createHighlighter, type Highlighter } from 'shiki';
+import {readableSyntax} from './code-contrast';
 
 /** 站内出现的语言别名 → shiki 语言 id */
 const LANG_ALIAS: Record<string, string> = {
@@ -50,7 +51,7 @@ async function render(code: string, lang: string): Promise<string> {
       l = 'txt';
     }
   }
-  return highlighter.codeToHtml(code.replace(/\n$/, ''), { lang: l, themes: THEMES });
+  return readableSyntax(highlighter.codeToHtml(code.replace(/\n$/, ''), { lang: l, themes: THEMES }));
 }
 
 /**

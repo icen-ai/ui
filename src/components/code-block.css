@@ -23,7 +23,7 @@
  *         </button>
  *       </span>
  *     </figcaption>
- *     <pre [data-icen-dual-theme]><code>
+ *     <pre tabindex="0" role="region" aria-label="源码文件名" [data-icen-dual-theme]><code>
  *       <span class="icen-code-block-line [icen-code-block-line--hl|--add|--del|--ctx|--meta]">…</span>…
  *     </code></pre>
  *     <button type="button" class="icen-code-block-tail">                       <!-- 仅可折叠块 -->
@@ -47,7 +47,7 @@
 .icen-code-block {
   border: 1px solid var(--icen-token-line-soft);
   border-radius: var(--icen-radius-lg);
-  background: color-mix(in srgb, var(--icen-token-text) 5%, var(--icen-token-bg));
+  background: var(--cb-background, var(--icen-token-surface));
   overflow: hidden;
 }
 
@@ -86,7 +86,7 @@
   border-bottom: 1px solid var(--icen-token-line-soft);
   font-size: var(--icen-density-font-size-sm);
   line-height: 1.4;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
 
 .icen-code-block-id {
@@ -125,7 +125,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
 .icen-code-block-title::before {
   content: '·';
@@ -153,7 +153,7 @@
   background: transparent;
   border: 0;
   border-radius: var(--icen-radius-xs);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   cursor: pointer;
   opacity: 0.45;
   transition:
@@ -237,7 +237,7 @@
   margin-inline-end: var(--icen-density-space-md);
   text-align: end;
   white-space: nowrap;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   user-select: none;
   transition:
     opacity var(--icen-duration-normal) var(--icen-ease-out),
@@ -266,7 +266,8 @@
 
 .icen-code-block.is-folded > pre {
   max-height: 264px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   cursor: pointer;
   -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 97%);
   mask-image: linear-gradient(to bottom, #000 58%, transparent 97%);
@@ -284,7 +285,7 @@
   border-top: 1px solid var(--icen-token-line-soft);
   font: inherit;
   font-size: var(--icen-density-font-size-sm);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   cursor: pointer;
   transition: color var(--icen-duration-fast) var(--icen-ease-out);
 }
@@ -357,7 +358,7 @@
 }
 
 .icen-code-block--diff .icen-code-block-line--meta {
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
 
 .icen-code-block--diff .icen-code-block-line--add {
@@ -389,4 +390,26 @@
   .icen-code-block-tail-icon {
     transition: none;
   }
+}
+
+/* Fixed optical slots, quiet until intent, and full touch hit areas. */
+.icen-code-block-btn { position: relative; inline-size: var(--icen-density-input-height-sm); block-size: var(--icen-density-input-height-sm); opacity: 1; }
+.icen-code-block-icon { inline-size: 20px; block-size: 20px; align-items: center; justify-content: center; opacity: 1; }
+.icen-code-block-icon svg, .icen-code-block-btn svg, .icen-code-block-tail-icon svg { inline-size: 16px; block-size: 16px; }
+.icen-code-block-file, .icen-code-block-lang { direction: ltr; unicode-bidi: isolate; }
+.icen-code-block > pre { overscroll-behavior-inline: contain; }
+.icen-code-block > pre:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: -2px; }
+.icen-code-block-tail { min-block-size: var(--icen-density-input-height-sm); }
+.icen-code-block-btn.is-error { color: var(--icen-token-error); }
+.icen-code-block-feedback { margin: 0; padding: var(--icen-density-space-sm) var(--icen-density-space-md); border-top: 1px solid var(--icen-token-line-soft); color: var(--icen-token-error); font-size: var(--icen-density-font-size-sm); }
+.icen-code-block-feedback.is-success { position: absolute; inline-size: 1px; block-size: 1px; padding: 0; border: 0; clip-path: inset(50%); overflow: hidden; }
+@media (hover: hover) and (pointer: fine) {
+  .icen-code-block .icen-code-block-btn { opacity: 0; }
+  .icen-code-block:hover .icen-code-block-btn, .icen-code-block:focus-within .icen-code-block-btn, .icen-code-block .icen-code-block-btn:is(.is-done,.is-error) { opacity: 1; }
+}
+@media (pointer: coarse) { .icen-code-block-btn { min-inline-size: 44px; min-block-size: 44px; } .icen-code-block-tail { min-block-size: 44px; } .icen-code-block-head { padding-inline: var(--icen-density-space-sm); gap: var(--icen-density-space-xs); } }
+@media (forced-colors: active) {
+  .icen-code-block { background: Canvas; border-color: CanvasText; }
+  .icen-code-block-btn.is-on { outline: 1px solid Highlight; }
+  .icen-code-block pre span { color: CanvasText !important; } /* guard:allow-important system high-contrast text must beat trusted inline syntax colors */
 }

@@ -15,17 +15,19 @@
  *         旧/新双行号 counter-set），diff 默认显示行号，其余默认隐藏
  *       · lines：高亮行（1 基）；num / wrap：初始态；fold：true 强制折叠 / false 永不 /
  *         数字 = 超过 N 行折叠（缺省 30）
- *   - initCodeBlock(root?)：幂等（__icenCodeBlockInit），事件委托（渲染后注入的块同样生效）：
+ *   - initCodeBlock(root?)：幂等（scope disposer），事件委托（渲染后注入的块同样生效）：
  *       · [data-icen-code-block-num|wrap]：切换行号/换行，同步 aria-pressed 与 tooltip 文案
  *       · [data-icen-code-block-fold] / .icen-code-block-tail / 折叠态点击 pre：展开收起
  *         （max-height 过渡动画，prefers-reduced-motion 下直接落位）
  *       · [data-icen-code-block-copy]：整块正文写剪贴板（复用 copy 的 copyText 含
  *         execCommand 回退），成功 .is-done 1.5s（CSS 切对勾图标），派 icen:copy-success /
- *         icen:copy-error（与 copy 组件同事件契约）
+ *         icen:copy-error（与 copy 组件同事件契约）；失败有可见重试，等待中不重复复制
  *       · 切换类操作派 icen:code-block-toggle { el, action: 'num'|'wrap'|'fold', value }
- *   - 返回销毁函数：移除监听、复位幂等标记（销毁后可重新 init）
+ *   - 返回销毁函数：移除监听与观察器、取消动画和异步反馈、复位幂等标记（可重新 init）
  */
 
+import {iconHTML} from './icons';
+import {runFeedbackAction,cancelFeedbackAction} from './feedback';
 import { parseSvg } from './svg-parse';
 import { emitIcen } from './events';
 import { t } from './i18n';
@@ -36,22 +38,11 @@ import { copyText } from './copy';
 /** 超过此行数自动折叠（CSS 的 is-folded max-height 264px 与之配套） */
 const FOLD_THRESHOLD = 30;
 /** 折叠态可视高度（与 code-block.css 的 .is-folded > pre max-height 同值） */
-const FOLD_MAX = '264px';
+const FOLD_MAX = 264;
 /** 复制成功反馈时长（与 blog 端一致；CSS 对勾图标切换窗口） */
 const COPY_DONE_MS = 1500;
 
-const SVG_OPEN =
-  '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
-const ICONS = {
-  file: `${SVG_OPEN}<path d="M4.5 1.5h4.6l3.4 3.4v8.6a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z"/><path d="M9 1.5V5h3.5"/></svg>`,
-  terminal: `${SVG_OPEN}<rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M4.5 6l2.5 2-2.5 2M8.5 10.5h3"/></svg>`,
-  branch: `${SVG_OPEN}<circle cx="5" cy="4" r="1.6"/><circle cx="11" cy="12" r="1.6"/><path d="M5 5.6v4.9a2 2 0 0 0 2 2h2.4"/></svg>`,
-  num: `${SVG_OPEN}<path d="M3 4.5h2M3 8h2M3 11.5h2M7.5 4.5H13M7.5 8H13M7.5 11.5H13"/></svg>`,
-  wrap: `${SVG_OPEN}<path d="M2.5 4h11M2.5 8h6.8a2.4 2.4 0 0 1 0 4.8H6.5"/><path d="M8.6 10.6l-2.1 2.2 2.1 2.2"/></svg>`,
-  fold: `${SVG_OPEN}<path d="M4 6.2l4 4 4-4"/></svg>`,
-  copy: `${SVG_OPEN}<rect x="5.8" y="5.8" width="7.7" height="8.7" rx="1.5"/><path d="M10.5 5.8v-2A1.3 1.3 0 0 0 9.2 2.5H4.8A1.3 1.3 0 0 0 3.5 3.8v6.7A1.3 1.3 0 0 0 4.8 11.8h1.5"/></svg>`,
-  check: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6"/></svg>`,
-} as const;
+const ICONS={file:iconHTML('file'),terminal:iconHTML('terminal'),branch:iconHTML('branch'),num:iconHTML('line-numbers'),wrap:iconHTML('wrap'),fold:iconHTML('chevron-down'),copy:iconHTML('copy'),check:iconHTML('check')};
 
 const SHELL_LANGS = ['bash', 'sh', 'shell', 'zsh', 'console', 'terminal', 'fish', 'powershell', 'cmd'];
 const DIFF_LANGS = ['diff', 'patch'];
@@ -279,7 +270,7 @@ export function renderCodeBlock(target: HTMLElement, opts: CodeBlockOptions): HT
   } else {
     pre = el('pre', '');
     const code = el('code', '');
-    const source = opts.code ?? '';
+    const source = (opts.code ?? '').replace(/\n$/, '');
     for (const text of source.split('\n')) {
       const line = el('span', 'icen-code-block-line');
       line.textContent = text;
@@ -288,6 +279,7 @@ export function renderCodeBlock(target: HTMLElement, opts: CodeBlockOptions): HT
     pre.appendChild(code);
     lines = [...pre.querySelectorAll<HTMLElement>('.icen-code-block-line')];
   }
+  pre.tabIndex=0;pre.setAttribute('role','region');pre.setAttribute('aria-label',opts.file || opts.title || opts.lang || t('codeBlock.region'));
   figure.appendChild(pre);
 
   /* diff 行分类 + 高亮行 */
@@ -309,13 +301,13 @@ export function renderCodeBlock(target: HTMLElement, opts: CodeBlockOptions): HT
     foldable === true ||
     (foldable === null && total > (typeof opts.fold === 'number' ? opts.fold : FOLD_THRESHOLD));
   if (fold && total > 0) {
-    const foldBtn = actionBtn('fold', t('codeBlock.foldCollapse'), ICONS.fold);
+    const foldBtn = actionBtn('fold', t('codeBlock.foldExpand'), ICONS.fold);
     foldBtn.setAttribute('aria-expanded', 'false'); /* 初始即折叠（is-folded 同步加上） */
     actions.insertBefore(foldBtn, copyBtn);
 
     const tail = el('button', 'icen-code-block-tail') as HTMLButtonElement;
     tail.type = 'button';
-    tail.setAttribute('aria-label', t('codeBlock.tailAria'));
+    tail.setAttribute('aria-label', t('codeBlock.linesTotal',{p0:String(total)})+', '+t('codeBlock.foldExpand'));tail.setAttribute('aria-expanded','false');
     const count = el('span', 'icen-code-block-count');
     count.textContent = t('codeBlock.linesTotal', { p0: String(total) });
     const less = el('span', 'icen-code-block-less');
@@ -327,6 +319,7 @@ export function renderCodeBlock(target: HTMLElement, opts: CodeBlockOptions): HT
 
   target.textContent = '';
   target.appendChild(figure);
+  prepareFigure(figure);
   return target;
 }
 
@@ -461,12 +454,13 @@ export function codeBlockHTML(opts: CodeBlockOptions): string {
       const mods = marks ? [marks.marks[i]!.cls] : [];
       if (hl.has(i + 1)) mods.push('icen-code-block-line--hl');
       const counter = marks?.marks[i]?.counter;
-      return `<span class="icen-code-block-line${mods.length > 0 ? ` ${mods.join(' ')}` : ''}"${counter ? ` style="${counter}"` : ''}>${esc(text) || ' '}</span>`;
+      return `<span class="icen-code-block-line${mods.length > 0 ? ` ${mods.join(' ')}` : ''}"${counter ? ` style="${counter}"` : ''}>${esc(text)}</span>`;
     });
     /* 行 span 之间不加任何空白：white-space: pre 下块级行间的文本节点会渲染成空行（行距翻倍） */
     pre = `<pre><code>${spans.join('')}</code></pre>`;
   }
 
+  pre=pre.replace(/^<pre([^>]*)>/i,(_m,attrs:string)=>'<pre'+attrs.replace(/\s(?:tabindex|role|aria-label)=(?:"[^"]*"|'[^']*')/gi,'')+' tabindex="0" role="region" aria-label="'+esc(opts.file || opts.title || opts.lang || t('codeBlock.region'))+'">');
   const fold = !foldNever && total > 0 && (foldForced || total > foldThreshold);
   if (fold) cls.push('is-folded');
   const gutterDigits = String(Math.max(1, maxNo)).length;
@@ -479,7 +473,7 @@ export function codeBlockHTML(opts: CodeBlockOptions): string {
       : '';
   const title = opts.title ? `<span class="icen-code-block-title">${esc(opts.title)}</span>` : '';
   const foldBtn = fold
-    ? btnHtml('fold', t('codeBlock.foldCollapse'), `<span class="icen-code-block-btn-icon">${ICONS.fold}</span>`, { expanded: false })
+    ? btnHtml('fold', t('codeBlock.foldExpand'), `<span class="icen-code-block-btn-icon">${ICONS.fold}</span>`, { expanded: false })
     : '';
   const actions =
     `<span class="icen-code-block-actions">` +
@@ -495,7 +489,7 @@ export function codeBlockHTML(opts: CodeBlockOptions): string {
     `</figcaption>`;
 
   const tail = fold
-    ? `<button type="button" class="icen-code-block-tail" aria-label="${esc(t('codeBlock.tailAria'))}">` +
+    ? `<button type="button" class="icen-code-block-tail" aria-expanded="false" aria-label="${esc(t('codeBlock.linesTotal',{p0:String(total)})+', '+t('codeBlock.foldExpand'))}">` +
       `<span class="icen-code-block-count">${esc(t('codeBlock.linesTotal', { p0: String(total) }))}</span>` +
       `<span class="icen-code-block-less">${esc(t('codeBlock.collapse'))}</span>` +
       `<span class="icen-code-block-tail-icon">${ICONS.fold}</span>` +
@@ -508,189 +502,85 @@ export function codeBlockHTML(opts: CodeBlockOptions): string {
   return `<figure class="${cls.join(' ')}"${styleAttr}>\n${parts.join('\n')}\n</figure>`;
 }
 
-/* ── 交互 ── */
-
-interface MarkedScope extends ParentNode {
-  __icenCodeBlockInit?: boolean;
+/* ── Interaction ownership ── */
+let regionSequence=0;
+const handled=new WeakSet<Event>();
+const scopes=new WeakMap<ParentNode,()=>void>();
+const folds=new WeakMap<HTMLElement,{owner:object;cancel(reset?:boolean):void}>();
+const copies=new WeakMap<HTMLElement,{owner:object;button:HTMLButtonElement;timer:number;pending:boolean}>();
+function syncFold(fig:HTMLElement,fold:boolean):void {
+  const button=fig.querySelector('[data-icen-code-block-fold]'),tail=fig.querySelector('.icen-code-block-tail');
+  if(button){retip(button,t(fold ? 'codeBlock.foldExpand' : 'codeBlock.foldCollapse'));button.setAttribute('aria-expanded',String(!fold));}
+  if(tail){const count=fig.querySelector('.icen-code-block-count')?.textContent ?? '';tail.setAttribute('aria-expanded',String(!fold));tail.setAttribute('aria-label',fold ? count+', '+t('codeBlock.foldExpand') : t('codeBlock.collapse')+', '+t('codeBlock.region'));}
 }
-
-const noopDestroy = (): void => undefined;
-
-function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : false;
+function prepareFigure(fig:HTMLElement):void {
+  const pre=fig.querySelector<HTMLElement>(':scope > pre');if(!pre)return;
+  pre.tabIndex=0;pre.setAttribute('role','region');
+  if(!pre.hasAttribute('aria-label'))pre.setAttribute('aria-label',fig.querySelector('.icen-code-block-file,.icen-code-block-title,.icen-code-block-lang')?.textContent || t('codeBlock.region'));
+  if(!pre.id){do{pre.id='icen-code-region-'+ ++regionSequence;}while(document.getElementById(pre.id) && document.getElementById(pre.id) !== pre);}
+  fig.querySelectorAll('[data-icen-code-block-num],[data-icen-code-block-wrap],[data-icen-code-block-fold],.icen-code-block-tail').forEach((control)=>control.setAttribute('aria-controls',pre.id));
+  syncFold(fig,fig.classList.contains('is-folded'));
 }
-
-function closestFigure(node: Element | null): HTMLElement | null {
-  const fig = node?.closest('.icen-code-block');
-  return fig instanceof HTMLElement ? fig : null;
+function setFold(fig:HTMLElement,fold:boolean,owner:object):void {
+  const pre=fig.querySelector<HTMLElement>(':scope > pre');if(!pre)return;
+  const height=pre.getBoundingClientRect().height;
+  folds.get(fig)?.cancel(false);fig.classList.toggle('is-folded',fold);syncFold(fig,fold);
+  const reduced=typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const duration=Math.max(...getComputedStyle(pre).transitionDuration.split(',').map((part)=>{const value=parseFloat(part)||0;return part.trim().endsWith('ms') ? value : value*1000;}));
+  if(reduced || !height || duration<=0){pre.style.maxHeight='';return;}
+  let frame=0,timer=0;
+  const state={owner,cancel(reset=true){cancelAnimationFrame(frame);window.clearTimeout(timer);pre.removeEventListener('transitionend',ended);if(reset)pre.style.maxHeight='';if(folds.get(fig) === state)folds.delete(fig);}};
+  const ended=(event:TransitionEvent)=>{if(event.target === pre && event.propertyName === 'max-height')state.cancel();};
+  folds.set(fig,state);pre.style.maxHeight=height+'px';void pre.offsetHeight;
+  pre.addEventListener('transitionend',ended);
+  frame=requestAnimationFrame(()=>{if(folds.get(fig) !== state || !fig.isConnected){state.cancel();return;}pre.style.maxHeight=(fold ? Math.min(FOLD_MAX,pre.scrollHeight) : pre.scrollHeight)+'px';});
+  timer=window.setTimeout(()=>state.cancel(),duration+80);
 }
-
-/** 折叠/展开（max-height 过渡；reduced-motion 直接落位）——与 blog 端同款双 rAF 防跳变 */
-function setFold(fig: HTMLElement, fold: boolean): void {
-  const pre = fig.querySelector<HTMLElement>(':scope > pre');
-  if (!pre) return;
-  const btn = fig.querySelector('[data-icen-code-block-fold]');
-  const reduced = prefersReducedMotion();
-  if (fold) {
-    if (reduced) {
-      fig.classList.add('is-folded');
-      pre.style.maxHeight = '';
-    } else {
-      pre.style.maxHeight = `${pre.scrollHeight}px`;
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          pre.style.maxHeight = FOLD_MAX;
-        }),
-      );
-      pre.addEventListener(
-        'transitionend',
-        () => {
-          pre.style.maxHeight = '';
-          fig.classList.add('is-folded');
-        },
-        { once: true },
-      );
-    }
-    if (btn) {
-      retip(btn, t('codeBlock.foldExpand'));
-      btn.setAttribute('aria-expanded', 'false');
-    }
-  } else {
-    if (reduced) {
-      fig.classList.remove('is-folded');
-      pre.style.maxHeight = '';
-    } else {
-      pre.style.maxHeight = FOLD_MAX;
-      fig.classList.remove('is-folded');
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          pre.style.maxHeight = `${pre.scrollHeight}px`;
-        }),
-      );
-      pre.addEventListener(
-        'transitionend',
-        () => {
-          pre.style.maxHeight = 'none';
-        },
-        { once: true },
-      );
-    }
-    if (btn) {
-      retip(btn, t('codeBlock.foldCollapse'));
-      btn.setAttribute('aria-expanded', 'true');
-    }
-  }
+function clearCopy(fig:HTMLElement):void {
+  const state=copies.get(fig);if(!state)return;
+  cancelFeedbackAction(fig);window.clearTimeout(state.timer);state.button.classList.remove('is-done','is-error');retip(state.button,t('codeBlock.copy'));fig.querySelector('.icen-code-block-feedback')?.remove();copies.delete(fig);
 }
-
-const copyTimers = new WeakMap<HTMLElement, number>();
-
-function doCopy(btn: HTMLElement, fig: HTMLElement): void {
-  const pre = fig.querySelector('pre');
-  if (!pre) return;
-  const text = pre.innerText;
-  void copyText(text).then((outcome) => {
-    if (outcome.ok) {
-      btn.classList.add('is-done');
-      retip(btn, t('copy.copied'));
-      emitIcen(btn, 'icen:copy-success', { text });
-      const prev = copyTimers.get(btn);
-      if (prev) window.clearTimeout(prev);
-      copyTimers.set(
-        btn,
-        window.setTimeout(() => {
-          btn.classList.remove('is-done');
-          retip(btn, t('codeBlock.copy'));
-          copyTimers.delete(btn);
-        }, COPY_DONE_MS),
-      );
-    } else {
-      emitIcen(btn, 'icen:copy-error', { text, reason: outcome.reason ?? t('copy.unknown') });
-    }
-  });
-}
-
-/**
- * 委托初始化：行号/换行切换、折叠/展开、复制。重复调用安全；
- * 返回销毁函数（移除监听并复位标记，可重新 init）。SSR 下返回 no-op。
- */
-export function initCodeBlock(root?: ParentNode): () => void {
-  if (typeof document === 'undefined') return noopDestroy;
-  const scope = root ?? document;
-  const marked = scope as MarkedScope;
-  if (marked.__icenCodeBlockInit) return noopDestroy;
-  marked.__icenCodeBlockInit = true;
-  const target = scope as ParentNode & EventTarget;
-
-  const onClick = (e: Event): void => {
-    const node = e.target instanceof Element ? e.target : null;
-    if (!node) return;
-
-    const numBtn = node.closest('[data-icen-code-block-num]');
-    if (numBtn) {
-      const fig = closestFigure(numBtn);
-      if (!fig) return;
-      const off = fig.classList.toggle('icen-code-block--nonum');
-      numBtn.classList.toggle('is-on', !off);
-      numBtn.setAttribute('aria-pressed', off ? 'false' : 'true');
-      retip(numBtn, off ? t('codeBlock.numShow') : t('codeBlock.numHide'));
-      emitIcen(fig, 'icen:code-block-toggle', { el: fig, action: 'num', value: !off });
-      return;
-    }
-
-    const wrapBtn = node.closest('[data-icen-code-block-wrap]');
-    if (wrapBtn) {
-      const fig = closestFigure(wrapBtn);
-      if (!fig) return;
-      const on = fig.classList.toggle('icen-code-block--wrap');
-      wrapBtn.classList.toggle('is-on', on);
-      wrapBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      retip(wrapBtn, on ? t('codeBlock.wrapOff') : t('codeBlock.wrapOn'));
-      emitIcen(fig, 'icen:code-block-toggle', { el: fig, action: 'wrap', value: on });
-      return;
-    }
-
-    const foldBtn = node.closest('[data-icen-code-block-fold]');
-    if (foldBtn) {
-      const fig = closestFigure(foldBtn);
-      if (!fig) return;
-      const folding = !fig.classList.contains('is-folded');
-      setFold(fig, folding);
-      emitIcen(fig, 'icen:code-block-toggle', { el: fig, action: 'fold', value: !folding });
-      return;
-    }
-
-    const tail = node.closest('.icen-code-block-tail');
-    if (tail) {
-      const fig = closestFigure(tail);
-      if (!fig) return;
-      const folding = !fig.classList.contains('is-folded');
-      setFold(fig, folding);
-      emitIcen(fig, 'icen:code-block-toggle', { el: fig, action: 'fold', value: !folding });
-      return;
-    }
-
-    /* 折叠态点击代码面 = 展开（与 blog 端一致） */
-    const preHit = node.closest('pre');
-    if (preHit instanceof HTMLElement && preHit.parentElement?.classList.contains('is-folded')) {
-      const fig = closestFigure(preHit);
-      if (!fig) return;
-      setFold(fig, false);
-      emitIcen(fig, 'icen:code-block-toggle', { el: fig, action: 'fold', value: true });
-      return;
-    }
-
-    const copyBtn = node.closest('[data-icen-code-block-copy]');
-    if (copyBtn instanceof HTMLElement) {
-      const fig = closestFigure(copyBtn);
-      if (fig) doCopy(copyBtn, fig);
-    }
+function doCopy(button:HTMLButtonElement,fig:HTMLElement,owner:object):void {
+  if(copies.get(fig)?.pending)return;
+  clearCopy(fig);const pre=fig.querySelector('pre');if(!pre)return;
+  const lines=Array.from(pre.querySelectorAll<HTMLElement>('.icen-code-block-line'));
+  const text=lines.length ? lines.map((line)=>line.textContent ?? '').join('\n') : pre.textContent ?? '';
+  const state={owner,button,timer:0,pending:false};copies.set(fig,state);let reason=t('copy.unknown');
+  const feedback=(ok:boolean)=>{
+    const status=document.createElement('p');status.className='icen-code-block-feedback'+(ok ? ' is-success' : '');status.setAttribute('role','status');status.textContent=ok ? t('copy.copied') : t('codeBlock.copyFailed');fig.append(status);
+    button.classList.add(ok ? 'is-done' : 'is-error');retip(button,ok ? t('copy.copied') : t('codeBlock.copyRetry'));
+    if(ok)state.timer=window.setTimeout(()=>{if(copies.get(fig) === state)clearCopy(fig);},COPY_DONE_MS);
+    if(ok)emitIcen(button,'icen:copy-success',{text});else emitIcen(button,'icen:copy-error',{text,reason});
   };
-
-  target.addEventListener('click', onClick);
-  return () => {
-    target.removeEventListener('click', onClick);
-    marked.__icenCodeBlockInit = false;
+  runFeedbackAction(fig,button,async(signal)=>{const result=await copyText(text,{signal});reason=result.reason ?? t('copy.unknown');return result.ok;},{busy(value){state.pending=value;},complete:feedback,error(){feedback(false);}});
+}
+function closestFigure(node:Element):HTMLElement | null {return node.closest<HTMLElement>('.icen-code-block');}
+/** Shared event delegation, real repeated disposer, no nested-scope double action.
+ * Every animation/async feedback belongs to the scope that started it. */
+export function initCodeBlock(root?:ParentNode):()=>void {
+  if(typeof document === 'undefined' || typeof window === 'undefined')return ()=>{};
+  const scope=root ?? document,previous=scopes.get(scope);if(previous)return previous;
+  const owner={},owned=new Set<HTMLElement>();let disposed=false;
+  const collect=(node:ParentNode)=>{if(node instanceof HTMLElement && node.matches('.icen-code-block'))prepareFigure(node);node.querySelectorAll<HTMLElement>('.icen-code-block').forEach(prepareFigure);};collect(scope);
+  const cleanup=(fig:HTMLElement)=>{if(folds.get(fig)?.owner === owner)folds.get(fig)?.cancel();if(copies.get(fig)?.owner === owner)clearCopy(fig);};
+  const observer=new MutationObserver((records)=>{for(const record of records)for(const node of record.addedNodes)if(node instanceof HTMLElement)collect(node);for(const fig of owned)if(!fig.isConnected){cleanup(fig);owned.delete(fig);}});
+  observer.observe(scope,{childList:true,subtree:true});
+  const target=scope as ParentNode & EventTarget;
+  const onClick=(event:Event)=>{
+    if(disposed || event.defaultPrevented || handled.has(event) || !(event.target instanceof Element))return;
+    const node=event.target,fig=closestFigure(node);if(!fig || !(scope as Node).contains(fig))return;
+    const control=node.closest<HTMLElement>('[data-icen-code-block-num],[data-icen-code-block-wrap],[data-icen-code-block-fold],[data-icen-code-block-copy],.icen-code-block-tail');
+    const pre=node.closest('pre'),surface=!control && pre?.parentElement === fig && fig.classList.contains('is-folded') && !window.getSelection()?.toString();
+    if(!control && !surface)return;if(control?.matches(':disabled,[aria-disabled="true"]'))return;
+    handled.add(event);owned.add(fig);prepareFigure(fig);
+    if(control?.hasAttribute('data-icen-code-block-copy')){if(control instanceof HTMLButtonElement)doCopy(control,fig,owner);return;}
+    let action:'num'|'wrap'|'fold',value:boolean;
+    if(control?.hasAttribute('data-icen-code-block-num')){action='num';value=!fig.classList.toggle('icen-code-block--nonum');control.classList.toggle('is-on',value);control.setAttribute('aria-pressed',String(value));retip(control,t(value ? 'codeBlock.numHide' : 'codeBlock.numShow'));}
+    else if(control?.hasAttribute('data-icen-code-block-wrap')){action='wrap';value=fig.classList.toggle('icen-code-block--wrap');control.classList.toggle('is-on',value);control.setAttribute('aria-pressed',String(value));retip(control,t(value ? 'codeBlock.wrapOff' : 'codeBlock.wrapOn'));}
+    else {action='fold';value=surface ? true : fig.classList.contains('is-folded');setFold(fig,!value,owner);}
+    emitIcen(fig,'icen:code-block-toggle',{el:fig,action,value});
   };
+  target.addEventListener('click',onClick);
+  const dispose=()=>{if(disposed)return;disposed=true;target.removeEventListener('click',onClick);observer.disconnect();owned.forEach(cleanup);owned.clear();if(scopes.get(scope) === dispose)scopes.delete(scope);};
+  scopes.set(scope,dispose);return dispose;
 }

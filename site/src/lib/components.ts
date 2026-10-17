@@ -26,7 +26,8 @@ import { codeBlockHTML } from '../../../src/behaviors/code-block';
 const CB_TS = await shikiPre(
   [
     "import { renderChart } from '@icen.ai/ui/behaviors/charts';",
-    "import { initTabs, initCopy } from '@icen.ai/ui/behaviors/tabs';",
+    "import { initTabs } from '@icen.ai/ui/behaviors/tabs';",
+    "import { initCopy } from '@icen.ai/ui/behaviors/copy';",
     '',
     'const chart = renderChart(el, {',
     "  type: 'line',",
@@ -43,7 +44,7 @@ const CB_BASH = await shikiPre(
   'bash',
 );
 const CB_DEMO =
-  codeBlockHTML({ html: CB_TS, lang: 'ts', file: 'src/boot.ts', title: 'shiki 双主题高亮', lines: [4], num: true }) +
+  codeBlockHTML({ html: CB_TS, lang: 'ts', file: 'src/boot.ts', title: 'shiki 双主题高亮', lines: [5], num: true }) +
   '\n\n<div style="height:14px"></div>\n\n' +
   codeBlockHTML({ html: CB_BASH, lang: 'bash', title: '超 30 行自动折叠' }) +
   '\n\n<div style="height:14px"></div>\n\n' +
@@ -1932,9 +1933,10 @@ return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clea
   },
   {
     slug: 'code-block',
+    summary: '让长代码易读、可查、可复制。行号、换行与折叠安静地留在手边。',
     name: '代码块',
     group: '数据展示',
-    desc: '与 code-inline 成对的多行代码块（v0.11 起，移植自 icen-ai/blog）：标题栏（文件名/语言徽标 + 说明标题 + 工具钮）、CSS counter 行号（可切换、定宽 gutter 对齐）、高亮行、diff 旧/新双行号 + 红绿底、超阈值折叠（底部渐隐 + 展开条）、整块复制（复用 copy 的 execCommand 回退链）。双渲染口：renderCodeBlock（浏览器 DOM，code 纯文本逐行 textContent / html 可信槽位）与 codeBlockHTML（SSR 字符串，构建期直出同构标记——本站的 CodeBlock 即「shiki 双主题高亮 + codeBlockHTML」）。shiki 输出原样可吃：.line 自动归一、内联背景剥除、--shiki-dark 检出即打 data-icen-dual-theme（暗色自动切深色 token）；工具钮气泡走 tooltip 组件。切换类操作派 icen:code-block-toggle { el, action: num|wrap|fold, value }，复制派 icen:copy-success / icen:copy-error。下方三个示例均为构建期 shiki 双主题渲染，暗色模式试试。',
+    desc: '适合源码、终端记录和 diff。工具栏在悬停或键盘进入时显现，触屏始终可用；代码区域可聚焦并横向滚动，行号、换行和折叠同步读屏状态。复制保留空行，等待时避免重复操作，失败提供重试。浏览器用 renderCodeBlock，构建期用 codeBlockHTML；两者共用 initCodeBlock 委托与销毁。code 是安全文本入口，html 仅接收可信高亮结果，调用方负责其语法配色对比度；本站高亮已适配六套主题的明暗底色。下方展示双主题 TypeScript、长终端记录和增删差异。',
     demo: CB_DEMO,
     usage: `import { renderCodeBlock, codeBlockHTML, initCodeBlock } from '@icen.ai/ui/behaviors/code-block';
 
@@ -1947,11 +1949,15 @@ renderCodeBlock(el, {
   num: true, wrap: false,    // 初始行号 / 换行
   fold: 20,                  // true 强制折叠 / false 永不 / 数字 = 超过 N 行折叠（缺省 30）
 });
-initCodeBlock();             // 行号/换行/折叠/复制 委托，页面级一次
+const dispose = initCodeBlock(el); // 可限定容器；重复初始化返回同一销毁函数
+// 宿主卸载前调用 dispose()：回收监听、折叠动画与尚未完成的复制反馈
 
 // SSR/构建期（Astro/JSX）：shiki 双主题高亮 + codeBlockHTML 直出整串标记（文档站 CodeBlock 即此方案）
 const html = codeBlockHTML({ html: shikiHighlighted, lang: 'ts', file: 'src/app.ts', num: true });
-// → <figure class="icen-code-block">…，set:html 注入即可（交互仍由 initCodeBlock 接管）
+// → <figure class="icen-code-block">…，可信输出用 set:html 注入
+// 页面初始化时 initCodeBlock()；之后插入的代码块也会自动接入
+// 切换派 icen:code-block-toggle { el, action: 'num'|'wrap'|'fold', value }
+// 复制派 icen:copy-success { text } / icen:copy-error { text, reason }
 
 <!-- 或手写标记：figure.icen-code-block 契约见 code-block.css 头注释 -->`,
     behaviors: ['code-block'],

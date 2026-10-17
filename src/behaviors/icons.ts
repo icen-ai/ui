@@ -2,6 +2,11 @@
  * No icon font, external sprite request or framework dependency. All paths are
  * original geometry in a 20 × 20 grid; labels are always escaped/plain text. */
 export const ICON_PATHS = {
+  file: 'M6 2.5h5.5L16 7v9.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-12a2 2 0 0 1 2-2ZM11.5 2.5V7H16',
+  terminal: 'M5 3.5h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2ZM6 7l3 3-3 3M11 13h3',
+  branch: 'M6 6v8M14 6v2a4 4 0 0 1-4 4H6M8 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM8 16a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM16 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z',
+  'line-numbers': 'M3 5h2M3 10h2M3 15h2M8 5h9M8 10h9M8 15h9',
+  wrap: 'M3 5h14M3 10h10a3 3 0 0 1 0 6h-3M12.5 13.5 10 16l2.5 2.5',
   calendar: 'M5.5 4h9A2.5 2.5 0 0 1 17 6.5v8a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 3 14.5v-8A2.5 2.5 0 0 1 5.5 4ZM6.5 2.5v3M13.5 2.5v3M3 8h14M6.5 11h.1M10 11h.1M13.5 11h.1M6.5 14h.1M10 14h.1',
   close: 'M6 6l8 8M14 6l-8 8',
   check: 'M4.5 10.2l3.6 3.6 7.4-7.6',

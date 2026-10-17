@@ -288,6 +288,9 @@ export interface IcenLocale {
   'themeSwitcher.pixel': string;
   /* ── codeBlock ── */
   'codeBlock.collapse': string;
+  'codeBlock.region': string;
+  'codeBlock.copyFailed': string;
+  'codeBlock.copyRetry': string;
   'codeBlock.copy': string;
   'codeBlock.foldCollapse': string;
   'codeBlock.foldExpand': string;
@@ -1087,6 +1090,9 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'themeSwitcher.pixel': '像素',
   /* ── codeBlock ── */
   'codeBlock.collapse': '收起',
+  'codeBlock.region': '代码内容',
+  'codeBlock.copyFailed': '未能复制，请重试。',
+  'codeBlock.copyRetry': '重试复制',
   'codeBlock.copy': '复制',
   'codeBlock.foldCollapse': '折叠代码',
   'codeBlock.foldExpand': '展开代码',
@@ -1886,6 +1892,9 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'themeSwitcher.pixel': 'Pixel',
   /* ── codeBlock ── */
   'codeBlock.collapse': 'Collapse',
+  'codeBlock.region': 'Code content',
+  'codeBlock.copyFailed': 'Could not copy. Try again.',
+  'codeBlock.copyRetry': 'Retry copy',
   'codeBlock.copy': 'Copy',
   'codeBlock.foldCollapse': 'Collapse code',
   'codeBlock.foldExpand': 'Expand code',

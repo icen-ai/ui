@@ -20,6 +20,7 @@ const handlers = new WeakMap<ParentNode, (ev: Event) => void>();
 const flashing = new WeakMap<HTMLElement, { original: string | null; timer: number }>();
 
 function legacyCopy(text: string): boolean {
+  const previous=document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const ta = document.createElement('textarea');
   ta.value = text;
   ta.setAttribute('readonly', '');
@@ -33,7 +34,8 @@ function legacyCopy(text: string): boolean {
   } catch {
     ok = false;
   }
-  ta.remove();
+  const owned=document.activeElement === ta;ta.remove();
+  if(owned && previous?.isConnected)previous.focus({preventScroll:true});
   return ok;
 }
 
@@ -45,15 +47,18 @@ interface CopyOutcome {
 
 /**
  * 写剪贴板（clipboard API 优先，execCommand 回退）；成功/失败带原因的结构化结果。
- * v0.11 起导出：code-block 等组件复用同一回退链与文案，不再各写一份。
+ * code-block 等组件复用同一回退链与文案。可选 signal 阻止取消后的回退复制。
  */
-export async function copyText(text: string): Promise<CopyOutcome> {
+export async function copyText(text: string,options:{signal?:AbortSignal}={}): Promise<CopyOutcome> {
+  if(typeof document === 'undefined' || typeof window === 'undefined')return {ok:false,reason:t('copy.unavailable')};
+  if(options.signal?.aborted)return {ok:false,reason:'AbortError'};
   const hasApi = typeof navigator !== 'undefined' && !!navigator.clipboard?.writeText;
   if (hasApi) {
     try {
       await navigator.clipboard.writeText(text);
       return { ok: true };
     } catch (err) {
+      if(options.signal?.aborted)return {ok:false,reason:'AbortError'};
       /* clipboard 被拒（权限/非安全上下文）→ 回落 execCommand */
       const fallbackOk = legacyCopy(text);
       if (fallbackOk) return { ok: true };

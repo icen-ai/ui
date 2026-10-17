@@ -80,7 +80,8 @@ describe('codeBlockHTML · shiki HTML 槽位', () => {
 
   test('裸片段包自建 pre', () => {
     const html = codeBlockHTML({ html: '<span class="line">a</span>' });
-    expect(html).toContain('<pre><code><span class="icen-code-block-line">a</span></code></pre>');
+    expect(html).toContain('tabindex="0" role="region" aria-label="代码内容"');
+    expect(html).toContain('<code><span class="icen-code-block-line">a</span></code></pre>');
   });
 
   test('行间换行空白剥除（white-space: pre 下会渲染成空行、行距翻倍）', () => {
