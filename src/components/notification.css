@@ -389,3 +389,9 @@
   .icen-notification-countdown-fill { animation: none; transform-origin: left; /* guard:allow-physical 倒计时压缩方向是动画语义（LTR 自左向右消减），RTL 下保持同一物理节奏 */ }
   .icen-notification-progress-bar { transition: none; }
 }
+
+/* Quiet close shares the same fixed action slot as other interface controls. */
+.icen-notification-close.icen-icon-action { inline-size: var(--icen-density-input-height-sm); block-size: var(--icen-density-input-height-sm); }
+.icen-notification-close.icen-icon-action > svg { inline-size: 14px; block-size: 14px; }
+.icen-notification-close:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
+@media (pointer: coarse) { .icen-notification-close.icen-icon-action { min-inline-size: 44px; min-block-size: 44px; } }

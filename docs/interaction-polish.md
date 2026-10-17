@@ -210,6 +210,18 @@
 - 验证：verify 662 测试通过，137 页站点构建通过。菜单专项覆盖两原语 × 明暗、触屏 44px、RTL/窄屏翻转、长列表滚动、换页/a11y、单次事件与表单防提交；既有全站 129 页 × 两档宽度基础巡检 0 问题。最终 39 条浏览器回归全部通过。
 - 仍待：菜单混合选中态、全部尺寸/极端内容与完整 forced-colors 审美矩阵；popover/modal/command palette/通知及其余组件继续逐项。上述进度不代表全库交付完成。
 
+### 第六轮：对话框、交互浮层与关闭动作
+
+- 新增 focus 共用契约，modal / command palette 共用同一可聚焦列表；跳过隐藏祖先、inert、禁用、负 tabindex 与关闭 details 的内容，同时保留 fixed 控件与显式程序焦点。
+- modal 修复默认初始焦点（尊重 autofocus）、幂等 disposer、无效目标不打断现有对话框；移除打开中的节点会自动释放滚动锁。关闭后归还原门户位置，重复打开可中断回收，换页 disposer 可立即清理。
+- 对话框改为原生 display/opacity/transform 过渡，3D/大幅缩放不参与；普通面板 6px/1.5%，Sheet 16px。支持反向重开、reduced-motion 与不支持离散过渡的立即隐藏降级；大号 Sheet 不超出移动视口。
+- interactive popover 支持 initialFocus / restoreFocus，关闭时仅在仍持有焦点的情况下归还。Escape 捕获优先关闭顶层 popover，menu 保持更高优先级，避免穿透关闭外层 modal；IME 不触发关闭。
+- 对话框、toast、notification 的关闭图形使用共享 20px SVG。提示与通知复用 quiet action 槽位，hover/focus 显示，触屏命中区不小于 44px；键盘关闭后归还触发位置。
+- 去掉 toast / notification 的重复 SVG 解析逻辑，统一 parseSvg；Toast 原先不可达的选项对象已接通 callable/语义方法/action，保留数字时长兼容。
+- 文档对话框采用可操作的回收、工作区保存、预览、文档详情；输入框有 autofocus、命名反馈与空值校验。modal / popover / toast / notification 示例接入换页销毁，通知演示统一回收轮询、进度与延时任务，异步 confirm 不跨页弹旧结果。
+- 验证：verify 668 测试通过；137 页站点构建通过；45 条浏览器回归通过，覆盖两原语 × 明暗、三尺寸焦点循环、原生关闭过渡与快速反向、移动 Sheet / 44px、保存反馈、popover 焦点、a11y、关闭图标、换页回收。129 页 × 两档宽度基础巡检 0 问题。追加的通知运行中换页回收专项同样通过。
+- 尚待：popover 完整布局/嵌套/空/加载动效与所有插槽状态；Toast / notification 异步 action、倒计时暂停/恢复、堆栈更新/持久化的完整 UX 审计；更多通知图形仍待统一。不能以本轮焦点和关闭动作验收代替整族最终完成。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。

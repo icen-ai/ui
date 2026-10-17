@@ -177,6 +177,7 @@ export const SLUG_INIT = {
 export const SLUG_EXPORTS = {
   select: ['refreshSelect'],
   dropdown: ['openDropdown', 'closeDropdown'],
+  modal: ['openModal', 'closeModal'],
   'context-menu': ['openContextMenu', 'closeContextMenu', 'registerContextMenu', 'unregisterContextMenu'],
   panel: ['setPanelExpanded'],
   icon: ['ICON_PATHS', 'iconPath', 'iconHTML', 'createIcon', 'registerIcon'],

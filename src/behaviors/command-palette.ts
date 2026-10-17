@@ -50,7 +50,7 @@ import { emitIcen } from './events';
 /* emitMenuSelect（菜单选中统一事件）与 FOCUSABLE（焦点陷阱选择器）收敛为
    context-menu / modal 的唯一定义点，此处 import 复用（消除三份逐字拷贝） */
 import { emitMenuSelect } from './context-menu';
-import { FOCUSABLE } from './modal';
+import { focusableWithin } from './focus';
 
 /** 编程命令条目（openCommandPalette 的 opts.items 元素类型）。 */
 export interface CommandPaletteCommand {
@@ -237,8 +237,10 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
   filterPanel(panel, '');
 
   keyHandler = (e: KeyboardEvent): void => {
+    if(e.defaultPrevented || e.isComposing || e.keyCode === 229)return;
     if (e.key === 'Escape') {
       e.preventDefault();
+      e.stopPropagation();
       closeCommandPalette(id);
       return;
     }
@@ -267,9 +269,7 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
     }
     if (e.key === 'Tab') {
       e.preventDefault();
-      const els = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => !el.hidden && el.offsetParent !== null,
-      );
+      const els = focusableWithin(panel);
       if (els.length === 0) return;
       const cur = els.findIndex((el) => el === document.activeElement);
       const next = e.shiftKey

@@ -34,9 +34,10 @@
   background: color-mix(in srgb, var(--icen-token-text) 45%, transparent);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  animation: icen-modal-fade-in var(--icen-tx-normal);
+  opacity: 1;
+  transition: opacity var(--icen-duration-fast) var(--icen-ease-out), display var(--icen-duration-fast) allow-discrete;
 }
-.icen-modal-backdrop[hidden] { display: none; }
+.icen-modal-backdrop[hidden] { display: none; opacity: 0; pointer-events: none; }
 
 .icen-modal {
   display: flex;
@@ -45,12 +46,16 @@
   width: 100%;
   max-width: 480px;
   max-height: calc(100vh - 32px);
+  max-block-size: calc(100dvh - 2 * var(--icen-density-space-md));
   background: var(--icen-token-card-strong);
   color: var(--icen-token-text);
   border: 1px solid var(--icen-token-outline);
   box-shadow: var(--icen-token-shadow-overlay);
   border-radius: var(--icen-radius-xl);
-  animation: icen-modal-scale-in var(--icen-tx-slow);
+  --modal-enter-transform: translateY(6px) scale(.985);
+  opacity: 1;
+  transform: translate(0, 0) scale(1);
+  transition: opacity var(--icen-duration-fast) var(--icen-ease-out), transform var(--icen-duration-normal) var(--icen-ease-out);
 }
 .icen-modal:focus { outline: none; }
 .icen-modal:focus-visible {
@@ -64,7 +69,7 @@
 .icen-modal--full {
   width: calc(100vw - 32px);
   max-width: none;
-  height: calc(100vh - 32px);
+  height: calc(100dvh - 32px);
   max-height: none;
   border-radius: var(--icen-radius-lg);
 }
@@ -94,8 +99,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  inline-size: var(--icen-density-input-height-sm);
+  block-size: var(--icen-density-input-height-sm);
   padding: 0;
   flex-shrink: 0;
   background: none;
@@ -109,6 +114,7 @@
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
+.icen-modal-close > svg { inline-size: 16px; block-size: 16px; }
 .icen-modal-close:hover {
   background: var(--icen-token-surface-hover);
   color: var(--icen-token-text);
@@ -147,6 +153,8 @@
   position: fixed;
   max-width: none;
   max-height: none;
+  max-inline-size: 100vw;
+  max-block-size: 100dvh;
   border-radius: 0;
 }
 .icen-modal--sheet-left {
@@ -154,60 +162,44 @@
   width: 360px;
   height: 100%;
   border-radius: 0 var(--icen-radius-xl) var(--icen-radius-xl) 0; /* guard:allow-physical 圆角贴着物理左缘（sheet-left 变体），RTL 语义不变 */
-  animation-name: icen-modal-slide-left;
+  --modal-enter-transform: translateX(-16px);
 }
 .icen-modal--sheet-right {
   right: 0; top: 0; bottom: 0; /* guard:allow-physical --sheet-right 是按物理侧边命名的变体（贴右缘抽屉），RTL 语义不变 */
   width: 360px;
   height: 100%;
   border-radius: var(--icen-radius-xl) 0 0 var(--icen-radius-xl); /* guard:allow-physical 圆角贴着物理右缘（sheet-right 变体），RTL 语义不变 */
-  animation-name: icen-modal-slide-right;
+  --modal-enter-transform: translateX(16px);
 }
 .icen-modal--sheet-top {
   top: 0; inset-inline: 0;
   width: 100%;
   height: 300px;
   border-radius: 0 0 var(--icen-radius-xl) var(--icen-radius-xl);
-  animation-name: icen-modal-slide-top;
+  --modal-enter-transform: translateY(-16px);
 }
 .icen-modal--sheet-bottom {
   bottom: 0; inset-inline: 0;
   width: 100%;
   height: 300px;
   border-radius: var(--icen-radius-xl) var(--icen-radius-xl) 0 0;
-  animation-name: icen-modal-slide-bottom;
+  --modal-enter-transform: translateY(16px);
 }
 .icen-modal--sheet-left.icen-modal--sm, .icen-modal--sheet-right.icen-modal--sm { width: 280px; }
 .icen-modal--sheet-left.icen-modal--lg, .icen-modal--sheet-right.icen-modal--lg { width: 480px; }
 .icen-modal--sheet-top.icen-modal--sm, .icen-modal--sheet-bottom.icen-modal--sm { height: 200px; }
 .icen-modal--sheet-top.icen-modal--lg, .icen-modal--sheet-bottom.icen-modal--lg { height: 50vh; }
 
-/* ── 进场动画 ── */
-@keyframes icen-modal-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Hidden keeps native semantics while display transitions retire the surface.
+   Unsupported browsers fall back to immediate hide; no JS timing owns visibility. */
+.icen-modal-backdrop[hidden] .icen-modal { opacity: 0; transform: var(--modal-enter-transform); }
+@starting-style {
+  .icen-modal-backdrop:not([hidden]) { opacity: 0; }
+  .icen-modal-backdrop:not([hidden]) .icen-modal { opacity: 0; transform: var(--modal-enter-transform); }
 }
-@keyframes icen-modal-scale-in {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+@media (pointer: coarse) {
+  .icen-modal-close { min-inline-size: 44px; min-block-size: 44px; }
 }
-@keyframes icen-modal-slide-left {
-  from { opacity: 0; transform: translateX(-40px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-@keyframes icen-modal-slide-right {
-  from { opacity: 0; transform: translateX(40px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-@keyframes icen-modal-slide-top {
-  from { opacity: 0; transform: translateY(-40px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes icen-modal-slide-bottom {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .icen-modal-backdrop, .icen-modal { animation: none; }
+  .icen-modal-backdrop, .icen-modal { transition: none; }
 }

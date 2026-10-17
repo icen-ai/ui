@@ -184,6 +184,10 @@ export interface OpenPopoverOptions extends PopoverLayoutOptions {
   sizing?: PanelSizing;
   /** 关闭（含外点/Esc 触发的关闭）后的回调 */
   onClose?: () => void;
+  /** Optional initial focus inside an interactive panel. */
+  initialFocus?: HTMLElement;
+  /** Restore the anchor only if the panel still owns focus; default true. */
+  restoreFocus?: boolean;
 }
 
 const DEFAULT_MIN_WIDTH = 220;
@@ -303,6 +307,7 @@ interface OpenState {
   /* 新版 lib.dom 中 hidden 为 string | boolean（'until-found' 等字符串值） */
   wasHidden: string | boolean;
   prevVisibility: string;
+  returnFocus: HTMLElement | null;
 }
 
 const openPanels = new Map<HTMLElement, OpenState>();
@@ -362,12 +367,13 @@ function onOutsidePointerDown(e: Event): void {
 }
 
 function onKeyDown(e: KeyboardEvent): void {
-  if (e.key !== 'Escape') return;
+  if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing || e.keyCode === 229 || menuCloser) return;
   // 只关最上层（最后打开的），逐次 Esc 逐层关闭
   const states = Array.from(openPanels.values());
   const top = states[states.length - 1];
   if (top) {
     e.preventDefault();
+    e.stopPropagation();
     closePopover(top.panel);
   }
 }
@@ -377,7 +383,7 @@ export function openPopover(panel: HTMLElement, options: OpenPopoverOptions): vo
   if (typeof document === 'undefined') return;
   if (openPanels.has(panel)) closePopover(panel);
 
-  const { anchor, onClose, sizing, ...rest } = options;
+  const { anchor, onClose, sizing, initialFocus, restoreFocus, ...rest } = options;
   /* 尺寸契约：opts.sizing > 面板元素 data-panel-* > 上方直接尺寸字段 */
   const layoutOpts = sizingToLayout(resolvePanelSizing(panel, sizing), rest);
 
@@ -395,6 +401,7 @@ export function openPopover(panel: HTMLElement, options: OpenPopoverOptions): vo
     placeholder,
     wasHidden,
     prevVisibility,
+    returnFocus: restoreFocus === false ? null : anchor instanceof HTMLElement ? anchor : document.activeElement instanceof HTMLElement ? document.activeElement : null,
   };
   openPanels.set(panel, state);
 
@@ -402,12 +409,13 @@ export function openPopover(panel: HTMLElement, options: OpenPopoverOptions): vo
   panel.hidden = false;
   panel.style.visibility = 'hidden';
   relayout(state);
+  if(initialFocus && panel.contains(initialFocus))initialFocus.focus({preventScroll:true});
 
   if (openPanels.size === 1) {
     window.addEventListener('resize', onWindowChange);
     window.addEventListener('scroll', onWindowChange, true);
     document.addEventListener('pointerdown', onOutsidePointerDown, true);
-    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', onKeyDown, true);
   }
 }
 
@@ -417,6 +425,7 @@ export function closePopover(panel: HTMLElement): void {
   const state = openPanels.get(panel);
   if (!state) return;
   openPanels.delete(panel);
+  const ownsFocus=panel.contains(document.activeElement);
 
   panel.style.visibility = state.prevVisibility;
   /* hidden 还原：字符串值（如 until-found）走 setAttribute，布尔走属性赋值 */
@@ -431,12 +440,13 @@ export function closePopover(panel: HTMLElement): void {
     state.placeholder.parentNode.insertBefore(panel, state.placeholder);
     state.placeholder.remove();
   }
+  if(ownsFocus && state.returnFocus?.isConnected)state.returnFocus.focus({preventScroll:true});
 
   if (openPanels.size === 0) {
     window.removeEventListener('resize', onWindowChange);
     window.removeEventListener('scroll', onWindowChange, true);
     document.removeEventListener('pointerdown', onOutsidePointerDown, true);
-    window.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('keydown', onKeyDown, true);
   }
 
   state.onClose?.();

@@ -1,5 +1,7 @@
+import { createIcon } from './icons';
 import { t } from './i18n';
 import { parseSvg } from './svg-parse';
+const focusOrigins=new WeakMap<HTMLElement,HTMLElement | null>();
 /*
  * @icen.ai/ui — Behavior: notification（通知栈 v2，与 components/notification.css 配套）
  *
@@ -221,8 +223,6 @@ const KIND_ICON: Record<NotificationKind, string> = {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
 };
 
-const CLOSE_SVG =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
 
 const PROGRESS_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>';
@@ -439,32 +439,6 @@ function playSound(sound: boolean | string): void {
 
 /* ═══ DOM 渲染 ═══ */
 
-/** 递归剔除 SVG 子树中的 on* 属性与 script/foreignObject 节点。 */
-function stripUnsafeSvg(el: Element): void {
-  for (const attr of Array.from(el.attributes)) {
-    if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
-  }
-  for (const child of Array.from(el.children)) {
-    const tag = child.tagName.toLowerCase();
-    if (tag === 'script' || tag === 'foreignobject') child.remove();
-    else stripUnsafeSvg(child);
-  }
-}
-
-/** 解析 SVG 字符串图标：仅接纳 <svg> 根元素，消毒后导入当前文档。非 <svg 开头返回 null。 */
-function sanitizeSvgIcon(source: string): Element | null {
-  if (!source.trimStart().startsWith('<svg')) return null;
-  try {
-    const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
-    const svg = doc.documentElement;
-    if (!svg || svg.tagName.toLowerCase() !== 'svg') return null;
-    stripUnsafeSvg(svg);
-    return document.importNode(svg, true);
-  } catch {
-    return null;
-  }
-}
-
 function buildIcon(record: NotificationRecord): HTMLElement {
   const wrap = document.createElement('span');
   wrap.className = 'icen-notification-icon';
@@ -492,14 +466,14 @@ function buildIcon(record: NotificationRecord): HTMLElement {
       img.alt = '';
       wrap.appendChild(img);
     } else {
-      const svg = sanitizeSvgIcon(icon);
+      const svg = parseSvg(icon);
       if (svg) wrap.appendChild(svg);
       else wrap.textContent = icon;
     }
     return wrap;
   }
   // 默认按 kind（受控常量，走同一解析入口）
-  const fallback = sanitizeSvgIcon(
+  const fallback = parseSvg(
     record.opts.progress !== undefined && record.opts.progress >= 0 ? PROGRESS_ICON : KIND_ICON[record.kind],
   );
   if (fallback) wrap.appendChild(fallback);
@@ -640,9 +614,10 @@ function buildClose(record: NotificationRecord): HTMLElement | null {
   if (record.opts.closable === false) return null;
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'icen-notification-close';
+  btn.className = 'icen-notification-close icen-icon-action';
+  btn.setAttribute('data-icen-reveal','');
   btn.setAttribute('aria-label', t('common.close'));
-  const svg = sanitizeSvgIcon(CLOSE_SVG);
+  const svg = createIcon('close');
   if (svg) btn.appendChild(svg);
   btn.addEventListener('click', (ev) => {
     ev.stopPropagation();
@@ -658,6 +633,7 @@ function renderNotification(
 ): HTMLElement {
   const el = document.createElement('div');
   let cls = record.kind === 'info' ? 'icen-notification' : `icen-notification icen-notification--${record.kind}`;
+  focusOrigins.set(el,document.activeElement instanceof HTMLElement ? document.activeElement : null);
   if (record.opts.priority === 'high') cls += ' is-priority';
   if (record.opts.unread) cls += ' is-unread';
   if (record.opts.progress !== undefined && record.opts.progress >= 0) cls += ' is-progress';
@@ -737,6 +713,8 @@ const LEAVE_FALLBACK_MS = 360;
 
 function removeOne(el: HTMLElement, onClose?: () => void): void {
   if (el.classList.contains('is-leaving')) return;
+  const origin=focusOrigins.get(el);
+  if(el.contains(document.activeElement) && origin?.isConnected)origin.focus({preventScroll:true});
   el.classList.add('is-leaving');
   let done = false;
   const finish = (): void => {

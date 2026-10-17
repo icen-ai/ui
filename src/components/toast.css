@@ -214,3 +214,9 @@
 @media (prefers-reduced-motion: reduce) {
   .icen-toast { animation: none; }
 }
+
+/* Quiet close shares the same fixed action slot as other interface controls. */
+.icen-toast-close.icen-icon-action { inline-size: var(--icen-density-input-height-sm); block-size: var(--icen-density-input-height-sm); }
+.icen-toast-close.icen-icon-action > svg { inline-size: 14px; block-size: 14px; }
+.icen-toast-close:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
+@media (pointer: coarse) { .icen-toast-close.icen-icon-action { min-inline-size: 44px; min-block-size: 44px; } }

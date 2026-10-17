@@ -370,16 +370,20 @@ initTabs(); // 激活态挂 .is-active；切换时容器派发 icen:tab-change�
   <button class="icen-btn" id="toast-demo-ok">成功提示</button>
   <button class="icen-btn" id="toast-demo-err">错误提示</button>
   <button class="icen-btn" id="toast-demo-warn">警告提示</button>
+  <button class="icen-btn" id="toast-demo-close">可关闭提示</button>
 </div>`,
     usage: `import { toast } from '@icen.ai/ui/behaviors/toast';
 toast.ok('已保存');
 toast.err('保存失败');
-toast.warn('配额将尽');`,
+toast.warn('配额将尽');
+toast.success('内容已更新', { closable: true, ms: 10000 });`,
     behaviors: ['toast'],
     script: `const toast = toastMod.toast;
 document.getElementById('toast-demo-ok')?.addEventListener('click', () => toast.ok('保存成功'));
 document.getElementById('toast-demo-err')?.addEventListener('click', () => toast.err('保存失败：网络超时'));
-document.getElementById('toast-demo-warn')?.addEventListener('click', () => toast.warn('配额已用 80%'));`,
+document.getElementById('toast-demo-warn')?.addEventListener('click', () => toast.warn('配额已用 80%'));
+document.getElementById('toast-demo-close')?.addEventListener('click', () => toast.success('内容已更新', { closable: true, ms: 10000 }));
+return () => toast.dismiss();`,
   },
   {
     slug: 'toolbar',
@@ -937,6 +941,7 @@ COMPONENTS.push(
   {
     slug: 'modal',
     name: '对话框',
+    summary: '让当前任务保持专注。支持多种尺寸、贴边面板、焦点约束和轻柔的进出场。',
     group: '浮层',
     desc: 'data-icen-modal 契约 + behaviors/modal：焦点陷阱、滚动锁、Esc/遮罩关闭、焦点还原；Sheet 四向贴边滑入。',
     demo: `<div class="demo-row">
@@ -950,17 +955,17 @@ COMPONENTS.push(
   <div class="icen-modal icen-modal--sm">
     <div class="icen-modal-header">
       <div>
-        <h3 class="icen-modal-title">小号对话框</h3>
-        <p class="icen-modal-description">max-width 360px，Esc / 点击遮罩可关闭</p>
+        <h3 class="icen-modal-title">移到回收站？</h3>
+        <p class="icen-modal-description">文档仍可在回收站中恢复。</p>
       </div>
       <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
-      <p>焦点已锁定在对话框内：Tab 会在关闭钮与底部按钮之间循环，关闭后焦点还原到触发按钮。</p>
+      <p>将「设计规范.md」移到回收站，不会影响已分享的副本。</p>
     </div>
     <div class="icen-modal-footer">
       <button class="icen-btn icen-btn-sm" data-icen-modal-close>取消</button>
-      <button class="icen-btn icen-btn-sm icen-btn-primary" data-icen-modal-close>确定</button>
+      <button class="icen-btn icen-btn-sm icen-btn-primary" data-icen-modal-close data-demo-modal-action="已移到回收站（演示）">移到回收站</button>
     </div>
   </div>
 </div>
@@ -969,18 +974,18 @@ COMPONENTS.push(
   <div class="icen-modal">
     <div class="icen-modal-header">
       <div>
-        <h3 class="icen-modal-title">默认对话框</h3>
-        <p class="icen-modal-description">max-width 480px</p>
+        <h3 class="icen-modal-title">保存工作区</h3>
+        <p class="icen-modal-description">为下次打开保留当前布局。</p>
       </div>
       <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
-      <p>面板进场为 dialogScaleIn 200ms：scale(.96) translateY(8px) → scale(1) translateY(0)。</p>
-      <p>同时只允许打开一个浮层对话框——打开另一个会自动关掉当前这个。</p>
+      <label class="icen-form-label" for="modal-workspace-name">工作区名称</label><div class="icen-input-wrap"><input class="icen-input" id="modal-workspace-name" value="设计工作区" autofocus required maxlength="40" /></div>
+      <p>保留已打开的文档、侧栏布局与当前外观设置。</p>
     </div>
     <div class="icen-modal-footer">
       <button class="icen-btn icen-btn-sm" data-icen-modal-close>取消</button>
-      <button class="icen-btn icen-btn-sm icen-btn-primary" data-icen-modal-close>保存</button>
+      <button class="icen-btn icen-btn-sm icen-btn-primary" data-icen-modal-close data-demo-modal-action="工作区已保存（演示）">保存</button>
     </div>
   </div>
 </div>
@@ -989,14 +994,14 @@ COMPONENTS.push(
   <div class="icen-modal icen-modal--lg">
     <div class="icen-modal-header">
       <div>
-        <h3 class="icen-modal-title">大号对话框</h3>
-        <p class="icen-modal-description">max-width 640px，内容超高时 modal-body 内部滚动</p>
+        <h3 class="icen-modal-title">发布前预览</h3>
+        <p class="icen-modal-description">检查内容，确认后再继续。</p>
       </div>
       <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
-      <p>背景已滚动锁定（body overflow 关闭时恢复旧值）。</p>
-      <p>尺寸档：modal--sm 360 / 默认 480 / modal--lg 640 / modal--xl 800 / modal--full 全屏。</p>
+      <p>本真设计规范：让材质、排版和交互保持一致。</p>
+      <p>从按钮和菜单到完整的工作区，以清楚的层级承载内容，让操作自然出现。</p>
     </div>
     <div class="icen-modal-footer">
       <button class="icen-btn icen-btn-sm" data-icen-modal-close>关闭</button>
@@ -1008,26 +1013,35 @@ COMPONENTS.push(
   <div class="icen-modal icen-modal--sheet-right">
     <div class="icen-modal-header">
       <div>
-        <h3 class="icen-modal-title">右侧 Sheet</h3>
-        <p class="icen-modal-description">宽 360px，translateX(40px) 滑入</p>
+        <h3 class="icen-modal-title">文档详情</h3>
+        <p class="icen-modal-description">设计规范 · 今天更新</p>
       </div>
       <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
-      <p>Sheet 变体：modal--sheet-left / right / top / bottom，圆角只保留非贴边侧。</p>
-      <p>宽度档：默认 360px，modal--sheet-sm 280px，modal--sheet-lg 480px（上下方向为 300px / 50vh）。</p>
+      <p>所有者：设计团队</p>
+      <p>可见范围：仅工作区成员</p>
     </div>
     <div class="icen-modal-footer">
       <button class="icen-btn icen-btn-sm" data-icen-modal-close>关闭</button>
     </div>
   </div>
 </div>`,
-    usage: `import { initModal, openModal, closeModal } from '@icen.ai/ui/behaviors/modal';
-initModal();            // 事件委托一次绑定
+    usage: `import { initModal, openModal, closeModal } from '@icen.ai/ui/kit/modal';
+import '@icen.ai/ui/kit/input'; // 本页输入型示例
+const dispose = initModal(); // 页面卸载时 dispose()，恢复门户与滚动锁
 openModal('confirm');   // 编程打开（可传 { initialFocus } 控制初始焦点）
 closeModal('confirm');  // 编程关闭；开合均派 icen:modal-open / icen:modal-close`,
-    behaviors: ['modal'],
-    behaviorInit: { modal: 'initModal' },
+    behaviors: ['modal', 'toast'],
+    script: `const dispose = modalMod.initModal(document.querySelector('.demo-stage'));
+const ac = new AbortController();
+document.querySelectorAll('[data-demo-modal-action]').forEach((button) => button.addEventListener('click', (event) => {
+  const input = button.closest('[data-icen-modal="demo-modal-md"]')?.querySelector('input');
+  if(input && !input.value.trim()) { event.stopPropagation(); input.setAttribute('aria-invalid', 'true'); input.focus(); toastMod.toast.error('请输入工作区名称'); return; }
+  input?.removeAttribute('aria-invalid');
+  toastMod.toast.success(input ? '已保存「' + input.value.trim() + '」（演示）' : button.dataset.demoModalAction);
+}, { signal: ac.signal }));
+return () => { ac.abort(); dispose(); };`,
   },
   {
     slug: 'dropdown',
@@ -1116,6 +1130,7 @@ return () => { dispose(); contextMenuMod.unregisterContextMenu('demo-file'); };`
   {
     slug: 'popover',
     name: '浮层',
+    summary: '在当前操作旁展开补充内容。随锚点定位，支持键盘关闭和焦点归还。',
     group: '浮层',
     desc: 'computePopoverLayout 纯函数选侧（prefer → 翻对侧 → 取大侧）；openPopover 负责 portal、跟随重算与外点/Esc 关闭。',
     demo: `<div class="demo-row">
@@ -1142,13 +1157,14 @@ const popTrigger = document.getElementById('popover-demo-trigger');
 const popPanel = document.getElementById('popover-demo-panel');
 popTrigger?.addEventListener('click', () => {
   if (popTrigger && popPanel) {
-    openPopover(popPanel, { anchor: popTrigger, side: 'bottom', align: 'start' });
+    openPopover(popPanel, { anchor: popTrigger, side: 'bottom', align: 'start', initialFocus: document.getElementById('popover-demo-input') });
   }
 });
 document.getElementById('popover-demo-apply')?.addEventListener('click', () => {
   if (popPanel) closePopover(popPanel);
   toast.ok('已应用筛选');
-});`,
+});
+return () => { if(popPanel) closePopover(popPanel); };`,
   },
   {
     slug: 'tooltip',
@@ -1582,13 +1598,17 @@ center.clear();
 notify.config({ position: 'top-right', maxStack: 5, pauseOnHover: true });`,
     behaviors: ['notification', 'toast'],
     script: `const notify = notificationMod.notify;
+let disposed = false;
+const timers = new Set();
+const schedule = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); if(!disposed) fn(); }, ms); timers.add(id); return id; };
+const repeat = (fn, ms) => { const id = setInterval(() => { if(!disposed) fn(); }, ms); timers.add(id); return id; };
 const toast = toastMod.toast;
 const countEl = document.getElementById('notif-count');
 function refreshCount() {
   const all = notify.getAll();
   if (countEl) countEl.textContent = all.length + ' 条 · ' + all.filter(r => r.opts.unread).length + ' 未读';
 }
-setInterval(refreshCount, 500);
+repeat(refreshCount, 500);
 
 // ── 语义 ──
 document.getElementById('notif-info')?.addEventListener('click', () => {
@@ -1612,13 +1632,13 @@ document.getElementById('notif-error')?.addEventListener('click', () => {
 document.getElementById('notif-progress')?.addEventListener('click', () => {
   const h = notify.progress('正在导出 PDF', { progressLabel: '准备中…', duration: 0 });
   let p = 0;
-  const t = setInterval(() => {
+  const t = repeat(() => {
     p += 0.07 + Math.random() * 0.06;
     if (p >= 1) {
       h.setProgress(1, '导出完成');
-      clearInterval(t);
-      setTimeout(() => { h.update({ title: '导出完成', description: '文件已下载' }); }, 400);
-      setTimeout(() => h.dismiss(), 2200);
+      clearInterval(t); timers.delete(t);
+      schedule(() => { h.update({ title: '导出完成', description: '文件已下载' }); }, 400);
+      schedule(() => h.dismiss(), 2200);
     } else {
       h.setProgress(p, '导出中 ' + Math.round(p * 100) + '%');
     }
@@ -1633,6 +1653,7 @@ document.getElementById('notif-confirm')?.addEventListener('click', async () => 
     confirmLabel: '删除',
     cancelLabel: '取消',
   });
+  if(disposed) return;
   if (ok) toast.ok('已删除（演示）');
   else toast.warn('已取消');
 });
@@ -1719,10 +1740,10 @@ document.getElementById('notif-actions')?.addEventListener('click', () => {
 // ── 动态更新 ──
 document.getElementById('notif-update')?.addEventListener('click', () => {
   const h = notify.info('准备就绪', { description: '即将开始下载…', duration: 0 });
-  setTimeout(() => h.update({ title: '下载中', description: '正在获取资源 (1/3)' }), 600);
-  setTimeout(() => h.update({ description: '正在解压文件 (2/3)' }), 1500);
-  setTimeout(() => h.update({ title: '完成', description: '所有资源已就绪' }), 2400);
-  setTimeout(() => h.dismiss(), 4000);
+  schedule(() => h.update({ title: '下载中', description: '正在获取资源 (1/3)' }), 600);
+  schedule(() => h.update({ description: '正在解压文件 (2/3)' }), 1500);
+  schedule(() => h.update({ title: '完成', description: '所有资源已就绪' }), 2400);
+  schedule(() => h.dismiss(), 4000);
   refreshCount();
 });
 
@@ -1736,7 +1757,8 @@ document.getElementById('notif-clear')?.addEventListener('click', () => {
   notify.clear();
   toast.ok('已清空');
   refreshCount();
-});`,
+});
+return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clearTimeout(id); }); timers.clear(); notify.clear(); toast.dismiss(); };`,
   },
   {
     slug: 'avatar',

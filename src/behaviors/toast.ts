@@ -57,25 +57,27 @@ export interface ToastConfig {
   maxStack?: number;
 }
 
+type ToastTiming = number | ToastOptions;
+const timingOptions = (value?: ToastTiming): ToastOptions => typeof value === 'number' ? { ms: value } : value ?? {};
 interface ToastFn {
-  (message: string, kind?: ToastKind, ms?: number): ToastHandle;
+  (message: string, kind?: ToastKind, ms?: ToastTiming): ToastHandle;
   /** success 语义（.icen-toast--success），规范词表入口 */
-  success(message: string, ms?: number): ToastHandle;
+  success(message: string, ms?: ToastTiming): ToastHandle;
   /**
    * success 语义（.icen-toast--success）。
    * @deprecated 词表统一：改用 toast.success()，本别名下个大版本删除。
    */
-  ok(message: string, ms?: number): ToastHandle;
+  ok(message: string, ms?: ToastTiming): ToastHandle;
   /** error 语义（.icen-toast--error），规范词表入口 */
-  error(message: string, ms?: number): ToastHandle;
+  error(message: string, ms?: ToastTiming): ToastHandle;
   /**
    * error 语义（.icen-toast--error）。
    * @deprecated 词表统一：改用 toast.error()，本别名下个大版本删除。
    */
-  err(message: string, ms?: number): ToastHandle;
-  warn(message: string, ms?: number): ToastHandle;
-  info(message: string, ms?: number): ToastHandle;
-  action(message: string, actionLabel: string, onAction: () => void, ms?: number): ToastHandle;
+  err(message: string, ms?: ToastTiming): ToastHandle;
+  warn(message: string, ms?: ToastTiming): ToastHandle;
+  info(message: string, ms?: ToastTiming): ToastHandle;
+  action(message: string, actionLabel: string, onAction: () => void, ms?: ToastTiming): ToastHandle;
   dismiss(): void;
   config(opts: ToastConfig): void;
 }
@@ -109,44 +111,6 @@ const KIND_CLASS: Record<ToastKind, string> = {
   warn: 'icen-toast--warning',
   info: 'icen-toast--info',
 };
-
-/** 关闭钮图标（库内静态常量，经同一消毒入口构建以守「禁 innerHTML」约定）。 */
-const CLOSE_SVG =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
-
-/** 递归剔除 SVG 子树中的 on* 属性与 script/foreignObject 节点（同 notification.ts 消毒模式）。 */
-function stripUnsafeSvg(el: Element): void {
-  for (const attr of Array.from(el.attributes)) {
-    if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
-  }
-  for (const child of Array.from(el.children)) {
-    const tag = child.tagName.toLowerCase();
-    if (tag === 'script' || tag === 'foreignobject') child.remove();
-    else stripUnsafeSvg(child);
-  }
-}
-
-/** 解析 SVG 字符串图标：仅接纳 <svg> 根元素，消毒后导入当前文档；其余返回 null。 */
-function sanitizeSvgIcon(source: string): Element | null {
-  if (!source.trimStart().startsWith('<svg')) return null;
-  try {
-    const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
-    const svg = doc.documentElement;
-    if (!svg || svg.tagName.toLowerCase() !== 'svg') return null;
-    stripUnsafeSvg(svg);
-    return document.importNode(svg, true);
-  } catch {
-    return null;
-  }
-}
-
-/** 关闭钮图标的懒缓存：CLOSE_SVG 是库内静态常量，首条 closable 弹窗解析消毒一次，
- *  之后每条克隆复用（解析结果节点直接 appendChild 会被搬走，必须克隆；走同一消毒入口）。 */
-let closeSvgCache: Element | null = null;
-function closeSvg(): Element | null {
-  closeSvgCache ??= sanitizeSvgIcon(CLOSE_SVG);
-  return closeSvgCache ? (closeSvgCache.cloneNode(true) as Element) : null;
-}
 
 /** 加退场类并调度移除（transitionend 或 400ms 兜底，只生效一次）。 */
 function scheduleRemove(el: HTMLElement): void {
@@ -184,6 +148,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
 
   const { ms, actionLabel, onAction, icon, closable, progress } = opts;
   const container = ensureContainer();
+  const returnFocus=document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   const el = document.createElement('div');
   el.className = `icen-toast ${KIND_CLASS[kind]}`;
@@ -191,7 +156,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
 
   /* 可选前置图标（消毒后的内联 SVG） */
   if (icon) {
-    const svg = sanitizeSvgIcon(icon);
+    const svg = parseSvg(icon);
     if (svg) {
       const iconWrap = document.createElement('span');
       iconWrap.className = 'icen-toast-icon';
@@ -226,6 +191,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
     if (removed) return;
     removed = true;
     if (timer) window.clearTimeout(timer);
+    if(el.contains(document.activeElement) && returnFocus?.isConnected)returnFocus.focus({preventScroll:true});
     scheduleRemove(el);
   };
 
@@ -233,11 +199,11 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   if (closable) {
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
-    closeBtn.className = 'icen-toast-close';
+    closeBtn.className = 'icen-toast-close icen-icon-action';
+    closeBtn.setAttribute('data-icen-reveal','');
     closeBtn.setAttribute('aria-label', t('common.close'));
-    const svg = closeSvg();
+    const svg = createIcon('close');
     if (svg) closeBtn.appendChild(svg);
-    else closeBtn.replaceChildren(createIcon('close')!);
     closeBtn.addEventListener('click', remove);
     el.appendChild(closeBtn);
   }
@@ -272,16 +238,16 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
 }
 
 export const toast: ToastFn = Object.assign(
-  (message: string, kind: ToastKind = 'info', ms?: number) => show(message, kind, { ms }),
+  (message: string, kind: ToastKind = 'info', ms?: ToastTiming) => show(message, kind, timingOptions(ms)),
   {
-    success: (message: string, ms?: number): ToastHandle => show(message, 'success', { ms }),
-    ok: (message: string, ms?: number): ToastHandle => show(message, 'ok', { ms }),
-    error: (message: string, ms?: number): ToastHandle => show(message, 'error', { ms }),
-    err: (message: string, ms?: number): ToastHandle => show(message, 'err', { ms }),
-    warn: (message: string, ms?: number): ToastHandle => show(message, 'warn', { ms }),
-    info: (message: string, ms?: number): ToastHandle => show(message, 'info', { ms }),
-    action: (message: string, actionLabel: string, onAction: () => void, ms?: number): ToastHandle =>
-      show(message, 'info', { actionLabel, onAction, ms }),
+    success: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'success', timingOptions(ms)),
+    ok: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'ok', timingOptions(ms)),
+    error: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'error', timingOptions(ms)),
+    err: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'err', timingOptions(ms)),
+    warn: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'warn', timingOptions(ms)),
+    info: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'info', timingOptions(ms)),
+    action: (message: string, actionLabel: string, onAction: () => void, ms?: ToastTiming): ToastHandle =>
+      show(message, 'info', { ...timingOptions(ms), actionLabel, onAction }),
     dismiss: (): void => {
       if (!isBrowser()) return;
       const c = document.body.querySelector('.icen-toast-container');
