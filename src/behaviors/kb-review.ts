@@ -278,6 +278,7 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
     const filterWrap = h('div', 'icen-kb-review-filter');
     filterWrap.append(h('span', 'kb-review-filter-label', t('kbReview.assignee')));
     const filterSel = h('select', 'icen-kb-review-filter-select');
+    filterSel.setAttribute('aria-label', t('kbReview.assignee'));
     const allOpt = h('option', undefined, t('common.all'));
     allOpt.value = '';
     filterSel.append(allOpt);
@@ -334,6 +335,7 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
       );
       if (state.assignees.length) {
         const sel = h('select', 'icen-kb-review-assign');
+        sel.setAttribute('aria-label', t('kbReview.assignee'));
         const placeholder = h('option', undefined, t('kbReview.unassigned'));
         placeholder.value = '';
         sel.append(placeholder);

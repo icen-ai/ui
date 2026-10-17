@@ -149,6 +149,7 @@ function labelOf(runs: KbEvalRunRef[], id: string): string {
 function buildRunSelect(runs: KbEvalRunRef[], selected: string, tag: string): HTMLSelectElement {
   const sel = h('select', 'icen-kb-eval-run');
   sel.dataset.icenRun = tag;
+  sel.setAttribute('aria-label', t('kbEval.runSelectAria'));
   if (!runs.length) {
     const o = h('option', undefined, '—');
     o.value = '';

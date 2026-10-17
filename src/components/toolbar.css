@@ -90,7 +90,7 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.icen-toolbar-label.icen-accent { color: var(--icen-token-accent); }
+.icen-toolbar-label.icen-accent { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); }
 
 @media (max-width: 480px) {
   .icen-toolbar { flex-wrap: wrap; }

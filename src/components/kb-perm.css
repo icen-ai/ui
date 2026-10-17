@@ -118,7 +118,7 @@
 .icen-kb-acl-grant-btn {
   flex: 0 0 auto; height: 26px; padding: 0 12px;
   font: inherit; font-size: 12.5px; line-height: 1;
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
   background: transparent;
   border: 1px solid color-mix(in srgb, var(--icen-token-accent) 45%, transparent);
   border-radius: var(--icen-radius-sm, 6px);
@@ -190,7 +190,7 @@
 .icen-kb-audit { display: flex; flex-direction: column; gap: 10px; min-inline-size: 0; }
 .icen-kb-audit-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .icen-kb-audit-channels { display: inline-flex; gap: 6px; flex-wrap: wrap; }
-.icen-kb-audit-channels .icen-kb-chip[aria-pressed='true'] { color: var(--icen-token-accent); border-color: var(--icen-token-accent); }
+.icen-kb-audit-channels .icen-kb-chip[aria-pressed='true'] { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); border-color: var(--icen-token-accent); }
 .icen-kb-audit-hygiene { display: flex; flex-direction: column; gap: 6px; }
 .icen-kb-hygiene { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 7px 10px; font-size: 12.5px; border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-sm, 6px); }
 .icen-kb-hygiene.is-high { border-color: color-mix(in srgb, var(--icen-token-error, #c0392b) 40%, transparent); background: color-mix(in srgb, var(--icen-token-error, #c0392b) 5%, transparent); }
@@ -371,7 +371,7 @@
 .icen-kb-visibility-hit:last-child { border-bottom: none; }
 .icen-kb-visibility-hit[data-icen-visibility='metadata'] .icen-kb-visibility-snippet,
 .icen-kb-visibility-hit[data-icen-visibility='summary'] .icen-kb-visibility-snippet {
-  display: block; height: 10px; border-radius: 3px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  display: block; height: 10px; border-radius: 3px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: color-mix(in srgb, var(--icen-token-text-faint) 18%, transparent);
 }
 .icen-kb-visibility-hit[data-icen-visibility='summary'] .icen-kb-visibility-summary { font-size: 12px; color: var(--icen-token-text-muted); line-height: 1.6; }

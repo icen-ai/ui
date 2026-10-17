@@ -63,8 +63,8 @@ test('ai-threads: groups collapse and items activate without page overflow', asy
   await expect(groupHead).toHaveAttribute('aria-expanded', 'false');
   await groupHead.click();
   await expect(groupHead).toHaveAttribute('aria-expanded', 'true');
-  const thread = page.locator('.icen-ai-thread').nth(1);
+  const thread = page.locator('.icen-ai-thread-main').nth(1);
   await thread.click();
-  await expect(thread).toHaveClass(/is-active/);
+  await expect(page.locator('.icen-ai-thread').nth(1)).toHaveClass(/is-active/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

@@ -397,7 +397,7 @@ export function renderKbSql(
     diffBox.querySelectorAll<HTMLElement>('.icen-ai-diff-file').forEach((file) => {
       const body = file.querySelector<HTMLElement>('.icen-ai-diff-body');
       if (body) body.hidden = false;
-      file.querySelector<HTMLElement>('.icen-ai-diff-head')?.setAttribute('aria-expanded', 'true');
+      file.querySelector<HTMLElement>('.icen-ai-diff-toggle')?.setAttribute('aria-expanded', 'true');
     });
     fix.appendChild(diffBox);
     card.appendChild(fix);

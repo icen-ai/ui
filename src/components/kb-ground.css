@@ -210,7 +210,7 @@
   top: 5px;
   bottom: 5px;
   width: 2px;
-  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--kb-source-tint);
 }
 
@@ -402,7 +402,7 @@
   top: 4px;
   bottom: 4px;
   width: 2px;
-  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--icen-token-line-soft);
 }
 .icen-kb-passage-context[hidden] { display: none; }
@@ -511,11 +511,11 @@
   background: color-mix(in srgb, var(--icen-token-accent) 6%, var(--icen-token-surface));
 }
 /* 其余版本：faded 退后 */
-.icen-kb-conflict-ver.is-older { opacity: 0.62; }
+.icen-kb-conflict-ver.is-older { /* 不降透明：透明会折进文字对比度；旧版语义由 muted 文案承担 */ }
 .icen-kb-conflict-ver:hover {
   border-color: color-mix(in srgb, var(--icen-token-accent) 45%, transparent);
 }
-.icen-kb-conflict-ver.is-older:hover { opacity: 1; }
+.icen-kb-conflict-ver.is-older:hover { /* hover 反馈由底色承担 */ }
 .icen-kb-conflict-ver:focus-visible { outline: none; box-shadow: var(--icen-ring); }
 
 .icen-kb-conflict-ver-head {
@@ -543,7 +543,7 @@
 .icen-kb-conflict-ver-sub {
   font-size: 11.5px;
   line-height: 1.4;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

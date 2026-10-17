@@ -146,7 +146,7 @@
 .icen-sidebar-item.is-active,
 .icen-sidebar-item[aria-current='page'] {
   background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
   font-weight: 500;
 }
 .icen-sidebar-item.is-disabled,

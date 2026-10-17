@@ -100,7 +100,7 @@
   white-space: nowrap;
 }
 .icen-cascader-value.is-empty {
-  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+  color: var(--icen-token-text-muted);
 }
 
 .icen-cascader-chevron {
@@ -282,7 +282,7 @@
 }
 .icen-cascader-result > i {
   font-style: normal;
-  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+  color: var(--icen-token-text-muted);
   margin-inline: 2px;
 }
 

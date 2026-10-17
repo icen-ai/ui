@@ -158,7 +158,7 @@
   font-size: 11.5px;
   color: var(--icen-token-text-faint);
 }
-.icen-kb-pipeline-state.is-running .icen-kb-pipeline-state-label { color: var(--icen-token-accent); }
+.icen-kb-pipeline-state.is-running .icen-kb-pipeline-state-label { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); }
 .icen-kb-pipeline-state.is-done .icen-kb-pipeline-state-label { color: var(--icen-token-success); }
 .icen-kb-pipeline-state.is-fail .icen-kb-pipeline-state-label { color: var(--icen-token-danger, var(--icen-token-error)); }
 .icen-kb-pipeline-state.is-cancel .icen-kb-pipeline-state-label { color: var(--icen-token-text-muted); }
@@ -177,14 +177,14 @@
 .icen-kb-pipeline-progress {
   height: 3px;
   margin: 8px;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--icen-token-line-soft);
   overflow: hidden;
 }
 .icen-kb-pipeline-progress > i {
   display: block;
   height: 100%;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--icen-token-accent);
   opacity: 0.7;
   transition: width 0.24s ease-out;
@@ -240,7 +240,7 @@
 /* 状态映射：未开始/排队/取消 中性弱化；进行中 accent；完成 muted；失败 danger */
 .icen-kb-pipeline-step.is-unstart .icen-kb-pipeline-step-label,
 .icen-kb-pipeline-step.is-queued .icen-kb-pipeline-step-label { color: var(--icen-token-text-faint); }
-.icen-kb-pipeline-step.is-running .icen-kb-pipeline-step-label { color: var(--icen-token-accent); }
+.icen-kb-pipeline-step.is-running .icen-kb-pipeline-step-label { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); }
 .icen-kb-pipeline-step.is-done .icen-kb-pipeline-step-label { color: var(--icen-token-text-muted); }
 .icen-kb-pipeline-step.is-cancel .icen-kb-pipeline-step-label {
   color: var(--icen-token-text-faint);
@@ -329,7 +329,7 @@
 }
 /* available=false：不删除但排除出检索 → 整体降透明度 */
 .icen-kb-chunk.is-off {
-  opacity: 0.55;
+  color: var(--icen-token-text-muted); /* 停用态落在文字色而非整卡透明（透明度会被 axe 算进对比度） */
 }
 
 /* 启用开关（kb 域自持，无 switch.css 依赖） */
@@ -445,7 +445,7 @@
 }
 
 .icen-kb-chunk-meta {
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
 .icen-kb-chunk-edited-flag {
   color: var(--icen-token-warning);

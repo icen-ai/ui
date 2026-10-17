@@ -444,6 +444,16 @@
 - 验证：4 条 AI 族专项全过；全量 verify 764 测试、153 条浏览器回归、129 页×两档巡检 0 问题。
 - 尚待：AI 族其余条目（ai-diff/ai-files/ai-context/ai-usage/ai-feedback/ai-branch/ai-subagent）与 kb 族 30 个的视觉矩阵仍未逐项走完；不勾选。
 
+### 第二十八轮：全站展开态巡检落地 + 对比度/嵌套交互大清账
+
+- 新增 `tests/e2e/expanded-audit.pw.ts`：129 个组件页逐一在「展开 details/手风琴」前后跑演示区 axe（serious/critical）+ 双宽度零横向溢出 + 零脚本异常。首轮逮到 29 处真问题，逐轮清零到 129/129。
+- 对比度大清账（系统性根因：accent 文本色在浅色面 4.06、透明度/opacity 降级被 axe 折进对比度）：tabs 激活项 / switch 选中卡 / tree 选中与禁用标签 / cascader 与 tree-select 与 date-picker 的占位值 / sidebar 激活项 / layout accent 文本 / toolbar 示例标签 / kb 官方徽标、ACL 授权钮、管线运行标签、rerank 落选列、chunk 停用态、SQL 高亮 kw/num/cmt/fn、冲突版本行、AI 归档会话、删除芯片、diff 聚合 chip——一律改 accent-text / text-muted / 实色，禁用与旧版语义不再用整行 opacity 降透明表达。
+- 嵌套交互三处结构修正（axe nested-interactive）：ai-diff 头部拆成「折叠真按钮 + 决策钮兄弟」（role=button 行壳退役）；ai-threads 行拆成「主按钮 + 溢出动作兄弟」；kb-sources 受限行降为纯容器（唯一动作是申请访问真按钮，不可读内容不再有整行可点的假 affordance）。委托与键盘随之走原生 click 通道。
+- 滚动区键盘可达：ai-usage 审计列表渲染器自动 tabindex=0；scroll-area 示例三处补上（示例文本本来就写着「可通过 tabindex=0…」却没做）。
+- select/input 命名：kb-review 的筛选与分配 select、kb-eval 的对比运行 select 补 aria-label；input 示例四个预填字段补 aria-label。
+- 新增 3 条 DOM 契约测试锁定三个重组件的结构（tests/dom/nested-interactive.test.ts）。
+- 验证：verify 767 测试、289 条浏览器回归（含 129 展开态巡检）、129 页×两档基础巡检 0 问题，全绿。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。

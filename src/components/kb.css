@@ -82,12 +82,12 @@
 .icen-kb-score-bar {
   flex: 1 1 auto;
   height: 3px;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--icen-token-line-soft);
   overflow: hidden;
   min-inline-size: 40px;
 }
-.icen-kb-score-bar > i { display: block; height: 100%; border-radius: 2px; background: var(--icen-token-accent); opacity: 0.75; } /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+.icen-kb-score-bar > i { display: block; height: 100%; border-radius: 2px; background: var(--icen-token-accent); opacity: 0.75; /* guard:allow-radius 微构件（指示条等图形级，不属容器圆角面） */ }
 .icen-kb-score-value { font-family: var(--icen-font-mono, ui-monospace, monospace); font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--icen-token-text-muted); min-inline-size: 34px; text-align: right; /* guard:allow-physical 分数数字右对齐惯例（数字是 LTR 文种，RTL 不镜像） */ }
 
 /* 证据引用体（原文摘录、citedText、chunk 预览；证据线沿 inline-start，RTL 镜像） */
@@ -106,7 +106,7 @@
   top: 4px;
   bottom: 4px;
   width: 2px;
-  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--icen-token-line);
 }
 .icen-kb-quote mark,
@@ -114,7 +114,7 @@
 .icen-kb-hit mark {
   background: color-mix(in srgb, var(--icen-token-accent) 18%, transparent);
   color: inherit;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   padding: 0 2px;
 }
 /* 多命中分色（data-icen-hit 轮转 3 色） */
@@ -139,11 +139,11 @@
 }
 .icen-kb-badge svg { width: 10px; height: 10px; }
 .icen-kb-badge--official {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
   border-color: color-mix(in srgb, var(--icen-token-accent) 45%, transparent);
   background: var(--icen-token-accent-subtle, transparent);
 }
-.icen-kb-badge--stale { color: var(--icen-token-warning); border-color: color-mix(in srgb, var(--icen-token-warning) 40%, transparent); }
+.icen-kb-badge--stale { color: color-mix(in srgb, var(--icen-token-warning) 50%, var(--icen-token-text)); border-color: color-mix(in srgb, var(--icen-token-warning) 40%, transparent); }
 .icen-kb-badge--restricted { color: var(--icen-token-text-faint); }
 .icen-kb-badge--trusted {
   color: var(--icen-token-success);
@@ -207,7 +207,7 @@
   color: var(--icen-token-text-faint);
   border: 1px solid var(--icen-token-line-soft);
   border-bottom-width: 2px;
-  border-radius: 4px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 4px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   padding: 1px 5px;
   background: var(--icen-token-bg-soft);
 }

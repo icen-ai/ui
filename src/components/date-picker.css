@@ -79,7 +79,7 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.icen-date-picker-value.is-empty { color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent); }
+.icen-date-picker-value.is-empty { color: var(--icen-token-text-muted); }
 .icen-date-picker-icon { display: inline-flex; color: var(--icen-token-text-faint); flex-shrink: 0; }
 .icen-date-picker-icon svg { width: 14px; height: 14px; }
 

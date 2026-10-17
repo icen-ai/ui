@@ -591,7 +591,7 @@
   padding: 1px 8px;
   border-radius: var(--icen-radius-full);
   background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
   font-size: var(--icen-density-font-size-2xs);
   font-weight: 500;
   font-variant-numeric: tabular-nums;

@@ -254,21 +254,24 @@ function renderFile(file: AiDiffFile): HTMLElement {
   const root = h('div', `icen-ai-diff-file is-${file.status}`);
   root.dataset.icenPath = file.path;
 
-  /* head */
+  /* head：纯布局行；展开/折叠落在真按钮 .icen-ai-diff-toggle 上，
+     接受/拒绝是它的兄弟——不再有嵌套交互（axe nested-interactive） */
   const head = h('div', 'icen-ai-diff-head');
-  head.setAttribute('role', 'button');
-  head.tabIndex = 0;
-  head.setAttribute('aria-expanded', 'false');
+
+  const toggle = h('button', 'icen-ai-diff-toggle');
+  toggle.type = 'button';
+  toggle.setAttribute('aria-expanded', 'false');
 
   const pathText = file.status === 'renamed' && file.oldPath
     ? `${file.oldPath} → ${file.path}`
     : file.path;
-  head.appendChild(h('span', 'icen-ai-diff-path', pathText));
+  toggle.appendChild(h('span', 'icen-ai-diff-path', pathText));
 
   const stat = h('span', 'icen-ai-diff-stat');
   if (file.addCount > 0) stat.appendChild(h('b', 'icen-ai-diff-add', `+${file.addCount}`));
   if (file.delCount > 0) stat.appendChild(h('b', 'icen-ai-diff-del', `−${file.delCount}`));
-  if (stat.children.length > 0) head.appendChild(stat);
+  if (stat.children.length > 0) toggle.appendChild(stat);
+  head.appendChild(toggle);
 
   const actions = h('span', 'icen-ai-diff-actions');
   actions.appendChild(h('button', '', t('common.accept'))).setAttribute('data-icen-ai-diff-accept', '');
@@ -337,14 +340,14 @@ function filePath(file: HTMLElement): string {
   return file.querySelector('.icen-ai-diff-path')?.textContent ?? '';
 }
 
-function toggleFile(head: HTMLElement): void {
-  const file = closestFile(head);
+function toggleFile(toggle: HTMLElement): void {
+  const file = closestFile(toggle);
   if (!file) return;
   const body = file.querySelector<HTMLElement>('.icen-ai-diff-body');
   if (!body) return;
   const open = body.hidden;
   body.hidden = !open;
-  head.setAttribute('aria-expanded', String(open));
+  toggle.setAttribute('aria-expanded', String(open));
   emitIcen(file, 'icen:ai-toggle', { el: file, open });
 }
 
@@ -403,27 +406,16 @@ export function initAiDiff(root?: ParentNode): () => void {
       return;
     }
 
-    const head = t.closest<HTMLElement>('.icen-ai-diff-head');
-    if (head) toggleFile(head);
+    const toggle = t.closest<HTMLElement>('.icen-ai-diff-toggle');
+    if (toggle) toggleFile(toggle);
   };
 
-  const onKeydown = (e: Event): void => {
-    const ke = e as KeyboardEvent;
-    if (ke.key !== 'Enter' && ke.key !== ' ') return;
-    const t = ke.target instanceof Element ? ke.target : null;
-    if (!t || t.closest('button, a, input, textarea, select')) return;
-    const head = t.closest<HTMLElement>('.icen-ai-diff-head');
-    if (!head) return;
-    ke.preventDefault();
-    toggleFile(head);
-  };
+  /* toggle 是真 button：Enter/Space 走原生 click，无需额外 keydown 通道 */
 
   target.addEventListener('click', onClick);
-  target.addEventListener('keydown', onKeydown);
 
   return () => {
     target.removeEventListener('click', onClick);
-    target.removeEventListener('keydown', onKeydown);
     marked.__icenAiDiffInit = false;
   };
 }

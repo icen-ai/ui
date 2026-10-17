@@ -101,7 +101,7 @@
   white-space: nowrap;
 }
 .icen-tree-select-value.is-empty {
-  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+  color: var(--icen-token-text-muted);
 }
 
 .icen-tree-select-chevron {

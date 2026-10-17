@@ -318,13 +318,16 @@
 .icen-tree-node.is-selected,
 .icen-tree-node[aria-selected='true'] {
   background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
   font-weight: 500;
 }
 .icen-tree-node.is-disabled,
 .icen-tree-node[aria-disabled='true'] {
-  opacity: var(--icen-disabled-opacity);
   pointer-events: none;
+}
+.icen-tree-node.is-disabled .icen-tree-label,
+.icen-tree-node[aria-disabled='true'] .icen-tree-label {
+  color: var(--icen-token-text-muted); /* 禁用≠淡到不可读：不整行降透明（axe 会把透明度算进对比度），标签落 muted */
 }
 .icen-tree-toggle {
   width: 18px;
@@ -548,7 +551,7 @@
 .icen-tree-label mark {
   background: color-mix(in srgb, var(--icen-token-warning) 30%, transparent);
   color: inherit;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   padding: 0 1px;
 }
 

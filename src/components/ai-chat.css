@@ -1106,32 +1106,42 @@
   min-width: 0;
 }
 
-/* 会话行：激活起始缘 2px accent 线；归档降透明 */
+/* 会话行：中性容器（激活起始缘 2px accent 线）；交互 affordance 归 .icen-ai-thread-main 真按钮 */
 .icen-ai-thread {
   position: relative;
   display: flex;
   align-items: center;
   gap: var(--icen-density-space-xs);
   min-inline-size: 0;
-  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
   border-inline-start: 2px solid transparent;
   border-radius: var(--icen-radius-xs);
   background: transparent;
   color: var(--icen-token-text-muted);
   font-size: var(--icen-density-font-size-sm);
+}
+.icen-ai-thread-main {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-xs);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  border: 0;
+  border-radius: var(--icen-radius-xs);
+  background: transparent;
+  color: inherit;
+  font: inherit;
   text-align: start;
   cursor: pointer;
   transition:
     background-color var(--icen-tx-fast),
-    color var(--icen-tx-fast),
-    border-color var(--icen-tx-fast),
-    opacity var(--icen-tx-fast);
+    color var(--icen-tx-fast);
 }
-.icen-ai-thread:hover {
+.icen-ai-thread-main:hover {
   background: var(--icen-token-fill-1);
   color: var(--icen-token-text);
 }
-.icen-ai-thread:focus-visible {
+.icen-ai-thread-main:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
@@ -1140,9 +1150,10 @@
   background: var(--icen-token-fill-1);
   color: var(--icen-token-text);
 }
-.icen-ai-thread.is-archived {
-  opacity: 0.55;
+.icen-ai-thread.is-archived .icen-ai-thread-label {
+  color: var(--icen-token-text-muted);
 }
+.icen-ai-thread.is-archived .icen-ai-thread-icon { opacity: 0.7; }
 .icen-ai-thread-icon {
   display: inline-flex;
   align-items: center;

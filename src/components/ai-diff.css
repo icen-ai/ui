@@ -8,9 +8,10 @@
  *   <div class="icen-ai-diff">
  *     <div class="icen-ai-diff-file is-added|is-modified|is-deleted|is-renamed
  *          [.is-accepted|.is-rejected]" data-icen-path="src/foo.ts">
- *       <div class="icen-ai-diff-head" role="button" tabindex="0" aria-expanded="false">
+ *       <div class="icen-ai-diff-head">
+  *         <button type="button" class="icen-ai-diff-toggle" aria-expanded="false">
  *         <span class="icen-ai-diff-path">src/foo.ts</span>            <!-- renamed：旧路径 → 新路径 -->
- *         <span class="icen-ai-diff-stat"><b class="icen-ai-diff-add">+12</b> <b class="icen-ai-diff-del">−4</b></span>
+ *         <span class="icen-ai-diff-stat"><b class="icen-ai-diff-add">+12</b> <b class="icen-ai-diff-del">−4</b></span>`n  *         </button>
  *         <span class="icen-ai-diff-actions">
  *           <button type="button" data-icen-ai-diff-accept>接受</button>
  *           <button type="button" data-icen-ai-diff-reject>拒绝</button>
@@ -88,14 +89,27 @@
   gap: var(--icen-density-space-sm);
   padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
   min-width: 0;
+}
+/* 折叠真按钮：占满行内容区（path+stat），行为 affordance 全在它身上；与决策钮兄弟平级 */
+.icen-ai-diff-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--icen-density-space-sm);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
   cursor: pointer;
   user-select: none;
+  border-radius: var(--icen-radius-xs);
   transition: background-color var(--icen-tx-fast);
 }
-.icen-ai-diff-head:hover {
-  background: var(--icen-token-fill-1);
-}
-.icen-ai-diff-head:focus-visible {
+.icen-ai-diff-toggle:hover { background: var(--icen-token-fill-1); }
+.icen-ai-diff-toggle:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
@@ -284,7 +298,7 @@
 
 .icen-ai-file-chip.is-deleted {
   text-decoration: line-through;
-  opacity: 0.75;
+  color: var(--icen-token-text-muted);
 }
 
 .icen-ai-file-icon {

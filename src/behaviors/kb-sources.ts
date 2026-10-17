@@ -15,10 +15,10 @@
  *         <span class="icen-kb-num">被引 ×2</span>
  *       </span>
  *     </button>
- *     <div class="icen-kb-source is-restricted" role="button" tabindex="0" data-icen-kb-source-id="…">
+ *     <div class="icen-kb-source is-restricted" data-icen-kb-source-id="…">
  *       …同上结构 + <button class="icen-kb-source-request" data-icen-kb-source-request>申请访问</button>
- *     </div>                                                                ← 受限行：含真实按钮，
- *     行壳降级为 role=button（HTML 禁止 button 嵌套 button；init 补 Enter/Space 键控）
+ *     </div>                                                                ← 受限行是纯容器（无 role）：
+ *     唯一动作是「申请访问」真按钮——不可读内容不配整行可点的假 affordance（杜绝嵌套交互）
  *   </div>
  *   rail 变体：side（徽章/被引/申请访问）并入 kb-source-main 尾部——标题独占一行
  *   （line-clamp 2），meta 行与徽章行各自 flex-wrap（窄侧栏不挤压标题，见 kb-ground.css）。
@@ -99,14 +99,12 @@ function buildSourceRow(
   variant: 'row' | 'rail' = 'row',
 ): HTMLElement {
   const restricted = source.permission !== 'readable';
-  /* 受限行内含「申请访问」真实按钮，行壳不能用 button（嵌套交互元素非法）→ role=button 降级 */
+  /* 受限行：不可读内容不配「整行可点」的假 affordance——唯一动作是「申请访问」真按钮，
+     行壳是纯容器（既不是 button 也不挂 role=button，杜绝嵌套交互） */
   const row: HTMLElement = restricted
     ? h('div', 'icen-kb-source is-restricted')
     : h('button', 'icen-kb-source');
-  if (restricted) {
-    row.setAttribute('role', 'button');
-    row.setAttribute('tabindex', '0');
-  } else {
+  if (!restricted) {
     (row as HTMLButtonElement).type = 'button';
   }
   row.dataset.icenKbSourceId = source.id;
@@ -214,25 +212,14 @@ export function initKbSources(root?: ParentNode): () => void {
       return;
     }
     const row = t.closest<HTMLElement>('[data-icen-kb-source-id].icen-kb-source');
-    if (row) fire(row);
-  };
-
-  const onKeydown = (e: Event): void => {
-    const ke = e as KeyboardEvent;
-    if (ke.key !== 'Enter' && ke.key !== ' ') return;
-    const t = e.target instanceof Element ? e.target : null;
-    const row = t?.closest<HTMLElement>('.icen-kb-source[role="button"]');
-    if (!row) return;
-    ke.preventDefault();
-    fire(row);
+    /* 受限行是纯容器，整行点击不再派发——唯一通道是上面的「申请访问」按钮 */
+    if (row && !row.classList.contains('is-restricted')) fire(row);
   };
 
   target.addEventListener('click', onClick);
-  target.addEventListener('keydown', onKeydown);
 
   return () => {
     target.removeEventListener('click', onClick);
-    target.removeEventListener('keydown', onKeydown);
     initedScopes.delete(key);
   };
 }

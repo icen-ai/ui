@@ -544,18 +544,18 @@ initSplitPane();
     <span class="icen-input-trailing">元</span>
   </div>
   <div class="icen-input-wrap icen-control">
-    <input class="icen-input" value="点右侧 × 可清空" />
+    <input class="icen-input" value="点右侧 × 可清空" aria-label="可清空输入示例" />
     <button class="icen-input-clear" type="button" aria-label="清空">${svgX}</button>
   </div>
   <div class="icen-input-wrap icen-control">
-    <input class="icen-input" type="password" value="secret-123" />
+    <input class="icen-input" type="password" value="secret-123" aria-label="密码示例" />
     <button class="icen-input-pw-toggle" type="button">${svgEye}${svgEyeOff}</button>
   </div>
   <div class="icen-input-wrap icen-control">
-    <input class="icen-input" value="带字符计数" maxlength="20" />
+    <input class="icen-input" value="带字符计数" maxlength="20" aria-label="字符计数示例" />
   </div>
   <div class="icen-input-wrap icen-control is-error">
-    <input class="icen-input" value="校验未通过的内容" />
+    <input class="icen-input" value="校验未通过的内容" aria-label="校验失败示例" />
   </div>
   <div class="icen-input-wrap icen-control is-disabled">
     <input class="icen-input" disabled placeholder="禁用态" />
@@ -2369,7 +2369,7 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     group: '数据展示',
     desc: '显式带视觉边界的滚动区。全局已有细薄滚动条（base.css），本组件用于强调"可滚动"或限定方向的场景。',
     demo: `<div class="demo-row" style="align-items:flex-start">
-  <div class="icen-scroll-area icen-scroll-area--inset" style="width:240px;height:140px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">
+  <div class="icen-scroll-area icen-scroll-area--inset" tabindex="0" style="width:240px;height:140px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">
     <p>inset 变体：内嵌阴影 + 背景色 + 圆角边框，<strong>强烈暗示可滚动</strong>。</p>
     <p>这里是一段超长内容，必须超出 140px 高度才能看到滚动条效果。</p>
     <p>第二条：overscroll-behavior: contain 已开启，不会把滚动传到外层。</p>
@@ -2378,7 +2378,7 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     <p>第五条：滚动条宽度随变体调整（sm 6px / 默认 8px / lg 12px）。</p>
     <p>第六条：可通过 tabindex="0" 让本容器可被键盘聚焦。</p>
   </div>
-  <div class="icen-scroll-area icen-scroll-area--y icen-scroll-area--sm" style="width:160px;height:140px;padding:8px;background:var(--icen-token-bg-soft);border-radius:var(--icen-radius-md);font-size:var(--icen-density-font-size-sm)">
+  <div class="icen-scroll-area icen-scroll-area--y icen-scroll-area--sm" tabindex="0" style="width:160px;height:140px;padding:8px;background:var(--icen-token-bg-soft);border-radius:var(--icen-radius-md);font-size:var(--icen-density-font-size-sm)">
     <div style="height:280px;display:flex;flex-direction:column;gap:6px">
       <div class="demo-box">条 1</div>
       <div class="demo-box">条 2</div>
@@ -2389,7 +2389,7 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
       <div class="demo-box">条 7</div>
     </div>
   </div>
-  <div class="icen-scroll-area icen-scroll-area--x icen-scroll-area--lg" style="max-width:240px;padding-bottom:8px">
+  <div class="icen-scroll-area icen-scroll-area--x icen-scroll-area--lg" tabindex="0" style="max-width:240px;padding-bottom:8px">
     <div style="display:flex;gap:8px;width:520px">
       <div class="demo-box" style="flex-shrink:0">横向 A</div>
       <div class="demo-box" style="flex-shrink:0">横向 B</div>
@@ -2399,7 +2399,7 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     </div>
   </div>
 </div>`,
-    usage: `<div class="icen-scroll-area icen-scroll-area--inset" style="height:200px">
+    usage: `<div class="icen-scroll-area icen-scroll-area--inset" tabindex="0" style="height:200px">
   超长内容…
 </div>
 <!-- 变体：--sm/--lg（滚动条宽度）/--x/--y/--both（轴向）/--inset（带边界）/--fade（渐隐遮罩）-->`,

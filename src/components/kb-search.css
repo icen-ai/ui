@@ -61,7 +61,7 @@
 }
 .icen-kb-range::-webkit-slider-runnable-track {
   height: 3px;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--icen-token-line-soft);
 }
 .icen-kb-range::-webkit-slider-thumb {
@@ -80,7 +80,7 @@
 }
 .icen-kb-range::-moz-range-track {
   height: 3px;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--icen-token-line-soft);
 }
 .icen-kb-range::-moz-range-thumb {
@@ -275,7 +275,7 @@
   color: var(--icen-token-text-muted);
   background: transparent;
   border: none;
-  border-radius: 4px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 4px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   cursor: pointer;
   transition: color 0.16s ease-out, background-color 0.16s ease-out;
 }
@@ -476,7 +476,7 @@
   width: 88px;
   height: 3px;
   overflow: hidden;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   background: var(--icen-token-line-soft);
 }
 .icen-kb-score-dual i {
@@ -756,7 +756,7 @@
   transition: background-color 0.16s ease-out;
 }
 .icen-kb-rerank-col.is-missing {
-  opacity: 0.6;
+  /* 落选列不降透明（透明会被 axe 算进对比度）：落选语义由 muted 文案承担 */
 }
 .icen-kb-rerank-rank {
   flex: 0 0 auto;
@@ -776,7 +776,7 @@
 .icen-kb-rerank-missing {
   flex: 1 1 auto;
   font-size: 11px;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
 /* delta 箭头：上升绿 / 下降红 / 持平或单侧缺失 — */
 .icen-kb-rerank-delta {

@@ -132,11 +132,11 @@
 }
 
 /* 语法 token：color-mix 半透明降饱和（语法层级，非装饰） */
-.icen-kb-sql-tok--kw  { color: color-mix(in srgb, var(--icen-token-accent) 85%, transparent); }
+.icen-kb-sql-tok--kw  { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); }
 .icen-kb-sql-tok--str { color: color-mix(in srgb, var(--icen-token-success) 82%, transparent); }
-.icen-kb-sql-tok--num { color: color-mix(in srgb, var(--icen-token-warning) 85%, transparent); }
-.icen-kb-sql-tok--fn  { color: color-mix(in srgb, var(--icen-token-info) 88%, transparent); }
-.icen-kb-sql-tok--cmt { color: color-mix(in srgb, var(--icen-token-text-faint) 72%, transparent); font-style: italic; }
+.icen-kb-sql-tok--num { color: color-mix(in srgb, var(--icen-token-warning) 50%, var(--icen-token-text)); }
+.icen-kb-sql-tok--fn  { color: var(--icen-token-info); }
+.icen-kb-sql-tok--cmt { color: var(--icen-token-text-muted); font-style: italic; }
 
 /* 修正卡（warning 边框：「修复已就绪」心智） */
 .icen-kb-sql-fix {
@@ -609,7 +609,7 @@
   outline-offset: 1px;
 }
 .icen-kb-chart-chip.is-active {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
   border-color: color-mix(in srgb, var(--icen-token-accent) 55%, transparent);
   background: var(--icen-token-accent-subtle, transparent);
 }

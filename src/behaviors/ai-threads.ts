@@ -79,6 +79,7 @@ function dispatch<K extends keyof IcenEventMap>(node: Element, name: K, detail: 
 /* ── 单条会话行 ── */
 
 function buildThread(item: AiThreadItem, activeKey?: string): HTMLElement {
+  /* 行是中性容器；选择与动作是两个平级真按钮——不再有嵌套交互 */
   const row = h('div', 'icen-ai-thread');
   if (item.key) row.dataset.icenKey = item.key;
   if (item.archived) row.classList.add('is-archived');
@@ -86,16 +87,17 @@ function buildThread(item: AiThreadItem, activeKey?: string): HTMLElement {
     row.classList.add('is-active');
     row.setAttribute('aria-current', 'true');
   }
-  row.setAttribute('role', 'button');
-  row.tabIndex = 0;
 
+  const main = h('button', 'icen-ai-thread-main');
+  main.type = 'button';
   if (item.icon) {
     const iconWrap = h('span', 'icen-ai-thread-icon');
     const svg = svgIcon(item.icon);
     if (svg) iconWrap.appendChild(svg);
-    row.appendChild(iconWrap);
+    main.appendChild(iconWrap);
   }
-  row.appendChild(h('span', 'icen-ai-thread-label', item.label));
+  main.appendChild(h('span', 'icen-ai-thread-label', item.label));
+  row.appendChild(main);
 
   /* 动作钮：只做事件挂载点（菜单本体由宿主实现），不吞选择点击之外的语义 */
   const action = h('button', 'icen-ai-thread-action');
@@ -231,26 +233,18 @@ export function initAiThreads(root?: ParentNode): () => void {
       toggleGroup(head);
       return;
     }
-    const thread = t.closest<HTMLElement>('.icen-ai-thread');
-    if (thread) selectThread(thread);
+    const main = t.closest<HTMLElement>('.icen-ai-thread-main');
+    if (main) {
+      const thread = main.closest<HTMLElement>('.icen-ai-thread');
+      if (thread) selectThread(thread);
+    }
   };
 
-  const onKeydown = (e: Event): void => {
-    const ke = e as KeyboardEvent;
-    if (ke.key !== 'Enter' && ke.key !== ' ') return;
-    const t = ke.target instanceof Element ? ke.target : null;
-    const thread = t?.closest<HTMLElement>('.icen-ai-thread');
-    if (!thread || thread.getAttribute('role') !== 'button') return;
-    ke.preventDefault();
-    selectThread(thread);
-  };
-
+  /* 主按钮是真 button：Enter/Space 走原生 click，无需额外 keydown 通道 */
   target.addEventListener('click', onClick);
-  target.addEventListener('keydown', onKeydown);
 
   return () => {
     target.removeEventListener('click', onClick);
-    target.removeEventListener('keydown', onKeydown);
     marked.__icenAiThreadsInit = false;
   };
 }

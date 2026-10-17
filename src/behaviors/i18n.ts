@@ -632,6 +632,7 @@ export interface IcenLocale {
   'kbEval.avgB': string;
   'kbEval.compare': string;
   'kbEval.expected': string;
+  'kbEval.runSelectAria': string;
   'kbEval.gradeImprovement': string;
   'kbEval.gradeRegression': string;
   'kbEval.gradeTie': string;
@@ -1452,6 +1453,7 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'kbEval.avgA': 'A 均分 {p0}',
   'kbEval.avgB': 'B 均分 {p0}',
   'kbEval.compare': '对比',
+  'kbEval.runSelectAria': '选择对比运行',
   'kbEval.expected': '期望',
   'kbEval.gradeImprovement': '提升',
   'kbEval.gradeRegression': '回归',
@@ -2272,6 +2274,7 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   /* ── kbEval ── */
   'kbEval.avgA': 'A avg {p0}',
   'kbEval.avgB': 'B avg {p0}',
+  'kbEval.runSelectAria': '选择对比运行',
   'kbEval.compare': 'Compare',
   'kbEval.expected': 'Expected',
   'kbEval.gradeImprovement': 'Improvement',

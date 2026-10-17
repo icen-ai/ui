@@ -955,6 +955,7 @@ function buildAuditBody(body: HTMLElement, entries: AiAuditEntry[], opts: { limi
   /* 最近条目（最新在前） */
   const recent = entries.slice(-limit).reverse();
   const list = h('div', 'icen-ai-audit-list');
+  list.tabIndex = 0; /* 可滚动区键盘可达（scrollable-region-focusable） */
   for (const e of recent) {
     const item = h('div', `icen-ai-audit-item is-${e.status === 'ok' ? 'done' : 'error'}`);
     item.appendChild(h('span', 'icen-ai-audit-dot'));
