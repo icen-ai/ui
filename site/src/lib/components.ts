@@ -93,8 +93,6 @@ const svgEye = `<svg data-icen-icon="show" width="14" height="14" viewBox="0 0 2
 const svgEyeOff = `<svg data-icen-icon="hide" hidden width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${iconPath('eye-off')}"/></svg>`;
 const svgSearch = iconHTML('search', { size: 14 });
 const svgPlus = iconHTML('plus');
-const svgDown = iconHTML('chevron-down', { size: 14 });
-const svgUp = iconHTML('chevron-up', { size: 14 });
 const starSvg = iconHTML('star');
 const chevronSvg = iconHTML('chevron-down');
 const accChevron = iconHTML('chevron-down', { className: 'icen-accordion-chevron' });
@@ -888,16 +886,16 @@ document.querySelectorAll('.icen-radio-group').forEach((group) => {
     slug: 'segmented',
     name: '分段选择',
     group: '表单',
-    desc: '同族四件：分段控件（两档尺寸）、toggle-group、数字步进器、OTP 单元格（输入跳格 / 粘贴分摊）。',
+    desc: '同族四件：分段控件（两档尺寸）、toggle-group、数字步进器、OTP 单元格（输入跳格 / 粘贴分摊）。分段是完整 radiogroup：方向键移动并选中（RTL 镜像）、Home/End 跳首尾；步进器按 min/max 钳制。',
     demo: `<div class="demo-row">
   <div class="icen-segmented icen-control" role="radiogroup" aria-label="统计周期">
-    <button class="icen-segmented-item icen-motion icen-pressable" type="button">日</button>
-    <button class="icen-segmented-item icen-motion icen-pressable is-active" type="button">周</button>
-    <button class="icen-segmented-item icen-motion icen-pressable" type="button">月</button>
+    <button class="icen-segmented-item icen-motion icen-pressable" type="button" role="radio" aria-checked="false">日</button>
+    <button class="icen-segmented-item icen-motion icen-pressable is-active" type="button" role="radio" aria-checked="true">周</button>
+    <button class="icen-segmented-item icen-motion icen-pressable" type="button" role="radio" aria-checked="false">月</button>
   </div>
   <div class="icen-segmented icen-segmented--sm icen-control" role="radiogroup" aria-label="小号分段">
-    <button class="icen-segmented-item icen-motion icen-pressable is-active" type="button">列表</button>
-    <button class="icen-segmented-item icen-motion icen-pressable" type="button">网格</button>
+    <button class="icen-segmented-item icen-motion icen-pressable is-active" type="button" role="radio" aria-checked="true">列表</button>
+    <button class="icen-segmented-item icen-motion icen-pressable" type="button" role="radio" aria-checked="false">网格</button>
   </div>
 </div>
 <div class="demo-row" style="margin-top:16px">
@@ -909,9 +907,9 @@ document.querySelectorAll('.icen-radio-group').forEach((group) => {
 </div>
 <div class="demo-row" style="margin-top:16px">
   <div class="icen-stepper icen-control">
-    <button class="icen-stepper-btn icen-pressable" type="button" data-icen-step="-1" aria-label="减少">${svgDown}</button>
+    <button class="icen-stepper-btn icen-pressable" type="button" data-icen-step="-1" aria-label="减少">${iconHTML('minus')}</button>
     <input class="icen-stepper-input" type="number" value="3" min="0" max="10" step="1" aria-label="数量" />
-    <button class="icen-stepper-btn icen-pressable" type="button" data-icen-step="1" aria-label="增加">${svgUp}</button>
+    <button class="icen-stepper-btn icen-pressable" type="button" data-icen-step="1" aria-label="增加">${iconHTML('plus')}</button>
   </div>
   <div class="icen-otp" role="group" aria-label="短信验证码">
     <input class="icen-otp-cell" maxlength="1" inputmode="numeric" aria-label="第 1 位" />
@@ -920,30 +918,23 @@ document.querySelectorAll('.icen-radio-group').forEach((group) => {
     <input class="icen-otp-cell" maxlength="1" inputmode="numeric" aria-label="第 4 位" />
   </div>
 </div>`,
-    usage: `import { initInput } from '@icen.ai/ui/behaviors/input';
-initInput(); // OTP 单元格的输入跳格 / 粘贴分摊由 input behavior 处理
-// segmented / toggle-group / stepper 为纯 CSS 契约，选中态由使用方切换`,
-    script: `document.querySelectorAll('.icen-segmented, .icen-toggle-group').forEach((group) => {
-  group.querySelectorAll('.icen-segmented-item, .icen-toggle-item').forEach((item) => {
+    usage: `import { initSegmented, initStepper, initInput } from '@icen.ai/ui/kit/segmented';
+initSegmented(); // 点击 + ←/→/Home/End（RTL 镜像），选中跟随焦点，派 icen:segmented-change
+initStepper();   // ±step 并 clamp 到 min/max，派 icen:stepper-change
+initInput();     // OTP 单元格的输入跳格 / 粘贴分摊
+// toggle-group 为纯 CSS 契约，选中态由使用方切换`,
+    script: `// toggle-group 的互斥切换是页面级演示（segmented/stepper 已由 behaviors 接管）
+const ac = new AbortController();
+document.querySelectorAll('.icen-toggle-group').forEach((group) => {
+  group.querySelectorAll('.icen-toggle-item').forEach((item) => {
     item.addEventListener('click', () => {
-      group.querySelectorAll('.icen-segmented-item, .icen-toggle-item').forEach((it) => {
+      group.querySelectorAll('.icen-toggle-item').forEach((it) => {
         it.classList.toggle('is-active', it === item);
       });
-    });
+    }, { signal: ac.signal });
   });
 });
-document.querySelectorAll('.icen-stepper').forEach((s) => {
-  const input = s.querySelector('.icen-stepper-input');
-  if (!(input instanceof HTMLInputElement)) return;
-  s.querySelectorAll('.icen-stepper-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const step = Number(btn.getAttribute('data-icen-step')) || 1;
-      const min = input.min === '' ? -Infinity : Number(input.min);
-      const max = input.max === '' ? Infinity : Number(input.max);
-      input.value = String(Math.min(max, Math.max(min, (Number(input.value) || 0) + step)));
-    });
-  });
-});`,
+return () => ac.abort();`,
 
     behaviors: ['input', 'controls'],
     behaviorInit: { input: 'initInput', controls: ['initSegmented', 'initStepper'] },

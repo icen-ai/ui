@@ -259,6 +259,12 @@ export const initStepper = createDelegatedInit({ click: onStepperClick });
 
 /* ── 3. segmented ── */
 
+function segmentedItems(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>('.icen-segmented-item')).filter(
+    (it) => it.closest('.icen-segmented') === container && !isDisabled(it),
+  );
+}
+
 function selectSegmentedItem(item: HTMLElement): void {
   const container = item.closest<HTMLElement>('.icen-segmented');
   if (!container) return;
@@ -288,13 +294,42 @@ function onSegmentedClick(ev: MouseEvent): void {
   selectSegmentedItem(item);
 }
 
+/* radiogroup 键盘契约：←/→ 移动并选中（RTL 按视觉方向镜像），Home/End 跳首尾；
+   跳过禁用项；焦点跟随移动到目标项（按钮序列不拆 Tab 序，仅方向键接管） */
+function onSegmentedKeydown(ev: KeyboardEvent): void {
+  const key = ev.key;
+  if (key !== 'ArrowLeft' && key !== 'ArrowRight' && key !== 'Home' && key !== 'End') return;
+  const t = ev.target;
+  if (!(t instanceof Element)) return;
+  const item = t.closest<HTMLElement>('.icen-segmented-item');
+  if (!item) return;
+  const container = item.closest<HTMLElement>('.icen-segmented');
+  if (!container) return;
+  const items = segmentedItems(container);
+  if (items.length === 0) return;
+  const cur = items.indexOf(item);
+  let next: HTMLElement | undefined;
+  if (key === 'Home') next = items[0];
+  else if (key === 'End') next = items[items.length - 1];
+  else {
+    if (cur === -1) return;
+    const rtl = getComputedStyle(container).direction === 'rtl';
+    const delta = key === 'ArrowRight' ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
+    next = items[(cur + delta + items.length) % items.length];
+  }
+  if (!next || next === item) { if (key === 'Home' || key === 'End') ev.preventDefault(); return; }
+  ev.preventDefault();
+  selectSegmentedItem(next);
+  next.focus({ preventScroll: true });
+}
+
 /**
  * 接线分段控件（document 级委托，重复调用幂等）。
  * .icen-segmented 内 .icen-segmented-item 点击 → 组内 .is-active 互斥 + role="radio" 项同步
  * aria-checked，派 icen:segmented-change { el: 容器, value: data-icen-value ?? String(index), index }。
  * 返回销毁函数：摘除委托并复位幂等标记，销毁后可重新 initSegmented。SSR 下返回 no-op。
  */
-export const initSegmented = createDelegatedInit({ click: onSegmentedClick });
+export const initSegmented = createDelegatedInit({ click: onSegmentedClick, keydown: onSegmentedKeydown });
 
 /* ── 4. steps ── */
 

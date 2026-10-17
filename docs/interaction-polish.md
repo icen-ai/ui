@@ -389,6 +389,13 @@
 - 视觉基线零变更：共享几何与原手写件在各场景光学兼容（1% 容差内），e2e 视觉套件无需重基线。
 - 验证：verify 756 测试、137 条浏览器回归、129 页×两档巡检 0 问题。
 
+### 第二十一轮：分段控件的 radiogroup 键盘契约与示例去手写接线
+
+- initSegmented 补上缺失的键盘层：←/→ 移动并选中（选中跟随焦点，RTL 按视觉方向镜像）、Home/End 跳首尾、禁用项跳过、边界回卷；aria-checked/is-active 与事件派发沿用同一条 selectSegmentedItem 通道。
+- 示例治病根：分段示例的容器是 radiogroup 但条目缺 role/aria-checked（axe required-children 隐患），且示例脚本手写点击切换 + 手写步进加减——与 initSegmented/initStepper 双驱动（步进曾一次 +2）。示例删掉手写接线，全部由 behavior 接管；usage 改教 kit 一行的正确接法。
+- 步进器图标从 chevron（下拉语义冒充加减）改为 minus/plus 诚实算术几何。
+- 验证：3 条 DOM 用例（方向键/回卷/Home/End/禁用跳过/RTL/重复点击不双派）+ 2 条浏览器专项（radiogroup 全流程 + axe、步进钳制与图标几何）。全量：verify 759 测试、139 条浏览器回归、129 页×两档巡检 0 问题。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。
