@@ -20,7 +20,7 @@ const THEME_VARIANT_PAGES = [
   { name: 'icen-btn', path: '/components/btn/' },
 ];
 
-async function shoot(browser: Browser, name: string, path: string, init?: () => void) {
+async function shoot(browser: Browser, name: string, path: string, init?: (() => void) | string) {
   const context = await browser.newContext();
   if (init) await context.addInitScript(init);
   const page = await context.newPage();
@@ -42,9 +42,14 @@ async function settle(page: import('@playwright/test').Page, path: string) {
   await page.waitForTimeout(3000);
 }
 
+// 贡献日历随真实日期每天位移——图表页冻结时钟到基线日，视觉基线才可重复
+const FREEZE_DATE = `(() => { const RealDate = Date; const fixed = new RealDate('2026-10-17T12:00:00');
+  class FrozenDate extends RealDate { constructor(...args) { super(...(args.length ? args : [fixed])); } static now() { return fixed.getTime(); } }
+  Object.defineProperty(window, 'Date', { value: FrozenDate }); })();`;
+
 for (const p of PAGES) {
   test(`light: ${p.path}`, async ({ browser }) => {
-    await shoot(browser, p.name, p.path);
+    await shoot(browser, p.name, p.path, p.name === 'charts' ? FREEZE_DATE : undefined);
   });
 }
 

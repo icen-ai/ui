@@ -38,6 +38,8 @@ export const ICON_PATHS = {
   'triangle-alert': 'M8.7 3.5a1.5 1.5 0 0 1 2.6 0l6.4 11.3a1.5 1.5 0 0 1-1.3 2.2H3.6a1.5 1.5 0 0 1-1.3-2.2ZM10 7.2v4.4M10 14v.15',
   refresh: 'M16.5 7.2A7 7 0 0 0 4.3 5.9L2.5 8M2.5 3.5V8H7M3.5 12.8a7 7 0 0 0 12.2 1.3l1.8-2.1M13 12h4.5v4.5',
   external: 'M11.5 3H17v5.5M17 3l-8 8M8 3H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3',
+  home: 'M3.5 10.25 10 4l6.5 6.25M5.75 8.75v7a.75.75 0 0 0 .75.75h7.5a.75.75 0 0 0 .75-.75v-7',
+  settings: 'M3.5 5.5h13M3.5 10h13M3.5 14.5h13M7 4v3M12.5 8.5v3M8 13v3',
 } as const;
 export type IconName = keyof typeof ICON_PATHS | (string & {});
 export interface IconOptions {

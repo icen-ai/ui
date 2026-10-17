@@ -56,7 +56,7 @@
 - [ ] context-menu
 - [x] popover
 - [ ] tooltip
-- [ ] command-palette
+- [x] command-palette
 - [ ] card
 - [ ] empty
 - [ ] avatar
@@ -363,6 +363,16 @@
 - 进场动效收敛到菜单同配方（scale(.985)±3px），修正 menu.css / base.css 的过时注释；portal 面板退场期不影响次个面板打开（design 专项选择器排除 closing 态）。
 - 文档示例改声明式：筛选面板带标题/关闭/输入/取消/应用全插槽，应用回执 toast 含真实关键词；popover 入 SLUG_INIT（kit 一行入口带 initPopover）。
 - 验证：5 条新 DOM 用例（委托开合/关闭钮/退场重入幂等/dispose 结算/立即与动画两路）+ 既有 dialog-focus/theme-switcher 适配后全过；3 条浏览器专项（声明式全流程 + 焦点归还 + 快速重开唯一性、双原语×明暗 axe、移动 RTL 视口钳制与换页清理）。全量：verify 751 测试、130 条浏览器回归、129 页×两档巡检 0 问题。
+
+### 第十八轮：命令面板的 combobox 语义、选中表面与可中断淡出
+
+- 语义补全：输入框成为真 combobox（role + aria-expanded + aria-controls 指向 listbox 化的结果区），条目自动获得稳定 id 与 role=option，activedescendant 随光标同步，aria-selected 镜像当前候选；新增 Home/End 跳首尾（↑↓ 回卷不变）。
+- 选中候选改用共享选中表面（accent 微底 + 内描边），不再把文字刷成 accent 深色；图标着色保留。forced-colors 下 double outline 保底。
+- 关闭两段式：焦点/滚动锁/事件立即结算，backdrop 淡出落定后才 hidden；淡出中重开从当前位置续接；`closeCommandPalette(id, { immediate })` 供销毁/换页；未接管的强制隐藏语义保留。
+- 进场收敛（-6px / .985 / fast），exit 与 popover/menu 同语言；i18n 无关（无新文案）。
+- 图标纪律：新增共享 home / settings（滑杆）两枚 20px 原创几何，演示面板的 24px 内联 SVG 全部迁到共享图标。
+- 顺带清两颗定时炸弹：date-picker 的 .is-today 文字从 accent（4.06:1）改 accent-text（此前只在「今天=被点那天」时偶然通过 axe）；图表页视觉基线冻结时钟到基线日（贡献日历每天位移曾让基线隔夜即腐）。
+- 验证：5 条新 DOM 用例（combobox 接线/activedescendant/Home/End 回卷/退场续接/immediate 与销毁释放滚动锁）+ 4 条浏览器专项（演示面板全流程、⌘K 落全站搜索面板、双原语×明暗 axe、软退出焦点归还、移动视口与外点）。全量：verify 756 测试、134 条浏览器回归、129 页×两档巡检 0 问题。
 
 ### 下一批待处理（保留完整目标）
 

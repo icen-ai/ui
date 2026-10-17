@@ -81,6 +81,9 @@ let prevBodyOverflow = '';
 let keyHandler: ((e: KeyboardEvent) => void) | null = null;
 let globalKeyHandler: ((e: KeyboardEvent) => void) | null = null;
 let teardown: (() => void) | null = null;
+/* 退场结算（backdrop 的 hidden 延迟到淡出落定；焦点/滚动锁/事件立即结算） */
+let closingState: { id: string; backdrop: HTMLElement; timer: number; onEnd: (event: Event) => void } | null = null;
+const CP_EXIT_FALLBACK_MS = 240;
 
 /* 编程条目运行时登记：DOM → 命令定义（供自定义过滤）+ 防与 Enter/点击路径双派 menu-select */
 const programmaticCommands = new WeakMap<HTMLElement, CommandPaletteCommand>();
@@ -152,9 +155,37 @@ function isDisabledItem(el: HTMLElement): boolean {
 
 function setActive(panel: HTMLElement, idx: number): void {
   const items = getVisibleItems(panel);
-  items.forEach((el, i) => el.classList.toggle('is-active', i === idx));
+  items.forEach((el, i) => {
+    el.classList.toggle('is-active', i === idx);
+    el.setAttribute('aria-selected', String(i === idx));
+  });
   const active = items[idx];
+  const input = panel.querySelector<HTMLElement>('.icen-command-palette-input');
+  if (input) {
+    if (active?.id) input.setAttribute('aria-activedescendant', active.id);
+    else input.removeAttribute('aria-activedescendant');
+  }
   if (active) revealPopoverItem(active,panel.querySelector<HTMLElement>('.icen-command-palette-body') ?? panel);
+}
+
+/* combobox 语义：input（combobox + expanded + controls）↔ body（listbox）↔ item（option + 稳定 id） */
+let itemSequence = 0;
+function paintComboboxSemantics(panel: HTMLElement): void {
+  const input = panel.querySelector<HTMLElement>('.icen-command-palette-input');
+  const body = panel.querySelector<HTMLElement>('.icen-command-palette-body');
+  if (body) {
+    if (!body.id) body.id = `icen-cp-body-${++itemSequence}`;
+    body.setAttribute('role', 'listbox');
+  }
+  if (input) {
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-expanded', 'true');
+    if (body?.id) input.setAttribute('aria-controls', body.id);
+  }
+  panel.querySelectorAll<HTMLElement>('.icen-command-palette-item').forEach((item) => {
+    item.setAttribute('role', 'option');
+    if (!item.id) item.id = `icen-cp-item-${++itemSequence}`;
+  });
 }
 
 function filterPanel(panel: HTMLElement, query: string): void {
@@ -221,7 +252,15 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
 
   restoreFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   openId = id;
+  /* 重开中断退场：取消 delayed hidden，从当前淡出位置续接 */
+  if (closingState) {
+    window.clearTimeout(closingState.timer);
+    closingState.backdrop.removeEventListener('transitionend', closingState.onEnd);
+    delete closingState.backdrop.dataset.icenState;
+    closingState = null;
+  }
   backdrop.hidden = false;
+  paintComboboxSemantics(panel);
 
   prevBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
@@ -253,6 +292,14 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
         ? (cur + 1) % items.length
         : (cur - 1 + items.length) % items.length;
       setActive(panel, next);
+      return;
+    }
+    /* Home/End 跳首末（与菜单/列表一致） */
+    if (e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      const items = getVisibleItems(panel);
+      if (items.length === 0) return;
+      setActive(panel, e.key === 'Home' ? 0 : items.length - 1);
       return;
     }
     if (e.key === 'Enter') {
@@ -287,11 +334,16 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
  * 关闭指定 id 的命令面板（backdrop 已被外部移除时也照常复位状态/监听/滚动锁）。
  * 关闭已打开的面板后从 document 广播 icen:command-palette-close；
  * 关闭未被接管打开的面板（幂等空操作路径）不派发。
+ * 默认带一段可中断的淡出（hidden 延迟到落定）；opts.immediate 供销毁/换页路径跳过。
  */
-export function closeCommandPalette(id: string): void {
+export function closeCommandPalette(id: string, opts?: { immediate?: boolean }): void {
   if (typeof document === 'undefined') return;
   const backdrop = findBackdrop(id);
-  if (backdrop) backdrop.hidden = true;
+  if (backdrop && openId !== id) {
+    /* 未被接管打开的面板：保持既有「强制隐藏」语义（不经过退场阶段） */
+    backdrop.hidden = true;
+    return;
+  }
   if (openId !== id) return;
   openId = null;
   if (keyHandler) {
@@ -302,6 +354,28 @@ export function closeCommandPalette(id: string): void {
   if (restoreFocusTo && restoreFocusTo.isConnected) restoreFocusTo.focus();
   restoreFocusTo = null;
   emitIcen(document, 'icen:command-palette-close', {});
+  if (!backdrop) return;
+
+  const calm = opts?.immediate || (typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (calm || !backdrop.isConnected) {
+    backdrop.hidden = true;
+    return;
+  }
+  backdrop.dataset.icenState = 'closing';
+  const finalize = (): void => {
+    if (!closingState || closingState.backdrop !== backdrop) return;
+    window.clearTimeout(closingState.timer);
+    backdrop.removeEventListener('transitionend', closingState.onEnd);
+    closingState = null;
+    delete backdrop.dataset.icenState;
+    backdrop.hidden = true;
+  };
+  const onEnd = (event: Event): void => {
+    if (event.target === backdrop && (event as TransitionEvent).propertyName === 'opacity') finalize();
+  };
+  backdrop.addEventListener('transitionend', onEnd);
+  closingState = { id, backdrop, timer: window.setTimeout(finalize, CP_EXIT_FALLBACK_MS), onEnd };
 }
 
 /**
@@ -393,7 +467,7 @@ export function initCommandPalette(root?: ParentNode): () => void {
       window.removeEventListener('keydown', globalKeyHandler);
       globalKeyHandler = null;
     }
-    if (openId) closeCommandPalette(openId);
+    if (openId) closeCommandPalette(openId, { immediate: true });
     /* 复位幂等标记（teardown 本身即标记），销毁后可重新 init */
     teardown = null;
   };

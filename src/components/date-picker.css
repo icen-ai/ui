@@ -177,7 +177,7 @@
 .icen-date-picker-cell:hover { background: var(--icen-token-fill-1); }
 .icen-date-picker-cell.is-today {
   border: 1px solid var(--icen-token-accent);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
   font-weight: 600;
 }
 .icen-date-picker-cell.is-selected {

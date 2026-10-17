@@ -29,8 +29,12 @@
  *     </div>
  *   </div>
  *
- * behavior 接管：搜索过滤、↑↓ 导航、Enter 执行、ESC / 外点 / backdrop 关闭、
+ * behavior 接管：搜索过滤、↑↓/Home/End 导航、Enter 执行、ESC / 外点 / backdrop 关闭、
  * 焦点陷阱、按 ⌘K / Ctrl+K 全局打开（可选 data-icen-command-palette-key）。
+ * 语义：input 为 combobox（expanded + controls + activedescendant），body 为 listbox，
+ * item 为 role=option（自动补稳定 id 与 aria-selected）。
+ * 关闭有两段：焦点/滚动锁立即结算，hidden 待淡出落定（backdrop[data-icen-state='closing']）；
+ * 重开中断续接；销毁/reduce-motion 走立即关闭。
  */
 
 .icen-command-palette-backdrop {
@@ -45,9 +49,16 @@
   background: color-mix(in srgb, var(--icen-token-text) 40%, transparent);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  animation: icen-cp-fade-in var(--icen-tx-normal);
+  animation: icen-cp-fade-in var(--icen-tx-fast);
+  /* 退场走过渡（behavior 的 closing 阶段；可中断续接） */
+  transition: opacity var(--icen-tx-fast) var(--icen-ease-out);
 }
 .icen-command-palette-backdrop[hidden] { display: none; }
+.icen-command-palette-backdrop[data-icen-state='closing'] {
+  animation: none;
+  opacity: 0;
+  pointer-events: none;
+}
 
 .icen-command-palette {
   display: flex;
@@ -60,7 +71,11 @@
   border: 1px solid var(--icen-token-outline);
   border-radius: var(--icen-radius-lg);
   box-shadow: var(--icen-token-shadow-overlay);
-  animation: icen-cp-scale-in var(--icen-tx-slow);
+  animation: icen-cp-scale-in var(--icen-tx-fast) var(--icen-ease-out);
+  transition: transform var(--icen-tx-fast) var(--icen-ease-out);
+}
+.icen-command-palette-backdrop[data-icen-state='closing'] .icen-command-palette {
+  transform: translateY(2px) scale(0.99);
 }
 .icen-command-palette:focus { outline: none; }
 
@@ -148,8 +163,10 @@
 }
 .icen-command-palette-item:hover { background: var(--icen-token-fill-1); }
 .icen-command-palette-item.is-active {
-  background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent-deep, var(--icen-token-accent));
+  /* 当前候选 = 选中表面（accent 微底 + 内描边），不改文字色；与菜单/选择器同语言 */
+  background: var(--icen-token-accent-faint);
+  color: var(--icen-token-text);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 65%, var(--icen-token-line-soft));
 }
 .icen-command-palette-item:focus-visible {
   outline: none;
@@ -167,7 +184,6 @@
 }
 .icen-command-palette-item.is-active .icen-command-palette-item-icon { color: var(--icen-token-accent); }
 .icen-command-palette-item-icon svg { width: 16px; height: 16px; }
-
 .icen-command-palette-item-label {
   flex: 1;
   min-width: 0;
@@ -183,7 +199,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.icen-command-palette-item.is-active .icen-command-palette-item-hint { color: color-mix(in srgb, var(--icen-token-accent) 70%, var(--icen-token-text-faint)); }
 
 .icen-command-palette-item-kbd {
   font-family: var(--icen-font-mono);
@@ -230,7 +245,7 @@
   to { opacity: 1; }
 }
 @keyframes icen-cp-scale-in {
-  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  from { opacity: 0; transform: translateY(-6px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -240,6 +255,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .icen-command-palette-backdrop { animation: none; }
-  .icen-command-palette { animation: none; }
+  .icen-command-palette-backdrop { animation: none; transition: none; }
+  .icen-command-palette { animation: none; transition: none; }
+}
+
+@media (forced-colors: active) {
+  .icen-command-palette-item.is-active { outline: 3px double Highlight; outline-offset: -3px; }
 }

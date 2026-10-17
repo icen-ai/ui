@@ -1327,7 +1327,7 @@ const dispose = initTooltip(); // 可省略容器；动态插入同样接入，�
     slug: 'command-palette',
     name: '命令面板',
     group: '浮层',
-    desc: '与 behaviors/command-palette 配套：⌘K / Ctrl+K 唤起的命令面板，搜索过滤、↑↓ 导航、Enter 执行、ESC 关闭，常用于编辑器 / 后台快速跳转。',
+    desc: '⌘K / Ctrl+K 唤起。输入框是完整 combobox（listbox + activedescendant），↑↓ 回卷、Home/End 跳首尾、Enter 执行、ESC 或外点关闭；选中候选是安静的表面而非文字变色。关闭有一段可打断的淡出，销毁与减少动效时立即收束。支持编程条目（openCommandPalette 传 items + 自定义过滤）与 keep-open 连续操作。',
     demo: `<div class="demo-row">
   <button class="icen-btn icen-btn-primary" data-icen-command-palette-open="demo-cp">打开命令面板</button>
   <span class="icen-dim" style="font-size:12px;align-self:center">或按 <kbd class="icen-kbd icen-kbd--sm">Ctrl</kbd> + <kbd class="icen-kbd icen-kbd--sm">K</kbd></span>
@@ -1336,7 +1336,7 @@ const dispose = initTooltip(); // 可省略容器；动态插入同样接入，�
 <div class="icen-command-palette-backdrop" data-icen-command-palette="demo-cp" hidden>
   <div class="icen-command-palette">
     <div class="icen-command-palette-search">
-      <span class="icen-command-palette-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+      <span class="icen-command-palette-search-icon">${iconHTML('search')}</span>
       <input class="icen-command-palette-input" placeholder="输入命令名或关键字…" />
       <kbd class="icen-command-palette-esc">ESC</kbd>
     </div>
@@ -1344,33 +1344,33 @@ const dispose = initTooltip(); // 可省略容器；动态插入同样接入，�
       <div class="icen-command-palette-group">
         <p class="icen-command-palette-group-label">操作</p>
         <button class="icen-command-palette-item" type="button" data-icen-command-palette-keyword="create new">
-          <span class="icen-command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          <span class="icen-command-palette-item-icon">${iconHTML('plus')}</span>
           <span class="icen-command-palette-item-label">新建项目</span>
           <kbd class="icen-command-palette-item-kbd">⌘N</kbd>
         </button>
         <button class="icen-command-palette-item" type="button" data-icen-command-palette-keyword="open file">
-          <span class="icen-command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></span>
+          <span class="icen-command-palette-item-icon">${iconHTML('file')}</span>
           <span class="icen-command-palette-item-label">打开文件</span>
           <kbd class="icen-command-palette-item-kbd">⌘O</kbd>
         </button>
         <button class="icen-command-palette-item" type="button" data-icen-command-palette-keyword="search find">
-          <span class="icen-command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+          <span class="icen-command-palette-item-icon">${iconHTML('search')}</span>
           <span class="icen-command-palette-item-label">全局搜索</span>
         </button>
       </div>
       <div class="icen-command-palette-group">
         <p class="icen-command-palette-group-label">导航</p>
         <button class="icen-command-palette-item" type="button" data-icen-command-palette-keyword="goto dashboard home">
-          <span class="icen-command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+          <span class="icen-command-palette-item-icon">${iconHTML('home')}</span>
           <span class="icen-command-palette-item-label">回到首页</span>
           <span class="icen-command-palette-item-hint">/</span>
         </button>
         <button class="icen-command-palette-item" type="button" data-icen-command-palette-keyword="settings preferences config">
-          <span class="icen-command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span>
+          <span class="icen-command-palette-item-icon">${iconHTML('settings')}</span>
           <span class="icen-command-palette-item-label">打开设置</span>
         </button>
         <button class="icen-command-palette-item" type="button" data-icen-command-palette-keyword="theme dark light color">
-          <span class="icen-command-palette-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
+          <span class="icen-command-palette-item-icon">${iconHTML('sun')}</span>
           <span class="icen-command-palette-item-label">切换主题</span>
           <span class="icen-command-palette-item-hint">预设 6 种</span>
         </button>
