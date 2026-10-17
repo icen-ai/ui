@@ -945,12 +945,14 @@ return () => ac.abort();`,
     group: '表单',
     desc: '点击 / Enter / Space 打开文件选择；拖入高亮，drop 后文件写入 input.files 并派发 change。增强（data-icen-upload-list）：自动渲染文件列表，图片缩略图、大小格式化、单文件移除、accept/max-size/max-files 校验。',
     demo: `<div class="demo-col">
-  <div class="icen-upload icen-control icen-lift icen-focus-ring" data-icen-upload-list data-icen-max-size="5242880" data-icen-max-files="6" role="button" tabindex="0" aria-label="上传文件" style="width:100%;max-width:480px">
-    <input type="file" multiple accept="image/*,.pdf,.doc,.docx" />
-    <div class="icen-upload-icon">${svgPlus}</div>
-    <p class="icen-upload-title">点击或拖拽文件到此处上传</p>
-    <p class="icen-upload-desc">支持图片 / PDF / DOC，单个 ≤ 5 MB，最多 6 个</p>
-    <p class="icen-upload-error" id="demo-upload-files" hidden></p>
+  <div class="icen-upload" data-icen-upload-list data-icen-max-size="5242880" data-icen-max-files="6" role="group" aria-label="上传文件" style="width:100%;max-width:480px">
+    <div class="icen-upload-dropzone icen-control icen-lift icen-focus-ring" role="button" tabindex="0" aria-label="拖放或点击选择文件">
+      <input type="file" multiple accept="image/*,.pdf,.doc,.docx" />
+      <div class="icen-upload-icon">${svgPlus}</div>
+      <p class="icen-upload-title">点击或拖拽文件到此处上传</p>
+      <p class="icen-upload-desc">支持图片 / PDF / DOC，单个 ≤ 5 MB，最多 6 个</p>
+      <p class="icen-upload-error" id="demo-upload-files" hidden></p>
+    </div>
   </div>
 </div>`,
     usage: `import { initUpload } from '@icen.ai/ui/behaviors/upload';
@@ -962,26 +964,55 @@ initUpload();
   …
 </div>
 
-<!-- 增强上传（文件列表 + 校验） -->
+<!-- 增强上传（文件列表 + 校验）：列表是 dropzone 的兄弟，不与可点区域嵌套 -->
 <div class="icen-upload" data-icen-upload-list data-icen-max-size="5242880" data-icen-max-files="6"
-     role="button" tabindex="0">
-  <input type="file" multiple accept="image/*,.pdf" />
-  …
+     role="group" aria-label="上传文件">
+  <div class="icen-upload-dropzone" role="button" tabindex="0">
+    <input type="file" multiple accept="image/*,.pdf" />
+    …
+  </div>
 </div>
-<!-- 事件：icen:upload { files } / icen:upload-error { file, reason } / icen:upload-remove { file } -->`,
+<!-- 事件：icen:upload { files } / icen:upload-error { file, reason } / icen:upload-remove { file } -->
+<!-- const dispose = initUpload(); 返回销毁函数：摘监听、回收缩略图 URL、移除生成列表 -->`,
     behaviors: ['upload'],
     behaviorInit: { upload: 'initUpload' },
-    script: `document.querySelectorAll('.icen-upload[data-icen-upload-list]').forEach((zone) => {
-  zone.addEventListener('icen:icen-upload-error', (ev) => {
-    const detail = ev.detail;
-    const msg = document.getElementById('demo-upload-files');
-    if (msg) {
-      msg.hidden = false;
-      msg.textContent = detail.reason + (detail.file ? '：' + detail.file.name : '');
-      setTimeout(() => { msg.hidden = true; }, 3000);
-    }
-  });
-});`,
+    script: `const ac = new AbortController();
+const zone = document.querySelector('.icen-upload[data-icen-upload-list]');
+const msg = document.getElementById('demo-upload-files');
+let timer = 0;
+zone?.addEventListener('icen:upload-error', (ev) => {
+  const detail = ev.detail;
+  if (!msg) return;
+  msg.hidden = false;
+  msg.textContent = detail.reason + (detail.file ? '：' + detail.file.name : '');
+  clearTimeout(timer);
+  timer = setTimeout(() => { msg.hidden = true; }, 3000);
+}, { signal: ac.signal });
+/* 预置两个真实文件（一份文本 + 一张画布生成的图），让列表演进直接可见 */
+(async () => {
+  if (!zone) return;
+  const dt = new DataTransfer();
+  dt.items.add(new File([['# 发布说明', '第一轮主题与暗色。'].join(String.fromCharCode(10, 10))], 'changelog.pdf', { type: 'application/pdf' }));
+  const canvas = document.createElement('canvas');
+  canvas.width = 64; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    const grad = ctx.createLinearGradient(0, 0, 64, 64);
+    grad.addColorStop(0, '#d97757'); grad.addColorStop(1, '#4a7a9b');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, 64, 64);
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.beginPath(); ctx.arc(32, 26, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(18, 42, 28, 6);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (blob) dt.items.add(new File([blob], 'cover.png', { type: 'image/png' }));
+  }
+  const input = zone.querySelector('input[type="file"]');
+  if (input && !ac.signal.aborted) {
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+})();
+return () => { ac.abort(); clearTimeout(timer); };`,
   },
   {
     slug: 'date-picker',

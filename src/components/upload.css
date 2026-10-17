@@ -2,23 +2,39 @@
  * @icen.ai/ui — Component: upload（拖放上传区）
  * 规格源自 opengal primitives/advanced-input.tsx 的 Upload；与 behaviors/upload.ts 配套。
  *
- * 完整契约：
- *   <div class="icen-upload icen-control icen-lift icen-focus-ring [--compact] [.is-drag] [.is-disabled] [.is-loading]"
- *        role="button" tabindex="0" aria-label="拖放或点击上传文件">
- *     <input type="file" multiple accept="…" />
- *     <div class="icen-upload-icon">…svg…</div>
- *     <p class="icen-upload-title">拖放文件到此处，或<span class="icen-upload-link">点击选择</span></p>
- *     <p class="icen-upload-desc">支持 PDF / PNG / JPG，单个 ≤ 5 MB</p>
- *     <p class="icen-upload-error" hidden role="alert">文件超过 5 MB</p>
+ * 完整契约（推荐结构——列表模式务必用此，避免交互嵌套）：
+ *   <div class="icen-upload" role="group" aria-label="上传文件">
+ *     <div class="icen-upload-dropzone" role="button" tabindex="0" aria-label="拖放或点击选择文件">
+ *       <input type="file" multiple accept="…" />
+ *       <div class="icen-upload-icon">…svg…</div>
+ *       <p class="icen-upload-title">拖放文件到此处，或<span class="icen-upload-link">点击选择</span></p>
+ *       <p class="icen-upload-desc">支持 PDF / PNG / JPG，单个 ≤ 5 MB</p>
+ *       <p class="icen-upload-error" hidden role="alert">文件超过 5 MB</p>
+ *     </div>
+ *     <!-- behavior 生成的 .icen-upload-list 是 dropzone 的兄弟，不在可点区域内 -->
  *   </div>
+ *
+ * 旧结构兼容：.icen-upload 自身带 role="button" 且没有 dropzone 子级时，
+ * 视觉与行为全部回落到 zone 本体（但列表模式的移除钮会与外层 role=button 构成嵌套交互，
+ * 请迁移到推荐结构）。
  *
  * behavior 维护：
  *   - dragenter/dragover 加 .is-drag，dragleave/drop 移除
- *   - 校验 accept/size，错误写 .icen-upload-error[hidden=false]
- *   - 文件列表（可选）渲染到 .icen-upload + <ul class="icen-upload-list">，behavior 提供
+ *   - 校验 accept/size/maxFiles（截断也派发 icen:upload-error）
+ *   - 文件列表（可选）渲染为 dropzone 的兄弟 <ul class="icen-upload-list">
  */
 
+/* 交互外壳：默认 zone 本体（旧结构）；有 dropzone 子级时镀铬迁移到它（推荐结构） */
 .icen-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.icen-upload:not(:has(.icen-upload-dropzone)),
+.icen-upload-dropzone {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,16 +50,19 @@
     background-color var(--icen-tx-fast),
     transform var(--icen-tx-fast);
 }
-.icen-upload:hover:not(.is-disabled) {
+.icen-upload:hover:not(.is-disabled):not(:has(.icen-upload-dropzone)),
+.icen-upload-dropzone:hover:not(.is-disabled) {
   border-color: color-mix(in srgb, var(--icen-token-accent) 60%, transparent);
   background: var(--icen-token-control-hover);
 }
-.icen-upload:focus-visible {
+.icen-upload:focus-visible,
+.icen-upload-dropzone:focus-visible {
   outline: none;
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.icen-upload.is-drag {
+.icen-upload.is-drag,
+.icen-upload-dropzone.is-drag {
   border-color: var(--icen-token-accent);
   border-style: solid;
   background: var(--icen-token-accent-subtle);
@@ -62,7 +81,7 @@
   pointer-events: none;
 }
 
-.icen-upload--compact { padding: var(--icen-density-space-sm) var(--icen-density-space-md); }
+.icen-upload--compact .icen-upload-dropzone, .icen-upload--compact:not(:has(.icen-upload-dropzone)) { padding: var(--icen-density-space-sm) var(--icen-density-space-md); }
 .icen-upload--compact .icen-upload-icon { width: 28px; height: 28px; margin-bottom: 4px; }
 
 .icen-upload input[type='file'] { display: none; }
@@ -80,11 +99,13 @@
   transition: transform var(--icen-tx-fast);
 }
 /* 图标放大反馈：拖拽态全设备生效；hover 仅可悬停设备（触屏关闭，AGENTS 动效守卫） */
-.icen-upload.is-drag .icen-upload-icon {
+.icen-upload.is-drag .icen-upload-icon,
+.icen-upload-dropzone.is-drag .icen-upload-icon {
   transform: scale(1.08);
 }
 @media (hover: hover) and (pointer: fine) {
-  .icen-upload:hover:not(.is-disabled) .icen-upload-icon {
+  .icen-upload:hover:not(.is-disabled) .icen-upload-icon,
+  .icen-upload-dropzone:hover:not(.is-disabled) .icen-upload-icon {
     transform: scale(1.08);
   }
 }
@@ -189,7 +210,21 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
+  position: relative;
+  transition:
+    opacity var(--icen-tx-fast),
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+/* 隐式移除：可悬停设备上随行浮现；触屏常显并带隐形 44px 命中区 */
+@media (hover: hover) and (pointer: fine) {
+  .icen-upload-list-item-x { opacity: 0; }
+  .icen-upload-list-item:hover .icen-upload-list-item-x,
+  .icen-upload-list-item:focus-within .icen-upload-list-item-x,
+  .icen-upload-list-item-x:focus-visible { opacity: 1; }
+}
+@media (pointer: coarse) {
+  .icen-upload-list-item-x::after { content: ''; position: absolute; inset: -10px; }
 }
 .icen-upload-list-item-x:hover {
   color: var(--icen-token-error);

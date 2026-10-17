@@ -67,6 +67,8 @@ test('open palette is readable in both primitives and modes; mobile stays inside
     await page.locator('.demo-stage [data-icen-command-palette-open="demo-cp"]').click();
     const backdrop = demo(page);
     await expect(backdrop).toBeVisible();
+    // 等进场动画落定再扫描（半透明中间帧不是稳定态）
+    await backdrop.evaluate(el => Promise.all(el.getAnimations({subtree: true}).map(a => a.finished)).then(() => undefined));
     const issues = await backdrop.evaluate(async el => {
       const r = await (window as any).axe.run(el, {runOnly:{type:'tag',values:['wcag2a','wcag2aa']}});
       return r.violations.filter((v:any) => ['serious','critical'].includes(v.impact)).map((v:any) => ({id: v.id, targets: v.nodes.map((n:any) => n.target)}));

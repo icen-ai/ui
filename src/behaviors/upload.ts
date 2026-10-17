@@ -21,10 +21,12 @@
  *   icen:upload-error { file: File | null, reason } 校验失败（maxFiles 超限等无单文件语境时 file 为 null）
  *   icen:upload-remove { file: File }         单个文件移除
  *
- * 同一容器重复 init 幂等。SSR 下为 no-op。
+ * 同一容器重复 init 幂等；initUpload 返回销毁函数（摘除监听、回收对象 URL、
+ * 移除生成的列表节点、复位幂等标记，销毁后可重新 init）。SSR 下为 no-op。
  */
 
 import { emitIcen } from './events';
+import { createIcon } from './icons';
 import { t } from './i18n';
 
 interface MarkedUpload extends HTMLElement {
@@ -52,41 +54,28 @@ function isAccepted(file: File, accept: string): boolean {
   });
 }
 
-/** SVG 图标：文件占位（非图片）。 */
-const fileIconSvg =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>' +
-  '<polyline points="14 2 14 8 20 8"/></svg>';
-
-/** SVG 图标：移除 ×。 */
-const xIconSvg =
-  '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-
-/** 惰性解析受控 SVG 常量为 DOM 节点（避免 innerHTML；仅在浏览器内调用）。 */
-function parseSvg(source: string): Element | null {
-  try {
-    const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
-    const svg = doc.documentElement;
-    if (!svg || svg.tagName.toLowerCase() !== 'svg') return null;
-    return document.importNode(svg, true);
-  } catch {
-    return null;
-  }
-}
-
 /** 判断两个 File 是否指向同一文件（重复选择/拖放去重用）。 */
 function sameFile(a: File, b: File): boolean {
   return a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
 }
 
-function setup(zone: HTMLElement): void {
+function setup(zone: HTMLElement): (() => void) | undefined {
   const el = zone as MarkedUpload;
-  if (el.__icenUploadInit) return;
+  if (el.__icenUploadInit) return undefined;
 
   const input = zone.querySelector<HTMLInputElement>('input[type="file"]');
   // 校验通过后再置位：无 file input 早退不置位，以便补上后重新 init 可重试
-  if (!input) return;
+  if (!input) return undefined;
   el.__icenUploadInit = true;
+
+  /* 本区的全部监听解绑器（dispose 时统一摘除） */
+  const offs: Array<() => void> = [];
+  const on = <K extends keyof HTMLElementEventMap>(node: HTMLElement, type: K, fn: (ev: HTMLElementEventMap[K]) => void): void => {
+    node.addEventListener(type, fn as EventListener);
+    offs.push(() => node.removeEventListener(type, fn as EventListener));
+  };
+  /* 列表容器是否由本行为生成（dispose 时决定摘除还是仅清空） */
+  let createdList = false;
 
   const hasList = zone.hasAttribute('data-icen-upload-list');
   const maxSize = Number(zone.getAttribute('data-icen-max-size')) || 0;
@@ -108,6 +97,7 @@ function setup(zone: HTMLElement): void {
       list = document.createElement('ul');
       list.className = 'icen-upload-list';
       zone.appendChild(list);
+      createdList = true;
     }
     return list;
   }
@@ -159,7 +149,7 @@ function setup(zone: HTMLElement): void {
       } else {
         const icon = document.createElement('span');
         icon.className = 'icen-upload-list-item-icon';
-        const svg = parseSvg(fileIconSvg);
+        const svg = createIcon('file');
         if (svg) icon.appendChild(svg);
         li.appendChild(icon);
       }
@@ -182,7 +172,7 @@ function setup(zone: HTMLElement): void {
       removeBtn.className = 'icen-upload-list-item-x';
       removeBtn.type = 'button';
       removeBtn.setAttribute('aria-label', t('upload.remove', { p0: file.name }));
-      const xSvg = parseSvg(xIconSvg);
+      const xSvg = createIcon('close', { size: 14 });
       if (xSvg) removeBtn.appendChild(xSvg);
       removeBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -252,7 +242,11 @@ function setup(zone: HTMLElement): void {
           emitIcen(zone, 'icen:upload-error', { file: null, reason: t('upload.tooMany', { p0: maxFiles }) });
           return;
         }
-        if (fresh.length > remaining) fresh.length = remaining;
+        if (fresh.length > remaining) {
+          fresh.length = remaining;
+          /* 部分截断也如实告知：选了 4 个只落 3 个不能悄无声息 */
+          emitIcen(zone, 'icen:upload-error', { file: null, reason: t('upload.tooMany', { p0: maxFiles }) });
+        }
       }
       currentFiles.push(...fresh);
       renderList();
@@ -265,15 +259,19 @@ function setup(zone: HTMLElement): void {
   }
 
   const openPicker = (): void => input.click();
+  /* 推荐结构：交互落在 .icen-upload-dropzone（role=button），列表是它的兄弟不嵌套；
+     旧结构回落 zone 本体（视觉与行为不变，但列表模式的移除钮会与外层 role=button 嵌套） */
+  const clickTarget = zone.querySelector<HTMLElement>('.icen-upload-dropzone') ?? zone;
+  const dragTarget = clickTarget;
 
-  zone.addEventListener('click', (ev) => {
+  on(clickTarget, 'click', (ev) => {
     if (ev.target === input) return;
     // 不在文件列表项内点击
     const tgt = ev.target;
     if (tgt instanceof Element && tgt.closest('.icen-upload-list')) return;
     openPicker();
   });
-  zone.addEventListener('keydown', (ev) => {
+  on(clickTarget, 'keydown', (ev) => {
     if (ev.key === 'Enter' || ev.key === ' ') {
       // 镜像 click 守卫：焦点在 .icen-upload-list 内控件（如移除钮）时放行原生激活，
       // 否则 Enter/Space 被吃掉反而打开文件选择器
@@ -285,7 +283,7 @@ function setup(zone: HTMLElement): void {
   });
 
   // input change（用户通过选择器选了文件）
-  input.addEventListener('change', () => {
+  on(input, 'change', () => {
     if (syncing) return; // syncInputFiles 的程序化回写，忽略
     if (!input.files) return;
     const files = Array.from(input.files);
@@ -296,17 +294,17 @@ function setup(zone: HTMLElement): void {
     handleFiles(files);
   });
 
-  zone.addEventListener('dragover', (ev) => {
+  on(zone, 'dragover', (ev) => {
     ev.preventDefault();
-    zone.classList.add('is-drag');
+    dragTarget.classList.add('is-drag');
   });
-  zone.addEventListener('dragleave', (ev) => {
+  on(zone, 'dragleave', (ev) => {
     // 只在离开 zone 本身时移除（子元素 dragleave 忽略）
-    if (ev.target === zone) zone.classList.remove('is-drag');
+    if (ev.target === zone) dragTarget.classList.remove('is-drag');
   });
-  zone.addEventListener('drop', (ev) => {
+  on(zone, 'drop', (ev) => {
     ev.preventDefault();
-    zone.classList.remove('is-drag');
+    dragTarget.classList.remove('is-drag');
     const files = ev.dataTransfer?.files;
     if (!files || files.length === 0) return;
     handleFiles(Array.from(files));
@@ -315,14 +313,43 @@ function setup(zone: HTMLElement): void {
     // 守卫期内派发的 change 不会重复触发 icen:upload）
     if (!hasList) setInputFiles(Array.from(files));
   });
+
+  /* 销毁：摘全部监听、回收对象 URL、清理生成的列表、复位幂等标记（可重新 init） */
+  return () => {
+    for (const off of offs) off();
+    offs.length = 0;
+    urlMap.forEach((url) => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch { /* 无 createObjectURL 的环境同样没有可回收对象 */ }
+    });
+    urlMap.clear();
+    const list = zone.querySelector<HTMLElement>('.icen-upload-list');
+    if (list) {
+      if (createdList) list.remove();
+      else list.replaceChildren();
+    }
+    zone.classList.remove('is-drag');
+    dragTarget.classList.remove('is-drag');
+    el.__icenUploadInit = false;
+  };
 }
 
-/** 为 root 下每个 .icen-upload 容器初始化（root 自身是 .icen-upload 也算）。 */
-export function initUpload(root?: ParentNode): void {
-  if (typeof document === 'undefined') return;
+/** 为 root 下每个 .icen-upload 容器初始化（root 自身是 .icen-upload 也算）。
+ *  返回销毁函数：统一摘除本次挂上的各区监听并回收其资源（销毁后可重新 init）。SSR 下返回 no-op。 */
+export function initUpload(root?: ParentNode): () => void {
+  if (typeof document === 'undefined') return () => {};
   const scope: ParentNode = root ?? document;
   const zones: HTMLElement[] = [];
   if (scope instanceof HTMLElement && scope.matches('.icen-upload')) zones.push(scope);
   zones.push(...Array.from(scope.querySelectorAll<HTMLElement>('.icen-upload')));
-  for (const z of zones) setup(z);
+  const cleanups: Array<() => void> = [];
+  for (const z of zones) {
+    const off = setup(z);
+    if (off) cleanups.push(off);
+  }
+  return () => {
+    for (const fn of cleanups) fn();
+    cleanups.length = 0;
+  };
 }

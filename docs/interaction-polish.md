@@ -44,7 +44,7 @@
 - [x] tag-input
 - [ ] switch
 - [ ] segmented
-- [ ] upload
+- [x] upload
 - [ ] date-picker
 - [ ] form-validate
 - [ ] cascader
@@ -402,6 +402,16 @@
 - 滑块示例修复：demo-col 在居中 demo-stage 里按内容收缩成细条（width:auto 的 flex 列），补 `width:100%;max-width:420px`，滑块终于呈现真实铺满形态。
 - 步进器（上轮）的 minus/plus 与分段键盘契约同属本族复核范围；switch/checkbox/radio 经巡审已达到当前标准（实心几何内核 + 行内整行可点）。
 - 验证：2 条浏览器专项（静止中性→提交判错→改对即摘、滑块宽度与填充驱动）。全量：verify 759 测试、141 条浏览器回归、129 页×两档巡检 0 问题。
+
+### 第二十三轮：上传的结构重排（消除嵌套交互）与生命周期收口
+
+- 结构修正：新增推荐结构 `.icen-upload`（role=group）> `.icen-upload-dropzone`（role=button）+ 列表兄弟——此前 zone 自身 role=button 且列表行移除钮嵌在其中，构成 axe nested-interactive（列表为空时潜伏）。旧结构无 dropzone 子级时视觉与行为自动回落（`:not(:has())` 分层），文档明确迁移方向。
+- 生命周期：initUpload 此前返回 void 且监听永久挂留。现 setup 返回 disposer（摘除全部监听、回收对象 URL、生成的列表摘除/作者提供的仅清空、复位幂等标记可重入）；initUpload 聚合返回。
+- 图标同源：行为内的手写 24px 常量（file/x）与本地的 parseSvg 副本删除，改 createIcon 共享几何；截断超限此前静默丢弃，现派发 icen:upload-error（选 4 落 3 不再悄无声息）。
+- 示例从「空壳」变「实况」：预置 changelog.pdf + 画布生成的 cover.png（真实缩略图管道直接可见）；修复错误监听写成 icen:icen-upload-error（双前缀，从未触发过）+ 脚本可卸载。
+- 移除钮隐式化（行悬停/聚焦显现，触屏常显 + 隐形 44px 命中）。
+- 测试基础设施同步修复：浮层 axe 扫描前等待进场动画落定（getAnimations().finished），命令面板专项的偶发误报根除。
+- 验证：5 条 DOM 用例（去重/校验/截断事件/销毁回收/新旧结构）+ 2 条浏览器专项（预置列表/缩略图/隐式移除/错误呈现、axe + 触屏 44px）。全量：verify 764 测试、143 条浏览器回归、129 页×两档巡检 0 问题。
 
 ### 下一批待处理（保留完整目标）
 
