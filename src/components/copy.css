@@ -2,25 +2,28 @@
  * @icen.ai/ui — Component: copy（复制按钮，与 behaviors/copy 配套）
  *
  * 完整契约：
- *   文本变体（成功后文本 1.4s 内变「已复制」再还原）：
+ *   文本变体（独立反馈层显示「已复制」1.4s，原插槽节点始终保留）：
  *   <button class="icen-copy-btn" data-icen-copy="复制的文本">复制</button>
  *   <button class="icen-copy-btn icen-copy-btn--ghost" data-icen-copy="…">复制链接</button>
  *
- *   图标变体（带 data-icen-copy-icon，仅加 .is-done 类；由 CSS 显隐子 svg）：
+ *   图标变体（带 data-icen-copy-icon，空槽由行为填共享 SVG，也可放自定义 SVG）：
  *   <button class="icen-copy-btn icen-copy-btn--icon" data-icen-copy="…" data-icen-copy-icon aria-label="复制">
  *     <svg class="icen-copy-icon-clipboard">…</svg>
  *     <svg class="icen-copy-icon-check" hidden>…</svg>
  *   </button>
  *
  * behavior 自动处理：
- *   - 文本变体：成功后 textContent = '已复制' + 加 .is-done 类，1.4s 后还原
- *   - 图标变体（带 data-icen-copy-icon）：仅加 .is-done 类（不改文本），由 CSS 切换 svg 显隐
+ *   - .icen-copy-content.icen-feedback-action-label：保留原始节点的内容层
+ *   - .icen-copy-result[aria-hidden=true]：成功覆盖层，共占一格以预留宽度
+ *   - 相邻 .icen-copy-feedback[role=status]：失败可见，成功只读屏可见
+ *   - --sm（默认）/ --md / --lg：尺寸；--quiet 配父 .icen-copy-scope：上下文隐式动作
  *
  * 与 toast.icen-toast--success 区别：copy 是"原地反馈"（按钮自身闪烁），toast 是"全局通知"。
  */
 
 .icen-copy-btn {
-  display: inline-flex;
+  position: relative;
+  display: inline-grid;
   align-items: center;
   justify-content: center;
   gap: var(--icen-density-space-xs);
@@ -73,13 +76,13 @@
 
 /* ── 图标变体：方形按钮，仅放 svg ── */
 .icen-copy-btn--icon {
-  width: 28px;
-  height: 28px;
+  inline-size: var(--icen-density-input-height-sm);
+  block-size: var(--icen-density-input-height-sm);
   padding: 0;
 }
 .icen-copy-btn--icon svg {
-  width: 14px;
-  height: 14px;
+  inline-size: 16px;
+  block-size: 16px;
   flex-shrink: 0;
 }
 
@@ -91,3 +94,25 @@
 @media (prefers-reduced-motion: reduce) {
   .icen-copy-btn { transition: none; }
 }
+
+/* Both layers reserve their footprint; changing state never destroys author slots. */
+.icen-copy-content, .icen-copy-result { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--icen-density-space-xs); transition: opacity var(--icen-tx-fast); }
+.icen-copy-result { visibility: hidden; opacity: 0; pointer-events: none; }
+.icen-copy-btn.is-done > .icen-copy-result { visibility: visible; opacity: 1; }
+.icen-copy-btn.is-done > .icen-copy-content { opacity: 0; }
+.icen-copy-btn.is-error { color: var(--icen-token-error); border-color: var(--icen-token-error); }
+.icen-copy-btn[aria-busy="true"] { cursor: progress; }
+.icen-copy-btn--sm { block-size: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-copy-btn--md { block-size: var(--icen-density-input-height-md); font-size: var(--icen-density-font-size-md); }
+.icen-copy-btn--lg { block-size: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }
+.icen-copy-btn--icon.icen-copy-btn--md { inline-size: var(--icen-density-input-height-md); }
+.icen-copy-btn--icon.icen-copy-btn--lg { inline-size: var(--icen-density-input-height-lg); }
+.icen-copy-feedback { display: inline-block; margin-inline-start: var(--icen-density-space-sm); color: var(--icen-token-error); font-size: var(--icen-density-font-size-sm); unicode-bidi: isolate; }
+.icen-copy-feedback.is-success { position: absolute; inline-size: 1px; block-size: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); }
+@media (hover: hover) and (pointer: fine) {
+  .icen-copy-scope .icen-copy-btn--quiet { opacity: 0; }
+  .icen-copy-scope:hover .icen-copy-btn--quiet, .icen-copy-scope:focus-within .icen-copy-btn--quiet, .icen-copy-scope .icen-copy-btn--quiet:is(.is-done,.is-error,[aria-busy="true"]) { opacity: 1; }
+}
+@media (pointer: coarse) { .icen-copy-btn { min-block-size: 44px; min-inline-size: 44px; } }
+@media (prefers-reduced-motion: reduce) { .icen-copy-content, .icen-copy-result { transition: none; } }
+@media (forced-colors: active) { .icen-copy-btn:is(.is-done,.is-error) { border-color: Highlight; outline: 1px solid Highlight; } }

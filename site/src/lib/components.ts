@@ -1522,20 +1522,62 @@ document.querySelectorAll('.icen-alert-close').forEach((btn) => {
   {
     slug: 'copy',
     name: '复制按钮',
+    summary: '复制一条命令或一个链接，等待、完成与重试都留在原处。',
     group: '反馈',
-    desc: '与 behaviors/copy 配套：命中 .copy-btn[data-icen-copy] 写入剪贴板，成功后文本变「已复制」1.4s 还原；图标变体加 data-icen-copy-icon 仅切 .is-done 类。与 toast 的区别——copy 是原地反馈，toast 是全局通知。',
+    desc: '文本、透明与图标按钮共用同一复制行为，支持三档尺寸。原始插槽节点始终保留，等待与完成不改变按钮宽度；失败会显示可读提示，直接点击原按钮即可重试。上下文内可用 quiet 变体：桌面随悬停或焦点显现，触屏始终可用。默认使用系统剪贴板与兼容回退，也可传入 write 接入原生桥或权限流程。',
     demo: `<div class="demo-row">
-  <button class="icen-copy-btn" data-icen-copy="npm i @icen.ai/ui">复制安装命令</button>
-  <button class="icen-copy-btn icen-copy-btn--ghost" data-icen-copy="https://ui.icen.ai">复制链接</button>
-  <button class="icen-copy-btn icen-copy-btn--icon" data-icen-copy="ABCD-1234-EFGH-5678" data-icen-copy-icon aria-label="复制密钥">
-    <svg class="icen-copy-icon-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-    <svg class="icen-copy-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-  </button>
-</div>`,
-    usage: `import { initCopy } from '@icen.ai/ui/behaviors/copy';
-initCopy(); // 委托监听，自动处理所有 .copy-btn[data-icen-copy]`,
+  <button type="button" class="icen-copy-btn icen-copy-btn--sm" data-icen-copy="bun add @icen.ai/ui">复制安装命令</button>
+  <button type="button" class="icen-copy-btn icen-copy-btn--md icen-copy-btn--ghost" data-icen-copy="https://ui.icen.ai/benzhen/">复制作品链接</button>
+  <button type="button" class="icen-copy-btn icen-copy-btn--lg" disabled data-icen-copy="">暂不可用</button>
+</div>
+<div class="icen-copy-scope demo-row" style="margin-block:var(--icen-density-space-lg);padding:var(--icen-density-space-md);border:1px solid var(--icen-token-line-soft);border-radius:var(--icen-radius-md)">
+  <code class="icen-code-inline">bun add @icen.ai/ui</code>
+  <button type="button" class="icen-copy-btn icen-copy-btn--icon icen-copy-btn--ghost icen-copy-btn--quiet" data-icen-copy="bun add @icen.ai/ui" data-icen-copy-icon aria-label="复制安装命令"></button>
+</div>
+<div id="copy-retry-demo">
+  <p class="icen-muted" dir="auto">先模拟一次失败，再尝试真实复制。等待时可以继续阅读，重复点击不会重复执行。</p>
+  <button type="button" class="icen-copy-btn icen-copy-btn--md" data-icen-copy="https://ui.icen.ai/benzhen/">复制分享地址</button>
+</div>
+<p id="copy-demo-log" class="icen-muted" dir="auto" role="status" style="margin-block-start:var(--icen-density-space-md)">选择一项，复制后会在这里确认。</p>`,
+    usage: `import { initCopy, copyText } from '@icen.ai/ui/behaviors/copy';
+
+const dispose = initCopy(container); // 省略容器即全页；动态插入同样生效
+// 宿主卸载时 dispose()，回收状态、监听、计时器和异步反馈
+
+<button type="button" class="icen-copy-btn" data-icen-copy="bun add @icen.ai/ui">复制命令</button>
+<!-- 空图标槽自动使用共享 copy/check SVG，仍需提供可访问名称 -->
+<button type="button" class="icen-copy-btn icen-copy-btn--icon" data-icen-copy="…" data-icen-copy-icon aria-label="复制地址"></button>
+<!-- 尺寸：--sm（默认）/ --md / --lg；透明：--ghost -->
+<!-- 上下文操作：父容器 .icen-copy-scope + 按钮 .icen-copy-btn--quiet -->
+
+// 可选：原生桥接或异步权限流程；false/抛错显示重试，true/void 视为成功
+const release = initCopy(nativeContainer, {
+  write: async (text, { signal }) => nativeClipboard.write(text, { signal }),
+});
+// 也可只使用底层写入：const { ok, reason } = await copyText(text, { signal });
+// 事件：icen:copy-success { text } / icen:copy-error { text, reason }
+// signal 取消反馈与尚未开始的兼容回退；已交给系统的写入无法撤回。`,
     behaviors: ['copy'],
     behaviorInit: { copy: 'initCopy' },
+    script: `const stage = document.querySelector('.demo-stage');
+const retryHost = document.getElementById('copy-retry-demo');
+const log = document.getElementById('copy-demo-log');
+const ac = new AbortController();
+let attempt = 0;
+const dispose = copyMod.initCopy(retryHost, {
+  write: async (text, { signal }) => {
+    await new Promise((resolve, reject) => {
+      const abort = () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); };
+      const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve(); }, 650);
+      signal.addEventListener('abort', abort, { once: true });
+    });
+    if (++attempt === 1) return false;
+    return (await copyMod.copyText(text, { signal })).ok;
+  },
+});
+stage.addEventListener('icen:copy-success', () => { log.textContent = '已复制，可以粘贴到需要的地方。'; }, { signal: ac.signal });
+stage.addEventListener('icen:copy-error', () => { log.textContent = '复制未完成，原按钮仍可重试。'; }, { signal: ac.signal });
+return () => { ac.abort(); dispose(); };`,
   },
   {
     slug: 'notification',

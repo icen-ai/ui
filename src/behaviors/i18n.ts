@@ -338,6 +338,7 @@ export interface IcenLocale {
   'contextMenu.refresh': string;
   /* ── copy ── */
   'copy.copied': string;
+  'copy.failed': string;
   'copy.denied': string;
   'copy.unavailable': string;
   'copy.unknown': string;
@@ -1140,6 +1141,7 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'contextMenu.refresh': '刷新',
   /* ── copy ── */
   'copy.copied': '已复制',
+  'copy.failed': '未能复制，请重试。',
   'copy.denied': 'clipboard API 被拒（{p0}）且回退 execCommand 失败',
   'copy.unavailable': '剪贴板不可用（无 clipboard API 且 execCommand 回退失败）',
   'copy.unknown': '未知错误',
@@ -1942,6 +1944,7 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'contextMenu.refresh': 'Reload',
   /* ── copy ── */
   'copy.copied': 'Copied',
+  'copy.failed': 'Could not copy. Try again.',
   'copy.denied': 'Clipboard API denied ({p0}) and execCommand fallback failed',
   'copy.unavailable': 'Clipboard unavailable (no Clipboard API and execCommand fallback failed)',
   'copy.unknown': 'Unknown error',

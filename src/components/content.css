@@ -51,7 +51,7 @@
   border: 1px solid var(--icen-token-outline-soft);
   font-size: 0.9em;
   font-family: var(--icen-font-mono);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text, var(--icen-token-accent));
   word-break: break-word;
 }
 
