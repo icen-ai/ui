@@ -1548,7 +1548,15 @@ initCopy(); // 委托监听，自动处理所有 .copy-btn[data-icen-copy]`,
   <button class="icen-btn icen-btn-sm" id="notif-read">全部已读</button>
   <button class="icen-btn icen-btn-sm" id="notif-clear">清空</button>
 </div>
-<p class="demo-label"><bdi>异步同步示例会先展示失败状态，重试后完成。</bdi></p>`,
+<p class="demo-label"><bdi>异步同步示例会先展示失败状态，重试后完成。</bdi></p>
+<div class="icen-toolbar" style="margin-top:16px">
+  <span class="icen-toolbar-label">保留</span>
+  <button class="icen-btn icen-btn-sm" id="notif-save">保存提醒</button>
+  <button class="icen-btn icen-btn-sm" id="notif-unmount">卸载通知区</button>
+  <button class="icen-btn icen-btn-sm" id="notif-restore">恢复通知区</button>
+  <button class="icen-btn icen-btn-sm" id="notif-forget">清除存档</button>
+</div>
+<p class="demo-label" id="notif-archive-status" role="status"><bdi>保存一条提醒，卸载后可恢复；关闭提醒会删除存档。</bdi></p>`,
     usage: `import { notify, createNotificationCenter } from '@icen.ai/ui/behaviors/notification';
 
 // ── 便捷 API ──
@@ -1615,7 +1623,9 @@ const center = createNotificationCenter(document.body, {
 });
 center.push({ title: '新消息', kind: 'info', options: { description: '…' } });
 center.markAllRead();
-center.clear();
+center.destroy(); // 卸载并保留常驻提醒存档，重新创建同 key 的中心可恢复。
+// dismiss()/clear() 删除存档；动作函数不序列化，可 update({ actions }) 重新接入。
+// 如需永久清空：先 center.clear()，再 center.destroy()。
 
 // ── 全局配置 ──
 notify.config({ position: 'top-right', maxStack: 5, pauseOnHover: true });`,
@@ -1626,6 +1636,16 @@ const timers = new Set();
 const schedule = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); if(!disposed) fn(); }, ms); timers.add(id); return id; };
 const repeat = (fn, ms) => { const id = setInterval(() => { if(!disposed) fn(); }, ms); timers.add(id); return id; };
 const toast = toastMod.toast;
+let archiveCenter = null;
+const archiveStatus = (message) => { const el=document.getElementById('notif-archive-status');const bdi=document.createElement('bdi');bdi.textContent=message;el?.replaceChildren(bdi); };
+const mountArchive = () => archiveCenter ??= notificationMod.createNotificationCenter(document.body, { position: 'bottom-left', persist: 'icen.ui.docs.notification.archive', maxStack: 3 });
+document.getElementById('notif-save')?.addEventListener('click', () => {
+  mountArchive().push({ title: '导出文件已就绪', options: { id: 'docs-saved-export', description: '这条提醒会保留到你主动关闭。', unread: true } });
+  archiveStatus('提醒已保存。可以卸载，再恢复通知区。');refreshCount();
+});
+document.getElementById('notif-unmount')?.addEventListener('click', () => { archiveCenter?.destroy();archiveCenter=null;archiveStatus('通知区已卸载，存档仍保留。');refreshCount(); });
+document.getElementById('notif-restore')?.addEventListener('click', () => { const c=mountArchive();archiveStatus(c.getAll().length ? '已恢复保存的提醒。' : '没有待恢复的提醒。');refreshCount(); });
+document.getElementById('notif-forget')?.addEventListener('click', () => { const c=mountArchive();c.clear();c.destroy();archiveCenter=null;archiveStatus('存档已清除，再次恢复不会出现旧提醒。');refreshCount(); });
 document.getElementById('notif-async')?.addEventListener('click', () => {
   let attempt = 0;
   notify.info('更改尚未同步', {
@@ -1794,7 +1814,7 @@ document.getElementById('notif-clear')?.addEventListener('click', () => {
   toast.ok('已清空');
   refreshCount();
 });
-return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clearTimeout(id); }); timers.clear(); notify.clear(); toast.dismiss(); };`,
+return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clearTimeout(id); }); timers.clear(); archiveCenter?.destroy(); archiveCenter=null; notify.clear(); toast.dismiss(); };`,
   },
   {
     slug: 'avatar',

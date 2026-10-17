@@ -114,7 +114,7 @@ export interface NotificationConfig {
   maxStack?: number;
   /** hover 暂停倒计时，默认 true */
   pauseOnHover?: boolean;
-  /** 持久化：true 用默认 key / 字符串=自定义 key / 不传=不持久化 */
+  /** 持久化常驻通知；true 用默认 key，字符串用自定义 key。卸载保留，dismiss/clear 删除。函数动作不序列化。 */
   persist?: boolean | string;
   /** 声音提示：true 用默认蜂鸣 / 字符串=data URL / 不传=无声 */
   sound?: boolean | string;
@@ -268,8 +268,6 @@ function syncContainerPosition(el: HTMLElement): void {
 
 const DEFAULT_PERSIST_KEY = 'icen.ui.notifications';
 
-/** 出现过的持久化 key（persistSave 据此把已清空的 key 覆写为 []）。 */
-const knownPersistKeys = new Set<string>();
 
 function persistKeyFor(p: boolean | string): string | null {
   if (p === true) return DEFAULT_PERSIST_KEY;
@@ -298,54 +296,61 @@ interface PersistedItem {
   createdAt?: number;
 }
 
-function persistSave(): void {
-  try {
-    // 按记录所属 persist 配置分组写 key；已知 key 即使没有记录也要覆写为 []
-    const groups = new Map<string, PersistedItem[]>();
-    for (const key of knownPersistKeys) groups.set(key, []);
-    for (const r of store.values()) {
-      const key = persistKeyFor(recordPersist(r));
-      if (!key) continue;
-      knownPersistKeys.add(key);
-      let bucket = groups.get(key);
-      if (!bucket) {
-        bucket = [];
-        groups.set(key, bucket);
-      }
-      if (r.opts.duration) continue; // 有时效的通知不持久化
-      bucket.push({
-        id: r.id,
-        title: r.title,
-        kind: r.kind,
-        description: r.opts.description ?? '',
-        tag: r.opts.tag,
-        unread: r.opts.unread,
-        priority: r.opts.priority,
-        progress: r.opts.progress,
-        progressLabel: r.opts.progressLabel,
-        link: r.opts.link,
-        linkLabel: r.opts.linkLabel,
-        data: r.opts.data,
-        createdAt: r.createdAt,
-      });
-    }
-    for (const [key, items] of groups) {
-      localStorage.setItem(key, JSON.stringify(items));
-    }
-  } catch {
-    /* quota / privacy mode → 静默放弃 */
+/** Merge live records into their own snapshot. Unmounted centers retain their
+ * records until an explicit dismiss; unrelated centers never erase them. */
+function persistSave(removed: NotificationRecord[] = []): void {
+  if(!isBrowser())return;
+  const groups=new Map<string,Map<string,PersistedItem>>();
+  const bucket=(key:string)=>{
+    let items=groups.get(key);
+    if(!items){items=new Map(persistLoad(key).map((item)=>[item.id,item]));groups.set(key,items);}
+    return items;
+  };
+  for(const r of removed){const key=persistKeyFor(recordPersist(r));if(key)bucket(key).delete(r.id);}
+  for(const r of store.values()){
+    const key=persistKeyFor(recordPersist(r));if(!key)continue;
+    const items=bucket(key);
+    if(r.duration>0){items.delete(r.id);continue;}
+    items.set(r.id,{
+      id:r.id,title:r.title,kind:r.kind,description:r.opts.description ?? '',
+      tag:r.opts.tag,unread:r.opts.unread,priority:r.opts.priority,
+      progress:r.opts.progress,progressLabel:r.opts.progressLabel,
+      link:r.opts.link,linkLabel:r.opts.linkLabel,data:r.opts.data,createdAt:r.createdAt,
+    });
+  }
+  for(const [key,items] of groups){
+    try{localStorage.setItem(key,JSON.stringify([...items.values()]));}
+    catch{/* One unavailable key or unserializable data must not block other centers. */}
   }
 }
-
 function persistLoad(key: string): PersistedItem[] {
   try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  } catch {
-    return [];
+    const raw=localStorage.getItem(key);if(!raw)return [];
+    const arr:unknown=JSON.parse(raw);if(!Array.isArray(arr))return [];
+    const unique=new Map<string,PersistedItem>();
+    for(const item of arr){
+      if(!item || typeof item !== 'object' || typeof item.id !== 'string' || !item.id || typeof item.title !== 'string')continue;
+      if(!['success','warning','error','info'].includes(item.kind))continue;
+      const text=(value:unknown)=>typeof value === 'string' ? value : undefined;
+      unique.set(item.id,{
+        id:item.id,title:item.title,kind:item.kind,description:text(item.description),tag:text(item.tag),
+        unread:item.unread === true,priority:item.priority === 'high' ? 'high' : 'normal',
+        progress:typeof item.progress === 'number' && Number.isFinite(item.progress) ? Math.min(1,Math.max(0,item.progress)) : undefined,
+        progressLabel:text(item.progressLabel),link:text(item.link),linkLabel:text(item.linkLabel),data:item.data,
+        createdAt:typeof item.createdAt === 'number' && Number.isFinite(item.createdAt) ? item.createdAt : undefined,
+      });
+    }
+    return [...unique.values()];
+  } catch {return [];}
+}
+/** Move only this owner's live records when persistence is reconfigured.
+ * Unmounted snapshots sharing the old key are preserved. Disabling keeps its archive. */
+function configurePersistence(config: Required<NotificationConfig>, next: boolean | string, records: NotificationRecord[]): void {
+  const oldKey=persistKeyFor(config.persist),newKey=persistKeyFor(next);
+  if(oldKey && newKey && oldKey !== newKey){
+    try{const items=persistLoad(oldKey).filter((item)=>!records.some((r)=>r.id === item.id));localStorage.setItem(oldKey,JSON.stringify(items));}catch{}
   }
+  config.persist=next;persistSave();
 }
 
 /** 从持久化 key 恢复通知到指定容器（不入任何 store，由调用方登记）。 */
@@ -356,6 +361,8 @@ function restorePersisted(
 ): NotificationRecord[] {
   const records: NotificationRecord[] = [];
   for (const item of persistLoad(key)) {
+    if(store.has(item.id))continue;
+    removeRetiredCopies(item.id);
     const record: NotificationRecord = {
       id: item.id,
       title: item.title,
@@ -743,6 +750,7 @@ function trimStack(
     const target=rows.splice(index<0 ? 0 : index,1)[0];
     const record=store.get(target.id);if(record)stopRuntime(record);
     remove(target.id);
+    if(record)persistSave([record]);
     removeOne(target,record ? ()=>record.opts.onClose?.(makeHandle(record)) : undefined);
   }
 }
@@ -794,6 +802,9 @@ function makeHandle(record: NotificationRecord): NotificationHandle {
  *   - ownerStore：center 双写（localStore 为其 get/getAll 数据源，全局 store 兼作
  *     全量索引以复用 dismissRecord / trimStack），全局路径仅写全局 store
  */
+function removeRetiredCopies(id:string):void {
+  document.querySelectorAll<HTMLElement>('.icen-notification.is-leaving').forEach((el)=>{if(el.id === id)el.remove();});
+}
 function pushRecord(
   title: string,
   kind: NotificationKind,
@@ -805,7 +816,7 @@ function pushRecord(
 ): NotificationHandle {
   const id = opts.id ?? genId();
   if(store.has(id))dismissRecord(id,true);
-  document.querySelectorAll<HTMLElement>('.icen-notification.is-leaving').forEach((el)=>{if(el.id === id)el.remove();});
+  removeRetiredCopies(id);
   const duration = opts.duration ?? 0;
   const record: NotificationRecord = {
     id,
@@ -875,7 +886,7 @@ function dismissRecord(id: string, immediate = false): void {
   if (record.el && immediate) {restoreFeedbackFocus(record.el);record.el.remove();onClose?.(handle);}
   else if (record.el) removeOne(record.el, () => onClose?.(handle));
   else onClose?.(handle);
-  persistSave();
+  persistSave([record]);
 }
 
 function updateRecord(id: string, patch: NotificationUpdatePatch): void {
@@ -1036,7 +1047,7 @@ export interface NotificationCenterHandle {
   dismiss(id?: string): void;
   clear(): void;
   markAllRead(): void;
-  /** 销毁容器：移除 DOM、清掉其所有 timer 与监听器；之后 push 返回 null */
+  /** 卸载界面并停止运行时，保留持久快照；清除快照请先 clear。之后 push 返回 null。 */
   destroy(): void;
   get(id: string): NotificationRecord | null;
   getAll(): NotificationRecord[];
@@ -1076,7 +1087,7 @@ export function createNotificationCenter(
 
   const local: Required<NotificationConfig> = {
     position: opts.position ?? 'top-right',
-    maxStack: opts.maxStack ?? 5,
+    maxStack: typeof opts.maxStack === 'number' && Number.isFinite(opts.maxStack) && opts.maxStack>=1 ? Math.floor(opts.maxStack) : 5,
     pauseOnHover: opts.pauseOnHover ?? true,
     persist: opts.persist ?? false,
     sound: opts.sound ?? false,
@@ -1095,13 +1106,14 @@ export function createNotificationCenter(
   // 恢复本 center 持久化的通知
   const pKey = persistKeyFor(local.persist);
   if (pKey) {
-    knownPersistKeys.add(pKey);
     for (const r of restorePersisted(container, pKey, local)) {
       r.ownerStore = localStore;
       localStore.set(r.id, r);
       store.set(r.id, r);
     }
   }
+
+  trimStack(container,local.maxStack,(id)=>{localStore.delete(id);store.delete(id);});
 
   function push(input: NotificationPushInput): NotificationHandle | null {
     if (destroyed) return null;
@@ -1128,14 +1140,12 @@ export function createNotificationCenter(
   }
 
   function markAllRead(): void {
-    localStore.forEach((rec) => {
-      rec.opts.unread = false;
-      rec.el?.classList.remove('is-unread');
-    });
+    Array.from(localStore.keys()).forEach((id)=>updateRecord(id,{unread:false}));
   }
 
   function destroy(): void {
     if (destroyed) return;
+    persistSave();
     destroyed = true;
     // 清掉所有计时器与记录（元素上的监听器随容器 DOM 一并移除）
     const closing=Array.from(localStore.values());
@@ -1158,14 +1168,11 @@ export function createNotificationCenter(
     get: (id) => localStore.get(id) ?? null,
     getAll: () => Array.from(localStore.values()),
     config: (next) => {
+      if(destroyed)return;
       if (next.position) { local.position = next.position; container.dataset.icenPosition = next.position; }
       if (typeof next.maxStack === 'number' && Number.isFinite(next.maxStack) && next.maxStack>=1) {local.maxStack=Math.floor(next.maxStack);trimStack(container,local.maxStack,(id)=>{localStore.delete(id);store.delete(id);});}
       if (typeof next.pauseOnHover === 'boolean') local.pauseOnHover = next.pauseOnHover;
-      if (next.persist !== undefined) {
-        local.persist = next.persist;
-        const k = persistKeyFor(next.persist);
-        if (k) knownPersistKeys.add(k);
-      }
+      if (next.persist !== undefined) configurePersistence(local,next.persist,Array.from(localStore.values()));
       if (next.sound !== undefined) local.sound = next.sound;
     },
     el: container,
@@ -1209,11 +1216,7 @@ export const notify: NotifyFn = Object.assign(
       }
       if (typeof opts.maxStack === 'number' && Number.isFinite(opts.maxStack) && opts.maxStack>=1) {cfg.maxStack=Math.floor(opts.maxStack);const c=document.querySelector<HTMLElement>('[data-icen-notif-default]');if(c)trimStack(c,cfg.maxStack,(id)=>store.delete(id));}
       if (typeof opts.pauseOnHover === 'boolean') cfg.pauseOnHover = opts.pauseOnHover;
-      if (opts.persist !== undefined) {
-        cfg.persist = opts.persist;
-        const k = persistKeyFor(opts.persist);
-        if (k) knownPersistKeys.add(k);
-      }
+      if (opts.persist !== undefined) configurePersistence(cfg,opts.persist,Array.from(store.values()).filter((r)=>!r.cfgRef));
       if (opts.sound !== undefined) cfg.sound = opts.sound;
     },
   },
@@ -1234,14 +1237,15 @@ export function initNotification(): () => void {
   const key = persistKeyFor(cfg.persist);
   const restored: NotificationRecord[] = [];
   if (key) {
-    knownPersistKeys.add(key);
     for (const r of restorePersisted(container, key)) {
       store.set(r.id, r);
       restored.push(r);
     }
   }
+  trimStack(container,cfg.maxStack,(id)=>store.delete(id));
   const dispose=() => {
     if(globalInit.dispose !== dispose)return;
+    persistSave();
     for (const r of restored) {
       stopRuntime(r);
       if(store.get(r.id) === r)store.delete(r.id);

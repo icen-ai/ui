@@ -3,6 +3,22 @@ import {createRequire} from 'node:module';
 import {ICON_PATHS} from '../../src/behaviors/icons';
 const require=createRequire(import.meta.url);
 
+test('saved notification survives unmount, unrelated activity, page navigation and reload until explicit dismissal',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',(error)=>errors.push(error.message));
+  await page.goto('/components/notification/');await page.locator('#notif-save').click();
+  const saved=page.locator('#docs-saved-export');await expect(saved).toHaveCount(1);
+  await page.locator('#notif-unmount').click();await expect(saved).toHaveCount(0);
+  await page.locator('#notif-info').click();await page.locator('#notif-restore').click();await expect(saved).toHaveCount(1);
+  await page.locator('a[href="/components/copy/"]:visible').first().click();await expect(saved).toHaveCount(0);
+  await page.locator('a[href="/components/notification/"]:visible').first().click();await page.locator('#notif-restore').click();await expect(saved).toHaveCount(1);
+  await page.reload();await page.locator('#notif-restore').click();await expect(saved).toHaveCount(1);
+  await saved.locator('.icen-notification-close').click();await expect(saved).toHaveCount(0);
+  await page.locator('#notif-unmount').click();await page.locator('#notif-restore').click();
+  await expect(page.locator('#notif-archive-status')).toHaveText('没有待恢复的提醒。');
+  await page.locator('#notif-save').click();await page.locator('#notif-forget').click();await page.reload();
+  await page.locator('#notif-restore').click();await expect(saved).toHaveCount(0);expect(errors).toEqual([]);
+});
+
 test('async toast has a stable SVG busy slot, inline retry and one successful continuation across primitives/modes',async({page})=>{
   for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/toast/');
