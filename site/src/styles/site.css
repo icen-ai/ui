@@ -530,29 +530,6 @@ body {
   border-top: 1px solid var(--icen-token-line-soft);
 }
 
-.icen-copy-btn--icon {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm);
-  background: var(--icen-token-surface);
-  color: var(--icen-token-text-faint);
-  cursor: pointer;
-  transition: color var(--icen-duration-fast) var(--icen-ease-out), border-color var(--icen-duration-fast) var(--icen-ease-out);
-}
-.icen-copy-btn--icon:hover { color: var(--icen-token-accent-text); border-color: var(--icen-token-accent); }
-.icen-copy-btn--icon .ic-check { display: none; }
-.icen-copy-btn--icon.is-done { color: var(--icen-token-success); border-color: var(--icen-token-success); }
-.icen-copy-btn--icon.is-done .ic-copy { display: none; }
-.icen-copy-btn--icon.is-done .ic-check { display: inline; }
-
 /* PmInstall 紧凑命令位：暗色下切 shiki 双主题色（组件 CSS 同款机制的站点侧作用域版） */
 [data-icen-theme='dark'] .pm-panel [data-icen-dual-theme] span[style*='--shiki-dark'] {
   /* 消费方无层样式覆写内联色（组件库同款豁免理由：shiki 逐 span 内联 color 仅 !important 可压） */
@@ -574,7 +551,7 @@ body {
   padding: 6px 12px;
   border-bottom: 1px solid var(--icen-token-line-soft);
 }
-.pm-term { color: var(--icen-token-text-faint); display: inline-flex; }
+.pm-term { color: var(--icen-token-text-muted); display: inline-flex; }
 .pm-tabs { display: flex; gap: 2px; }
 .pm-tab {
   font: inherit;
@@ -590,21 +567,32 @@ body {
 }
 .pm-tab:hover { color: var(--icen-token-text); }
 .pm-tab.is-active { color: var(--icen-token-text); background: var(--icen-token-surface); font-weight: 600; }
-.pm-panel { position: relative; }
+.pm-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--icen-density-space-sm);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  background: var(--icen-token-surface);
+}
+.pm-panel[hidden] { display: none; }
+.pm-panel > .icen-copy-feedback:not(.is-success) { grid-column: 1 / -1; margin: 0; }
 .pm-panel pre {
   margin: 0;
-  padding: 12px 0;
+  padding: 0;
+  min-inline-size: 0;
+  direction: ltr;
   background: transparent;
   font-size: 12.5px;
   overflow-x: auto;
 }
-/* shiki 行 span 的水平内距（与组件 .icen-code-block-line 的 padding-inline 同节奏；
-   pre 的水平 padding 为 0，行 span 不加内距命令会贴左右边缘） */
+/* 行片段只负责分行，水平留白由同一网格外壳提供。 */
 .pm-panel .line {
   display: block;
-  padding-inline: var(--icen-density-space-lg);
+  padding-inline: 0;
 }
-.pm-copy { top: 50%; transform: translateY(-50%); }
+.pm-panel .pm-copy { position: relative; inset: auto; transform: none; }
 
 /* ═══════════ 演示辅助类（demo markup 契约） ═══════════ */
 .icen-panel-body { padding: var(--icen-density-space-lg) calc(var(--icen-density-space-lg) + var(--icen-density-space-xs)) var(--icen-density-space-xl); }

@@ -45,7 +45,7 @@ test('copy exposes pending, visible failure and retry without duplicate work or 
 
 test('copy feedback is readable in every palette and quiet actions reveal on keyboard focus', async ({page}) => {
   await clipboard(page); await page.goto('/components/copy/'); await page.addScriptTag({path: require.resolve('axe-core')});
-  const button = page.locator('.demo-stage .icen-copy-btn').first(), icon = page.locator('.icen-copy-btn--quiet');
+  const button = page.locator('.demo-stage .icen-copy-btn').first(), icon = page.locator('.demo-stage .icen-copy-btn--quiet');
   await page.mouse.move(0, 0); await expect(icon).toHaveCSS('opacity', '0'); await icon.focus(); await expect(icon).toHaveCSS('opacity', '1');
   await expect(icon.locator('svg').first()).toHaveAttribute('viewBox', '0 0 20 20');
   for (const preset of ['benzhen', 'clay', 'piano', 'art', 'vangogh', 'ink']) for (const dark of [false, true]) {
@@ -66,7 +66,7 @@ test('touch RTL copy remains discoverable, respects reduced motion and keeps gen
     for (const button of await page.locator('.demo-stage .icen-copy-btn').all()) {
       const box = (await button.boundingBox())!; expect(box.height).toBeGreaterThanOrEqual(44); expect(box.width).toBeGreaterThanOrEqual(44);
     }
-    const icon = page.locator('.icen-copy-btn--quiet'); await expect(icon).toHaveCSS('opacity', '1'); await icon.tap();
+    const icon = page.locator('.demo-stage .icen-copy-btn--quiet'); await expect(icon).toHaveCSS('opacity', '1'); await icon.tap();
     await expect(icon).toHaveClass(/is-done/); await expect(icon.locator('.icen-copy-result svg')).toHaveAttribute('viewBox', '0 0 20 20');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.locator('.demo-stage').screenshot({path: '.ui-audit/copy-mobile-rtl.png', animations: 'disabled'});

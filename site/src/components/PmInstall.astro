@@ -1,5 +1,6 @@
 ---
 import { shikiInner } from '../lib/highlight';
+import { iconHTML } from '../../../src/behaviors/icons';
 
 interface Props {
   pkg?: string;
@@ -12,11 +13,10 @@ const managers = [
   { id: 'npm', cmd: `npm install ${pkg}` },
   { id: 'yarn', cmd: `yarn add ${pkg}` },
 ];
-const copySvg = `<svg class="ic-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
-const checkSvg = `<svg class="ic-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
-const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>`;
+const copySvg = iconHTML('copy');
+const termSvg = iconHTML('terminal');
 ---
-<div class="pm-install" data-icen-tabs>
+<div class="pm-install icen-copy-scope" data-icen-tabs>
   <div class="pm-head">
     <span class="pm-term" aria-hidden="true"><Fragment set:html={termSvg} /></span>
     <nav class="pm-tabs" aria-label="包管理器">
@@ -31,9 +31,9 @@ const termSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
   </div>
   {await Promise.all(managers.map(async (m, i) => (
     <div class="pm-panel" data-icen-tab-panel={m.id} hidden={i !== 0}>
-      <pre data-icen-dual-theme><code set:html={await shikiInner(m.cmd, 'bash')} /></pre>
-      <button class="icen-copy-btn icen-copy-btn--icon pm-copy" type="button" data-icen-copy={m.cmd} data-icen-copy-icon aria-label="复制命令">
-        <Fragment set:html={copySvg + checkSvg} />
+      <pre tabindex="0" role="region" aria-label={`${m.id} 安装命令`} data-icen-dual-theme><code set:html={await shikiInner(m.cmd, 'bash')} /></pre>
+      <button class="icen-copy-btn icen-copy-btn--icon icen-copy-btn--ghost icen-copy-btn--quiet pm-copy" type="button" data-icen-copy={m.cmd} data-icen-copy-icon aria-label="复制命令">
+        <Fragment set:html={copySvg} />
       </button>
     </div>
   )))}
