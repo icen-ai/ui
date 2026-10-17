@@ -54,7 +54,7 @@
 - [ ] modal
 - [ ] dropdown
 - [ ] context-menu
-- [ ] popover
+- [x] popover
 - [ ] tooltip
 - [ ] command-palette
 - [ ] card
@@ -354,6 +354,15 @@
 - 读屏语义：容器 aria-roledescription（作者声明优先）、slide 逐个 role=group + 序号标签、隐藏 role=status 行通报「第 i / n 张」；新增可选 .icen-carousel-index 槽位自动同步「i / n」。销毁摘除全部自有节点与属性，可重入。
 - 文档示例升级为有标题/副题的内容页 + 索引槽 + 共享 SVG chevron（去掉手写 24px 内联）。
 - 验证：4 条新 DOM 用例（RTL 键位/状态行/索引槽/语义还原重入）+ 既有 swipe 4 条；3 条浏览器专项（双原语×明暗圆点可读性+axe、RTL 键盘与索引/状态同源、触屏 44px 与 reduced-motion/换页销毁）；全量 verify 746 测试、126+1 条浏览器回归（menu-polish 一条为并行抖动，孤立复查通过）、129 页×两档巡检 0 问题。
+
+### 第十七轮：浮层（popover）声明式接入与可中断退场
+
+- 补上缺失的接入层：initPopover() 委托 `data-icen-popover-target` 触发器（CSS 头注释承诺已久但从未实现）——点击开合、面板内关闭钮（挂在 panel 自身，portal 后委托照样生效）、aria-haspopup/expanded/controls 同步、[data-icen-autofocus] 初始焦点、作用域幂等 disposer。
+- closePopover 改为两段：焦点与 onClose 立即结算 → 视觉淡出（transition，可中断）→ finalize 还原门户；退场中重开复用原 OpenState 从当前位置续接，不重复插占位。closePopover(panel, { immediate }) 供卸载/销毁路径（换页不把面板留在 body）；theme-switcher destroy 与 initPopover dispose 走 immediate。
+- 面板内 onClose 移除节点的既有模式兼容（onClose 先于 isConnected 判定执行）；嵌套场景 Escape 仍逐层（dialog-focus 专项更新到两阶段契约：焦点同步归还 + hidden 落定后还原）。
+- 进场动效收敛到菜单同配方（scale(.985)±3px），修正 menu.css / base.css 的过时注释；portal 面板退场期不影响次个面板打开（design 专项选择器排除 closing 态）。
+- 文档示例改声明式：筛选面板带标题/关闭/输入/取消/应用全插槽，应用回执 toast 含真实关键词；popover 入 SLUG_INIT（kit 一行入口带 initPopover）。
+- 验证：5 条新 DOM 用例（委托开合/关闭钮/退场重入幂等/dispose 结算/立即与动画两路）+ 既有 dialog-focus/theme-switcher 适配后全过；3 条浏览器专项（声明式全流程 + 焦点归还 + 快速重开唯一性、双原语×明暗 axe、移动 RTL 视口钳制与换页清理）。全量：verify 751 测试、130 条浏览器回归、129 页×两档巡检 0 问题。
 
 ### 下一批待处理（保留完整目标）
 

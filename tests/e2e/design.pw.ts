@@ -166,13 +166,13 @@ test('both primitives compose with every built-in theme in light and dark', asyn
   const primary=page.locator('main .icen-btn-primary').first();
   for(const preset of ['benzhen','clay','piano','art','vangogh','ink']) {
     await page.locator('#preset-select .icen-theme-switcher-trigger').click();
-    await page.locator(`[role="dialog"]:visible [data-icen-value="${preset}"]`).click();
+    await page.locator(`[role="dialog"]:visible:not([data-icen-state="closing"]) [data-icen-value="${preset}"]`).click();
     for(const dark of [false,true]) {
       if(await page.locator('html').getAttribute('data-icen-theme')!== (dark?'dark':null)) await page.locator('#dark-toggle button').click();
       let palette='';
       for(const primitive of ['benzhen','pixel']) {
         await page.locator('#style-select .icen-theme-switcher-trigger').click();
-        await page.locator(`[role="dialog"]:visible [data-icen-value="${primitive}"]`).click();
+        await page.locator(`[role="dialog"]:visible:not([data-icen-state="closing"]) [data-icen-value="${primitive}"]`).click();
         await expect(page.locator('html')).toHaveAttribute('data-icen-preset',preset);
         await expect(primary).toHaveCSS('border-radius',primitive==='pixel'?'0px':'10px');
         const color=await primary.evaluate(el=>getComputedStyle(el).backgroundColor);

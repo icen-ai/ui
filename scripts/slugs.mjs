@@ -139,6 +139,7 @@ export const SLUG_INIT = {
   nav: 'initNav',
   notification: 'initNotification',
   pagination: 'initPagination',
+  popover: 'initPopover',
   rating: 'initRating',
   select: 'initSelect',
   sidebar: 'initSidebar',

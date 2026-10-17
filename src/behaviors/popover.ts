@@ -7,8 +7,15 @@
  *
  * openPopover(panel, { anchor, ...opts })：panel 移到 document.body（跳出祖先
  * stacking context），未算出布局前 visibility:hidden；window resize 与捕获
- * scroll 时重算；外点/Esc 关闭；closePopover 后还原 panel 到原位置。
- * SSR 下为 no-op。
+ * scroll 时重算；外点/Esc 关闭；closePopover 视觉先退场（可中断重开续接），
+ * 落定后还原 panel 到原位置。
+ *
+ * initPopover(root?)：声明式委托——<button data-icen-popover-target="panelId">
+ * 点击开关（退场中再点 = 重开续接），同步 aria-haspopup/expanded/controls；
+ * 面板内 .icen-popover-close（或 data-icen-popover-dismiss）点击关闭；
+ * 触发器 data-icen-side/align 优先，其次面板首开时的同名属性，缺省 bottom/start；
+ * 面板内 [data-icen-autofocus] / [autofocus] 为初始焦点。重复 init 幂等返回同一
+ * disposer；dispose 摘除委托并关闭本作用域打开的浮层。SSR 下为 no-op。
  */
 
 /** 布局锚矩形（视口坐标，宽高齐全，元素锚或手工锚共用此形状）。 */
@@ -312,6 +319,9 @@ interface OpenState {
 }
 
 const openPanels = new Map<HTMLElement, OpenState>();
+/* 退场中的面板：保留 OpenState 至 finalize；重开从当前动画位置续接，不重建门户 */
+const closingPanels = new Map<HTMLElement, { state: OpenState; timer: number; onEnd: (event: Event) => void }>();
+const EXIT_FALLBACK_MS = 240;
 let menuCloser: (()=>void) | null = null;
 /** Shared ownership for action menus: opening one retires the previous renderer
  * without stealing focus. The release handle cannot release a newer owner. */
@@ -379,9 +389,33 @@ function onKeyDown(e: KeyboardEvent): void {
   }
 }
 
-/** 打开浮层：panel 移入 body 并按 anchor 布局；重复调用同一 panel 为先关后开。 */
+/** 打开浮层：panel 移入 body 并按 anchor 布局；重复调用同一 panel 为先关后开；
+ *  退场中重开从当前动画位置续接（复用既有门户记录，不重复插占位）。 */
 export function openPopover(panel: HTMLElement, options: OpenPopoverOptions): void {
   if (typeof document === 'undefined') return;
+
+  /* 中断退场：取消回收定时，复用原 OpenState（placeholder/returnFocus 仍有效） */
+  const pending = closingPanels.get(panel);
+  if (pending) {
+    window.clearTimeout(pending.timer);
+    panel.removeEventListener('transitionend', pending.onEnd);
+    closingPanels.delete(panel);
+    delete panel.dataset.icenState;
+    openPanels.set(panel, pending.state);
+    panel.hidden = false;
+    panel.style.visibility = 'hidden';
+    relayout(pending.state);
+    if (openPanels.size === 1) {
+      window.addEventListener('resize', onWindowChange);
+      window.addEventListener('scroll', onWindowChange, true);
+      document.addEventListener('pointerdown', onOutsidePointerDown, true);
+      window.addEventListener('keydown', onKeyDown, true);
+    }
+    const ifs = options.initialFocus;
+    if (ifs && panel.contains(ifs)) ifs.focus({ preventScroll: true });
+    return;
+  }
+
   if (openPanels.has(panel)) closePopover(panel);
 
   const { anchor, onClose, sizing, initialFocus, restoreFocus, ...rest } = options;
@@ -420,14 +454,9 @@ export function openPopover(panel: HTMLElement, options: OpenPopoverOptions): vo
   }
 }
 
-/** 关闭浮层：移除监听并把 panel 还原到打开前的位置与 hidden 状态。 */
-export function closePopover(panel: HTMLElement): void {
-  if (typeof document === 'undefined') return;
-  const state = openPanels.get(panel);
-  if (!state) return;
-  openPanels.delete(panel);
-  const ownsFocus=panel.contains(document.activeElement);
-
+/* 退场 finalize：还原门户位置、hidden、尺寸与可见性（在 DOM 已拆除时安全跳过） */
+function finalizeClose(panel: HTMLElement, state: OpenState): void {
+  delete panel.dataset.icenState;
   panel.style.visibility = state.prevVisibility;
   /* hidden 还原：字符串值（如 until-found）走 setAttribute，布尔走属性赋值 */
   if (typeof state.wasHidden === 'string') panel.setAttribute('hidden', state.wasHidden);
@@ -441,6 +470,16 @@ export function closePopover(panel: HTMLElement): void {
     state.placeholder.parentNode.insertBefore(panel, state.placeholder);
     state.placeholder.remove();
   }
+}
+
+/** 关闭浮层：视觉先退场（可被打断重开），finalize 再还原门户；焦点与 onClose 立即结算。
+ *  immediate: true 供卸载/销毁路径——跳过退场直接 finalize（拆页时不把面板留在 body）。 */
+export function closePopover(panel: HTMLElement, opts?: { immediate?: boolean }): void {
+  if (typeof document === 'undefined') return;
+  const state = openPanels.get(panel);
+  if (!state) return;
+  openPanels.delete(panel);
+  const ownsFocus=panel.contains(document.activeElement);
   if(ownsFocus && state.returnFocus?.isConnected)state.returnFocus.focus({preventScroll:true});
 
   if (openPanels.size === 0) {
@@ -449,6 +488,124 @@ export function closePopover(panel: HTMLElement): void {
     document.removeEventListener('pointerdown', onOutsidePointerDown, true);
     window.removeEventListener('keydown', onKeyDown, true);
   }
-
   state.onClose?.();
+
+  /* reduced-motion 或节点已拆除：跳过退场动画直接 finalize */  const calm = opts?.immediate || (typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (calm || !panel.isConnected) {
+    finalizeClose(panel, state);
+    return;
+  }
+  panel.dataset.icenState = 'closing';
+  const finalize = (): void => {
+    const pending = closingPanels.get(panel);
+    if (!pending || pending.state !== state) return;
+    window.clearTimeout(pending.timer);
+    panel.removeEventListener('transitionend', pending.onEnd);
+    closingPanels.delete(panel);
+    finalizeClose(panel, state);
+  };
+  const onEnd = (event: Event): void => {
+    if (event.target === panel && (event as TransitionEvent).propertyName === 'opacity') finalize();
+  };
+  panel.addEventListener('transitionend', onEnd);
+  closingPanels.set(panel, {
+    state,
+    timer: window.setTimeout(finalize, EXIT_FALLBACK_MS),
+    onEnd,
+  });
+}
+
+/* ═══════════ 声明式接入（data-icen-popover-target 触发器委托） ═══════════ */
+
+const popoverScopes = new WeakMap<ParentNode, () => void>();
+/* 面板首开时记住作者声明的默认侧/对齐（布局写回的 dataset.icenSide 不冒充作者意图） */
+const popoverDefaults = new WeakMap<HTMLElement, { side?: PopoverSide; align?: PopoverAlign }>();
+
+function rememberPopoverDefaults(panel: HTMLElement): { side?: PopoverSide; align?: PopoverAlign } {
+  let defaults = popoverDefaults.get(panel);
+  if (!defaults) {
+    const side = panel.dataset.icenSide;
+    const align = panel.getAttribute('data-icen-align');
+    defaults = {
+      side: side === 'top' || side === 'bottom' || side === 'left' || side === 'right' ? side : undefined,
+      align: align === 'start' || align === 'center' || align === 'end' ? align : undefined,
+    };
+    popoverDefaults.set(panel, defaults);
+  }
+  return defaults;
+}
+
+/**
+ * 声明式浮层委托：<button data-icen-popover-target="panelId"> 点击开关 .icen-popover 面板，
+ * 同步触发器 aria-haspopup/aria-expanded/aria-controls；面板内 .icen-popover-close 点击关闭。
+ * 同一 root 重复调用返回同一销毁函数；销毁摘除委托并关闭本作用域打开的浮层。SSR 下返回 no-op。
+ */
+export function initPopover(root?: ParentNode): () => void {
+  if (typeof document === 'undefined') return () => {};
+  const scope = root ?? document;
+  const existing = popoverScopes.get(scope);
+  if (existing) return existing;
+
+  /* panel → trigger（本作用域打开的），dispose 时逐一结算；
+     关闭钮监听挂在 panel 自身（面板 portal 到 body 后已不在作用域内，委托捕获不到） */
+  const opened = new Map<HTMLElement, HTMLElement>();
+  const dismissHandlers = new Map<HTMLElement, (event: Event) => void>();
+  const watchDismiss = (panel: HTMLElement): void => {
+    if (dismissHandlers.has(panel)) return;
+    const handler = (event: Event): void => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('.icen-popover-close, [data-icen-popover-dismiss]')) closePopover(panel);
+    };
+    panel.addEventListener('click', handler);
+    dismissHandlers.set(panel, handler);
+  };
+
+  const onClick = (event: Event): void => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const trigger = target.closest<HTMLElement>('[data-icen-popover-target]');
+    if (!trigger || !(scope as Node).contains(trigger)) return;
+    const id = trigger.getAttribute('data-icen-popover-target') ?? '';
+    const panel = document.getElementById(id);
+    if (!panel || !panel.classList.contains('icen-popover')) return;
+
+    if (openPanels.has(panel)) {
+      closePopover(panel);
+      return;
+    }
+    /* 退场中再点 = 重开续接（openPopover 的 closing 分支处理），此处直接放行 */
+
+    const defaults = rememberPopoverDefaults(panel);
+    const sideAttr = trigger.getAttribute('data-icen-side') as PopoverSide | null;
+    const alignAttr = trigger.getAttribute('data-icen-align') as PopoverAlign | null;
+    if (!trigger.hasAttribute('aria-haspopup')) trigger.setAttribute('aria-haspopup', 'dialog');
+    trigger.setAttribute('aria-expanded', 'true');
+    if (panel.id) trigger.setAttribute('aria-controls', panel.id);
+    opened.set(panel, trigger);
+    watchDismiss(panel);
+    openPopover(panel, {
+      anchor: trigger,
+      side: sideAttr ?? defaults.side ?? 'bottom',
+      align: alignAttr ?? defaults.align ?? 'start',
+      initialFocus: panel.querySelector<HTMLElement>('[data-icen-autofocus], [autofocus]') ?? undefined,
+      onClose: () => {
+        opened.delete(panel);
+        trigger.setAttribute('aria-expanded', 'false');
+      },
+    });
+  };
+
+  scope.addEventListener('click', onClick);
+  const dispose = (): void => {
+    scope.removeEventListener('click', onClick);
+    for (const panel of [...opened.keys()]) closePopover(panel, { immediate: true });
+    for (const [panel, handler] of dismissHandlers) panel.removeEventListener('click', handler);
+    dismissHandlers.clear();
+    popoverScopes.delete(scope);
+  };
+  popoverScopes.set(scope, dispose);
+  return dispose;
 }

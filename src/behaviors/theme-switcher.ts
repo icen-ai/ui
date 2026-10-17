@@ -118,7 +118,7 @@ function bind(root: HTMLElement, o: ThemeSwitcherOptions): ThemeSwitcherHandle {
     });
     if (panel && !inline) panel.setAttribute('aria-label',axisName(o.kind ?? 'all'));
   };
-  const close = () => { if (panel && opened) closePopover(panel); };
+  const close = (immediate = false) => { if (panel && opened) closePopover(panel, { immediate }); };
   const open = () => {
     if (!panel || !trigger) return;
     if (opened) { close(); return; }
@@ -168,7 +168,7 @@ function bind(root: HTMLElement, o: ThemeSwitcherOptions): ThemeSwitcherHandle {
   observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-icen-preset','data-icen-theme','data-icen-style']});
   reflect();
   const handle = { destroy() {
-    close(); observer.disconnect();
+    close(true); observer.disconnect();
     trigger?.removeEventListener('click',triggerClick); trigger?.removeEventListener('keydown',keydown);
     panel?.removeEventListener('click',choose); panel?.removeEventListener('keydown',keydown); panel?.removeEventListener('focusout',focusout);
     document.removeEventListener('icen:theme-change',reflect); document.removeEventListener('icen:locale-change',reflect);

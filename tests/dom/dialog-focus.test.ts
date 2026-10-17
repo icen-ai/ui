@@ -26,11 +26,14 @@ test('removing an open modal releases scroll lock and listeners without resurrec
   await new Promise((resolve)=>setTimeout(resolve,0));
   expect(document.body.style.overflow).not.toBe('hidden');expect(backdrop.isConnected).toBe(false);expect(document.activeElement === trigger).toBe(true);
 });
-test('an inner popover owns Escape before its parent dialog, and restores focus to its anchor',()=>{
+test('an inner popover owns Escape before its parent dialog, and restores focus to its anchor',async()=>{
   const {backdrop,trigger}=fixture();trigger.click();const anchor=backdrop.querySelector<HTMLElement>('.first')!;
   const pop=document.createElement('div'),input=document.createElement('input');pop.hidden=true;pop.append(input);backdrop.querySelector('.icen-modal')!.append(pop);cleanups.push(()=>closePopover(pop));
   openPopover(pop,{anchor,initialFocus:input});expect(document.activeElement === input).toBe(true);
   input.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
-  expect(pop.hidden).toBe(true);expect(backdrop.hidden).toBe(false);expect(document.activeElement === anchor).toBe(true);
+  /* 退场是短暂的视觉阶段：焦点立即归还锚点，hidden 在落定后还原 */
+  expect(document.activeElement === anchor).toBe(true);expect(pop.dataset.icenState).toBe('closing');expect(backdrop.hidden).toBe(false);
+  await new Promise((resolve)=>setTimeout(resolve,300));
+  expect(pop.hidden).toBe(true);expect(backdrop.hidden).toBe(false);
   anchor.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));expect(backdrop.hidden).toBe(true);
 });

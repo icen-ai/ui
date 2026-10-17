@@ -280,7 +280,7 @@ html {
      icen-pop-in         → 弹层进场（scale .96 + translateY -4px）
      icen-spin           → 旋转（spinner / 加载态）
      icen-skeleton-pulse → 骨架脉冲
-   注：menu.css / popover.css 保留自己的 scale(.95)±8px 四方向版
+   注：menu.css / popover.css 保留自己的 scale(.985)±3px 四方向版
        （方向语义不同：按 data-icen-side 反向位移），不并入 icen-pop-in。
    ══════════════════════════════════════════════════════════════ */
 @keyframes icen-pop-in {

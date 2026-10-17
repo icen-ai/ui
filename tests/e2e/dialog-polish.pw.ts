@@ -56,7 +56,7 @@ test('mobile large sheet stays in the viewport, close is 44px and reduced motion
 });
 
 test('interactive popover focuses its field and returns focus after Escape or apply',async({page})=>{
-  await page.goto('/components/popover/');const trigger=page.locator('#popover-demo-trigger');await trigger.click();
+  await page.goto('/components/popover/');const trigger=page.locator('[data-icen-popover-target="popover-demo-panel"]');await trigger.click();
   const input=page.locator('#popover-demo-input');await expect(input).toBeFocused();await input.press('Escape');await expect(trigger).toBeFocused();
   await trigger.click();await input.fill('材质');await page.locator('#popover-demo-apply').click();await expect(trigger).toBeFocused();
 });

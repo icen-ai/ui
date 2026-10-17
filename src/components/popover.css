@@ -15,7 +15,8 @@
  *   </div>
  *
  * behavior：面板 portal 到 document.body 按 fixed 定位；data-icen-side 由布局函数写入；
- *           ESC / 外部点击关闭；焦点 trap 可选。
+ *           ESC / 外部点击关闭；initPopover() 提供 data-icen-popover-target 声明式委托；
+ *           退场为淡出过渡（[data-icen-state='closing']），重开从当前位置续接。
  */
 
 .icen-popover {
@@ -31,6 +32,16 @@
   border-radius: var(--icen-radius-lg);
   animation: icen-popover-in var(--icen-tx-fast);
   transform-origin: top center;
+  /* 退场走过渡（可中断回弹）；与菜单同收敛配方 */
+  transition:
+    opacity var(--icen-tx-fast) var(--icen-ease-out),
+    transform var(--icen-tx-fast) var(--icen-ease-out);
+}
+.icen-popover[data-icen-state='closing'] {
+  animation: none; /* 打断可能仍在跑的进场 */
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.99);
 }
 .icen-popover[data-icen-side='top'] {
   animation-name: icen-popover-in-top;
@@ -104,24 +115,24 @@
   border-top: 1px solid var(--icen-token-line-soft);
 }
 
-/* ── 进场动画（按侧别反向位移 8px） ── */
+/* ── 进场动画（与菜单同配方：fade + scale(.985)，按侧别反向位移 3px） ── */
 @keyframes icen-popover-in {
-  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  from { opacity: 0; transform: scale(0.985) translateY(-3px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes icen-popover-in-top {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  from { opacity: 0; transform: scale(0.985) translateY(3px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes icen-popover-in-left {
-  from { opacity: 0; transform: scale(0.95) translateX(8px); }
+  from { opacity: 0; transform: scale(0.985) translateX(3px); }
   to { opacity: 1; transform: scale(1) translateX(0); }
 }
 @keyframes icen-popover-in-right {
-  from { opacity: 0; transform: scale(0.95) translateX(-8px); }
+  from { opacity: 0; transform: scale(0.985) translateX(-3px); }
   to { opacity: 1; transform: scale(1) translateX(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .icen-popover { animation: none; }
+  .icen-popover { animation: none; transition: none; }
 }

@@ -1255,39 +1255,46 @@ return () => { dispose(); contextMenuMod.unregisterContextMenu('demo-file'); };`
     name: '浮层',
     summary: '在当前操作旁展开补充内容。随锚点定位，支持键盘关闭和焦点归还。',
     group: '浮层',
-    desc: 'computePopoverLayout 纯函数选侧（prefer → 翻对侧 → 取大侧）；openPopover 负责 portal、跟随重算与外点/Esc 关闭。',
-    demo: `<div class="demo-row">
-  <button class="icen-btn" id="popover-demo-trigger">筛选</button>
-</div>
-<div class="icen-popover" id="popover-demo-panel" hidden>
-  <div class="icen-form-field">
-    <label class="icen-form-label" for="popover-demo-input">包含关键词</label>
-    <input class="icen-form-input" id="popover-demo-input" placeholder="例如：overlay" />
+    desc: '声明式接入：触发器写 data-icen-popover-target 指向面板 id，点击开合、面板内关闭钮生效、触发器状态自动同步。面板 portal 到 body，computePopoverLayout 选侧（prefer → 翻对侧 → 取大侧）并避开视口边缘；外点 / Esc 关闭，焦点归还触发器；退场淡出可中断，快速重开从当前位置续接。程序面 openPopover / closePopover 同样可用。',
+    demo: `<button class="icen-btn" data-icen-popover-target="popover-demo-panel">筛选</button>
+<div class="icen-popover" id="popover-demo-panel" role="dialog" aria-label="筛选条件" hidden>
+  <div class="icen-popover-header">
+    <h3 class="icen-popover-title">筛选作品</h3>
+    <button class="icen-popover-close" aria-label="关闭筛选">${iconHTML('close')}</button>
   </div>
-  <div class="demo-row" style="margin-top:10px">
-    <button class="icen-btn icen-btn-sm icen-btn-primary" id="popover-demo-apply">应用</button>
+  <div class="icen-popover-body">
+    <div class="icen-form-field">
+      <label class="icen-form-label" for="popover-demo-input">包含关键词</label>
+      <input class="icen-form-input" id="popover-demo-input" data-icen-autofocus placeholder="例如：overlay" />
+    </div>
+  </div>
+  <div class="icen-popover-footer">
+    <button class="icen-btn icen-btn-sm icen-popover-close" type="button">取消</button>
+    <button class="icen-btn icen-btn-sm icen-btn-primary" id="popover-demo-apply" type="button">应用</button>
   </div>
 </div>`,
-    usage: `import { openPopover, closePopover, computePopoverLayout } from '@icen.ai/ui/behaviors/popover';
+    usage: `import { initPopover, openPopover, closePopover } from '@icen.ai/ui/behaviors/popover';
 
-openPopover(panel, { anchor: trigger, side: 'bottom', align: 'start' });
-// panel 移入 body 定位；resize / 捕获 scroll 重算；外点 / Esc 关闭并还原`,
+<button data-icen-popover-target="filter-panel">筛选</button>
+<div class="icen-popover" id="filter-panel" role="dialog" aria-label="筛选" hidden>
+  …面板内容；[data-icen-autofocus] 标记初始焦点…
+</div>
+
+const dispose = initPopover(); // 声明式委托；宿主卸载时 dispose()
+// 触发器可用 data-icen-side / data-icen-align 指定偏好侧与对齐
+// 程序面：openPopover(panel, { anchor, side: 'bottom', align: 'start' })`,
     behaviors: ['popover', 'toast'],
-    script: `const openPopover = popoverMod.openPopover;
-const closePopover = popoverMod.closePopover;
+    behaviorInit: { popover: 'initPopover' },
+    script: `const closePopover = popoverMod.closePopover;
 const toast = toastMod.toast;
-const popTrigger = document.getElementById('popover-demo-trigger');
 const popPanel = document.getElementById('popover-demo-panel');
-popTrigger?.addEventListener('click', () => {
-  if (popTrigger && popPanel) {
-    openPopover(popPanel, { anchor: popTrigger, side: 'bottom', align: 'start', initialFocus: document.getElementById('popover-demo-input') });
-  }
-});
+const ac = new AbortController();
 document.getElementById('popover-demo-apply')?.addEventListener('click', () => {
+  const keyword = document.getElementById('popover-demo-input')?.value.trim();
   if (popPanel) closePopover(popPanel);
-  toast.ok('已应用筛选');
-});
-return () => { if(popPanel) closePopover(popPanel); };`,
+  toast.ok(keyword ? '已应用筛选：' + keyword : '已清除筛选条件');
+}, { signal: ac.signal });
+return () => { ac.abort(); if (popPanel) closePopover(popPanel); };`,
   },
   {
     slug: 'tooltip',
