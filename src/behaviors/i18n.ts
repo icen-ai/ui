@@ -250,6 +250,10 @@ export interface IcenLocale {
   'aiTools.typeMismatch': string;
   'aiTools.validationFailed': string;
   /* ── autocomplete ── */
+  'suggestions.loading': string;
+  'suggestions.error': string;
+  'suggestions.options': string;
+  'suggestions.empty': string;
   'autocomplete.empty': string;
   /* ── backTop ── */
   'backTop.label': string;
@@ -1045,6 +1049,10 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'aiTools.typeMismatch': '期望 {p0}，实得 {p1}',
   'aiTools.validationFailed': '参数校验失败（{p0} 项）',
   /* ── autocomplete ── */
+  'suggestions.loading': '正在查找建议…',
+  'suggestions.error': '暂时无法加载建议，请重试。',
+  'suggestions.options': '建议',
+  'suggestions.empty': '没有匹配的建议',
   'autocomplete.empty': '无匹配结果',
   /* ── backTop ── */
   'backTop.label': '回到顶部',
@@ -1840,6 +1848,10 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'aiTools.typeMismatch': 'expected {p0}, got {p1}',
   'aiTools.validationFailed': 'argument validation failed ({p0} issues)',
   /* ── autocomplete ── */
+  'suggestions.loading': 'Finding suggestions…',
+  'suggestions.error': 'Suggestions could not be loaded. Try again.',
+  'suggestions.options': 'Suggestions',
+  'suggestions.empty': 'No matching suggestions',
   'autocomplete.empty': 'No matches',
   /* ── backTop ── */
   'backTop.label': 'Back to top',

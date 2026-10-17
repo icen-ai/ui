@@ -248,7 +248,7 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 ## 规模
 
 - **69 个组件 CSS**（charts 基座 + 13 个细分图表 CSS（+v0.9 chart-graph/map）+ 10 个 v0.5 新增：copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 v0.7 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel + v0.9：kb.css 基座 + 7 个 kb 域文件（ground/ingest/search/data/ops/agent/perm）+ v0.10：form-validate.css 校验层 + mentions/autocomplete.css + theme-switcher.css 外观切换）
-- **84 个 behaviors TS**（v0.9：+ai-threads/ai-feedback/ai-branch +kb-core 契约层 +31 个 kb-*——含权限域 kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility；v0.10：+form-validate 校验层 +mentions/autocomplete +i18n 文案注册表；+theme-switcher 外观切换、icons 共享图形、focus 原生焦点契约、feedback 计时与异步动作等基础模块）
+- **85 个 behaviors TS**（v0.9：+ai-threads/ai-feedback/ai-branch +kb-core 契约层 +31 个 kb-*——含权限域 kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility；v0.10：+form-validate 校验层 +mentions/autocomplete +i18n 文案注册表；+theme-switcher 外观切换、icons 共享图形、focus 原生焦点契约、feedback 计时与异步动作、suggestions 可取消查询等基础模块）
 - **122 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单；v0.9 新增 37：kb 总集 + 31 kb-* + ai-threads/ai-feedback/ai-branch + chart-graph/chart-map；v0.10 新增 3：form-validate + mentions/autocomplete；+theme-switcher）
 - **测试与守卫**：`bun run verify` = tsc + guard + test + build；500+ 测试（bun test + happy-dom，tests/unit 纯契约 + tests/dom 委托行为 + tests/kb-conformance 权限诚实呈现 + tests/{unit,dom}/i18n 本地化契约与零 CJK 渲染验收）；9 项纪律守卫（CSS/registry/事件/行为/命名空间/权限域/RTL 逻辑属性/类名同步/操作图标），CI 全挂
 - **6 个 token 文件**：colors.css、style-profiles.css（公共兜底）、typography.css、design.css（本真与共享配方）、pixel.css（像素）、icon-masks.css（共享 SVG 路径生成的静态图形）。旧 retro-effects 已删除。

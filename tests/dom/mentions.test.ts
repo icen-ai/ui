@@ -46,15 +46,15 @@ afterEach(() => {
 });
 
 describe('createMentions', () => {
-  test('@ 触发（minChars 0）：面板弹出并列出候选，combobox 语义接线', () => {
+  test('@ 触发（minChars 0）：面板弹出并列出候选，原生多行 textbox 与 listbox 语义接线', () => {
     const { ta } = setup();
     type(ta, '@');
     expect(panel().hidden).toBe(false);
-    expect(panel().getAttribute('role')).toBe('listbox');
+    expect(panel().querySelector('[role="listbox"] [role="status"]')).toBeNull();
     expect(options().length).toBe(4);
     expect(ta.getAttribute('aria-haspopup')).toBe('listbox');
-    expect(ta.getAttribute('aria-expanded')).toBe('true');
-    expect(ta.getAttribute('aria-controls')).toBe(panel().id);
+    expect(ta.hasAttribute('aria-expanded')).toBe(false);
+    expect(ta.getAttribute('aria-controls')).toBe(panel().querySelector('[role="listbox"]')!.id);
   });
 
   test('触发边界：行首/空白后才触发（email 形态 a@b 不弹层）', () => {
@@ -103,7 +103,7 @@ describe('createMentions', () => {
     expect(panel().hidden).toBe(false);
     const status = panel().querySelector<HTMLElement>('.icen-mentions-status')!;
     expect(status.hidden).toBe(false);
-    expect(status.textContent).toBe('查询中…');
+    expect(status.querySelector('.icen-suggestion-copy')?.textContent).toBe('查询中…');
     resolveSource!();
     await nextTick();
     expect(status.hidden).toBe(true);
@@ -214,13 +214,15 @@ describe('createMentions', () => {
     expect(ev.defaultPrevented).toBe(true);
     expect(panel().hidden).toBe(true);
     expect(ta.value).toBe('@ali');
-    expect(ta.getAttribute('aria-expanded')).toBe('false');
+    expect(ta.hasAttribute('aria-expanded')).toBe(false);
   });
 
-  test('空结果直接关层', () => {
+  test('空结果保留明确提示，状态不是 listbox 选项', () => {
     const { ta } = setup({ source: () => [] });
     type(ta, '@zzz');
-    expect(panel().hidden).toBe(true);
+    expect(panel().hidden).toBe(false);
+    expect(panel().querySelector<HTMLElement>('.icen-mentions-empty')?.hidden).toBe(false);
+    expect(panel().querySelector('[role="listbox"] [role="status"]')).toBeNull();
   });
 
   test('destroy：摘面板/监听并还原 aria 属性', () => {

@@ -1,48 +1,15 @@
-/*
- * @icen.ai/ui — Behavior: mentions（@ 提及输入，与 components/mentions.css 配套）
- *
- * createMentions(el, opts) → MentionsHandle：
- *   el 传包装容器（内含宿主渲染的 <icen-textarea class="icen-input">）或 icen-textarea 直元素。
- *
- * 交互：
- *   - textarea 输入中检测光标前的 trigger token：触发边界 = 行首/空白后（`(^|\s)@query`，
- *     query 为不含空白与 trigger 字符的连续串）；命中即弹层（portal 到 body），
- *     查询字符数 ≥ minChars 才调 source（默认 0 = 输入 @ 即出）。
- *   - source(query) 负责过滤（同步数组或 Promise 皆可；keywords 字段是给 source 做
- *     辅助匹配用的元数据，组件不消费）；结果截断到 max 条；空结果直接关层。
- *   - 异步竞态守卫：只渲染最新一次 query 的结果（seq 单调递增，晚到丢弃）。
- *   - 键盘：↑↓ 循环移动 active（跳过 disabled），Enter 选中（IME 组合态不拦截），
- *     Esc 关层不动文本；点击选项选中（mousedown preventDefault 保焦点在 textarea）。
- *   - 选中：把 `@query` 替换为 `@label `（label + 尾随空格），光标落在插入文本之后，
- *     同时 track 进 mentions 数组（id/label 双全）。
- *   - 诚实一致性：任何输入变化后，文本里已不存在 `@label` 的 mention 自动从数组摘除
- *     （getMentions() 只返回仍然活在文本里的提及）。
- *   - 失焦 / 外点（textarea 与面板之外）关层；窗口 resize/scroll 重定位。
- *
- * caret 定位技法（镜像 div 量坐标，经典 textarea-caret-position 方案）：
- *   textarea 不暴露像素级 caret 坐标，故建一个 off-screen 镜像 div：逐条拷贝计算样式
- *   （box-sizing / padding / border / font / line-height / text-indent / letter-spacing…），
- *   写入 caret 之前的全文 + 一个零宽标记 span，读标记的 offsetTop/offsetLeft/offsetHeight
- *   即得 caret 相对 textarea 内边距盒的坐标（加回 border 宽），再叠 textarea 的视口 rect
- *   并减掉 scrollTop/scrollLeft，得到视口锚点交给 popover 布局引擎。渲染只走 textContent。
- *
- * a11y：textarea 挂 aria-haspopup="listbox" / aria-expanded / aria-controls；
- *   面板 role="listbox"，选项 role="option" + id，active 项经 aria-activedescendant 指认；
- *   异步加载态渲染 .icen-mentions-status（role="status"），文案 = opts.loadingLabel。
- *
- * 面板尺寸契约（PanelSizing）：包装容器可挂 data-icen-panel-width / -min / -max /
- *   -max-height，经 resolvePanelSizing 读入布局。
- *
- * 事件（bubbles + composed + cancelable，detail 契约见 events.ts IcenEventMap）：
- *   选中 → icen:mention-select { id, label, query }（textarea 上派发，随后调 opts.onSelect）
- *
- * SSR 安全（window 未定义静默返回 noop handle）；渲染只写 textContent（禁 innerHTML）；
- * destroy() 摘除监听/面板/镜像并还原 textarea 的 aria 属性。
+/** Mention suggestions for native multiline textareas. Trigger/caret queries
+ * share cancellable source ownership with autocomplete. The popup contains a
+ * named listbox plus sibling loading/empty/retry states; the textarea retains its
+ * native textbox role (aria-expanded is not valid on a multiline textbox).
+ * Supports safe renderItem, disabled entries, original ARIA restoration, native
+ * input after insertion, exact-label tracking, and an idempotent close/destroy.
  */
 
 import { emitIcen } from './events';
 import { t } from './i18n';
-import { revealPopoverItem, computePopoverLayout, resolvePanelSizing, sizingToLayout, type PopoverLayoutOptions } from './popover';
+import {canQuery,createSuggestionQuery,createSuggestionStatus,watchSuggestionField,afterSuggestionField,type SuggestionSourceContext} from './suggestions';
+import { revealPopoverItem, computePopoverLayout, resolvePanelSizing, sizingToLayout, claimMenuFocus, type PopoverLayoutOptions } from './popover';
 
 /** 一条提及候选项（id/label 双全：id 是业务键，label 是插入文本的展示名）。 */
 export interface MentionItem {
@@ -57,8 +24,8 @@ export interface MentionItem {
 }
 
 export interface MentionsOptions {
-  /** 查询过滤源：按 query 返回候选（同步数组或 Promise；空结果 = 关层） */
-  source: (query: string) => MentionItem[] | Promise<MentionItem[]>;
+  /** 查询过滤源：按 query 返回候选（同步数组或 Promise；空结果显示 noResultsLabel） */
+  source: (query: string, context: SuggestionSourceContext) => MentionItem[] | Promise<MentionItem[]>;
   /** 触发字符（默认 '@'） */
   trigger?: string;
   /** 面板最多显示条数（默认 8） */
@@ -69,6 +36,10 @@ export interface MentionsOptions {
   debounceMs?: number;
   /** 异步加载态占位文案（默认取 i18n mentions.loading，可被 opts 覆盖） */
   loadingLabel?: string;
+  errorLabel?: string;
+  retryLabel?: string;
+  noResultsLabel?: string;
+  renderItem?: (item: MentionItem, query: string) => Node | string;
   /** 选中回调（在 icen:mention-select 派发后调用） */
   onSelect?: (item: MentionItem) => void;
 }
@@ -76,6 +47,8 @@ export interface MentionsOptions {
 export interface MentionsHandle {
   /** 当前 track 中的提及（已按文本实时摘除失效项） */
   getMentions(): MentionItem[];
+  /** Cancel the current suggestions without modifying the text. */
+  close(): void;
   /** 摘除全部监听/计时器/面板/镜像，还原 textarea aria 属性 */
   destroy(): void;
 }
@@ -122,30 +95,33 @@ function findTrigger(text: string, trigger: string): TriggerMatch | null {
   return { start, query: m[2] ?? '' };
 }
 
+const mounted=new WeakMap<HTMLTextAreaElement,MentionsHandle>();
 export function createMentions(el: HTMLElement, opts: MentionsOptions): MentionsHandle {
   /* SSR 守卫：window/document 未定义时静默返回 noop handle */
   if (typeof document === 'undefined' || typeof window === 'undefined') {
-    return { getMentions: () => [], destroy: () => undefined };
+    return { getMentions: () => [], close:()=>{}, destroy: () => undefined };
   }
   if (!opts || typeof opts.source !== 'function') {
-    return { getMentions: () => [], destroy: () => undefined };
+    return { getMentions: () => [], close:()=>{}, destroy: () => undefined };
   }
 
   const found = el instanceof HTMLTextAreaElement
     ? el
-    : (el.querySelector<HTMLTextAreaElement>('textarea.input')
+    : (el.querySelector<HTMLTextAreaElement>('textarea.icen-input')
         ?? el.querySelector<HTMLTextAreaElement>('textarea'));
   if (!found) {
     console.warn('[@icen.ai/ui] mentions: el 内未找到 textarea，已跳过创建');
-    return { getMentions: () => [], destroy: () => undefined };
+    return { getMentions: () => [], close:()=>{}, destroy: () => undefined };
   }
   /* 非空别名：提升式函数声明在作用域入口取声明类型（含 null），别名把非空面钉死 */
   const ta: HTMLTextAreaElement = found;
+  mounted.get(ta)?.destroy();
+  const attrs=['aria-haspopup','aria-expanded','aria-controls','aria-activedescendant','aria-autocomplete','aria-busy'];
+  const original=attrs.map((key)=>ta.getAttribute(key));
 
   const trigger = opts.trigger ?? '@';
-  const max = Math.max(1, opts.max ?? 8);
-  const minChars = Math.max(0, opts.minChars ?? 0);
-  const debounceMs = Math.max(0, opts.debounceMs ?? 160);
+  const count=(value:number | undefined,fallback:number,min:number)=>Number.isFinite(value) ? Math.max(min,Math.floor(value!)) : fallback;
+  const max=count(opts.max,8,1),minChars=count(opts.minChars,0,0),debounceMs=count(opts.debounceMs,160,0);
   const loadingLabel = opts.loadingLabel ?? t('mentions.loading');
 
   /* ── 状态 ── */
@@ -156,9 +132,10 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
   let currentQuery = '';
   let open = false;
   let composing = false;
-  /** 异步竞态守卫：seq 单调递增，渲染时比对，晚到的结果丢弃 */
-  let seq = 0;
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Query ownership and presentation state. */
+  let busy=false,failed=false;
+  let lastComposition:string | null=null,release:(()=>void) | null=null;
+
   let destroyed = false;
 
   /* ── 面板（portal 到 body）── */
@@ -167,15 +144,19 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
   panel.className = 'icen-mentions-panel';
   panel.id = panelId;
   panel.hidden = true;
-  panel.setAttribute('role', 'listbox');
+  const list=document.createElement('div');list.className='icen-mentions-list';list.id=panelId+'-list';list.setAttribute('role','listbox');
+  list.setAttribute('aria-label',ta.getAttribute('aria-label') || ta.labels?.[0]?.textContent?.trim() || t('suggestions.options'));
+  panel.append(list);
   document.body.appendChild(panel);
 
-  const status = document.createElement('div');
-  status.className = 'icen-mentions-status';
-  status.setAttribute('role', 'status');
-  status.hidden = true;
-  status.textContent = loadingLabel;
-  panel.appendChild(status);
+  const notice=createSuggestionStatus(()=>{ta.focus({preventScroll:true});onValueChanged(0);},{loading:loadingLabel,error:opts.errorLabel,retry:opts.retryLabel});
+  const status=notice.el;status.classList.add('icen-mentions-status');panel.append(status);
+  const empty=document.createElement('div');empty.className='icen-mentions-empty';empty.setAttribute('role','status');empty.hidden=true;empty.textContent=opts.noResultsLabel ?? t('suggestions.empty');panel.append(empty);
+  const query=createSuggestionQuery(opts.source,{
+    pending(){if(!canQuery(ta))return;busy=true;failed=false;items=[];activeIndex=-1;list.replaceChildren();empty.hidden=true;ta.setAttribute('aria-busy','true');notice.show('loading');syncActive();setOpen(true);position();},
+    success(raw){if(!canQuery(ta)){close();return;}busy=false;failed=false;ta.removeAttribute('aria-busy');notice.show(null);renderItems(normalizeItems(raw));empty.hidden=items.length>0;setOpen(true);position();},
+    error(){if(!canQuery(ta)){close();return;}busy=false;failed=true;items=[];activeIndex=-1;list.replaceChildren();empty.hidden=true;ta.removeAttribute('aria-busy');notice.show('error');syncActive();setOpen(true);position();},
+  });
 
   /* ── 镜像 div（caret 量坐标用，见文件头技法说明）── */
   const mirror = document.createElement('div');
@@ -183,7 +164,7 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
     'box-sizing', 'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
     'border-top-width', 'border-bottom-width', 'border-left-width', 'border-right-width',
     'font-family', 'font-size', 'font-weight', 'font-style', 'font-variant',
-    'line-height', 'text-indent', 'letter-spacing', 'word-spacing',
+    'line-height', 'text-indent', 'letter-spacing', 'word-spacing','direction','text-align','tab-size','word-break','text-transform',
   ];
   mirror.style.position = 'absolute';
   mirror.style.top = '-9999px';
@@ -197,7 +178,8 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
   function measureCaret(): { top: number; left: number; height: number } {
     const cs = getComputedStyle(ta);
     for (const p of MIRROR_PROPS) mirror.style.setProperty(p, cs.getPropertyValue(p));
-    mirror.style.width = `${ta.clientWidth}px`;
+    mirror.style.whiteSpace=ta.wrap === 'off' ? 'pre' : 'pre-wrap';
+    mirror.style.width = `${ta.offsetWidth || ta.clientWidth}px`;
     mirror.textContent = '';
     const caret = ta.selectionStart ?? ta.value.length;
     mirror.appendChild(document.createTextNode(ta.value.slice(0, caret)));
@@ -217,6 +199,7 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
 
   /* ── 面板定位：caret 视口锚点 → popover 视口智能布局 ── */
   function position(): void {
+    if(!canQuery(ta)){close();return;}panel.dir=getComputedStyle(ta).direction;
     const caret = measureCaret();
     const rect = ta.getBoundingClientRect();
     const left = rect.left + caret.left - ta.scrollLeft;
@@ -232,12 +215,12 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
     const layoutOpts: PopoverLayoutOptions = {
       side: 'bottom',
       align: 'start',
-      contentHeightHint: items.length * 36 + 16,
+      contentHeightHint: panel.scrollHeight || items.length * 36 + 48,
     };
     const layout = computePopoverLayout(
       anchor,
       { width: window.innerWidth, height: window.innerHeight },
-      sizingToLayout(resolvePanelSizing(el instanceof HTMLTextAreaElement ? null : el), layoutOpts),
+      sizingToLayout(resolvePanelSizing(el), layoutOpts),
     );
     panel.style.left = `${layout.left}px`;
     panel.style.top = `${layout.top}px`;
@@ -253,28 +236,32 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
     const target = e.target;
     if (!(target instanceof Node)) return;
     if (panel.contains(target) || ta.contains(target)) return;
-    setOpen(false);
+    close();
   }
 
   /* ── 开/关 ── */
   function setOpen(next: boolean): void {
-    if (open === next) return;
+    if (destroyed || open === next) return;
     open = next;
     panel.hidden = !next;
-    ta.setAttribute('aria-expanded', String(next));
+    ta.removeAttribute('aria-expanded'); // Multiline textbox does not support aria-expanded.
     if (next) {
+      release=claimMenuFocus(close);
       window.addEventListener('resize', onWindowChange);
       window.addEventListener('scroll', onWindowChange, true);
       document.addEventListener('pointerdown', onDocPointerDown, true);
       position();
       syncActive(); /* 打开后重指 active（渲染时面板尚闭，activedescendant 需补挂） */
     } else {
+      release?.();release=null;
       window.removeEventListener('resize', onWindowChange);
       window.removeEventListener('scroll', onWindowChange, true);
       document.removeEventListener('pointerdown', onDocPointerDown, true);
       ta.removeAttribute('aria-activedescendant');
     }
   }
+
+  function close():void {query.cancel();busy=false;failed=false;ta.removeAttribute('aria-busy');setOpen(false);}
 
   function firstEnabledIndex(): number {
     return items.findIndex((it) => !it.disabled);
@@ -286,10 +273,10 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
       const active = i === activeIndex;
       optEl.classList.toggle('is-active', active);
       if (active) optEl.setAttribute('aria-selected', 'true');
-      else optEl.removeAttribute('aria-selected');
+      else optEl.setAttribute('aria-selected','false');
     });
     const activeItem = items[activeIndex];
-    if (open && activeItem && !activeItem.disabled) {
+    if (open && !busy && activeItem && !activeItem.disabled) {
       ta.setAttribute('aria-activedescendant', `${panelId}-opt-${activeIndex}`);
       const active=panel.querySelector<HTMLElement>('.icen-mentions-option.is-active');
       if (active) revealPopoverItem(active,panel);
@@ -298,9 +285,9 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
     }
   }
 
-  function renderItems(list: MentionItem[]): void {
+  function renderItems(values: MentionItem[]): void {
     panel.querySelectorAll('.icen-mentions-option').forEach((n) => n.remove());
-    items = list.slice(0, max);
+    items = values.slice(0, max);
     items.forEach((item, i) => {
       const opt = document.createElement('div');
       opt.className = 'icen-mentions-option';
@@ -312,21 +299,23 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
       }
       const label = document.createElement('span');
       label.className = 'icen-mentions-option-label';
-      label.textContent = item.label;
+      const text=document.createElement('bdi');text.textContent=item.label;label.append(text);
+      if(opts.renderItem){const rendered=opts.renderItem(item,currentQuery);if(typeof rendered === 'string')label.textContent=rendered;else label.replaceChildren(rendered);}
       opt.appendChild(label);
       /* mousedown preventDefault：保住 textarea 焦点（click 仍触发选中） */
+      opt.addEventListener('pointerdown',(e)=>e.preventDefault());
       opt.addEventListener('mousedown', (e) => e.preventDefault());
       opt.addEventListener('click', () => {
         if (!item.disabled) select(item);
       });
-      panel.appendChild(opt);
+      list.appendChild(opt);
     });
     activeIndex = firstEnabledIndex();
     syncActive();
   }
 
   function moveActive(dir: 1 | -1): void {
-    if (items.length === 0) return;
+    if (items.length === 0 || firstEnabledIndex()<0) return;
     let idx = activeIndex < 0 ? (dir === 1 ? -1 : 0) : activeIndex;
     for (let n = 0; n < items.length; n++) {
       idx = (idx + dir + items.length) % items.length;
@@ -338,12 +327,13 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
 
   /** 诚实一致性：文本里已不存在 `@label` 的 mention 从数组摘除。 */
   function prune(): void {
-    mentions = mentions.filter((m) => ta.value.includes(`${trigger}${m.label}`));
+    mentions = mentions.filter((m) => new RegExp('(^|\\s)'+escapeRegExp(trigger+m.label)+'(?=$|[^\\p{L}\\p{N}_])','u').test(ta.value));
   }
 
   /** 选中：替换 `@query` → `@label `（尾随空格），track 进数组并派事件。 */
   function select(item: MentionItem): void {
-    if (!current) return;
+    if (!current || busy || destroyed || !canQuery(ta) || !open || ta.selectionStart !== ta.selectionEnd) return;
+    const match=findTrigger(ta.value.slice(0,ta.selectionStart ?? ta.value.length),trigger);if(!match || match.start !== current.start || match.query !== currentQuery){onValueChanged();return;}
     const value = ta.value;
     const caret = ta.selectionStart ?? value.length;
     const insert = `${trigger}${item.label} `;
@@ -359,113 +349,53 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
     prune();
     const query = currentQuery;
     current = null;
-    setOpen(false);
-    ta.focus();
+    close();
+    ta.focus({preventScroll:true});
+    ta.dispatchEvent(new Event('input',{bubbles:true}));
+    if(destroyed)return;
     emitIcen(ta, 'icen:mention-select', { id: item.id, label: item.label, query });
-    opts.onSelect?.(item);
+    if(!destroyed)opts.onSelect?.(item);
   }
 
-  /* ── 查询调度：防抖 + 竞态守卫 + 异步加载态 ── */
-  function runSource(query: string): void {
-    const mySeq = ++seq;
-    let result: ReturnType<MentionsOptions['source']>;
-    try {
-      result = opts.source(query);
-    } catch {
-      setOpen(false);
-      return;
-    }
-    const thenable =
-      result !== null && (typeof result === 'object' || typeof result === 'function')
-        ? (result as { then?: unknown }).then
-        : undefined;
-    if (typeof thenable === 'function') {
-      if (!open) setOpen(true); /* 加载态占位先可见（面板只含 status 与旧列表） */
-      status.hidden = false;
-      Promise.resolve(result as PromiseLike<unknown>).then(
-        (raw) => {
-          if (destroyed || mySeq !== seq) return; /* 晚到丢弃：只渲染最新 query */
-          status.hidden = true;
-          const list = normalizeItems(raw);
-          if (list.length === 0) {
-            setOpen(false);
-            return;
-          }
-          renderItems(list);
-          if (!open) setOpen(true);
-          else position();
-        },
-        () => {
-          if (destroyed || mySeq !== seq) return;
-          status.hidden = true;
-          setOpen(false); /* 源失败：诚实关层，不编造候选 */
-        },
-      );
-    } else {
-      status.hidden = true;
-      const list = normalizeItems(result);
-      if (list.length === 0) {
-        setOpen(false);
-        return;
-      }
-      renderItems(list);
-      if (!open) setOpen(true);
-      else position();
-    }
+  function schedule(value:string,delay=debounceMs):void {
+    if(destroyed || !canQuery(ta))return;
+    currentQuery=value;items=[];activeIndex=-1;list.replaceChildren();empty.hidden=true;ta.removeAttribute('aria-activedescendant');query.run(value,delay);
   }
-
-  function schedule(query: string): void {
-    currentQuery = query;
-    if (debounceTimer) clearTimeout(debounceTimer);
-    if (debounceMs > 0) {
-      debounceTimer = setTimeout(() => {
-        debounceTimer = null;
-        runSource(query);
-      }, debounceMs);
-    } else {
-      runSource(query);
-    }
-  }
-
-  function onValueChanged(): void {
-    prune();
-    const caret = ta.selectionStart ?? ta.value.length;
-    const match = findTrigger(ta.value.slice(0, caret), trigger);
-    current = match;
-    if (!match || match.query.length < minChars) {
-      seq++; /* 作废在途查询 */
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-        debounceTimer = null;
-      }
-      status.hidden = true;
-      setOpen(false);
-      return;
-    }
-    schedule(match.query);
+  function onValueChanged(delay=debounceMs):void {
+    if(destroyed || composing || !canQuery(ta)){close();return;}
+    prune();const caret=ta.selectionStart ?? ta.value.length;
+    const match=ta.selectionStart === ta.selectionEnd ? findTrigger(ta.value.slice(0,caret),trigger) : null;
+    current=match;
+    if(!match || match.query.length<minChars){close();notice.show(null);return;}
+    schedule(match.query,delay);
   }
 
   /* ── 事件接线 ── */
   const onInput = (): void => {
-    if (composing) return; /* IME 组合态挂起检测（compositionend 后补一次） */
+    if (composing) return;
+    if(lastComposition !== null){const same=lastComposition === ta.value;lastComposition=null;if(same)return;}
     onValueChanged();
   };
   const onCompositionStart = (): void => {
-    composing = true;
+    composing = true;lastComposition=null;close();
   };
   const onCompositionEnd = (): void => {
     composing = false;
-    onValueChanged();
+    onValueChanged();lastComposition=ta.value;
   };
   const onKeyDown = (e: KeyboardEvent): void => {
+    if(destroyed || composing || e.isComposing || e.keyCode === 229 || !canQuery(ta))return;
     if (e.key === 'Escape') {
       if (open) {
-        e.preventDefault();
-        setOpen(false); /* Esc 关层不动文本 */
+        e.preventDefault();e.stopPropagation();
+        close(); /* Esc 关层不动文本 */
       }
       return;
     }
     if (!open) return;
+    if(e.key === 'Tab' && !e.shiftKey && failed){e.preventDefault();panel.querySelector<HTMLButtonElement>('.icen-suggestion-retry')?.focus();return;}
+    if(e.key === 'Enter' && failed){e.preventDefault();onValueChanged(0);return;}
+    if(busy)return;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       moveActive(e.key === 'ArrowDown' ? 1 : -1);
@@ -481,11 +411,20 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
       }
     }
   };
-  const onBlur = (): void => {
+  const onBlur = (event:FocusEvent): void => {
+    if(event.relatedTarget instanceof Node && (panel.contains(event.relatedTarget) || event.relatedTarget === ta))return;
     /* 失焦关层（点击选项走 mousedown preventDefault，不会先触发 blur） */
-    setOpen(false);
+    close();
   };
 
+  const events=new AbortController();
+  const caretChanged=()=>{if(composing || destroyed)return;const match=ta.selectionStart === ta.selectionEnd ? findTrigger(ta.value.slice(0,ta.selectionStart ?? ta.value.length),trigger) : null;if(match?.start !== current?.start || match?.query !== current?.query)onValueChanged();else if(open)position();};
+  ta.addEventListener('keyup',(event)=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key))caretChanged();},{signal:events.signal});
+  ta.addEventListener('click',caretChanged,{signal:events.signal});
+  panel.addEventListener('focusout',onBlur,{signal:events.signal});
+  panel.addEventListener('keydown',(event)=>{if(event.key === 'Tab'){event.preventDefault();const target=event.shiftKey ? ta : afterSuggestionField(ta,panel);target.focus({preventScroll:true});if(!event.shiftKey && target === ta)close();return;}if(event.key === 'Escape' && !event.isComposing){event.preventDefault();event.stopPropagation();close();ta.focus({preventScroll:true});}},{signal:events.signal});
+  ta.form?.addEventListener('reset',(event)=>queueMicrotask(()=>{if(!destroyed && !event.defaultPrevented){close();prune();}}),{signal:events.signal});
+  const stopWatching=watchSuggestionField(ta,()=>{if(!canQuery(ta))close();else if(open)position();});
   ta.addEventListener('input', onInput);
   ta.addEventListener('compositionstart', onCompositionStart);
   ta.addEventListener('compositionend', onCompositionEnd);
@@ -494,19 +433,18 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
 
   /* a11y 接线（destroy 时还原） */
   ta.setAttribute('aria-haspopup', 'listbox');
-  ta.setAttribute('aria-expanded', 'false');
-  ta.setAttribute('aria-controls', panelId);
+  ta.removeAttribute('aria-expanded');
+  ta.setAttribute('aria-controls', list.id);ta.setAttribute('aria-autocomplete','list');ta.removeAttribute('aria-activedescendant');ta.removeAttribute('aria-busy');
 
-  return {
+  const handle:MentionsHandle={
+    close(){if(!destroyed)close();},
     getMentions(): MentionItem[] {
-      return mentions.slice();
+      prune();
+      return mentions.map((item)=>({...item}));
     },
     destroy(): void {
       if (destroyed) return;
-      destroyed = true;
-      seq++;
-      if (debounceTimer) clearTimeout(debounceTimer);
-      setOpen(false);
+      close();destroyed = true;query.destroy();events.abort();stopWatching();
       panel.remove();
       mirror.remove();
       ta.removeEventListener('input', onInput);
@@ -514,11 +452,9 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
       ta.removeEventListener('compositionend', onCompositionEnd);
       ta.removeEventListener('keydown', onKeyDown);
       ta.removeEventListener('blur', onBlur);
-      ta.removeAttribute('aria-haspopup');
-      ta.removeAttribute('aria-expanded');
-      ta.removeAttribute('aria-controls');
-      ta.removeAttribute('aria-activedescendant');
+      attrs.forEach((key,index)=>original[index] === null ? ta.removeAttribute(key) : ta.setAttribute(key,original[index]!));if(mounted.get(ta) === handle)mounted.delete(ta);
       mentions = [];
     },
   };
+  mounted.set(ta,handle);return handle;
 }

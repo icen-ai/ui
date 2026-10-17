@@ -98,3 +98,5 @@ export * from './behaviors/theme-switcher';
 export * from './behaviors/icons';
 
 export * from './behaviors/panel';
+
+export type { SuggestionSourceContext } from './behaviors/suggestions';

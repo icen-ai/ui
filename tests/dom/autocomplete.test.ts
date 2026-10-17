@@ -37,7 +37,7 @@ function press(input: HTMLInputElement, key: string): KeyboardEvent {
 }
 
 const panelOf = (input: HTMLInputElement): HTMLElement =>
-  document.getElementById(input.getAttribute('aria-controls')!) as HTMLElement;
+  document.getElementById(input.getAttribute('aria-controls')!)!.closest('.icen-autocomplete-panel') as HTMLElement;
 const optionsOf = (input: HTMLInputElement): HTMLElement[] =>
   Array.from(panelOf(input).querySelectorAll<HTMLElement>('.icen-autocomplete-option'));
 const emptyOf = (input: HTMLInputElement): HTMLElement =>
@@ -59,8 +59,8 @@ describe('createAutocomplete', () => {
     type(input, 'ap');
     expect(input.getAttribute('aria-expanded')).toBe('true');
     expect(panelOf(input).hidden).toBe(false);
-    expect(panelOf(input).id).toBe(pid);
-    expect(panelOf(input).getAttribute('role')).toBe('listbox');
+    expect(panelOf(input).querySelector('[role="listbox"]')?.id).toBe(pid);
+    expect(panelOf(input).querySelector('[role="listbox"] [role="status"]')).toBeNull();
     expect(optionsOf(input).length).toBe(2);
     expect(optionsOf(input)[0]!.getAttribute('role')).toBe('option');
     /* 初始 active = 第一项，activedescendant 指认 */
