@@ -188,29 +188,6 @@ export interface TableHandle<Row = Record<string, unknown>> {
   destroy(): void;
 }
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
-function svgIcon(d: string, size = 12): SVGSVGElement {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('width', String(size));
-  svg.setAttribute('height', String(size));
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('stroke-linecap', 'round');
-  svg.setAttribute('stroke-linejoin', 'round');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', d);
-  svg.appendChild(path);
-  return svg;
-}
-
-const ICON_SEARCH = 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.3-4.3';
-const ICON_FUNNEL = 'M22 3H2l8 9.46V19l4 2v-8.54L22 3Z';
-const ICON_CHEVRON = 'm6 9 6 6 6-6';
-const ICON_COLUMNS = 'M3 3h7v18H3zM14 3h7v18h-7z';
-const ICON_DOWNLOAD = 'M12 3v12m0 0-4-4m4 4 4-4M5 21h14';
 
 function defaultCompare(a: unknown, b: unknown): number {
   if (typeof a === 'number' && typeof b === 'number') return a - b;
@@ -508,7 +485,7 @@ export function createTable<Row = Record<string, unknown>>(
     if (opts.searchable) {
       const box = document.createElement('div');
       box.className = 'icen-dt-search';
-      box.appendChild(svgIcon(ICON_SEARCH, 14));
+      box.appendChild(createIcon('search', { size: 14 })!);
       searchInput = document.createElement('input');
       searchInput.className = 'icen-dt-search-input';
       searchInput.type = 'search';
@@ -525,7 +502,7 @@ export function createTable<Row = Record<string, unknown>>(
       colBtn.type = 'button';
       colBtn.className = 'icen-dt-tool-btn';
       colBtn.setAttribute('aria-label', t('datatable.columnSettingsAria'));
-      colBtn.appendChild(svgIcon(ICON_COLUMNS, 14));
+      colBtn.appendChild(createIcon('columns', { size: 14 })!);
       colBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         if (openPanel?.key === '__cols') closeFilterPanel();
@@ -538,7 +515,7 @@ export function createTable<Row = Record<string, unknown>>(
       expBtn.type = 'button';
       expBtn.className = 'icen-dt-tool-btn';
       expBtn.setAttribute('aria-label', t('common.exportCsv'));
-      expBtn.appendChild(svgIcon(ICON_DOWNLOAD, 14));
+      expBtn.appendChild(createIcon('download', { size: 14 })!);
       expBtn.addEventListener('click', () => exportCSV());
       actions.appendChild(expBtn);
     }
@@ -818,7 +795,7 @@ export function createTable<Row = Record<string, unknown>>(
         btn.dataset.colKey = col.key;
         if (hasFilter) btn.classList.add('is-active');
         btn.setAttribute('aria-label', t('datatable.filterChipAria', { p0: col.title }));
-        btn.appendChild(svgIcon(ICON_FUNNEL, 12));
+        btn.appendChild(createIcon('filter', { size: 12 })!);
         btn.addEventListener('click', (ev) => {
           ev.stopPropagation();
           if (openPanel?.key === col.key) closeFilterPanel();
@@ -1350,7 +1327,7 @@ export function createTable<Row = Record<string, unknown>>(
     btn.className = 'icen-dt-group-toggle';
     btn.setAttribute('aria-expanded', String(!entry.collapsed));
     btn.setAttribute('aria-label', entry.collapsed ? t('datatable.expandGroup', { p0: entry.label }) : t('datatable.collapseGroup', { p0: entry.label }));
-    btn.appendChild(svgIcon(ICON_CHEVRON, 14));
+    btn.appendChild(createIcon('chevron-down', { size: 14 })!);
 
     const label = document.createElement('span');
     label.className = 'icen-dt-group-label';
@@ -1454,7 +1431,7 @@ export function createTable<Row = Record<string, unknown>>(
       btn.className = 'icen-dt-expand-btn';
       btn.setAttribute('aria-label', t('datatable.expandRow'));
       btn.setAttribute('aria-expanded', String(expanded.has(key)));
-      btn.appendChild(svgIcon(ICON_CHEVRON, 14));
+      btn.appendChild(createIcon('chevron-down', { size: 14 })!);
       btn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         if (expanded.has(key)) expanded.delete(key);

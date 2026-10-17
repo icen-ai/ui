@@ -62,6 +62,9 @@ export const ICON_PATHS = {
   'chart-line': 'M3.5 3.5v13h13M6.5 12l2.8-2.8 2.2 2.2 4-4.4',
   layers: 'M10 3.2 3.6 6.5 10 9.8l6.4-3.3ZM4.5 10.4 10 13.2l5.5-2.8M4.5 13.6 10 16.4l5.5-2.8',
   box: 'M17 6 10 3.2 3 6v8l7 2.8 7-2.8ZM3 6l7 2.8L17 6M10 9v7.8',
+  filter: 'M4 4.5h12l-4.4 5.1v5l-3.2-1.6V9.6Z',
+  columns: 'M3.5 4h13v12h-13ZM8.2 4v12M12.8 4v12',
+  download: 'M10 3.5v8M6.8 8.3 10 11.5l3.2-3.2M4 15v2.5a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5V15',
 } as const;
 export type IconName = keyof typeof ICON_PATHS | (string & {});
 export interface IconOptions {

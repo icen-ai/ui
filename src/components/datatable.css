@@ -83,6 +83,44 @@
 }
 .icen-dt-body .icen-dt-row:last-child { border-bottom: 0; }
 .icen-dt-body .icen-dt-row:hover { background: var(--icen-token-fill-1); }
+
+/* 行内次要动作（columns.render 产出 .icen-dt-actions）：隐式待命，行悬停/聚焦显现；
+   触屏常显；按钮本体 26px 视觉 + 触屏隐形 44px 命中 */
+.icen-dt-actions { display: inline-flex; gap: 2px; }
+.icen-dt-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 26px;
+  block-size: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--icen-radius-sm);
+  background: transparent;
+  color: var(--icen-token-text-faint);
+  cursor: pointer;
+  position: relative;
+  transition:
+    opacity var(--icen-tx-fast),
+    color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast);
+}
+.icen-dt-action:hover { color: var(--icen-token-text); background: var(--icen-token-fill-2); }
+.icen-dt-action:focus-visible { outline: none; box-shadow: var(--icen-ring); opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .icen-dt-actions { opacity: 0; }
+  .icen-dt-row:hover .icen-dt-actions,
+  .icen-dt-row:focus-within .icen-dt-actions { opacity: 1; }
+}
+@media (pointer: coarse) {
+  /* 隐形命中扩张用透明 border + 负 margin（background-clip 保持视觉不变）；
+     不用 ::after——动作钮可同时带 data-icen-tooltip，伪元素只有一颗 */
+  .icen-dt-action {
+    border: 9px solid transparent;
+    background-clip: padding-box;
+    margin: -9px;
+  }
+}
 .icen-dt-row.is-selected { background: var(--icen-token-accent-subtle); }
 .icen-dt-row.is-selected:hover { background: color-mix(in srgb, var(--icen-token-accent-subtle) 82%, var(--icen-token-fill-1)); }
 .icen-dt-row.is-clickable { cursor: pointer; }
@@ -397,7 +435,7 @@
   bottom: 25%;
   right: 2px; /* guard:allow-physical 手柄视觉与拖拽坐标系一致（物理右缘），RTL 不变 */
   width: 2px;
-  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 1px; /* guard:allow-radius 微构件（指示线/手柄等图形级，不属容器圆角面） */
   background: transparent;
   transition: background var(--icen-tx-fast);
 }
@@ -478,7 +516,7 @@
   position: fixed;
   z-index: var(--icen-z-popover);
   width: 2px;
-  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 1px; /* guard:allow-radius 微构件（指示线/手柄等图形级，不属容器圆角面） */
   background: var(--icen-token-accent);
   pointer-events: none;
 }
