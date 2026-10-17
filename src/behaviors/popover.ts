@@ -306,6 +306,13 @@ interface OpenState {
 }
 
 const openPanels = new Map<HTMLElement, OpenState>();
+let menuCloser: (()=>void) | null = null;
+/** Shared ownership for action menus: opening one retires the previous renderer
+ * without stealing focus. The release handle cannot release a newer owner. */
+export function claimMenuFocus(close: ()=>void): ()=>void {
+  menuCloser?.();menuCloser=close;
+  return ()=>{if(menuCloser === close)menuCloser=null;};
+}
 
 function rectFromElement(el: Element): PopoverRect {
   const r = el.getBoundingClientRect();

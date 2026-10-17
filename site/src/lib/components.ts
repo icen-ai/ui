@@ -1032,71 +1032,86 @@ closeModal('confirm');  // 编程关闭；开合均派 icen:modal-open / icen:mo
   {
     slug: 'dropdown',
     name: '下拉菜单',
+    summary: '把相关操作收进一个安静的入口。支持图标、快捷键、选中项与完整键盘导航。',
     group: '浮层',
     desc: 'trigger + [data-icen-dropdown-menu] 模板；面板 fixed 定位在 trigger 下方 4px，视口 12px margin 内 clamp，空间不足翻上。',
     demo: `<div class="dropdown" data-icen-dropdown>
-  <button class="icen-btn dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="menu">操作 ${iconHTML('chevron-down')}</button>
+  <button class="icen-btn dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="menu">文档操作 ${iconHTML('chevron-down')}</button>
   <div data-icen-dropdown-menu hidden>
     <div class="icen-menu-label">文件</div>
     <button class="icen-menu-item icen-pressable" id="dd-rename">
-      <span class="icen-menu-item-icon"></span>
+      <span class="icen-menu-item-icon">${iconHTML('edit')}</span>
       <span class="icen-menu-item-label">重命名</span>
       <span class="icen-menu-item-shortcut">F2</span>
     </button>
     <button class="icen-menu-item icen-pressable" id="dd-share">
-      <span class="icen-menu-item-icon"></span>
+      <span class="icen-menu-item-icon">${iconHTML('link')}</span>
       <span class="icen-menu-item-label">分享</span>
     </button>
+    <button class="icen-menu-item" role="menuitemcheckbox" aria-checked="true" data-icen-menu-keep-open id="dd-updates">
+      <span class="icen-menu-item-label">接收更新</span>
+    </button>
+    <button class="icen-menu-item" disabled><span class="icen-menu-item-label">导出归档</span></button>
     <div class="icen-menu-separator"></div>
     <button class="icen-menu-item icen-pressable icen-menu-item--danger" id="dd-delete">
-      <span class="icen-menu-item-icon"></span>
+      <span class="icen-menu-item-icon">${iconHTML('trash')}</span>
       <span class="icen-menu-item-label">删除</span>
       <span class="icen-menu-item-shortcut">⌫</span>
     </button>
   </div>
 </div>`,
-    usage: `import { initDropdown } from '@icen.ai/ui/behaviors/dropdown';
-initDropdown();
-// 面板由 JS portal 到 body；click / ArrowDown 打开，↑↓ 高亮，Enter 激活，Esc / 外点 / 滚动关闭`,
+    usage: `import { initDropdown, openDropdown, closeDropdown } from '@icen.ai/ui/kit/dropdown';
+const dispose = initDropdown(container); // 不传 container 则委托整个 document
+openDropdown(trigger);                  // 可选；ArrowUp 打开最后一项
+closeDropdown();                        // 关闭并归还焦点
+// Home/End、首字定位、Enter/Space 激活；Tab 回到正常表单顺序。
+// role=menuitemcheckbox + aria-checked 声明选中态，点击后由业务更新。
+// data-icen-menu-keep-open 支持连续修改；其他动作默认关闭。
+// 页面卸载时 dispose()，可再次 init。`,
     behaviors: ['dropdown', 'toast'],
-    behaviorInit: { dropdown: 'initDropdown' },
-    script: `const toast = toastMod.toast;
+    script: `const dispose = dropdownMod.initDropdown(document.querySelector('.demo-stage'));
+const toast = toastMod.toast;
+const updates = document.getElementById('dd-updates');
+updates?.addEventListener('click', () => updates.setAttribute('aria-checked', String(updates.getAttribute('aria-checked') !== 'true')));
 document.getElementById('dd-rename')?.addEventListener('click', () => toast.ok('重命名'));
 document.getElementById('dd-share')?.addEventListener('click', () => toast.ok('已创建分享链接'));
-document.getElementById('dd-delete')?.addEventListener('click', () => toast.err('已删除'));`,
+document.getElementById('dd-delete')?.addEventListener('click', () => toast.err('已删除'));
+return dispose;`,
   },
   {
     slug: 'context-menu',
+    summary: '在当前位置展开相关操作。支持右键、触屏长按和键盘，关闭后回到原来的焦点。',
     name: '右键菜单',
     group: '浮层',
     desc: '全局单例：registerContextMenu(id, items) 注册，[data-icen-context-menu="id"] 命中；支持 header / separator / danger / disabled，触屏长按触发。',
-    demo: `<div class="ctx-zone" data-icen-context-menu="demo-file">
-  右键我（触屏长按 520ms）—— 自定义菜单
+    demo: `<div class="ctx-zone" tabindex="0" aria-label="文档操作区域" data-icen-context-menu="demo-file">
+  右键打开文档操作；也可以聚焦后按 Shift + F10，或在触屏上长按。
 </div>
 <p class="icen-dim" style="margin:8px 0 0">区域外右键则是默认菜单：后退 / 前进 / 刷新 / 复制页面链接。</p>`,
     usage: `import { initContextMenu, registerContextMenu } from '@icen.ai/ui/behaviors/context-menu';
 
 registerContextMenu('demo-file', [
   { type: 'header', label: 'report-2026.qmd', description: '文档 · 2.4 MB' },
-  { label: '重命名', shortcut: 'F2', onClick: () => toast.ok('重命名') },
-  { label: '复制链接', onClick: () => toast.ok('已复制链接') },
+  { label: '重命名', iconName: 'edit', shortcut: 'F2', onClick: () => toast.ok('重命名') },
+  { label: '复制链接', iconName: 'link', onClick: () => toast.ok('已复制链接') },
   { type: 'separator' },
-  { label: '移到回收站', danger: true, shortcut: '⌫', onClick: () => toast.warn('已移到回收站') },
+  { label: '移到回收站', iconName: 'trash', danger: true, shortcut: '⌫', onClick: () => toast.warn('已移到回收站') },
   { label: '高级操作（不可用）', disabled: true },
 ]);
 initContextMenu();`,
     behaviors: ['context-menu', 'toast'],
-    behaviorInit: { 'context-menu': 'initContextMenu' },
-    script: `const registerContextMenu = contextMenuMod.registerContextMenu;
+    script: `const dispose = contextMenuMod.initContextMenu();
+const registerContextMenu = contextMenuMod.registerContextMenu;
 const toast = toastMod.toast;
 registerContextMenu('demo-file', [
   { type: 'header', label: 'report-2026.qmd', description: '文档 · 2.4 MB' },
-  { label: '重命名', shortcut: 'F2', onClick: () => toast.ok('重命名') },
-  { label: '复制链接', onClick: () => toast.ok('已复制链接') },
+  { label: '重命名', iconName: 'edit', shortcut: 'F2', onClick: () => toast.ok('重命名') },
+  { label: '复制链接', iconName: 'link', onClick: () => toast.ok('已复制链接') },
   { type: 'separator' },
-  { label: '移到回收站', danger: true, shortcut: '⌫', onClick: () => toast.warn('已移到回收站') },
+  { label: '移到回收站', iconName: 'trash', danger: true, shortcut: '⌫', onClick: () => toast.warn('已移到回收站') },
   { label: '高级操作（不可用）', disabled: true },
-]);`,
+]);
+return () => { dispose(); contextMenuMod.unregisterContextMenu('demo-file'); };`,
   },
   {
     slug: 'popover',

@@ -92,7 +92,7 @@ describe('RTL 静态断言：逻辑属性落在 CSS 源里', () => {
       ['components/btn.css', /margin:\s*-7px\s+0\s+0\s+-7px/], /* 居中负边距（物理豁免形态）存在 */
       ['components/tabs.css', /border-inline-end/],
       ['components/sidebar.css', /inset-inline-start/],
-      ['components/menu.css', /padding-inline-start/],
+      ['components/menu.css', /margin-inline-start/],
       ['components/toast.css', /border-inline-start/],
       ['components/notification.css', /padding-block:\s*var\(--icen-density-space-md\)/],
       ['components/select.css', /margin-inline-start:\s*auto/],

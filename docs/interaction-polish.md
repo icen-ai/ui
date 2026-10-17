@@ -197,6 +197,19 @@
 - 文档 boot 支持 script 返回 cleanup，并用代际标记阻断异步旧页初始化；级联/树选择示例已接入销毁与定时器回收。其他例子/behavior init 仍需逐一接入，不能视作全站生命周期完工。
 - 新增真实浏览器专项覆盖两套原语 × 明暗、RTL、触屏 44px 搜索动作、reduced-motion、空查询键盘、焦点连续性、展开状态几何、a11y 与换页门户回收。验证：verify 656 测试通过，站点 137 页构建通过，129 页 × 两档宽度基础巡检 0 问题。34 条浏览器回归覆盖原有外观联动与新增层级选择、表单防意外提交。
 
+### 第五轮：动作菜单、图标槽位与焦点协调
+
+- 重做 dropdown 的真实焦点与 roving tabindex：鼠标/触屏/键盘开关，ArrowUp/Down、Home/End、首字定位、Enter/Space、IME、Tab 正常退出；跳过原生、ARIA、类状态及隐藏/不可交互祖先中的项。
+- 布局改用实际宽高，固定宽不再按默认 420px 错算位置；窄屏、RTL、长列表与视口底部翻转统一走既有布局引擎，键盘只滚菜单内部。
+- 图标独占 20px 光学槽，选中标记移到尾部固定槽；混合有/无图标的行仍然文字对齐。补齐 edit/link/trash 共享 SVG 与 mask；右键菜单可用 iconName，不再要求手写 SVG。
+- 选中项支持 menuitemcheckbox/radio 与业务管理的 aria-checked；data-icen-menu-keep-open 允许连续操作。禁用点击在捕获阶段拦截，不再触发宿主回调或关闭菜单；原始节点和监听随门户来回移动。
+- 菜单进场收敛为 3px/1.5% 的轻位移/缩放，退出 90ms 内完成，并从当前动画位置续接。退出立即 inert + aria-hidden，重开/销毁可打断；时长随设计种子、reduced-motion 和像素 steps 变化。
+- Context menu 补齐 Shift+F10/ContextMenu 键入口、Home/End/首字定位、Space 激活、Escape/Tab 焦点归还、内部滚动。unregisterContextMenu 与幂等 init disposer 让注册和生命周期可回收。
+- 两类动作菜单共用焦点所有权，互相打开时旧菜单退出；捕获 Escape 只关闭最上层菜单，避免顺带关闭外层 popover。测试覆盖此嵌套关系。
+- dropdown/context-menu 文档接入示例卸载，新增真实 checkbox、SVG、禁用项、键盘/触屏说明和更简短的首屏描述。source、kit 与注册表 API 一致。
+- 验证：verify 662 测试通过，137 页站点构建通过。菜单专项覆盖两原语 × 明暗、触屏 44px、RTL/窄屏翻转、长列表滚动、换页/a11y、单次事件与表单防提交；既有全站 129 页 × 两档宽度基础巡检 0 问题。最终 39 条浏览器回归全部通过。
+- 仍待：菜单混合选中态、全部尺寸/极端内容与完整 forced-colors 审美矩阵；popover/modal/command palette/通知及其余组件继续逐项。上述进度不代表全库交付完成。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。

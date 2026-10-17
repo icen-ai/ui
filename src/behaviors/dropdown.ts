@@ -1,225 +1,202 @@
-/*
- * @icen.ai/ui — Behavior: dropdown（下拉菜单，与 components/menu.css 配套）
- *
- * 契约：
- *   <div class="dropdown" data-icen-dropdown>
- *     <button class="dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="icen-menu">操作 ▾</button>
- *     <div data-icen-dropdown-menu hidden>
- *       <button class="icen-menu-item">…</button>   <!-- 模板节点，children 会被移入面板 -->
- *     </div>
- *   </div>
- *
- * 面板为 JS 在 document.body 创建的 .icen-menu（fixed 定位：trigger 下方 offset 4px，
- * 视口 12px margin 内 clamp，下方空间不足翻上）。trigger click/ArrowDown 打开；
- * ↑↓ 循环高亮（跳过 disabled/separator）、Enter 激活并关闭、Esc 关闭还原焦点、
- * 外点/滚动（捕获）关闭；trigger aria-expanded 同步。SSR 下为 no-op。
- *
- * 菜单项选中（点击或 Enter）统一派发 icen:menu-select
- * { source: 面板, item, value: item.dataset.value ?? '', label: textContent 前 80 字 }
- * ——与 context-menu / command-palette 共用同一事件（统一菜单选中流）。
- *
- * 面板尺寸走全库统一 PanelSizing 契约（见 behaviors/popover.ts）：
- * 根上 data-icen-panel-width（固定）/ data-icen-panel-min / data-icen-panel-max /
- * data-icen-panel-max-height → 创建面板时内联应用（宽度默认内容驱动，CSS min 180/max 320）。
- */
-
-import { applyPanelSizing, computePopoverLayout, readPanelSizing } from './popover';
-/* emitMenuSelect（菜单选中统一事件）收敛自 context-menu（唯一定义点，消除逐字拷贝）；
-   本模块不再直接用 emitIcen，events 导入随之移除 */
+/** Dropdown: real template nodes are portalled, preserving listeners and links.
+ * Root data-icen-panel-* controls measured layout. data-icen-menu-keep-open on
+ * an item supports host-managed checkbox/radio actions. initDropdown(scope?)
+ * returns an idempotent disposer; open/close are also available. SSR is a no-op. */
+import { applyPanelSizing, computePopoverLayout, readPanelSizing, revealPopoverItem, claimMenuFocus } from './popover';
 import { emitMenuSelect } from './context-menu';
-
-const VIEWPORT_MARGIN = 12;
-const SIDE_OFFSET = 4;
+import { createIcon } from './icons';
 
 interface ActiveDropdown {
-  trigger: HTMLElement;
-  template: HTMLElement;
-  panel: HTMLElement;
-  items: HTMLElement[];
-  highlight: number;
+  trigger: HTMLElement; template: HTMLElement; panel: HTMLElement;
+  highlight: number; typed: string; typedAt: number;
 }
-
 let active: ActiveDropdown | null = null;
-let initialized = false;
+let sequence = 0;
+const scopes = new Map<ParentNode, () => void>();
+let finishClosing: (() => void) | null = null;
+let releaseMenu: (()=>void) | null = null;
+const classDisabled = new WeakSet<HTMLElement>();
+const unavailable = (item: Element) => item.matches('.is-disabled,:disabled') || Boolean(item.closest('[aria-disabled="true"],[hidden],[inert],[data-icen-disabled]'));
+const items = (menu: HTMLElement) => Array.from(menu.querySelectorAll<HTMLElement>('.icen-menu-item')).filter((item)=>!unavailable(item));
+const within = (scope: ParentNode, node: Node) => scope === node || (scope instanceof Node && scope.contains(node));
 
-function menuItems(panel: HTMLElement): HTMLElement[] {
-  return Array.from(panel.querySelectorAll<HTMLElement>('.icen-menu-item:not(.is-disabled):not(:disabled)'));
-}
-
-function setHighlight(next: number): void {
+function setHighlight(index: number, focus = true): void {
   if (!active) return;
-  active.items.forEach((el, i) => el.classList.toggle('is-highlighted', i === next));
-  active.highlight = next;
+  const rows=items(active.panel);
+  active.highlight=index;
+  active.panel.querySelectorAll<HTMLElement>('.icen-menu-item').forEach((item)=>{
+    const selected=item === rows[index];
+    item.classList.toggle('is-highlighted',selected);item.tabIndex=selected ? 0 : -1;
+  });
+  if(rows[index])revealPopoverItem(rows[index],active.panel,{focus});
 }
 
-/* 布局统一走 computePopoverLayout（与 select 同一引擎）：prefer 下方、空间不足翻上、
-   视口 margin 内 clamp；fixed 定位直接用视口坐标，不加 scrollX/Y。
-   宽度不传 opts——面板宽仍内容驱动（CSS min 180 / max 320），引擎默认宽仅参与
-   left 的视口钳制；side 写回 dataset 供 CSS 进场动画分方向 */
 function place(): void {
   if (!active) return;
-  const { trigger, panel } = active;
-  const rect = trigger.getBoundingClientRect();
-  const layout = computePopoverLayout(
-    rect,
-    { width: window.innerWidth, height: window.innerHeight },
-    { side: 'bottom', offset: SIDE_OFFSET, margin: VIEWPORT_MARGIN },
-  );
-  panel.style.left = `${layout.left}px`;
-  panel.style.top = `${layout.top}px`;
-  panel.dataset.icenSide = layout.side;
+  const {trigger,panel}=active;
+  if (!trigger.isConnected) {closeDropdown(false);return;}
+  const sizing=readPanelSizing(trigger.closest('[data-icen-dropdown]'));
+  applyPanelSizing(panel,null);applyPanelSizing(panel,sizing);
+  const width=panel.offsetWidth || panel.getBoundingClientRect().width || 180;
+  const height=panel.scrollHeight || panel.offsetHeight;
+  const cssMax=parseFloat(getComputedStyle(panel).maxHeight);
+  const layout=computePopoverLayout(trigger.getBoundingClientRect(),{width:window.innerWidth,height:window.innerHeight},{
+    side:'bottom',align:getComputedStyle(trigger).direction === 'rtl' ? 'end' : 'start',offset:4,margin:12,
+    minWidth:width,maxWidth:width,minHeight:40,maxHeight:sizing.maxHeight ?? (Number.isFinite(cssMax) ? cssMax : 420),contentHeightHint:height,
+  });
+  panel.style.left=`${layout.left}px`;panel.style.top=`${layout.top}px`;
+  panel.style.width=`${layout.width}px`;panel.style.minWidth=`${layout.width}px`;
+  panel.style.maxHeight=`${layout.maxHeight}px`;panel.dataset.icenSide=layout.side;
 }
 
-function openDropdown(trigger: HTMLElement, highlightFirst = false): void {
-  closeDropdown();
-
-  const root = trigger.closest<HTMLElement>('[data-icen-dropdown]');
-  const template = root?.querySelector<HTMLElement>('[data-icen-dropdown-menu]');
-  if (!root || !template) return;
-
-  const panel = document.createElement('div');
-  panel.className = 'icen-menu';
-  panel.setAttribute('role', 'menu');
-  panel.style.visibility = 'hidden';
-  applyPanelSizing(panel, readPanelSizing(root));
-  while (template.firstChild) panel.appendChild(template.firstChild);
-  panel
-    .querySelectorAll<HTMLElement>('.icen-menu-item')
-    .forEach((el) => el.setAttribute('role', 'menuitem'));
-  document.body.appendChild(panel);
-
-  active = { trigger, template, panel, items: menuItems(panel), highlight: -1 };
-  trigger.setAttribute('aria-expanded', 'true');
-
-  place();
-  panel.style.visibility = '';
-  if (highlightFirst && active.items.length > 0) setHighlight(0);
-
-  document.addEventListener('pointerdown', onOutsidePointerDown, true);
-  document.addEventListener('scroll', onScroll, true);
-  window.addEventListener('keydown', onKeyDown);
-}
-
-function closeDropdown(restoreFocus = false): void {
-  if (!active) return;
-  const { trigger, template, panel } = active;
-  active = null;
-
-  trigger.setAttribute('aria-expanded', 'false');
-  while (panel.firstChild) template.appendChild(panel.firstChild);
-  panel.remove();
-
-  document.removeEventListener('pointerdown', onOutsidePointerDown, true);
-  document.removeEventListener('scroll', onScroll, true);
-  window.removeEventListener('keydown', onKeyDown);
-
-  if (restoreFocus) trigger.focus();
-}
-
-function onOutsidePointerDown(e: Event): void {
-  if (!active) return;
-  const target = e.target;
-  if (!(target instanceof Node)) return;
-  if (active.panel.contains(target) || active.trigger.contains(target)) return;
-  closeDropdown();
-}
-
-function onScroll(e: Event): void {
-  if (!active) return;
-  /* 滚动发生在面板内部（长菜单自身滚动）时不关闭 */
-  const target = e.target;
-  if (target instanceof Node && active.panel.contains(target)) return;
-  closeDropdown();
-}
-
-function onKeyDown(e: KeyboardEvent): void {
-  if (!active) return;
-  const { items } = active;
-  if (e.key === 'Escape') {
-    e.preventDefault();
-    closeDropdown(true);
-    return;
-  }
-  if (items.length === 0) return;
-  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-    e.preventDefault();
-    const offset = e.key === 'ArrowDown' ? 1 : -1;
-    const next =
-      active.highlight < 0
-        ? offset > 0
-          ? 0
-          : items.length - 1
-        : (active.highlight + offset + items.length) % items.length;
-    setHighlight(next);
-    return;
-  }
-  if (e.key === 'Enter' && active.highlight >= 0) {
-    e.preventDefault();
-    const item = items[active.highlight];
-    /* 面板尚在文档内先派 menu-select（关闭后 item 已脱文档，冒泡不可达 document） */
-    emitMenuSelect(active.panel, item);
-    closeDropdown(true);
-    item.click();
-  }
-}
-
-/**
- * 绑定全部 [data-icen-dropdown-trigger]（document 级委托，重复调用安全）。
- * 返回销毁函数：摘除 document 委托并复位幂等标记（销毁后可重新 init）；
- * 销毁时若有面板开着会顺带收起。SSR 下返回 no-op。
- */
-export function initDropdown(root?: ParentNode): () => void {
-  if (typeof document === 'undefined') return () => {};
-  const scope = root ?? document;
-
-  scope
-    .querySelectorAll<HTMLElement>('[data-icen-dropdown-trigger]')
-    .forEach((el) => el.setAttribute('aria-expanded', 'false'));
-
-  if (initialized) return () => {};
-  initialized = true;
-
-  const onClick = (e: MouseEvent): void => {
-    const target = e.target instanceof Element ? e.target : null;
-    if (!target) return;
-
-    // 面板内点击菜单项：派 menu-select 后关闭（item 自身的 click 监听照常执行）
-    if (active && target.closest('.icen-menu-item') && active.panel.contains(target)) {
-      const item = target.closest<HTMLElement>('.icen-menu-item');
-      if (item) {
-        /* 与 Enter 路径一致：不可选项（.is-disabled/:disabled）不派选中事件 */
-        if (!item.matches('.is-disabled') && !item.matches(':disabled')) {
-          emitMenuSelect(active.panel, item);
-        }
-        closeDropdown();
-        return;
-      }
+/** Open an authored menu and focus its first/last available action. */
+export function openDropdown(trigger: HTMLElement, edge: 'first' | 'last' = 'first'): void {
+  if(typeof document === 'undefined' || unavailable(trigger))return;
+  closeDropdown(false);finishClosing?.();
+  const root=trigger.closest<HTMLElement>('[data-icen-dropdown]');
+  const template=root?.querySelector<HTMLElement>('[data-icen-dropdown-menu]');
+  if(!root || !template)return;
+  releaseMenu=claimMenuFocus(()=>closeDropdown(false));
+  if(trigger instanceof HTMLButtonElement && !trigger.hasAttribute('type'))trigger.type='button';
+  trigger.setAttribute('aria-haspopup','menu');
+  const panel=document.createElement('div');panel.className='icen-menu';panel.id=`icen-dropdown-${++sequence}`;
+  panel.setAttribute('role','menu');panel.tabIndex=-1;panel.style.visibility='hidden';
+  trigger.id ||= `icen-dropdown-trigger-${sequence}`;
+  panel.setAttribute('aria-labelledby',trigger.id);trigger.setAttribute('aria-controls',panel.id);
+  applyPanelSizing(panel,readPanelSizing(root));
+  while(template.firstChild)panel.append(template.firstChild);
+  panel.querySelectorAll<HTMLElement>('.icen-menu-item').forEach((item)=>{
+    if(item instanceof HTMLButtonElement && !item.hasAttribute('type'))item.type='button';
+    if(!item.hasAttribute('role'))item.setAttribute('role',item.hasAttribute('aria-checked') || item.classList.contains('icen-menu-item--checked') ? 'menuitemcheckbox' : 'menuitem');
+    if(item.getAttribute('role') === 'menuitemcheckbox' && !item.hasAttribute('aria-checked'))item.setAttribute('aria-checked',String(item.classList.contains('icen-menu-item--checked')));
+    if(classDisabled.has(item)){item.removeAttribute('aria-disabled');classDisabled.delete(item);}
+    if(item.classList.contains('is-disabled') && !item.hasAttribute('aria-disabled')){item.setAttribute('aria-disabled','true');classDisabled.add(item);}
+    item.tabIndex=-1;
+    if(item.matches('[role="menuitemcheckbox"],[role="menuitemradio"]') && !item.querySelector('.icen-menu-item-check')) {
+      const check=document.createElement('span');check.className='icen-menu-item-check';check.append(createIcon('check')!);item.append(check);
     }
+    const check=item.querySelector('.icen-menu-item-check');
+    if(check && !check.querySelector('svg'))check.replaceChildren(createIcon('check')!);
+    item.querySelector('.icen-menu-item-shortcut')?.setAttribute('aria-hidden','true');
+  });
+  panel.querySelectorAll('.icen-menu-separator').forEach((separator)=>separator.setAttribute('role','separator'));
+  document.body.append(panel);
+  active={trigger,template,panel,highlight:-1,typed:'',typedAt:0};
+  trigger.setAttribute('aria-expanded','true');place();panel.style.visibility='';
+  const rows=items(panel);if(rows.length)setHighlight(edge === 'last' ? rows.length-1 : 0);else panel.focus({preventScroll:true});
+  panel.addEventListener('pointermove',onPointerMove);
+  panel.addEventListener('focusin',(event)=>{
+    const item=event.target instanceof Element ? event.target.closest<HTMLElement>('.icen-menu-item') : null;
+    if(active?.panel === panel && item)setHighlight(items(panel).indexOf(item),false);
+  });
+  panel.addEventListener('click',(event)=>{
+    const item=event.target instanceof Element ? event.target.closest('.icen-menu-item') : null;
+    if(item && unavailable(item)){event.preventDefault();event.stopImmediatePropagation();}
+  },true);
+  document.addEventListener('click',onClick);
+  document.addEventListener('pointerdown',onOutsidePointerDown,true);
+  document.addEventListener('scroll',onScroll,true);window.addEventListener('resize',place);
+  window.addEventListener('keydown',onKeyDown,true);
+}
 
-    const trigger = target.closest<HTMLElement>('[data-icen-dropdown-trigger]');
-    if (!trigger) return;
-    if (active && active.trigger === trigger) closeDropdown();
-    else openDropdown(trigger);
+/** Closing is interruptible: reopening/destroying first restores template nodes. */
+export function closeDropdown(restoreFocus = true): void {
+  if(!active)return;
+  const {trigger,template,panel}=active;active=null;
+  releaseMenu?.();releaseMenu=null;
+  trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');
+  panel.removeEventListener('pointermove',onPointerMove);
+  document.removeEventListener('pointerdown',onOutsidePointerDown,true);
+  document.removeEventListener('scroll',onScroll,true);window.removeEventListener('resize',place);window.removeEventListener('keydown',onKeyDown,true);
+  if(!scopes.size)document.removeEventListener('click',onClick);
+  if(restoreFocus && trigger.isConnected)trigger.focus({preventScroll:true});
+  panel.inert=true;panel.setAttribute('aria-hidden','true');panel.dataset.icenState='closing';
+  let done=false;let animation: Animation | undefined;
+  const finish=()=>{
+    if(done)return;done=true;animation?.cancel();
+    while(panel.firstChild)template.append(panel.firstChild);
+    panel.remove();if(finishClosing === finish)finishClosing=null;
   };
-  document.addEventListener('click', onClick);
+  finishClosing=finish;
+  const css=getComputedStyle(panel),duration=parseFloat(css.animationDuration)*(css.animationDuration.endsWith('ms') ? 1 : 1000);
+  if(typeof panel.animate === 'function' && trigger.isConnected && duration !== 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    animation=panel.animate([{opacity:css.opacity,transform:css.transform === 'none' ? 'scale(1)' : css.transform},{opacity:0,transform:'scale(.985)'}],{duration:Number.isFinite(duration) ? Math.min(90,duration*.75) : 90,easing:css.getPropertyValue('--icen-ease-out').trim() || 'ease-out',fill:'forwards'});
+    void animation.finished.then(finish,finish);
+  } else finish();
+}
 
-  const onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key !== 'ArrowDown') return;
-    if (active) return;
-    const target = e.target instanceof Element ? e.target : null;
-    const trigger = target?.closest<HTMLElement>('[data-icen-dropdown-trigger]');
-    if (!trigger) return;
-    e.preventDefault();
-    openDropdown(trigger, true);
-  };
-  document.addEventListener('keydown', onKeyDown);
+function onOutsidePointerDown(event: Event): void {
+  if(active && event.target instanceof Node && !active.panel.contains(event.target) && !active.trigger.contains(event.target))closeDropdown(false);
+}
+function onScroll(event: Event): void {
+  if(active && !(event.target instanceof Node && active.panel.contains(event.target)))closeDropdown(false);
+}
+function onPointerMove(event: PointerEvent): void {
+  if(!active || event.pointerType === 'touch' || !(event.target instanceof Element))return;
+  const item=event.target.closest<HTMLElement>('.icen-menu-item');
+  if(item && active.panel.contains(item))setHighlight(items(active.panel).indexOf(item),false);
+}
+function onKeyDown(event: KeyboardEvent): void {
+  if(!active || event.isComposing || event.keyCode === 229)return;
+  if(event.key === 'Escape') {event.preventDefault();event.stopPropagation();closeDropdown();return;}
+  if(event.key === 'Tab') {closeDropdown();return;}
+  if(event.target instanceof Element && event.target.matches('input,textarea,[contenteditable="true"]'))return;
+  const rows=items(active.panel);if(!rows.length)return;
+  if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)) {
+    event.preventDefault();
+    const next=event.key === 'Home' ? 0 : event.key === 'End' ? rows.length-1 : (active.highlight+(event.key === 'ArrowDown' ? 1 : -1)+rows.length)%rows.length;
+    setHighlight(next);return;
+  }
+  if(event.key === 'Enter' || event.key === ' ') {event.preventDefault();rows[active.highlight]?.click();return;}
+  if(event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey)return;
+  event.preventDefault();const now=Date.now();
+  active.typed=now-active.typedAt<600 ? active.typed+event.key : event.key;active.typedAt=now;
+  let query=active.typed.toLocaleLowerCase();
+  if([...query].every((character)=>character===query[0]))query=active.typed=query[0];
+  for(let step=1;step<=rows.length;step++) {
+    const index=(Math.max(0,active.highlight)+(query.length === 1 ? step : step-1))%rows.length;
+    const label=rows[index].querySelector('.icen-menu-item-label')?.textContent ?? rows[index].textContent ?? '';
+    if(label.trim().toLocaleLowerCase().startsWith(query)){setHighlight(index);break;}
+  }
+}
+function onClick(event: MouseEvent): void {
+  if(!(event.target instanceof Element))return;
+  const item=event.target.closest<HTMLElement>('.icen-menu-item');
+  if(active && item && active.panel.contains(item)) {
+    if(unavailable(item)){event.preventDefault();event.stopPropagation();return;}
+    const current=active;emitMenuSelect(current.panel,item);
+    if(active === current && !item.hasAttribute('data-icen-menu-keep-open'))closeDropdown(current.panel.contains(document.activeElement));
+    return;
+  }
+  const trigger=event.target.closest<HTMLElement>('[data-icen-dropdown-trigger]');
+  if(!trigger || ![...scopes.keys()].some((scope)=>within(scope,trigger)))return;
+  event.preventDefault();
+  if(active?.trigger === trigger)closeDropdown();else openDropdown(trigger);
+}
+function onTriggerKey(event: KeyboardEvent): void {
+  if(active || event.isComposing || !['ArrowDown','ArrowUp','Enter',' '].includes(event.key))return;
+  const trigger=event.target instanceof Element ? event.target.closest<HTMLElement>('[data-icen-dropdown-trigger]') : null;
+  if(!trigger || ![...scopes.keys()].some((scope)=>within(scope,trigger)))return;
+  event.preventDefault();openDropdown(trigger,event.key === 'ArrowUp' ? 'last' : 'first');
+  event.stopPropagation();
+}
 
-  const destroy = (): void => {
-    document.removeEventListener('click', onClick);
-    document.removeEventListener('keydown', onKeyDown);
-    closeDropdown();
-    /* 复位幂等标记，销毁后可重新 init */
-    initialized = false;
+export function initDropdown(root?: ParentNode): () => void {
+  if(typeof document === 'undefined')return ()=>{};
+  const scope=root ?? document,existing=scopes.get(scope);if(existing)return existing;
+  const triggers=[...(scope instanceof HTMLElement && scope.matches('[data-icen-dropdown-trigger]') ? [scope] : []),...scope.querySelectorAll<HTMLElement>('[data-icen-dropdown-trigger]')];
+  triggers.forEach((trigger)=>{
+    if(active?.trigger !== trigger)trigger.setAttribute('aria-expanded','false');
+    trigger.setAttribute('aria-haspopup','menu');
+    if(trigger instanceof HTMLButtonElement && !trigger.hasAttribute('type'))trigger.type='button';
+  });
+  if(!scopes.size){document.addEventListener('click',onClick);document.addEventListener('keydown',onTriggerKey);}
+  let disposed=false;
+  const dispose=()=>{
+    if(disposed)return;disposed=true;scopes.delete(scope);
+    if(active && within(scope,active.trigger))closeDropdown(false);
+    finishClosing?.();
+    if(!scopes.size){if(!active)document.removeEventListener('click',onClick);document.removeEventListener('keydown',onTriggerKey);}
   };
-  return destroy;
+  scopes.set(scope,dispose);return dispose;
 }

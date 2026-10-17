@@ -18,6 +18,8 @@ export interface ContextMenuEntry {
   subLabel?: string;
   /** 可信 svg 字符串（唯一走 innerHTML 的字段） */
   icon?: string;
+  /** Shared ICEN symbol (preferred over hand-written SVG). */
+  iconName?: import('./icons').IconName;
   shortcut?: string;
   danger?: boolean;
   disabled?: boolean;
@@ -41,7 +43,9 @@ export interface ContextMenuOptions {
   items?: ContextMenuItem[];
 }
 
-import { applyPanelSizing, readPanelSizing, type PanelSizing } from './popover';
+import { applyPanelSizing, readPanelSizing, revealPopoverItem, claimMenuFocus, type PanelSizing } from './popover';
+import { createIcon } from './icons';
+import { parseSvg } from './svg-parse';
 import { emitIcen } from './events';
 import { t } from './i18n';
 
@@ -69,6 +73,11 @@ export function emitMenuSelect(source: HTMLElement, item: HTMLElement): void {
 const registry = new Map<string, ContextMenuItem[]>();
 let fallbackItems: ContextMenuItem[] | null = null;
 let initialized = false;
+let disposeInit: (()=>void) | null = null;
+let returnFocus: HTMLElement | null = null;
+let typed = '';
+let typedAt = 0;
+let releaseMenu: (()=>void) | null = null;
 
 let panel: HTMLElement | null = null;
 let focusableItems: HTMLElement[] = [];
@@ -79,20 +88,24 @@ let longPress: { timer: number; x: number; y: number; target: Element | null } |
 export function registerContextMenu(id: string, items: ContextMenuItem[]): void {
   registry.set(id, items);
 }
+/** Remove a registration and its retained host callbacks. */
+export function unregisterContextMenu(id: string): void { registry.delete(id); }
 
 function defaultItems(): ContextMenuItem[] {
   return [
     {
       label: t('contextMenu.back'),
+      iconName: 'arrow-left',
       shortcut: 'Alt ←',
       disabled: window.history.length <= 1,
       onClick: () => window.history.back(),
     },
-    { label: t('contextMenu.forward'), shortcut: 'Alt →', onClick: () => window.history.forward() },
+    { label: t('contextMenu.forward'), iconName: 'arrow-right', shortcut: 'Alt →', onClick: () => window.history.forward() },
     { type: 'separator' },
-    { label: t('contextMenu.refresh'), shortcut: 'Ctrl R', onClick: () => window.location.reload() },
+    { label: t('contextMenu.refresh'), iconName: 'refresh', shortcut: 'Ctrl R', onClick: () => window.location.reload() },
     {
       label: t('contextMenu.copyPageLink'),
+      iconName: 'link',
       onClick: () => {
         void navigator.clipboard?.writeText(window.location.href);
       },
@@ -142,12 +155,14 @@ function buildItem(item: ContextMenuItem, menuPanel: HTMLElement): HTMLElement {
   btn.type = 'button';
   btn.className = entry.danger ? 'icen-menu-item icen-pressable icen-menu-item--danger' : 'icen-menu-item icen-pressable';
   if (entry.disabled) btn.disabled = true;
+  if(entry.disabled)btn.setAttribute('aria-disabled','true');
   btn.setAttribute('role', 'menuitem');
   btn.tabIndex = -1;
 
   const icon = document.createElement('span');
   icon.className = 'icen-menu-item-icon';
-  if (entry.icon) icon.innerHTML = entry.icon;
+  const symbol=entry.iconName ? createIcon(entry.iconName) : entry.icon ? parseSvg(entry.icon) : null;
+  if(symbol) {symbol.setAttribute('aria-hidden','true');icon.append(symbol);}
   btn.appendChild(icon);
 
   const label = document.createElement('span');
@@ -165,14 +180,15 @@ function buildItem(item: ContextMenuItem, menuPanel: HTMLElement): HTMLElement {
     const shortcut = document.createElement('span');
     shortcut.className = 'icen-menu-item-shortcut';
     shortcut.textContent = entry.shortcut;
+    shortcut.setAttribute('aria-hidden','true');
     btn.appendChild(shortcut);
   }
 
   btn.addEventListener('click', () => {
     /* 先派菜单选中统一事件，再执行条目回调（Enter 路径经 click() 同样到达） */
     emitMenuSelect(menuPanel, btn);
+    if(panel === menuPanel)closeContextMenu(menuPanel.contains(document.activeElement));
     entry.onClick?.();
-    closeContextMenu();
   });
   return btn;
 }
@@ -184,14 +200,18 @@ export function openContextMenu(
   x: number,
   y: number,
   items: ContextMenuItem[],
-  opts?: { sizing?: PanelSizing },
+  opts?: { sizing?: PanelSizing; returnFocus?: HTMLElement },
 ): void {
   if (typeof document === 'undefined') return;
   closeContextMenu();
+  releaseMenu=claimMenuFocus(()=>closeContextMenu());
+  returnFocus=opts?.returnFocus ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  typed='';typedAt=0;
 
   panel = document.createElement('div');
   panel.className = 'icen-menu icen-menu--context';
   panel.setAttribute('role', 'menu');
+  panel.tabIndex=-1;
   panel.style.visibility = 'hidden';
   applyPanelSizing(panel, opts?.sizing ?? {});
 
@@ -217,28 +237,31 @@ export function openContextMenu(
   focusableItems = Array.from(panel.querySelectorAll<HTMLElement>('.icen-menu-item:not(:disabled)'));
   focusedIndex = -1;
   // rAF 聚焦首个非 disabled 项
+  const openedPanel=panel;
   requestAnimationFrame(() => {
-    if (!panel || focusableItems.length === 0) return;
-    setFocused(0);
+    if (panel !== openedPanel)return;
+    if(focusableItems.length)setFocused(0);else panel.focus({preventScroll:true});
   });
 
   document.addEventListener('pointerdown', onOutsidePointerDown, true);
   document.addEventListener('scroll', onScrollSignal, true);
   window.addEventListener('resize', onCloseSignal);
-  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keydown', onKeyDown, true);
 }
 
 /** 关闭当前右键菜单（未打开时为 no-op）。 */
-export function closeContextMenu(): void {
+export function closeContextMenu(restoreFocus = false): void {
   if (!panel) return;
-  panel.remove();
+  releaseMenu?.();releaseMenu=null;
+  if(restoreFocus && returnFocus?.isConnected)returnFocus.focus({preventScroll:true});
+  returnFocus=null;panel.remove();
   panel = null;
   focusableItems = [];
   focusedIndex = -1;
   document.removeEventListener('pointerdown', onOutsidePointerDown, true);
   document.removeEventListener('scroll', onScrollSignal, true);
   window.removeEventListener('resize', onCloseSignal);
-  window.removeEventListener('keydown', onKeyDown);
+  window.removeEventListener('keydown', onKeyDown, true);
 }
 
 /**
@@ -252,7 +275,8 @@ export function closeMenu(): void {
 function setFocused(next: number): void {
   if (!panel || focusableItems.length === 0) return;
   focusedIndex = ((next % focusableItems.length) + focusableItems.length) % focusableItems.length;
-  focusableItems[focusedIndex].focus();
+  focusableItems.forEach((item,i)=>{item.tabIndex=i === focusedIndex ? 0 : -1;item.classList.toggle('is-highlighted',i === focusedIndex);});
+  revealPopoverItem(focusableItems[focusedIndex],panel,{focus:true});
 }
 
 function onOutsidePointerDown(e: Event): void {
@@ -273,11 +297,13 @@ function onCloseSignal(): void {
 
 function onKeyDown(e: KeyboardEvent): void {
   if (!panel) return;
+  if(e.isComposing || e.keyCode === 229)return;
   if (e.key === 'Escape') {
-    e.preventDefault();
-    closeContextMenu();
+    e.preventDefault();e.stopPropagation();
+    closeContextMenu(true);
     return;
   }
+  if(e.key === 'Tab'){closeContextMenu(true);return;}
   if (focusableItems.length === 0) return;
   if (e.key === 'ArrowDown') {
     e.preventDefault();
@@ -285,9 +311,18 @@ function onKeyDown(e: KeyboardEvent): void {
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
     setFocused(focusedIndex - 1);
-  } else if (e.key === 'Enter' && focusedIndex >= 0) {
+  } else if(e.key === 'Home' || e.key === 'End') {
+    e.preventDefault();setFocused(e.key === 'Home' ? 0 : focusableItems.length-1);
+  } else if ((e.key === 'Enter' || e.key === ' ') && focusedIndex >= 0) {
     e.preventDefault();
     focusableItems[focusedIndex].click();
+  } else if(e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const now=Date.now();typed=now-typedAt<600 ? typed+e.key : e.key;typedAt=now;
+    let query=typed.toLocaleLowerCase();if([...query].every((c)=>c===query[0]))query=typed=query[0];
+    for(let step=1;step<=focusableItems.length;step++) {
+      const index=(Math.max(0,focusedIndex)+(query.length === 1 ? step : step-1))%focusableItems.length;
+      if(focusableItems[index].querySelector('.icen-menu-item-label')?.textContent?.trim().toLocaleLowerCase().startsWith(query)){e.preventDefault();setFocused(index);break;}
+    }
   }
 }
 
@@ -315,6 +350,13 @@ function onContextMenu(e: MouseEvent): void {
   if (isEditable(target)) return;
   e.preventDefault();
   openForTarget(target, e.clientX, e.clientY);
+}
+
+function onContextKey(e: KeyboardEvent): void {
+  if(panel || e.isComposing || !(e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')))return;
+  const target=e.target instanceof Element ? e.target.closest<HTMLElement>('[data-icen-context-menu]') : null;
+  if(!target || isEditable(e.target instanceof Element ? e.target : null))return;
+  e.preventDefault();const rect=target.getBoundingClientRect();openForTarget(target,rect.left+8,rect.bottom);
 }
 
 // 触屏长按起点（520ms 后打开，移动超过 12px 取消）
@@ -348,23 +390,28 @@ function onLongPressMove(e: PointerEvent): void {
 export function initContextMenu(opts: ContextMenuOptions = {}): () => void {
   if (typeof document === 'undefined') return () => {};
   if (opts.items) fallbackItems = opts.items;
-  if (initialized) return () => {};
+  if (initialized) return disposeInit!;
   initialized = true;
 
   document.addEventListener('contextmenu', onContextMenu);
+  document.addEventListener('keydown',onContextKey);
   document.addEventListener('pointerdown', onLongPressStart);
   document.addEventListener('pointermove', onLongPressMove);
   document.addEventListener('pointerup', clearLongPress);
   document.addEventListener('pointercancel', clearLongPress);
 
-  return (): void => {
+  const dispose = (): void => {
+    if(disposeInit !== dispose)return;
     document.removeEventListener('contextmenu', onContextMenu);
+    document.removeEventListener('keydown',onContextKey);
     document.removeEventListener('pointerdown', onLongPressStart);
     document.removeEventListener('pointermove', onLongPressMove);
     document.removeEventListener('pointerup', clearLongPress);
     document.removeEventListener('pointercancel', clearLongPress);
     closeContextMenu();
+    clearLongPress();disposeInit=null;
     /* 复位幂等标记，销毁后可重新 init */
     initialized = false;
   };
+  disposeInit=dispose;return dispose;
 }
