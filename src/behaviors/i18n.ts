@@ -259,6 +259,9 @@ export interface IcenLocale {
   'backTop.label': string;
   /* ── carousel ── */
   'carousel.item': string;
+  'carousel.region': string;
+  'carousel.slide': string;
+  'carousel.status': string;
   /* ── charts ── */
   'charts.calendarWeekdays': string[];
   'charts.few': string;
@@ -1067,6 +1070,9 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'backTop.label': '回到顶部',
   /* ── carousel ── */
   'carousel.item': '第 {p0} 张',
+  'carousel.region': '轮播',
+  'carousel.slide': '幻灯片',
+  'carousel.status': '第 {p0} / {p1} 张',
   /* ── charts ── */
   'charts.calendarWeekdays': ['一', '', '三', '', '五', '', '日'],
   'charts.few': '少',
@@ -1875,6 +1881,9 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'backTop.label': 'Back to top',
   /* ── carousel ── */
   'carousel.item': 'Item {p0}',
+  'carousel.region': 'Carousel',
+  'carousel.slide': 'Slide',
+  'carousel.status': 'Item {p0} of {p1}',
   /* ── charts ── */
   'charts.calendarWeekdays': ['M', '', 'W', '', 'F', '', 'S'],
   'charts.few': 'Few',

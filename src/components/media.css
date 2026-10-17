@@ -267,8 +267,13 @@
  *     <div class="icen-carousel-track"><div class="icen-carousel-slide">…</div>×n</div>
  *     <button class="icen-carousel-arrow icen-carousel-arrow--prev" aria-label="上一张">…</button>
  *     <button class="icen-carousel-arrow icen-carousel-arrow--next" aria-label="下一张">…</button>
+ *     <span class="icen-carousel-index" aria-hidden="true"></span>  <!-- 可选：behavior 同步「i / n」 -->
  *     <div class="icen-carousel-dots"></div>   <!-- behavior 自动生成 .icen-carousel-dot -->
  *   </div>
+ * behavior 另生成视觉隐藏的 .icen-carousel-status（role=status 通报「第 i / n 张」），
+ * slide 自动带 role=group + aria-roledescription + 第 N 张标签；键盘 ←/→ 在 RTL 下镜像。
+ * 圆点/箭头是覆盖件：亮玻璃 + 分离环，不依赖主题 accent（accent 色幻灯上同样可辨）；
+ * 触屏箭头 44px、圆点隐形命中区 44px。
  */
 .icen-carousel {
   position: relative;
@@ -337,28 +342,49 @@
   z-index: 2;
 }
 .icen-carousel-dot {
+  position: relative;
   width: 6px;
   height: 6px;
   padding: 0;
   border: 0;
   border-radius: var(--icen-radius-full);
-  background: color-mix(in srgb, var(--icen-token-card) 70%, transparent);
+  /* 覆盖任意媒质：亮玻点 + 细环防亮图隐形；激活为实心长 pill（覆盖件不吃主题 accent） */
+  background: color-mix(in srgb, var(--icen-token-card) 58%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--icen-token-text) 12%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   cursor: pointer;
   transition:
     width var(--icen-tx-fast),
     background-color var(--icen-tx-fast);
 }
+/* 触屏命中扩张：视觉 6px 不变，隐形命中区 44px（不影响布局，不参与 hover 命中样式） */
+.icen-carousel-dot::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
 .icen-carousel-dot:hover {
-  background: color-mix(in srgb, var(--icen-token-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--icen-token-card) 85%, transparent);
 }
 .icen-carousel-dot:focus-visible {
   outline: none;
-  box-shadow: var(--icen-ring);
+  box-shadow: var(--icen-ring), 0 0 0 1px color-mix(in srgb, var(--icen-token-text) 12%, transparent);
 }
 .icen-carousel-dot.is-active,
 .icen-carousel-dot[aria-current='true'] {
   width: 20px;
-  background: var(--icen-token-accent);
+  background: var(--icen-token-card-strong);
+  box-shadow: var(--icen-token-shadow-card);
+}
+/* 读屏状态行（behavior 生成，视觉隐藏） */
+.icen-carousel-status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* 自动播放进度条（behavior 可选） */
@@ -434,6 +460,18 @@
   .icen-carousel-track { transition: none; }
   .icen-carousel-slide { animation: none; }
   .icen-media-card, .icen-rating-star, .icen-carousel-arrow, .icen-carousel-thumb { transition: none; }
+}
+
+@media (pointer: coarse) {
+  .icen-carousel-arrow { width: 44px; height: 44px; }
+  .icen-carousel-dot::after { inset: -19px; } /* 6px 视觉 → 44px 命中 */
+}
+
+@media (forced-colors: active) {
+  .icen-carousel-dot { background: Canvas; box-shadow: none; border: 1px solid ButtonText; }
+  .icen-carousel-dot.is-active,
+  .icen-carousel-dot[aria-current='true'] { background: Highlight; border-color: Highlight; }
+  .icen-carousel-arrow { border: 1px solid ButtonText; }
 }
 
 /* ── RTL：方向性图标镜像（轮播左右箭头）── */

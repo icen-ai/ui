@@ -2249,20 +2249,32 @@ initTree();
     slug: 'carousel',
     name: '轮播',
     group: '数据展示',
-    desc: '与 behaviors/carousel 配套：箭头 / 自动圆点 / 循环切换（三张色块幻灯）。',
+    summary: '内容是主角。控制件退到画面边缘，需要时才被注意到。',
+    desc: '箭头/圆点/滑动/键盘四条通道同一个切换引擎，首尾循环。圆点与箭头用覆盖件玻璃语言，在任何深浅媒质上都可辨；触屏命中区不小于 44px。RTL 下左右键按视觉方向镜像。读屏经隐藏状态行通报「第 i / n 张」，slide 带 W3C 语义；标记里放 .icen-carousel-index 槽位即同步「i / n」索引。',
     demo: `<div class="icen-carousel">
   <div class="icen-carousel-track">
-    <div class="icen-carousel-slide"><div style="height:170px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--icen-token-accent),var(--icen-token-accent-deep));color:#fff">第一张 · 陶土橙</div></div>
-    <div class="icen-carousel-slide"><div style="height:170px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--icen-token-success),var(--icen-token-info));color:#fff">第二张 · 青绿过渡</div></div>
-    <div class="icen-carousel-slide"><div style="height:170px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--icen-token-accent-cold),var(--icen-token-accent));color:#fff">第三张 · 冷蓝回暖</div></div>
+    <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-accent),var(--icen-token-accent-deep));color:var(--icen-token-on-accent)"><strong>随手的组件</strong><span style="font-size:12px;opacity:.85">一行引入，行为自动接上</span></div></div>
+    <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-success),var(--icen-token-info));color:#fff"><strong>六套主题</strong><span style="font-size:12px;opacity:.85">同一套 tokens，六副面孔</span></div></div>
+    <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-accent-cold),var(--icen-token-accent));color:#fff"><strong>键盘与触屏</strong><span style="font-size:12px;opacity:.85">方向键、滑动、圆点直达</span></div></div>
   </div>
-  <button class="icen-carousel-arrow icen-carousel-arrow--prev" type="button" aria-label="上一张"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
-  <button class="icen-carousel-arrow icen-carousel-arrow--next" type="button" aria-label="下一张"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+  <button class="icen-carousel-arrow icen-carousel-arrow--prev" type="button" aria-label="上一张">${iconHTML('chevron-left')}</button>
+  <button class="icen-carousel-arrow icen-carousel-arrow--next" type="button" aria-label="下一张">${iconHTML('chevron-right')}</button>
+  <span class="icen-carousel-index" aria-hidden="true"></span>
   <div class="icen-carousel-dots"></div>
 </div>`,
     usage: `import { initCarousel } from '@icen.ai/ui/behaviors/carousel';
-initCarousel();
-// dots 自动生成；首尾循环；当前 dot 挂 .is-active`,
+
+<div class="icen-carousel">
+  <div class="icen-carousel-track"><div class="icen-carousel-slide">…</div>×n</div>
+  <button class="icen-carousel-arrow icen-carousel-arrow--prev" aria-label="上一张">…</button>
+  <button class="icen-carousel-arrow icen-carousel-arrow--next" aria-label="下一张">…</button>
+  <span class="icen-carousel-index" aria-hidden="true"></span> <!-- 可选：自动同步「i / n」 -->
+  <div class="icen-carousel-dots"></div> <!-- 留空，圆点自动生成 -->
+</div>
+
+const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
+// 键盘 ←/→/Home/End（RTL 镜像）；触屏自动开滑动；读屏通报「第 i / n 张」
+// 事件：icen:carousel-change { index, count }（仅用户导航时派发）`,
     behaviors: ['carousel'],
     behaviorInit: { carousel: 'initCarousel' },
   },

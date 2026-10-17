@@ -17,8 +17,10 @@
  * 触屏（pointer: coarse）自动开 data-icen-gestures="swipe"：swipe-left → 下一张、
  * swipe-right → 上一张（与箭头/dots/键盘同一 go() 通道），销毁时还原词位。
  * icen:carousel-change 仅在用户导航（箭头/dots/键盘/滑动）时派发，初始化不派发。
- * 同一容器重复 init 幂等；initCarousel 返回销毁函数（移除箭头/键盘/dots 监听并
- * 复位幂等标记，销毁后可重新 init）。SSR 下返回 no-op。
+ * 键盘 ←/→/Home/End（焦点在容器内；RTL 下左右键按视觉方向镜像）；
+ * 读屏：容器 aria-roledescription=轮播（作者已声明则尊重），slide 逐个 role=group +
+ * 「第 N 张」标签，隐藏状态行 aria-live 通报「第 i / n 张」；标记里有 .icen-carousel-index
+ * 槽位则同步「i / n」文本。销毁时还原全部自有节点与属性，可重新 init。SSR 下返回 no-op。
  */
 
 import { emitIcen } from './events';
@@ -82,7 +84,29 @@ function setup(carousel: Element): (() => void) | undefined {
     count = slides.length;
     if (index >= count) index = Math.max(0, count - 1);
     buildDots();
+    paintSlideSemantics();
   }
+
+  /* slide 语义：role=group + roledescription + 第 N 张标签（W3C carousel 模式） */
+  function paintSlideSemantics(): void {
+    slides.forEach((s, i) => {
+      s.setAttribute('role', 'group');
+      s.setAttribute('aria-roledescription', slideLabel);
+      s.setAttribute('aria-label', t('carousel.item', { p0: i + 1 }));
+    });
+  }
+
+  /* 可选槽位与读屏状态行：索引指示器用作者提供的节点；状态行由本行为生成并在销毁时摘除 */
+  const indexSlot = carousel.querySelector<HTMLElement>('.icen-carousel-index');
+  const status = document.createElement('span');
+  status.className = 'icen-carousel-status';
+  status.setAttribute('role', 'status');
+  carousel.appendChild(status);
+
+  /* 容器语义：作者已声明 roledescription 则尊重 */
+  const authoredRegion = carousel.getAttribute('aria-roledescription');
+  if (!authoredRegion) carousel.setAttribute('aria-roledescription', t('carousel.region'));
+  const slideLabel = t('carousel.slide');
 
   const render = (): void => {
     track.style.transform = `translateX(${-index * 100}%)`;
@@ -92,6 +116,9 @@ function setup(carousel: Element): (() => void) | undefined {
       if (i === index) d.setAttribute('aria-current', 'true');
       else d.removeAttribute('aria-current');
     });
+    /* 索引槽与读屏状态行同源更新 */
+    if (indexSlot) indexSlot.textContent = `${index + 1} / ${count}`;
+    status.textContent = t('carousel.status', { p0: index + 1, p1: count });
   }
 
   /* 用户导航入口：唯一派发 icen:carousel-change 的地方（初始化不派发） */
@@ -142,12 +169,13 @@ function setup(carousel: Element): (() => void) | undefined {
     };
   }
 
-  /* 键盘 ←/→/Home/End（仅当焦点在 carousel 内） */
+  /* 键盘 ←/→/Home/End（仅当焦点在 carousel 内）；RTL 镜像左右（视觉方向优先） */
+  const rtl = (): boolean => getComputedStyle(carousel).direction === 'rtl';
   const onKeyDown = (ev: Event): void => {
     const kev = ev as KeyboardEvent;
     switch (kev.key) {
-      case 'ArrowLeft':  kev.preventDefault(); go(index - 1); break;
-      case 'ArrowRight': kev.preventDefault(); go(index + 1); break;
+      case 'ArrowLeft':  kev.preventDefault(); go(rtl() ? index + 1 : index - 1); break;
+      case 'ArrowRight': kev.preventDefault(); go(rtl() ? index - 1 : index + 1); break;
       case 'Home':       kev.preventDefault(); go(0); break;
       case 'End':        kev.preventDefault(); go(count - 1); break;
     }
@@ -155,9 +183,11 @@ function setup(carousel: Element): (() => void) | undefined {
   carousel.addEventListener('keydown', onKeyDown);
 
   buildDots();
+  paintSlideSemantics();
   render();
 
-  /* 销毁：移除箭头/键盘/触屏滑动/当前代 dots 监听，清空 dots 容器并复位幂等标记（可重新 init） */
+  /* 销毁：移除箭头/键盘/触屏滑动/当前代 dots 监听，清空 dots 容器、摘除状态行、
+     还原语义属性与幂等标记（销毁后可重新 init） */
   return () => {
     prev?.removeEventListener('click', onPrev);
     next?.removeEventListener('click', onNext);
@@ -167,6 +197,14 @@ function setup(carousel: Element): (() => void) | undefined {
     dotOffs = [];
     /* dots 全为本行为生成（buildDots 重建前先清容器），销毁时清空，对照 tabs 回收 .icen-tabs-ink */
     dotsBox?.replaceChildren();
+    status.remove();
+    if (!authoredRegion) carousel.removeAttribute('aria-roledescription');
+    slides.forEach((s) => {
+      s.removeAttribute('role');
+      s.removeAttribute('aria-roledescription');
+      s.removeAttribute('aria-label');
+      s.removeAttribute('aria-hidden');
+    });
     el.__icenCarouselInit = false;
   };
 }

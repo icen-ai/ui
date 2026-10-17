@@ -68,7 +68,7 @@
 - [ ] timeline
 - [ ] desc
 - [ ] tree
-- [ ] carousel
+- [x] carousel
 - [ ] badge
 - [ ] scroll-area
 - [ ] code-block
@@ -345,6 +345,15 @@
 - 顺带清账：首页文段链接补安静下划线（link-in-text-block 旧债）、hero 卡片说明文字对比度达标；a11y 扫描改在 reduced-motion 下进行（入场动画中间帧非稳定态，曾误报）；视觉基线按十五轮累计的合法变更重生成（侧栏新组件/顶栏无箭头/代码块工具栏/安装区/选中表面）。
 - 验证：7 条 DOM 用例 + 4 条浏览器专项（代码块气泡完整可见不被裁、键盘即显、Escape/点击不闪、顶缘翻转、多行、reduced-motion 无位移、移动 RTL 不出视口、换页摘除）。全量：verify 742 测试、125 条浏览器回归、129 页×两档巡检 0 问题。提交 22df06c。
 - 尚待：tooltip 在所有嵌套滚动容器/阴影宿主中的完整矩阵；CSS 回退的可访问名称会并入 ::after 文案（Chromium 计算规则），增强态下名称干净、描述走 describedby——后续可考虑初始化期即标记全部触发器消除名称状态翻转。
+
+### 第十六轮：轮播的覆盖件语言与完整语义
+
+- 修复真实缺陷：圆点在 accent 色幻灯上隐形（激活态吃主题 accent 与画面撞色）。圆点/箭头统一为覆盖件玻璃语言——亮玻璃 + 1px 分离环，激活实心长 pill 带卡片投影，任何深浅媒质可辨；不再依赖主题色。
+- 触屏纪律补齐：箭头 32→44px（pointer: coarse），圆点保持 6px 视觉但挂隐形 44px 命中区；forced-colors 用 Canvas/Highlight 保留状态。
+- 键盘 RTL 镜像：ArrowLeft/Right 按视觉方向（此前只镜像了图标）。
+- 读屏语义：容器 aria-roledescription（作者声明优先）、slide 逐个 role=group + 序号标签、隐藏 role=status 行通报「第 i / n 张」；新增可选 .icen-carousel-index 槽位自动同步「i / n」。销毁摘除全部自有节点与属性，可重入。
+- 文档示例升级为有标题/副题的内容页 + 索引槽 + 共享 SVG chevron（去掉手写 24px 内联）。
+- 验证：4 条新 DOM 用例（RTL 键位/状态行/索引槽/语义还原重入）+ 既有 swipe 4 条；3 条浏览器专项（双原语×明暗圆点可读性+axe、RTL 键盘与索引/状态同源、触屏 44px 与 reduced-motion/换页销毁）；全量 verify 746 测试、126+1 条浏览器回归（menu-polish 一条为并行抖动，孤立复查通过）、129 页×两档巡检 0 问题。
 
 ### 下一批待处理（保留完整目标）
 
