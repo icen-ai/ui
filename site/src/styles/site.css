@@ -515,9 +515,11 @@ body {
   min-height: 180px;
 }
 .demo-stage > * { max-width: 100%; }
-.demo-stage .demo-row { justify-content: center; }
-.demo-stage .demo-col,
-.demo-stage .demo-col-wide { margin-left: auto; margin-right: auto; }
+/* 仅顶层示例列居中：嵌套 demo-col（如标签输入的 form 分组）保持拉伸，
+   auto 横向外边距会禁用 flex stretch 导致内容宽度溢出 */
+.demo-stage > .demo-row { justify-content: center; }
+.demo-stage > .demo-col,
+.demo-stage > .demo-col-wide { margin-left: auto; margin-right: auto; }
 /* ═══════════ 代码块（@icen.ai/ui code-block 组件承载，chrome 样式在组件库） ═══════════ */
 /* figure 默认 1em 40px 外边距 → 文档流节奏统一（组件自身不设 margin，交给消费方） */
 .icen-code-block { margin: 14px 0; }

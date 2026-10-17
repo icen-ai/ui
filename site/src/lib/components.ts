@@ -751,17 +751,96 @@ dual?.querySelectorAll('.icen-slider-native').forEach((n) => {
   {
     slug: 'tag-input',
     name: '标签输入',
+    summary: '把零散词句整理成标签。安静地添加、移除与修正，保留每一步编辑的连续性。',
     group: '表单',
-    desc: 'Enter / 逗号提交、重复静默清空、空草稿 Backspace 删尾、blur 提交；达到 data-icen-max 边框转 warning 色并拒加。',
-    demo: `<div class="demo-col">
-  <div class="icen-tag-input icen-control" data-icen-tags="设计,前端" data-icen-max="5">
-    <input class="icen-tag-input-field" placeholder="输入后回车添加（最多 5 个）" />
+    desc: 'Enter、中英文逗号或离开字段时提交，也能粘贴多行词条。重复或超出数量时保留未接纳的草稿并说明原因；到达上限本身不显示警告。标签节点保留身份，删除后焦点回到相邻动作或输入框，触屏移除不会意外提交草稿。支持三档尺寸、只读、禁用、动态数据与原生表单；命名字段以重复表单项提交，重置恢复最初标签。',
+    demo: `<div class="demo-col-wide" style="inline-size:min(100%,560px);gap:var(--icen-density-space-lg)">
+  <form id="tags-form" class="demo-col-wide">
+    <label for="tags-topics-field" id="tags-topics-label">作品主题</label>
+    <div id="tags-topics" class="icen-tag-input icen-control" data-icen-tags="界面设计,排版" data-icen-max="5" aria-labelledby="tags-topics-label">
+      <input id="tags-topics-field" class="icen-tag-input-field" name="topics" required aria-describedby="tags-topics-help" placeholder="输入主题，按回车添加" />
+    </div>
+    <p id="tags-topics-help" class="icen-muted" dir="auto">最多 5 个。也可以粘贴以逗号或换行分隔的词条。</p>
+    <div class="demo-row">
+      <button type="submit" class="icen-btn icen-btn-primary icen-btn-sm">保存主题</button>
+      <button type="reset" class="icen-btn icen-btn-sm">恢复初始主题</button>
+    </div>
+    <p id="tags-form-result" class="icen-muted" dir="auto">尚未保存，标签只保留在当前页面。</p>
+  </form>
+  <div class="demo-col-wide">
+    <label for="tags-keywords-field" id="tags-keywords-label">检索关键词 · 紧凑</label>
+    <div id="tags-keywords" class="icen-tag-input icen-control icen-tag-input--sm" data-icen-tags="Design systems,细微的光影与材质" data-icen-max="3" aria-labelledby="tags-keywords-label">
+      <input id="tags-keywords-field" class="icen-tag-input-field" placeholder="添加关键词" />
+    </div>
+  </div>
+  <div class="demo-col-wide">
+    <label for="tags-review-field" id="tags-review-label">审阅范围 · 大尺寸</label>
+    <div id="tags-review" class="icen-tag-input icen-control icen-tag-input--lg" data-icen-tags="视觉语言,交互细节" aria-labelledby="tags-review-label">
+      <input id="tags-review-field" class="icen-tag-input-field" placeholder="添加审阅范围" />
+    </div>
+    <button type="button" class="icen-btn icen-btn-sm" id="tags-edit-review" aria-pressed="false">编辑审阅范围</button>
+  </div>
+  <div class="demo-col-wide">
+    <label for="tags-locked-field" id="tags-locked-label">归档标签 · 暂不可编辑</label>
+    <div class="icen-tag-input icen-control" data-icen-tags="已归档" data-icen-disabled aria-labelledby="tags-locked-label">
+      <input id="tags-locked-field" class="icen-tag-input-field" placeholder="归档后不可编辑" />
+    </div>
   </div>
 </div>`,
-    usage: `import { initTagInput } from '@icen.ai/ui/behaviors/tag-input';
-initTagInput();`,
+    usage: `import { initTagInput, createTagInput } from '@icen.ai/ui/behaviors/tag-input';
+
+<!-- 使用真实 input，label 关联输入框；name 提交已确认的标签，不提交草稿 -->
+<label for="topics">作品主题</label>
+<div class="icen-tag-input" data-icen-tags="界面设计,排版" data-icen-max="5">
+  <input id="topics" class="icen-tag-input-field" name="topics" required placeholder="添加主题" />
+</div>
+
+const dispose = initTagInput(container); // 可省略容器；动态插入同样接入
+// 宿主卸载时 dispose()；重复调用返回同一销毁函数
+
+// 需要程序控制时取得显式生命周期句柄，已有编辑器会被复用
+const tags = createTagInput(element, { max: 5, name: 'topics' });
+tags.getValue();                         // 返回独立数组
+tags.setValue(['界面设计', '动效']);
+tags.setValue(['排版'], { emit: false }); // 不派变化事件
+tags.update({ readOnly: true });          // disabled / max / allowDuplicates / name
+tags.focus();
+tags.destroy();                          // 显式句柄由调用方销毁
+
+// FormData(form).getAll('topics') → ['界面设计', '排版']
+// form.reset() 恢复初始化值，遵守 reset.preventDefault()
+// data-icen-tags 支持逗号分隔或 JSON 字符串数组（标签自身含逗号时用 JSON）
+// data-icen-duplicate="true" 允许重复；max<=0 表示不限，降低上限不删除已有标签
+// data-icen-readonly / data-icen-disabled 也可声明状态
+// 改变时派原生 input/change 与 icen:tags-change { tags }
+// 删除键：输入为空时 Backspace 删除末项；行首方向键进入标签动作
+// 标签动作支持左右移动、Delete/Backspace 移除、Escape 回到输入框。`,
     behaviors: ['tag-input'],
     behaviorInit: { 'tag-input': 'initTagInput' },
+    script: `const form = document.getElementById('tags-form');
+const result = document.getElementById('tags-form-result');
+const button = document.getElementById('tags-edit-review');
+const ac = new AbortController();
+const topics = tagInputMod.createTagInput(document.getElementById('tags-topics'));
+const keywords = tagInputMod.createTagInput(document.getElementById('tags-keywords'));
+const review = tagInputMod.createTagInput(document.getElementById('tags-review'), { readOnly: true });
+let editing = false;
+form.addEventListener('submit', (event) => {
+  if (event.defaultPrevented) return;
+  event.preventDefault();
+  result.textContent = '已保存主题：' + new FormData(form).getAll('topics').join('、') + '。';
+}, { signal: ac.signal });
+form.addEventListener('reset', (event) => queueMicrotask(() => {
+  if (!event.defaultPrevented && !ac.signal.aborted) result.textContent = '已恢复最初的作品主题。';
+}), { signal: ac.signal });
+button.addEventListener('click', () => {
+  editing = !editing;
+  review.update({ readOnly: !editing });
+  button.setAttribute('aria-pressed', String(editing));
+  button.textContent = editing ? '完成编辑' : '编辑审阅范围';
+  if (editing) review.focus();
+}, { signal: ac.signal });
+return () => { ac.abort(); topics.destroy(); keywords.destroy(); review.destroy(); };`,
   },
   {
     slug: 'switch',

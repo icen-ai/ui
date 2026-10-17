@@ -1,147 +1,51 @@
-/*
- * @icen.ai/ui — Component: tag-input（多值标签编辑）
- * 规格源自 opengal primitives/advanced-input.tsx 的 TagInput；与 behaviors/tag-input.ts 配套。
- *
- * 完整契约：
- *   <div class="icen-tag-input icen-control [.icen-tag-input--sm|.icen-tag-input--lg] [.is-disabled]"
- *        data-icen-tags="初始,标签" data-icen-max="5" data-icen-duplicate="false|true">
- *     <icen-input class="icen-tag-input-field" placeholder="…" />
- *   </div>
- *
- * behavior 渲染：
- *   - 解析 data-icen-tags → 渲染 .icen-tag-chip（含 .icen-tag-chip-x 删除钮），input 放在末尾
- *   - 达到 data-icen-max 时容器加 .is-max（warning 色边框）并拒加
- *   - data-icen-duplicate="false" 时重复值被拒绝（短暂 .is-shake 抖动反馈）
- *   - 删除钮 Enter/Space 触发，删后 input 自动聚焦
+/* Tag editor: native input.icen-tag-input-field inside .icen-tag-input.
+ * Behavior adds stable .icen-tag-chip > bdi.icen-tag-chip-label +
+ * button.icen-tag-chip-x, an optical .icen-tag-input-count, hidden native form
+ * entries, and an adjacent .icen-tag-input-feedback[role=status].
+ * --sm / --lg vary density; data-icen-readonly keeps labels without actions.
+ * is-max is a capacity state, is-unavailable follows actual disabled state.
  */
-
 .icen-tag-input {
+  --tag-action-size: calc(var(--icen-density-input-height-md) - var(--icen-density-space-xs) * 2 - 2px);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--icen-density-space-xs);
   padding: var(--icen-density-space-xs);
-  min-height: var(--icen-density-input-height-md);
+  min-block-size: var(--icen-density-input-height-md);
   background: var(--icen-token-control);
   border: 1px solid var(--icen-token-outline-soft);
   border-radius: var(--icen-radius-md);
   box-shadow: var(--icen-token-shadow-inset);
-  transition:
-    border-color var(--icen-tx-fast),
-    box-shadow var(--icen-tx-fast);
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
-.icen-tag-input:hover {
-  border-color: var(--icen-hover-border);
-}
-.icen-tag-input:focus-within {
-  border-color: var(--icen-control-focus-border);
-  box-shadow: var(--icen-control-focus-shadow);
-}
-.icen-tag-input.is-max,
-.icen-tag-input.is-max:focus-within {
-  border-color: color-mix(in srgb, var(--icen-token-warning) 60%, transparent);
-  box-shadow: var(--icen-ring-warning);
-}
-.icen-tag-input.is-disabled,
-.icen-tag-input[aria-disabled='true'],
-.icen-tag-input[data-icen-disabled] {
-  opacity: var(--icen-disabled-opacity);
-  background: var(--icen-token-bg-soft);
-  cursor: not-allowed;
-  pointer-events: none;
-}
-.icen-tag-input.is-disabled .icen-tag-input-field { cursor: not-allowed; }
-.icen-tag-input.is-disabled .icen-tag-chip-x { pointer-events: none; }
-
-.icen-tag-input--sm { min-height: var(--icen-density-input-height-sm); }
-.icen-tag-input--lg { min-height: var(--icen-density-input-height-lg); }
-
-.icen-tag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding-block: 2px;
-  padding-inline: var(--icen-density-space-xs) 4px;
-  border-radius: var(--icen-radius-full);
-  background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent);
-  font-size: var(--icen-density-font-size-xs);
-  font-weight: 500;
-  line-height: 1.4;
-  max-width: 100%;
-  animation: tag-pop var(--icen-tx-fast);
-}
-/* readonly 变体（消费方手写标记，behavior 不产出） */
-.icen-tag-chip--readonly { background: var(--icen-token-fill-2); color: var(--icen-token-text-muted); }
-
-@keyframes tag-pop {
-  from { opacity: 0; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .icen-tag-chip { animation: none; }
-}
-
-.icen-tag-chip-x {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  border-radius: var(--icen-radius-full);
-  color: inherit;
-  font-size: var(--icen-density-font-size-xs);
-  line-height: 1;
-  opacity: 0.7;
-  transition:
-    background-color var(--icen-tx-fast),
-    opacity var(--icen-tx-fast),
-    color var(--icen-tx-fast);
-}
-.icen-tag-chip-x:hover {
-  opacity: 1;
-  background: color-mix(in srgb, currentColor 18%, transparent);
-  color: var(--icen-token-on-accent);
-}
-.icen-tag-chip-x:focus-visible {
-  outline: none;
-  opacity: 1;
-  box-shadow: var(--icen-ring);
-}
-.icen-tag-chip-x svg { width: 10px; height: 10px; }
-
-.icen-tag-input-field {
-  flex: 1;
-  min-width: 80px;
-  padding: 2px;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--icen-token-text);
-  font: inherit;
-  font-size: var(--icen-density-font-size-sm);
-}
-.icen-tag-input-field::placeholder {
-  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
-}
-
-/* 重复值抖动反馈（behavior 短暂挂 is-shake） */
-.icen-tag-input.is-shake {
-  animation: tag-shake var(--tag-shake-duration, 0.32s) var(--icen-ease-out);
-}
-@keyframes tag-shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-3px); }
-  40%, 80% { transform: translateX(3px); }
-}
-
-/* Stable secondary-action slot: reveal is optical rather than a width change. */
+.icen-tag-input:focus-within { border-color: var(--icen-control-focus-border); box-shadow: var(--icen-control-focus-shadow); }
+.icen-tag-input--sm { --tag-action-size: calc(var(--icen-density-input-height-sm) - var(--icen-density-space-xs) * 2 - 2px); min-block-size: var(--icen-density-input-height-sm); }
+.icen-tag-input--lg { --tag-action-size: calc(var(--icen-density-input-height-lg) - var(--icen-density-space-xs) * 2 - 2px); min-block-size: var(--icen-density-input-height-lg); }
+.icen-tag-input:is(.is-disabled,.is-unavailable,[aria-disabled='true'],[data-icen-disabled]) { background: var(--icen-token-bg-soft); cursor: not-allowed; }
+.icen-tag-input.is-unavailable > .icen-tag-chip { background: var(--icen-token-fill-2); color: var(--icen-token-text-muted); }
+.icen-tag-input.is-unavailable .icen-tag-chip-x { visibility: hidden; }
+.icen-tag-input.is-unavailable :is(.icen-tag-input-field,.icen-tag-chip-x) { cursor: not-allowed; }
+.icen-tag-chip { display: inline-flex; align-items: center; gap: var(--icen-density-space-xs); padding-inline-start: var(--icen-density-space-sm); border-radius: var(--icen-radius-full); background: var(--icen-token-accent-subtle); color: var(--icen-token-accent-text,var(--icen-token-text)); font-size: var(--icen-density-font-size-sm); font-weight: 500; line-height: 1.4; max-inline-size: 100%; min-inline-size: 0; animation: icen-pop-in var(--icen-tx-fast); }
+.icen-tag-chip-label { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icen-tag-chip--readonly, .is-readonly > .icen-tag-chip { background: var(--icen-token-fill-2); color: var(--icen-token-text-muted); padding-inline: var(--icen-density-space-sm); min-block-size: var(--tag-action-size); }
+.icen-tag-chip-x { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; inline-size: var(--tag-action-size); block-size: var(--tag-action-size); padding: 0; border: 0; border-radius: var(--icen-radius-full); color: inherit; background: transparent; cursor: pointer; transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast), opacity var(--icen-tx-fast); }
+.icen-tag-chip-x svg { inline-size: 12px; block-size: 12px; pointer-events: none; }
+.icen-tag-chip-x[hidden] { display: none; }
+.icen-tag-chip-x:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: -2px; opacity: 1; }
+.icen-tag-input-field { flex: 1 1 6ch; min-inline-size: 6ch; max-inline-size: 100%; padding: var(--icen-density-space-xs); border: 0; background: transparent; outline: none; color: var(--icen-token-text); font: inherit; font-size: var(--icen-density-font-size-sm); }
+.icen-tag-input-field::placeholder { color: var(--icen-token-text-muted); opacity: 1; }
+.icen-tag-input--sm :is(.icen-tag-chip,.icen-tag-input-field) { font-size: var(--icen-density-font-size-xs); }
+.icen-tag-input--lg :is(.icen-tag-chip,.icen-tag-input-field) { font-size: var(--icen-density-font-size-md); }
+.icen-tag-input-count { flex: 0 0 auto; padding-inline: var(--icen-density-space-xs); color: var(--icen-token-text-muted); font-size: var(--icen-density-font-size-xs); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+.icen-tag-input-feedback { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+.icen-tag-input-feedback.is-visible { position: static; display: block; inline-size: auto; block-size: auto; margin-block-start: var(--icen-density-space-xs); overflow: visible; clip-path: none; color: var(--icen-token-text-muted); font-size: var(--icen-density-font-size-sm); }
 @media (hover: hover) and (pointer: fine) {
+  .icen-tag-input:not(.is-unavailable):hover { border-color: var(--icen-hover-border); }
   .icen-tag-chip-x { opacity: 0; }
   .icen-tag-chip:is(:hover,:focus-within) .icen-tag-chip-x { opacity: 1; }
+  .icen-tag-chip-x:hover { background: var(--icen-token-fill-2); }
 }
-@media (pointer: coarse) { .icen-tag-chip-x { min-inline-size: 28px; min-block-size: 28px; opacity: 1; } }
+@media (pointer: coarse) { .icen-tag-chip-x { min-inline-size: 44px; min-block-size: 44px; opacity: 1; } .icen-tag-input-field { min-block-size: 44px; } }
+@media (prefers-reduced-motion: reduce) { .icen-tag-chip { animation: none; } .icen-tag-input, .icen-tag-chip-x { transition: none; } }
+@media (forced-colors: active) { .icen-tag-chip { border: 1px solid CanvasText; } .icen-tag-chip-x:focus-visible { outline-color: Highlight; } }

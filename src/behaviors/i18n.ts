@@ -881,6 +881,11 @@ export interface IcenLocale {
   /* ── tagInput ── */
   'tagInput.ariaLabel': string;
   'tagInput.remove': string;
+  'tagInput.field': string;
+  'tagInput.added': string;
+  'tagInput.removed': string;
+  'tagInput.duplicate': string;
+  'tagInput.limit': string;
   /* ── upload ── */
   'upload.remove': string;
   'upload.tooBig': string;
@@ -1684,6 +1689,11 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   /* ── tagInput ── */
   'tagInput.ariaLabel': '标签输入，共 {p0} 个',
   'tagInput.remove': '移除 {p0}',
+  'tagInput.field': '添加标签',
+  'tagInput.added': '已添加 {p0} 个标签。',
+  'tagInput.removed': '已移除 {p0}。',
+  'tagInput.duplicate': '已有「{p0}」，可以编辑后重试。',
+  'tagInput.limit': '最多 {p0} 个标签，请先移除一个。',
   /* ── upload ── */
   'upload.remove': '移除 {p0}',
   'upload.tooBig': '文件超过 {p0}',
@@ -2487,6 +2497,11 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   /* ── tagInput ── */
   'tagInput.ariaLabel': 'Tag input, {p0} tags',
   'tagInput.remove': 'Remove {p0}',
+  'tagInput.field': 'Add a tag',
+  'tagInput.added': 'Added {p0} tags.',
+  'tagInput.removed': 'Removed {p0}.',
+  'tagInput.duplicate': '“{p0}” already exists. Edit it and try again.',
+  'tagInput.limit': 'Up to {p0} tags. Remove one to add another.',
   /* ── upload ── */
   'upload.remove': 'Remove {p0}',
   'upload.tooBig': 'File exceeds {p0}',
