@@ -267,25 +267,29 @@ document.querySelectorAll('.icen-tag-close').forEach((btn) => {
     slug: 'tabs',
     name: '标签页',
     group: '基础',
-    desc: '与 behaviors/tabs 配套的 data 契约分区导航——下面是可点击切换的 live demo。',
-    demo: `<div data-icen-tabs>
-  <nav class="icen-tabs">
-    <button class="icen-page-tab is-active" data-icen-tab="overview">概览</button>
-    <button class="icen-page-tab" data-icen-tab="usage">用法</button>
-    <button class="icen-page-tab" data-icen-tab="api">契约</button>
+    summary: '分区内容各就各位。指示条会滑动，键盘与地址栏都知道当前位置。',
+    desc: 'data 契约分区导航：←/→/↑↓ 方向键与 Home/End 移动焦点（manual 模式移动不激活，auto 模式跟随激活），roving tabindex 只留一个 tab 进 Tab 序。挂 data-icen-tabs-ink 获得滑动墨水条（宽度与位移走过渡，reduced-motion 直落）；data-icen-tabs-hash 把激活态同步进地址栏（push/replace 可选），刷新后位置不丢。',
+    demo: `<div data-icen-tabs data-icen-tabs-hash="replace">
+  <nav class="icen-tabs" data-icen-tabs-ink role="tablist" aria-label="发布流程">
+    <button class="icen-page-tab is-active" type="button" data-icen-tab="overview">概览</button>
+    <button class="icen-page-tab" type="button" data-icen-tab="checks">检查单</button>
+    <button class="icen-page-tab" type="button" data-icen-tab="rollback">回滚</button>
   </nav>
-  <section data-icen-tab-panel="overview">
-    <p>三分区可点击切换。激活态 = .is-active 类，未激活面板挂 hidden。</p>
+  <section data-icen-tab-panel="overview" role="tabpanel">
+    <p>本次发布包含 16 个组件的交互精修。版本 0.10.0，签名与产物就绪。</p>
   </section>
-  <section data-icen-tab-panel="usage" hidden>
-    <p>引入 behaviors/tabs 后调用 initTabs()，事件委托在 [data-icen-tabs] 容器上。</p>
+  <section data-icen-tab-panel="checks" role="tabpanel" hidden>
+    <p>构建验证、类型检查、浏览器回归与视觉基线均已通过。</p>
   </section>
-  <section data-icen-tab-panel="api" hidden>
-    <p>契约：data-icen-tabs（容器）→ data-icen-tab（页签）→ data-icen-tab-panel（面板）；可选 data-icen-tabs-hash 与 location.hash 同步。</p>
+  <section data-icen-tab-panel="rollback" role="tabpanel" hidden>
+    <p>有 tag 可直接回滚；迁移脚本可逆。</p>
   </section>
 </div>`,
-    usage: `import { initTabs } from '@icen.ai/ui/behaviors/tabs';
-initTabs(); // 激活态挂 .is-active；切换时容器派发 icen:tab-change（detail { tab, panel, index }）`,
+    usage: `import { initTabs } from '@icen.ai/ui/kit/tabs';
+initTabs(); // 点击 + 方向键/Home/End；派发 icen:tab-change { tab, panel, index }
+
+<!-- 墨水条：tablist 挂 data-icen-tabs-ink；地址同步：容器挂 data-icen-tabs-hash="replace" -->
+<!-- data-icen-tabs-activation="auto" 方向键移动即激活（缺省 manual 只移焦点） -->`,
     behaviors: ['tabs'],
     behaviorInit: { tabs: 'initTabs' },
   },

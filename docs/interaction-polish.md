@@ -32,7 +32,7 @@
 - [ ] panel
 - [ ] pill
 - [ ] tag
-- [ ] tabs
+- [x] tabs
 - [ ] stat
 - [ ] toast
 - [ ] toolbar
@@ -453,6 +453,12 @@
 - select/input 命名：kb-review 的筛选与分配 select、kb-eval 的对比运行 select 补 aria-label；input 示例四个预填字段补 aria-label。
 - 新增 3 条 DOM 契约测试锁定三个重组件的结构（tests/dom/nested-interactive.test.ts）。
 - 验证：verify 767 测试、289 条浏览器回归（含 129 展开态巡检）、129 页×两档基础巡检 0 问题，全绿。
+
+### 第二十九轮：tabs 示例升舱（墨水条/键盘/地址同步）
+
+- tabs 的最佳特性此前藏在契约注释里：示例从未挂 data-icen-tabs-ink。示例升级为发布流程三段内容 + 墨水条滑动 + data-icen-tabs-hash="replace" 地址同步；desc 写明 manual/auto 激活与 roving tabindex 语义。
+- 修正墨水条与活动 tab 自身下划线的双画：挂 ink 时活动项 border-bottom 让位透明。
+- 验证：2 条浏览器专项（墨水条跟随/面板/hash/键盘 manual 语义/roving tabindex；暗色 RTL 无双画线）。全量：verify 767 测试、284 条浏览器回归、129 页×两档巡检 0 问题。
 
 ### 下一批待处理（保留完整目标）
 

@@ -229,6 +229,9 @@
 .icen-tabs[data-icen-tabs-ink] {
   position: relative;
 }
+/* 挂墨水条时，活动 tab 自身的下划线让位（不双画） */
+.icen-tabs[data-icen-tabs-ink] .icen-page-tab.is-active,
+.icen-tabs[data-icen-tabs-ink] .icen-page-tab[aria-selected='true'] { border-bottom-color: transparent; }
 .icen-tabs-ink {
   position: absolute;
   bottom: -1px; /* 盖在容器 1px 底边线上，与活动 tab 的 2px 下划线同高 */
