@@ -431,6 +431,12 @@
 - 验证：2 条浏览器专项（流式宽度/点位对齐/aria-label/缩容重渲染 + 总览页 axe 清零）；既有 310 单测 + 433 DOM 全过。全量：verify 764 测试、147 条浏览器回归、129 页×两档巡检 0 问题。图表页视觉基线随流式宽度重生成（冻结时钟下确定）。
 - 尚待： donut/gauge/radar 等径向图在多原语下的视觉矩阵、charts 族交互（tooltip/缩放/图例切换）的逐项验收仍未走完；不勾选 charts。
 
+### 第二十六轮：边框戏法字形清零（AI/kb 折叠与对勾）
+
+- 清掉库内最后的边框半边拼字：ai-tool 的 is-done 状态点（两条 border 拼 ✓）、ai-chat 的 reasoning/threads 折叠 caret（border 三角）、kb-ops trace 树的 ▶ 三角——全部换成共享 chevron-right/check 的 mask 几何，RTL 统一 scaleX(-1) 镜像；既有的 guard 物理半边登记注释随之移除。
+- 守卫机制深挖：css-discipline 的圆角登记配对依赖 stripComments 后的行号映射，删注释行会让配对漂移——受影响的三处（ai-tool/kb-ops spinner/进度条）登记注释归位行尾；ai-tool.css 与 kb-ops.css 两个历史 CRLF blob 顺带归一 LF（一次性整文件 diff）。
+- 验证：2 条浏览器专项（reasoning caret mask 几何 + 展开旋转 + RTL 镜像；工具完成态与 trace caret 同构）。全量：verify 764 测试、149 条浏览器回归、129 页×两档巡检 0 问题。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。

@@ -46,13 +46,12 @@
   background: var(--icen-token-line-soft);
 }
 
-/* caret（有子才显；hidden 占位保持列对齐）：CSS 三角指向行进方向，展开旋转 90°；RTL 用镜像规则换为左指三角 */
+/* caret（有子才显；hidden 占位保持列对齐）：共享 chevron-right mask 指向行进方向，展开旋转 90°；RTL 经 scaleX(-1) 镜像 */
 .icen-kb-span-caret {
-  width: 0;
-  height: 0;
-  border-left: 4px solid var(--icen-token-text-faint); /* guard:allow-physical CSS 三角半边构成（▶ 指向行进方向，RTL 镜像规则换 border-right 翻转） */
-  border-top: 3px solid transparent;
-  border-bottom: 3px solid transparent;
+  inline-size: 12px;
+  block-size: 12px;
+  background: var(--icen-token-text-faint);
+  mask: var(--icen-token-icon-chevron-right) center / contain no-repeat;
   transition: transform 0.16s ease-out;
 }
 .icen-kb-span[aria-expanded='true'] .icen-kb-span-caret { transform: rotate(90deg); }
@@ -89,7 +88,7 @@
   justify-self: start;
   width: 0%;
   height: 4px;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
   background: var(--icen-token-line);
   transition: width 0.16s ease-out;
 }
@@ -342,7 +341,7 @@
   min-width: 4px;
   max-width: 28px;
   background: var(--icen-token-line);
-  border-radius: 2px 2px 0 0; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px 2px 0 0; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
   align-self: flex-end;
 }
 .icen-kb-gap-bar:hover { background: var(--icen-token-accent); }
@@ -534,12 +533,12 @@
 .icen-kb-eval-diff-del {
   background: color-mix(in srgb, var(--icen-token-danger, var(--icen-token-error)) 14%, transparent);
   color: var(--icen-token-danger, var(--icen-token-error));
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
 }
 .icen-kb-eval-diff-ins {
   background: color-mix(in srgb, var(--icen-token-success) 14%, transparent);
   color: var(--icen-token-success);
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
 }
 
 /* ═══════════════ hidden 属性优先（本文件的 display 声明不得击穿 [hidden]） ═══════════════ */
@@ -561,7 +560,8 @@
 }
 
 /* ── RTL：方向性指示镜像 ── */
-/* trace 树 caret：CSS 三角由 border-left 构成（▶），RTL 换 border-right 成 ◀ */
-:is([dir='rtl']) .icen-kb-span-caret { border-left: none; /* guard:allow-physical RTL 镜像规则：撤掉右指三角的物理半边 */ border-right: 4px solid var(--icen-token-text-faint); /* guard:allow-physical RTL 镜像规则：换成左指三角的物理半边 */ }
+/* trace 树 caret：共享 chevron mask 经 scaleX(-1) 翻转向左 */
+:is([dir='rtl']) .icen-kb-span-caret { transform: scaleX(-1); }
+:is([dir='rtl']) .icen-kb-span[aria-expanded='true'] .icen-kb-span-caret { transform: rotate(90deg) scaleX(-1); }
 /* review 队列激活描边：box-shadow 无逻辑属性，inset 起始缘 2px 在 RTL 下取负 */
 :is([dir='rtl']) .icen-kb-review-item.is-active { box-shadow: inset -2px 0 0 var(--icen-token-accent); }

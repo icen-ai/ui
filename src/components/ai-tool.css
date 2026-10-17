@@ -197,7 +197,7 @@
 :is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-streaming .icen-ai-item-status {
   width: 3px;
   height: 12px;
-  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
   background: var(--ai-item-tint);
   animation: blink var(--ai-item-blink-duration) step-end infinite;
 }
@@ -208,17 +208,13 @@
   box-shadow: 0 0 0 3px var(--icen-token-warning-muted);
 }
 
-/* 完成：success 对勾（纯 CSS，无 SVG） */
+/* 完成：success 对勾（共享 check 几何 mask，颜色由 background 承载） */
 :is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-done .icen-ai-item-status::after {
-  content: "";
+  content: '';
   position: absolute;
-  left: 1px; /* guard:allow-physical ✓ 字形微定位（对勾在 8px 圆点内的物理偏移，RTL 下对勾仍朝该方向） */
-  top: -1px;
-  width: 5px;
-  height: 9px;
-  border-right: 1.5px solid var(--icen-token-success); /* guard:allow-physical ✓ 字形半边构成（与 rotate(45deg) 配套） */
-  border-bottom: 1.5px solid var(--icen-token-success); /* guard:allow-physical ✓ 字形半边构成 */
-  transform: rotate(45deg);
+  inset: 0;
+  background: var(--icen-token-success);
+  mask: var(--icen-token-icon-check) center / 75% no-repeat;
 }
 
 /* 失败：error 点 + 外环 */

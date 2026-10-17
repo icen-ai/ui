@@ -367,19 +367,18 @@
   border-radius: var(--icen-radius-xs);
 }
 
-/* 折叠指示 chevron（CSS 三角，展开时旋转） */
+/* 折叠指示（共享 chevron-right mask；展开旋转 90° 朝下） */
 .icen-ai-reasoning-head::before {
   content: '';
   flex-shrink: 0;
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid currentColor; /* guard:allow-physical CSS 三角 chevron 的半边构成（与 rotate 配套成方向箭头，RTL 用 scaleX(-1) 镜像规则翻转） */
-  border-bottom: 1.5px solid currentColor; /* guard:allow-physical CSS 三角 chevron 的半边构成（与 rotate 配套） */
-  transform: rotate(-45deg);
+  inline-size: 12px;
+  block-size: 12px;
+  background: currentColor;
+  mask: var(--icen-token-icon-chevron-right) center / contain no-repeat;
   transition: transform var(--icen-tx-fast);
 }
 .icen-ai-reasoning:has(.icen-ai-reasoning-head[aria-expanded='true']) .icen-ai-reasoning-head::before {
-  transform: rotate(45deg);
+  transform: rotate(90deg);
 }
 
 .icen-ai-reasoning-label {
@@ -1087,15 +1086,14 @@
 .icen-ai-threads-group-head::before {
   content: '';
   flex-shrink: 0;
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid currentColor; /* guard:allow-physical CSS 三角 chevron 的半边构成（与 rotate 配套成方向箭头，RTL 用 scaleX(-1) 镜像规则翻转） */
-  border-bottom: 1.5px solid currentColor; /* guard:allow-physical CSS 三角 chevron 的半边构成（与 rotate 配套） */
-  transform: rotate(-45deg);
+  inline-size: 10px;
+  block-size: 10px;
+  background: currentColor;
+  mask: var(--icen-token-icon-chevron-right) center / contain no-repeat;
   transition: transform var(--icen-tx-fast);
 }
 .icen-ai-threads-group-head[aria-expanded='true']::before {
-  transform: rotate(45deg);
+  transform: rotate(90deg);
 }
 .icen-ai-threads-group.is-collapsed .icen-ai-threads-group-list {
   display: none;
@@ -1322,10 +1320,10 @@
   }
 }
 
-/* ── RTL：方向性指示镜像（折叠 chevron 是 CSS 三角，scaleX(-1) 翻转向左） ── */
-:is([dir='rtl']) .icen-ai-reasoning-head::before { transform: rotate(-45deg) scaleX(-1); }
-:is([dir='rtl']) .icen-ai-reasoning:has(.icen-ai-reasoning-head[aria-expanded='true']) .icen-ai-reasoning-head::before { transform: rotate(45deg) scaleX(-1); }
-:is([dir='rtl']) .icen-ai-threads-group-head::before { transform: rotate(-45deg) scaleX(-1); }
-:is([dir='rtl']) .icen-ai-threads-group-head[aria-expanded='true']::before { transform: rotate(45deg) scaleX(-1); }
+/* ── RTL：方向性指示镜像（共享 chevron mask 经 scaleX(-1) 翻转向左） ── */
+:is([dir='rtl']) .icen-ai-reasoning-head::before { transform: scaleX(-1); }
+:is([dir='rtl']) .icen-ai-reasoning:has(.icen-ai-reasoning-head[aria-expanded='true']) .icen-ai-reasoning-head::before { transform: rotate(90deg) scaleX(-1); }
+:is([dir='rtl']) .icen-ai-threads-group-head::before { transform: scaleX(-1); }
+:is([dir='rtl']) .icen-ai-threads-group-head[aria-expanded='true']::before { transform: rotate(90deg) scaleX(-1); }
 
 .icen-ai-composer-model-chevron, .icen-ai-composer-popup-option-check { display: none; }
