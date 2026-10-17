@@ -36,7 +36,7 @@
 
 import { emitIcen } from './events';
 import { t } from './i18n';
-import { computePopoverLayout, resolvePanelSizing, sizingToLayout, type PopoverLayoutOptions } from './popover';
+import { revealPopoverItem, computePopoverLayout, resolvePanelSizing, sizingToLayout, type PopoverLayoutOptions } from './popover';
 
 /** 候选项：裸字符串或 { value, label } 对（value 是提交值，label 是展示名）。 */
 export type AutocompleteItem = string | { value: string; label: string };
@@ -231,6 +231,8 @@ export function createAutocomplete(el: HTMLInputElement, opts: AutocompleteOptio
     });
     if (open && activeIndex >= 0 && items[activeIndex]) {
       input.setAttribute('aria-activedescendant', `${panelId}-opt-${activeIndex}`);
+      const active=panel.querySelector<HTMLElement>('.icen-autocomplete-option.is-active');
+      if (active) revealPopoverItem(active,panel);
     } else {
       input.removeAttribute('aria-activedescendant');
     }

@@ -65,6 +65,7 @@
  *   先 destroy 旧实例（WeakMap 级幂等）；destroy 摘除 portal + 全部监听。
  */
 
+import { enhanceSearchField } from './input';
 import { createIcon } from './icons';
 import { revealPopoverItem, computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
@@ -353,6 +354,9 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
     searchWrap.appendChild(searchInput);
     panel.appendChild(searchWrap);
   }
+  const searchField=searchInput ? enhanceSearchField(searchInput) : null;
+  ac.signal.addEventListener('abort',()=>searchField?.destroy(),{once:true});
+
 
   const tree = document.createElement('div');
   tree.className = 'icen-tree-select-tree';
@@ -533,6 +537,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   }
 
   function renderTree(): void {
+    searchField?.refresh();
     const rows = planRows();
     tree.textContent = '';
     /* aria-posinset / aria-setsize：同父可见兄弟内序号 */

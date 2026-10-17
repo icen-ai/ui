@@ -1,6 +1,6 @@
 # 组件交互与图标精修清单
 
-基线：fa3e945，工作区干净；版本保持 0.10.0。目标覆盖全部 121 个组件、文档示例和消费者接入。此文件记录进度，不替代浏览器验收。
+基线：fa3e945，工作区干净；版本保持 0.10.0。目标覆盖全部 122 个组件、文档示例和消费者接入。此文件记录进度，不替代浏览器验收。
 
 ## 验收标准
 
@@ -176,9 +176,19 @@
 - 第二轮验证：verify 645 测试通过；24 条 Playwright 浏览器回归通过；137 页站点构建通过；全站默认状态基础巡检仍为 129 页 × 两档宽度、0 问题。
 - 首批基础提交：715ba1d。第二批提交覆盖多选动作、文档首屏、移动导航和额外 native 表单绑定；版本保持 0.10.0，不发布。
 
+### 第三轮：真实搜索、键盘与生命周期
+
+- 修复组件 display:flex/grid 覆盖原生 hidden 的问题；规则仅覆盖 icen 类，保留 hidden="until-found" 的浏览器查找语义。
+- select 搜索框移出实际 listbox，使用 combobox + active-descendant，保留输入光标；支持 IME、先清搜索再关闭的 Escape、Home/End、首字定位、跳过禁用项、Tab 按逻辑表单顺序退出。
+- 动态增加选项/分组、文字与原生 disabled 自动同步；新增 refreshSelect 用于作者主动修改选中类。初始化静默读取原生值；销毁还原门户与临时限额状态，重复 init 不重绑。
+- 搜索清空使用共享 SVG 与真实 button；鼠标或 Tab/Enter 清空后回到输入焦点。enhanceSearchField 提供 refresh/destroy，disabled/readonly 自动同步，销毁幂等。公共 CSS 随 tokens 分发，单引 select/tree-select/cascader 无新增 CSS 依赖。
+- select/tree-select 小中大尺寸保持各自 token 高度，chips 不再把小号撑成中号。吸顶搜索栏留出滚动安全区；级联、自动完成、提及、命令面板、AI 输入台改为仅滚菜单内容。
+- 第三轮验证：verify 651 测试通过；29 条浏览器回归通过；137 页站点构建通过；129 页 × 两档宽度基础巡检 0 问题。实际检查了搜索展开截图，已去掉浏览器蓝色清空图形。
+- 尚未以这一批替代逐组件最终验收，完整交互/视觉矩阵仍待推进。
+
 ### 下一批待处理（保留完整目标）
 
-- 选择器进一步复核 Home/End、typeahead、搜索 active-descendant、动态数据、销毁/重新初始化与限额状态基线；其他 popup 内的 scrollIntoView 统一迁移。
+- 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。
 - Date picker / cascader / tree select / autocomplete / mentions：全部尺寸、搜索/空/加载/错误/禁用状态，完整键盘与两轴视觉矩阵。
 - dropdown / context-menu / popover / modal / command-palette / notification：开关动效、焦点、触屏与所有文档示例。
 - 标签、工具条、导航、分页、表格/图表、AI 与知识库逐一复核。大量原有 SVG 的 close/check/chevron 仍可进一步收敛到共享几何；不能把已迁移字符图标等同于完整图标审美验收。

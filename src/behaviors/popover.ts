@@ -73,13 +73,20 @@ export function revealPopoverItem(item: HTMLElement, scrollport: HTMLElement, op
   if (typeof document === 'undefined') return;
   if (opts.focus) item.focus({preventScroll:true});
   const rect=item.getBoundingClientRect(), bounds=scrollport.getBoundingClientRect();
+  const style=getComputedStyle(scrollport);
+  const inset=(value:string,extent:number):number=>{
+    const amount=Number.parseFloat(value) || 0;
+    return value.endsWith('%') ? amount*extent/100 : amount;
+  };
   if (opts.axis !== 'inline') {
-    const top=bounds.top+scrollport.clientTop, bottom=top+scrollport.clientHeight;
+    const top=bounds.top+scrollport.clientTop+inset(style.scrollPaddingTop,scrollport.clientHeight);
+    const bottom=bounds.top+scrollport.clientTop+scrollport.clientHeight-inset(style.scrollPaddingBottom,scrollport.clientHeight);
     if (rect.top<top) scrollport.scrollTop-=top-rect.top;
     else if (rect.bottom>bottom) scrollport.scrollTop+=rect.bottom-bottom;
   }
   if (opts.axis === 'inline' || opts.axis === 'both') {
-    const left=bounds.left+scrollport.clientLeft, right=left+scrollport.clientWidth;
+    const left=bounds.left+scrollport.clientLeft+inset(style.scrollPaddingLeft,scrollport.clientWidth);
+    const right=bounds.left+scrollport.clientLeft+scrollport.clientWidth-inset(style.scrollPaddingRight,scrollport.clientWidth);
     if (rect.left<left) scrollport.scrollLeft-=left-rect.left;
     else if (rect.right>right) scrollport.scrollLeft+=rect.right-right;
   }

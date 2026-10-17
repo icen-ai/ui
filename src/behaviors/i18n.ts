@@ -394,6 +394,7 @@ export interface IcenLocale {
   'formValidate.tool.type': string;
   'formValidate.url': string;
   /* ── input ── */
+  'input.clearSearch': string;
   'input.hidePassword': string;
   'input.otpPosition': string;
   'panel.expand': string;
@@ -1182,6 +1183,7 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'formValidate.tool.type': '控件类型，默认 text',
   'formValidate.url': '请输入有效的链接地址',
   /* ── input ── */
+  'input.clearSearch': '清空搜索',
   'input.hidePassword': '隐藏密码',
   'input.otpPosition': '第 {p0} 位，共 {p1} 位',
   'panel.expand': '展开',
@@ -1970,6 +1972,7 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'formValidate.tool.type': 'control type, default text',
   'formValidate.url': 'Enter a valid URL',
   /* ── input ── */
+  'input.clearSearch': 'Clear search',
   'input.hidePassword': 'Hide password',
   'input.otpPosition': 'Digit {p0} of {p1}',
   'panel.expand': 'Expand',

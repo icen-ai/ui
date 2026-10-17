@@ -162,7 +162,7 @@
 
 /* ── 搜索框（opts.searchable 时 behavior 渲染）── */
 .icen-cascader-search {
-  padding: 4px 4px 6px;
+  padding: var(--icen-density-space-xs);
   border-bottom: 1px solid var(--icen-token-outline-soft);
   margin-bottom: 4px;
   position: sticky;
@@ -172,7 +172,7 @@
 }
 .icen-cascader-search-input {
   inline-size: 100%;
-  height: 30px;
+  height: var(--icen-density-input-height-sm);
   padding: 0 var(--icen-density-space-sm);
   font-size: var(--icen-density-font-size-sm);
   color: var(--icen-token-text);
@@ -326,3 +326,5 @@
 
 .icen-cascader--sm .icen-cascader-trigger { block-size: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
 .icen-cascader--lg .icen-cascader-trigger { block-size: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }
+
+.icen-cascader-panel:has(> .icen-cascader-search) { scroll-padding-block-start: calc(var(--icen-density-input-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }

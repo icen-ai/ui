@@ -65,8 +65,9 @@
  *   先 destroy 旧实例（WeakMap 级幂等）；destroy 摘除 portal + 全部监听。
  */
 
+import { enhanceSearchField } from './input';
 import { createIcon } from './icons';
-import { computePopoverLayout, resolvePanelSizing } from './popover';
+import { revealPopoverItem, computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
 import { t } from './i18n';
 
@@ -323,6 +324,9 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     searchWrap.appendChild(searchInput);
     panel.appendChild(searchWrap);
   }
+  const searchField=searchInput ? enhanceSearchField(searchInput) : null;
+  ac.signal.addEventListener('abort',()=>searchField?.destroy(),{once:true});
+
 
   const cols = document.createElement('div');
   cols.className = 'icen-cascader-cols';
@@ -471,6 +475,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   }
 
   function renderResults(): void {
+    searchField?.refresh();
     const searching = searchMode();
     cols.hidden = searching;
     results.hidden = !searching;
@@ -535,14 +540,8 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     const items = Array.from(colEl.querySelectorAll<HTMLElement>('.icen-cascader-item'));
     const item = items[focus.idx];
     if (!item) return;
-    item.focus({preventScroll:true});
-    // A portalled menu must scroll its own viewports, never the document behind it.
-    const rowRect = item.getBoundingClientRect(), panelRect = panel.getBoundingClientRect();
-    if (rowRect.top < panelRect.top) panel.scrollTop -= panelRect.top-rowRect.top;
-    else if (rowRect.bottom > panelRect.bottom) panel.scrollTop += rowRect.bottom-panelRect.bottom;
-    const colRect = colEl.getBoundingClientRect(), colsRect = cols.getBoundingClientRect();
-    if (colRect.left < colsRect.left) cols.scrollLeft -= colsRect.left-colRect.left;
-    else if (colRect.right > colsRect.right) cols.scrollLeft += colRect.right-colsRect.right;
+    revealPopoverItem(item,panel,{focus:true});
+    revealPopoverItem(colEl as HTMLElement,cols,{axis:'inline'});
   }
 
   function moveVertical(delta: number): void {
@@ -749,6 +748,8 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
 
   on(panel, 'keydown', (ev: KeyboardEvent) => {
     if (opts.disabled) return;
+    if(ev.isComposing || ev.keyCode === 229)return;
+    if(ev.target instanceof Element && ev.target.closest('.icen-search-clear'))return;
     if (searchMode()) {
       const items = resultItems();
       if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
@@ -759,7 +760,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
           ? (delta > 0 ? 0 : items.length - 1)
           : (resultFocus + delta + items.length) % items.length;
         items.forEach((it, i) => it.classList.toggle('is-focused', i === resultFocus));
-        items[resultFocus]?.scrollIntoView({ block: 'nearest' });
+        if (items[resultFocus]) revealPopoverItem(items[resultFocus],panel);
       } else if (ev.key === 'Enter') {
         ev.preventDefault();
         if (items.length > 0) chooseResult(resultFocus >= 0 ? resultFocus : 0);

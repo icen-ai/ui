@@ -25,6 +25,48 @@
 
 import { emitIcen } from './events';
 import { t } from './i18n';
+import { createIcon } from './icons';
+
+export interface SearchFieldHandle { refresh(): void; destroy(): void; }
+const searchFields=new WeakMap<HTMLInputElement,SearchFieldHandle>();
+/** Add one quiet, labelled SVG clear action inside an input's dedicated wrapper.
+ * The wrapper retains its layout (including position:sticky). Clearing emits the
+ * normal input event, so filtering, callbacks and caret handling share one path. */
+export function enhanceSearchField(input: HTMLInputElement): SearchFieldHandle {
+  if (typeof document === 'undefined' || !input.parentElement) return {refresh() {},destroy() {}};
+  const previous=searchFields.get(input);if(previous)return previous;
+  const host=input.parentElement;
+  const hadHostClass=host.classList.contains('icen-search-field');
+  const hadInputClass=input.classList.contains('icen-search-input');
+  host.classList.add('icen-search-field');input.classList.add('icen-search-input');
+  const clear=document.createElement('button');clear.type='button';
+  clear.className='icen-search-clear';clear.append(createIcon('close')!);host.append(clear);
+  const ac=new AbortController();
+  let disposed=false;
+  const refresh=()=>{
+    if(disposed)return;
+    clear.hidden=!input.value || input.disabled || input.readOnly;
+    clear.setAttribute('aria-label',t('input.clearSearch'));
+  };
+  clear.addEventListener('pointerdown',(event)=>event.preventDefault(),{signal:ac.signal});
+  clear.addEventListener('click',()=>{
+    if(input.disabled || input.readOnly)return;
+    input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.focus({preventScroll:true});refresh();
+  },{signal:ac.signal});
+  for(const event of ['input','change','focus']) input.addEventListener(event,refresh,{signal:ac.signal});
+  document.addEventListener('icen:locale-change',refresh,{signal:ac.signal});
+  const observer=new MutationObserver(refresh);
+  observer.observe(input,{attributes:true,attributeFilter:['disabled','readonly']});
+  refresh();
+  const handle={refresh,destroy(){
+    if(disposed)return;
+    disposed=true;observer.disconnect();ac.abort();clear.remove();searchFields.delete(input);
+    if(!hadHostClass)host.classList.remove('icen-search-field');
+    if(!hadInputClass)input.classList.remove('icen-search-input');
+  }};
+  searchFields.set(input,handle);return handle;
+}
 
 interface MarkedElement extends Element {
   __icenInputInit?: boolean;

@@ -175,6 +175,7 @@ export const SLUG_INIT = {
 
 /** 有 behavior 但无 init（函数式 API）的 slug → 导出函数提示（CLI 输出用）。 */
 export const SLUG_EXPORTS = {
+  select: ['refreshSelect'],
   panel: ['setPanelExpanded'],
   icon: ['ICON_PATHS', 'iconPath', 'iconHTML', 'createIcon', 'registerIcon'],
   'theme-switcher': ['createThemeSwitcher', 'themeSwitcherHTML'],

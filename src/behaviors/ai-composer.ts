@@ -69,7 +69,7 @@
 
 import { createIcon } from './icons';
 import { formatTokens, contextEstimate, svgIcon, addUsage, type AiUsage } from './ai-core';
-import { closePopover, openPopover, resolvePanelSizing, type PanelSizing } from './popover';
+import { revealPopoverItem, closePopover, openPopover, resolvePanelSizing, type PanelSizing } from './popover';
 import { renderAiUsageRing, renderAiTodo, type AiUsageRingOpts } from './ai-panel';
 import type { AiStatus } from './ai-core';
 import type { AiTodoItem } from './ai-panel';
@@ -542,7 +542,7 @@ function setPopupFocus(s: ComposerPopup, idx: number): void {
   s.focused = Math.max(0, Math.min(idx, vis.length - 1));
   const cur = vis[s.focused];
   cur.classList.add('is-focused');
-  cur.scrollIntoView({ block: 'nearest' });
+  revealPopoverItem(cur,s.panel.querySelector<HTMLElement>('.icen-ai-composer-popup-list') ?? s.panel);
 }
 
 function movePopupFocus(s: ComposerPopup, delta: number): void {

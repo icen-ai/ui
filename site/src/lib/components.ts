@@ -555,8 +555,13 @@ initSplitPane();
     <button class="icen-input-clear" type="button" aria-label="清空">${svgX}</button>
   </div>
 </div>`,
-    usage: `import { initInput } from '@icen.ai/ui/behaviors/input';
+    usage: `import { initInput, enhanceSearchField } from '@icen.ai/ui/kit/input';
 initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计数 / 输入掩码
+
+// 专用搜索容器：一个 SVG 清空按钮，自动派发 input 并保留输入焦点。
+const search = enhanceSearchField(searchInput);
+search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly 自动同步。
+// 页面卸载：search.destroy();
 
 <!-- 字符计数 -->
 <input class="icen-input" maxlength="20" />
@@ -572,6 +577,7 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
   },
   {
     slug: 'select',
+    summary: '单选、分组搜索和多选标签。支持首字定位与完整键盘操作，动态选项会自动更新。',
     name: '选择器',
     group: '表单',
     desc: '触发器与 input 同视觉；弹层支持 ↑↓ 移动、Enter 选中、Esc / 外点关闭，选中值同步隐藏 input。选项内容支持任意 HTML（色卡/图标/多行）。增强：data-icen-select-search 可搜索过滤、data-icen-select-multiple 多选（逗号分隔）、data-icen-select-max 上限；面板尺寸走全库统一 PanelSizing 契约：data-icen-panel-width 固定宽 / -min / -max 夹取 / -max-height 高度上限。',
@@ -646,8 +652,12 @@ initInput(); // 清除钮 / 密码切换 / textarea autosize / OTP / 字符计�
     <input type="hidden" data-icen-select-value name="preset" />
   </div>
 </div>`,
-    usage: `import { initSelect } from '@icen.ai/ui/behaviors/select';
-initSelect();
+    usage: `import { initSelect, refreshSelect } from '@icen.ai/ui/kit/select';
+const destroy = initSelect(root);
+// 子节点、标签文字、原生 disabled 改动会自动同步。
+// 手动修改 is-selected 类后，可明确请求一次静默同步：
+refreshSelect(root);
+// 页面或组件卸载时：destroy();
 
 <!-- 基础单选 -->
 <div class="icen-select" data-icen-select>…</div>

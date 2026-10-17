@@ -39,6 +39,7 @@
  *   dropdown.ts），同时只开一个 panel。
  */
 
+import { enhanceSearchField } from './input';
 import { createIcon } from './icons';
 import { revealPopoverItem, computePopoverLayout, resolvePanelSizing } from './popover';
 import { emitIcen } from './events';
@@ -48,6 +49,8 @@ interface MarkedSelect extends Element {
   __icenSelectInit?: boolean;
 }
 let selectSequence = 0;
+interface SelectInstance { dispose: () => void; refresh: () => void; wasConnected: boolean; }
+const instances = new Map<Element,SelectInstance>();
 
 /** 当前打开的 select（模块级单例，同时只开一个）。 */
 interface OpenSelect {
@@ -76,7 +79,7 @@ function onGlobalPointerDown(ev: Event): void {
 }
 
 function onGlobalKeyDown(ev: KeyboardEvent): void {
-  if (ev.key !== 'Escape') return;
+  if (ev.key !== 'Escape' || ev.isComposing) return;
   const cur = openSelect;
   if (!cur) return;
   cur.close();
@@ -113,7 +116,8 @@ function unbindOpenListeners(): void {
 
 function setup(container: Element): () => void {
   const el = container as MarkedSelect;
-  if (el.__icenSelectInit) return () => {};
+  const existing = instances.get(container);
+  if (existing) return existing.dispose;
   /* 本容器全部监听挂同一 AbortSignal：销毁一次摘净，销毁后可重新 init */
   const ac = new AbortController();
   /* 泛型 on()：调用点直接写 (ev: KeyboardEvent) 等具体事件类型，内部经 EventListener
@@ -175,19 +179,75 @@ function setup(container: Element): () => void {
     panel.insertBefore(searchWrap, panel.firstChild);
   }
   searchInput = panel.querySelector<HTMLInputElement>('.icen-select-search-input');
+  const searchField=searchInput ? enhanceSearchField(searchInput) : null;
+  ac.signal.addEventListener('abort',()=>searchField?.destroy(),{once:true});
+
+  // Search is outside the actual listbox. An editable combobox controls only
+  // option/group content, rather than placing another input inside a listbox.
+  let list = panel.querySelector<HTMLElement>('[data-icen-select-options]');
+  if (!list) {
+    list = document.createElement('div');
+    list.className = 'icen-select-options';
+    list.setAttribute('data-icen-select-options','');
+    for (const child of Array.from(panel.children)) {
+      if (!child.matches('.icen-select-search,.icen-select-empty')) list.append(child);
+    }
+    panel.append(list);
+  }
+  const optionsList = list;
 
   /** 获取所有选项按钮（不在分组容器内的也包含）。 */
   const allOptions = (): HTMLButtonElement[] =>
     Array.from(panel.querySelectorAll<HTMLButtonElement>('.icen-select-option'));
-  const originalDisabled = new WeakSet(allOptions().filter((option)=>option.disabled || option.matches('.is-disabled,[data-icen-disabled],[aria-disabled="true"]')));
+  if (!allOptions().some((option)=>option.classList.contains('is-selected'))) {
+    const requested=(container.getAttribute('data-icen-value') ?? hiddenInput?.value ?? '').split(',').filter(Boolean);
+    let matched=false;
+    allOptions().forEach((option)=>{
+      const selected=requested.includes(option.getAttribute('data-icen-value') ?? '') && (isMultiple || !matched);
+      if (selected) { option.classList.add('is-selected');matched=true; }
+    });
+  }
+  const originalDisabled = new WeakSet<HTMLButtonElement>();
+  const knownOptions = new WeakSet<HTMLButtonElement>();
   panel.id ||= `icen-select-list-${++selectSequence}`;
-  panel.setAttribute('role','listbox');
-  panel.setAttribute('aria-label',trigger.getAttribute('aria-label') ?? (placeholder || t('select.fieldLabel')));
-  if (isMultiple) panel.setAttribute('aria-multiselectable','true');
-  trigger.setAttribute('aria-controls',panel.id);
+  optionsList.id ||= `${panel.id}-options`;
+  if (panel.getAttribute('role') === 'listbox') panel.removeAttribute('role');
+  optionsList.setAttribute('role','listbox');
+  optionsList.setAttribute('aria-label',trigger.getAttribute('aria-label') ?? (placeholder || t('select.fieldLabel')));
+  if (isMultiple) optionsList.setAttribute('aria-multiselectable','true');
+  trigger.setAttribute('aria-controls',optionsList.id);
   trigger.setAttribute('aria-haspopup','listbox');
   searchInput?.setAttribute('aria-label',t('select.searchPlaceholder'));
+  if (searchInput) {
+    searchInput.setAttribute('role','combobox');
+    searchInput.setAttribute('aria-autocomplete','list');
+    searchInput.setAttribute('aria-controls',optionsList.id);
+    searchInput.setAttribute('aria-expanded','false');
+  }
+  function prepareOptions(): void {
+    const atLimit = isMultiple && maxSelect > 0 && getSelectedValues().length >= maxSelect;
+    allOptions().forEach((option)=>{
+      if (!knownOptions.has(option)) {
+        knownOptions.add(option);
+        if (!option.hasAttribute('data-icen-select-limit-disabled') && option.matches('.is-disabled,[aria-disabled="true"]')) originalDisabled.add(option);
+      }
+      option.id ||= `${optionsList.id}-option-${++selectSequence}`;
+      const limited = atLimit && !option.classList.contains('is-selected');
+      const authored = originalDisabled.has(option) || option.disabled || option.hasAttribute('data-icen-disabled');
+      option.toggleAttribute('data-icen-select-limit-disabled',limited && !authored);
+      option.classList.toggle('is-disabled',authored || limited);
+    });
+    panel.querySelectorAll<HTMLElement>('.icen-select-group').forEach((group)=>{
+      group.setAttribute('role','group');
+      const heading=group.querySelector<HTMLElement>('.icen-select-group-label');
+      if (heading && !group.hasAttribute('aria-label') && !group.hasAttribute('aria-labelledby')) {
+        heading.id ||= `${optionsList.id}-group-${++selectSequence}`;
+        group.setAttribute('aria-labelledby',heading.id);
+      }
+    });
+  }
   function syncOptionAria(): void {
+    prepareOptions();
     allOptions().forEach((option)=>{
       if (originalDisabled.has(option)) option.classList.add('is-disabled');
       option.setAttribute('role','option');
@@ -209,17 +269,31 @@ function setup(container: Element): () => void {
     focusIdx = Math.max(-1, Math.min(idx, opts.length - 1));
     opts.forEach((o, i) => o.classList.toggle('is-focused', i === focusIdx));
     const cur = focusIdx >= 0 ? opts[focusIdx] : undefined;
+    if (cur && searchInput) searchInput.setAttribute('aria-activedescendant',cur.id);
+    else searchInput?.removeAttribute('aria-activedescendant');
     if (cur) revealPopoverItem(cur,panel,{focus:moveDomFocus});
   }
 
   function firstEnabled(): number {
     return visibleOptions().findIndex((o) => !o.classList.contains('is-disabled'));
   }
+  function lastEnabled(): number {
+    const opts=visibleOptions();
+    for (let i=opts.length-1;i>=0;i--) if (!opts[i].classList.contains('is-disabled')) return i;
+    return -1;
+  }
+  function leaveByTab(): void {
+    closePanel();
+    // Let the native Tab action continue from the original position in the form,
+    // rather than from the portal at the end of body.
+    trigger.focus({preventScroll:true});
+  }
 
   function moveFocus(delta: number): void {
     const opts = visibleOptions();
     if (opts.length === 0) return;
-    let n = focusIdx;
+    if (!opts.some((option)=>!option.classList.contains('is-disabled'))) { setFocus(-1); return; }
+    let n = focusIdx < 0 && delta < 0 ? 0 : focusIdx;
     for (let guard = 0; guard < opts.length; guard++) {
       n = (n + delta + opts.length) % opts.length;
       const opt = opts[n];
@@ -241,10 +315,13 @@ function setup(container: Element): () => void {
   function updateEmptyState(): void {
     const hasVisible = visibleOptions().length > 0;
     if (emptyEl) emptyEl.hidden = hasVisible;
+    optionsList.hidden = !hasVisible;
   }
+  emptyEl.setAttribute('role','status');
 
   // ── 搜索过滤 ──
   function filterOptions(query: string): void {
+    searchField?.refresh();
     const q = query.trim().toLowerCase();
     const groups = Array.from(panel.querySelectorAll<HTMLElement>('.icen-select-group'));
     for (const opt of allOptions()) {
@@ -258,19 +335,24 @@ function setup(container: Element): () => void {
       g.hidden = !hasVisible;
     }
     updateEmptyState();
-    setFocus(firstEnabled());
+    setFocus(isOpen() ? firstEnabled() : -1);
   }
 
   if (searchInput) {
-    on(searchInput, 'input', () => filterOptions(searchInput!.value));
-    // 阻止搜索框的按键冒泡到 document 级处理
+    on(searchInput, 'input', (event: InputEvent) => { if (!event.isComposing) filterOptions(searchInput!.value); });
+    on(searchInput, 'compositionend', () => filterOptions(searchInput!.value));
     on(searchInput, 'keydown', (ev: KeyboardEvent) => {
+      if (ev.isComposing || ev.keyCode === 229) return;
       if (ev.key === 'Escape') {
+        ev.preventDefault();
         ev.stopPropagation();
-        searchInput!.value = '';
-        filterOptions('');
-        searchInput!.focus();
-      }
+        if (searchInput!.value) { searchInput!.value = ''; filterOptions(''); }
+        else { closePanel(); trigger.focus({preventScroll:true}); }
+      } else if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+        ev.preventDefault();moveFocus(ev.key === 'ArrowDown' ? 1 : -1);
+      } else if (ev.key === 'Enter') {
+        ev.preventDefault();const option=visibleOptions()[focusIdx];if(option)choose(option);
+      } else if (ev.key === 'Tab' && (ev.shiftKey || panel.querySelector<HTMLButtonElement>('.icen-search-clear')?.hidden !== false)) leaveByTab();
     });
   }
 
@@ -289,6 +371,7 @@ function setup(container: Element): () => void {
         minWidth: panelWidth,
         maxWidth: panelWidth,
         maxHeight: panelSizing.maxHeight ?? PANEL_MAX_HEIGHT,
+        contentHeightHint: panel.scrollHeight,
       },
     );
     panel.style.left = `${layout.left + window.scrollX}px`;
@@ -299,7 +382,7 @@ function setup(container: Element): () => void {
     panel.dataset.icenSide = layout.side;
   }
 
-  function openPanel(): void {
+  function openPanel(edge?: 'first' | 'last'): void {
     if (isOpen() || trigger.disabled || container.matches('[data-icen-disabled],[aria-disabled="true"]')) return;
     openSelect?.close();
     // portal：跳出祖先 overflow 裁切与 stacking context；只移一次，关闭不移回
@@ -307,6 +390,8 @@ function setup(container: Element): () => void {
     panel.hidden = false;
     container.classList.add('is-open');
     trigger.setAttribute('aria-expanded', 'true');
+    syncOptionAria();
+    searchInput?.setAttribute('aria-expanded','true');
     positionPanel();
     openSelect = { container, trigger, panel, close: closePanel, reposition: positionPanel };
     bindOpenListeners();
@@ -314,10 +399,11 @@ function setup(container: Element): () => void {
       searchInput.value = '';
       filterOptions('');
       // 可搜索面板打开时焦点落在搜索框
-      setTimeout(() => searchInput?.focus(), 0);
+      searchInput.focus({preventScroll:true});
     } else {
-      const sel = allOptions().findIndex((o) => o.classList.contains('is-selected'));
-      setFocus(sel >= 0 ? sel : firstEnabled(),true);
+      const opts=visibleOptions();
+      const sel = opts.findIndex((o) => o.classList.contains('is-selected') && !o.classList.contains('is-disabled'));
+      setFocus(edge === 'last' ? lastEnabled() : edge === 'first' ? firstEnabled() : sel >= 0 ? sel : firstEnabled(),true);
     }
   }
 
@@ -326,6 +412,7 @@ function setup(container: Element): () => void {
     panel.hidden = true;
     container.classList.remove('is-open');
     trigger.setAttribute('aria-expanded', 'false');
+    searchInput?.setAttribute('aria-expanded','false');
     setFocus(-1);
     if (openSelect?.panel === panel) openSelect = null;
     unbindOpenListeners();
@@ -412,15 +499,6 @@ function setup(container: Element): () => void {
     }
     /* 清除全部钮：有选中才显示 */
     if (clearBtn) clearBtn.hidden = selected.length === 0;
-    // 多选上限约束
-    if (maxSelect > 0) {
-      const atMax = selected.length >= maxSelect;
-      allOptions().forEach((o) => {
-        if (!o.classList.contains('is-selected')) {
-          o.classList.toggle('is-disabled', originalDisabled.has(o) || atMax);
-        }
-      });
-    }
     syncOptionAria();
   }
 
@@ -485,17 +563,22 @@ function setup(container: Element): () => void {
 
   on(trigger, 'click', () => (isOpen() ? closePanel() : openPanel()));
 
-  on(trigger, 'keydown', (ev: KeyboardEvent) => {
+  let typed = '';
+  let typedAt = 0;
+  function handleListKey(ev: KeyboardEvent): void {
+    if (ev.isComposing || ev.keyCode === 229) return;
     if (!isOpen()) {
-      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp' || ev.key === 'Enter' || ev.key === ' ') {
+      if (['ArrowDown','ArrowUp','Enter',' ','Home','End'].includes(ev.key)) {
         ev.preventDefault(); // 阻止 button 原生 click 激活，避免双 toggle
-        openPanel();
+        openPanel(ev.key === 'End' || ev.key === 'ArrowUp' ? 'last' : ev.key === 'Home' ? 'first' : undefined);
+        return;
       }
-      return;
     }
     switch (ev.key) {
       case 'ArrowDown': ev.preventDefault(); moveFocus(1); break;
       case 'ArrowUp': ev.preventDefault(); moveFocus(-1); break;
+      case 'Home': ev.preventDefault();setFocus(firstEnabled(),true);break;
+      case 'End': ev.preventDefault();setFocus(lastEnabled(),true);break;
       case 'Enter':
       case ' ': {
         ev.preventDefault();
@@ -503,9 +586,28 @@ function setup(container: Element): () => void {
         if (opt) choose(opt);
         break;
       }
-      case 'Escape': ev.preventDefault(); closePanel(); break;
+      case 'Escape': ev.preventDefault();closePanel();trigger.focus({preventScroll:true});break;
+      case 'Tab': if (isOpen()) leaveByTab();break;
+      default: {
+        if (isSearchable || ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length !== 1) return;
+        ev.preventDefault();
+        if (!isOpen()) openPanel();
+        if (!isOpen()) return;
+        const now=Date.now();
+        typed=now-typedAt<600 ? typed+ev.key : ev.key;typedAt=now;
+        let query=typed.toLocaleLowerCase();
+        if ([...query].every((character)=>character===query[0])) { query=query[0];typed=query; }
+        const opts=visibleOptions();
+        const start=query.length === 1 ? focusIdx+1 : Math.max(0,focusIdx);
+        for (let step=0;step<opts.length;step++) {
+          const index=(start+step+opts.length)%opts.length;
+          const option=opts[index];
+          if (!option.classList.contains('is-disabled') && (option.textContent ?? '').trim().toLocaleLowerCase().startsWith(query)) { setFocus(index,true);break; }
+        }
+      }
     }
-  });
+  }
+  on(trigger, 'keydown',handleListKey);
 
   on(panel, 'click', (ev: MouseEvent) => {
     const t = ev.target;
@@ -515,13 +617,11 @@ function setup(container: Element): () => void {
   });
   on(panel,'keydown',(event:KeyboardEvent)=>{
     if (event.target === searchInput) return;
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      event.preventDefault();moveFocus(event.key === 'ArrowDown' ? 1 : -1);
-    } else if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();const option=visibleOptions()[focusIdx];if(option)choose(option);
-    } else if (event.key === 'Escape') {
-      event.preventDefault();closePanel();trigger.focus({preventScroll:true});
+    if (event.target instanceof Element && event.target.closest('.icen-search-clear')) {
+      if(event.key === 'Tab' && !event.shiftKey)leaveByTab();
+      return;
     }
+    handleListKey(event);
   });
 
   // 悬停同步键盘焦点态，鼠标与键盘看到同一个 is-focused
@@ -534,10 +634,40 @@ function setup(container: Element): () => void {
     if (idx >= 0 && !opt.classList.contains('is-disabled')) setFocus(idx);
   });
 
-  // 初始化：多选 trigger 回填
-  if (isMultiple) updateMultiTrigger();
-
-  return (): void => {
+  function refresh(): void {
+    // Hosts can append fresh options/groups without rebuilding the control.
+    for (const child of Array.from(panel.children)) {
+      if (child.matches('.icen-select-option,.icen-select-group')) optionsList.append(child);
+    }
+    const focusedRemove = container.querySelector<HTMLButtonElement>('.icen-select-chip-x:focus')?.dataset.icenValue;
+    syncOptionAria();
+    if (isMultiple) updateMultiTrigger();
+    else {
+      const selected=allOptions().find((option)=>option.classList.contains('is-selected'));
+      if (valueEl) { valueEl.textContent=selected?.textContent ?? (placeholder || t('select.fieldLabel'));valueEl.classList.toggle('is-empty',!selected); }
+      if (selected) container.setAttribute('data-icen-value',selected.getAttribute('data-icen-value') ?? '');
+      else container.removeAttribute('data-icen-value');
+    }
+    if (hiddenInput) hiddenInput.value=isMultiple ? getSelectedValues().join(',') : getSelectedValues()[0] ?? '';
+    if (searchInput) filterOptions(searchInput.value);else updateEmptyState();
+    if (focusedRemove != null) {
+      const next=Array.from(container.querySelectorAll<HTMLButtonElement>('.icen-select-chip-x')).find((button)=>button.dataset.icenValue===focusedRemove);
+      (next ?? trigger).focus({preventScroll:true});
+    }
+    if (isOpen()) positionPanel();
+  }
+  refresh();
+  let disposed=false;
+  let refreshPending=false;
+  const observer=new MutationObserver(()=>{
+    if (refreshPending) return;
+    refreshPending=true;
+    queueMicrotask(()=>{refreshPending=false;if(!disposed)refresh();});
+  });
+  observer.observe(panel,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['disabled','data-icen-disabled','data-icen-value','data-icen-keywords']});
+  const dispose = (): void => {
+    if (disposed) return;
+    disposed=true;observer.disconnect();
     /* 打开状态下销毁：先收浮层（隐藏面板 + 摘 window scroll/resize 监听 + 清单例），
        否则面板残留 body、跟随重定位监听泄漏 */
     if (openSelect?.panel === panel) closePanel();
@@ -545,8 +675,21 @@ function setup(container: Element): () => void {
        re-init 在 setup 早退处静默失效（Astro 换页等重 init 场景） */
     if (panel.parentElement === document.body) container.appendChild(panel);
     ac.abort();
+    allOptions().forEach((option)=>{
+      option.removeAttribute('data-icen-select-limit-disabled');
+      option.classList.toggle('is-disabled',originalDisabled.has(option));
+      if (!originalDisabled.has(option)) option.removeAttribute('aria-disabled');
+    });
     el.__icenSelectInit = false;
+    instances.delete(container);activeSetups.delete(dispose);
+    if (!activeSetups.size && globalBound) {
+      document.removeEventListener('pointerdown',onGlobalPointerDown);
+      document.removeEventListener('keydown',onGlobalKeyDown);
+      globalBound=false;
+    }
   };
+  instances.set(container,{dispose,refresh,wasConnected:container.isConnected});
+  return dispose;
 }
 
 /** 活跃容器销毁器（最后一个销毁时连带摘除全局委托）。 */
@@ -558,17 +701,21 @@ const activeSetups = new Set<() => void>();
 export function initSelect(root?: ParentNode): () => void {
   if (typeof document === 'undefined') return () => {};
   const scope = root ?? document;
-  // 外点 / Esc 的 document 级单例委托，全库只挂一次
-  bindGlobalListeners();
+  for (const [container,instance] of instances) {
+    if (container.isConnected) instance.wasConnected=true;
+    else if (instance.wasConnected) instance.dispose();
+  }
   const containers: Element[] = [];
   if (scope instanceof Element && scope.matches('[data-icen-select]')) containers.push(scope);
   containers.push(...Array.from(scope.querySelectorAll('[data-icen-select]')));
   const disposers: Array<() => void> = [];
   for (const c of containers) {
     const dispose = setup(c);
+    if (!instances.has(c)) continue;
     activeSetups.add(dispose);
     disposers.push(dispose);
   }
+  if (disposers.length) bindGlobalListeners();
   return (): void => {
     for (const d of disposers) {
       d();
@@ -581,4 +728,14 @@ export function initSelect(root?: ParentNode): () => void {
       globalBound = false;
     }
   };
+}
+
+/** Resync authored selection classes, labels and form values without emitting a
+ * user-change event. Child/text/native-disabled changes are observed automatically. */
+export function refreshSelect(root?: ParentNode): void {
+  if (typeof document === 'undefined') return;
+  const scope=root ?? document;
+  for (const [container,instance] of instances) {
+    if (scope === container || (scope instanceof Node && scope.contains(container))) instance.refresh();
+  }
 }

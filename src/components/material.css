@@ -5,6 +5,11 @@
  * recipes automatically. Force opaque via html[data-icen-transparency="reduced"].
  * This file ships with tokens.css as well as ui.css; kit consumers need no extras.
  */
+/* Component display rules must not override native hidden semantics. Preserve
+ * until-found so browser find-in-page can reveal intentionally searchable content. */
+:where([class^="icen-"], [class*=" icen-"])[hidden]:not([hidden="until-found"]) {
+  display: none !important; /* guard:allow-important native hidden must win over component display:flex/grid */
+}
 :root[data-icen-design-changing] *,
 :root[data-icen-design-changing] *::before,
 :root[data-icen-design-changing] *::after {

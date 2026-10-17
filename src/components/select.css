@@ -44,6 +44,7 @@
  */
 
 .icen-select {
+  --select-height: var(--icen-density-input-height-md);
   position: relative;
   inline-size: 100%;
 }
@@ -54,7 +55,7 @@
   align-items: center;
   gap: var(--icen-density-space-xs);
   inline-size: 100%;
-  height: var(--icen-density-input-height-md);
+  height: var(--select-height);
   padding: 0 var(--icen-density-space-sm);
   font-size: var(--icen-density-font-size-md);
   text-align: start;
@@ -138,6 +139,7 @@
   animation: icen-pop-in var(--icen-tx-fast);
 }
 .icen-select-panel[data-icen-side='top'] { transform-origin: bottom center; }
+.icen-select-options { min-inline-size: 0; }
 
 /* 选项 */
 .icen-select-option {
@@ -208,7 +210,7 @@
 
 /* ── 搜索框（data-icen-select-search 时 behavior 自动注入） ── */
 .icen-select-search {
-  padding: 4px 4px 6px;
+  padding: var(--icen-density-space-xs);
   border-bottom: 1px solid var(--icen-token-outline-soft);
   margin-bottom: 4px;
   position: sticky;
@@ -218,7 +220,7 @@
 }
 .icen-select-search-input {
   inline-size: 100%;
-  height: 30px;
+  height: var(--icen-density-input-height-sm);
   padding: 0 var(--icen-density-space-sm);
   font-size: var(--icen-density-font-size-sm);
   color: var(--icen-token-text);
@@ -302,7 +304,7 @@
 
 /* ── 多选 trigger 高度自适应（chips 可能换行） ── */
 .icen-select[data-icen-select-multiple] .icen-select-trigger {
-  min-height: var(--icen-density-input-height-md);
+  min-height: var(--select-height);
   height: auto;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -332,14 +334,14 @@
 .icen-select:has(> .icen-select-chips:not([hidden])) > .icen-select-trigger {
   grid-area: 1 / 1;
   block-size: auto;
-  min-block-size: var(--icen-density-input-height-md);
+  min-block-size: var(--select-height);
   align-self: stretch;
 }
 .icen-select > .icen-select-chips {
   position: relative;
   grid-area: 1 / 1;
   align-self: center;
-  min-block-size: var(--icen-density-input-height-md);
+  min-block-size: var(--select-height);
   padding-block: var(--icen-density-space-xs);
   padding-inline-start: var(--icen-density-space-sm);
   padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
@@ -362,3 +364,8 @@
 /* Optional rich-option color sample: copied markup works with select.css alone. */
 .icen-select-swatch { display: inline-flex; flex: none; inline-size: 36px; block-size: 18px; border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-xs); overflow: hidden; }
 .icen-select-swatch > i { flex: 1; }
+
+.icen-select:has(> .icen-select-trigger--sm) { --select-height: var(--icen-density-input-height-sm); }
+.icen-select:has(> .icen-select-trigger--lg) { --select-height: var(--icen-density-input-height-lg); }
+
+.icen-select-panel:has(> .icen-select-search) { scroll-padding-block-start: calc(var(--icen-density-input-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }

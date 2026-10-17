@@ -49,6 +49,7 @@
  */
 
 .icen-tree-select {
+  --tree-select-height: var(--icen-density-input-height-md);
   position: relative;
   inline-size: 100%;
 }
@@ -59,7 +60,7 @@
   align-items: center;
   gap: var(--icen-density-space-xs);
   inline-size: 100%;
-  min-height: var(--icen-density-input-height-md);
+  min-height: var(--tree-select-height);
   height: auto;
   padding: 4px var(--icen-density-space-sm);
   font-size: var(--icen-density-font-size-md);
@@ -202,7 +203,7 @@
 
 /* ── 搜索框 ── */
 .icen-tree-select-search {
-  padding: 4px 4px 6px;
+  padding: var(--icen-density-space-xs);
   border-bottom: 1px solid var(--icen-token-outline-soft);
   margin-bottom: 4px;
   position: sticky;
@@ -212,7 +213,7 @@
 }
 .icen-tree-select-search-input {
   inline-size: 100%;
-  height: 30px;
+  height: var(--icen-density-input-height-sm);
   padding: 0 var(--icen-density-space-sm);
   font-size: var(--icen-density-font-size-sm);
   color: var(--icen-token-text);
@@ -402,14 +403,14 @@
 .icen-tree-select:has(> .icen-tree-select-chips:not([hidden])) > .icen-tree-select-trigger {
   grid-area: 1 / 1;
   block-size: auto;
-  min-block-size: var(--icen-density-input-height-md);
+  min-block-size: var(--tree-select-height);
   align-self: stretch;
 }
 .icen-tree-select > .icen-tree-select-chips {
   position: relative;
   grid-area: 1 / 1;
   align-self: center;
-  min-block-size: var(--icen-density-input-height-md);
+  min-block-size: var(--tree-select-height);
   padding-block: var(--icen-density-space-xs);
   padding-inline-start: var(--icen-density-space-sm);
   padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
@@ -428,3 +429,8 @@
 }
 
 .icen-tree-select-chips[hidden], .icen-tree-select-clear[hidden] { display: none; }
+
+.icen-tree-select--sm { --tree-select-height: var(--icen-density-input-height-sm); }
+.icen-tree-select--lg { --tree-select-height: var(--icen-density-input-height-lg); }
+
+.icen-tree-select-panel:has(> .icen-tree-select-search) { scroll-padding-block-start: calc(var(--icen-density-input-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }

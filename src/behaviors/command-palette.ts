@@ -45,7 +45,7 @@
  * opts.filter 可覆盖默认 includes 过滤。
  */
 
-import { applyPanelSizing, readPanelSizing } from './popover';
+import { revealPopoverItem, applyPanelSizing, readPanelSizing } from './popover';
 import { emitIcen } from './events';
 /* emitMenuSelect（菜单选中统一事件）与 FOCUSABLE（焦点陷阱选择器）收敛为
    context-menu / modal 的唯一定义点，此处 import 复用（消除三份逐字拷贝） */
@@ -154,9 +154,7 @@ function setActive(panel: HTMLElement, idx: number): void {
   const items = getVisibleItems(panel);
   items.forEach((el, i) => el.classList.toggle('is-active', i === idx));
   const active = items[idx];
-  if (active && typeof active.scrollIntoView === 'function') {
-    active.scrollIntoView({ block: 'nearest' });
-  }
+  if (active) revealPopoverItem(active,panel.querySelector<HTMLElement>('.icen-command-palette-body') ?? panel);
 }
 
 function filterPanel(panel: HTMLElement, query: string): void {

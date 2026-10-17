@@ -42,7 +42,7 @@
 
 import { emitIcen } from './events';
 import { t } from './i18n';
-import { computePopoverLayout, resolvePanelSizing, sizingToLayout, type PopoverLayoutOptions } from './popover';
+import { revealPopoverItem, computePopoverLayout, resolvePanelSizing, sizingToLayout, type PopoverLayoutOptions } from './popover';
 
 /** 一条提及候选项（id/label 双全：id 是业务键，label 是插入文本的展示名）。 */
 export interface MentionItem {
@@ -291,6 +291,8 @@ export function createMentions(el: HTMLElement, opts: MentionsOptions): Mentions
     const activeItem = items[activeIndex];
     if (open && activeItem && !activeItem.disabled) {
       ta.setAttribute('aria-activedescendant', `${panelId}-opt-${activeIndex}`);
+      const active=panel.querySelector<HTMLElement>('.icen-mentions-option.is-active');
+      if (active) revealPopoverItem(active,panel);
     } else {
       ta.removeAttribute('aria-activedescendant');
     }
