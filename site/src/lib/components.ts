@@ -513,7 +513,7 @@ initSplitPane();
     <input class="icen-form-input" id="demo-form-disabled" value="只读内容" disabled />
   </fieldset>
 </form>
-<div class="icen-banner-ok icen-banner-block" style="margin-top:20px">✓ 已保存：表单校验通过</div>
+<div class="icen-banner-ok icen-banner-block" style="margin-top:20px">${iconHTML('circle-check',{size:14})} 已保存：表单校验通过</div>
 <div class="icen-banner-err icen-banner-block">✗ 提交失败：网络错误，请稍后重试</div>`,
     usage: `<form class="icen-form">
   <fieldset class="icen-form-field">
@@ -3133,7 +3133,7 @@ COMPONENTS.push(
     desc: '三段式玻璃顶栏（左 / 中 / 右）+ pill 导航钮；data-icen-scroll-reactive 时滚动超过 12px 切 .is-scrolled。',
     demo: `<nav class="icen-nav icen-nav--sticky" data-icen-scroll-reactive>
   <div class="icen-nav-left">
-    <span class="demo-logo">◆ ICEN</span>
+    <span class="demo-logo">${iconHTML('benzhen', { size: 15 })} ICEN</span>
   </div>
   <div class="icen-nav-center">
     <button class="icen-nav-btn icen-motion icen-pressable icen-focus-ring is-active">概览</button>
@@ -3428,8 +3428,8 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
     group: 'AI 原生',
     desc: '一段可播放的完整对话《分析 AI 迭代历史》——把 AI 族全部能力按真实工作流串起来：思考（reasoning 流式+自动折叠）→ 规划（todo activeForm 推进）→ 网络搜索 / 接口调用（工具卡）→ 二次思考 → 正文流式 → render_chart 可视化（默认展开）→ 人工审批（点「允许」继续）→ history.md 差异审阅（accept/reject）→ 文件标签 → 子智能体（嵌套活动流）→ 失败重试（自动展开）→ 多模态回执（架构图）→ 收尾（token/成本、上下文抽屉、审计面板）。输入台 v2（模型切换/命令/@引用/上下文环）全程参与。',
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
-  <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" id="ai-ov-play">▶ 播放全流程</button>
-  <button class="icen-btn icen-btn-sm" type="button" id="ai-ov-reset">↺ 重置</button>
+  <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" id="ai-ov-play">${iconHTML('play',{size:13})} 播放全流程</button>
+  <button class="icen-btn icen-btn-sm" type="button" id="ai-ov-reset">${iconHTML('refresh',{size:13})} 重置</button>
   <span class="icen-toolbar-spacer"></span>
   <button class="icen-btn icen-btn-sm" type="button" data-icen-ai-context-open="#ai-ov-ctx-host">上下文</button>
 </div>
@@ -3535,7 +3535,7 @@ const U = function (n) { return { prompt_tokens: n, completion_tokens: Math.roun
 
 async function play() {
   if (!scroll) return;
-  if (playBtn && playBtn.disabled) { stage('演示进行中 · 点 ↺ 重置后可重放'); return; }
+  if (playBtn && playBtn.disabled) { stage('演示进行中 · 点重置后可重放'); return; }
   cancelled = false; if (playBtn) playBtn.disabled = true;
   M.comp.setComposerRunning(composer, true);
   stage('① 用户提问');
@@ -3706,7 +3706,7 @@ async function play() {
     mcpServers: [{ name: 'github', tools: 24 }, { name: 'filesystem', tools: 12 }, { name: 'browser', status: 'disconnected' }],
     skills: [{ name: 'release-skills', description: '发版流程' }, { name: 'icen-cn-doc', description: '中文文体' }],
   });
-  stage('完成 · ' + auditor.list().length + ' 次请求 · ' + (tCost() ? '$' + tCost().toFixed(4) : '—') + ' · 点 ↺ 可重放');
+  stage('完成 · ' + auditor.list().length + ' 次请求 · ' + (tCost() ? '$' + tCost().toFixed(4) : '—') + ' · 点重置可重放');
   if (playBtn) playBtn.disabled = false;
 }
 
