@@ -1529,6 +1529,7 @@ initCopy(); // 委托监听，自动处理所有 .copy-btn[data-icen-copy]`,
 <div class="icen-toolbar" style="margin-bottom:10px">
   <span class="icen-toolbar-label">特性</span>
   <button class="icen-btn icen-btn-sm" id="notif-progress">进度通知</button>
+  <button class="icen-btn icen-btn-sm" id="notif-group">同组消息</button>
   <button class="icen-btn icen-btn-sm" id="notif-confirm">Promise 确认</button>
   <button class="icen-btn icen-btn-sm" id="notif-multi">多按钮</button>
   <button class="icen-btn icen-btn-sm" id="notif-countdown">倒计时(8s)</button>
@@ -1598,6 +1599,12 @@ notify.info('评论了你的作品', {
   linkLabel: '查看作品',
 });
 
+// ── 同组消息：每个容器按 tag 折叠，保留各条原始操作 ──
+notify.info('林晚晴补充了批注', { tag: 'review:42', unread: true });
+notify.info('沈墨回复了批注', { tag: 'review:42', unread: true });
+// 入口显示同组数量/未读数；展开后分别处理。maxStack 按原始记录数计算。
+// 隐藏成员暂停计时，焦点或进行中的操作不会被折叠。
+
 // ── 高优先级置顶 + 未读 ──
 notify.error('服务中断', {
   description: 'gateway-001 不可达，已自动切换备用节点',
@@ -1646,6 +1653,13 @@ document.getElementById('notif-save')?.addEventListener('click', () => {
 document.getElementById('notif-unmount')?.addEventListener('click', () => { archiveCenter?.destroy();archiveCenter=null;archiveStatus('通知区已卸载，存档仍保留。');refreshCount(); });
 document.getElementById('notif-restore')?.addEventListener('click', () => { const c=mountArchive();archiveStatus(c.getAll().length ? '已恢复保存的提醒。' : '没有待恢复的提醒。');refreshCount(); });
 document.getElementById('notif-forget')?.addEventListener('click', () => { const c=mountArchive();c.clear();c.destroy();archiveCenter=null;archiveStatus('存档已清除，再次恢复不会出现旧提醒。');refreshCount(); });
+document.getElementById('notif-group')?.addEventListener('click', () => {
+  ['林晚晴补充了批注', '沈墨回复了批注', '作品有新的修改意见'].forEach((title,index) => notify.info(title, {
+    id: 'docs-review-' + index, tag: 'docs-review', unread: true,
+    description: '《海边的房间》 · 团队审阅',
+    actions: [{ label: '查看批注', keepOpen: true, onClick: () => { toast.ok('已定位到这条批注'); } }],
+  }));refreshCount();
+});
 document.getElementById('notif-async')?.addEventListener('click', () => {
   let attempt = 0;
   notify.info('更改尚未同步', {

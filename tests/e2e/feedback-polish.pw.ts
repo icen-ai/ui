@@ -3,6 +3,35 @@ import {createRequire} from 'node:module';
 import {ICON_PATHS} from '../../src/behaviors/icons';
 const require=createRequire(import.meta.url);
 
+test('group disclosure keeps actions aligned and keyboard focus stable across primitives and modes',async({page})=>{
+  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]){
+    await page.goto('/components/notification/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.locator('#notif-group').click();const latest=page.locator('#docs-review-2'),first=page.locator('#docs-review-0'),button=latest.locator('.icen-notification-group-toggle');
+    await expect(first).toBeHidden();await expect(button).toHaveAttribute('aria-expanded','false');await expect(button).toHaveText('3 条同组通知，3 条未读');
+    await expect(button.locator('svg')).toHaveAttribute('viewBox','0 0 20 20');await button.focus();await button.press('Enter');
+    await expect(first).toBeVisible();await expect(button).toBeFocused();await expect(button).toHaveAttribute('aria-expanded','true');
+    await first.getByRole('button',{name:'查看批注'}).click();await expect(page.locator('.icen-toast-msg')).toHaveText('已定位到这条批注');
+    await button.focus();await button.press('Space');await expect(first).toBeHidden();await expect(button).toBeFocused();
+    await page.locator('#notif-read').click();await expect(button).toHaveText('3 条同组通知');
+    await latest.getByRole('button',{name:'关闭',exact:true}).click();await expect(latest).toHaveCount(0);await expect(page.locator('#docs-review-1')).toBeVisible();
+    await expect(page.locator('.icen-notification-group-toggle')).toHaveText('2 条同组通知');
+    await page.screenshot({path:'.ui-audit/notification-group-'+primitive+(dark?'-dark':'')+'.png'});
+  }
+});
+
+test('group disclosure is usable on a touch RTL viewport with reduced motion and no serious accessibility issues',async({browser})=>{
+  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  try{
+    const page=await context.newPage();await page.goto('/components/notification/');await page.locator('html').evaluate((el)=>el.dir='rtl');
+    await page.locator('#notif-group').tap();const button=page.locator('.icen-notification-group-toggle');const box=(await button.boundingBox())!;expect(box.height).toBeGreaterThanOrEqual(44);
+    await button.tap();await expect(page.locator('#docs-review-0')).toBeVisible();await expect(page.locator('#docs-review-0')).toHaveCSS('animation-name','none');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.addScriptTag({path:require.resolve('axe-core')});
+    const issues=await page.locator('[data-icen-notif-default]').evaluate(async(el)=>{const result=await (window as any).axe.run(el,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});return result.violations.filter((issue:any)=>['serious','critical'].includes(issue.impact)).map((issue:any)=>issue.id);});
+    expect(issues).toEqual([]);await page.screenshot({path:'.ui-audit/notification-group-mobile-rtl.png'});
+  }finally{await context.close();}
+});
+
 test('saved notification survives unmount, unrelated activity, page navigation and reload until explicit dismissal',async({page})=>{
   const errors:string[]=[];page.on('pageerror',(error)=>errors.push(error.message));
   await page.goto('/components/notification/');await page.locator('#notif-save').click();

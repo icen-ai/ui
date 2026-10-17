@@ -95,7 +95,7 @@ export interface NotificationOptions {
   /** 详情链接（绝对 / 相对路径） */
   link?: string;
   linkLabel?: string;
-  /** 分组键：同 tag 的多条会聚合显示计数 */
+  /** 同一容器内相同 tag 自动折叠为最新通知，可展开原始卡片；高优先级优先呈现。 */
   tag?: string;
   /** 自定义数据（持久化时保留） */
   data?: unknown;
@@ -520,7 +520,7 @@ function buildActions(record: NotificationRecord): HTMLElement | null {
       const content=card.querySelector<HTMLElement>('.icen-notification-content')!;
       setFeedbackError(content);
       runFeedbackAction(card,btn,a.onClick ?? (()=>undefined),{
-        busy(value){const clock=clocks.get(record);if(value){clock?.pause('action');clock?.resume('failure');}else clock?.resume('action');},
+        busy(value){const clock=clocks.get(record);if(value){busyRecords.add(record);clock?.pause('action');clock?.resume('failure');}else {busyRecords.delete(record);clock?.resume('action');}if(card.parentElement)syncNotificationGroups(card.parentElement);},
         complete(accepted){if(!accepted)clocks.get(record)?.pause('failure');else if(!a.keepOpen && store.get(record.id) === record)dismissRecord(record.id);},
         error(){clocks.get(record)?.pause('failure');setFeedbackError(content,record.opts.actionError ?? t('common.actionFailed'));},
       });
@@ -693,6 +693,73 @@ function renderNotification(
   return el;
 }
 
+/** Groups share their original cards and callbacks; collapsing never clones
+ * actions or loses record identity. Scope and disclosure state belong to a container. */
+const groupStates=new WeakMap<HTMLElement,Map<string,{expanded:boolean}>>();
+const busyRecords=new WeakSet<NotificationRecord>();
+function syncNotificationGroups(container:HTMLElement):void {
+  const records=Array.from(container.querySelectorAll<HTMLElement>(':scope > .icen-notification:not(.is-leaving)'))
+    .map((el)=>store.get(el.id)).filter((r):r is NotificationRecord=>Boolean(r?.el && r.el.parentElement === container));
+  const groups=new Map<string,NotificationRecord[]>();
+  let states=groupStates.get(container);if(!states){states=new Map();groupStates.set(container,states);}
+  for(const record of records){
+    const tag=record.opts.tag;
+    if(tag){const members=groups.get(tag) ?? [];members.push(record);groups.set(tag,members);}
+  }
+  for(const tag of states.keys())if(!groups.has(tag))states.delete(tag);
+  const representatives=new Set<HTMLElement>();
+  const active=document.activeElement;
+  let restore:HTMLButtonElement | null=null;
+  for(const [tag,members] of groups){
+    if(members.length<2){states.delete(tag);continue;}
+    let state=states.get(tag);if(!state){state={expanded:false};states.set(tag,state);}
+    // Store insertion order is receipt order, even when a priority update moves DOM.
+    const high=members.filter((r)=>r.opts.priority === 'high');
+    const eligible=high.length ? high : members;
+    const representative=Array.from(store.values()).filter((r)=>eligible.includes(r)).at(-1)!;
+    const card=representative.el!;representatives.add(card);
+    const pending=members.some((r)=>busyRecords.has(r));
+    const focused=members.some((r)=>r !== representative && r.el!.contains(active) && !(active instanceof Element && active.closest('.icen-notification-group-toggle')));
+    if(pending || focused)state.expanded=true;
+    let button=card.querySelector<HTMLButtonElement>('.icen-notification-group-toggle');
+    if(!button){
+      button=document.createElement('button');button.type='button';button.className='icen-notification-group-toggle';
+      button.addEventListener('click',(event)=>{
+        event.stopPropagation();
+        const current=groupStates.get(container)?.get(button!.dataset.icenNotifGroup!);if(!current)return;
+        if(button!.getAttribute('aria-disabled') === 'true')return;
+        current.expanded=!current.expanded;syncNotificationGroups(container);
+      });
+      card.querySelector('.icen-notification-content')!.append(button);
+    }
+    button.dataset.icenNotifGroup=tag;
+    button.setAttribute('aria-expanded',String(state.expanded));
+    button.setAttribute('aria-controls',members.filter((r)=>r !== representative).map((r)=>r.id).join(' '));
+    if(pending && state.expanded){button.setAttribute('aria-disabled','true');button.setAttribute('aria-description',t('notification.groupBusy'));}else {button.removeAttribute('aria-disabled');button.removeAttribute('aria-description');}
+    const unread=members.filter((r)=>r.opts.unread).length;
+    const text=document.createElement('bdi');text.textContent=t(state.expanded ? 'notification.groupExpanded' : unread ? 'notification.groupUnread' : 'notification.groupCount',{count:members.length,unread});
+    const icon=createIcon('chevron-down')!;button.replaceChildren(text,icon);
+    for(const member of members){
+      const el=member.el!,hide=!state.expanded && member !== representative;
+      const revealing=el.hidden && !hide;
+      el.hidden=hide;el.inert=hide;el.classList.toggle('is-group-hidden',hide);
+      if(hide)el.classList.remove('is-group-revealing');else if(revealing)el.classList.add('is-group-revealing');
+      if(hide)clocks.get(member)?.pause('group');else clocks.get(member)?.resume('group');
+      if(el !== card && el.querySelector('.icen-notification-group-toggle')?.contains(active))restore=button;
+    }
+  }
+  for(const record of records){
+    const el=record.el!;
+    if(!representatives.has(el)){
+      const previous=el.querySelector('.icen-notification-group-toggle');
+      if(previous?.contains(active) && !restore){restore=el.querySelector<HTMLButtonElement>('.icen-notification-close,.icen-notification-open,.icen-notification-action');if(!restore)restoreFeedbackFocus(el);}
+      previous?.remove();
+    }
+    if(!record.opts.tag || (groups.get(record.opts.tag)?.length ?? 0)<2){el.hidden=false;el.inert=false;el.classList.remove('is-group-hidden');clocks.get(record)?.resume('group');}
+  }
+  restore?.focus({preventScroll:true});
+}
+
 /* ═══ 入栈 / 出栈 ═══ */
 
 function pushToContainer(container: HTMLElement, el: HTMLElement, priority: 'normal' | 'high'): void {
@@ -752,6 +819,7 @@ function trimStack(
     remove(target.id);
     if(record)persistSave([record]);
     removeOne(target,record ? ()=>record.opts.onClose?.(makeHandle(record)) : undefined);
+    syncNotificationGroups(container);
   }
 }
 
@@ -850,6 +918,7 @@ function pushRecord(
     ownerStore?.delete(removedId);
     store.delete(removedId);
   });
+  syncNotificationGroups(container);
   persistSave();
   playSound(cfgRef?.sound ?? cfg.sound);
 
@@ -886,6 +955,7 @@ function dismissRecord(id: string, immediate = false): void {
   if (record.el && immediate) {restoreFeedbackFocus(record.el);record.el.remove();onClose?.(handle);}
   else if (record.el) removeOne(record.el, () => onClose?.(handle));
   else onClose?.(handle);
+  if(record.el?.parentElement)syncNotificationGroups(record.el.parentElement);
   persistSave([record]);
 }
 
@@ -996,6 +1066,7 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
     }
     lbl.textContent = labelText;
   }
+  if(el.parentElement)syncNotificationGroups(el.parentElement);
   persistSave();
 }
 
@@ -1114,6 +1185,8 @@ export function createNotificationCenter(
   }
 
   trimStack(container,local.maxStack,(id)=>{localStore.delete(id);store.delete(id);});
+
+  syncNotificationGroups(container);
 
   function push(input: NotificationPushInput): NotificationHandle | null {
     if (destroyed) return null;
@@ -1243,6 +1316,7 @@ export function initNotification(): () => void {
     }
   }
   trimStack(container,cfg.maxStack,(id)=>store.delete(id));
+  syncNotificationGroups(container);
   const dispose=() => {
     if(globalInit.dispose !== dispose)return;
     persistSave();

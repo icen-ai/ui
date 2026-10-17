@@ -847,6 +847,10 @@ export interface IcenLocale {
   /* ── mentions ── */
   'mentions.loading': string;
   /* ── notification ── */
+  'notification.groupBusy': string;
+  'notification.groupUnread': string;
+  'notification.groupCount': string;
+  'notification.groupExpanded': string;
   'notification.ariaLabel': string;
   'notification.viewDetails': string;
   /* ── pagination ── */
@@ -1637,6 +1641,10 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   /* ── mentions ── */
   'mentions.loading': '加载中…',
   /* ── notification ── */
+  'notification.groupBusy': '操作结束后可以收起这组通知。',
+  'notification.groupUnread': '{count} 条同组通知，{unread} 条未读',
+  'notification.groupCount': '{count} 条同组通知',
+  'notification.groupExpanded': '收起这组通知',
   'notification.ariaLabel': '通知',
   'notification.viewDetails': '查看详情',
   /* ── pagination ── */
@@ -2427,6 +2435,10 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   /* ── mentions ── */
   'mentions.loading': 'Loading…',
   /* ── notification ── */
+  'notification.groupBusy': 'This group can be collapsed when its action finishes.',
+  'notification.groupUnread': '{count} grouped notifications, {unread} unread',
+  'notification.groupCount': '{count} grouped notifications',
+  'notification.groupExpanded': 'Collapse group',
   'notification.ariaLabel': 'Notifications',
   'notification.viewDetails': 'View details',
   /* ── pagination ── */
