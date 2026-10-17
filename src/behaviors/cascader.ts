@@ -198,7 +198,7 @@ function onGlobalPointerDown(ev: Event): void {
 }
 
 function onGlobalKeyDown(ev: KeyboardEvent): void {
-  if (ev.key !== 'Escape') return;
+  if (ev.key !== 'Escape' || ev.isComposing || ev.keyCode === 229) return;
   const cur = openCascader;
   if (!cur) return;
   cur.close();
@@ -321,6 +321,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     searchInput.className = 'icen-cascader-search-input';
     searchInput.type = 'search';
     searchInput.placeholder = opts.searchPlaceholder ?? t('cascader.search');
+    searchInput.setAttribute('aria-label',searchInput.placeholder);
     searchWrap.appendChild(searchInput);
     panel.appendChild(searchWrap);
   }
@@ -334,12 +335,21 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
 
   const results = document.createElement('ul');
   results.className = 'icen-cascader-results';
+  results.id = `icen-cascader-results-${uid}`;
   results.setAttribute('role', 'listbox');
+  results.setAttribute('aria-label',opts.label ?? placeholder);
+  if(searchInput) {
+    searchInput.setAttribute('role','combobox');
+    searchInput.setAttribute('aria-autocomplete','list');
+    searchInput.setAttribute('aria-controls',results.id);
+    searchInput.setAttribute('aria-expanded','false');
+  }
   results.hidden = true;
   panel.appendChild(results);
 
   const emptyEl = document.createElement('div');
   emptyEl.className = 'icen-cascader-empty';
+  emptyEl.setAttribute('role','status');
   emptyEl.textContent = emptyLabel;
   emptyEl.hidden = true;
   panel.appendChild(emptyEl);
@@ -430,6 +440,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
       const ul = document.createElement('ul');
       ul.className = 'icen-cascader-col';
       ul.setAttribute('role', 'listbox');
+      ul.setAttribute('aria-label',i === 0 ? (opts.label ?? placeholder) : optionsAt(i-1).find((node)=>node.value===activePath[i-1])?.label ?? placeholder);
       ul.dataset.icenLevel = String(i);
       level.forEach((opt, idx) => {
         const li = document.createElement('li');
@@ -438,6 +449,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
         li.tabIndex = -1;
         li.dataset.icenValue = opt.value;
         if (opt.disabled) li.classList.add('is-disabled');
+        if (opt.disabled) li.setAttribute('aria-disabled','true');
         const itemPathVals = [...activePath.slice(0, i), opt.value];
         const isActive = activePath[i] === opt.value;
         /* 已提交值的路径经过此项 → is-selected（含祖先级） */
@@ -477,10 +489,12 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   function renderResults(): void {
     searchField?.refresh();
     const searching = searchMode();
+    searchInput?.setAttribute('aria-expanded',String(searching && isOpen()));
+    searchInput?.removeAttribute('aria-activedescendant');
     cols.hidden = searching;
     results.hidden = !searching;
     if (!searching) {
-      emptyEl.hidden = true;
+      emptyEl.hidden = opts.options.length > 0;
       return;
     }
     searchHits = filterCascaderPaths(collectCascaderLeafPaths(opts.options), searchQuery);
@@ -489,10 +503,13 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
       const leaf = path[path.length - 1]!;
       const li = document.createElement('li');
       li.className = 'icen-cascader-result';
+      li.id = `icen-cascader-result-${uid}-${i}`;
       li.setAttribute('role', 'option');
       li.tabIndex = -1;
       li.dataset.icenIndex = String(i);
       if (path.some((node) => node.disabled)) li.classList.add('is-disabled');
+      li.setAttribute('aria-disabled',String(path.some((node)=>node.disabled)));
+      li.setAttribute('aria-selected',String(path.length === value.length && path.every((node,k)=>node.value === value[k])));
       path.forEach((node, k) => {
         if (k > 0) {
           const sep = document.createElement('i');
@@ -509,6 +526,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     });
     emptyEl.hidden = searchHits.length > 0;
     if (resultFocus >= searchHits.length) resultFocus = searchHits.length - 1;
+    syncResultFocus();
   }
 
   /* ═══ 定值 / 清除 ═══ */
@@ -522,7 +540,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   }
 
   function clear(): void {
-    if (opts.disabled) return;
+    if (opts.disabled || destroyed) return;
     value = [];
     activePath = [];
     renderTrigger();
@@ -538,6 +556,8 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     const colEl = cols.children[focus.col];
     if (!colEl) return;
     const items = Array.from(colEl.querySelectorAll<HTMLElement>('.icen-cascader-item'));
+    if(items[focus.idx]?.classList.contains('is-disabled'))focus.idx=items.findIndex((item)=>!item.classList.contains('is-disabled'));
+    items.forEach((item,index)=>item.classList.toggle('is-focused',index===focus.idx));
     const item = items[focus.idx];
     if (!item) return;
     revealPopoverItem(item,panel,{focus:true});
@@ -554,6 +574,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
       n = (n + delta + items.length) % items.length;
       if (!items[n]!.classList.contains('is-disabled')) break;
     }
+    if(items[n]!.classList.contains('is-disabled'))return;
     focus.idx = n;
     activePath = [...activePath.slice(0, focus.col), items[n]!.dataset.icenValue ?? ''];
     renderColumns();
@@ -563,7 +584,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   function drillIn(): void {
     const colEl = cols.children[focus.col];
     const item = colEl?.querySelectorAll<HTMLElement>('.icen-cascader-item')[focus.idx];
-    if (!item) return;
+    if (!item || item.classList.contains('is-disabled')) return;
     const chain = chainTo(focus.col, item.dataset.icenValue ?? '');
     const node = chain?.[chain.length - 1];
     if (!chain || !node?.children?.length) return;
@@ -607,6 +628,26 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     return Array.from(results.querySelectorAll<HTMLElement>('.icen-cascader-result'));
   }
 
+  function syncResultFocus(): void {
+    const items=resultItems();
+    items.forEach((item,index)=>item.classList.toggle('is-focused',index===resultFocus));
+    const item=items[resultFocus];
+    if(item && !item.classList.contains('is-disabled')) {
+      searchInput?.setAttribute('aria-activedescendant',item.id);
+      revealPopoverItem(item,panel);
+    } else searchInput?.removeAttribute('aria-activedescendant');
+  }
+
+  function moveResultFocus(delta: number): void {
+    const items=resultItems();
+    let index=resultFocus < 0 ? (delta>0 ? -1 : 0) : resultFocus;
+    for(let step=0;step<items.length;step++) {
+      index=(index+delta+items.length)%items.length;
+      if(!items[index]!.classList.contains('is-disabled')) {resultFocus=index;syncResultFocus();return;}
+    }
+    resultFocus=-1;syncResultFocus();
+  }
+
   function chooseResult(index: number): void {
     const hit = searchHits[index];
     const leaf = hit?.[hit.length - 1];
@@ -643,7 +684,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   }
 
   function openPanel(): void {
-    if (isOpen() || opts.disabled) return;
+    if (isOpen() || opts.disabled || destroyed) return;
     openCascader?.close();
     activePath = [...value];
     focus = { col: Math.max(0, activePath.length), idx: 0 };
@@ -679,6 +720,8 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     panel.hidden = true;
     root.classList.remove('is-open');
     trigger.setAttribute('aria-expanded', 'false');
+    searchInput?.setAttribute('aria-expanded','false');
+    searchInput?.removeAttribute('aria-activedescendant');
     if (openCascader?.panel === panel) openCascader = null;
     unbindOpenListeners();
   }
@@ -688,6 +731,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   on(trigger, 'click', () => (isOpen() ? closePanel() : openPanel()));
 
   on(trigger, 'keydown', (ev: KeyboardEvent) => {
+    if(ev.isComposing || ev.keyCode === 229)return;
     if (!isOpen()) {
       if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp' || ev.key === 'Enter' || ev.key === ' ') {
         ev.preventDefault(); // 阻止 button 原生 click 激活，避免双 toggle
@@ -740,42 +784,54 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     const item = t.closest('.icen-cascader-result');
     if (!(item instanceof HTMLElement)) return;
     const idx = resultItems().indexOf(item);
-    if (idx >= 0) {
+    if (idx >= 0 && !item.classList.contains('is-disabled')) {
       resultFocus = idx;
-      resultItems().forEach((it, i) => it.classList.toggle('is-focused', i === idx));
+      syncResultFocus();
     }
   });
 
   on(panel, 'keydown', (ev: KeyboardEvent) => {
     if (opts.disabled) return;
     if(ev.isComposing || ev.keyCode === 229)return;
+    if(ev.key === 'Tab') {
+      const clear=panel.querySelector<HTMLButtonElement>('.icen-search-clear');
+      if(ev.target === searchInput && !ev.shiftKey && clear?.hidden === false)return;
+      if(ev.target === clear && ev.shiftKey)return;
+      closePanel();trigger.focus({preventScroll:true});return;
+    }
     if(ev.target instanceof Element && ev.target.closest('.icen-search-clear'))return;
     if (searchMode()) {
       const items = resultItems();
       if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
         ev.preventDefault();
         if (items.length === 0) return;
-        const delta = ev.key === 'ArrowDown' ? 1 : -1;
-        resultFocus = resultFocus < 0
-          ? (delta > 0 ? 0 : items.length - 1)
-          : (resultFocus + delta + items.length) % items.length;
-        items.forEach((it, i) => it.classList.toggle('is-focused', i === resultFocus));
-        if (items[resultFocus]) revealPopoverItem(items[resultFocus],panel);
+        moveResultFocus(ev.key === 'ArrowDown' ? 1 : -1);
       } else if (ev.key === 'Enter') {
         ev.preventDefault();
-        if (items.length > 0) chooseResult(resultFocus >= 0 ? resultFocus : 0);
+        if(resultFocus < 0)moveResultFocus(1);
+        if (resultFocus >= 0) chooseResult(resultFocus);
       }
       return;
     }
+    if(ev.target === searchInput && !['ArrowDown','ArrowUp'].includes(ev.key))return;
     switch (ev.key) {
       case 'ArrowDown':
         ev.preventDefault();
+        if(ev.target === searchInput)focus.idx=-1;
         moveVertical(1);
         break;
       case 'ArrowUp':
         ev.preventDefault();
+        if(ev.target === searchInput)focus.idx=0;
         moveVertical(-1);
         break;
+      case 'Home':
+      case 'End': {
+        ev.preventDefault();
+        focus.idx=ev.key === 'Home' ? -1 : 0;
+        moveVertical(ev.key === 'Home' ? 1 : -1);
+        break;
+      }
       case 'ArrowRight':
         ev.preventDefault();
         if (isRtl()) goParent();
@@ -794,15 +850,19 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   });
 
   if (searchInput) {
-    on(searchInput, 'input', () => {
+    const filterSearch = () => {
       searchQuery = searchInput!.value;
       resultFocus = -1;
       renderResults();
-    });
+    };
+    on(searchInput, 'input', (ev:InputEvent) => {if(!ev.isComposing)filterSearch();});
+    on(searchInput, 'compositionend',filterSearch);
     on(searchInput, 'keydown', (ev: KeyboardEvent) => {
+      if(ev.isComposing || ev.keyCode === 229)return;
       if (ev.key !== 'Escape') return;
       /* 阻止冒泡到 document 级 Esc 委托：先清搜索词，再关面板 */
       ev.stopPropagation();
+      ev.preventDefault();
       if (searchQuery.trim() !== '') {
         searchQuery = '';
         searchInput!.value = '';
@@ -848,6 +908,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
       return chain ? cascaderPathLabels(chain) : [];
     },
     setValue(v) {
+      if(destroyed)return;
       const chain = findCascaderPath(opts.options, v);
       if (!chain) return;
       value = [...v];
@@ -857,7 +918,10 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
     },
     clear,
     open: openPanel,
-    close: closePanel,
+    close() {
+      if(panel.contains(document.activeElement))trigger.focus({preventScroll:true});
+      closePanel();
+    },
     destroy,
   };
 }

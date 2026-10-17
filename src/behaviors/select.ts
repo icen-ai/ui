@@ -227,6 +227,7 @@ function setup(container: Element): () => void {
   function prepareOptions(): void {
     const atLimit = isMultiple && maxSelect > 0 && getSelectedValues().length >= maxSelect;
     allOptions().forEach((option)=>{
+      if(!option.hasAttribute('type'))option.type='button';
       if (!knownOptions.has(option)) {
         knownOptions.add(option);
         if (!option.hasAttribute('data-icen-select-limit-disabled') && option.matches('.is-disabled,[aria-disabled="true"]')) originalDisabled.add(option);
@@ -545,6 +546,8 @@ function setup(container: Element): () => void {
 
   // ── 清除全部按钮（多选可选；与 trigger 同级叠放右侧，不能嵌套进 button）──
   const clearBtn = container.querySelector<HTMLElement>('.icen-select-clear');
+  if(!trigger.hasAttribute('type'))trigger.type='button';
+  if(clearBtn instanceof HTMLButtonElement && !clearBtn.hasAttribute('type'))clearBtn.type='button';
   if (clearBtn) {
     clearBtn.replaceChildren(createIcon('close')!);
     clearBtn.classList.add('icen-icon-action');

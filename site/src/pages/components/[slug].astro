@@ -130,6 +130,14 @@ const bootData = JSON.stringify({
   <script type="application/json" id="doc-boot-data" set:html={bootData} />
   <script>
     import { initCopy } from '../../../../src/behaviors/copy.ts';
+    let bootGeneration = 0;
+    let disposeDemo: (() => void) | undefined;
+    function cleanupDemo(): void {
+      bootGeneration++;
+      disposeDemo?.();
+      disposeDemo = undefined;
+    }
+    document.addEventListener('astro:before-swap', cleanupDemo);
 
     // astro:page-load = 首载 + 每次 ClientRouter 换页（模块脚本同 src 只评估一次，
     // 直接调用会在第二次换页后断线；copy 是事件委托幂等，重复调用安全）
@@ -146,6 +154,8 @@ const bootData = JSON.stringify({
     };
 
     async function boot(): Promise<void> {
+      cleanupDemo();
+      const generation = bootGeneration;
       const el = document.getElementById('doc-boot-data');
       if (!el) return;
       const data = JSON.parse(el.textContent ?? '{}') as BootData;
@@ -158,6 +168,7 @@ const bootData = JSON.stringify({
         if (typeof load === 'function') {
           try {
             loaded[b] = (await load()) as Record<string, unknown>;
+            if (generation !== bootGeneration || !el.isConnected) return;
           } catch (err) {
             console.error(`[docs] 加载 behavior 模块失败: ${b}`, err);
             throw err;
@@ -184,8 +195,9 @@ const bootData = JSON.stringify({
           (b) => b.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase()) + 'Mod',
         );
         try {
-          const fn = new Function(...names, data.script) as (...args: unknown[]) => void;
-          fn(...keys.map((k) => loaded[k]));
+          const fn = new Function(...names, data.script) as (...args: unknown[]) => unknown;
+          const cleanup = fn(...keys.map((k) => loaded[k]));
+          if (typeof cleanup === 'function') disposeDemo = cleanup as () => void;
         } catch (err) {
           console.error('[docs] 演示接线脚本执行失败', err);
           throw err;

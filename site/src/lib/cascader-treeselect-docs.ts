@@ -16,7 +16,7 @@ export const CASCADER_TREESELECT_DOCS: ComponentDoc[] = [
     group: '表单',
     desc: 'createCascader 装配级联选择：路径型选择（省/市/区、类目/子类目），值 = 路径值数组。多列面板逐级展开（当前路径高亮、有子级的项带 chevron、列宽不足横向滚动），点中间级只展开、叶子才定值（changeOnSelect: true 时任意级即定值）；searchable 面板内搜索跨级过滤，命中显示完整路径（面包屑式 muted 分隔符），无命中 empty 态（emptyLabel）。键盘 → 进子级 / ← 回上级（RTL 镜像）/ ↑↓ 移动 / Enter 定值 / Esc 关闭；trigger role=combobox，列 role=listbox、项 role=option。面板 portal 到 body，尺寸走全库 PanelSizing 契约（根挂 data-icen-panel-*）。事件 icen:cascader-change { value, path }（path = 各级 label，与 onChange 双通道）；clearable 清除、disabled 置灰、同 el 重复 create 先销毁旧实例。',
     demo: `<div id="demo-cascader" style="width:100%;max-width:340px"></div>
-<p class="demo-label" id="cascader-log" style="margin-top:8px">逐级点选到叶子定值 · 搜索「深圳」看跨级路径命中 · 键盘 ←/→/↑↓/Enter 全程可操</p>`,
+<p class="demo-label" id="cascader-log" style="margin-top:8px">逐级选择，或搜索「深圳」直接找到完整路径。方向键移动，Enter 选择。</p>`,
     usage: `import { createCascader } from '@icen.ai/ui/kit/cascader';
 
 const handle = createCascader(el, {
@@ -78,7 +78,8 @@ var handle = cascaderMod.createCascader(host, {
 host.addEventListener('icen:cascader-change', function (e) {
   /* 事件通道与 onChange 双通道同 shape：{ value: string[]; path: string[] } */
   window.__cascaderLast = e.detail;
-});`,
+});
+return function () { clearTimeout(logTimer); handle.destroy(); };`,
   },
   {
     slug: 'tree-select',
@@ -108,6 +109,7 @@ const handle = createTreeSelect(el, {
 handle.getValue();                            // ['fe', 'be']（文档序）
 handle.getLabels();
 handle.setValue(['fe']);                      // 程序化回填（静默）
+handle.open(); handle.close();                // close 后焦点回到触发器（焦点在面板内时）
 handle.clear(); handle.expandAll(); handle.collapseAll(); handle.destroy();`,
     behaviors: ['tree-select'],
     script: `var host = document.getElementById('demo-tree-select');
@@ -146,6 +148,7 @@ var handle = treeSelectMod.createTreeSelect(host, {
     log('icen:tree-select-change · ' + JSON.stringify(value) + '（' + labels.join('、') + '）');
   },
 });
-handle.expandAll();`,
+handle.expandAll();
+return function () { clearTimeout(logTimer); handle.destroy(); };`,
   },
 ];

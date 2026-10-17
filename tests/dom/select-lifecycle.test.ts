@@ -15,7 +15,9 @@ const tick=()=>new Promise((resolve)=>setTimeout(resolve,0));
 test('search combobox lives outside its listbox and announces the focused result without moving the caret',()=>{
   const root=mount('data-icen-select-search');cleanups.push(initSelect(root));
   const trigger=root.querySelector<HTMLButtonElement>('.icen-select-trigger')!;trigger.click();
+  expect(trigger.type).toBe('button');
   const panel=document.querySelector<HTMLElement>('.icen-select-panel')!,input=panel.querySelector<HTMLInputElement>('input')!;
+  expect(panel.querySelector<HTMLButtonElement>('.icen-select-option')!.type).toBe('button');
   const list=panel.querySelector('[role="listbox"]')!;
   expect(list.contains(input)).toBe(false);expect(input.getAttribute('aria-controls')).toBe(list.id);
   input.value='b';input.dispatchEvent(new InputEvent('input',{bubbles:true}));

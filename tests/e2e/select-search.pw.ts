@@ -76,6 +76,18 @@ test('all sizes preserve their height with chips; keyboard selection and RTL use
   expect(chip.x).toBeGreaterThanOrEqual(control.x);expect(chip.x+chip.width).toBeLessThanOrEqual(control.x+control.width);
 });
 
+test('opening and choosing an authored select inside a form never submits the form',async({page})=>{
+  await page.goto('/components/select/');
+  const root=page.locator('.demo-stage [data-icen-select]').first();
+  await root.evaluate((root)=>{
+    const form=document.createElement('form');root.before(form);form.append(root);
+    form.dataset.submits='0';form.addEventListener('submit',(event)=>{event.preventDefault();form.dataset.submits=String(Number(form.dataset.submits)+1);});
+  });
+  await root.locator('.icen-select-trigger').click();
+  await page.locator('.icen-select-panel:visible').getByRole('option').first().click();
+  await expect(root.locator('..')).toHaveAttribute('data-submits','0');
+});
+
 test('a long searchable list scrolls internally and keeps the active result below its sticky search field',async({page})=>{
   await page.goto('/components/select/');
   const trigger=page.locator('[data-icen-select-search] .icen-select-trigger');await trigger.click();

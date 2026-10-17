@@ -74,6 +74,7 @@ export interface ComponentDoc {
   usage: string;
   behaviors?: string[];
   behaviorInit?: Record<string, string | string[]>;
+  /** Plain JS; may return a cleanup function, called before ClientRouter swaps. */
   script?: string;
 }
 /** 组件分组的展示名（顺序即侧栏顺序）。原「数据」已拆为三组：数据展示（含表格）/ 图表 / 反馈；

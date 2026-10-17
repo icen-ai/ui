@@ -268,10 +268,9 @@ describe('createTreeSelect 键盘 / 展开控制', () => {
     nav('ArrowRight'); /* 展开运维 */
     expect(rows()[1]!.getAttribute('aria-expanded')).toBe('true');
     expect(rows()).toHaveLength(5); /* +SRE +DBA */
-    nav('ArrowRight'); /* 已展开 → 进首子 SRE */
-    expect(rows()[2]!.classList.contains('is-focused')).toBe(true);
-    nav('ArrowDown'); /* → DBA */
+    nav('ArrowRight'); /* 已展开 → 跳过禁用的 SRE，进入 DBA */
     expect(rows()[3]!.classList.contains('is-focused')).toBe(true);
+    expect(document.activeElement).toBe(rows()[3]);
     nav('ArrowLeft'); /* DBA 叶子 → 回父行运维 */
     expect(rows()[1]!.classList.contains('is-focused')).toBe(true);
     nav('ArrowLeft'); /* 运维已展开 → 折叠 */
@@ -279,6 +278,7 @@ describe('createTreeSelect 键盘 / 展开控制', () => {
     expect(rows()).toHaveLength(3);
     nav('Enter'); /* 激活运维 → 整树勾选 */
     expect(handle.getValue()).toEqual(['ops', 'dba']);
+    expect(document.activeElement).toBe(rows()[1]);
     expect(p.hidden).toBe(false); /* 多选不关面板 */
     nav('Escape');
     expect(p.hidden).toBe(true);

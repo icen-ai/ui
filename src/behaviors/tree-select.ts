@@ -108,6 +108,8 @@ export interface TreeSelectHandle {
   getLabels(): string[];
   setValue(v: string[]): void;
   clear(): void;
+  open(): void;
+  close(): void;
   expandAll(): void;
   collapseAll(): void;
   destroy(): void;
@@ -192,6 +194,8 @@ function noopHandle(): TreeSelectHandle {
     getLabels: () => [],
     setValue: noop,
     clear: noop,
+    open: noop,
+    close: noop,
     expandAll: noop,
     collapseAll: noop,
     destroy: noop,
@@ -226,7 +230,7 @@ function onGlobalPointerDown(ev: Event): void {
 }
 
 function onGlobalKeyDown(ev: KeyboardEvent): void {
-  if (ev.key !== 'Escape') return;
+  if (ev.key !== 'Escape' || ev.isComposing || ev.keyCode === 229) return;
   const cur = openTreeSelect;
   if (!cur) return;
   cur.close();
@@ -264,7 +268,7 @@ function unbindOpenListeners(): void {
 const instances = new WeakMap<HTMLElement, () => void>();
 
 /** 右指 chevron（分支展开 toggle）。 */
-function branchChevronSvg(): SVGSVGElement { return createIcon('chevron-right')!; }
+function branchChevronSvg(): SVGSVGElement { return createIcon('chevron-down')!; }
 
 export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): TreeSelectHandle {
   if (typeof document === 'undefined') return noopHandle();
@@ -351,6 +355,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
     searchInput.className = 'icen-tree-select-search-input';
     searchInput.type = 'search';
     searchInput.placeholder = opts.searchPlaceholder ?? t('treeSelect.search');
+    searchInput.setAttribute('aria-label',searchInput.placeholder);
     searchWrap.appendChild(searchInput);
     panel.appendChild(searchWrap);
   }
@@ -361,10 +366,15 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   const tree = document.createElement('div');
   tree.className = 'icen-tree-select-tree';
   tree.setAttribute('role', 'tree');
+  tree.id = `icen-tree-select-tree-${uid}`;
+  tree.setAttribute('aria-label',opts.label ?? placeholder);
+  if(multiple)tree.setAttribute('aria-multiselectable','true');
+  searchInput?.setAttribute('aria-controls',tree.id);
   panel.appendChild(tree);
 
   const emptyEl = document.createElement('div');
   emptyEl.className = 'icen-tree-select-empty';
+  emptyEl.setAttribute('role','status');
   emptyEl.textContent = emptyLabel;
   emptyEl.hidden = true;
   panel.appendChild(emptyEl);
@@ -537,6 +547,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   }
 
   function renderTree(): void {
+    const focusedRow=document.activeElement instanceof HTMLElement && tree.contains(document.activeElement) ? document.activeElement.closest<HTMLElement>('.icen-tree-select-row')?.dataset.icenValue : undefined;
     searchField?.refresh();
     const rows = planRows();
     tree.textContent = '';
@@ -578,14 +589,12 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
           state === 'checked' ? 'true' : state === 'unchecked' ? 'false' : 'mixed',
         );
       }
-      /* toggle：分支为按钮，叶子为占位（保持缩进对齐） */
+      /* Row owns keyboard and ARIA expansion; chevron is a decorative pointer target. */
       const toggle = document.createElement('span');
       if (r.isBranch) {
         toggle.className = 'icen-tree-select-toggle';
         if (!r.isOpen) toggle.classList.add('is-collapsed');
-        toggle.setAttribute('role', 'button');
-        toggle.setAttribute('tabindex', '-1');
-        toggle.setAttribute('aria-label', r.isOpen ? '折叠' : '展开');
+        toggle.setAttribute('aria-hidden', 'true');
         toggle.appendChild(branchChevronSvg());
       } else {
         toggle.className = 'icen-tree-select-toggle is-leaf';
@@ -601,9 +610,15 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
       renderLabel(row, r.node, searchMode() && r.matched);
       tree.appendChild(row);
     });
-    emptyEl.hidden = !(searchMode() && rows.length === 0);
-    tree.hidden = searchMode() && rows.length === 0;
+    emptyEl.hidden = rows.length > 0;
+    tree.hidden = rows.length === 0;
     if (focusIdx >= rows.length) focusIdx = rows.length - 1;
+    if(focusedRow != null) {
+      const index=rowEls().findIndex((row)=>row.dataset.icenValue===focusedRow);
+      if(index>=0)setFocus(index);
+      else (searchInput ?? trigger).focus({preventScroll:true});
+    }
+    if(isOpen())positionPanel();
   }
 
   /* ═══ 定值 / 勾选 ═══ */
@@ -625,9 +640,11 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   /** 多选 + checkable：整树三态切换（disabled 节点不动）。 */
   function toggleCheckSubtree(node: TreeNode): void {
     if (node.disabled) return;
-    const next = treeNodeCheckState(node, checkedSet()) !== 'checked';
     const targets = [node, ...flattenTreeNodes(node.children ?? []).map((e) => e.node)]
       .filter((n) => !n.disabled);
+    // Disabled descendants can truthfully keep the visual state mixed. Toggle
+    // the eligible set, so a parent can still deselect everything it selected.
+    const next = !targets.every((target)=>selected.has(target.value));
     for (const t of targets) {
       if (next) selected.add(t.value);
       else selected.delete(t.value);
@@ -664,7 +681,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   }
 
   function clear(): void {
-    if (opts.disabled) return;
+    if (opts.disabled || destroyed) return;
     if (selected.size === 0) return;
     selected.clear();
     syncSelection();
@@ -684,8 +701,10 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
 
   function setFocus(idx: number): void {
     const rows = rowEls();
-    if (rows.length === 0) return;
-    focusIdx = Math.max(0, Math.min(idx, rows.length - 1));
+    if (rows.length === 0 || idx < 0) return;
+    const nextIndex = Math.max(0, Math.min(idx, rows.length - 1));
+    if(rows[nextIndex]!.classList.contains('is-disabled'))return;
+    focusIdx=nextIndex;
     rows.forEach((r, i) => {
       r.tabIndex = i === focusIdx ? 0 : -1;
       r.classList.toggle('is-focused', i === focusIdx);
@@ -696,12 +715,12 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   function moveFocus(delta: number): void {
     const rows = rowEls();
     if (rows.length === 0) return;
-    let n = focusIdx < 0 ? (delta > 0 ? 0 : rows.length - 1) : focusIdx;
+    let n = focusIdx < 0 ? (delta > 0 ? -1 : 0) : focusIdx;
     for (let guard = 0; guard < rows.length; guard++) {
       n = (n + delta + rows.length) % rows.length;
       if (!rows[n]!.classList.contains('is-disabled')) break;
     }
-    setFocus(n);
+    if(!rows[n]!.classList.contains('is-disabled'))setFocus(n);
   }
 
   function toggleBranch(node: TreeNode): void {
@@ -740,7 +759,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   }
 
   function openPanel(): void {
-    if (isOpen() || opts.disabled) return;
+    if (isOpen() || opts.disabled || destroyed) return;
     openTreeSelect?.close();
     searchQuery = '';
     if (searchInput) searchInput.value = '';
@@ -758,8 +777,8 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
     else {
       /* 焦点落到首个可选行（或已选中行） */
       const rows = rowEls();
-      const selIdx = rows.findIndex((r) => r.classList.contains('is-selected'));
-      setFocus(selIdx >= 0 ? selIdx : 0);
+      const selIdx = rows.findIndex((r) => r.classList.contains('is-selected') && !r.classList.contains('is-disabled'));
+      setFocus(selIdx >= 0 ? selIdx : rows.findIndex((r)=>!r.classList.contains('is-disabled')));
     }
   }
 
@@ -777,6 +796,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   on(trigger, 'click', () => (isOpen() ? closePanel() : openPanel()));
 
   on(trigger, 'keydown', (ev: KeyboardEvent) => {
+    if(ev.isComposing || ev.keyCode === 229)return;
     if (!isOpen()) {
       if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp' || ev.key === 'Enter' || ev.key === ' ') {
         ev.preventDefault(); // 阻止 button 原生 click 激活，避免双 toggle
@@ -807,7 +827,18 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
 
   on(tree, 'keydown', (ev: KeyboardEvent) => {
     if (opts.disabled) return;
-    switch (ev.key) {
+    if(ev.isComposing || ev.keyCode === 229)return;
+    const rtl=getComputedStyle(root).direction === 'rtl';
+    const key=rtl ? ev.key === 'ArrowLeft' ? 'ArrowRight' : ev.key === 'ArrowRight' ? 'ArrowLeft' : ev.key : ev.key;
+    switch (key) {
+      case 'Home':
+      case 'End': {
+        ev.preventDefault();
+        const rows=rowEls();
+        const row=(key === 'Home' ? rows : [...rows].reverse()).find((row)=>!row.classList.contains('is-disabled'));
+        if(row)setFocus(rows.indexOf(row));
+        break;
+      }
       case 'ArrowDown':
         ev.preventDefault();
         moveFocus(1);
@@ -826,7 +857,10 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
         else {
           /* 已展开：焦点进首子行 */
           const idx = rowEls().findIndex((r) => r.dataset.icenValue === node.value);
-          if (idx >= 0) setFocus(idx + 1);
+          const rows=rowEls(),level=Number(rows[idx]?.getAttribute('aria-level'));
+          for(let next=idx+1;next<rows.length && Number(rows[next]!.getAttribute('aria-level'))>level;next++) {
+            if(!rows[next]!.classList.contains('is-disabled')) {setFocus(next);break;}
+          }
         }
         break;
       }
@@ -859,18 +893,30 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
     }
   });
 
+  on(panel,'keydown',(ev:KeyboardEvent)=>{
+    if(ev.key !== 'Tab' || ev.isComposing)return;
+    const clear=panel.querySelector<HTMLButtonElement>('.icen-search-clear');
+    if(ev.target === searchInput && !ev.shiftKey && clear?.hidden === false)return;
+    if(ev.target === clear && ev.shiftKey)return;
+    closePanel();trigger.focus({preventScroll:true});
+  });
+
   if (searchInput) {
-    on(searchInput, 'input', () => {
+    const filterSearch = () => {
       searchQuery = searchInput!.value;
       focusIdx = -1;
       renderTree();
       /* 命中行渲染后同步 is-focused 态 */
       rowEls().forEach((r, i) => r.classList.toggle('is-focused', i === focusIdx));
-    });
+    };
+    on(searchInput,'input',(ev:InputEvent)=>{if(!ev.isComposing)filterSearch();});
+    on(searchInput,'compositionend',filterSearch);
     on(searchInput, 'keydown', (ev: KeyboardEvent) => {
+      if(ev.isComposing || ev.keyCode === 229)return;
       if (ev.key === 'Escape') {
         /* 先清搜索词，再关面板 */
         ev.stopPropagation();
+        ev.preventDefault();
         if (searchQuery.trim() !== '') {
           searchQuery = '';
           searchInput!.value = '';
@@ -886,7 +932,6 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
         /* 搜索态：焦点移进树行导航（is-disabled 行跳过） */
         if (document.activeElement === searchInput && rowEls().length > 0) {
           ev.preventDefault();
-          searchInput!.blur();
           moveFocus(ev.key === 'ArrowDown' ? 1 : -1);
         }
       }
@@ -921,6 +966,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
     getValue: () => selectedNodesInOrder().map((n) => n.value),
     getLabels: () => selectedNodesInOrder().map((n) => n.label),
     setValue(v) {
+      if(destroyed)return;
       selected.clear();
       for (const val of v) {
         if (known.has(val)) selected.add(val);
@@ -930,13 +976,20 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
       renderTree();
     },
     clear,
+    open: openPanel,
+    close() {
+      if(panel.contains(document.activeElement))trigger.focus({preventScroll:true});
+      closePanel();
+    },
     expandAll() {
+      if(destroyed)return;
       for (const e of flattenTreeNodes(opts.nodes)) {
         if (e.node.children?.length) expanded.add(e.node.value);
       }
       if (isOpen()) renderTree();
     },
     collapseAll() {
+      if(destroyed)return;
       expanded.clear();
       if (isOpen()) renderTree();
     },
