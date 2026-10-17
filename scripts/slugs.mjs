@@ -182,7 +182,7 @@ export const SLUG_EXPORTS = {
   panel: ['setPanelExpanded'],
   icon: ['ICON_PATHS', 'iconPath', 'iconHTML', 'createIcon', 'registerIcon'],
   'theme-switcher': ['createThemeSwitcher', 'themeSwitcherHTML'],
-  notification: ['notify'],
+  notification: ['notify', 'createNotificationCenter'],
   toast: ['toast'],
   // ── 表单/导航控件族：交互在 controls.ts（behavior 映射见 SLUG_BEHAVIOR）──
   // segmented 的 OTP 仍由 input.ts 的 initInput 提供，kit 入口从 controls re-export，

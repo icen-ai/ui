@@ -299,6 +299,7 @@ export interface IcenLocale {
   'common.all': string;
   'common.approve': string;
   'common.cancel': string;
+  'common.actionFailed': string;
   'common.close': string;
   'common.confirm': string;
   'common.copied': string;
@@ -1088,6 +1089,7 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'common.all': '全部',
   'common.approve': '批准',
   'common.cancel': '取消',
+  'common.actionFailed': '操作未完成，请重试。',
   'common.close': '关闭',
   'common.confirm': '确认',
   'common.copied': '已复制',
@@ -1877,6 +1879,7 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'common.all': 'All',
   'common.approve': 'Approve',
   'common.cancel': 'Cancel',
+  'common.actionFailed': 'Action failed. Try again.',
   'common.close': 'Close',
   'common.confirm': 'Confirm',
   'common.copied': 'Copied',

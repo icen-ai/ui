@@ -1,7 +1,8 @@
-import { createIcon } from './icons';
+import { createFeedbackClock, runFeedbackAction, cancelFeedbackAction, setFeedbackError, setFeedbackText, rememberFeedbackOrigin, restoreFeedbackFocus, type FeedbackAction, type FeedbackClock } from './feedback';
+import { createIcon, type IconName } from './icons';
 import { t } from './i18n';
 import { parseSvg } from './svg-parse';
-const focusOrigins=new WeakMap<HTMLElement,HTMLElement | null>();
+const clocks=new WeakMap<NotificationRecord,FeedbackClock>();
 /*
  * @icen.ai/ui — Behavior: notification（通知栈 v2，与 components/notification.css 配套）
  *
@@ -49,8 +50,8 @@ export type NotificationKind = 'success' | 'warning' | 'error' | 'info';
 export interface NotificationAction {
   /** 按钮文字 */
   label: string;
-  /** 点击回调；返回 false 阻止通知关闭 */
-  onClick?: () => void | Promise<void> | boolean;
+  /** 同步/异步操作；false 保持打开，reject 提供重试反馈；关闭时 abort signal。 */
+  onClick?: FeedbackAction;
   /** 视觉变体：默认 ghost / primary 实底 / danger 危险色 */
   type?: 'primary' | 'ghost' | 'danger';
   /** 点击后是否保持通知打开（默认 false） */
@@ -72,6 +73,8 @@ export interface NotificationOptions {
   showCountdown?: boolean;
   /** 自定义图标：SVG 字符串 / 图片 URL / false（关闭） */
   icon?: string | false;
+  /** Shared ICEN symbol; icon:false still disables the slot. */
+  iconName?: IconName;
   /** 头像 URL（会覆盖 kind 图标） */
   avatar?: string;
   /** 优先级：normal（默认）/ high（置顶） */
@@ -82,7 +85,9 @@ export interface NotificationOptions {
   actions?: NotificationAction[];
   /** 兼容旧版单按钮 */
   actionLabel?: string;
-  onAction?: () => void | Promise<void> | boolean;
+  onAction?: FeedbackAction;
+  /** Inline copy for a rejected action; defaults to localized retry guidance. */
+  actionError?: string;
   /** 进度（0–1）；progress > 0 时显示进度条。推荐用 notify.icen-progress() 返回的 handle.setProgress */
   progress?: number;
   /** 进度条下方文字（如「正在导出 64%」） */
@@ -139,6 +144,7 @@ export interface NotificationHandle {
 
 /** update 接受的局部字段（title 在 push 时传，update 时也接受） */
 export interface NotificationUpdatePatch {
+  iconName?: IconName;
   title?: string;
   description?: string;
   duration?: number;
@@ -212,20 +218,7 @@ export interface NotificationConfirmOptions extends Omit<NotificationOptions, 'a
 
 /* ═══ 常量与图标库 ═══ */
 
-const KIND_ICON: Record<NotificationKind, string> = {
-  success:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
-  warning:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
-  error:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>',
-  info:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
-};
-
-
-const PROGRESS_ICON =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>';
+const KIND_SYMBOL = { success:'circle-check', warning:'triangle-alert', error:'circle-error', info:'circle-info' } as const;
 
 /* ═══ 全局状态 ═══ */
 
@@ -238,7 +231,7 @@ let cfg: Required<NotificationConfig> = {
 };
 
 const store = new Map<string, NotificationRecord>();
-const globalInit = { done: false };
+const globalInit: { done: boolean; dispose?: ()=>void } = { done: false };
 
 function isBrowser(): boolean {
   return typeof document !== 'undefined' && typeof window !== 'undefined';
@@ -392,6 +385,7 @@ function restorePersisted(
     const el = renderNotification(record, container, () => handle);
     record.el = el;
     handle.el = el;
+    attachTimer(record,handle);
     pushToContainer(container, el, record.opts.priority ?? 'normal');
     records.push(record);
   }
@@ -457,6 +451,7 @@ function buildIcon(record: NotificationRecord): HTMLElement {
     wrap.style.display = 'none';
     return wrap;
   }
+  if(record.opts.iconName){const symbol=createIcon(record.opts.iconName);if(symbol){wrap.append(symbol);return wrap;}}
   if (typeof icon === 'string' && icon.length > 0) {
     // SVG 字符串或图片 URL；其余按纯文本展示
     if (/^https?:\/\/|^data:image\//.test(icon) || icon.endsWith('.png') || icon.endsWith('.jpg') || icon.endsWith('.svg') || icon.endsWith('.webp')) {
@@ -468,22 +463,21 @@ function buildIcon(record: NotificationRecord): HTMLElement {
     } else {
       const svg = parseSvg(icon);
       if (svg) wrap.appendChild(svg);
-      else wrap.textContent = icon;
+      if(!svg)wrap.append(createIcon(KIND_SYMBOL[record.kind])!);
     }
     return wrap;
   }
-  // 默认按 kind（受控常量，走同一解析入口）
-  const fallback = parseSvg(
-    record.opts.progress !== undefined && record.opts.progress >= 0 ? PROGRESS_ICON : KIND_ICON[record.kind],
-  );
-  if (fallback) wrap.appendChild(fallback);
+  const progressing=record.kind === 'info' && record.opts.progress !== undefined;
+  const name=progressing ? record.opts.progress!>=1 ? 'circle-check' : 'spinner' : KIND_SYMBOL[record.kind];
+  const fallback=createIcon(name);
+  if(fallback){if(name === 'spinner')fallback.classList.add('icen-notification-busy-symbol');wrap.append(fallback);}
   return wrap;
 }
 
 function buildTitle(title: string): HTMLElement {
   const el = document.createElement('p');
   el.className = 'icen-notification-title';
-  el.textContent = title;
+  setFeedbackText(el,title);
   return el;
 }
 
@@ -492,12 +486,12 @@ function buildDescription(text: string): HTMLElement {
   el.className = 'icen-notification-message';
   // 支持显式换行
   el.style.whiteSpace = 'pre-wrap';
-  el.textContent = text;
+  setFeedbackText(el,text);
   return el;
 }
 
 function buildActions(record: NotificationRecord): HTMLElement | null {
-  const actions = record.opts.actions?.length
+  const actions = record.opts.actions !== undefined
     ? record.opts.actions
     : record.opts.actionLabel
       ? [{ label: record.opts.actionLabel, onClick: record.opts.onAction }]
@@ -512,15 +506,17 @@ function buildActions(record: NotificationRecord): HTMLElement | null {
     btn.className = 'icen-notification-action';
     if (a.type === 'primary') btn.classList.add('icen-notification-action--primary');
     else if (a.type === 'danger') btn.classList.add('icen-notification-action--danger');
-    btn.textContent = a.label;
-    btn.addEventListener('click', (ev) => {
+    setFeedbackText(btn,a.label);
+    btn.addEventListener('click',(ev)=>{
       ev.stopPropagation();
-      if (a.onClick) {
-        const ret = a.onClick();
-        if (ret === false) return;
-      }
-      // keepOpen 时保持通知打开，无需处理
-      if (!a.keepOpen) dismissRecord(record.id);
+      const card=record.el;if(!card || store.get(record.id) !== record)return;
+      const content=card.querySelector<HTMLElement>('.icen-notification-content')!;
+      setFeedbackError(content);
+      runFeedbackAction(card,btn,a.onClick ?? (()=>undefined),{
+        busy(value){const clock=clocks.get(record);if(value){clock?.pause('action');clock?.resume('failure');}else clock?.resume('action');},
+        complete(accepted){if(!accepted)clocks.get(record)?.pause('failure');else if(!a.keepOpen && store.get(record.id) === record)dismissRecord(record.id);},
+        error(){clocks.get(record)?.pause('failure');setFeedbackError(content,record.opts.actionError ?? t('common.actionFailed'));},
+      });
     });
     wrap.appendChild(btn);
   }
@@ -633,18 +629,16 @@ function renderNotification(
 ): HTMLElement {
   const el = document.createElement('div');
   let cls = record.kind === 'info' ? 'icen-notification' : `icen-notification icen-notification--${record.kind}`;
-  focusOrigins.set(el,document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  rememberFeedbackOrigin(el);
   if (record.opts.priority === 'high') cls += ' is-priority';
   if (record.opts.unread) cls += ' is-unread';
   if (record.opts.progress !== undefined && record.opts.progress >= 0) cls += ' is-progress';
   if (record.opts.avatar) cls += ' icen-has-avatar';
+  if((record.opts.progress ?? 0)>=1)cls += ' is-complete';
   if (record.opts.onClick) {
     cls += ' is-clickable';
-    el.setAttribute('role', 'button');
-    el.tabIndex = 0;
-  } else {
-    el.setAttribute('role', 'alert');
   }
+  el.setAttribute('role',record.kind === 'error' || record.kind === 'warning' ? 'alert' : 'status');
   el.className = cls;
   el.id = record.id;
 
@@ -653,7 +647,12 @@ function renderNotification(
 
   const content = document.createElement('div');
   content.className = 'icen-notification-content';
-  content.appendChild(buildTitle(record.title));
+  const title=buildTitle(record.title);
+  if(record.opts.onClick) {
+    const open=document.createElement('button');open.type='button';open.className='icen-notification-open';setFeedbackText(open,record.title);
+    title.replaceChildren(open);
+  }
+  content.appendChild(title);
   if (record.opts.description) content.appendChild(buildDescription(record.opts.description));
 
   const actions = buildActions(record);
@@ -676,13 +675,10 @@ function renderNotification(
   // 点击通知体
   if (record.opts.onClick) {
     const onClick = record.opts.onClick;
-    const handleClick = (): void => onClick(getHandle());
-    el.addEventListener('click', handleClick);
-    el.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        ev.preventDefault();
-        handleClick();
-      }
+    el.addEventListener('click', (ev) => {
+      const control=ev.target instanceof Element ? ev.target.closest('button,a,input,select,textarea,[role="button"]') : null;
+      if(control && !control.classList.contains('icen-notification-open'))return;
+      onClick(getHandle());
     });
   }
 
@@ -713,18 +709,20 @@ const LEAVE_FALLBACK_MS = 360;
 
 function removeOne(el: HTMLElement, onClose?: () => void): void {
   if (el.classList.contains('is-leaving')) return;
-  const origin=focusOrigins.get(el);
-  if(el.contains(document.activeElement) && origin?.isConnected)origin.focus({preventScroll:true});
+  restoreFeedbackFocus(el);
+  el.inert=true;el.setAttribute('aria-hidden','true');
   el.classList.add('is-leaving');
   let done = false;
   const finish = (): void => {
     if (done) return;
     done = true;
+    el.removeEventListener('transitionend',onTransition);window.clearTimeout(fallback);
     el.remove();
     onClose?.();
   };
-  el.addEventListener('transitionend', finish, { once: true });
-  window.setTimeout(finish, LEAVE_FALLBACK_MS);
+  const onTransition=(event:TransitionEvent)=>{if(event.target === el)finish();};
+  el.addEventListener('transitionend',onTransition);
+  const fallback=window.setTimeout(finish,LEAVE_FALLBACK_MS);
 }
 
 /**
@@ -738,89 +736,31 @@ function trimStack(
   maxStack: number,
   remove: (id: string) => void,
 ): void {
-  for (;;) {
-    const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > .icen-notification'));
-    if (items.length <= maxStack) return;
-    // 优先折叠最早的、已读的、normal 优先级的
-    const target = items.find((it) => !it.classList.contains('is-priority')) ?? items[0];
-    if (!target) return;
-    const rec = target.id ? store.get(target.id) : undefined;
-    if (rec?.timer) window.clearTimeout(rec.timer);
-    if (target.classList.contains('is-leaving')) {
-      // 已在退场动画中：立即真正移除，保证循环必定推进
-      target.remove();
-      if (target.id) remove(target.id);
-      continue;
-    }
-    removeOne(target);
-    if (target.id) remove(target.id);
-    // 已调度退场，退出循环（动画期间允许短暂超限）
-    return;
+  const rows=Array.from(container.querySelectorAll<HTMLElement>(':scope > .icen-notification:not(.is-leaving)'));
+  while(rows.length>maxStack){
+    const read=rows.findIndex((item)=>!item.classList.contains('is-priority') && !item.classList.contains('is-unread'));
+    const index=read>=0 ? read : rows.findIndex((item)=>!item.classList.contains('is-priority'));
+    const target=rows.splice(index<0 ? 0 : index,1)[0];
+    const record=store.get(target.id);if(record)stopRuntime(record);
+    remove(target.id);
+    removeOne(target,record ? ()=>record.opts.onClose?.(makeHandle(record)) : undefined);
   }
 }
 
 /* ═══ 倒计时 + hover 暂停 ═══ */
 
 function attachTimer(record: NotificationRecord, handle: NotificationHandle): void {
-  const el = record.el;
-  if (!el) return;
-
-  const start = (): void => {
-    if (record.timer) window.clearTimeout(record.timer);
-    record.timer = 0;
-    if (record.remaining <= 0) return;
-    record.startedAt = Date.now();
-    record.timer = window.setTimeout(() => dismissRecord(record.id), record.remaining);
-    record.paused = false;
-  };
-  const pause = (): void => {
-    if (record.paused) return;
-    if (!record.timer) return; // 无运行中的倒计时（持久通知）→ 无需暂停
-    window.clearTimeout(record.timer);
-    record.timer = 0;
-    // 扣减已消耗的时间，resume 时按剩余时长重启（与原地暂停的 CSS 倒计时动画保持一致）
-    record.remaining = Math.max(0, record.remaining - (Date.now() - record.startedAt));
-    record.paused = true;
-    el.classList.add('is-paused');
-    const fill = el.querySelector<HTMLElement>('.icen-notification-countdown-fill');
-    if (fill) fill.style.animationPlayState = 'paused';
-  };
-  const resume = (): void => {
-    if (!record.paused) return;
-    record.paused = false;
-    el.classList.remove('is-paused');
-    const fill = el.querySelector<HTMLElement>('.icen-notification-countdown-fill');
-    if (fill) fill.style.animationPlayState = 'running';
-    if (record.remaining <= 0) {
-      dismissRecord(record.id);
-      return;
-    }
-    start();
-  };
-
-  // update duration 后按新时长重启（remaining 已由调用方重置为新 duration）
-  record.restartTimer = () => {
-    record.paused = false;
-    el.classList.remove('is-paused');
-    start();
-  };
-
-  // per-通知 opts 优先，其次所属 center 的 local 配置，最后全局 cfg
-  const pauseOnHover = record.opts.pauseOnHover ?? record.cfgRef?.pauseOnHover ?? cfg.pauseOnHover;
-  if (pauseOnHover && !record.hoverBound) {
-    record.hoverBound = true;
-    el.addEventListener('mouseenter', () => handle.pause());
-    el.addEventListener('mouseleave', () => handle.resume());
-  }
-
-  // 绑定到 handle
-  handle.pause = pause;
-  handle.resume = resume;
-
-  if (record.duration > 0) {
-    record.remaining = record.duration;
-    start();
-  }
+  if(!record.el)return;
+  let clock=clocks.get(record);
+  if(!clock){clock=createFeedbackClock(record.el,record,()=>dismissRecord(record.id),'.icen-notification-countdown-fill',()=>record.opts.pauseOnHover ?? record.cfgRef?.pauseOnHover ?? cfg.pauseOnHover);clocks.set(record,clock);}
+  record.restartTimer=()=>clock!.reset(record.duration);
+  handle.pause=()=>clock!.pause();
+  handle.resume=()=>{clock!.resume('failure');clock!.resume();};
+}
+function stopRuntime(record: NotificationRecord): void {
+  clocks.get(record)?.destroy();clocks.delete(record);
+  if(record.timer){window.clearTimeout(record.timer);record.timer=0;}
+  if(record.el)cancelFeedbackAction(record.el);
 }
 
 /* ═══ Handle 工厂 ═══ */
@@ -829,15 +769,15 @@ function makeHandle(record: NotificationRecord): NotificationHandle {
   const handle: NotificationHandle = {
     id: record.id,
     el: record.el ?? document.createElement('div'),
-    dismiss: () => dismissRecord(record.id),
-    update: (patch) => updateRecord(record.id, patch),
-    setProgress: (value, label) => updateRecord(record.id, {
+    dismiss: () => {if(store.get(record.id) === record)dismissRecord(record.id);},
+    update: (patch) => {if(store.get(record.id) === record)updateRecord(record.id, patch);},
+    setProgress: (value, label) => {if(store.get(record.id) === record)updateRecord(record.id, {
       progress: Math.min(1, Math.max(0, value)),
       progressLabel: label,
-    }),
-    markRead: () => updateRecord(record.id, { unread: false }),
-    pause: () => { /* 由 attachTimer 注入 */ },
-    resume: () => { /* 由 attachTimer 注入 */ },
+    });},
+    markRead: () => {if(store.get(record.id) === record)updateRecord(record.id, { unread: false });},
+    pause: () => clocks.get(record)?.pause(),
+    resume: () => {clocks.get(record)?.resume('failure');clocks.get(record)?.resume();},
   };
   return handle;
 }
@@ -864,6 +804,8 @@ function pushRecord(
   ownerStore?: Map<string, NotificationRecord>,
 ): NotificationHandle {
   const id = opts.id ?? genId();
+  if(store.has(id))dismissRecord(id,true);
+  document.querySelectorAll<HTMLElement>('.icen-notification.is-leaving').forEach((el)=>{if(el.id === id)el.remove();});
   const duration = opts.duration ?? 0;
   const record: NotificationRecord = {
     id,
@@ -913,15 +855,11 @@ function showRecord(
   if (!isBrowser()) return null;
 
   const container = ensureContainer();
-  const id = opts.id ?? genId();
-  // 同 id 先清掉旧的（center.push 无此语义，是该路径的差异点，保留在包装层）
-  if (store.has(id)) dismissRecord(id);
-
   // 全局单例路径：maxStack/声音读全局 cfg，不挂 cfgRef / ownerStore
   return pushRecord(title, kind, opts, container, cfg.maxStack);
 }
 
-function dismissRecord(id: string): void {
+function dismissRecord(id: string, immediate = false): void {
   const record = store.get(id);
   if (!record) {
     // 兜底：DOM 上找
@@ -929,12 +867,13 @@ function dismissRecord(id: string): void {
     if (el && el.classList.contains('icen-notification')) removeOne(el);
     return;
   }
-  if (record.timer) window.clearTimeout(record.timer);
+  stopRuntime(record);
   const handle = makeHandle(record);
   const onClose = record.opts.onClose;
   store.delete(id);
   record.ownerStore?.delete(id);
-  if (record.el) removeOne(record.el, () => onClose?.(handle));
+  if (record.el && immediate) {restoreFeedbackFocus(record.el);record.el.remove();onClose?.(handle);}
+  else if (record.el) removeOne(record.el, () => onClose?.(handle));
   else onClose?.(handle);
   persistSave();
 }
@@ -942,6 +881,8 @@ function dismissRecord(id: string): void {
 function updateRecord(id: string, patch: NotificationUpdatePatch): void {
   const record = store.get(id);
   if (!record) return;
+  const wasComplete=(record.opts.progress ?? 0)>=1;
+  const wasProgress=record.opts.progress !== undefined;
   if (patch.title !== undefined) record.title = patch.title;
   if (patch.description !== undefined) record.opts.description = patch.description;
   if (patch.duration !== undefined) {
@@ -955,6 +896,7 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
   if (patch.tag !== undefined) record.opts.tag = patch.tag;
   if (patch.priority !== undefined) record.opts.priority = patch.priority;
   if (patch.icon !== undefined) record.opts.icon = patch.icon;
+  if (patch.iconName !== undefined) record.opts.iconName = patch.iconName;
   if (patch.avatar !== undefined) record.opts.avatar = patch.avatar;
   if (patch.link !== undefined) record.opts.link = patch.link;
   if (patch.linkLabel !== undefined) record.opts.linkLabel = patch.linkLabel;
@@ -962,6 +904,25 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
   // 局部 DOM 更新（避免完全重渲染丢失 hover/timer 状态）
   const el = record.el;
   if (!el) return;
+  if(patch.actions !== undefined) {
+    cancelFeedbackAction(el);
+    if(store.get(id) !== record)return;
+    const old=el.querySelector<HTMLElement>('.icen-notification-actions'),owned=old?.contains(document.activeElement);
+    const next=buildActions(record),target=next?.querySelector<HTMLButtonElement>('button') ?? el.querySelector<HTMLButtonElement>('.icen-notification-close');
+    if(owned && !target)restoreFeedbackFocus(el);
+    old?.remove();
+    if(next)el.querySelector('.icen-notification-content')?.append(next);
+    if(owned)target?.focus({preventScroll:true});
+    if(!el.contains(document.activeElement))clocks.get(record)?.resume('focus');
+  }
+  if(patch.icon !== undefined || patch.iconName !== undefined || patch.avatar !== undefined || (patch.progress !== undefined && (!wasProgress || wasComplete !== (patch.progress>=1)))) {
+    el.querySelector('.icen-notification-icon')?.replaceWith(buildIcon(record));
+    el.classList.toggle('icen-has-avatar',Boolean(record.opts.avatar));
+  }
+  if(patch.link !== undefined || patch.linkLabel !== undefined) {
+    el.querySelector('.icen-notification-link-wrap')?.remove();
+    const link=buildLink(record);if(link)el.querySelector('.icen-notification-content')?.append(link);
+  }
 
   if (patch.duration !== undefined && el.isConnected) {
     // 通知在显示中：按新 duration 重启运行中的计时，并同步倒计时条
@@ -971,7 +932,7 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
   }
   if (patch.title !== undefined) {
     const t = el.querySelector<HTMLElement>('.icen-notification-title');
-    if (t) t.textContent = patch.title;
+    if (t) setFeedbackText((t.querySelector<HTMLElement>('.icen-notification-open') ?? t),patch.title);
   }
   if (patch.description !== undefined) {
     let m = el.querySelector<HTMLElement>('.icen-notification-message');
@@ -985,7 +946,7 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
         if (titleEl && titleEl.nextSibling) content?.insertBefore(m, titleEl.nextSibling);
         else content?.appendChild(m);
       }
-      m.textContent = patch.description;
+      setFeedbackText(m,patch.description);
     } else if (m) {
       m.remove();
     }
@@ -995,9 +956,11 @@ function updateRecord(id: string, patch: NotificationUpdatePatch): void {
   }
   if (patch.priority !== undefined) {
     el.classList.toggle('is-priority', patch.priority === 'high');
+    if(el.parentElement)pushToContainer(el.parentElement,el,patch.priority);
   }
   if (patch.progress !== undefined || patch.progressLabel !== undefined) {
     el.classList.add('is-progress');
+    el.classList.toggle('is-complete',(record.opts.progress ?? 0)>=1);
     let progWrap = el.querySelector<HTMLElement>('.icen-notification-progress');
     const pct = Math.min(100, Math.max(0, (record.opts.progress ?? 0) * 100));
     if (!progWrap) {
@@ -1143,7 +1106,7 @@ export function createNotificationCenter(
   function push(input: NotificationPushInput): NotificationHandle | null {
     if (destroyed) return null;
     // 局部 center 路径：maxStack/声音读 local，记录挂 cfgRef/ownerStore 双写两个 store；
-    // 与全局路径不同，这里不做同 id 先清（保留原语义）
+    // 显式 id 与全局路径一致：替换同 id 记录，旧句柄不会影响新记录。
     return pushRecord(
       input.title,
       input.kind ?? 'info',
@@ -1156,18 +1119,8 @@ export function createNotificationCenter(
   }
 
   function dismiss(id?: string): void {
-    if (id) {
-      const rec = localStore.get(id);
-      if (!rec) return;
-      if (rec.timer) window.clearTimeout(rec.timer);
-      const handle = makeHandle(rec);
-      localStore.delete(id);
-      store.delete(id);
-      if (rec.el) removeOne(rec.el, () => rec.opts.onClose?.(handle));
-      persistSave();
-      return;
-    }
-    Array.from(localStore.keys()).forEach((k) => dismiss(k));
+    if(id){if(localStore.has(id))dismissRecord(id);return;}
+    Array.from(localStore.keys()).forEach((key)=>dismissRecord(key));
   }
 
   function clear(): void {
@@ -1185,12 +1138,15 @@ export function createNotificationCenter(
     if (destroyed) return;
     destroyed = true;
     // 清掉所有计时器与记录（元素上的监听器随容器 DOM 一并移除）
+    const closing=Array.from(localStore.values());
     localStore.forEach((rec) => {
-      if (rec.timer) window.clearTimeout(rec.timer);
+      stopRuntime(rec);
+      if(rec.el)restoreFeedbackFocus(rec.el);
       store.delete(rec.id);
     });
     localStore.clear();
     container.remove();
+    closing.forEach((rec)=>rec.opts.onClose?.(makeHandle(rec)));
   }
 
   return {
@@ -1203,7 +1159,7 @@ export function createNotificationCenter(
     getAll: () => Array.from(localStore.values()),
     config: (next) => {
       if (next.position) { local.position = next.position; container.dataset.icenPosition = next.position; }
-      if (typeof next.maxStack === 'number' && next.maxStack > 0) local.maxStack = next.maxStack;
+      if (typeof next.maxStack === 'number' && Number.isFinite(next.maxStack) && next.maxStack>=1) {local.maxStack=Math.floor(next.maxStack);trimStack(container,local.maxStack,(id)=>{localStore.delete(id);store.delete(id);});}
       if (typeof next.pauseOnHover === 'boolean') local.pauseOnHover = next.pauseOnHover;
       if (next.persist !== undefined) {
         local.persist = next.persist;
@@ -1245,12 +1201,13 @@ export const notify: NotifyFn = Object.assign(
     get: (id: string) => store.get(id) ?? null,
     getAll: () => Array.from(store.values()),
     config: (opts: NotificationConfig) => {
+      if(!isBrowser())return;
       if (opts.position) {
         cfg.position = opts.position;
         const c = document.body.querySelector<HTMLElement>('.icen-notification-container[data-icen-notif-default]');
         if (c) c.dataset.icenPosition = opts.position;
       }
-      if (typeof opts.maxStack === 'number' && opts.maxStack > 0) cfg.maxStack = opts.maxStack;
+      if (typeof opts.maxStack === 'number' && Number.isFinite(opts.maxStack) && opts.maxStack>=1) {cfg.maxStack=Math.floor(opts.maxStack);const c=document.querySelector<HTMLElement>('[data-icen-notif-default]');if(c)trimStack(c,cfg.maxStack,(id)=>store.delete(id));}
       if (typeof opts.pauseOnHover === 'boolean') cfg.pauseOnHover = opts.pauseOnHover;
       if (opts.persist !== undefined) {
         cfg.persist = opts.persist;
@@ -1270,7 +1227,7 @@ export const notify: NotifyFn = Object.assign(
  */
 export function initNotification(): () => void {
   if (!isBrowser()) return () => {};
-  if (globalInit.done) return () => {};
+  if (globalInit.done) return globalInit.dispose!;
   globalInit.done = true;
   const container = ensureContainer();
   // 恢复持久化通知
@@ -1283,15 +1240,17 @@ export function initNotification(): () => void {
       restored.push(r);
     }
   }
-  return () => {
+  const dispose=() => {
+    if(globalInit.dispose !== dispose)return;
     for (const r of restored) {
-      if (r.timer) window.clearTimeout(r.timer);
-      store.delete(r.id);
+      stopRuntime(r);
+      if(store.get(r.id) === r)store.delete(r.id);
       r.el?.remove();
     }
     restored.length = 0;
     /* 默认容器已空则一并回收（仍有活跃通知时保留容器） */
     if (container.childElementCount === 0) container.remove();
-    globalInit.done = false;
+    globalInit.done = false;globalInit.dispose=undefined;
   };
+  globalInit.dispose=dispose;return dispose;
 }

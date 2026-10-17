@@ -1,4 +1,5 @@
-import { createIcon } from './icons';
+import { createFeedbackClock, runFeedbackAction, cancelFeedbackAction, setFeedbackError, setFeedbackText, rememberFeedbackOrigin, restoreFeedbackFocus, type FeedbackAction, type FeedbackClock } from './feedback';
+import { createIcon, type IconName } from './icons';
 import { t } from './i18n';
 import { parseSvg } from './svg-parse';
 /*
@@ -33,14 +34,17 @@ import { parseSvg } from './svg-parse';
 export type ToastKind = 'ok' | 'err' | 'warn' | 'info' | 'success' | 'error';
 
 export interface ToastOptions {
-  /** 保留时长（毫秒），默认 2600；带 action 时默认 6000 */
+  /** 保留时长（毫秒），默认 2600；action 默认 6000；0 常驻。焦点/hover/后台/忙碌时暂停。 */
   ms?: number;
   /** 配合 action：可撤销 / 重试 / 查看等 */
   actionLabel?: string;
-  /** action 触发回调；返回 false 阻止 toast 关闭 */
-  onAction?: () => void | Promise<void> | boolean;
+  /** 等待同步/异步操作；false 保持打开，reject 保留重试反馈。关闭会 abort 传入的 signal。 */
+  onAction?: FeedbackAction;
+  /** Inline retry feedback on thrown/rejected actions; defaults to localized text. */
+  actionError?: string;
   /** 内联 SVG 字符串图标（消毒后渲染为 .icen-toast-icon）；非 <svg> 开头或解析失败静默忽略 */
   icon?: string;
+  iconName?: IconName;
   /** 显示右上角关闭按钮（.icen-toast-close，点击即关闭本条），默认 false */
   closable?: boolean;
   /** 显示底部超时进度条（.icen-toast-progress，动画时长 = 本条保留时长），默认 false */
@@ -50,6 +54,8 @@ export interface ToastOptions {
 /** 单条 toast 句柄：dismiss() 立即关闭本条（幂等，可重复调用）。 */
 export interface ToastHandle {
   dismiss(): void;
+  pause(): void;
+  resume(): void;
 }
 
 export interface ToastConfig {
@@ -77,7 +83,7 @@ interface ToastFn {
   err(message: string, ms?: ToastTiming): ToastHandle;
   warn(message: string, ms?: ToastTiming): ToastHandle;
   info(message: string, ms?: ToastTiming): ToastHandle;
-  action(message: string, actionLabel: string, onAction: () => void, ms?: ToastTiming): ToastHandle;
+  action(message: string, actionLabel: string, onAction: FeedbackAction, ms?: ToastTiming): ToastHandle;
   dismiss(): void;
   config(opts: ToastConfig): void;
 }
@@ -85,6 +91,7 @@ interface ToastFn {
 const DEFAULT_MS = 2600;
 const ACTION_MS = 6000;
 let maxStack = 5;
+const activeToasts=new Map<HTMLElement,{dismiss():void;dispose():void}>();
 
 function isBrowser(): boolean {
   return typeof document !== 'undefined';
@@ -119,44 +126,34 @@ function scheduleRemove(el: HTMLElement): void {
   const finish = (): void => {
     if (done) return;
     done = true;
+    el.removeEventListener('transitionend',onTransition);window.clearTimeout(fallback);
     el.remove();
   };
-  el.addEventListener('transitionend', finish, { once: true });
-  window.setTimeout(finish, 400);
+  const onTransition=(event:TransitionEvent)=>{if(event.target === el)finish();};
+  el.addEventListener('transitionend',onTransition);
+  const fallback=window.setTimeout(finish,400);
 }
 
 function trimStack(container: HTMLElement): void {
-  /* 重读真实 DOM 直到堆栈内不超 maxStack；NodeList 不可写，用循环重读 */
-  for (;;) {
-    const items = Array.from(container.querySelectorAll<HTMLElement>(':scope > .icen-toast'));
-    if (items.length <= maxStack) return;
-    const oldest = items[0];
-    if (!oldest) return;
-    if (oldest.classList.contains('is-leaving')) {
-      // 已在退场中（动画尚未结束）：立即移除，保证循环必定推进
-      oldest.remove();
-      continue;
-    }
-    scheduleRemove(oldest);
-    // 已调度退场，退出循环（动画期间允许短暂超限）
-    return;
-  }
+  const rows=Array.from(container.querySelectorAll<HTMLElement>(':scope > .icen-toast:not(.is-leaving)'));
+  while(rows.length>maxStack){const oldest=rows.shift()!;const handle=activeToasts.get(oldest);if(handle)handle.dismiss();else oldest.remove();}
 }
 
 function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}): ToastHandle {
-  if (!isBrowser()) return { dismiss(): void { /* SSR no-op */ } };
+  if (!isBrowser()) return { dismiss(){}, pause(){}, resume(){} };
 
   const { ms, actionLabel, onAction, icon, closable, progress } = opts;
   const container = ensureContainer();
-  const returnFocus=document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
 
   const el = document.createElement('div');
   el.className = `icen-toast ${KIND_CLASS[kind]}`;
   el.setAttribute('role', kind === 'err' || kind === 'error' ? 'alert' : 'status');
+  rememberFeedbackOrigin(el);
 
   /* 可选前置图标（消毒后的内联 SVG） */
-  if (icon) {
-    const svg = parseSvg(icon);
+  if (icon || opts.iconName) {
+    const svg = opts.iconName ? createIcon(opts.iconName) : parseSvg(icon!);
     if (svg) {
       const iconWrap = document.createElement('span');
       iconWrap.className = 'icen-toast-icon';
@@ -169,8 +166,8 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   /* 文本节点（必须用 textContent） */
   const msgNode = document.createElement('span');
   msgNode.className = 'icen-toast-msg';
-  msgNode.textContent = message;
-  el.appendChild(msgNode);
+  setFeedbackText(msgNode,message);
+  const content=document.createElement('span');content.className='icen-toast-content';content.append(msgNode);el.append(content);
 
   /* 可选 action 按钮 */
   let actionBtn: HTMLButtonElement | null = null;
@@ -178,21 +175,23 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
     actionBtn = document.createElement('button');
     actionBtn.type = 'button';
     actionBtn.className = 'icen-toast-action';
-    actionBtn.textContent = actionLabel;
+    setFeedbackText(actionBtn,actionLabel);
     el.appendChild(actionBtn);
   }
 
   const duration = ms ?? (actionLabel ? ACTION_MS : DEFAULT_MS);
 
   /* 关闭计时（先建 remove，关闭钮 / action / 超时 / 句柄共用） */
-  let timer = 0;
-  let removed = false;
-  const remove = (): void => {
-    if (removed) return;
-    removed = true;
-    if (timer) window.clearTimeout(timer);
-    if(el.contains(document.activeElement) && returnFocus?.isConnected)returnFocus.focus({preventScroll:true});
-    scheduleRemove(el);
+  let removed=false;
+  let clock:FeedbackClock;
+  const dispose=()=>{
+    if(removed && !el.isConnected)return;
+    removed=true;clock?.destroy();cancelFeedbackAction(el);restoreFeedbackFocus(el);activeToasts.delete(el);el.remove();
+  };
+  const remove=()=>{
+    if(removed)return;
+    removed=true;clock?.destroy();cancelFeedbackAction(el);restoreFeedbackFocus(el);activeToasts.delete(el);
+    el.inert=true;el.setAttribute('aria-hidden','true');scheduleRemove(el);
   };
 
   /* 可选关闭按钮 */
@@ -209,7 +208,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   }
 
   /* 可选超时进度条（animation-duration 内联 = 布局时序而非主题样式，同 notification 倒计时） */
-  if (progress) {
+  if (progress && duration>0) {
     const bar = document.createElement('div');
     bar.className = 'icen-toast-progress';
     bar.setAttribute('aria-hidden', 'true');
@@ -221,20 +220,19 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
   }
 
   container.appendChild(el);
-  trimStack(container);
-
-  timer = window.setTimeout(remove, duration);
-
-  if (actionBtn && onAction) {
-    actionBtn.addEventListener('click', () => {
-      window.clearTimeout(timer);
-      const ret = onAction();
-      if (ret === false) return; // 显式拒绝关闭
-      remove();
+  const state={duration,remaining:duration,paused:false,timer:0,startedAt:0};
+  clock=createFeedbackClock(el,state,remove,'.icen-toast-progress-fill');
+  activeToasts.set(el,{dismiss:remove,dispose});trimStack(container);
+  if(actionBtn && onAction)actionBtn.addEventListener('click',()=>{
+    setFeedbackError(content);
+    runFeedbackAction(el,actionBtn!,onAction,{
+      busy(value){if(value){clock.pause('action');clock.resume('failure');}else clock.resume('action');},
+      complete(accepted){if(accepted)remove();else clock.pause('failure');},
+      error(){clock.pause('failure');setFeedbackError(content,opts.actionError ?? t('common.actionFailed'));},
     });
-  }
+  });
 
-  return { dismiss: remove };
+  return { dismiss:remove, pause:()=>clock.pause(), resume:()=>{clock.resume('failure');clock.resume();} };
 }
 
 export const toast: ToastFn = Object.assign(
@@ -246,16 +244,18 @@ export const toast: ToastFn = Object.assign(
     err: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'err', timingOptions(ms)),
     warn: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'warn', timingOptions(ms)),
     info: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'info', timingOptions(ms)),
-    action: (message: string, actionLabel: string, onAction: () => void, ms?: ToastTiming): ToastHandle =>
+    action: (message: string, actionLabel: string, onAction: FeedbackAction, ms?: ToastTiming): ToastHandle =>
       show(message, 'info', { ...timingOptions(ms), actionLabel, onAction }),
     dismiss: (): void => {
       if (!isBrowser()) return;
       const c = document.body.querySelector('.icen-toast-container');
       if (!c) return;
+      activeToasts.forEach((handle)=>handle.dispose());
       c.querySelectorAll('.icen-toast').forEach((t) => t.remove());
     },
     config: (opts: ToastConfig): void => {
-      if (typeof opts.maxStack === 'number' && opts.maxStack > 0) maxStack = opts.maxStack;
+      if(!isBrowser())return;
+      if (typeof opts.maxStack === 'number' && Number.isFinite(opts.maxStack) && opts.maxStack >= 1) {maxStack=Math.floor(opts.maxStack);const container=document.querySelector<HTMLElement>('.icen-toast-container');if(container)trimStack(container);}
     },
   },
 );

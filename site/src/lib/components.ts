@@ -364,6 +364,7 @@ initTabs(); // 激活态挂 .is-active；切换时容器派发 icen:tab-change�
   {
     slug: 'toast',
     name: '轻提示',
+    summary: '及时确认操作结果，也给撤销与重试留出时间。键盘焦点、鼠标停留和异步操作都会暂停倒计时。',
     group: '基础',
     desc: '与 behaviors/toast 配套（toast.css 提供容器与滑入动画）：toast.ok / err / warn。',
     demo: `<div class="demo-row">
@@ -371,18 +372,37 @@ initTabs(); // 激活态挂 .is-active；切换时容器派发 icen:tab-change�
   <button class="icen-btn" id="toast-demo-err">错误提示</button>
   <button class="icen-btn" id="toast-demo-warn">警告提示</button>
   <button class="icen-btn" id="toast-demo-close">可关闭提示</button>
-</div>`,
+  <button class="icen-btn" id="toast-demo-async">撤销与重试</button>
+</div>
+<p class="demo-label"><bdi>异步示例首次模拟失败，重试后成功。</bdi></p>`,
     usage: `import { toast } from '@icen.ai/ui/behaviors/toast';
 toast.ok('已保存');
 toast.err('保存失败');
 toast.warn('配额将尽');
-toast.success('内容已更新', { closable: true, ms: 10000 });`,
+toast.success('内容已更新', { closable: true, ms: 10000 });
+const h = toast.action('文档已删除', '撤销', async (signal) => {
+  await restoreDocument({ signal }); // 等待完成再关闭；reject 后保留重试
+}, { closable: true, progress: true, iconName: 'trash' });
+h.pause(); h.resume(); h.dismiss(); // hover / focus 的暂停彼此独立`,
+
     behaviors: ['toast'],
     script: `const toast = toastMod.toast;
 document.getElementById('toast-demo-ok')?.addEventListener('click', () => toast.ok('保存成功'));
 document.getElementById('toast-demo-err')?.addEventListener('click', () => toast.err('保存失败：网络超时'));
 document.getElementById('toast-demo-warn')?.addEventListener('click', () => toast.warn('配额已用 80%'));
 document.getElementById('toast-demo-close')?.addEventListener('click', () => toast.success('内容已更新', { closable: true, ms: 10000 }));
+document.getElementById('toast-demo-async')?.addEventListener('click', () => {
+  let attempt = 0;
+  toast.action('「设计规范.md」已移到回收站', '撤销', async (signal) => {
+    await new Promise((resolve, reject) => {
+      const abort = () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); };
+      const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve(); }, 650);
+      signal.addEventListener('abort', abort, { once: true });
+    });
+    if(++attempt === 1) throw new Error('Demo: retry once');
+    toast.success('已恢复「设计规范.md」');
+  }, { closable: true, progress: true, iconName: 'trash', actionError: '撤销未完成，请重试。', ms: 6000 });
+});
 return () => toast.dismiss();`,
   },
   {
@@ -1495,14 +1515,16 @@ initCopy(); // 委托监听，自动处理所有 .copy-btn[data-icen-copy]`,
   {
     slug: 'notification',
     name: '通知栈',
+    summary: '承载长任务、协作消息与重要变更。支持进度、异步操作、暂停计时和有分寸的堆叠。',
     group: '反馈',
     desc: '与 behaviors/notification 配套：工程级持久通知栈——进度通知、Promise confirm、多按钮、hover 暂停+倒计时进度、优先级置顶、已读未读、自定义图标/头像、详情链接、localStorage 持久化、多容器。与 toast（瞬时）/ alert（内嵌）正交。',
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <span class="icen-toolbar-label">语义</span>
-  <button class="icen-btn icen-btn-sm" id="notif-info">info</button>
-  <button class="icen-btn icen-btn-sm icen-btn-primary" id="notif-success">success</button>
-  <button class="icen-btn icen-btn-sm" id="notif-warn">warn</button>
-  <button class="icen-btn icen-btn-sm icen-btn-danger" id="notif-error">error</button>
+  <button class="icen-btn icen-btn-sm" id="notif-async">异步同步与重试</button>
+  <button class="icen-btn icen-btn-sm" id="notif-info">普通通知</button>
+  <button class="icen-btn icen-btn-sm icen-btn-primary" id="notif-success">成功反馈</button>
+  <button class="icen-btn icen-btn-sm" id="notif-warn">配额提醒</button>
+  <button class="icen-btn icen-btn-sm icen-btn-danger" id="notif-error">失败反馈</button>
 </div>
 <div class="icen-toolbar" style="margin-bottom:10px">
   <span class="icen-toolbar-label">特性</span>
@@ -1522,10 +1544,11 @@ initCopy(); // 委托监听，自动处理所有 .copy-btn[data-icen-copy]`,
 </div>
 <div class="icen-toolbar">
   <span class="icen-toolbar-spacer"></span>
-  <span class="icen-toolbar-label" id="notif-count">0 条</span>
+  <span class="icen-toolbar-label" id="notif-count" dir="auto">0 条</span>
   <button class="icen-btn icen-btn-sm" id="notif-read">全部已读</button>
   <button class="icen-btn icen-btn-sm" id="notif-clear">清空</button>
-</div>`,
+</div>
+<p class="demo-label"><bdi>异步同步示例会先展示失败状态，重试后完成。</bdi></p>`,
     usage: `import { notify, createNotificationCenter } from '@icen.ai/ui/behaviors/notification';
 
 // ── 便捷 API ──
@@ -1603,6 +1626,21 @@ const timers = new Set();
 const schedule = (fn, ms) => { const id = setTimeout(() => { timers.delete(id); if(!disposed) fn(); }, ms); timers.add(id); return id; };
 const repeat = (fn, ms) => { const id = setInterval(() => { if(!disposed) fn(); }, ms); timers.add(id); return id; };
 const toast = toastMod.toast;
+document.getElementById('notif-async')?.addEventListener('click', () => {
+  let attempt = 0;
+  notify.info('更改尚未同步', {
+    description: '等待同步当前工作区的变更。', duration: 6000, actionError: '同步未完成，请重试。',
+    actions: [{ label: '立即同步', type: 'primary', onClick: async (signal) => {
+      await new Promise((resolve, reject) => {
+        const abort = () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); };
+        const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve(); }, 650);
+        signal.addEventListener('abort', abort, { once: true });
+      });
+      if(++attempt === 1) throw new Error('Demo: retry once');
+      toast.success('更改已同步');
+    } }],
+  });
+});
 const countEl = document.getElementById('notif-count');
 function refreshCount() {
   const all = notify.getAll();
@@ -1695,8 +1733,6 @@ document.getElementById('notif-avatar')?.addEventListener('click', () => {
   notify.success('沈墨 回复了你', {
     description: '「这段配乐很棒，用在了第 3 章」',
                 avatar: 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect width=%2248%22 height=%2248%22 fill=%22%233d8a5a%22/><text x=%2224%22 y=%2230%22 font-size=%2220%22 text-anchor=%22middle%22 fill=%22white%22>沈</text></svg>',
-    link: '#',
-    linkLabel: '查看对话',
     unread: true,
   });
   refreshCount();
@@ -1704,10 +1740,10 @@ document.getElementById('notif-avatar')?.addEventListener('click', () => {
 
 // ── 链接 ──
 document.getElementById('notif-link')?.addEventListener('click', () => {
-  notify.info('新版本 v0.6.0', {
-    description: '类名收敛：pill/toast/stat 语义修饰符统一为 --success/--warning/--error/--info',
-    link: '#',
-    linkLabel: '查看更新日志 →',
+  notify.info('本真主题已就绪', {
+    description: '查看材质、色彩与组件组合的完整效果。',
+    link: '/benzhen/',
+    linkLabel: '打开主题工作室',
   });
   refreshCount();
 });

@@ -220,3 +220,9 @@
 .icen-toast-close.icen-icon-action > svg { inline-size: 14px; block-size: 14px; }
 .icen-toast-close:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
 @media (pointer: coarse) { .icen-toast-close.icen-icon-action { min-inline-size: 44px; min-block-size: 44px; } }
+
+.icen-toast-content { min-inline-size: 0; }
+.icen-toast { max-inline-size: min(380px, calc(100vw - 2 * var(--icen-density-space-md))); }
+.icen-toast-action { min-block-size: var(--icen-density-input-height-sm); padding-inline: var(--icen-density-space-sm); border-radius: var(--icen-radius-sm); text-decoration: none; background: var(--icen-token-fill-1); }
+.icen-toast-action:hover { background: var(--icen-token-fill-2); }
+@media (pointer: coarse) { .icen-toast-action { min-inline-size: 44px; min-block-size: 44px; } }

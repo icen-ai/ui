@@ -158,7 +158,7 @@
 }
 
 /* 进度通知的图标默认走品牌色 */
-.icen-notification.is-progress:not(.icen-notification--success):not(.icen-notification--warning):not(.icen-notification--error) .icen-notification-icon {
+.icen-notification.is-progress:not(.is-complete):not(.icen-notification--success):not(.icen-notification--warning):not(.icen-notification--error) .icen-notification-icon {
   color: var(--icen-token-accent);
 }
 
@@ -395,3 +395,20 @@
 .icen-notification-close.icen-icon-action > svg { inline-size: 14px; block-size: 14px; }
 .icen-notification-close:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
 @media (pointer: coarse) { .icen-notification-close.icen-icon-action { min-inline-size: 44px; min-block-size: 44px; } }
+
+.icen-notification-action { min-block-size: var(--icen-density-input-height-sm); block-size: auto; }
+@media (pointer: coarse) { .icen-notification-action { min-inline-size: 44px; min-block-size: 44px; } }
+
+.icen-notification-busy-symbol { animation: icen-spin calc(var(--icen-duration-normal) * 4) linear infinite; }
+.icen-notification.is-complete:not(.icen-notification--warning):not(.icen-notification--error) .icen-notification-icon { color: var(--icen-token-success); }
+@media (prefers-reduced-motion: reduce) { .icen-notification-busy-symbol { animation: none; } }
+
+.icen-notification.is-complete:not(.icen-notification--warning):not(.icen-notification--error) { border-inline-start-color: var(--icen-token-success); }
+.icen-notification.is-complete:not(.icen-notification--warning):not(.icen-notification--error) .icen-notification-progress-bar { background: var(--icen-token-success); }
+
+/* The card body is clickable, while its title is a real keyboard action.
+   Sibling action/close buttons never live inside a synthetic parent button. */
+.icen-notification-open { display: block; inline-size: 100%; padding: 0; border: 0; border-radius: var(--icen-radius-xs); background: transparent; color: inherit; font: inherit; line-height: inherit; text-align: start; cursor: pointer; }
+.icen-notification-open:hover { color: var(--icen-token-accent); }
+.icen-notification-open:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: -2px; }
+:root[data-icen-style="pixel"] .icen-notification-busy-symbol { animation-timing-function: steps(8,end); }

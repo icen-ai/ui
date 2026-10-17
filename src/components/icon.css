@@ -80,3 +80,15 @@
 @media (prefers-reduced-motion: reduce) {
   .icen-search-clear { transition: none; }
 }
+
+/* Feedback actions keep their label's footprint while work is pending. */
+.icen-toast-action, .icen-notification-action { position: relative; }
+.icen-feedback-action-label { display: inline-block; }
+[aria-busy="true"] > .icen-feedback-action-label { opacity: 0; }
+.icen-feedback-action-spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.icen-feedback-action-spinner > svg { inline-size: 16px; block-size: 16px; animation: icen-spin calc(var(--icen-duration-normal) * 4) linear infinite; }
+.icen-toast-action[aria-disabled="true"], .icen-notification-action[aria-disabled="true"] { cursor: progress; }
+.icen-toast-action[aria-disabled="true"]:not([aria-busy="true"]), .icen-notification-action[aria-disabled="true"]:not([aria-busy="true"]) { opacity: var(--icen-disabled-opacity); }
+.icen-feedback-error { display: block; margin-block-start: var(--icen-density-space-xs); color: var(--icen-token-error); font-size: var(--icen-density-font-size-sm); line-height: 1.5; }
+:root[data-icen-style="pixel"] .icen-feedback-action-spinner > svg { animation-timing-function: steps(8,end); }
+@media (prefers-reduced-motion: reduce) { .icen-feedback-action-spinner > svg { animation: none; } }
