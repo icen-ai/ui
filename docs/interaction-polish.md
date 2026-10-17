@@ -41,7 +41,7 @@
 - [ ] input
 - [ ] select
 - [ ] slider
-- [ ] tag-input
+- [x] tag-input
 - [ ] switch
 - [ ] segmented
 - [ ] upload
@@ -323,6 +323,28 @@
 - 验证：verify 733 项测试通过（包含尚在开发的标签输入 9 项用例）、类型/守卫/包构建通过；站点 137 页构建通过。新增 5 条浏览器专项通过，覆盖六主题明暗面板 axe、两原语明暗选择器、无旧 glyph 槽、菜单与模型 ARIA、原生与自定义复选状态、手机 RTL 与 forced-colors；已检查主题面板截图。原菜单 SVG 断言改为无 check 槽且语义保留，RTL 静态断言改验实际末端动作的逻辑定位。
 - 最终 87 条浏览器回归全部通过，含旧选择器/菜单/外观切换键盘与清除行为；129 页 × 两档宽度默认基础巡检 0 问题。已复查含顶部触发器的主题面板截图，箭头与选中 check 均已去掉。修改形成独立本地检查点，不升版、不推送。
 - 标签输入的文档与完整视觉验收仍待接续，未因本轮选择规范修改而标记完成；其余组件的全面交互精修目标同样保留。
+
+### 第十四轮：标签编辑的稳定节点、诚实草稿与原生表单
+
+- 标签编辑不再整体重建 chip：增删保留未动节点身份与监听，键盘删除后焦点归还相邻动作或输入框，Escape 回到字段。
+- 拒绝原因诚实可见：重复/超上限的草稿保留在字段中，相邻 role=status 说明原因；到达上限本身不再显示警告边框（is-max 仅是容量态）。
+- 粘贴支持逗号/中文逗号/换行分隔；IME 组合与 keyCode 229 不提交不删除；触屏移除动作 44px 且不吞草稿。
+- 原生表单契约：命名字段以重复表单项提交（草稿不进表单），form.reset 恢复初始标签并遵守取消重置；容器跨父移动会重绑表单归属与禁用祖先。
+- 生命周期：createTagInput 显式句柄 + initTagInput 委托幂等 disposer；动态 data-icen-tags 支持 CSV 或 JSON 数组，setValue 可静默，update 支持只读/禁用/上限热更。
+- 文档换真实示例：作品主题表单（提交/重置/结果反馈）、紧凑/大两档、只读切换编辑、禁用归档；示例脚本返回清理函数。
+- 顺带修复站点结构债：`.demo-stage` 居中规则改直连子级——嵌套 demo 列的 auto 横向外边距会禁用 flex stretch，超长标签曾把文档撑出横向滚动。
+- 验证：11 条 DOM 用例 + 10 条浏览器专项通过（两原语×明暗的编辑/键盘/焦点、六主题 axe、触屏 RTL 44px、forced-colors、长标签截断、换页清理）。提交 53a2bd5。
+
+### 第十五轮：tooltip 入 portal 家族（体系级杜绝裁切）
+
+- 用户副线：代码块悬停提示被 overflow:hidden 裁切。定位到体系漏洞——tooltip 是全库唯一不 portal 的浮层（纯 CSS ::after），z-index 标尺对裁切无解。
+- 新增 behaviors/tooltip.ts：initTooltip() 委托增强，气泡 portal 到 body，computePopoverLayout 选侧/翻转/钳制；hover 400ms、focus-visible 立即、触屏不抢点按；Escape/点击/滚动/缩放/移除即关；全局至多一个气泡，可中断进退场从当前位置续接。
+- 渐进增强契约：CSS ::after 回退保留给无 JS 场景，JS 接管期间触发器带 data-icen-tooltip-live 抑制回退（绝不双渲染）；气泡 role=tooltip 并合并/还原 aria-describedby；MutationObserver 跟随文案/side 变更与触发器移除。
+- popover 引擎修正：left/right 侧翻转阈值改用调用方 minWidth（小气泡不再被默认 220 误判）。code-block SSR 渲染补齐 side=bottom（消除与 DOM 路径漂移）。material.css 像素材质早已认 .icen-tooltip，新气泡天然适配。
+- AGENTS.md 浮层 portal 家族收录 tooltip；slugs.mjs 登记 SLUG_INIT，kit/tooltip 一行入口自动带 behavior。
+- 顺带清账：首页文段链接补安静下划线（link-in-text-block 旧债）、hero 卡片说明文字对比度达标；a11y 扫描改在 reduced-motion 下进行（入场动画中间帧非稳定态，曾误报）；视觉基线按十五轮累计的合法变更重生成（侧栏新组件/顶栏无箭头/代码块工具栏/安装区/选中表面）。
+- 验证：7 条 DOM 用例 + 4 条浏览器专项（代码块气泡完整可见不被裁、键盘即显、Escape/点击不闪、顶缘翻转、多行、reduced-motion 无位移、移动 RTL 不出视口、换页摘除）。全量：verify 742 测试、125 条浏览器回归、129 页×两档巡检 0 问题。提交 22df06c。
+- 尚待：tooltip 在所有嵌套滚动容器/阴影宿主中的完整矩阵；CSS 回退的可访问名称会并入 ::after 文案（Chromium 计算规则），增强态下名称干净、描述走 describedby——后续可考虑初始化期即标记全部触发器消除名称状态翻转。
 
 ### 下一批待处理（保留完整目标）
 
