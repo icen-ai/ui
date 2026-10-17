@@ -18,7 +18,8 @@
  *   <div class="icen-banner-ok [.icen-banner-block]">已保存</div>
  *   <div class="icen-banner-err [.icen-banner-block]">提交失败：网络错误</div>
  *
- * form-input 同时支持 :invalid 与 [data-icen-invalid=true]，behavior 二选一驱动。
+ * form-input 的错误态以 :user-invalid（交互后）与 [data-icen-invalid=true]（behavior 驱动）为通道；
+ * 旧引擎回退 :invalid:not(:placeholder-shown) 启发式。
  */
 
 .icen-form { display: flex; flex-direction: column; gap: var(--icen-density-space-md); }
@@ -87,15 +88,27 @@
   background: var(--icen-token-bg-soft);
 }
 
-/* 校验态：原生 :invalid 与显式 [data-icen-invalid] 同时支持 */
-.icen-form-input:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']),
-.icen-form-textarea:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']) {
+/* 校验态：:user-invalid（交互后才判 invalid，现代引擎）为主通道；
+   显式 [data-icen-invalid] 由 behavior 驱动；旧引擎回退 :invalid:not(:placeholder-shown) 启发式 */
+.icen-form-input:where(:user-invalid, [data-icen-invalid='true']),
+.icen-form-textarea:where(:user-invalid, [data-icen-invalid='true']) {
   border-color: var(--icen-token-error);
 }
-.icen-form-input:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']):focus-visible,
-.icen-form-textarea:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']):focus-visible {
+.icen-form-input:where(:user-invalid, [data-icen-invalid='true']):focus-visible,
+.icen-form-textarea:where(:user-invalid, [data-icen-invalid='true']):focus-visible {
   border-color: var(--icen-token-error);
   box-shadow: var(--icen-control-error-shadow);
+}
+@supports not selector(:user-invalid) {
+  .icen-form-input:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']),
+  .icen-form-textarea:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']) {
+    border-color: var(--icen-token-error);
+  }
+  .icen-form-input:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']):focus-visible,
+  .icen-form-textarea:where(:invalid:not(:placeholder-shown), [data-icen-invalid='true']):focus-visible {
+    border-color: var(--icen-token-error);
+    box-shadow: var(--icen-control-error-shadow);
+  }
 }
 
 /* 尺寸变体 */

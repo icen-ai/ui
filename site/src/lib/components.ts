@@ -705,7 +705,7 @@ refreshSelect(root);
     name: '滑块',
     group: '表单',
     desc: '透明原生 range 覆盖层驱动填充与滑块；双滑块带选中段与 lo ≤ hi − step 钳制。',
-    demo: `<div class="demo-col">
+    demo: `<div class="demo-col" style="width:100%;max-width:420px">
   <div class="icen-slider-row"><span>音量</span><span id="demo-slider-val">40</span></div>
   <div class="icen-slider">
     <div class="icen-slider-track"></div>
@@ -714,7 +714,7 @@ refreshSelect(root);
     <input class="icen-slider-native" id="demo-slider" type="range" min="0" max="100" value="40" aria-label="音量" />
   </div>
 </div>
-<div class="demo-col" style="margin-top:16px">
+<div class="demo-col" style="width:100%;max-width:420px;margin-top:16px">
   <div class="icen-slider-row"><span>价格区间</span><span id="demo-dual-val">20 – 80</span></div>
   <div class="icen-slider icen-slider--dual" id="demo-dual">
     <div class="icen-slider-track"></div>
