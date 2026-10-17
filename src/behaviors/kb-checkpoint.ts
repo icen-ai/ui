@@ -18,7 +18,6 @@
  *     <div class="icen-kb-checkpoint-menu-title">恢复检查点</div>
  *     <button class="icen-kb-checkpoint-menu-item is-checked" role="menuitemradio"
  *             aria-checked="true" data-icen-scope="content">
- *       <span class="icen-kb-checkpoint-menu-check"></span>
  *       <span class="icen-kb-checkpoint-menu-main">
  *         <span class="kb-checkpoint-menu-label">仅内容（保留对话）</span>
  *         <span class="icen-kb-checkpoint-menu-note">讨论历史有审计价值</span>
@@ -128,7 +127,6 @@ function openCheckpointMenu(btn: HTMLElement): void {
       item.title = t('kbCheckpoint.scopeMissing');
     }
 
-    item.appendChild(h('span', 'icen-kb-checkpoint-menu-check'));
     const main = h('span', 'icen-kb-checkpoint-menu-main');
     main.appendChild(h('span', 'kb-checkpoint-menu-label', label));
     if (scope === 'content') {

@@ -786,18 +786,6 @@
   color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
 }
-.icen-ai-composer-popup-option-check {
-  display: none;
-  flex-shrink: 0;
-  color: var(--icen-token-accent);
-}
-.icen-ai-composer-popup-option-check svg {
-  width: 12px;
-  height: 12px;
-}
-.icen-ai-composer-popup-option[aria-selected='true'] .icen-ai-composer-popup-option-check {
-  display: inline-flex;
-}
 
 /* 命令行：/name <argsHint> + 描述 */
 .icen-ai-composer-popup-cmd {
@@ -1339,3 +1327,5 @@
 :is([dir='rtl']) .icen-ai-reasoning:has(.icen-ai-reasoning-head[aria-expanded='true']) .icen-ai-reasoning-head::before { transform: rotate(45deg) scaleX(-1); }
 :is([dir='rtl']) .icen-ai-threads-group-head::before { transform: rotate(-45deg) scaleX(-1); }
 :is([dir='rtl']) .icen-ai-threads-group-head[aria-expanded='true']::before { transform: rotate(45deg) scaleX(-1); }
+
+.icen-ai-composer-model-chevron, .icen-ai-composer-popup-option-check { display: none; }

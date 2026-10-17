@@ -5,7 +5,6 @@
  *   <div class="icen-select" data-icen-select>
  *     <button class="icen-select-trigger" aria-haspopup="listbox" aria-expanded="false">
  *       <span class="icen-select-value is-empty">占位</span>
- *       <svg class="icen-select-chevron">…</svg>
  *     </button>
  *     <div class="icen-select-panel" hidden>
  *       <button class="icen-select-option" data-icen-value="x">…</button>
@@ -139,7 +138,7 @@ function setup(container: Element): () => void {
   const trigger = triggerEl;
   const panel = panelEl;
   const arrow = trigger.querySelector('.icen-select-chevron');
-  if (arrow) arrow.replaceWith(createIcon('chevron-down',{className:'icen-select-chevron'})!);
+  arrow?.remove();
 
   const isMultiple = container.hasAttribute('data-icen-select-multiple');
   const isSearchable = container.hasAttribute('data-icen-select-search');

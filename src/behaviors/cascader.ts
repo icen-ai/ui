@@ -18,7 +18,6 @@
  *     <button class="icen-cascader-trigger icen-pressable icen-focus-ring" role="combobox"
  *             aria-haspopup="listbox" aria-expanded="false" aria-controls="<panelId>" [disabled]>
  *       <span class="icen-cascader-value [.is-empty]">请选择 / 浙江 / 杭州</span>
- *       <svg class="icen-cascader-chevron">…</svg>
  *     </button>
  *     <button class="icen-cascader-clear" aria-label="清除" hidden>×</button>  ← clearable；与
  *         trigger 同级（不能嵌套进 button），绝对定位叠进 trigger 行内末端侧、chevron 内侧
@@ -287,10 +286,7 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
 
   const valueEl = document.createElement('span');
   valueEl.className = 'icen-cascader-value';
-  const chevron = createIcon('chevron-down')!;
-  chevron.classList.add('icen-cascader-chevron');
   trigger.appendChild(valueEl);
-  trigger.appendChild(chevron);
 
   let clearBtn: HTMLButtonElement | null = null;
   if (opts.clearable) {

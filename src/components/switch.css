@@ -106,11 +106,12 @@
 }
 .icen-checkbox::before {
   content: '';
-  width: 60%;
-  height: 60%;
+  width: 40%;
+  height: 40%;
   background: currentColor;
   opacity: 0;
-  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  clip-path: none;
+  border-radius: max(0px, calc(var(--icen-radius-xs) - var(--icen-density-space-xs)));
 }
 .icen-checkbox[aria-checked='true']::before { opacity: 1; }
 .icen-checkbox[aria-checked='mixed']::before {

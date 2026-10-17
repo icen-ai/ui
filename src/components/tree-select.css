@@ -75,7 +75,7 @@
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
-  padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  padding-inline-end: var(--icen-density-space-sm);
 }
 .icen-tree-select-trigger:hover:not(:disabled) {
   border-color: var(--icen-hover-border);
@@ -122,7 +122,7 @@
 .icen-tree-select-clear {
   position: absolute;
   inset-block-start: 50%;
-  inset-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  inset-inline-end: var(--icen-density-space-sm);
   translate: 0 -50%;
   display: inline-flex;
   align-items: center;
@@ -141,7 +141,7 @@
   color: var(--icen-token-text);
   background: var(--icen-token-fill-1);
 }
-.icen-tree-select:has(.icen-tree-select-clear:not([hidden])) .icen-tree-select-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + 52px); }
+.icen-tree-select:has(.icen-tree-select-clear:not([hidden])) .icen-tree-select-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + var(--icen-density-input-height-sm) + var(--icen-density-space-xs)); }
 
 /* ── 多选 chips（tag 式展示；× 仅 hover 对应 chip 时出现）── */
 .icen-tree-select-chips {
@@ -311,25 +311,9 @@
   background: var(--icen-token-accent);
   border-color: var(--icen-token-accent);
 }
-.icen-tree-select-row.is-checked .icen-tree-select-check::after {
-  content: '';
-  inline-size: 16px;
-  block-size: 16px;
-  background: currentColor;
-  mask: var(--icen-token-icon-check) center / contain no-repeat;
-  font-size: var(--icen-density-font-size-2xs);
-  line-height: 1;
-  color: var(--icen-token-on-accent);
-}
 .icen-tree-select-row.is-mixed .icen-tree-select-check {
   background: var(--icen-token-accent);
   border-color: var(--icen-token-accent);
-}
-.icen-tree-select-row.is-mixed .icen-tree-select-check::after {
-  content: '–';
-  font-size: var(--icen-density-font-size-2xs);
-  line-height: 1;
-  color: var(--icen-token-on-accent);
 }
 
 .icen-tree-select-label {
@@ -391,8 +375,8 @@
   .icen-tree-select:is(:hover,:focus-within) .icen-tree-select-clear:not([hidden]) { opacity: 1; pointer-events: auto; }
 }
 @media (pointer: coarse) {
-  .icen-tree-select-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: 32px; }
-  .icen-tree-select:has(.icen-tree-select-clear:not([hidden])) .icen-tree-select-trigger { padding-inline-end: 84px; }
+  .icen-tree-select-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: var(--icen-density-space-sm); }
+  .icen-tree-select:has(.icen-tree-select-clear:not([hidden])) .icen-tree-select-trigger { padding-inline-end: calc(var(--icen-density-input-height-sm) + var(--icen-density-space-sm) + var(--icen-density-space-xs)); }
 }
 
 .icen-tree-select--sm .icen-tree-select-trigger { block-size: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
@@ -413,10 +397,10 @@
   min-block-size: var(--tree-select-height);
   padding-block: var(--icen-density-space-xs);
   padding-inline-start: var(--icen-density-space-sm);
-  padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  padding-inline-end: var(--icen-density-space-sm);
   pointer-events: none;
 }
-.icen-tree-select:has(.icen-tree-select-clear:not([hidden])) > .icen-tree-select-chips { padding-inline-end: calc(var(--icen-density-space-sm) + 52px); }
+.icen-tree-select:has(.icen-tree-select-clear:not([hidden])) > .icen-tree-select-chips { padding-inline-end: calc(var(--icen-density-space-sm) + var(--icen-density-input-height-sm) + var(--icen-density-space-xs)); }
 .icen-tree-select-chip { pointer-events: auto; }
 .icen-tree-select-chip > span { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; }
 @media (hover: hover) and (pointer: fine) {
@@ -425,7 +409,7 @@
 }
 @media (pointer: coarse) {
   .icen-tree-select-chip-x { min-inline-size: 44px; min-block-size: 44px; }
-  .icen-tree-select:has(.icen-tree-select-clear:not([hidden])) > .icen-tree-select-chips { padding-inline-end: 84px; }
+  .icen-tree-select:has(.icen-tree-select-clear:not([hidden])) > .icen-tree-select-chips { padding-inline-end: calc(var(--icen-density-input-height-sm) + var(--icen-density-space-sm) + var(--icen-density-space-xs)); }
 }
 
 .icen-tree-select-chips[hidden], .icen-tree-select-clear[hidden] { display: none; }
@@ -434,3 +418,10 @@
 .icen-tree-select--lg { --tree-select-height: var(--icen-density-input-height-lg); }
 
 .icen-tree-select-panel:has(> .icen-tree-select-search) { scroll-padding-block-start: calc(var(--icen-density-input-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }
+
+.icen-tree-select-row.is-checked .icen-tree-select-check, .icen-tree-select-row.is-mixed .icen-tree-select-check { background: var(--icen-token-surface); }
+.icen-tree-select-row:is(.is-checked,.is-mixed) .icen-tree-select-check::after { content: ""; inline-size: 6px; block-size: 6px; border-radius: max(0px, calc(var(--icen-radius-xs) - var(--icen-density-space-xs))); background: var(--icen-token-accent); }
+.icen-tree-select-row.is-mixed .icen-tree-select-check::after { inline-size: 8px; block-size: 2px; border-radius: var(--icen-radius-full); }
+
+/* Popup affordance is carried by the control surface, not a direction glyph. */
+.icen-tree-select-chevron { display: none; }

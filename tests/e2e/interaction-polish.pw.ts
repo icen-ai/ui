@@ -29,7 +29,7 @@ test('cascader maintains aligned action slots and expands columns without scroll
   await page.getByRole('option',{name:'西湖区',exact:true}).click();
   await page.locator('.icen-cascader').hover();
   await expect(page.locator('.icen-cascader-clear')).toHaveCSS('opacity','1');
-  const centers=await page.locator('.icen-cascader').evaluate((el)=>['.icen-cascader-chevron','.icen-cascader-clear'].map((selector)=>{const r=el.querySelector(selector)!.getBoundingClientRect();return r.y+r.height/2;}));
+  const centers=await page.locator('.icen-cascader').evaluate((el)=>['.icen-cascader-trigger','.icen-cascader-clear'].map((selector)=>{const r=el.querySelector(selector)!.getBoundingClientRect();return r.y+r.height/2;}));
   expect(Math.abs(centers[0]-centers[1])).toBeLessThan(1);
   await page.locator('.icen-cascader-clear').click();
   await expect(trigger).toContainText('请选择');
@@ -42,7 +42,8 @@ test('all appearance icon shapes are real SVG and mode remains reachable without
   await trigger.click();
   const panel=page.locator('[role="dialog"]:visible');
   await expect(panel.locator('[data-icen-value="dark"]')).toBeInViewport();
-  expect(await page.locator('.icen-theme-switcher-chevron').first().evaluate((el)=>el.namespaceURI)).toBe('http://www.w3.org/2000/svg');
+  await expect(page.locator('.icen-theme-switcher-chevron')).toHaveCount(0);
+  await expect(panel.locator('.icen-theme-switcher-check')).toHaveCount(0);
   await panel.locator('[data-icen-value="pixel"]').click();
   await panel.locator('[data-icen-value="dark"]').click();
   await expect(page.locator('html')).toHaveAttribute('data-icen-style','pixel');

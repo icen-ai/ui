@@ -351,6 +351,8 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 
 ## 图标与次要操作
 
+- **选中态纪律（用户明确要求）**：所有选择组件与菜单不使用 ✓、check SVG 或 check mask 表示选中，也不替换为「已选」等文字标记。选项共用 material.css 的轻底色 + 内描边；复选框用实心几何内核，半选用 CSS 短横，保留真实 checked/indeterminate/aria-*。弹出式选择器、主题/原语切换、模型选择和下拉触发器不展示上下箭头；树内层级导航及前后翻页仍可保留方向图形。完成/成功反馈与选中不同，状态 check 图标仍可按语义使用。
+
 - `behaviors/icons.ts` 是界面操作符号的唯一几何源：`createIcon` 返回真实 SVG DOM，`iconHTML` 输出安全 SSR 标记；消费方一行入口 `kit/icon`，不使用图标字体或 Unicode 字形代替操作图标。CSS 指示器用 `--icen-token-icon-*` masks，由 `scripts/icon-masks.ts` 同源生成，构建会重算。
 - 所有图形采用 20×20 光学网格、1.6 线宽；图标默认 decorative，独立图标传 label。方向镜像由具体组件决定。自定义路径走 registerIcon，不允许覆盖内置符号。
 - 次要操作可用 `.icen-icon-action[data-icen-reveal]`：固定槽位，父级 hover/focus-within 显现，触屏常显。不要隐藏主入口或重要状态；避免用宽度从 0 展开挤动正文。

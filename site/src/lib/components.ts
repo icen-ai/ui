@@ -92,7 +92,6 @@ const svgX = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke
 const svgEye = `<svg data-icen-icon="show" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
 const svgEyeOff = `<svg data-icen-icon="hide" hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.16 3.19"/><path d="M6.61 6.61A17.4 17.4 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 5.17-1.34"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`;
 const svgSearch = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
-const svgChevron = `<svg class="icen-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
 const svgPlus = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
 const svgDown = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
 const svgUp = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>`;
@@ -612,7 +611,7 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
   <div class="icen-select" data-icen-select style="width:100%;max-width:280px">
     <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="icen-select-value is-empty">选择一种水果</span>
-      ${svgChevron}
+
     </button>
     <div class="icen-select-panel" hidden>
       <button class="icen-select-option" type="button" data-icen-value="apple">苹果</button>
@@ -627,7 +626,7 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
   <div class="icen-select" data-icen-select data-icen-select-search style="width:100%;max-width:280px">
     <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="icen-select-value is-empty">搜索城市…</span>
-      ${svgChevron}
+
     </button>
     <div class="icen-select-panel" hidden>
       <div class="icen-select-group">
@@ -653,7 +652,7 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
   <div class="icen-select" data-icen-select data-icen-select-multiple data-icen-select-max="3" data-icen-select-placeholder="选择标签（最多 3 个）" style="width:100%;max-width:280px">
     <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="icen-select-value is-empty">选择标签（最多 3 个）</span>
-      ${svgChevron}
+
     </button>
     <button class="icen-select-clear" type="button" aria-label="清除全部" hidden>${iconHTML('close')}</button>
     <div class="icen-select-panel" hidden>
@@ -670,7 +669,7 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
   <div class="icen-select" data-icen-select data-icen-panel-width="216" style="width:100%;max-width:216px">
     <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="icen-select-value is-empty">选择色彩预设</span>
-      ${svgChevron}
+
     </button>
     <div class="icen-select-panel" hidden>
       ${themes.map((theme) => `<button class="icen-select-option" type="button" data-icen-value="${theme.id}"><span class="icen-select-swatch" aria-hidden="true"><i style="background:${theme.light.bg}"></i><i style="background:${theme.light.accent}"></i><i style="background:${theme.light.cold}"></i></span>${theme.name}</button>`).join('\n      ')}
@@ -1095,7 +1094,7 @@ return () => { ac.abort(); dispose(); };`,
     group: '浮层',
     desc: 'trigger + [data-icen-dropdown-menu] 模板；面板 fixed 定位在 trigger 下方 4px，视口 12px margin 内 clamp，空间不足翻上。',
     demo: `<div class="dropdown" data-icen-dropdown>
-  <button class="icen-btn dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="menu">文档操作 ${iconHTML('chevron-down')}</button>
+  <button class="icen-btn dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="menu">文档操作</button>
   <div data-icen-dropdown-menu hidden>
     <div class="icen-menu-label">文件</div>
     <button class="icen-menu-item icen-pressable" id="dd-rename">
@@ -1179,7 +1178,7 @@ return () => { dispose(); contextMenuMod.unregisterContextMenu('demo-file'); };`
     group: '浮层',
     desc: 'computePopoverLayout 纯函数选侧（prefer → 翻对侧 → 取大侧）；openPopover 负责 portal、跟随重算与外点/Esc 关闭。',
     demo: `<div class="demo-row">
-  <button class="icen-btn" id="popover-demo-trigger">筛选 ${iconHTML('chevron-down')}</button>
+  <button class="icen-btn" id="popover-demo-trigger">筛选</button>
 </div>
 <div class="icen-popover" id="popover-demo-panel" hidden>
   <div class="icen-form-field">

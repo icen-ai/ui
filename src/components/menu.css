@@ -16,7 +16,6 @@
  *     </button>
  *     <div class="icen-menu-separator"></div>
  *     <button class="icen-menu-item icen-menu-item--checked">
- *       <span class="icen-menu-item-check">…svg…</span>
  *       <span class="icen-menu-item-label">已选项</span>
  *     </button>
  *   </div>
@@ -177,27 +176,8 @@
   color: var(--icen-token-text-faint);
 }
 
-/* Selection has its own trailing slot; it never replaces the leading icon. */
-.icen-menu-item-check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  order: 4;
-  flex: none;
-  inline-size: 20px;
-  block-size: 20px;
-  color: var(--icen-token-accent);
-  font-size: var(--icen-density-font-size-md);
-  line-height: 1;
-}
-.icen-menu-item-check > svg { inline-size: 16px; block-size: 16px; }
-.icen-menu-item[aria-checked='false'] > .icen-menu-item-check { visibility: hidden; }
-.icen-menu:has(.icen-menu-item-check) .icen-menu-item:not(:has(> .icen-menu-item-check))::after {
-  content: '';
-  order: 4;
-  flex: none;
-  inline-size: 20px;
-}
+/* Legacy check slots are removed visually; checked items use the shared selected surface. */
+.icen-menu-item-check { display: none; }
 
 .icen-menu-separator {
   margin: var(--icen-density-space-xs) calc(var(--icen-density-space-sm) + 2px);

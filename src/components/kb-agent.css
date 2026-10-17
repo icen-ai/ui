@@ -297,16 +297,6 @@
   font-size: 12px;
   line-height: 1.4;
 }
-.icen-kb-checkpoint-menu-item.is-checked .icen-kb-checkpoint-menu-check::before {
-  content: '';
-  display: inline-block;
-  inline-size: 16px;
-  block-size: 16px;
-  flex: none;
-  vertical-align: middle;
-  background: currentColor;
-  mask: var(--icen-token-icon-check) center / contain no-repeat;
-}
 .icen-kb-checkpoint-menu-main {
   display: flex;
   flex-direction: column;
@@ -493,3 +483,5 @@
   left: 1px; /* guard:allow-physical RTL 镜像规则：箭头钉在视觉左端 */
   transform: translateY(-50%) rotate(45deg) scaleX(-1);
 }
+
+.icen-kb-checkpoint-menu-check { display: none; }

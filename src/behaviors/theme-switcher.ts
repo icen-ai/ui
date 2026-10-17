@@ -53,7 +53,6 @@ function triggerChildren(o: ThemeSwitcherOptions, state: ThemeState): Tree[] {
   return [
     kind === 'primitive' ? symbol(state.style === 'pixel' ? 'pixel' : 'benzhen','icen-theme-switcher-symbol') : kind === 'mode' ? symbol(state.dark ? 'moon' : 'sun','icen-theme-switcher-symbol') : sample(state.preset,state.dark),
     node('span', { class: 'icen-theme-switcher-name' }, label),
-    ...(kind === 'mode' ? [] : [symbol('chevron-down','icen-theme-switcher-chevron')]),
   ];
 }
 function section(kind: 'theme' | 'primitive' | 'mode', o: ThemeSwitcherOptions, state: ThemeState): Tree {
@@ -65,7 +64,6 @@ function section(kind: 'theme' | 'primitive' | 'mode', o: ThemeSwitcherOptions, 
       ...ids.map((id) => node('button', { type: 'button', class: 'icen-theme-switcher-option', 'data-icen-axis': kind, 'data-icen-value': id, 'aria-pressed': String(id === active) },
         ...(kind === 'theme' ? [sample(id,state.dark)] : [symbol(kind === 'primitive' ? id === 'pixel' ? 'pixel' : 'benzhen' : id === 'dark' ? 'moon' : 'sun','icen-theme-switcher-symbol')]),
         node('span', {class:'icen-theme-switcher-option-name'}, kind === 'mode' ? t(id === 'dark' ? 'themeSwitcher.dark' : 'themeSwitcher.light') : name(id,o)),
-        symbol('check','icen-theme-switcher-check'),
       )),
     ),
   );

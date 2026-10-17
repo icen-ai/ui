@@ -20,7 +20,6 @@
  *     <button class="icen-tree-select-trigger" role="combobox" aria-haspopup="tree"
  *             aria-expanded="false" aria-controls="<panelId>" [disabled]>
  *       <span class="icen-tree-select-value [.is-empty]">请选择</span>
- *       <svg class="icen-tree-select-chevron">…</svg>
  *     </button>
  *     <span class="icen-tree-select-chips" [hidden]>          ← behavior 生成，与 trigger 同级
  *       <span class="icen-tree-select-chip"><span>前端</span><button class="icen-tree-select-chip-x" type="button" aria-label="移除前端">…svg…</button></span>
@@ -321,10 +320,7 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
 
   const valueEl = document.createElement('span');
   valueEl.className = 'icen-tree-select-value';
-  const chevron = createIcon('chevron-down')!;
-  chevron.classList.add('icen-tree-select-chevron');
   trigger.appendChild(valueEl);
-  trigger.appendChild(chevron);
 
   let clearBtn: HTMLButtonElement | null = null;
   if (opts.clearable) {

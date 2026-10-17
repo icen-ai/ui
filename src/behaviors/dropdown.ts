@@ -4,7 +4,6 @@
  * returns an idempotent disposer; open/close are also available. SSR is a no-op. */
 import { applyPanelSizing, computePopoverLayout, readPanelSizing, revealPopoverItem, claimMenuFocus } from './popover';
 import { emitMenuSelect } from './context-menu';
-import { createIcon } from './icons';
 
 interface ActiveDropdown {
   trigger: HTMLElement; template: HTMLElement; panel: HTMLElement;
@@ -72,11 +71,7 @@ export function openDropdown(trigger: HTMLElement, edge: 'first' | 'last' = 'fir
     if(classDisabled.has(item)){item.removeAttribute('aria-disabled');classDisabled.delete(item);}
     if(item.classList.contains('is-disabled') && !item.hasAttribute('aria-disabled')){item.setAttribute('aria-disabled','true');classDisabled.add(item);}
     item.tabIndex=-1;
-    if(item.matches('[role="menuitemcheckbox"],[role="menuitemradio"]') && !item.querySelector('.icen-menu-item-check')) {
-      const check=document.createElement('span');check.className='icen-menu-item-check';check.append(createIcon('check')!);item.append(check);
-    }
-    const check=item.querySelector('.icen-menu-item-check');
-    if(check && !check.querySelector('svg'))check.replaceChildren(createIcon('check')!);
+    item.querySelector('.icen-menu-item-check')?.remove();
     item.querySelector('.icen-menu-item-shortcut')?.setAttribute('aria-hidden','true');
   });
   panel.querySelectorAll('.icen-menu-separator').forEach((separator)=>separator.setAttribute('role','separator'));

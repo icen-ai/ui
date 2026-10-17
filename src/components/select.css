@@ -68,7 +68,7 @@
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
-  padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  padding-inline-end: var(--icen-density-space-sm);
 }
 .icen-select-trigger:hover:not(:disabled) {
   border-color: var(--icen-hover-border);
@@ -169,19 +169,6 @@
   font-weight: 500;
   background: var(--icen-token-accent-subtle);
 }
-.icen-select-option::after {
-  opacity: 0;
-  transition: opacity var(--icen-tx-fast);
-  content: '';
-  inline-size: 16px;
-  block-size: 16px;
-  background: currentColor;
-  mask: var(--icen-token-icon-check) center / contain no-repeat;
-  margin-inline-start: auto;
-  flex-shrink: 0;
-  color: var(--icen-token-accent-text);
-}
-.icen-select-option.is-selected::after { opacity: 1; }
 .icen-select-option.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -239,7 +226,7 @@
 .icen-select-clear {
   position: absolute;
   inset-block-start: 50%;
-  inset-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  inset-inline-end: var(--icen-density-space-sm);
   translate: 0 -50%;
   display: inline-flex;
   align-items: center;
@@ -259,7 +246,7 @@
   background: var(--icen-token-fill-1);
 }
 /* 有清除钮时 trigger 行内末端侧让位（clear 18px + chevron 14px + 间距） */
-.icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + 52px); }
+.icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + var(--icen-density-input-height-sm) + var(--icen-density-space-xs)); }
 
 /* ── 多选 chips（tag 式展示；× 仅 hover 对应 chip 时出现） ── */
 .icen-select-chips {
@@ -323,11 +310,11 @@
   .icen-select:is(:hover,:focus-within) .icen-select-clear:not([hidden]) { opacity: 1; pointer-events: auto; }
 }
 @media (pointer: coarse) {
-  .icen-select-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: 32px; }
-  .icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: 84px; }
+  .icen-select-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: var(--icen-density-space-sm); }
+  .icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: calc(var(--icen-density-input-height-sm) + var(--icen-density-space-sm) + var(--icen-density-space-xs)); }
 }
 
-.icen-select-trigger--sm, .icen-select-trigger--lg { padding-inline-end: calc(var(--icen-density-space-sm) + 24px); }
+.icen-select-trigger--sm, .icen-select-trigger--lg { padding-inline-end: var(--icen-density-space-sm); }
 
 /* The chips and trigger occupy one grid cell without nesting interactive elements. */
 .icen-select:has(> .icen-select-chips:not([hidden])) { display: grid; }
@@ -344,10 +331,10 @@
   min-block-size: var(--select-height);
   padding-block: var(--icen-density-space-xs);
   padding-inline-start: var(--icen-density-space-sm);
-  padding-inline-end: calc(var(--icen-density-space-sm) + 24px);
+  padding-inline-end: var(--icen-density-space-sm);
   pointer-events: none;
 }
-.icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: calc(var(--icen-density-space-sm) + 52px); }
+.icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: calc(var(--icen-density-space-sm) + var(--icen-density-input-height-sm) + var(--icen-density-space-xs)); }
 .icen-select-chip { pointer-events: auto; }
 .icen-select-chip > span { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; }
 @media (hover: hover) and (pointer: fine) {
@@ -356,7 +343,7 @@
 }
 @media (pointer: coarse) {
   .icen-select-chip-x { min-inline-size: 44px; min-block-size: 44px; }
-  .icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: 84px; }
+  .icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: calc(var(--icen-density-input-height-sm) + var(--icen-density-space-sm) + var(--icen-density-space-xs)); }
 }
 
 .icen-select-chips[hidden], .icen-select-clear[hidden] { display: none; }
@@ -369,3 +356,6 @@
 .icen-select:has(> .icen-select-trigger--lg) { --select-height: var(--icen-density-input-height-lg); }
 
 .icen-select-panel:has(> .icen-select-search) { scroll-padding-block-start: calc(var(--icen-density-input-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }
+
+/* Popup affordance is carried by the control surface, not a direction glyph. */
+.icen-select-chevron { display: none; }

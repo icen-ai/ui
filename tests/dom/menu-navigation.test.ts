@@ -41,7 +41,7 @@ test('programmatic open works without a delegate and preserves host-managed chec
   closeDropdown();openDropdown(trigger);
   expect(document.querySelector('.icen-menu-item') === item).toBe(true);
   const cleanup=initDropdown(host);cleanup();
-  expect(host.querySelector('.icen-menu-item') === item).toBe(true);expect(item.querySelector('svg')).not.toBeNull();
+  expect(host.querySelector('.icen-menu-item') === item).toBe(true);expect(item.querySelector('.icen-menu-item-check') === null).toBe(true);expect(item.getAttribute('aria-checked')).toBe('true');
 });
 
 test('context menu uses named SVGs, retains callbacks and returns keyboard focus on Escape or Tab',async()=>{

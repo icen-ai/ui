@@ -10,7 +10,7 @@
  *       <icen-textarea class="icen-ai-composer-input" rows="1" placeholder="…"></icen-textarea>
  *       <div class="icen-ai-composer-actions"><!-- v1 旧结构：附件 + 发送 --></div>
  *       <div class="icen-ai-composer-toolbar"><!-- v2 工具条：models/usage 配置时出现 -->
- *         <button class="icen-ai-composer-model" data-icen-ai-model-open>provider 图标 + 模型名 + chevron</button>
+ *         <button class="icen-ai-composer-model" data-icen-ai-model-open>provider 图标 + 模型名</button>
  *         <span class="icen-ai-composer-spacer"></span>
  *         <span class="icen-ai-composer-usage" data-icen-ai-usage></span>   <!-- 用量环挂载点 -->
  *         <button class="icen-ai-composer-btn" data-icen-ai-attach></button>
@@ -138,8 +138,6 @@ const ATTACH_ICON =
 const svgWrap = (body: string): string =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
-const ICON_CHEVRON = svgWrap('<path d="m6 9 6 6 6-6"/>');
-const ICON_CHECK = svgWrap('<path d="M20 6 9 17l-5-5"/>');
 const ICON_INFO = svgWrap('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>');
 const ICON_FILE = svgWrap(
   '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
@@ -422,15 +420,7 @@ function updateModelButton(composer: HTMLElement): void {
   }
   name.textContent = model.label;
   btn.setAttribute('aria-label', t('aiComposer.modelAria', { p0: model.label, p1: provider.label }));
-  if (!btn.querySelector('.icen-ai-composer-model-chevron')) {
-    const chev = svgIcon(ICON_CHEVRON);
-    if (chev) {
-      const wrap = document.createElement('span');
-      wrap.className = 'icen-ai-composer-model-chevron';
-      wrap.appendChild(chev);
-      btn.appendChild(wrap);
-    }
-  }
+  btn.querySelector('.icen-ai-composer-model-chevron')?.remove();
 }
 
 /**
@@ -788,11 +778,7 @@ function openModelPopup(composer: HTMLElement): void {
           const meta = document.createElement('span');
           meta.className = 'icen-ai-composer-popup-option-meta';
           meta.textContent = typeof m.context === 'number' ? formatTokens(m.context) : '';
-          const check = document.createElement('span');
-          check.className = 'icen-ai-composer-popup-option-check';
-          const checkSvg = svgIcon(ICON_CHECK);
-          if (checkSvg) check.appendChild(checkSvg);
-          opt.append(icon, label, meta, check);
+          opt.append(icon, label, meta);
           group.appendChild(opt);
           s.options.push(opt);
         }
