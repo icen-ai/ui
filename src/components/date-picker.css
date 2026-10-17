@@ -2,7 +2,7 @@
  * @icen.ai/ui — Component: date-picker（日期选择，与 behaviors/date-picker 配套）
  *
  * 契约：
- *   <div class="icen-date-picker" data-icen-date-picker data-icen-date-picker-input="id">
+ *   <div class="icen-date-picker" data-icen-date-picker>
  *     <button class="icen-date-picker-trigger [--sm|--lg]" type="button" aria-haspopup="dialog">
  *       <span class="icen-date-picker-value">2026-07-29</span>
  *       <svg class="icen-date-picker-icon">…日历 svg…</svg>
@@ -10,15 +10,12 @@
  *     <input type="hidden" id="id" name="date" value="2026-07-29" />
  *   </div>
  *
- *   或直接挂到普通 input（behavior 自动包裹触发器外观）：
- *   <icen-input class="date-picker-input" data-icen-date-picker value="2026-07-29" />
- *
  * behavior 渲染面板（portal 到 body）：
  *   <div class="icen-date-picker-panel" role="dialog">
  *     <div class="icen-date-picker-head">
- *       <button class="icen-date-picker-nav" data-icen-prev>‹</button>
+ *       <button class="icen-date-picker-nav" data-icen-prev>…shared chevron SVG…</button>
  *       <span class="icen-date-picker-title">2026 年 7 月</span>
- *       <button class="icen-date-picker-nav" data-icen-next>›</button>
+ *       <button class="icen-date-picker-nav" data-icen-next>…shared chevron SVG…</button>
  *     </div>
  *     <div class="icen-date-picker-weekdays">
  *       <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
@@ -190,8 +187,8 @@
 }
 .icen-date-picker-cell.is-selected.is-today { border-color: var(--icen-token-on-accent); }
 .icen-date-picker-cell.is-outside {
-  color: var(--icen-token-text-faint);
-  opacity: 0.55;
+  color: var(--icen-token-text-muted);
+  opacity: 1;
 }
 .icen-date-picker-cell.is-disabled {
   color: var(--icen-token-text-faint);
@@ -218,7 +215,7 @@
   border: 0;
   border-radius: var(--icen-radius-xs);
   background: transparent;
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-strong);
   font: inherit;
   font-size: var(--icen-density-font-size-xs);
   cursor: pointer;
@@ -237,4 +234,35 @@
 @media (prefers-reduced-motion: reduce) {
   .icen-date-picker-panel { animation: none; }
   .icen-date-picker-cell { transition: none; }
+}
+
+/* Calendar rows preserve real grid semantics. A single date joins the tab order;
+   logical arrows move within the month without exposing 42 separate tab stops. */
+.icen-date-picker-panel { width: 300px; overflow: auto; overscroll-behavior: contain; }
+.icen-date-picker-grid { display: flex; flex-direction: column; gap: 2px; }
+.icen-date-picker-week { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 2px; }
+.icen-date-picker-week > span { min-inline-size: 0; }
+.icen-date-picker-cell { inline-size: 100%; block-size: 34px; }
+.icen-date-picker-nav { inline-size: 30px; block-size: 30px; flex: 0 0 30px; }
+.icen-date-picker-nav > svg { inline-size: 16px; block-size: 16px; }
+.icen-date-picker-icon { inline-size: 20px; block-size: 20px; align-items: center; justify-content: center; }
+.icen-date-picker-icon > svg { inline-size: 16px; block-size: 16px; }
+.icen-date-picker-nav:disabled, .icen-date-picker-today:disabled, .icen-date-picker-clear:disabled { opacity: .4; cursor: default; }
+.icen-date-picker-nav:disabled:hover, .icen-date-picker-today:disabled:hover, .icen-date-picker-clear:disabled:hover { background: transparent; }
+.icen-date-picker-trigger[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.icen-date-picker-cell.is-outside.is-selected { opacity: 1; color: var(--icen-token-on-accent); }
+.icen-date-picker-panel:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 2px; }
+.icen-date-picker-empty { margin-block: var(--icen-density-space-sm) 0; color: var(--icen-token-text-muted); text-align: center; }
+.icen-date-picker-panel[dir="rtl"] .icen-date-picker-nav > svg { transform: scaleX(-1); }
+@media (pointer: coarse) {
+  .icen-date-picker-panel { width: 344px; }
+  .icen-date-picker-trigger { min-block-size: 44px; }
+  .icen-date-picker-cell { min-block-size: 44px; }
+  .icen-date-picker-nav { min-inline-size: 44px; min-block-size: 44px; }
+  .icen-date-picker-today, .icen-date-picker-clear { min-inline-size: 44px; min-block-size: 44px; }
+}
+@media (forced-colors: active) {
+  :root .icen-date-picker-panel { background: Canvas; color: CanvasText; border-color: CanvasText; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .icen-date-picker-cell.is-selected { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  .icen-date-picker-cell:disabled, .icen-date-picker-nav:disabled, .icen-date-picker-today:disabled, .icen-date-picker-clear:disabled { color: GrayText; opacity: 1; }
 }

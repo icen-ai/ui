@@ -358,6 +358,7 @@ export interface IcenLocale {
   'datatable.totalCount': string;
   'datatable.totalLabel': string;
   /* ── datePicker ── */
+  'datePicker.noDates': string;
   'datePicker.clear': string;
   'datePicker.nextMonth': string;
   'datePicker.prevMonth': string;
@@ -1152,6 +1153,7 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'datatable.totalCount': '共 {p0} 条',
   'datatable.totalLabel': '合计',
   /* ── datePicker ── */
+  'datePicker.noDates': '没有可选日期',
   'datePicker.clear': '清除',
   'datePicker.nextMonth': '下一月',
   'datePicker.prevMonth': '上一月',
@@ -1946,6 +1948,7 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'datatable.totalCount': '{p0} items total',
   'datatable.totalLabel': 'Total',
   /* ── datePicker ── */
+  'datePicker.noDates': 'No available dates',
   'datePicker.clear': 'Clear',
   'datePicker.nextMonth': 'Next month',
   'datePicker.prevMonth': 'Previous month',

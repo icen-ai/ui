@@ -917,42 +917,66 @@ initUpload();
     slug: 'date-picker',
     name: '日期选择',
     group: '表单',
-    desc: '与 behaviors/date-picker 配套：点击触发器弹出日历面板，支持月份导航 / 今日 / 清除 / min-max 限制 / 周首日配置。纯 JS 渲染，零依赖。',
-    demo: `<div class="demo-row">
-  <div class="icen-date-picker" data-icen-date-picker data-icen-date-picker-placeholder="选择发布日期">
-    <button class="icen-date-picker-trigger" type="button">
-      <span class="icen-date-picker-value is-empty"></span>
-      <span class="icen-date-picker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
-    </button>
-    <input type="hidden" name="date1" />
+    summary: '用安静的日历选择一个确定的日期。支持范围、清除、键盘移动和原生表单。',
+    desc: '日历以原生按钮组成可连续导航的日期网格。方向键按天/周移动，Home/End 定位周首尾，PageUp/PageDown 翻月，Shift 配合翻年；日期范围、今日入口、禁用、重置与表单值保持一致。',
+    demo: `<form id="date-demo-form">
+<div class="demo-row">
+  <div style="display:grid;gap:6px">
+    <label for="date-publish" class="demo-label">发布日期</label>
+    <div class="icen-date-picker" data-icen-date-picker>
+      <button id="date-publish" class="icen-date-picker-trigger" type="button"><span class="icen-date-picker-value">2026-10-17</span></button>
+      <input type="hidden" name="发布日期" value="2026-10-17" />
+    </div>
   </div>
-  <div class="icen-date-picker" data-icen-date-picker data-icen-date-picker-placeholder="有范围限制" data-icen-date-picker-min="2026-07-01" data-icen-date-picker-max="2026-12-31">
-    <button class="icen-date-picker-trigger" type="button">
-      <span class="icen-date-picker-value is-empty"></span>
-      <span class="icen-date-picker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></span>
-    </button>
-    <input type="hidden" name="date2" value="2026-07-29" />
+  <div style="display:grid;gap:6px">
+    <label for="date-release" class="demo-label">十一月排期 · 小号</label>
+    <div class="icen-date-picker" data-icen-date-picker data-icen-date-picker-min="2026-11-01" data-icen-date-picker-max="2026-11-30" data-icen-date-picker-week-start="0">
+      <button id="date-release" class="icen-date-picker-trigger icen-date-picker-trigger--sm" type="button"><span class="icen-date-picker-value">2026-11-09</span></button>
+      <input type="hidden" name="十一月排期" value="2026-11-09" />
+    </div>
   </div>
-</div>`,
-    usage: `import { initDatePicker } from '@icen.ai/ui/behaviors/date-picker';
-initDatePicker();
-
-<div class="icen-date-picker" data-icen-date-picker>
-  <button class="icen-date-picker-trigger" type="button">
-    <span class="icen-date-picker-value is-empty"></span>
-    <span class="icen-date-picker-icon">…日历 svg…</span>
-  </button>
-  <input type="hidden" name="date" />
+  <div style="display:grid;gap:6px">
+    <label for="date-review" class="demo-label">复盘日期 · 大号</label>
+    <div class="icen-date-picker" data-icen-date-picker data-icen-date-picker-placeholder="选择复盘日期">
+      <button id="date-review" class="icen-date-picker-trigger icen-date-picker-trigger--lg" type="button"><span class="icen-date-picker-value is-empty">选择复盘日期</span></button>
+      <input type="hidden" name="复盘日期" />
+    </div>
+  </div>
+  <div style="display:grid;gap:6px">
+    <label for="date-locked" class="demo-label">已锁定的排期</label>
+    <div class="icen-date-picker" data-icen-date-picker>
+      <button id="date-locked" class="icen-date-picker-trigger" type="button" disabled><span class="icen-date-picker-value">2026-11-20</span></button>
+      <input type="hidden" name="锁定排期" value="2026-11-20" disabled />
+    </div>
+  </div>
 </div>
-<!-- 可选 data-icen-date-picker-format/min/max/week-start/placeholder -->`,
+<p class="demo-label" id="date-feedback" role="status"><bdi>选择日期后在这里查看结果。可以用键盘操作日历。</bdi></p>
+<button class="icen-btn icen-btn-sm" type="reset" id="date-reset">恢复初始日期</button>
+</form>`,
+    usage: `import { initDatePicker } from '@icen.ai/ui/behaviors/date-picker';
+const dispose = initDatePicker(); // 卸载时 dispose()，可重新初始化
+
+// 只需隐藏输入，行为自动补齐触发器、日期文本与共享日历图标。
+// 如需尺寸、label 或插槽，提供自己的 .icen-date-picker-trigger 即可。
+<div class="icen-date-picker" data-icen-date-picker
+     data-icen-date-picker-min="2026-11-01"
+     data-icen-date-picker-max="2026-11-30">
+  <input type="hidden" name="publish_date" value="2026-11-09" />
+</div>
+// data-icen-date-picker-format/min/max/week-start/placeholder 与 data-icen-panel-* 可动态更新。
+// input / change 或原生 form.reset() 会同步日期。日期变化派发 icen:date-change 与 input.change。
+// Arrow / Home / End 移动；PageUp/Down 翻月，Shift 翻年；Escape 归还触发器焦点。
+root.addEventListener('icen:date-change', (event) => console.log(event.detail.value));`,
     behaviors: ['date-picker'],
     behaviorInit: { 'date-picker': 'initDatePicker' },
-    script: `// hidden input 值变化监听演示
-document.querySelectorAll('.icen-date-picker input[type="hidden"]').forEach((inp) => {
-  inp.addEventListener('change', () => {
-    console.log('date change:', inp.value);
-  });
-});`,
+    script: `const dispose = datePickerMod.initDatePicker();
+const events = new AbortController();
+const form = document.getElementById('date-demo-form');
+const feedback = document.getElementById('date-feedback');
+const show = (message) => { const text=document.createElement('bdi');text.textContent=message;feedback?.replaceChildren(text); };
+form?.addEventListener('change', (event) => { const input=event.target;if(input instanceof HTMLInputElement)show(input.name + (input.value ? '：' + input.value : '已清除')); }, {signal:events.signal});
+form?.addEventListener('reset', () => show('已恢复初始日期。'), {signal:events.signal});
+return () => { events.abort();dispose(); };`,
   },
 ];
 

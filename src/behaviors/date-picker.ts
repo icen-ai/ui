@@ -1,413 +1,192 @@
-/*
- * @icen.ai/ui — Behavior: date-picker（日期选择，与 components/date-picker.css 配套）
- *
- * 契约：
- *   <div class="icen-date-picker" data-icen-date-picker>
- *     <button class="icen-date-picker-trigger" type="button">
- *       <span class="icen-date-picker-value">2026-07-29</span>
- *       <svg class="icen-date-picker-icon">…</svg>
- *     </button>
- *     <input type="hidden" name="date" value="2026-07-29" />
- *   </div>
- *
- * 可选 data-*：
- *   data-icen-date-picker-format="yyyy-mm-dd"  显示格式（默认 yyyy-mm-dd）
- *   data-icen-date-picker-min="2026-01-01"     最小可选日期
- *   data-icen-date-picker-max="2026-12-31"     最大可选日期
- *   data-icen-date-picker-week-start="0"       周首日（0=周日，1=周一，默认 1）
- *   data-icen-date-picker-placeholder="选择日期" 空值占位文本
- *   面板尺寸走全库统一 PanelSizing 契约：data-icen-panel-width 覆盖默认 280 宽，
- *   data-icen-panel-min / -max / -max-height 同理（面板为跨实例单例）。
- *
- * behavior 渲染日历面板（portal 到 body，DOM API 构建，禁 innerHTML），
- * 点选后更新 hidden input + 触发 change 事件。外点 / Esc 关闭；
- * 滚动 / resize 重定位监听随面板关闭一并移除。
+/** ICEN date picker: native form value, one shared calendar, continuous focus.
+ * Mark a .icen-date-picker[data-icen-date-picker] containing a hidden input.
+ * Trigger/value/icon are created when absent. Optional format/min/max/week-start/
+ * placeholder and shared data-icen-panel-* sizing are read live. init returns an
+ * idempotent disposer; open calendars release their portal, listeners and focus.
  */
+import {createIcon} from './icons';
+import {applyPanelSizing,computePopoverLayout,readPanelSizing,claimMenuFocus,revealPopoverItem} from './popover';
+import {focusableWithin} from './focus';
+import {emitIcen} from './events';
+import {t} from './i18n';
 
-import { createIcon } from './icons';
-import { applyPanelSizing, computePopoverLayout, readPanelSizing } from './popover';
-import { emitIcen } from './events';
-import { t } from './i18n';
-
-let openPicker: HTMLElement | null = null;
-let panelEl: HTMLElement | null = null;
-let outsideHandler: ((e: Event) => void) | null = null;
-let escHandler: ((e: KeyboardEvent) => void) | null = null;
-let repositionHandler: (() => void) | null = null;
-
-function pad(n: number): string {
-  return n < 10 ? '0' + n : String(n);
+let sequence=0;
+let active:{root:HTMLElement;close(restore?:boolean):void} | null=null;
+const instances=new WeakMap<HTMLElement,()=>void>();
+function date(year:number,month:number,day:number):Date {
+  const value=new Date(0);value.setHours(0,0,0,0);value.setFullYear(year,month,day);return value;
 }
-
-function toDateStr(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+function iso(value:Date):string {return String(value.getFullYear()).padStart(4,'0')+'-'+String(value.getMonth()+1).padStart(2,'0')+'-'+String(value.getDate()).padStart(2,'0');}
+function parse(value:string):Date | null {
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());if(!m || +m[1]<1)return null;
+  const result=date(+m[1],+m[2]-1,+m[3]);return iso(result) === value.trim() ? result : null;
 }
-
-function parseDateStr(s: string): Date | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s.trim());
-  if (!m) return null;
-  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  return Number.isNaN(d.getTime()) ? null : d;
+function display(value:Date,fmt:string):string {
+  const parts:Record<string,string>={yyyy:String(value.getFullYear()).padStart(4,'0'),yy:String(value.getFullYear()).slice(-2),mm:String(value.getMonth()+1).padStart(2,'0'),m:String(value.getMonth()+1),dd:String(value.getDate()).padStart(2,'0'),d:String(value.getDate())};
+  return fmt.replace(/yyyy|yy|mm|m|dd|d/g,(key)=>parts[key]);
 }
-
-function format(d: Date | null, fmt: string): string {
-  if (!d) return '';
-  return fmt
-    .replace(/yyyy/g, String(d.getFullYear()))
-    .replace(/yy/g, String(d.getFullYear()).slice(-2))
-    .replace(/mm/g, pad(d.getMonth() + 1))
-    .replace(/m/g, String(d.getMonth() + 1))
-    .replace(/dd/g, pad(d.getDate()))
-    .replace(/d/g, String(d.getDate()));
+function monthShift(value:Date,delta:number):Date {
+  const first=date(value.getFullYear(),value.getMonth()+delta,1);
+  return date(first.getFullYear(),first.getMonth(),Math.min(value.getDate(),date(first.getFullYear(),first.getMonth()+1,0).getDate()));
 }
-
-function ensurePanel(): HTMLElement {
-  if (panelEl && panelEl.isConnected) return panelEl;
-  const el = document.createElement('div');
-  el.className = 'icen-date-picker-panel';
-  el.setAttribute('role', 'dialog');
-  el.setAttribute('aria-label', t('datePicker.selectDate'));
-  el.hidden = true;
-  document.body.appendChild(el);
-  panelEl = el;
-  return el;
-}
-
-function positionPanel(panel: HTMLElement, trigger: HTMLElement): void {
-  const r = trigger.getBoundingClientRect();
-  /* 面板尺寸契约（PanelSizing）：根上 data-panel-* 可覆盖默认 280 宽与高度上限；
-     面板是跨实例单例，未指定的字段必须清空内联，避免串味 */
-  const sizing = readPanelSizing(trigger.closest('[data-icen-date-picker]'));
-  /* 面板是跨实例单例：先复位全部内联尺寸再按本次契约应用（applyPanelSizing(null) 复位语义）。
-     min 提升为固定宽：日历网格固定 7 列不随宽自适应，min 语义落空，故提升为固定宽 */
-  applyPanelSizing(panel, null);
-  if (sizing.width != null || sizing.minWidth != null) {
-    applyPanelSizing(panel, { width: sizing.width ?? sizing.minWidth, maxWidth: sizing.maxWidth, maxHeight: sizing.maxHeight });
-  } else {
-    applyPanelSizing(panel, sizing);
-  }
-  const pw = sizing.width ?? sizing.minWidth ?? 280;
-  /* 定位统一走 computePopoverLayout（与 select/dropdown 同一引擎）：prefer 下方、
-     空间不足翻上、视口 margin 内 clamp；固定宽经 minWidth=maxWidth 传入参与钳制。
-     面板 fixed 定位直接用视口坐标，不加 scrollX/Y */
-  const layout = computePopoverLayout(
-    r,
-    { width: window.innerWidth, height: window.innerHeight },
-    { side: 'bottom', offset: 4, margin: 12, minWidth: pw, maxWidth: pw, maxHeight: sizing.maxHeight },
-  );
-  panel.style.left = `${layout.left}px`;
-  panel.style.top = `${layout.top}px`;
-}
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
-/** trigger 的日历图标（DOM API 构建，替代原 innerHTML SVG 字符串）。 */
-function buildCalIcon(): SVGSVGElement {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('stroke-linecap', 'round');
-  svg.setAttribute('stroke-linejoin', 'round');
-  const rect = document.createElementNS(SVG_NS, 'rect');
-  rect.setAttribute('x', '3');
-  rect.setAttribute('y', '4');
-  rect.setAttribute('width', '18');
-  rect.setAttribute('height', '18');
-  rect.setAttribute('rx', '2');
-  rect.setAttribute('ry', '2');
-  svg.appendChild(rect);
-  const lines: Array<[string, string, string, string]> = [
-    ['16', '16', '2', '6'],
-    ['8', '8', '2', '6'],
-    ['3', '21', '10', '10'],
-  ];
-  for (const [x1, x2, y1, y2] of lines) {
-    const line = document.createElementNS(SVG_NS, 'line');
-    line.setAttribute('x1', x1);
-    line.setAttribute('x2', x2);
-    line.setAttribute('y1', y1);
-    line.setAttribute('y2', y2);
-    svg.appendChild(line);
-  }
-  return svg;
-}
-
-const WEEK_LABELS_ZH = t('datePicker.weekdays');
-const WEEK_LABELS_SUN = t('datePicker.weekdaysSunFirst');
-
-function renderCalendar(
-  panel: HTMLElement,
-  ctx: {
-    view: Date;
-    selected: Date | null;
-    min: Date | null;
-    max: Date | null;
-    weekStart: number;
-    /** 选中回调：null 表示「清除」选择（面板底部清除钮） */
-    onPick: (d: Date | null) => void;
-  },
-): void {
-  const { view, selected, min, max, weekStart, onPick } = ctx;
-  const year = view.getFullYear();
-  const month = view.getMonth();
-  const labels = weekStart === 0 ? WEEK_LABELS_SUN : WEEK_LABELS_ZH;
-
-  const firstDay = new Date(year, month, 1);
-  // day-of-month of the first grid cell (may be from prev month)
-  const offsetRaw = firstDay.getDay(); // 0=Sun, 1=Mon ...
-  const leadDays = weekStart === 0 ? offsetRaw : (offsetRaw + 6) % 7;
-  const gridStart = new Date(year, month, 1 - leadDays);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const cells: Date[] = [];
-  for (let i = 0; i < 42; i++) {
-    cells.push(new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i));
-  }
-
-  panel.textContent = '';
-
-  const head = document.createElement('div');
-  head.className = 'icen-date-picker-head';
-  const prevBtn = document.createElement('button');
-  prevBtn.type = 'button';
-  prevBtn.className = 'icen-date-picker-nav';
-  prevBtn.setAttribute('aria-label', t('datePicker.prevMonth'));
-  prevBtn.append(createIcon('chevron-left')!);
-  const title = document.createElement('span');
-  title.className = 'icen-date-picker-title';
-  title.textContent = t('datePicker.yearMonth', { p0: year, p1: month + 1 });
-  const nextBtn = document.createElement('button');
-  nextBtn.type = 'button';
-  nextBtn.className = 'icen-date-picker-nav';
-  nextBtn.setAttribute('aria-label', t('datePicker.nextMonth'));
-  nextBtn.append(createIcon('chevron-right')!);
-  head.append(prevBtn, title, nextBtn);
-
-  const weekdays = document.createElement('div');
-  weekdays.className = 'icen-date-picker-weekdays';
-  for (const label of labels) {
-    const s = document.createElement('span');
-    s.textContent = label;
-    weekdays.appendChild(s);
-  }
-
-  const grid = document.createElement('div');
-  grid.className = 'icen-date-picker-grid';
-  for (const d of cells) {
-    const isOutside = d.getMonth() !== month;
-    const isToday = d.getTime() === today.getTime();
-    const isSelected = selected !== null && toDateStr(d) === toDateStr(selected);
-    const disabled = (min !== null && d < min) || (max !== null && d > max);
-    const classes = ['icen-date-picker-cell'];
-    if (isOutside) classes.push('is-outside');
-    if (isToday) classes.push('is-today');
-    if (isSelected) classes.push('is-selected');
-    if (disabled) classes.push('is-disabled');
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = classes.join(' ');
-    btn.textContent = String(d.getDate());
-    if (disabled) btn.disabled = true;
-    btn.addEventListener('click', () => onPick(d));
-    grid.appendChild(btn);
-  }
-
-  const foot = document.createElement('div');
-  foot.className = 'icen-date-picker-foot';
-  const todayBtn = document.createElement('button');
-  todayBtn.type = 'button';
-  todayBtn.className = 'icen-date-picker-today';
-  todayBtn.textContent = t('datePicker.today');
-  const clearBtn = document.createElement('button');
-  clearBtn.type = 'button';
-  clearBtn.className = 'icen-date-picker-clear';
-  clearBtn.textContent = t('datePicker.clear');
-  foot.append(todayBtn, clearBtn);
-
-  panel.append(head, weekdays, grid, foot);
-
-  // 事件（翻月直接以新 view 递归渲染，不改写 ctx 自身）
-  prevBtn.addEventListener('click', () => {
-    renderCalendar(panel, { ...ctx, view: new Date(year, month - 1, 15) });
-  });
-  nextBtn.addEventListener('click', () => {
-    renderCalendar(panel, { ...ctx, view: new Date(year, month + 1, 15) });
-  });
-  todayBtn.addEventListener('click', () => {
-    onPick(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
-  });
-  clearBtn.addEventListener('click', () => {
-    onPick(null);
-  });
-}
-
-function closePanel(): void {
-  if (!panelEl) return;
-  panelEl.hidden = true;
-  openPicker?.querySelector('.icen-date-picker-trigger')?.classList.remove('is-open');
-  openPicker = null;
-  if (outsideHandler) {
-    document.removeEventListener('mousedown', outsideHandler);
-    outsideHandler = null;
-  }
-  if (escHandler) {
-    window.removeEventListener('keydown', escHandler);
-    escHandler = null;
-  }
-  if (repositionHandler) {
-    window.removeEventListener('scroll', repositionHandler);
-    window.removeEventListener('resize', repositionHandler);
-    repositionHandler = null;
-  }
-}
-
-/** 已初始化容器（幂等 + 销毁后可重新 init）。 */
-const pickersInit = new WeakSet<HTMLElement>();
-
-function setupPicker(container: HTMLElement): () => void {
-  /* 幂等只认 WeakSet（销毁会 delete，支持重新 init）；不再叠加 __icenDatePickerInit
-     标记——它永不复位，销毁后容器永不再接线，违反 JSDoc 的「可重新 init」承诺 */
-  if (pickersInit.has(container)) return () => {};
-  pickersInit.add(container);
-  const el = container;
-  /* 本容器持久监听挂同一 AbortSignal：销毁一次摘净 */
-  const ac = new AbortController();
-  const disposers: Array<() => void> = [
-    () => {
-      /* 打开状态下销毁：先收浮层（隐藏面板 + 摘外点/Esc/重定位监听），否则监听泄漏、面板留 body */
-      if (openPicker === el) closePanel();
-      ac.abort();
-      pickersInit.delete(container);
-    },
-  ];
-
-  const fmt = el.dataset.icenDatePickerFormat ?? 'yyyy-mm-dd';
-  const minStr = el.dataset.icenDatePickerMin;
-  const maxStr = el.dataset.icenDatePickerMax;
-  const weekStart = Number(el.dataset.icenDatePickerWeekStart ?? '1');
-  const placeholder = el.dataset.icenDatePickerPlaceholder ?? t('datePicker.selectDate');
-  const min = minStr ? parseDateStr(minStr) : null;
-  const max = maxStr ? parseDateStr(maxStr) : null;
-
-  // 找到 hidden input
-  const hidden = el.querySelector<HTMLInputElement>('input[type="hidden"], icen-input[type="hidden"]');
-  const initialStr = hidden?.value ?? '';
-  const initialDate = initialStr ? parseDateStr(initialStr) : null;
-
-  // 找或构建触发器
-  let trigger = el.querySelector<HTMLButtonElement>('.icen-date-picker-trigger');
-  if (!trigger) {
-    trigger = document.createElement('button');
-    trigger.type = 'button';
-    trigger.className = 'icen-date-picker-trigger';
-    const value = document.createElement('span');
-    value.className = initialDate ? 'icen-date-picker-value' : 'icen-date-picker-value is-empty';
-    const icon = document.createElement('span');
-    icon.className = 'icen-date-picker-icon';
-    icon.appendChild(buildCalIcon());
-    trigger.append(value, icon);
-    el.prepend(trigger);
-  }
-  trigger.setAttribute('aria-haspopup', 'dialog');
-
-  const valueEl = trigger.querySelector<HTMLElement>('.icen-date-picker-value');
-  function paint(): void {
-    const v = hidden?.value ?? '';
-    const d = v ? parseDateStr(v) : null;
-    if (valueEl) {
-      valueEl.textContent = d ? format(d, fmt) : placeholder;
-      valueEl.classList.toggle('is-empty', !d);
+function setup(root:HTMLElement):()=>void {
+  const previous=instances.get(root);if(previous)return previous;
+  const input=root.querySelector<HTMLInputElement>('input[type="hidden"]');
+  const initialValue=input?.value ?? '';
+  const generated=!root.querySelector('.icen-date-picker-trigger');
+  const trigger=root.querySelector<HTMLButtonElement>('.icen-date-picker-trigger') ?? document.createElement('button');
+  if(!trigger.hasAttribute('type'))trigger.type='button';
+  trigger.classList.add('icen-date-picker-trigger');
+  let value=trigger.querySelector<HTMLElement>('.icen-date-picker-value');
+  if(!value){value=document.createElement('span');value.className='icen-date-picker-value';trigger.prepend(value);}
+  let symbol=trigger.querySelector<Element>('.icen-date-picker-icon');
+  if(!(symbol instanceof HTMLElement)){const next=document.createElement('span');next.className='icen-date-picker-icon';if(symbol)symbol.replaceWith(next);else trigger.append(next);symbol=next;}
+  symbol.replaceChildren(createIcon('calendar')!);symbol.setAttribute('aria-hidden','true');
+  if(generated)root.prepend(trigger);
+  const attrs=['aria-haspopup','aria-expanded','aria-controls','aria-disabled','aria-invalid','aria-describedby'];
+  const saved=attrs.map((key)=>trigger.getAttribute(key));
+  if(!value.id)value.id='icen-date-value-'+ ++sequence;
+  trigger.setAttribute('aria-describedby',((trigger.getAttribute('aria-describedby') ?? '')+' '+value.id).trim());
+  trigger.setAttribute('aria-haspopup','dialog');trigger.setAttribute('aria-expanded','false');
+  const ac=new AbortController();let disposed=false,panel:HTMLElement | null=null,opened:AbortController | null=null,release:(()=>void) | null=null;
+  let selected:Date | null=null,min:Date | null=null,max:Date | null=null;
+  let cursor=date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+  let view=date(cursor.getFullYear(),cursor.getMonth(),1);
+  const inheritedDisabled=()=>{
+    for(let parent=trigger.parentElement;parent;parent=parent.parentElement){
+      if(parent.matches('fieldset[disabled]') && !parent.querySelector(':scope > legend')?.contains(trigger))return true;
     }
+    return false;
+  };
+  const unavailable=()=>trigger.matches(':disabled') || inheritedDisabled() || Boolean(input?.disabled) || root.classList.contains('is-disabled') || root.getAttribute('aria-disabled') === 'true' || root.hasAttribute('data-icen-disabled');
+  const allowed=(d:Date)=>d.getFullYear()>=1 && d.getFullYear()<=9999 && (!min || d>=min) && (!max || d<=max);
+  const empty=()=>Boolean(min && max && min>max);
+  function clamp(d:Date):Date {return min && d<min ? new Date(min) : max && d>max ? new Date(max) : d;}
+  function paint():void {
+    min=parse(root.dataset.icenDatePickerMin ?? '');max=parse(root.dataset.icenDatePickerMax ?? '');
+    selected=parse(input?.value ?? '');
+    const text=document.createElement('bdi');text.textContent=selected ? display(selected,root.dataset.icenDatePickerFormat ?? 'yyyy-mm-dd') : root.dataset.icenDatePickerPlaceholder ?? t('datePicker.selectDate');value!.replaceChildren(text);
+    value!.classList.toggle('is-empty',!selected);
+    trigger.setAttribute('aria-disabled',String(unavailable()));
+    if(input?.value && (!selected || !allowed(selected)))trigger.setAttribute('aria-invalid','true');else trigger.removeAttribute('aria-invalid');
+    if(panel && unavailable())close(false);
   }
-  paint();
-
-  if (hidden) {
-    // 使用 MutationObserver 监听 hidden input 的 value 被外部修改
-    const obs = new MutationObserver(() => paint());
-    obs.observe(hidden, { attributes: true, attributeFilter: ['value'] });
-    disposers.push(() => obs.disconnect());
+  function position():void {
+    if(!panel)return;
+    if(!root.isConnected || unavailable()){close(false);return;}
+    panel.dir=getComputedStyle(root).direction;
+    const sizing=readPanelSizing(root),touch=window.matchMedia?.('(pointer: coarse)').matches;
+    const desired=sizing.width ?? sizing.minWidth ?? (touch ? 344 : 300);
+    applyPanelSizing(panel,null);
+    applyPanelSizing(panel,{width:Math.min(desired,sizing.maxWidth ?? desired,Math.max(80,window.innerWidth-24))});
+    panel.style.maxHeight='';
+    const measured=panel.getBoundingClientRect();
+    const layout=computePopoverLayout(trigger.getBoundingClientRect(),{width:window.innerWidth,height:window.innerHeight},{side:'bottom',align:getComputedStyle(root).direction === 'rtl' ? 'end' : 'start',offset:6,margin:12,minWidth:measured.width || desired,maxWidth:measured.width || desired,maxHeight:sizing.maxHeight ?? Math.max(80,window.innerHeight-24),contentHeightHint:measured.height || panel.scrollHeight});
+    panel.style.left=layout.left+'px';panel.style.top=layout.top+'px';panel.style.width=layout.width+'px';panel.style.maxHeight=layout.maxHeight+'px';panel.dataset.icenSide=layout.side;
   }
-
-  const onTriggerClick = (): void => {
-    if (openPicker === el) {
-      closePanel();
-      return;
-    }
-    closePanel();
-    openPicker = el;
-    trigger.classList.add('is-open');
-
-    const panel = ensurePanel();
-    panel.hidden = false;
-
-    const selected = hidden?.value ? parseDateStr(hidden.value) : null;
-    // clone 再改"日"：直接 setDate 会原地改 selected，重开时已选高亮错位成 15 号
-    const view = selected ? new Date(selected.getTime()) : new Date();
-    view.setDate(15);
-
-    positionPanel(panel, trigger);
-    renderCalendar(panel, {
-      view,
-      selected,
-      min,
-      max,
-      weekStart,
-      onPick: (d: Date | null) => {
-        if (hidden) hidden.value = d ? toDateStr(d) : '';
-        /* 领域事件走 icen: 契约；hidden input 的原生 change 保留给表单框架（双通道） */
-        emitIcen(el, 'icen:date-change', { value: d ? toDateStr(d) : '', date: d });
-        if (hidden) hidden.dispatchEvent(new Event('change', { bubbles: true }));
-        paint();
-        closePanel();
-      },
-    });
-
-    // 外点 / Esc
-    outsideHandler = (ev: Event) => {
-      const t = ev.target instanceof Node ? ev.target : null;
-      if (!t) return;
-      if (panel.contains(t) || el.contains(t)) return;
-      closePanel();
+  function close(restore=true):void {
+    if(!panel)return;
+    const owns=panel.contains(document.activeElement);
+    opened?.abort();opened=null;release?.();release=null;
+    panel.remove();panel=null;trigger.classList.remove('is-open');trigger.setAttribute('aria-expanded','false');trigger.removeAttribute('aria-controls');
+    if(active?.root === root)active=null;
+    if(restore && owns && root.isConnected && !unavailable())trigger.focus({preventScroll:true});
+  }
+  function pick(d:Date | null):void {
+    if(disposed || unavailable() || (d && !allowed(d)))return;
+    const next=d ? iso(d) : '';if(input)input.value=next;
+    paint();close();emitIcen(root,'icen:date-change',{value:next,date:d});
+    input?.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function render(focus:'day'|'prev'|'next'|null=null):void {
+    if(!panel)return;
+    const year=view.getFullYear(),month=view.getMonth(),weekStart=root.dataset.icenDatePickerWeekStart === '0' ? 0 : 1;
+    const today=date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+    const titleId=panel.id+'-month';
+    const head=document.createElement('div');head.className='icen-date-picker-head';
+    const nav=(delta:number)=>{
+      const b=document.createElement('button');b.type='button';b.className='icen-date-picker-nav';b.dataset.icenDateNav=delta<0 ? 'prev' : 'next';
+      b.setAttribute('aria-label',t(delta<0 ? 'datePicker.prevMonth' : 'datePicker.nextMonth'));b.append(createIcon(delta<0 ? 'chevron-left' : 'chevron-right')!);
+      const target=date(year,month+delta,1),end=date(year,month+delta+1,0);
+      b.disabled=empty() || target.getFullYear()<1 || target.getFullYear()>9999 || Boolean(min && end<min) || Boolean(max && target>max);
+      b.addEventListener('click',()=>{cursor=clamp(monthShift(cursor,delta));view=date(cursor.getFullYear(),cursor.getMonth(),1);render(delta<0 ? 'prev' : 'next');});return b;
     };
-    document.addEventListener('mousedown', outsideHandler);
-
-    escHandler = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') {
-        ev.preventDefault();
-        closePanel();
+    const title=document.createElement('span');title.id=titleId;title.className='icen-date-picker-title';title.textContent=t('datePicker.yearMonth',{p0:year,p1:month+1});title.setAttribute('aria-live','polite');
+    head.append(nav(-1),title,nav(1));
+    const weekdays=document.createElement('div');weekdays.className='icen-date-picker-weekdays';weekdays.setAttribute('aria-hidden','true');
+    for(const label of t(weekStart === 0 ? 'datePicker.weekdaysSunFirst' : 'datePicker.weekdays')){const span=document.createElement('span');span.textContent=label;weekdays.append(span);}
+    const grid=document.createElement('div');grid.className='icen-date-picker-grid';grid.setAttribute('role','grid');grid.setAttribute('aria-labelledby',titleId);
+    const offset=(date(year,month,1).getDay()-weekStart+7)%7;
+    for(let week=0;week<6;week++){
+      const row=document.createElement('div');row.className='icen-date-picker-week';row.setAttribute('role','row');
+      for(let day=0;day<7;day++){
+        const d=date(year,month,1-offset+week*7+day),key=iso(d),chosen=selected && key === iso(selected);
+        const cell=document.createElement('span');cell.setAttribute('role','gridcell');cell.setAttribute('aria-selected',String(Boolean(chosen)));
+        const b=document.createElement('button');b.type='button';b.className='icen-date-picker-cell';b.textContent=String(d.getDate());b.dataset.icenDate=key;b.setAttribute('aria-label',key);
+        b.disabled=!allowed(d) || empty();b.tabIndex=!b.disabled && key === iso(cursor) ? 0 : -1;
+        b.classList.toggle('is-outside',d.getMonth() !== month);b.classList.toggle('is-today',key === iso(today));b.classList.toggle('is-selected',Boolean(chosen));b.classList.toggle('is-disabled',b.disabled);
+        if(key === iso(today))b.setAttribute('aria-current','date');
+        b.addEventListener('click',()=>pick(d));b.addEventListener('focus',()=>{cursor=d;grid.querySelectorAll<HTMLButtonElement>('button').forEach((button)=>button.tabIndex=button === b ? 0 : -1);});
+        cell.append(b);row.append(cell);
       }
-    };
-    window.addEventListener('keydown', escHandler);
-
-    // 窗口滚动 / resize 重定位（closePanel 统一移除）
-    repositionHandler = () => {
-      if (openPicker === el && !panel.hidden) positionPanel(panel, trigger);
-    };
-    window.addEventListener('scroll', repositionHandler, { passive: true });
-    window.addEventListener('resize', repositionHandler, { passive: true });
-  };
-  trigger.addEventListener('click', onTriggerClick, { signal: ac.signal });
-
-  return (): void => {
-    for (const d of disposers) d();
-  };
+      grid.append(row);
+    }
+    const foot=document.createElement('div');foot.className='icen-date-picker-foot';
+    const now=document.createElement('button');now.type='button';now.className='icen-date-picker-today';now.textContent=t('datePicker.today');now.disabled=!allowed(today) || empty();now.addEventListener('click',()=>pick(today));
+    const clear=document.createElement('button');clear.type='button';clear.className='icen-date-picker-clear';clear.textContent=t('datePicker.clear');clear.disabled=!input?.value;clear.addEventListener('click',()=>pick(null));foot.append(now,clear);
+    panel.replaceChildren(head,weekdays,grid,foot);
+    if(empty()){const status=document.createElement('p');status.className='icen-date-picker-empty';status.setAttribute('role','status');status.textContent=t('datePicker.noDates');panel.append(status);}
+    position();
+    if(focus && panel){const target=focus === 'day' ? panel.querySelector<HTMLButtonElement>('.icen-date-picker-cell[tabindex="0"]') : panel.querySelector<HTMLButtonElement>('[data-icen-date-nav="'+focus+'"]:not(:disabled)');const next=target ?? panel.querySelector<HTMLButtonElement>('button:not(:disabled)') ?? panel;next.focus({preventScroll:true});revealPopoverItem(next,panel);}
+  }
+  function open():void {
+    if(disposed || unavailable())return;
+    active?.close(false);paint();
+    cursor=clamp(selected ?? date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()));view=date(cursor.getFullYear(),cursor.getMonth(),1);
+    const el=document.createElement('div');el.className='icen-date-picker-panel';el.id='icen-date-panel-'+ ++sequence;el.tabIndex=-1;el.dir=getComputedStyle(root).direction;el.setAttribute('role','dialog');el.setAttribute('aria-label',trigger.labels?.[0]?.textContent?.trim() || t('datePicker.selectDate'));panel=el;
+    document.body.append(el);active={root,close};opened=new AbortController();const signal=opened.signal;
+    release=claimMenuFocus(()=>close(false));trigger.classList.add('is-open');trigger.setAttribute('aria-expanded','true');trigger.setAttribute('aria-controls',el.id);render('day');
+    document.addEventListener('pointerdown',(event)=>{if(event.target instanceof Node && !root.contains(event.target) && !el.contains(event.target))close(false);},{capture:true,signal});
+    document.addEventListener('keydown',(event)=>{
+      if(event.defaultPrevented || event.isComposing || event.keyCode === 229)return;
+      if(event.key === 'Escape'){event.preventDefault();event.stopPropagation();close();return;}
+      if(!el.contains(event.target as Node))return;
+      if(event.key === 'Tab'){
+        const focusables=focusableWithin(el),index=focusables.indexOf(document.activeElement as HTMLElement);
+        if(event.shiftKey && (index === 0 || !focusables.length)){event.preventDefault();close(false);trigger.focus();}
+        else if(!event.shiftKey && index === focusables.length-1){const all=focusableWithin(document.body).filter((item)=>!el.contains(item)),next=all[all.indexOf(trigger)+1];event.preventDefault();close(false);(next ?? trigger).focus();}return;
+      }
+      if(!(event.target instanceof Element) || !event.target.matches('.icen-date-picker-cell'))return;
+      let candidate:Date | null=null;const rtl=getComputedStyle(root).direction === 'rtl';
+      if(event.key === 'ArrowRight' || event.key === 'ArrowLeft')candidate=date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate()+(event.key === 'ArrowRight' ? 1 : -1)*(rtl ? -1 : 1));
+      else if(event.key === 'ArrowUp' || event.key === 'ArrowDown')candidate=date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate()+(event.key === 'ArrowDown' ? 7 : -7));
+      else if(event.key === 'Home' || event.key === 'End'){const start=root.dataset.icenDatePickerWeekStart === '0' ? 0 : 1,offset=(cursor.getDay()-start+7)%7;candidate=date(cursor.getFullYear(),cursor.getMonth(),cursor.getDate()-offset+(event.key === 'End' ? 6 : 0));}
+      else if(event.key === 'PageUp' || event.key === 'PageDown')candidate=monthShift(cursor,(event.key === 'PageDown' ? 1 : -1)*(event.shiftKey ? 12 : 1));
+      if(candidate){event.preventDefault();if(empty())return;cursor=clamp(candidate);if(!allowed(cursor))return;view=date(cursor.getFullYear(),cursor.getMonth(),1);render('day');}
+    },{capture:true,signal});
+    el.addEventListener('focusout',(event)=>{if(event.relatedTarget instanceof Node && !el.contains(event.relatedTarget) && event.relatedTarget !== trigger)close(false);},{signal});
+    window.addEventListener('scroll',position,{capture:true,passive:true,signal});window.addEventListener('resize',position,{passive:true,signal});
+  }
+  trigger.addEventListener('click',()=>panel ? close(false) : open(),{signal:ac.signal});
+  trigger.addEventListener('keydown',(event)=>{if(!event.isComposing && ['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();if(!panel)open();}},{signal:ac.signal});
+  function refresh():void {paint();if(panel){cursor=clamp(selected ?? cursor);view=date(cursor.getFullYear(),cursor.getMonth(),1);const owned=panel.contains(document.activeElement);render(owned ? 'day' : null);}}
+  input?.addEventListener('change',refresh,{signal:ac.signal});input?.addEventListener('input',refresh,{signal:ac.signal});
+  // Hidden input value uses the attribute/default mode, so writes also mutate
+  // defaultValue. Preserve the initialized value for a real component reset.
+  input?.form?.addEventListener('reset',(event)=>queueMicrotask(()=>{if(!disposed && !event.defaultPrevented){if(input)input.value=initialValue;refresh();}}),{signal:ac.signal});
+  const observer=new MutationObserver(refresh);observer.observe(root,{attributes:true,attributeFilter:['data-icen-date-picker-min','data-icen-date-picker-max','data-icen-date-picker-format','data-icen-date-picker-week-start','data-icen-date-picker-placeholder','data-icen-panel-width','data-icen-panel-min','data-icen-panel-max','data-icen-panel-max-height','aria-disabled','data-icen-disabled','class','dir','style']});
+  if(input)observer.observe(input,{attributes:true,attributeFilter:['value','disabled']});
+  observer.observe(trigger,{attributes:true,attributeFilter:['disabled']});
+  for(let ancestor=root.parentElement;ancestor;ancestor=ancestor.parentElement)if(ancestor.matches('fieldset'))observer.observe(ancestor,{attributes:true,attributeFilter:['disabled']});
+  const removed=new MutationObserver(()=>{if(panel && !root.isConnected)close(false);});removed.observe(document.body,{childList:true,subtree:true});
+  paint();
+  const dispose=()=>{if(disposed)return;disposed=true;close();ac.abort();observer.disconnect();removed.disconnect();attrs.forEach((key,i)=>saved[i] === null ? trigger.removeAttribute(key) : trigger.setAttribute(key,saved[i]!));if(generated)trigger.remove();instances.delete(root);};
+  instances.set(root,dispose);return dispose;
 }
-
-/** 返回销毁函数：摘除本次初始化容器的全部监听并复位幂等标记（可重新 init）。 */
-export function initDatePicker(root?: ParentNode): () => void {
-  if (typeof document === 'undefined') return () => {};
-  if (typeof window === 'undefined') return () => {};
-  const scope = root ?? document;
-  const pickers: Element[] = [];
-  if (scope instanceof Element && scope.matches('.icen-date-picker[data-icen-date-picker]')) pickers.push(scope);
-  pickers.push(...Array.from(scope.querySelectorAll('.icen-date-picker[data-icen-date-picker]')));
-  const disposers: Array<() => void> = [];
-  for (const p of pickers) disposers.push(setupPicker(p as HTMLElement));
-  return (): void => {
-    for (const d of disposers) d();
-  };
+export function initDatePicker(root?:ParentNode):()=>void {
+  if(typeof document === 'undefined' || typeof window === 'undefined')return ()=>{};
+  const scope=root ?? document,items:HTMLElement[]=[];
+  if(scope instanceof HTMLElement && scope.matches('.icen-date-picker[data-icen-date-picker]'))items.push(scope);
+  items.push(...scope.querySelectorAll<HTMLElement>('.icen-date-picker[data-icen-date-picker]'));
+  const disposers=items.map(setup);return ()=>disposers.forEach((dispose)=>dispose());
 }

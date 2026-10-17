@@ -2,6 +2,7 @@
  * No icon font, external sprite request or framework dependency. All paths are
  * original geometry in a 20 × 20 grid; labels are always escaped/plain text. */
 export const ICON_PATHS = {
+  calendar: 'M5.5 4h9A2.5 2.5 0 0 1 17 6.5v8a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 3 14.5v-8A2.5 2.5 0 0 1 5.5 4ZM6.5 2.5v3M13.5 2.5v3M3 8h14M6.5 11h.1M10 11h.1M13.5 11h.1M6.5 14h.1M10 14h.1',
   close: 'M6 6l8 8M14 6l-8 8',
   check: 'M4.5 10.2l3.6 3.6 7.4-7.6',
   'chevron-down': 'M5.5 7.75 10 12.25l4.5-4.5',
