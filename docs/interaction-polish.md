@@ -460,6 +460,13 @@
 - 修正墨水条与活动 tab 自身下划线的双画：挂 ink 时活动项 border-bottom 让位透明。
 - 验证：2 条浏览器专项（墨水条跟随/面板/hash/键盘 manual 语义/roving tabindex；暗色 RTL 无双画线）。全量：verify 767 测试、284 条浏览器回归、129 页×两档巡检 0 问题。
 
+### 第三十轮：back-top 图标同源与进度条实况示例
+
+- back-top 的 autoCreate 按钮从手写 24px DOMParser 常量迁到 createIcon('chevron-up')，文件里未用的 parseSvg 引入一并删除；自动按钮补 data-icen-tooltip（悬停/聚焦提示「回到顶部」）。
+- 示例文案去掉文字箭头（「向下滚动本页测试 →」这类文字里塞符号是本轮纪律的清除对象）。
+- progress 示例从静态变实况：「构建一次」按钮驱动 0→100 的平滑过渡（width transition 早已在组件里，示例没展示），aria-valuenow 同步，重置可回退；role=progressbar 语义补上，usage 同步。
+- 验证：2 条浏览器专项（阈值现身/共享几何/tooltip/平滑回顶 + 进度动画与 aria 同步）。全量：verify 767 测试、286 条浏览器回归、129 页×两档巡检 0 问题。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。

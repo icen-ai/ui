@@ -1607,21 +1607,39 @@ return () => ac.abort();`,
     slug: 'progress',
     name: '进度条',
     group: '反馈',
-    desc: '默认 6px 轨道 / progress--sm 4px，右侧 tabular-nums 百分比标签。',
+    summary: '进度肉眼可见地往前走。宽度变化走过渡，标签等宽数字不抖动。',
+    desc: '默认 6px 轨道 / progress--sm 4px，右侧 tabular-nums 百分比标签。宽度经 style.width 驱动即得平滑过渡（reduced-motion 直落）。',
     demo: `<div style="width:100%;max-width:460px">
-<div class="icen-progress">
-  <div class="icen-progress-track"><div class="icen-progress-bar" style="width:64%"></div></div>
-  <span class="icen-progress-label">64%</span>
+<div class="icen-progress" role="progressbar" aria-valuenow="24" aria-valuemin="0" aria-valuemax="100" aria-label="构建进度" id="demo-progress">
+  <div class="icen-progress-track"><div class="icen-progress-bar" id="demo-progress-bar" style="width:24%"></div></div>
+  <span class="icen-progress-label" id="demo-progress-label">24%</span>
 </div>
-<div class="icen-progress icen-progress--sm" style="margin-top:14px">
-  <div class="icen-progress-track"><div class="icen-progress-bar" style="width:32%"></div></div>
-  <span class="icen-progress-label">32%</span>
+<div class="demo-row" style="margin-top:14px">
+  <button class="icen-btn icen-btn-sm icen-btn-primary" id="demo-progress-run">构建一次</button>
+  <button class="icen-btn icen-btn-sm" id="demo-progress-reset">重置</button>
 </div>
 </div>`,
-    usage: `<div class="icen-progress">
+    usage: `<div class="icen-progress" role="progressbar" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100">
   <div class="icen-progress-track"><div class="icen-progress-bar" style="width:64%"></div></div>
   <span class="icen-progress-label">64%</span>
 </div>`,
+    script: `const bar = document.getElementById('demo-progress-bar');
+const label = document.getElementById('demo-progress-label');
+const ac = new AbortController();
+let timer = 0;
+function paint(v) { bar.style.width = v + '%'; label.textContent = v + '%'; bar.closest('.icen-progress').setAttribute('aria-valuenow', String(v)); }
+document.getElementById('demo-progress-run')?.addEventListener('click', () => {
+  clearInterval(timer);
+  let v = 0;
+  paint(0);
+  timer = setInterval(() => {
+    v = Math.min(100, v + Math.ceil(Math.random() * 14));
+    paint(v);
+    if (v >= 100) clearInterval(timer);
+  }, 240);
+}, { signal: ac.signal });
+document.getElementById('demo-progress-reset')?.addEventListener('click', () => { clearInterval(timer); paint(24); }, { signal: ac.signal });
+return () => { ac.abort(); clearInterval(timer); };`,
   },
   {
     slug: 'spinner',
@@ -3301,9 +3319,9 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
     group: '导航',
     desc: '与 behaviors/back-top 配套：滚动超过阈值（默认 320px）出现的悬浮按钮，点击平滑滚回顶部。支持手写按钮或 autoCreate 全自动。',
     demo: `<div class="demo-row">
-  <button class="icen-btn" id="back-top-demo">向下滚动本页测试 →</button>
+  <button class="icen-btn" id="back-top-demo">向下滚动本页试试</button>
 </div>
-<p class="icen-dim" style="margin:8px 0 0;font-size:12px">点击按钮平滑滚到页面底部，右下角会浮出回到顶部按钮（autoCreate 模式）。</p>`,
+<p class="icen-dim" style="margin:8px 0 0;font-size:12px">点击按钮平滑滚到页面底部，右下角会浮出回到顶部按钮（autoCreate 模式，悬停有提示）。</p>`,
     usage: `import { initBackTop } from '@icen.ai/ui/behaviors/back-top';
 
 // 全自动：portal 一个默认按钮到 body，滚到顶

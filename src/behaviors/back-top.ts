@@ -22,8 +22,8 @@
  */
 
 import { emitIcen } from './events';
+import { createIcon } from './icons';
 import { t } from './i18n';
-import { parseSvg } from './svg-parse';
 
 interface MarkedBtn extends HTMLElement {
   __icenBackTopInit?: boolean;
@@ -48,9 +48,6 @@ interface BackTopOptions {
   /** 扫描根节点，默认 document */
   root?: ParentNode;
 }
-
-const AUTO_BTN_SVG =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>';
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -148,9 +145,8 @@ export function initBackTop(opts: BackTopOptions = {}): () => void {
         btn.setAttribute('data-icen-back-top', '');
         btn.setAttribute('data-icen-back-top-auto', '');
         btn.setAttribute('aria-label', t('backTop.label'));
-        /* AUTO_BTN_SVG 是库内静态常量（非外部输入），DOMParser 构建以守「禁 innerHTML」约定 */
-        const svg = new DOMParser().parseFromString(AUTO_BTN_SVG, 'image/svg+xml').documentElement;
-        btn.appendChild(document.importNode(svg, true));
+        btn.setAttribute('data-icen-tooltip', t('backTop.label')); // 悬停/聚焦提示（initTooltip 在场时走 portal）
+        btn.append(createIcon('chevron-up', { size: 18 })!);
         document.body.appendChild(btn);
         created = true;
       }
