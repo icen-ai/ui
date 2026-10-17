@@ -62,8 +62,16 @@
   color: var(--icen-token-text-faint);
   cursor: pointer;
   transition:
+    opacity var(--icen-tx-fast),
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
+}
+/* 隐式关闭：可悬停设备上安静待命，悬停/聚焦警示条或键盘落焦即现身；触屏常显 */
+@media (hover: hover) and (pointer: fine) {
+  .icen-alert-close { opacity: 0; }
+  .icen-alert:hover .icen-alert-close,
+  .icen-alert:focus-within .icen-alert-close,
+  .icen-alert-close:focus-visible { opacity: 1; }
 }
 .icen-alert-close:hover {
   color: var(--icen-token-text);
@@ -74,6 +82,12 @@
   box-shadow: var(--icen-ring);
 }
 .icen-alert-close svg { width: 14px; height: 14px; }
+@media (pointer: coarse) {
+  /* 触屏命中扩张：视觉 22px 不变，隐形命中区不小于 44px */
+  .icen-alert-close { position: relative; }
+  .icen-alert-close::after { content: ''; position: absolute; inset: -11px; }
+  .icen-alert--inline .icen-alert-close::after { inset: -14px; }
+}
 
 /* ══════════════ result · 终态页 ══════════════ */
 .icen-result {
@@ -355,7 +369,7 @@
   width: 3px;
   height: 100%;
   background: var(--icen-token-accent);
-  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
   animation: spinner-bar var(--spinner-bars-duration, 1s) ease-in-out infinite;
 }
 .icen-spinner--bars span:nth-child(2) { animation-delay: 0.1s; }

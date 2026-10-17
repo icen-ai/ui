@@ -1,5 +1,5 @@
 import themes from '../../../src/tokens/themes.json';
-import { iconHTML } from '../../../src/behaviors/icons';
+import { iconHTML, iconPath } from '../../../src/behaviors/icons';
 /*
  * 组件文档注册表 —— 文档站单一数据源。
  * demo / script 拆解自原四个合集演示页（forms / overlays / data / navig）与 components 合集页。
@@ -87,22 +87,22 @@ export function cssFor(slug: string): string {
   return cssOf(slug);
 }
 
-/* ── 演示内联 SVG（与原合集页一致） ── */
-const svgX = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
-const svgEye = `<svg data-icen-icon="show" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
-const svgEyeOff = `<svg data-icen-icon="hide" hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.16 3.19"/><path d="M6.61 6.61A17.4 17.4 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 5.17-1.34"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`;
-const svgSearch = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
-const svgPlus = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
-const svgDown = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
-const svgUp = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>`;
-const starSvg = `<svg viewBox="0 0 24 24" stroke-linejoin="round"><path d="M12 2.5l2.95 6.26 6.85.72-5.1 4.63 1.4 6.74L12 17.6l-6.1 3.25 1.4-6.74-5.1-4.63 6.85-.72z"/></svg>`;
-const chevronSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
-const accChevron = `<svg class="icen-accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
-const infoSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`;
-const checkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>`;
-const warnSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
-const xSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
-const inboxSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`;
+/* ── 演示图标：全部来自共享 20px 几何（src/behaviors/icons.ts），不另写私有路径 ── */
+const svgX = iconHTML('close', { size: 12 });
+const svgEye = `<svg data-icen-icon="show" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${iconPath('eye')}"/></svg>`;
+const svgEyeOff = `<svg data-icen-icon="hide" hidden width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${iconPath('eye-off')}"/></svg>`;
+const svgSearch = iconHTML('search', { size: 14 });
+const svgPlus = iconHTML('plus');
+const svgDown = iconHTML('chevron-down', { size: 14 });
+const svgUp = iconHTML('chevron-up', { size: 14 });
+const starSvg = iconHTML('star');
+const chevronSvg = iconHTML('chevron-down');
+const accChevron = iconHTML('chevron-down', { className: 'icen-accordion-chevron' });
+const infoSvg = iconHTML('circle-info');
+const checkSvg = iconHTML('circle-check');
+const warnSvg = iconHTML('triangle-alert');
+const xSvg = iconHTML('close');
+const inboxSvg = iconHTML('inbox');
 const avatarImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' fill='%23d97757'/><circle cx='24' cy='18' r='8' fill='%23fffdf9'/><path d='M8 44c3-10 10-14 16-14s13 4 16 14z' fill='%23fffdf9'/></svg>`;
 
 export const COMPONENTS: ComponentDoc[] = [
@@ -1496,7 +1496,7 @@ COMPONENTS.push(
     slug: 'alert',
     name: '警示',
     group: '反馈',
-    desc: 'info / success / warning / error 四态警示条，带关闭按钮（演示 JS 点击移除）。',
+    desc: 'info / success / warning / error 四态警示条。关闭动作隐式待命——悬停或键盘进入警示条即现身，触屏常显且命中区不小于 44px；关闭演示带柔和退场。',
     demo: `<div class="demo-col-wide">
   <div class="icen-alert icen-alert--info">
     <span class="icen-alert-icon">${infoSvg}</span>
@@ -1539,10 +1539,22 @@ COMPONENTS.push(
   </div>
   <button class="icen-alert-close" type="button" aria-label="关闭">${iconHTML('close')}</button>
 </div>`,
-    script: `// alert 关闭是页面级演示（非组件 behavior）：点击移除整条
+    script: `// alert 关闭是页面级演示（非组件 behavior）：柔和退幕后移除整条
+const ac = new AbortController();
 document.querySelectorAll('.icen-alert-close').forEach((btn) => {
-  btn.addEventListener('click', () => btn.closest('.icen-alert')?.remove());
-});`,
+  btn.addEventListener('click', () => {
+    const alert = btn.closest('.icen-alert');
+    if (!alert || alert.dataset.icenState === 'closing') return;
+    alert.dataset.icenState = 'closing';
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { alert.remove(); return; }
+    alert.style.transition = 'opacity 160ms ease, transform 160ms ease';
+    alert.style.opacity = '0';
+    alert.style.transform = 'translateY(-3px)';
+    const timer = setTimeout(() => alert.remove(), 180);
+    ac.signal.addEventListener('abort', () => clearTimeout(timer), { once: true });
+  }, { signal: ac.signal });
+});
+return () => ac.abort();`,
   },
   {
     slug: 'result',

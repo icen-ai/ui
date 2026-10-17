@@ -374,6 +374,14 @@
 - 顺带清两颗定时炸弹：date-picker 的 .is-today 文字从 accent（4.06:1）改 accent-text（此前只在「今天=被点那天」时偶然通过 axe）；图表页视觉基线冻结时钟到基线日（贡献日历每天位移曾让基线隔夜即腐）。
 - 验证：5 条新 DOM 用例（combobox 接线/activedescendant/Home/End 回卷/退场续接/immediate 与销毁释放滚动锁）+ 4 条浏览器专项（演示面板全流程、⌘K 落全站搜索面板、双原语×明暗 axe、软退出焦点归还、移动视口与外点）。全量：verify 756 测试、134 条浏览器回归、129 页×两档巡检 0 问题。
 
+### 第十九轮：警示的隐式关闭与示例图标同源
+
+- alert 关闭动作改为隐式：桌面静止时 opacity 0 安静待命（占位不塌），悬停/聚焦警示条或焦点落钮即现身；触屏常显并挂隐形 44px 命中区（inline 变体 -14px 补足）。示例的关闭移除带柔和退幕（160ms 淡出+轻位移，reduced-motion 立即），脚本可卸载。
+- 示例图标同源：components.ts 的 13 个手写 24px 常量（svgX/svgEye/svgEyeOff/svgSearch/svgPlus/svgDown/svgUp/starSvg/chevronSvg/accChevron/infoSvg/checkSvg/warnSvg/xSvg/inboxSvg）全部改为共享 iconHTML/iconPath 重定义——调用点零改动，一次迁移约 30 处示例。共享图标集新增 star / eye / eye-off / inbox（20px 原创几何）。
+- 守卫副线：CRLF 行尾曾让 css-discipline 的裸圆角放行规则失效（原因注释在上一行才认）；feedback.css spinner bars 的登记注释归位到行尾，全库文件维持 LF。
+- 验证：3 条浏览器专项（隐式显隐与布局稳定、双模式 axe + 20px 几何、触屏 RTL 44px 与零横向溢出）全过；verify 756 测试、137 条浏览器回归、129 页×两档巡检 0 问题。
+- 尚待：编辑器域图标族（bold/italic/underline/align-* 等，toolbar 示例在用 24px 手写件）需专门设计一批；其余约 22 处手写 SVG 散在 kb/ai 示例与首页（index.astro 自带常量）；alert 的 banner/inline 变体与 forced-colors 矩阵未全覆盖，alert/result 暂不勾选。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。
