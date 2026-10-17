@@ -1293,16 +1293,28 @@ return () => { if(popPanel) closePopover(popPanel); };`,
     slug: 'tooltip',
     name: '提示',
     group: '浮层',
-    desc: '纯 CSS：data-icen-tooltip 文案 + data-icen-tooltip-side 方向；hover 延迟 400ms，键盘 focus-visible 立即出现。',
+    summary: '一句话说明，出现在恰好需要的位置。永远不被容器裁切，永远能找到空间。',
+    desc: 'data-icen-tooltip 声明文案，side / align / multiline 控制方向与换行。initTooltip() 后气泡 portal 到 body，随视口空间翻转并避开边缘，任何祖先的 overflow 或圆角裁切都不再影响它；无 JS 时 CSS 回退照常工作。鼠标悬停延迟 400ms，键盘聚焦立即出现；离开、点击、Escape 或滚动即关闭，全局至多一个。触屏不抢首次点按。',
     demo: `<div class="demo-row">
   <button class="icen-btn" data-icen-tooltip="默认在上方">上</button>
   <button class="icen-btn" data-icen-tooltip="下方提示" data-icen-tooltip-side="bottom">下</button>
   <button class="icen-btn" data-icen-tooltip="左侧提示" data-icen-tooltip-side="left">左</button>
   <button class="icen-btn" data-icen-tooltip="右侧提示" data-icen-tooltip-side="right">右</button>
+</div>
+<div class="demo-row" style="margin-top:12px">
+  <button class="icen-btn" data-icen-tooltip="多行模式允许换行，适合一段完整说明，而不是一个短语。" data-icen-tooltip-multiline="true">多行</button>
+  <span class="icen-tag" data-icen-tooltip="贴在视口边缘时会自动翻转并留在视野内">边缘自适</span>
 </div>`,
-    usage: `<!-- 纯 CSS：hover 延迟 400ms 出现，focus-visible 立即出现 -->
+    usage: `import { initTooltip } from '@icen.ai/ui/behaviors/tooltip';
+
 <button class="icen-btn" data-icen-tooltip="文案" data-icen-tooltip-side="top">目标</button>
-<!-- data-icen-tooltip-side 可选 top | bottom | left | right -->`,
+<!-- side 可选 top | bottom | left | right；align 可选 start | end；multiline 允许多行 -->
+
+const dispose = initTooltip(); // 可省略容器；动态插入同样接入，宿主卸载时 dispose()
+// 气泡 portal 到 body：翻转/钳制不被祖先裁切；无 JS 时 CSS ::after 回退照常
+// hover 400ms 出现，键盘 :focus-visible 立即；离开 / 点击 / Escape / 滚动关闭`,
+    behaviors: ['tooltip'],
+    behaviorInit: { tooltip: 'initTooltip' },
   },
   {
     slug: 'command-palette',

@@ -1,10 +1,18 @@
 /*
- * @icen.ai/ui — Component: tooltip（纯 CSS 气泡提示，无 JS）
+ * @icen.ai/ui — Component: tooltip（气泡提示）
  *
  * 完整契约：
  *   <button data-icen-tooltip="提示文案" data-icen-tooltip-side="top|bottom|left|right" data-icen-tooltip-align="start|icen-center|end">
  *   多行：data-icen-tooltip-multiline="true" 允许换行（默认 whitespace nowrap 截断）
  *   无障碍：键盘 :focus-visible 立即出现（无延迟），鼠标 hover 延迟 400ms。
+ *
+ * 双层实现（同一属性契约）：
+ *   - CSS 回退：::after 内联气泡，零 JS 可用；但无法跳出祖先 overflow/stacking
+ *     裁切（z-index 对裁切无解），靠近容器/视口边缘也不会翻转。
+ *   - JS 增强（推荐）：initTooltip() 后气泡 portal 到 body（.icen-tooltip，
+ *     role=tooltip，aria-describedby 关联），computePopoverLayout 选侧/翻转/钳制，
+ *     滚动/Escape/点击/移除即关。接管期间触发器带 data-icen-tooltip-live，
+ *     下方 ::after 规则一律以 :not() 回避，绝不双渲染。
  *
  * RTL 豁免（guard 文件级白名单 scripts/guard/rtl.ts）：side 是物理侧边契约
  * （data-icen-tooltip-side="left|right" 指触发器物理左/右侧），left/right 定位与水平居中配套，RTL 语义不变。
@@ -12,7 +20,7 @@
 
 [data-icen-tooltip] { position: relative; --tooltip-delay: 400ms; }
 
-[data-icen-tooltip]::after {
+[data-icen-tooltip]:not([data-icen-tooltip-live])::after {
   content: attr(data-icen-tooltip);
   position: absolute;
   z-index: var(--icen-z-tooltip);
@@ -44,26 +52,26 @@
 }
 
 /* 多行模式 */
-[data-icen-tooltip-multiline='true']::after {
+[data-icen-tooltip-multiline='true']:not([data-icen-tooltip-live])::after {
   white-space: normal;
   max-width: min(320px, calc(100vw - 32px));
 }
 
 /* ── 方向 ── */
-[data-icen-tooltip-side='bottom']::after {
+[data-icen-tooltip-side='bottom']:not([data-icen-tooltip-live])::after {
   bottom: auto;
   top: calc(100% + 6px);
   left: 50%;
   transform: translate(-50%, -4px);
 }
-[data-icen-tooltip-side='left']::after {
+[data-icen-tooltip-side='left']:not([data-icen-tooltip-live])::after {
   bottom: auto;
   top: 50%;
   left: auto;
   right: calc(100% + 6px);
   transform: translate(4px, -50%);
 }
-[data-icen-tooltip-side='right']::after {
+[data-icen-tooltip-side='right']:not([data-icen-tooltip-live])::after {
   bottom: auto;
   top: 50%;
   right: auto;
@@ -72,48 +80,92 @@
 }
 
 /* ── 对齐（仅 top/bottom 方向生效）── */
-[data-icen-tooltip-align='start']::after { inset-inline-start: 0; transform: translate(0, 4px); }
-[data-icen-tooltip-align='end']::after { inset-inline-start: auto; inset-inline-end: 0; transform: translate(0, 4px); }
-[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']::after { transform: translate(0, -4px); }
-[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']::after { transform: translate(0, -4px); }
+[data-icen-tooltip-align='start']:not([data-icen-tooltip-live])::after { inset-inline-start: 0; transform: translate(0, 4px); }
+[data-icen-tooltip-align='end']:not([data-icen-tooltip-live])::after { inset-inline-start: auto; inset-inline-end: 0; transform: translate(0, 4px); }
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']:not([data-icen-tooltip-live])::after { transform: translate(0, -4px); }
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']:not([data-icen-tooltip-live])::after { transform: translate(0, -4px); }
 
 /* ── 出现：hover/focus-visible ── */
-[data-icen-tooltip]:hover::after,
-[data-icen-tooltip]:focus-visible::after {
+[data-icen-tooltip]:hover:not([data-icen-tooltip-live])::after,
+[data-icen-tooltip]:focus-visible:not([data-icen-tooltip-live])::after {
   opacity: 1;
   transform: translate(-50%, 0);
 }
-[data-icen-tooltip-side='bottom']:hover::after,
-[data-icen-tooltip-side='bottom']:focus-visible::after {
+[data-icen-tooltip-side='bottom']:hover:not([data-icen-tooltip-live])::after,
+[data-icen-tooltip-side='bottom']:focus-visible:not([data-icen-tooltip-live])::after {
   transform: translate(-50%, 0);
 }
-[data-icen-tooltip-side='left']:hover::after,
-[data-icen-tooltip-side='left']:focus-visible::after {
+[data-icen-tooltip-side='left']:hover:not([data-icen-tooltip-live])::after,
+[data-icen-tooltip-side='left']:focus-visible:not([data-icen-tooltip-live])::after {
   transform: translate(0, -50%);
 }
-[data-icen-tooltip-side='right']:hover::after,
-[data-icen-tooltip-side='right']:focus-visible::after {
+[data-icen-tooltip-side='right']:hover:not([data-icen-tooltip-live])::after,
+[data-icen-tooltip-side='right']:focus-visible:not([data-icen-tooltip-live])::after {
   transform: translate(0, -50%);
 }
 
 /* align 起效（覆盖 translateX 的 -50%） */
-[data-icen-tooltip-align='start']:hover::after,
-[data-icen-tooltip-align='start']:focus-visible::after { transform: translate(0, 0); }
-[data-icen-tooltip-align='end']:hover::after,
-[data-icen-tooltip-align='end']:focus-visible::after { transform: translate(0, 0); }
-[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']:hover::after,
-[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']:focus-visible::after { transform: translate(0, 0); }
-[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']:hover::after,
-[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']:focus-visible::after { transform: translate(0, 0); }
+[data-icen-tooltip-align='start']:hover:not([data-icen-tooltip-live])::after,
+[data-icen-tooltip-align='start']:focus-visible:not([data-icen-tooltip-live])::after { transform: translate(0, 0); }
+[data-icen-tooltip-align='end']:hover:not([data-icen-tooltip-live])::after,
+[data-icen-tooltip-align='end']:focus-visible:not([data-icen-tooltip-live])::after { transform: translate(0, 0); }
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']:hover:not([data-icen-tooltip-live])::after,
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='start']:focus-visible:not([data-icen-tooltip-live])::after { transform: translate(0, 0); }
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']:hover:not([data-icen-tooltip-live])::after,
+[data-icen-tooltip-side='bottom'][data-icen-tooltip-align='end']:focus-visible:not([data-icen-tooltip-live])::after { transform: translate(0, 0); }
 
 /* 键盘聚焦立即出现（覆盖 400ms 延迟） */
-[data-icen-tooltip]:focus-visible::after { transition-delay: 0ms; }
+[data-icen-tooltip]:focus-visible:not([data-icen-tooltip-live])::after { transition-delay: 0ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-icen-tooltip]::after {
+  [data-icen-tooltip]:not([data-icen-tooltip-live])::after {
     transition: opacity var(--icen-tx-fast);
     transform: none !important; /* guard:allow-important 动效守卫：降级媒体查询需压制组件动画 */
   }
-  [data-icen-tooltip]:hover::after,
-  [data-icen-tooltip]:focus-visible::after { transform: none !important; /* guard:allow-important 状态/守卫覆盖需压制变体优先级 */ }
+  [data-icen-tooltip]:hover:not([data-icen-tooltip-live])::after,
+  [data-icen-tooltip]:focus-visible:not([data-icen-tooltip-live])::after { transform: none !important; /* guard:allow-important 状态/守卫覆盖需压制变体优先级 */ }
+}
+
+/* ═══════════ portal 气泡（initTooltip 增强层；material.css 像素材质已认 .icen-tooltip）═══════════
+   JS 以视口坐标计算 left/top（物理坐标，与 RTL 豁免同一理由），data-icen-side 驱动入场方向。 */
+.icen-tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--icen-z-tooltip);
+  box-sizing: border-box;
+  max-inline-size: min(260px, calc(100vw - 32px));
+  padding: 4px var(--icen-density-space-xs);
+  font-size: var(--icen-density-font-size-xs);
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: color-mix(in srgb, var(--icen-token-text) 92%, var(--icen-token-bg));
+  color: var(--icen-token-bg);
+  border: 1px solid var(--icen-token-line);
+  box-shadow: var(--icen-token-shadow-elevated);
+  border-radius: var(--icen-radius-sm);
+  pointer-events: none;
+  opacity: 0;
+  translate: 0 4px;
+  transition:
+    opacity var(--icen-tx-fast),
+    translate var(--icen-tx-fast);
+}
+.icen-tooltip.is-multiline {
+  white-space: normal;
+  max-inline-size: min(320px, calc(100vw - 32px));
+}
+.icen-tooltip[data-icen-side='bottom'] { translate: 0 -4px; }
+.icen-tooltip[data-icen-side='left'] { translate: 4px 0; }
+.icen-tooltip[data-icen-side='right'] { translate: -4px 0; }
+.icen-tooltip.is-open { opacity: 1; translate: 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-tooltip, .icen-tooltip[data-icen-side], .icen-tooltip.is-open { transition: opacity var(--icen-tx-fast); translate: none; }
+}
+@media (forced-colors: active) {
+  .icen-tooltip { background: Canvas; color: CanvasText; border-color: CanvasText; box-shadow: none; }
 }

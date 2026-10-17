@@ -409,6 +409,7 @@ const featureIcons = {
     import { initInput } from '../../../src/behaviors/input.ts';
     import { initSlider } from '../../../src/behaviors/slider.ts';
     import { initCopy } from '../../../src/behaviors/copy.ts';
+    import { initTooltip } from '../../../src/behaviors/tooltip.ts';
 
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -416,6 +417,7 @@ const featureIcons = {
     initInput();
     initSlider();
     initCopy();
+    initTooltip();
     initAiTool();
 
     /* ── 统计卡：迷你趋势线 ── */
@@ -941,7 +943,7 @@ const featureIcons = {
   .mn-row--center { justify-content: center; }
   .mn-lb { font-size: 11.5px; color: var(--icen-token-text-muted); white-space: nowrap; }
   .mn-t { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--icen-token-text); display: flex; align-items: center; gap: 6px; }
-  .mn-d { margin: 2px 0 0; font-size: 10.5px; color: var(--icen-token-text-faint); }
+  .mn-d { margin: 2px 0 0; font-size: 10.5px; color: var(--icen-token-text-muted); }
   .mn-main { min-width: 0; }
   .mn-ic {
     display: inline-flex;

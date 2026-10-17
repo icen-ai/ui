@@ -142,6 +142,8 @@ async function assertA11y(page: Page, label: string) {
 
 for (const p of PAGES) {
   test(`${p.name}: ${p.path}`, async ({ page }) => {
+    // 扫描在减少动效下进行：首页等入场动画的半透明中间帧不是稳定态，容易误报对比度
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(p.path, { waitUntil: 'networkidle' });
     if (p.path.startsWith('/kb')) {
       // /kb/ 首屏定时模拟流落定后再扫（同 visual.pw.ts 的 settle 语义）

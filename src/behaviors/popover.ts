@@ -235,13 +235,14 @@ export function computePopoverLayout(
   const align = opts.align ?? 'start';
 
   if (preferredSide === 'left' || preferredSide === 'right') {
+    const minWidth = Math.max(1, opts.minWidth ?? DEFAULT_MIN_WIDTH);
     const availableLeft = Math.max(0, anchor.left - margin - offset);
     const availableRight = Math.max(0, viewport.width - anchor.right - margin - offset);
+    /* 翻转阈值按调用方实际下限（tooltip 等小气泡不再因默认 220 误判翻转） */
     const side: PopoverSide =
-      (preferredSide === 'left' ? availableLeft : availableRight) >= DEFAULT_MIN_WIDTH
+      (preferredSide === 'left' ? availableLeft : availableRight) >= minWidth
         ? preferredSide
         : preferredSide === 'left' ? 'right' : 'left';
-    const minWidth = Math.max(1, opts.minWidth ?? DEFAULT_MIN_WIDTH);
     const maxWidth = Math.min(
       Math.max(opts.maxWidth ?? DEFAULT_MAX_WIDTH, minWidth),
       side === 'left' ? availableLeft : availableRight,

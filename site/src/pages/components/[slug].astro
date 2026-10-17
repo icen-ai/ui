@@ -130,6 +130,7 @@ const bootData = JSON.stringify({
   <script type="application/json" id="doc-boot-data" set:html={bootData} />
   <script>
     import { initCopy } from '../../../../src/behaviors/copy.ts';
+    import { initTooltip } from '../../../../src/behaviors/tooltip.ts';
     let bootGeneration = 0;
     let disposeDemo: (() => void) | undefined;
     function cleanupDemo(): void {
@@ -143,6 +144,7 @@ const bootData = JSON.stringify({
     // 直接调用会在第二次换页后断线；copy 是事件委托幂等，重复调用安全）
     document.addEventListener('astro:page-load', () => {
       initCopy();
+      initTooltip();
       void boot();
     });
 

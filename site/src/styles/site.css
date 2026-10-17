@@ -689,6 +689,16 @@ body {
 /* Package paths and API names in prose must wrap without clipping code samples. */
 .docs-main :is(.doc-desc,.doc-note,.demo-label,.page-desc) { overflow-wrap: anywhere; }
 
+/* 文段内的链接：除颜色外始终保留下划线（axe link-in-text-block 纪律）；
+   下划线随正文色弱化，hover 回到全实——安静但永远可辨 */
+:is(.doc-note,.doc-desc,.page-desc,.qs-step p) a:not(:has(*)) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+:is(.doc-note,.doc-desc,.page-desc,.qs-step p) a:not(:has(*)):hover { text-decoration-color: currentColor; }
+
 html { scroll-padding-block-start: 76px; }
 .docs-main :is(button,input,textarea,select,[tabindex]) { scroll-margin-block-start: 76px; }
 

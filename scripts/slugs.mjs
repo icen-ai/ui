@@ -150,6 +150,7 @@ export const SLUG_INIT = {
   table: 'initTableSort',
   tabs: 'initTabs',
   'tag-input': 'initTagInput',
+  tooltip: 'initTooltip',
   tree: 'initTree',
   upload: 'initUpload',
   // AI 族扩展
@@ -202,6 +203,7 @@ export const SLUG_EXPORTS = {
   ],
   datatable: ['createTable'],
   'code-block': ['renderCodeBlock', 'codeBlockHTML'],
+  'tag-input': ['createTagInput'],
   // ── 图表细分类型：仅导出该类型的渲染函数 ──
   'chart-line': ['renderLine'],
   'chart-bar': ['renderVBar', 'renderHBar'],
@@ -272,7 +274,7 @@ export const SLUG_BEHAVIOR = {
 /** slug → kit 入口需附加引入的其他 CSS（如 datatable 右键菜单依赖 menu.css）。 */
 export const EXTRA_CSS = {
   datatable: ['menu.css'],
-  // code-block 工具钮的 data-icen-tooltip 气泡由 tooltip.css 提供（纯 CSS 组件）
+  // code-block 工具钮的 data-icen-tooltip 气泡样式由 tooltip.css 提供（CSS 回退 + portal 增强共用）
   'code-block': ['tooltip.css'],
   // charts umbrella：引入全部细分类型 CSS，一条 import 拿到所有图表样式
   charts: [

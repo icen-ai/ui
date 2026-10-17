@@ -26,6 +26,8 @@ const html = codeBlockHTML({ html: pre, lang, file, title, num, fold: collapsibl
 
 <script>
   import { initCodeBlock } from '../../../src/behaviors/code-block';
+  import { initTooltip } from '../../../src/behaviors/tooltip';
   // 文档级事件委托、幂等；ClientRouter 客户端换页后 document 上的监听持续生效
   initCodeBlock();
+  initTooltip();
 </script>

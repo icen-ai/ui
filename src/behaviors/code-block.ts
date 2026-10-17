@@ -414,7 +414,8 @@ function btnHtml(hook: string, tip: string, icon: string, opts?: { pressed?: boo
       : opts?.expanded !== undefined
         ? ` aria-expanded="${opts.expanded}" class="icen-code-block-btn"`
         : ' class="icen-code-block-btn"';
-  return `<button type="button" data-icen-code-block-${hook} data-icen-tooltip="${esc(tip)}" aria-label="${esc(tip)}"${state}>${icon}</button>`;
+  /* 头栏在 overflow:hidden 容器顶行：与 DOM 路径一致朝下（CSS 回退不被裁；portal 增强下是风格选择） */
+  return `<button type="button" data-icen-code-block-${hook} data-icen-tooltip="${esc(tip)}" data-icen-tooltip-side="bottom" aria-label="${esc(tip)}"${state}>${icon}</button>`;
 }
 
 /**
