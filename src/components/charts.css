@@ -87,6 +87,20 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* 点位坐标系的轴标签（line/area）：pad 内缩由渲染器按实测宽度写内联 padding-inline，
+   每个 span 零宽、文字以点位为中心——首尾标签精确落在首尾点正下方 */
+.icen-chart-labels--points {
+  justify-content: space-between;
+  gap: 0;
+}
+.icen-chart-labels--points > span {
+  flex: none;
+  inline-size: 0;
+  overflow: visible;
+  display: inline-flex;
+  justify-content: center;
+}
+
 /* ── 调色盘：手写 markup 调色盘；behavior 走 charts.ts PALETTE_VARS 内联同值（两处值需人工同步） ── */
 .icen-chart-tone-1 { --chart-tone: var(--icen-token-accent); }
 .icen-chart-tone-2 { --chart-tone: var(--icen-token-accent-cold); }

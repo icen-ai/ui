@@ -74,14 +74,6 @@
     ],
     "label-content-name-mismatch": [
       ".brand"
-    ],
-    "role-img-alt": [
-      ".icen-chart-heatmap-grid"
-    ],
-    "svg-img-alt": [
-      "svg[viewBox=\"0 0 96 28\"]",
-      ".icen-chart-donut > svg[viewBox=\"0 0 120 120\"][role=\"img\"]",
-      ".icen-chart-gauge > svg[viewBox=\"0 0 120 120\"][role=\"img\"]"
     ]
   },
   "frameworks": {
@@ -110,15 +102,6 @@
     ],
     "label-content-name-mismatch": [
       ".brand"
-    ],
-    "role-img-alt": [
-      ".icen-chart-heatmap-grid"
-    ],
-    "svg-img-alt": [
-      ".icen-chart-donut > svg[viewBox=\"0 0 120 120\"][role=\"img\"]",
-      ".icen-chart-gauge > svg[viewBox=\"0 0 120 120\"][role=\"img\"]",
-      "svg[viewBox=\"0 0 96 28\"]",
-      "#icen-chart-line > .icen-chart-body[data-chart-body=\"\"] > .icen-chart-line > svg[viewBox=\"0 0 360 150\"][role=\"img\"]"
     ]
   },
   "datatable": {

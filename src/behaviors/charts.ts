@@ -237,10 +237,11 @@ function legendItem(label: string, valueText: string, tone?: ChartTone): HTMLEle
   return row;
 }
 
-/** 底部轴标签行（vbar / line 共用） */
-function labelsRow(labels: string[]): HTMLElement {
+/** 底部轴标签行（vbar / line 共用；padRatio = 点位图 pad/宽度 时按点位坐标系内缩对齐） */
+function labelsRow(labels: string[], padRatio = 0): HTMLElement {
   const row = document.createElement('div');
-  row.className = 'icen-chart-labels';
+  row.className = padRatio > 0 ? 'icen-chart-labels icen-chart-labels--points' : 'icen-chart-labels';
+  if (padRatio > 0) row.style.paddingInline = `${(padRatio * 100).toFixed(4)}%`;
   for (const label of labels) {
     const span = document.createElement('span');
     span.textContent = label;
@@ -620,7 +621,7 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): HTMLEl
   const wrap = document.createElement('div');
   wrap.className = 'icen-chart-donut';
 
-  const svg = svgEl('svg', { viewBox: '0 0 120 120', role: 'img' });
+  const svg = svgEl('svg', { viewBox: '0 0 120 120', role: 'img', 'aria-label': chartAriaLabel(opts.title, icenT('charts.type.donut')) });
   svg.style.transform = 'rotate(-90deg)';
   svg.appendChild(svgEl('circle', {
     cx: '60', cy: '60', r: String(radius),
@@ -675,7 +676,7 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement
   if (n === 0 || seriesList.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
   const labelsUsed = labels.slice(0, n);
-  const width = 360;
+  const width = fluidWidth(body);
   const height = 150;
   const pad = 14;
   let max = 1;
@@ -683,7 +684,7 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement
 
   const wrap = document.createElement('div');
   wrap.className = 'icen-chart-line';
-  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': chartAriaLabel(opts.title, icenT('charts.type.line')) });
   const defs = svgEl('defs', {});
 
   for (let i = 0; i < 4; i++) {
@@ -761,10 +762,12 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement
   });
 
   if (defs.firstChild) svg.insertBefore(defs, svg.firstChild);
-  wrap.append(svg, labelsRow(sampleLabels(labelsUsed)));
+  wrap.append(svg, labelsRow(sampleLabels(labelsUsed), pad / width));
   body.appendChild(wrap);
   if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap));
   });
+  /* renderChart 驱动时（el 即 chartBody）不重复挂观察——外层句柄的 update 管线负责 */
+  if (!el.dataset.chartBody) observeFluidWidth(el, () => renderLine(el, opts));
   attachChartInteraction(el, 'line');
   return el;
 }
@@ -779,7 +782,7 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
   const labels = opts.labels.slice(0, n);
   const values = opts.values.slice(0, n);
 
-  const width = 360;
+  const width = fluidWidth(body);
   const height = 150;
   const pad = 14;
   const max = maxOf(values);
@@ -799,7 +802,7 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
 
   const wrap = document.createElement('div');
   wrap.className = 'icen-chart-area';
-  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': chartAriaLabel(opts.title, icenT('charts.type.area')) });
 
   const defs = svgEl('defs', {});
   const gradient = svgEl('linearGradient', { id: gradientId, x1: '0', x2: '0', y1: '0', y2: '1' });
@@ -833,9 +836,10 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
     svg.appendChild(inv);
   }
 
-  wrap.append(svg, labelsRow(sampleLabels(labels)));
+  wrap.append(svg, labelsRow(sampleLabels(labels), pad / width));
   body.appendChild(wrap);
   });
+  if (!el.dataset.chartBody) observeFluidWidth(el, () => renderArea(el, opts));
   attachChartInteraction(el, 'area');
   return el;
 }
@@ -894,7 +898,7 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): HTMLEleme
 
   const wrap = document.createElement('div');
   wrap.className = 'icen-chart-radar';
-  const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, role: 'img' });
+  const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, role: 'img', 'aria-label': chartAriaLabel(opts.title, icenT('charts.type.radar')) });
 
   // 网格环（levels 层正多边形）
   for (let lv = 1; lv <= levels; lv++) {
@@ -1105,6 +1109,7 @@ export function renderHeatmap(el: HTMLElement, opts: ChartHeatmapOptions): HTMLE
   const grid = document.createElement('div');
   grid.className = 'icen-chart-heatmap-grid';
   grid.setAttribute('role', 'img');
+  grid.setAttribute('aria-label', chartAriaLabel(opts.title, icenT('charts.type.heatmap')));
 
   padFirstWeek(grid, entries[0]!.date, opts.weekStart === 0 ? 0 : 1);
   for (const [i, entry] of entries.entries()) {
@@ -1149,7 +1154,7 @@ export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): HTML
   const gradientId = `icen-chart-line-${++lineGradientSeq}`;
   const wrap = document.createElement('div');
   wrap.className = 'icen-chart-sparkline';
-  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': chartAriaLabel(opts.title, icenT('charts.type.sparkline')) });
 
   const defs = svgEl('defs', {});
   const gradient = svgEl('linearGradient', { id: gradientId, x1: '0', x2: '0', y1: '0', y2: '1' });
@@ -1202,7 +1207,7 @@ export function renderGauge(el: HTMLElement, opts: ChartGaugeOptions): HTMLEleme
   wrap.className = 'icen-chart-gauge';
   if (opts.tone) wrap.style.setProperty('--chart-tone', toneVar(opts.tone));
 
-  const svg = svgEl('svg', { viewBox: '0 0 120 120', role: 'img' });
+  const svg = svgEl('svg', { viewBox: '0 0 120 120', role: 'img', 'aria-label': chartAriaLabel(opts.label, icenT('charts.type.gauge')) });
   svg.style.transform = 'rotate(-90deg)';
   svg.appendChild(svgEl('circle', {
     cx: '60', cy: '60', r: String(radius),
@@ -1282,6 +1287,7 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): HTM
   const grid = document.createElement('div');
   grid.className = 'icen-chart-heatmap-grid';
   grid.setAttribute('role', 'img');
+  grid.setAttribute('aria-label', chartAriaLabel(opts.title, icenT('charts.type.heatmap')));
   const months = document.createElement('div');
   months.className = 'icen-chart-calendar-months';
   const weekdayRow = document.createElement('div');
@@ -1353,7 +1359,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
   const pts = opts.points.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
   if (pts.length === 0) { renderEmpty(body, opts.emptyLabel); return; }
 
-  const width = 360;
+  const width = fluidWidth(body);
   const height = 220;
   const pad = 30;
   let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity, sMax = 0;
@@ -1371,7 +1377,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
   const wrap = document.createElement('div');
   wrap.className = 'icen-chart-scatter';
   const tone = toneVar(opts.tone);
-  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' });
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': chartAriaLabel(opts.title, icenT('charts.type.scatter')) });
 
   /* 网格：3 横 + 4 竖 + 边界刻度值 */
   const xAt = (x: number): number => pad + ((x - xMin) / (xMax - xMin)) * (width - pad * 2);
@@ -1429,6 +1435,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
   wrap.appendChild(svg);
   body.appendChild(wrap);
   });
+  if (!el.dataset.chartBody) observeFluidWidth(el, () => renderScatter(el, opts));
   attachChartInteraction(el, 'scatter');
   return el;
 }
@@ -1951,10 +1958,15 @@ function paintSvgChartMarks(
       : [];
   let max = 1;
   for (const s of seriesList) max = Math.max(max, maxOf(s.values.slice(0, n)));
+  /* 流式宽度：以渲染产物的真实 viewBox 为准（CHART_LINE_* 只是回落默认值） */
+  const dims = svgDimsOf(svg);
+  const W = dims.w;
+  const H = dims.h;
+  const PAD = CHART_LINE_PAD;
   const xAt = (i: number): number =>
-    n <= 1 ? CHART_LINE_W / 2 : CHART_LINE_PAD + (i / (n - 1)) * (CHART_LINE_W - CHART_LINE_PAD * 2);
+    n <= 1 ? W / 2 : PAD + (i / (n - 1)) * (W - PAD * 2);
   const yAt = (v: number): number =>
-    CHART_LINE_H - CHART_LINE_PAD - (Math.max(0, v) / max) * (CHART_LINE_H - CHART_LINE_PAD * 2);
+    H - PAD - (Math.max(0, v) / max) * (H - PAD * 2);
 
   for (const mark of marks) {
     if (mark.type === 'line') {
@@ -1962,16 +1974,16 @@ function paintSvgChartMarks(
       if (mark.axis === 'y') {
         const v = typeof mark.value === 'number' ? mark.value : Number(mark.value);
         if (!Number.isFinite(v)) { markWarnOnce(warned, mark, '参考线数值 NaN'); continue; }
-        const y = clampNum(yAt(v), CHART_LINE_PAD, CHART_LINE_H - CHART_LINE_PAD);
+        const y = clampNum(yAt(v), CHART_LINE_PAD, H - PAD);
         svg.appendChild(svgEl('line', {
           class: 'icen-chart-mark-line',
-          x1: String(CHART_LINE_PAD), x2: String(CHART_LINE_W - CHART_LINE_PAD),
+          x1: String(PAD), x2: String(W - PAD),
           y1: y.toFixed(1), y2: y.toFixed(1),
           stroke: color, 'stroke-width': '1', 'stroke-dasharray': '4 3',
         }));
         const label = svgEl('text', {
           class: 'icen-chart-mark-label',
-          x: String(CHART_LINE_W - CHART_LINE_PAD),
+          x: String(W - PAD),
           y: String(clampNum(y - 4, 8, CHART_LINE_H - 4)),
           'text-anchor': 'end', 'font-size': '8', fill: color,
         });
@@ -1984,13 +1996,13 @@ function paintSvgChartMarks(
         svg.appendChild(svgEl('line', {
           class: 'icen-chart-mark-line',
           x1: x.toFixed(1), x2: x.toFixed(1),
-          y1: String(CHART_LINE_PAD), y2: String(CHART_LINE_H - CHART_LINE_PAD),
+          y1: String(PAD), y2: String(H - PAD),
           stroke: color, 'stroke-width': '1', 'stroke-dasharray': '4 3',
         }));
         const label = svgEl('text', {
           class: 'icen-chart-mark-label',
-          x: String(clampNum(x, 10, CHART_LINE_W - 10)),
-          y: String(CHART_LINE_PAD + 8),
+          x: String(clampNum(x, 10, W - 10)),
+          y: String(PAD + 8),
           'text-anchor': 'middle', 'font-size': '8', fill: color,
         });
         label.textContent = mark.label ?? labels[idx] ?? '';
@@ -2005,7 +2017,7 @@ function paintSvgChartMarks(
       const v = mark.value ?? s.values[idx] ?? NaN;
       if (!Number.isFinite(v)) { markWarnOnce(warned, mark, '标记点数值 NaN'); continue; }
       const x = xAt(idx);
-      const y = clampNum(yAt(v), CHART_LINE_PAD, CHART_LINE_H - CHART_LINE_PAD);
+      const y = clampNum(yAt(v), CHART_LINE_PAD, H - PAD);
       const g = svgEl('g', { class: 'icen-chart-mark-point' });
       g.appendChild(svgEl('circle', {
         cx: x.toFixed(1), cy: y.toFixed(1), r: '6',
@@ -2014,7 +2026,7 @@ function paintSvgChartMarks(
       g.appendChild(svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: '2', fill: CHART_MARK_ACCENT }));
       const label = svgEl('text', {
         class: 'icen-chart-mark-label',
-        x: String(clampNum(x, 12, CHART_LINE_W - 12)),
+        x: String(clampNum(x, 12, W - 12)),
         y: String(clampNum(y - 10, 8, CHART_LINE_H - 4)),
         'text-anchor': 'middle', 'font-size': '8', fill: CHART_MARK_ACCENT,
       });
@@ -2106,12 +2118,44 @@ function paintVBarChartMarks(
 }
 
 /* ── PNG 导出：SVG 序列化 → canvas 光栅化 → dataURL（诚实：不可用返回 undefined，不抛）── */
+/** 图表 SVG 替代文本：标题优先，否则本地化类型名（role=img 的可访问名） */
+function chartAriaLabel(title: string | undefined, typeName: string): string {
+  return title ? `${typeName}：${title}` : typeName;
+}
 
 function svgDimsOf(svg: SVGSVGElement): { w: number; h: number } {
   const vb = (svg.getAttribute('viewBox') ?? '').split(/\s+/).map(Number);
   const w = Number.isFinite(vb[2]) && (vb[2] ?? 0) > 0 ? vb[2]! : CHART_LINE_W;
   const h = Number.isFinite(vb[3]) && (vb[3] ?? 0) > 0 ? vb[3]! : CHART_LINE_H;
   return { w, h };
+}
+
+/* ── 流式宽度：SVG 点位图（line/area/scatter）按容器实测像素宽渲染，
+   viewBox 宽 = 元素像素宽 → 缩放恒为 1，无信箱畸变；ResizeObserver 宽度变化重渲染，
+   renderChart 场景由外层句柄驱动（renderLine 在 chartBody 内不重复挂观察）── */
+const fluidObservers = new WeakMap<HTMLElement, ResizeObserver>();
+function fluidWidth(host: HTMLElement): number {
+  const w = Math.round(host.getBoundingClientRect().width);
+  return w > 240 ? w : 360; /* 隐匿/极窄容器回落逻辑宽 360 */
+}
+function observeFluidWidth(el: HTMLElement, rerender: () => void): void {
+  if (typeof ResizeObserver === 'undefined') return;
+  fluidObservers.get(el)?.disconnect();
+  let last = Math.round(el.getBoundingClientRect().width);
+  const ro = new ResizeObserver(() => {
+    if (!el.isConnected) { ro.disconnect(); fluidObservers.delete(el); return; }
+    const w = Math.round(el.getBoundingClientRect().width);
+    if (Math.abs(w - last) < 2) return;
+    last = w;
+    rerender();
+  });
+  ro.observe(el);
+  fluidObservers.set(el, ro);
+}
+/** destroy 路径断开流式观察 */
+function releaseFluidWidth(el: HTMLElement): void {
+  fluidObservers.get(el)?.disconnect();
+  fluidObservers.delete(el);
 }
 
 /**
@@ -2525,10 +2569,10 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
     } else {
       const svg = root.querySelector<SVGSVGElement>('.icen-chart-line svg');
       if (!svg) return;
-      const p0 = svgClientPoint(svg, lo, 0, CHART_LINE_W, CHART_LINE_H);
-      const p1 = svgClientPoint(svg, hi, 0, CHART_LINE_W, CHART_LINE_H);
-      const rel0 = Math.round(((p0.x - CHART_LINE_PAD) / (CHART_LINE_W - CHART_LINE_PAD * 2)) * (viewLen - 1));
-      const rel1 = Math.round(((p1.x - CHART_LINE_PAD) / (CHART_LINE_W - CHART_LINE_PAD * 2)) * (viewLen - 1));
+      const dims = svgDimsOf(svg); const p0 = svgClientPoint(svg, lo, 0, dims.w, dims.h);
+      const p1 = svgClientPoint(svg, hi, 0, dims.w, dims.h);
+      const rel0 = Math.round(((p0.x - CHART_LINE_PAD) / (dims.w - CHART_LINE_PAD * 2)) * (viewLen - 1));
+      const rel1 = Math.round(((p1.x - CHART_LINE_PAD) / (dims.w - CHART_LINE_PAD * 2)) * (viewLen - 1));
       i0 = clampNum(rel0 + base, 0, len - 1);
       i1 = clampNum(rel1 + base, 0, len - 1);
     }
@@ -2693,6 +2737,9 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
   const unbindEvents = bindChartEvents(root);
 
   render();
+
+  /* 流式宽度：容器宽度变化时走句柄的 render()（缩放窗/降采样/标记全部保持） */
+  observeFluidWidth(root, render);
 
   return {
     el: root,
@@ -3447,7 +3494,7 @@ export function renderGraph(el: HTMLElement, raw: GraphSpec | unknown): DatumCha
     const wrap = document.createElement('div');
     wrap.className = 'icen-chart-graph';
     if (current.tone) wrap.style.setProperty('--chart-tone', toneVar(current.tone));
-    const svg = svgEl('svg', { viewBox: `0 0 ${GRAPH_W} ${GRAPH_H}`, role: 'img' });
+    const svg = svgEl('svg', { viewBox: `0 0 ${GRAPH_W} ${GRAPH_H}`, role: 'img', 'aria-label': chartAriaLabel(current.title, icenT('charts.type.graph')) });
     svgRef = svg;
     svg.addEventListener('pointerdown', onNodePointerDown);
 
@@ -3725,7 +3772,7 @@ export function renderMap(el: HTMLElement, raw: MapSpec | unknown): DatumChartHa
     const wrap = document.createElement('div');
     wrap.className = 'icen-chart-map';
     if (current.tone) wrap.style.setProperty('--chart-tone', toneVar(current.tone));
-    const svg = svgEl('svg', { viewBox: `0 0 ${MAP_W} ${MAP_H}`, role: 'img' });
+    const svg = svgEl('svg', { viewBox: `0 0 ${MAP_W} ${MAP_H}`, role: 'img', 'aria-label': chartAriaLabel(current.title, icenT('charts.type.map')) });
 
     /* 细网格（去轴：预投影坐标的刻度无意义，只留参考线） */
     for (let i = 0; i <= 3; i++) {

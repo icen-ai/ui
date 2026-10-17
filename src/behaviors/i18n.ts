@@ -272,6 +272,16 @@ export interface IcenLocale {
   'charts.noData': string;
   'charts.resetZoom': string;
   'charts.sampled': string;
+  'charts.type.area': string;
+  'charts.type.donut': string;
+  'charts.type.gauge': string;
+  'charts.type.graph': string;
+  'charts.type.heatmap': string;
+  'charts.type.line': string;
+  'charts.type.map': string;
+  'charts.type.radar': string;
+  'charts.type.scatter': string;
+  'charts.type.sparkline': string;
   'charts.seriesName': string;
   'charts.showLegend': string;
   'charts.value': string;
@@ -1083,6 +1093,16 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'charts.noData': '暂无数据',
   'charts.resetZoom': '重置缩放',
   'charts.sampled': '已抽样 {p0}→{p1} 点',
+  'charts.type.area': '面积图',
+  'charts.type.donut': '环形图',
+  'charts.type.gauge': '仪表盘',
+  'charts.type.graph': '知识图谱',
+  'charts.type.heatmap': '热力图',
+  'charts.type.line': '折线图',
+  'charts.type.map': '地图',
+  'charts.type.radar': '雷达图',
+  'charts.type.scatter': '散点图',
+  'charts.type.sparkline': '迷你趋势',
   'charts.seriesName': '系列{p0}',
   'charts.showLegend': '显示图例',
   'charts.value': '数值',
@@ -1894,6 +1914,16 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'charts.noData': 'No data',
   'charts.resetZoom': 'Reset zoom',
   'charts.sampled': 'Sampled → {p0} points',
+  'charts.type.area': 'Area chart',
+  'charts.type.donut': 'Donut chart',
+  'charts.type.gauge': 'Gauge',
+  'charts.type.graph': 'Graph',
+  'charts.type.heatmap': 'Heatmap',
+  'charts.type.line': 'Line chart',
+  'charts.type.map': 'Map',
+  'charts.type.radar': 'Radar chart',
+  'charts.type.scatter': 'Scatter plot',
+  'charts.type.sparkline': 'Sparkline',
   'charts.seriesName': 'Series {p0}',
   'charts.showLegend': 'Show legend',
   'charts.value': 'Value',

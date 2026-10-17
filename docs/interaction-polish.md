@@ -422,6 +422,15 @@
 - 验证：既有 11+38 条 datatable 用例全过；2 条浏览器专项（胶囊/隐式动作/tooltip/回执 + 触屏 44px/axe/零横向溢出）；视觉基线按示例升舱重生成（仅本页）。全量：verify 764 测试、145 条浏览器回归、129 页×两档巡检 0 问题。
 - 尚待：datatable 完整交互矩阵（编辑/拖拽/虚拟滚动/冻结在多原语×明暗下的视觉验收）仍未逐项走完；不勾选。
 
+### 第二十五轮：SVG 图表的流式宽度与可访问名清债
+
+- 根治折线/面积/散点的信箱畸变：SVG 固定在 360 逻辑宽、preserveAspectRatio meet 居中信箱化，轴标签行却占满容器——点位与标签各说各话。现按容器实测像素宽渲染（viewBox=像素宽，scale 恒 1），ResizeObserver 宽度变化经 renderChart 句柄的 render() 重渲染（缩放窗/降采样/标记保持），纯 renderLine 直调在 chartBody 外自挂观察、节点摘除自断开。
+- 轴标签行新增点位坐标系变体（labelsRow 的 padRatio）：零宽 span + 内联 padding-inline = 首尾标签精确落在首尾点正下方。
+- marks/zoom 的镜像常量（CHART_LINE_W/H）改读渲染产物真实 viewBox（svgDimsOf 已有，一处补齐消费点）。
+- 可访问名清债：9 个 role=img 的 SVG 图表 + 热力/日历网格全部补 aria-label（标题优先，否则本地化类型名——新增 charts.type.* 十键 × 中英）；a11y 基线的 svg-img-alt（home/charts/frameworks 三页）与 role-img-alt（heatmap-grid）核销删除——债只减不增。
+- 验证：2 条浏览器专项（流式宽度/点位对齐/aria-label/缩容重渲染 + 总览页 axe 清零）；既有 310 单测 + 433 DOM 全过。全量：verify 764 测试、147 条浏览器回归、129 页×两档巡检 0 问题。图表页视觉基线随流式宽度重生成（冻结时钟下确定）。
+- 尚待： donut/gauge/radar 等径向图在多原语下的视觉矩阵、charts 族交互（tooltip/缩放/图例切换）的逐项验收仍未走完；不勾选 charts。
+
 ### 下一批待处理（保留完整目标）
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。
