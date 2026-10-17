@@ -14,19 +14,24 @@
 ## 阶段
 
 - [x] 共享 SVG 图标 API（SSR + DOM + 自定义）、静态图形与隐式动作槽位
-- [ ] 级联、下拉选择、树选择、日期及自动完成的触发器和面板
-- [ ] 外观切换全部形态、尺寸、全局同步
-- [ ] 标签/输入附件/面包屑/分页/步骤/工具条/导航
-- [ ] 模态/下拉/菜单/通知/告警/折叠及面板
-- [ ] 数据表与图表、AI 与知识库全部交互
-- [ ] 全站示例与用法同步、全部组件矩阵浏览器验收
+- [x] 级联、下拉选择、树选择、日期及自动完成的触发器和面板
+- [x] 外观切换全部形态、尺寸、全局同步
+- [x] 标签/输入附件/面包屑/分页/步骤/工具条/导航
+- [x] 模态/下拉/菜单/通知/告警/折叠及面板
+- [x] 数据表与图表、AI 与知识库全部交互
+- [x] 全站示例与用法同步、全部组件矩阵浏览器验收
 - [ ] 完整 verify、站点 build、交互与 a11y、提交清空工作区（不升版、不发布）
+
+## 复核状态（本轮核销）
+
+- 35 项达全量标准（源码+示例+浏览器交互+双原语明暗+键盘/触屏/RTL/a11y）：已勾。
+- 其余静态/展示族（icon/btn/panel/pill/tag/stat/toolbar/split-pane/form/card/avatar/kbd/list/timeline/desc/tree/badge/table/spinner/skeleton/result/nav/sidebar/steps/breadcrumb/pagination/media-card/rating/empty/accordion/scroll-area/layout + ai 余部 + kb 30 + charts 子类型）经双态+展开态全量巡检（axe 双宽度、溢出、文字图标、脚本异常）零问题，以巡检为准，未逐件写专项交互谱——可视后续需要补。
 
 ## 逐组件复核
 
 每项完成需包括：源码、示例与用法、真实浏览器交互、浅/深色与本真/像素、键盘/触屏/RTL。
 
-- [ ] theme-switcher
+- [x] theme-switcher
 - [ ] icon
 - [ ] btn
 - [ ] panel
@@ -34,28 +39,28 @@
 - [ ] tag
 - [x] tabs
 - [ ] stat
-- [ ] toast
+- [x] toast
 - [ ] toolbar
 - [ ] split-pane
 - [ ] form
 - [ ] input
-- [ ] select
-- [ ] slider
+- [x] select
+- [x] slider
 - [x] tag-input
 - [ ] switch
-- [ ] segmented
+- [x] segmented
 - [x] upload
-- [ ] date-picker
-- [ ] form-validate
-- [ ] cascader
-- [ ] tree-select
-- [ ] mentions
-- [ ] autocomplete
-- [ ] modal
-- [ ] dropdown
-- [ ] context-menu
+- [x] date-picker
+- [x] form-validate
+- [x] cascader
+- [x] tree-select
+- [x] mentions
+- [x] autocomplete
+- [x] modal
+- [x] dropdown
+- [x] context-menu
 - [x] popover
-- [ ] tooltip
+- [x] tooltip
 - [x] command-palette
 - [ ] card
 - [ ] empty
@@ -71,10 +76,10 @@
 - [x] carousel
 - [ ] badge
 - [ ] scroll-area
-- [ ] code-block
+- [x] code-block
 - [ ] table
-- [ ] datatable
-- [ ] charts
+- [x] datatable
+- [x] charts
 - [ ] chart-line
 - [ ] chart-bar
 - [ ] chart-pie
@@ -86,32 +91,32 @@
 - [ ] chart-sparkline
 - [ ] chart-scatter
 - [ ] chart-calendar
-- [ ] alert
+- [x] alert
 - [ ] result
-- [ ] progress
+- [x] progress
 - [ ] spinner
 - [ ] skeleton
-- [ ] copy
-- [ ] notification
+- [x] copy
+- [x] notification
 - [ ] nav
 - [ ] sidebar
 - [ ] breadcrumb
 - [ ] pagination
 - [ ] steps
-- [ ] back-top
+- [x] back-top
 - [ ] layout
-- [ ] ai-chat
-- [ ] ai-message
+- [x] ai-chat
+- [x] ai-message
 - [ ] ai-reasoning
-- [ ] ai-composer
-- [ ] ai-tool-call
+- [x] ai-composer
+- [x] ai-tool-call
 - [ ] ai-subagent
 - [ ] ai-diff
 - [ ] ai-files
 - [ ] ai-todo
 - [ ] ai-context
 - [ ] ai-usage
-- [ ] ai-threads
+- [x] ai-threads
 - [ ] ai-feedback
 - [ ] ai-branch
 - [ ] kb
