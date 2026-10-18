@@ -55,6 +55,7 @@
  */
 
 import { h, type KbReviewTask, type KbScoreConfig } from './kb-core';
+import { kbSelect } from './kb-select';
 import { emitIcen } from './events';
 import { t } from './i18n';
 
@@ -277,23 +278,22 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
     const queueCol = h('div', 'icen-kb-review-queue');
     const filterWrap = h('div', 'icen-kb-review-filter');
     filterWrap.append(h('span', 'kb-review-filter-label', t('kbReview.assignee')));
-    const filterSel = h('select', 'icen-kb-review-filter-select');
-    filterSel.setAttribute('aria-label', t('kbReview.assignee'));
-    const allOpt = h('option', undefined, t('common.all'));
-    allOpt.value = '';
-    filterSel.append(allOpt);
-    for (const a of distinctAssignees(state.tasks)) {
-      const o = h('option', undefined, a);
-      o.value = a;
-      filterSel.append(o);
-    }
-    filterSel.value = state.filter;
-    filterSel.addEventListener('change', () => {
-      state.filter = filterSel.value;
-      state.idx = 0;
-      render();
+    const filterSel = kbSelect({
+      cls: 'icen-kb-review-filter-select',
+      sm: true,
+      options: [
+        { value: '', label: t('common.all') },
+        ...distinctAssignees(state.tasks).map((a) => ({ value: a, label: a })),
+      ],
+      value: state.filter,
+      ariaLabel: t('kbReview.assignee'),
+      onChange: (v) => {
+        state.filter = v;
+        state.idx = 0;
+        render();
+      },
     });
-    filterWrap.append(filterSel);
+    filterWrap.append(filterSel.el);
     queueCol.append(filterWrap);
 
     const vis = visible();
@@ -334,19 +334,18 @@ export function createKbReview(el: HTMLElement, opts: KbReviewOpts): KbReviewHan
         h('span', 'icen-kb-review-card-title', task.target.label || task.target.id),
       );
       if (state.assignees.length) {
-        const sel = h('select', 'icen-kb-review-assign');
-        sel.setAttribute('aria-label', t('kbReview.assignee'));
-        const placeholder = h('option', undefined, t('kbReview.unassigned'));
-        placeholder.value = '';
-        sel.append(placeholder);
-        for (const a of state.assignees) {
-          const o = h('option', undefined, a);
-          o.value = a;
-          sel.append(o);
-        }
-        sel.value = task.assignee ?? '';
-        sel.addEventListener('change', () => assign(task, sel.value));
-        head.append(sel);
+        const sel = kbSelect({
+          cls: 'icen-kb-review-assign',
+          sm: true,
+          options: [
+            { value: '', label: t('kbReview.unassigned') },
+            ...state.assignees.map((a) => ({ value: a, label: a })),
+          ],
+          value: task.assignee ?? '',
+          ariaLabel: t('kbReview.assignee'),
+          onChange: (v) => assign(task, v),
+        });
+        head.append(sel.el);
       }
       card.append(head);
 

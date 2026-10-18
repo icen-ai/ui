@@ -160,17 +160,9 @@
 /* 队列列表（起始缘列，RTL 镜像） */
 .icen-kb-review-queue { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .icen-kb-review-filter { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--icen-token-text-faint); }
-.icen-kb-review-filter-select,
-.icen-kb-review-assign {
-  font: inherit;
-  font-size: 12px;
-  color: var(--icen-token-text);
-  background: var(--icen-token-bg-soft);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
-  padding: 2px 6px;
-  max-width: 180px;
-}
+/* 弹层选择器（icen-select）域钩子：面样式随 select.css，此处只管布局 */
+.icen-kb-review-filter-select { flex: 0 1 160px; }
+.icen-kb-review-assign { flex: 0 1 180px; }
 .icen-kb-review-list { display: flex; flex-direction: column; gap: 2px; max-height: 420px; overflow-y: auto; }
 
 .icen-kb-review-item {
@@ -403,16 +395,8 @@
 .icen-kb-eval { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 .icen-kb-eval-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--icen-token-text-faint); }
-.icen-kb-eval-run {
-  font: inherit;
-  font-size: 12px;
-  color: var(--icen-token-text);
-  background: var(--icen-token-bg-soft);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
-  padding: 2px 8px;
-  max-width: 220px;
-}
+/* 弹层选择器（icen-select）域钩子：面样式随 select.css，此处只管布局 */
+.icen-kb-eval-run { flex: 0 1 220px; }
 
 /* Summary 判级行（告警才上色：improvement 绿 / regression 红 / tradeoff 警示 / tie 中性） */
 .icen-kb-eval-summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--icen-token-text-muted); }

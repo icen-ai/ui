@@ -80,6 +80,7 @@ import {
   kbVisibilityLabel,
   type KbIdentity, KbRetrievalHit, KbRetrievalParams, KbRetrievalQuery, KbVisibility,
 } from './kb-core';
+import { kbSelect, type KbSelectHandle } from './kb-select';
 import { emitIcen } from './events';
 import { t as icenT } from './i18n';
 
@@ -361,18 +362,18 @@ export function createKbRetrieval(el: HTMLElement, opts: KbRetrievalOpts = {}): 
   if (runIcon) runBtn.prepend(runIcon);
 
   /* ── 检索身份控件（权限域增强 §9.7）：固定身份集给定时才渲染；身份不变更检索逻辑 ── */
-  let idnSelect: HTMLSelectElement | null = null;
+  let idnSelect: KbSelectHandle | null = null;
   let idnGroup: HTMLElement | null = null;
   if (idnList.length) {
-    idnSelect = h('select', 'icen-kb-retrieval-idn');
-    idnSelect.setAttribute('aria-label', icenT('kbRetrieval.identityLabel'));
-    for (const idn of idnList) {
-      const opt = h('option', undefined, idn.label ?? idn.user);
-      opt.value = idn.user;
-      idnSelect.appendChild(opt);
-    }
+    idnSelect = kbSelect({
+      cls: 'icen-kb-retrieval-idn',
+      sm: true,
+      options: idnList.map((idn) => ({ value: idn.user, label: idn.label ?? idn.user })),
+      value: idnList[0]?.user,
+      ariaLabel: icenT('kbRetrieval.identityLabel'),
+    });
     idnGroup = h('span', 'icen-kb-retrieval-idn-group');
-    idnGroup.append(h('span', 'icen-kb-meta', icenT('kbRetrieval.identityShort')), idnSelect);
+    idnGroup.append(h('span', 'icen-kb-meta', icenT('kbRetrieval.identityShort')), idnSelect.el);
   }
 
   /* ── 过滤层徽标（权限域增强 §9.7）：bar 尾部，点击循环三态 ── */
@@ -658,11 +659,11 @@ export function createKbRetrieval(el: HTMLElement, opts: KbRetrievalOpts = {}): 
   });
 
   /* 检索身份：不变更检索逻辑（mock 不重算），只派 icen:kb-visibility-identity {identity}
-     （权限域共用事件）并由原生 select 回显当前身份 */
+     （权限域共用事件）并由弹层选择器回显当前身份 */
   if (idnSelect) {
     const select = idnSelect;
-    listen(select, 'change', () => {
-      const identity = idnList.find((i) => i.user === select.value);
+    listen(select.el, 'icen:select-change', (ev) => {
+      const identity = idnList.find((i) => i.user === (ev as CustomEvent<{ value: string }>).detail.value);
       if (identity) emitIcen(el, 'icen:kb-visibility-identity', { identity });
     });
   }

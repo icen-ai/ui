@@ -65,6 +65,7 @@ import {
   type KbAclEntry,
   type KbIdentity,
 } from './kb-core';
+import { kbSelect } from './kb-select';
 import { emitIcen } from './events';
 import { t as icenT } from './i18n';
 
@@ -158,19 +159,19 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
   el.classList.add('icen-kb-whocan');
 
   /* —— bar：固定身份集下拉 + 检查钮 —— */
-  const select = h('select', 'icen-kb-whocan-user') as HTMLSelectElement;
-  select.setAttribute('aria-label', icenT('kbWhoCan.checkIdentity'));
-  for (const identity of identities) {
-    const option = h('option', undefined, identity.label ?? identity.user);
-    option.value = identity.user;
-    select.appendChild(option);
-  }
+  const select = kbSelect({
+    cls: 'icen-kb-whocan-user',
+    sm: true,
+    options: identities.map((identity) => ({ value: identity.user, label: identity.label ?? identity.user })),
+    value: identities[0]?.user,
+    ariaLabel: icenT('kbWhoCan.checkIdentity'),
+  });
   const checkBtn = h('button', 'icen-kb-whocan-check', icenT('kbWhoCan.check'));
   checkBtn.type = 'button';
   checkBtn.dataset.icenWhocanCheck = '';
   checkBtn.setAttribute('aria-label', icenT('kbWhoCan.recheckTip'));
   const bar = h('div', 'icen-kb-whocan-bar');
-  bar.append(select, checkBtn);
+  bar.append(select.el, checkBtn);
 
   const result = h('div', 'icen-kb-whocan-result');
   el.append(bar, result);
@@ -222,7 +223,7 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
   /* —— 重算：固定身份集 → evaluate → 渲染 → 双通道通知 —— */
   function run(): void {
     if (destroyed) return;
-    const identity = identities.find((i) => i.user === select.value);
+    const identity = identities.find((i) => i.user === select.getValue());
     if (!identity) {
       decision = null;
       result.textContent = '';
@@ -236,8 +237,8 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
   }
 
   /* select 变更即重算；检查钮显式重算 */
-  listen('change', (ev) => {
-    if (ev.target === select) run();
+  listen('icen:select-change', (ev) => {
+    if (ev.target instanceof Node && select.el.contains(ev.target)) run();
   });
   listen('click', (ev) => {
     const t = ev.target;
@@ -246,7 +247,7 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
 
   /* 空身份集：控件禁用 + 空态文案（固定集纪律下无身份 = 不可检查，不猜测） */
   if (!identities.length) {
-    select.disabled = true;
+    select.setDisabled(true);
     checkBtn.disabled = true;
     result.appendChild(h('div', 'icen-kb-empty', icenT('kbWhoCan.noIdentity')));
   } else {
@@ -258,7 +259,7 @@ export function renderKbWhoCan(el: HTMLElement, opts: KbWhoCanOpts): KbWhoCanHan
     setIdentity(id: string): void {
       if (destroyed) return;
       if (!identities.some((i) => i.user === id)) return; /* 集合外 id 静默忽略（不接受自由输入） */
-      select.value = id;
+      select.setValue(id);
       run();
     },
     getResult(): KbAclDecision | null {

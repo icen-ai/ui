@@ -146,11 +146,13 @@ function buildCleanGroup(cfg: KbSegmentConfig): HTMLElement {
   const group = h('div', 'icen-kb-segment-clean');
   KB_CLEAN_OPTIONS.forEach((opt) => {
     const label = h('label', 'icen-kb-segment-clean-item');
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.value = opt;
-    cb.checked = cfg.clean.includes(opt);
+    /* 勾选框走库内 .icen-checkbox 原语（switch.css 自绘 ✓），非原生裸 checkbox */
+    const cb = h('button', 'icen-checkbox');
+    cb.type = 'button';
+    cb.setAttribute('role', 'checkbox');
+    cb.setAttribute('aria-checked', String(cfg.clean.includes(opt)));
     cb.dataset.icenKbSegmentClean = opt;
+    cb.setAttribute('aria-label', CLEAN_LABELS[opt]);
     label.appendChild(cb);
     label.appendChild(document.createTextNode(CLEAN_LABELS[opt]));
     group.appendChild(label);
@@ -280,8 +282,8 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
     delimInput.value = cfg.delimiter ?? '';
     maxInput.value = String(cfg.maxLength);
     overlapInput.value = String(cfg.overlap);
-    modeSeg.querySelectorAll<HTMLInputElement>('[data-icen-kb-segment-clean]').forEach((cb) => {
-      cb.checked = cfg.clean.includes(cb.value as KbCleanOption);
+    modeSeg.querySelectorAll<HTMLElement>('[data-icen-kb-segment-clean]').forEach((cb) => {
+      cb.setAttribute('aria-checked', String(cfg.clean.includes(cb.dataset.icenKbSegmentClean as KbCleanOption)));
     });
     pcNotice.hidden = cfg.mode !== 'parent-child';
   };
@@ -306,8 +308,8 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
     const max = Math.floor(Number(maxInput.value));
     const overlap = Math.floor(Number(overlapInput.value));
     const clean = Array.from(
-      form.querySelectorAll<HTMLInputElement>('[data-icen-kb-segment-clean]:checked'),
-    ).map((cb) => cb.value as KbCleanOption);
+      form.querySelectorAll<HTMLElement>('[data-icen-kb-segment-clean][aria-checked="true"]'),
+    ).map((cb) => cb.dataset.icenKbSegmentClean as KbCleanOption);
     cfg = normalizeSegmentConfig({
       mode: (mode === 'custom' || mode === 'parent-child' ? mode : 'auto'),
       delimiter: delim || undefined,
@@ -331,8 +333,15 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
   listen(delimInput, 'input', () => { readForm(); apply(); });
   listen(maxInput, 'input', () => { readForm(); apply(); });
   listen(overlapInput, 'input', () => { readForm(); apply(); });
-  form.querySelectorAll<HTMLInputElement>('[data-icen-kb-segment-clean]').forEach((cb) => {
-    listen(cb, 'change', () => { readForm(); apply(); });
+  form.querySelectorAll<HTMLElement>('.icen-kb-segment-clean-item').forEach((label) => {
+    /* 整行可点（含按钮自身冒泡）；切换后即时重算预览 */
+    listen(label, 'click', () => {
+      const cb = label.querySelector<HTMLElement>('[data-icen-kb-segment-clean]');
+      if (!cb) return;
+      cb.setAttribute('aria-checked', cb.getAttribute('aria-checked') !== 'true' ? 'true' : 'false');
+      readForm();
+      apply();
+    });
   });
 
   /* 预览块点击展开/收起（200px 截断的渐进披露） */

@@ -345,7 +345,7 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ```
 <div class="icen-kb-whocan">
-  <div class="icen-kb-whocan-bar"><select class="icen-kb-whocan-user">…固定身份集…</select><button data-icen-whocan-check>检查</button></div>
+  <div class="icen-kb-whocan-bar"><icen-select class="icen-kb-whocan-user">…固定身份集（弹层选择器，kb-select 构建器）…</icen-select><button data-icen-whocan-check>检查</button></div>
   <div class="icen-kb-whocan-result [.is-allowed|.is-denied]">
     <div class="icen-kb-whocan-verdict">可编辑（Editor） / 无权限</div>
     <div class="icen-kb-whocan-deniedby">被策略拒绝：DLP-外发管控</div>      <!-- deny 一票否决置顶 -->

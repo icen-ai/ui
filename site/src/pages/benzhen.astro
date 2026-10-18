@@ -7,11 +7,13 @@ import '../../../src/tokens/design.css';
 import '../../../src/tokens/pixel.css';
 import '../../../src/components/btn.css';
 import '../../../src/components/input.css';
+import '../../../src/components/select.css';
 import '../../../src/components/segmented.css';
 import '../../../src/components/switch.css';
 import '../../../src/components/menu.css';
 import '../../../src/components/modal.css';
 import '../../../src/components/pill.css';
+import '../../../src/components/table.css';
 import '../../../src/components/material.css';
 ---
 <!doctype html>
@@ -26,7 +28,7 @@ import '../../../src/components/material.css';
     <a class="icen-skip-link" href="#studio-content">跳到内容</a>
     <header class="studio-header" data-icen-material="chrome">
       <a href="/primitives/" class="studio-wordmark">icen<span> / 原语工作室</span></a>
-      <div class="studio-header-actions"><label class="studio-muted">原语 <select id="primitive-control" aria-label="原语"><option value="benzhen">本真</option><option value="pixel">像素</option></select></label><button class="icen-btn icen-btn-ghost" id="theme-toggle" aria-pressed="false">深色模式</button></div>
+      <div class="studio-header-actions"><span class="studio-muted">原语 <span class="icen-select studio-header-select" data-icen-select data-icen-value="benzhen"><button class="icen-select-trigger icen-pressable icen-focus-ring icen-select-trigger--sm" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="原语"><span class="icen-select-value">本真</span></button><div class="icen-select-panel" hidden><button class="icen-select-option" type="button" data-icen-value="benzhen">本真</button><button class="icen-select-option" type="button" data-icen-value="pixel">像素</button></div><input type="hidden" data-icen-select-value value="benzhen" id="primitive-control" /></span></span><button class="icen-btn icen-btn-ghost" id="theme-toggle" aria-pressed="false">深色模式</button></div>
     </header>
     <main id="studio-content" class="studio-layout">
       <aside class="studio-inspector" aria-label="设计原语设置">
@@ -41,7 +43,7 @@ import '../../../src/components/material.css';
           <label for="glass-control">操作层透光 <output id="glass-value">18%</output></label>
           <input id="glass-control" type="range" min="0" max="30" value="18" />
           <label for="density-control">布局密度</label>
-          <select id="density-control"><option value="normal">标准 · 从容清晰</option><option value="compact">紧凑 · 更多信息</option><option value="comfortable">宽松 · 更多留白</option></select>
+          <span class="icen-select" data-icen-select data-icen-value="normal"><button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="布局密度"><span class="icen-select-value">标准 · 从容清晰</span></button><div class="icen-select-panel" hidden><button class="icen-select-option" type="button" data-icen-value="normal">标准 · 从容清晰</button><button class="icen-select-option" type="button" data-icen-value="compact">紧凑 · 更多信息</button><button class="icen-select-option" type="button" data-icen-value="comfortable">宽松 · 更多留白</button></div><input type="hidden" data-icen-select-value value="normal" id="density-control" /></span>
           <label class="studio-checkbox"><input id="opaque-control" type="checkbox" />减少透明效果</label>
           <button class="icen-btn" id="reset-design">恢复本真</button>
         </div>
@@ -72,7 +74,7 @@ import '../../../src/components/material.css';
           <div id="scene-workspace" role="tabpanel" aria-labelledby="tab-workspace" class="studio-scene" hidden>
             <div class="studio-section-title"><div><h3>团队知识库</h3><p>最近更新的资料，随时可以接着读。</p></div><button class="icen-btn" data-icen-modal-open="new-note">新建笔记</button></div>
             <div class="studio-search icen-input-wrap"><input class="icen-input" id="knowledge-search" type="search" placeholder="搜索资料" aria-label="搜索资料" /></div>
-            <table class="studio-table icen-table"><thead><tr><th>资料</th><th>更新日期</th><th>状态</th></tr></thead><tbody>
+            <table class="icen-table"><thead><tr><th>资料</th><th>更新日期</th><th>状态</th></tr></thead><tbody>
               <tr><td>产品设计原则<span>设计规范 · 12 页</span></td><td>10 月 16 日</td><td><span class="icen-pill icen-pill--success">已同步</span></td></tr>
               <tr><td>品牌语言与写作<span>内容指南 · 8 页</span></td><td>10 月 15 日</td><td><span class="icen-pill icen-pill--success">已同步</span></td></tr>
               <tr><td>秋季产品访谈<span>用户研究 · 24 页</span></td><td>10 月 12 日</td><td><span class="icen-pill">草稿</span></td></tr>
@@ -100,12 +102,21 @@ import '../../../src/components/material.css';
     <script>
       import { initModal, closeModal } from '../../../src/behaviors/modal';
       import { initSwitch } from '../../../src/behaviors/controls';
+      import { initSelect, refreshSelect } from '../../../src/behaviors/select';
       import { createDesign, mountDesign, setDesign, prepareDesignChange } from '../../../src/behaviors/design';
       import { openPopover, closePopover } from '../../../src/behaviors/popover';
       initModal();
       initSwitch();
+      initSelect();
       const root = document.documentElement;
-      document.getElementById('primitive-control')?.addEventListener('change',(event)=>{prepareDesignChange();root.setAttribute('data-icen-style',(event.target as HTMLSelectElement).value);updateExport();});
+      const setStudioSelect = (id: string, value: string): void => {
+        const input = document.getElementById(id) as HTMLInputElement | null;
+        if (!input) return;
+        input.value = value;
+        input.closest('.icen-select')?.setAttribute('data-icen-value', value);
+        refreshSelect();
+      };
+      document.getElementById('primitive-control')?.addEventListener('change',(event)=>{prepareDesignChange();root.setAttribute('data-icen-style',(event.target as HTMLInputElement).value);updateExport();});
       const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
       let customAccent = '';
       let removeBrand = () => {};
@@ -148,9 +159,9 @@ import '../../../src/components/material.css';
         const style = document.head.lastElementChild; if (style) style.id = 'brand-style';
         updateExport();
       });
-      $('density-control').addEventListener('change', (event) => {root.setAttribute('data-icen-density',(event.target as HTMLSelectElement).value);updateExport();});
+      $('density-control').addEventListener('change', (event) => {root.setAttribute('data-icen-density',(event.target as HTMLInputElement).value);updateExport();});
       $('opaque-control').addEventListener('change', (event) => { if ((event.target as HTMLInputElement).checked) root.setAttribute('data-icen-transparency','reduced'); else root.removeAttribute('data-icen-transparency'); updateExport(); });
-      $('reset-design').addEventListener('click', () => { removeBrand(); customAccent=''; setDesign('benzhen'); root.removeAttribute('style'); root.removeAttribute('data-icen-density'); root.removeAttribute('data-icen-transparency'); radius.value='10'; glass.value=root.hasAttribute('data-icen-theme')?'12':'18'; accent.value='#0062cc'; $('radius-value').textContent='10 px'; $('glass-value').textContent=`${glass.value}%`; $('accent-value').textContent='#0062cc'; $<HTMLSelectElement>('density-control').value='normal'; $<HTMLInputElement>('opaque-control').checked=false; updateExport(); });
+      $('reset-design').addEventListener('click', () => { removeBrand(); customAccent=''; setDesign('benzhen'); root.removeAttribute('style'); root.removeAttribute('data-icen-density'); root.removeAttribute('data-icen-transparency'); radius.value='10'; glass.value=root.hasAttribute('data-icen-theme')?'12':'18'; accent.value='#0062cc'; $('radius-value').textContent='10 px'; $('glass-value').textContent=`${glass.value}%`; $('accent-value').textContent='#0062cc'; setStudioSelect('density-control','normal'); $<HTMLInputElement>('opaque-control').checked=false; updateExport(); });
       const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-scene]'));
       function selectTab(tab: HTMLButtonElement) { tabs.forEach((button) => { const active=button===tab; button.setAttribute('aria-selected',String(active)); button.classList.toggle('is-active',active); button.tabIndex=active ? 0 : -1; $(`scene-${button.dataset.scene}`).hidden=!active; }); }
       tabs.forEach((tab,index) => { tab.addEventListener('click',()=>selectTab(tab)); tab.addEventListener('keydown',(event)=> { const direction=root.dir==='rtl' ? -1 : 1; let next=index; if(event.key==='ArrowRight') next=(index+direction+tabs.length)%tabs.length; else if(event.key==='ArrowLeft') next=(index-direction+tabs.length)%tabs.length; else if(event.key==='Home') next=0; else if(event.key==='End') next=tabs.length-1; else return; event.preventDefault(); selectTab(tabs[next]); tabs[next].focus(); }); });
@@ -171,10 +182,10 @@ import '../../../src/components/material.css';
 
 <style is:global>
   *{box-sizing:border-box} body{margin:0} button,input,select{font:inherit} button,a,input,select,summary{touch-action:manipulation} a{color:inherit;text-decoration:none} button{white-space:nowrap} [hidden]{display:none!important}
-  .studio-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 4vw;position:sticky;inset-block-start:0;z-index:var(--icen-z-chrome);border-radius:0!important;border-inline:0!important;border-block-start:0!important}
+  .studio-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 4vw;position:sticky;inset-block-start:0;z-index:var(--icen-z-chrome);border-radius:0!important;border-inline:0!important;border-block-start:0!important}.studio-header-select{inline-size:auto}
   .studio-wordmark{font-size:24px;font-weight:650;letter-spacing:-1px}.studio-wordmark span{font-size:13px;color:var(--icen-token-text-muted);font-weight:400;letter-spacing:0;margin-inline-start:12px}.studio-header-actions{display:flex;align-items:center;gap:20px}.studio-muted{color:var(--icen-token-text-muted);font-size:13px}
   .studio-layout{max-width:1440px;margin-inline:auto;padding:60px 4vw;display:grid;grid-template-columns:236px minmax(0,1fr);gap:64px}.studio-inspector{align-self:start;position:sticky;inset-block-start:112px}.studio-eyebrow{font-size:11px;letter-spacing:.1em;color:var(--icen-token-text-muted);font-weight:600;margin:0 0 16px}h1{font-size:58px;font-weight:550;letter-spacing:-3px!important;margin:0 0 20px}.studio-period{color:var(--icen-token-accent)}.studio-intro{font-size:23px;line-height:1.6;margin:0 0 16px;letter-spacing:-.02em}.studio-description{font-size:13px;line-height:1.9;color:var(--icen-token-text-muted);margin:0 0 32px;max-width:24em}
-  .studio-controls{border-block-start:1px solid var(--icen-token-line-soft);padding-block-start:24px;display:grid;gap:12px;font-size:13px}.studio-controls label{display:flex;align-items:center;gap:8px}.studio-controls output{margin-inline-start:auto;color:var(--icen-token-text-muted);font-size:12px;font-variant-numeric:tabular-nums}.studio-controls input[type=color]{inline-size:24px;block-size:24px;padding:0;border:0;background:none;margin-inline-start:auto}.studio-controls input[type=range]{inline-size:100%;accent-color:var(--icen-token-accent);margin:0 0 8px;min-block-size:24px}.studio-controls select{inline-size:100%;background:var(--icen-token-control);border:1px solid var(--icen-token-line);border-radius:var(--icen-radius-sm);color:var(--icen-token-text);padding:10px}.studio-controls .studio-checkbox{margin-block:8px}.studio-checkbox input{accent-color:var(--icen-token-accent)}.studio-note{font-size:11px;line-height:1.9;color:var(--icen-token-text-muted);margin-block:20px}.studio-doc-link{font-size:12px;color:var(--icen-token-accent-text)}
+  .studio-controls{border-block-start:1px solid var(--icen-token-line-soft);padding-block-start:24px;display:grid;gap:12px;font-size:13px}.studio-controls label{display:flex;align-items:center;gap:8px}.studio-controls output{margin-inline-start:auto;color:var(--icen-token-text-muted);font-size:12px;font-variant-numeric:tabular-nums}.studio-controls input[type=color]{inline-size:24px;block-size:24px;padding:0;border:0;background:none;margin-inline-start:auto}.studio-controls input[type=range]{inline-size:100%;accent-color:var(--icen-token-accent);margin:0 0 8px;min-block-size:24px}.studio-controls .icen-select{inline-size:100%}.studio-controls .studio-checkbox{margin-block:8px}.studio-checkbox input{accent-color:var(--icen-token-accent)}.studio-note{font-size:11px;line-height:1.9;color:var(--icen-token-text-muted);margin-block:20px}.studio-doc-link{font-size:12px;color:var(--icen-token-accent-text)}
   .studio-stage{min-inline-size:0}.studio-stage-heading{display:flex;align-items:center;justify-content:space-between;margin-block-end:30px}.studio-stage-heading h2{font-size:30px;font-weight:550;margin:0}.studio-version{font-size:12px;color:var(--icen-token-text-muted)}.studio-stage-heading .studio-eyebrow{margin-block-end:10px}
   .studio-materials{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-block-end:32px}.studio-materials>div{min-inline-size:0}.studio-materials [data-icen-material]{display:flex;flex-direction:column;padding:22px;min-block-size:166px;gap:5px}.studio-sample-symbol{font-size:30px;font-weight:500;letter-spacing:-1px;margin-block-end:12px}.studio-materials strong{font-size:14px;font-weight:550}.studio-materials span:last-child{font-size:12px;color:var(--icen-token-text-muted)}.studio-material-backdrop{position:relative;padding-block-start:0;background:linear-gradient(125deg,var(--icen-token-bg-soft) 28%,var(--icen-token-accent-subtle) 29%,var(--icen-token-accent-subtle) 60%,var(--icen-token-bg-soft) 61%);border-radius:var(--icen-radius-lg)}.studio-material-offset{background:linear-gradient(60deg,var(--icen-token-bg-soft) 35%,var(--icen-token-info-muted) 36%,var(--icen-token-info-muted) 67%,var(--icen-token-bg-soft) 68%)}
   .studio-workbench{overflow:visible;min-block-size:396px}.studio-workbench-nav{display:flex;align-items:center;justify-content:space-between;padding:var(--icen-density-space-lg);border-block-end:1px solid var(--icen-token-line-soft);gap:12px}.studio-scene{padding:var(--icen-density-space-2xl)}.studio-section-title{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-block-end:28px}.studio-section-title h3{font-size:21px;margin:0 0 8px;font-weight:550}.studio-section-title p,.studio-setting-row p{font-size:13px;color:var(--icen-token-text-muted);margin:0;line-height:1.7}.studio-avatar{display:grid;place-items:center;inline-size:48px;block-size:48px;background:var(--icen-token-accent-subtle);color:var(--icen-token-accent-text);border-radius:50%;font-size:19px}.studio-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--icen-density-space-xl)}.studio-form-grid label,.icen-modal-body label{display:grid;gap:var(--icen-density-space-sm);font-size:13px}.studio-setting-row{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-block:var(--icen-density-space-xl);padding-block:var(--icen-density-space-lg);border-block:1px solid var(--icen-token-line-soft)}.studio-setting-row strong{font-size:14px;font-weight:500;display:block;margin-block-end:4px}.studio-form-actions{display:flex;align-items:center;justify-content:space-between;gap:16px}.studio-form-actions p{font-size:12px;color:var(--icen-token-text-muted);margin:0}

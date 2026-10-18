@@ -47,6 +47,7 @@
 
 import { createIcon } from './icons';
 import { h, normalizeFilterNode, filterToMongo, filterToOData, KB_FILTER_OPS, type KbFilterNode, type KbFilterOp } from './kb-core';
+import { kbSelect } from './kb-select';
 import { emitIcen } from './events';
 import { t } from './i18n';
 
@@ -204,14 +205,18 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
     field.placeholder = t('kbFilter.fieldLabel');
     field.setAttribute('list', datalistId);
     field.setAttribute('aria-label', t('kbFilter.fieldPlaceholder'));
-    const opSel = h('select', 'icen-kb-filter-op') as HTMLSelectElement;
-    opSel.setAttribute('aria-label', t('kbFilter.operatorLabel'));
-    for (const op of KB_FILTER_OPS) {
-      const option = h('option', undefined, OP_LABELS[op]);
-      option.value = op;
-      opSel.appendChild(option);
-    }
-    opSel.value = rule.op;
+    const opSel = kbSelect({
+      cls: 'icen-kb-filter-op',
+      sm: true,
+      options: KB_FILTER_OPS.map((op) => ({ value: op, label: OP_LABELS[op] })),
+      value: rule.op,
+      ariaLabel: t('kbFilter.operatorLabel'),
+      onChange: (op) => {
+        value.disabled = op === 'exists';
+        value.placeholder = op === 'in' ? t('kbFilter.valuePlaceholder') : op === 'exists' ? t('kbFilter.noValueNeeded') : t('kbFilter.valueLabel');
+        notify();
+      },
+    });
     const value = h('input', 'icen-kb-filter-value') as HTMLInputElement;
     value.type = 'text';
     value.value = formatValue(rule.value);
@@ -224,7 +229,7 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
     del.dataset.icenAct = 'del-rule';
     del.title = t('kbFilter.deleteRule');
     del.setAttribute('aria-label', t('kbFilter.deleteRule'));
-    row.append(field, opSel, value, del);
+    row.append(field, opSel.el, value, del);
     return row;
   }
 
@@ -275,9 +280,8 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
           const opEl = child.querySelector(':scope > .icen-kb-filter-op');
           const valueEl = child.querySelector(':scope > .icen-kb-filter-value');
           const field = fieldEl instanceof HTMLInputElement ? fieldEl.value.trim() : '';
-          const op = opEl instanceof HTMLSelectElement && KB_FILTER_OPS.includes(opEl.value as KbFilterOp)
-            ? opEl.value as KbFilterOp
-            : 'eq';
+          const opRaw = opEl?.querySelector<HTMLInputElement>('input[data-icen-select-value]')?.value ?? 'eq';
+          const op = KB_FILTER_OPS.includes(opRaw as KbFilterOp) ? opRaw as KbFilterOp : 'eq';
           const rawValue = valueEl instanceof HTMLInputElement ? valueEl.value : '';
           children.push({ type: 'rule', field, op, value: parseValue(rawValue, op) });
         } else if (child.classList.contains('icen-kb-filter-group')) {
@@ -443,15 +447,9 @@ export function createKbFilter(el: HTMLElement, opts: KbFilterOpts = {}): KbFilt
   });
 
   listen('change', (ev) => {
-    const target = ev.target;
-    if (!(target instanceof HTMLSelectElement) || !target.classList.contains('icen-kb-filter-op')) return;
-    const row = target.closest('.icen-kb-filter-rule');
-    const valueEl = row?.querySelector(':scope > .icen-kb-filter-value');
-    if (!(valueEl instanceof HTMLInputElement)) return;
-    const op = KB_FILTER_OPS.includes(target.value as KbFilterOp) ? target.value as KbFilterOp : 'eq';
-    valueEl.disabled = op === 'exists';
-    valueEl.placeholder = op === 'in' ? t('kbFilter.valuePlaceholder') : op === 'exists' ? t('kbFilter.noValueNeeded') : t('kbFilter.valueLabel');
-    notify();
+    /* op 选择器的 change 已由 kbSelect 的 onChange 就地处理；此处仅兜底 hidden input 之外的意外 */
+    if (!(ev.target instanceof Element)) return;
+    if (ev.target.closest('.icen-kb-filter-op')) notify();
   });
 
   syncDsl();

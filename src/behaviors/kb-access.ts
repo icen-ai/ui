@@ -97,6 +97,7 @@ import {
   type KbAccessState,
   type KbRole,
 } from './kb-core';
+import { kbSelect } from './kb-select';
 import { emitIcen } from './events';
 import { t as icenT } from './i18n';
 
@@ -136,6 +137,7 @@ export interface KbAccessHandle {
 
 /** 即将到期派生窗口：granted 且 expiresAt 距今 ≤7 天 → 渲染为 expiring（与表单「7 天」档同尺度） */
 const EXPIRING_WINDOW_MS = 7 * 86_400_000;
+let accessFormSequence = 0;
 
 /** 请求方可申请的角色（owner 不开放自助申请——负责人由治理侧指定） */
 const REQUESTABLE_ROLES: readonly KbRole[] = ['viewer', 'commenter', 'editor'];
@@ -172,7 +174,7 @@ interface AccessHost extends HTMLElement {
 
 /**
  * 创建访问申请流（requester：被拒五件套 + 表单 + 状态徽章族；approver：审批队列卡）。
- * 快照渲染：setState / 表单交互后整树重建（重建前回填用户已输入的理由/时长，不打断打字）。
+ * 申请端保留原生表单节点：setState 不打断选区、组合输入与时长；切换资源才清空草稿。
  */
 export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHandle {
   const host = el as AccessHost;
@@ -188,6 +190,7 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
   }
 
   host.__icenKbAccess?.destroy(); /* 同一 el 重复 create：先销毁旧实例 */
+  host.replaceChildren();
 
   const mode = opts.mode === 'approver' ? 'approver' : 'requester';
   let req = normalizeAccessRequest(opts.request);
@@ -197,7 +200,10 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
   let formOpen = false;
   let formRole: KbRole = REQUESTABLE_ROLES.includes(req.role) ? req.role : 'viewer';
   let formDuration = '';
-  let formReason = '';
+  let formReason = req.reason ?? '';
+  let formEl: HTMLFormElement | null = null;
+  let deniedKey = '';
+  const formId = `icen-kb-access-form-${++accessFormSequence}`;
 
   /** 渲染瞬间的到期派生：过期 → expired（派事件一次）；7 天窗口内 → expiring。快照语义，不设定时器。 */
   const deriveExpiry = (): void => {
@@ -218,8 +224,10 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
 
   /* ── 表单提交：组请求 → requested → 派事件 + 回调 → 收起表单 ── */
   const submitForm = (form: HTMLFormElement): void => {
+    if (destroyed || !formOpen || req.state === 'requested' || req.state === 'pending_review') return;
+    const ownedFocus = host.contains(host.ownerDocument.activeElement);
     const reasonEl = form.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason');
-    const durationEl = form.querySelector<HTMLSelectElement>('.icen-kb-access-duration');
+    const durationEl = form.querySelector<HTMLInputElement>('.icen-kb-access-duration input[data-icen-select-value]');
     const reason = reasonEl?.value.trim() ?? '';
     const days = Number(durationEl?.value ?? '');
     const expiresAt =
@@ -235,13 +243,15 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       submittedAt: new Date().toISOString(),
     });
     formOpen = false;
+    render();
+    if (ownedFocus) host.querySelector<HTMLElement>('.icen-kb-access-state')?.focus({preventScroll:true});
     emitIcen(host, 'icen:kb-access-request', { request: { ...req } });
     opts.onRequest?.({ ...req });
-    render();
   };
 
   /* ── 审批决定：更新本地状态（回显决定），事件 + 回调双通道 ── */
   const decide = (decision: 'approve' | 'deny', role?: KbRole): void => {
+    if (destroyed) return;
     req = normalizeAccessRequest({
       ...req,
       state: decision === 'approve' ? 'granted' : 'denied',
@@ -283,10 +293,13 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
     const primary = h('button', 'icen-kb-access-btn', icenT('common.requestAccess'));
     primary.type = 'button';
     primary.dataset.icenAccessRequest = '';
+    primary.setAttribute('aria-controls', formId);
     primary.setAttribute('aria-label', icenT('common.requestAccessFor', { p0: req.resource || icenT('kbAccess.defaultSubject') }));
     primary.addEventListener('click', () => {
+      if (destroyed) return;
       formOpen = !formOpen; /* 再点收起 = 免取消钮的关闭路径 */
       render();
+      if (formOpen) formEl?.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason')?.focus({preventScroll:true});
     });
     actions.appendChild(primary);
     const switchBtn = ghostBtn(icenT('kbAccess.switchIdentity'), 'data-icen-access-switch', icenT('kbAccess.switchIdentityTip'));
@@ -302,6 +315,7 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
   /** 申请表单（理由 + 角色三选 + 时长 + 路由明示 + 提交） */
   const buildForm = (): HTMLFormElement => {
     const form = h('form', 'icen-kb-access-form');
+    form.id = formId;
     form.hidden = !formOpen;
 
     const reason = document.createElement('textarea');
@@ -321,8 +335,13 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       chip.dataset.icenRole = r;
       chip.setAttribute('aria-pressed', String(formRole === r));
       chip.addEventListener('click', () => {
+        if (destroyed) return;
         formRole = r;
-        render();
+        roles.querySelectorAll<HTMLButtonElement>('[data-icen-role]').forEach(option => {
+          const selected = option.dataset.icenRole === r;
+          option.classList.toggle('is-on', selected);
+          option.setAttribute('aria-pressed', String(selected));
+        });
       });
       roles.appendChild(chip);
     }
@@ -330,19 +349,18 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
 
     const durationRow = h('label', 'icen-kb-access-duration-row');
     durationRow.appendChild(h('span', undefined, icenT('kbAccess.durationLabel')));
-    const duration = h('select', 'icen-kb-access-duration');
-    for (const [value, label] of [
-      ['', icenT('kbAccess.durationForever')],
-      ['7', icenT('kbAccess.duration7d')],
-      ['30', icenT('kbAccess.duration30d')],
-    ] as const) {
-      const o = h('option', undefined, label);
-      o.value = value;
-      duration.appendChild(o);
-    }
-    duration.value = formDuration;
-    duration.setAttribute('aria-label', icenT('kbAccess.durationLabel'));
-    durationRow.appendChild(duration);
+    const duration = kbSelect({
+      cls: 'icen-kb-access-duration',
+      sm: true,
+      options: [
+        { value: '', label: icenT('kbAccess.durationForever') },
+        { value: '7', label: icenT('kbAccess.duration7d') },
+        { value: '30', label: icenT('kbAccess.duration30d') },
+      ],
+      value: formDuration,
+      ariaLabel: icenT('kbAccess.durationLabel'),
+    });
+    durationRow.appendChild(duration.el);
     form.appendChild(durationRow);
 
     /* 路由明示（Confluence 十年踩坑：请求发给谁必须写明，§9.0.2） */
@@ -363,6 +381,9 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
   /** 状态徽章族：chip + 倒计时 + 续期/重申请文字钮（denied 中性化，revoked 弱化） */
   const buildStateRow = (): HTMLElement => {
     const row = h('div', 'icen-kb-access-state');
+    row.setAttribute('role', 'status');
+    row.setAttribute('aria-atomic', 'true');
+    row.tabIndex = -1;
     const chip = h('span', 'icen-kb-chip', kbAccessStateLabel(req.state));
     chip.dataset.icenState = req.state;
     row.appendChild(chip);
@@ -383,6 +404,7 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       renew.addEventListener('click', () => {
         formOpen = true; /* 续期走同一表单/同一 request 事件，数据侧关联原授权 */
         render();
+        formEl?.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason')?.focus({preventScroll:true});
       });
       row.appendChild(renew);
       return row;
@@ -394,6 +416,7 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       reapply.addEventListener('click', () => {
         formOpen = true;
         render();
+        formEl?.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason')?.focus({preventScroll:true});
       });
       row.appendChild(reapply);
       return row;
@@ -407,6 +430,7 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       reapply.addEventListener('click', () => {
         formOpen = true;
         render();
+        formEl?.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason')?.focus({preventScroll:true});
       });
       row.appendChild(reapply);
       return row;
@@ -419,6 +443,7 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
       reapply.addEventListener('click', () => {
         formOpen = true;
         render();
+        formEl?.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason')?.focus({preventScroll:true});
       });
       row.appendChild(reapply);
     }
@@ -440,18 +465,17 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
     if (pending) {
       const actions = h('span', 'icen-kb-access-req-actions');
 
-      const roleSel = h('select', 'icen-kb-access-approve-role');
-      roleSel.setAttribute('aria-label', icenT('kbAccess.grantRoleLabel'));
-      for (const r of REQUESTABLE_ROLES) {
-        const o = h('option', undefined, icenT('kbAccess.grantAsPrefix', { p0: kbRoleLabel(r) }));
-        o.value = r;
-        roleSel.appendChild(o);
-      }
-      roleSel.value = REQUESTABLE_ROLES.includes(req.role) ? req.role : 'viewer';
-      actions.appendChild(roleSel);
+      const roleSel = kbSelect({
+        cls: 'icen-kb-access-approve-role',
+        sm: true,
+        options: REQUESTABLE_ROLES.map((r) => ({ value: r, label: icenT('kbAccess.grantAsPrefix', { p0: kbRoleLabel(r) }) })),
+        value: REQUESTABLE_ROLES.includes(req.role) ? req.role : 'viewer',
+        ariaLabel: icenT('kbAccess.grantRoleLabel'),
+      });
+      actions.appendChild(roleSel.el);
 
       const approve = ghostBtn(icenT('common.approve'), 'data-icen-access-approve', icenT('kbAccess.approveTip'));
-      approve.addEventListener('click', () => decide('approve', roleSel.value as KbRole));
+      approve.addEventListener('click', () => decide('approve', roleSel.getValue() as KbRole));
       actions.appendChild(approve);
 
       /* 拒绝留言：UI 便利；事件契约（冻结）不含留言字段，宿主经 onDecide 自行读取或走自有通道 */
@@ -479,15 +503,12 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
     return queue;
   };
 
-  /* ── 快照渲染（整树重建；重建前捞回正在输入的理由/时长并回焦，不打断打字） ── */
+  /* Requester controls retain their native identity: selection, IME composition,
+   * scroll position and focus survive status/owner updates. */
   const render = (): void => {
     if (destroyed) return;
     deriveExpiry();
-
-    const doc = host.ownerDocument;
-    const active = doc.activeElement;
-    const focusInForm =
-      active instanceof HTMLElement && host.contains(active) && active.closest('.icen-kb-access-form') != null;
+    if (destroyed) return; // An expiry listener may synchronously dispose this instance.
 
     /* 打断保护：宿主 setState 触发的重渲不吞掉用户已输入未提交的内容 */
     const prevReason = host.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason');
@@ -497,29 +518,57 @@ export function createKbAccess(el: HTMLElement, opts: KbAccessOpts): KbAccessHan
 
     host.className = mode === 'approver' ? 'icen-kb-access icen-kb-access--approver' : 'icen-kb-access';
     host.dataset.icenState = req.state;
-    host.replaceChildren();
-
     if (mode === 'approver') {
-      host.append(buildQueue(), buildStateRow());
+      host.replaceChildren(buildQueue(), buildStateRow());
     } else {
       const grantedLike = req.state === 'granted' || req.state === 'expiring';
-      if (!grantedLike) host.appendChild(buildDeniedCard()); /* 获权后五件套不再呈现（原因已不成立） */
-      const form = buildForm();
-      host.appendChild(form);
-      host.appendChild(buildStateRow());
-      if (formOpen && focusInForm) form.querySelector<HTMLTextAreaElement>('.icen-kb-access-reason')?.focus();
+      if (!formEl) { formEl = buildForm(); host.appendChild(formEl); }
+      formEl.hidden = !formOpen;
+      const oldCard = host.querySelector('.icen-kb-access-denied');
+      const key = JSON.stringify([req.resource, req.approverNote]);
+      if (grantedLike) oldCard?.remove();
+      else if (!oldCard || key !== deniedKey) {
+        const card = buildDeniedCard();
+        if (oldCard) oldCard.replaceWith(card);
+        else host.insertBefore(card, formEl);
+      }
+      deniedKey = key;
+      const requestButton = host.querySelector<HTMLButtonElement>('[data-icen-access-request]');
+      if (requestButton) {
+        requestButton.setAttribute('aria-expanded', String(formOpen));
+        requestButton.disabled = req.state === 'requested' || req.state === 'pending_review';
+      }
+      const route = formEl.querySelector('.icen-kb-access-route');
+      if (route) route.textContent = icenT('kbAccess.requestToPrefix', {p0:req.approverNote || icenT('kbAccess.ownerLabel')});
+      const state = host.querySelector('.icen-kb-access-state');
+      const nextState = buildStateRow();
+      if (state) state.replaceChildren(...nextState.childNodes);
+      else host.appendChild(nextState);
     }
   };
 
   const setState = (next: Partial<KbAccessRequest> | KbAccessState): void => {
     if (destroyed) return;
+    const editing = formEl?.contains(host.ownerDocument.activeElement);
+    const previous = req;
     req = normalizeAccessRequest(typeof next === 'string' ? { ...req, state: next } : { ...req, ...next });
+    if (previous.id !== req.id || previous.resource !== req.resource || previous.requester !== req.requester) {
+      formEl?.remove();
+      formEl = null;
+      formOpen = false;
+      formReason = req.reason ?? '';
+      formDuration = '';
+      formRole = REQUESTABLE_ROLES.includes(req.role) ? req.role : 'viewer';
+    }
+    if (['granted', 'requested', 'pending_review'].includes(req.state)) formOpen = false;
     render();
+    if (editing && !formOpen) host.querySelector<HTMLElement>('.icen-kb-access-state')?.focus({preventScroll:true});
   };
 
   const destroy = (): void => {
     if (destroyed) return;
     destroyed = true;
+    formEl = null;
     host.replaceChildren();
     host.classList.remove('icen-kb-access', 'icen-kb-access--approver');
     delete host.dataset.icenState;

@@ -131,15 +131,8 @@
 }
 
 /* —— 段A 装配件细化：kb-who-can 身份下拉 / 检查钮 / 原因链徽标 —— */
-.icen-kb-whocan-user {
-  height: 28px; max-width: 240px; padding: 0 8px;
-  font: inherit; font-size: 12.5px;
-  color: var(--icen-token-text);
-  background: var(--icen-token-bg);
-  border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-sm, 6px);
-  cursor: pointer;
-}
-.icen-kb-whocan-user:focus-visible { outline: none; border-color: var(--icen-token-accent); }
+/* 弹层选择器（icen-select）域钩子：面样式随 select.css，此处只管布局 */
+.icen-kb-whocan-user { flex: 0 1 240px; }
 .icen-kb-whocan-check {
   height: 26px; padding: 0 12px;
   font: inherit; font-size: 12.5px; line-height: 1;
@@ -269,13 +262,8 @@
   background: var(--icen-token-accent-subtle, transparent);
 }
 .icen-kb-access-duration-row { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--icen-token-text-muted); }
-.icen-kb-access-duration {
-  font: inherit; font-size: 12px;
-  color: var(--icen-token-text);
-  background: var(--icen-token-bg);
-  border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-sm, 6px);
-  padding: 3px 6px; cursor: pointer;
-}
+/* 弹层选择器（icen-select）域钩子：面样式随 select.css，此处只管布局 */
+.icen-kb-access-duration { flex: 0 1 150px; }
 .icen-kb-access-route { align-self: flex-start; }
 .icen-kb-access-submit {
   align-self: flex-start;
@@ -293,13 +281,8 @@
 .icen-kb-access-req-resource { color: var(--icen-token-text); }
 .icen-kb-access-req-at { font-size: 11px; color: var(--icen-token-text-faint); }
 .icen-kb-access-req-reason { flex: 1 1 160px; min-width: 120px; }
-.icen-kb-access-approve-role {
-  font: inherit; font-size: 12px;
-  color: var(--icen-token-text);
-  background: var(--icen-token-bg);
-  border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-sm, 6px);
-  padding: 3px 6px; cursor: pointer;
-}
+/* 弹层选择器（icen-select）域钩子：面样式随 select.css，此处只管布局 */
+.icen-kb-access-approve-role { flex: 0 1 auto; }
 .icen-kb-access-note {
   font: inherit; font-size: 12px;
   color: var(--icen-token-text);

@@ -13,40 +13,7 @@
 
 /* ══════════════ 0. 域内共享控件基元 ══════════════ */
 
-/* 文本输入（query / 过滤字段 / 过滤值 / 新增问题） */
-.icen-kb-retrieval-query,
-.icen-kb-hittest-input,
-.icen-kb-filter-field,
-.icen-kb-filter-value {
-  height: 28px;
-  padding: 0 10px;
-  font: inherit;
-  font-size: 12.5px;
-  color: var(--icen-token-text);
-  background: var(--icen-token-bg);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
-  transition: border-color 0.16s ease-out;
-}
-.icen-kb-retrieval-query::placeholder,
-.icen-kb-hittest-input::placeholder,
-.icen-kb-filter-field::placeholder,
-.icen-kb-filter-value::placeholder {
-  color: var(--icen-token-text-faint);
-}
-.icen-kb-retrieval-query:focus-visible,
-.icen-kb-hittest-input:focus-visible,
-.icen-kb-filter-field:focus-visible,
-.icen-kb-filter-value:focus-visible,
-.icen-kb-filter-op:focus-visible {
-  outline: none;
-  border-color: var(--icen-token-accent);
-}
-.icen-kb-filter-field:disabled,
-.icen-kb-filter-value:disabled {
-  opacity: var(--icen-disabled-opacity, 0.5);
-  cursor: not-allowed;
-}
+/* Text fields share input.css; only domain widths/flex allocation are local. */
 
 /* 滑杆（alpha 混合权重 / 分数阈值）：自实现简单拖杆，input[type=range] 样式化 */
 .icen-kb-range {
@@ -363,20 +330,10 @@
   margin-inline-start: auto;
 }
 
-/* 检索身份选择（权限域注入的控件，spec §9.7；固定身份集——服务端 token 语义，不接受自由输入） */
+/* 检索身份选择（权限域注入的控件，spec §9.7；固定身份集——服务端 token 语义，不接受自由输入）。
+   弹层选择器（icen-select）域钩子：面样式随 select.css，此处只管布局 */
 .icen-kb-retrieval-idn-group { display: inline-flex; align-items: center; gap: 6px; }
-.icen-kb-retrieval-idn {
-  height: 28px;
-  padding: 0 6px;
-  font: inherit;
-  font-size: 12.5px;
-  color: var(--icen-token-text);
-  background: var(--icen-token-bg);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
-  transition: border-color 0.16s ease-out;
-}
-.icen-kb-retrieval-idn:focus-visible { outline: none; border-color: var(--icen-token-accent); }
+.icen-kb-retrieval-idn { flex: 0 0 auto; inline-size: auto; }
 
 /* 可复制参数 JSON 行（.icen-kb-meta mono；DSL 双表示纪律）：不换行不断词，横向滚动 */
 .icen-kb-params {
@@ -624,24 +581,18 @@
   width: 120px;
   flex: 0 0 auto;
   font-family: var(--icen-font-mono, ui-monospace, monospace);
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-sm);
 }
 .icen-kb-filter-op {
-  height: 28px;
-  padding: 0 6px;
-  font: inherit;
-  font-size: 12px;
-  color: var(--icen-token-text);
-  background: var(--icen-token-bg);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
-  cursor: pointer;
+  /* 弹层选择器（icen-select）域钩子：面样式随 select.css，此处只管布局 */
+  flex: 0 0 auto;
+  inline-size: auto;
 }
 .icen-kb-filter-value {
   flex: 1 1 120px;
   min-width: 104px; /* 12px mono 下容得下整条日期串 2026-07-01，不截字 */
   font-family: var(--icen-font-mono, ui-monospace, monospace);
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-sm);
 }
 
 /* DSL 镜像（Mongo JSON / OData tab 切换，mono 可复制） */

@@ -8,11 +8,11 @@
  *   - 摄取域＝中性行 + 状态色只给状态点与徽标（连线/边框一律层级色）
  *   - 数字 .icen-kb-num；元信息 .icen-kb-meta；材料 bg → bg-soft 两档；圆角 --icen-radius-md（容器）/ --icen-radius-sm（行内）
  *   - 动效 ≤240ms ease-out；运行脉冲交给 kb.css .icen-kb-dot.is-live；reduced-motion 全退化为瞬时
- *   - 域自持控件基元：.icen-kb-btn（钮）/ .icen-kb-input（输入）/ .icen-kb-seg（mini segmented），不依赖库内其他 css
+ *   - 域控件布局（输入视觉复用基础组件）：.icen-kb-btn（钮）/ .icen-kb-input（输入）/ .icen-kb-seg（mini segmented），输入原语随 tokens.css 提供
  *   - 只消费 --icen-token-* / --icen-radius-* / --icen-font-mono，附缺省回退，可独立安装
  */
 
-/* ══════════════ 域自持控件基元（.icen-kb-btn / .icen-kb-input / .icen-kb-seg） ══════════════ */
+/* ══════════════ 域控件布局（输入视觉复用基础组件）（.icen-kb-btn / .icen-kb-input / .icen-kb-seg） ══════════════ */
 
 .icen-kb-btn {
   display: inline-flex;
@@ -52,32 +52,13 @@
   flex: 0 0 auto;
 }
 
-.icen-kb-input {
-  box-sizing: border-box;
-  min-width: 0;
-  padding: 3px 8px;
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
-  background: var(--icen-token-bg);
-  color: var(--icen-token-text);
-  font: inherit;
-  font-size: 12.5px;
-  line-height: 1.5;
-  transition: border-color 0.16s ease-out;
-}
-.icen-kb-input::placeholder {
-  color: var(--icen-token-text-faint);
-}
-.icen-kb-input:focus {
-  outline: none;
-  border-color: var(--icen-token-accent);
-}
+/* Input surface/geometry comes from the shared input recipe in tokens.css. */
 .icen-kb-input[aria-invalid='true'] {
   border-color: var(--icen-token-danger, var(--icen-token-error));
 }
 .icen-kb-input--mono {
   font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-sm);
 }
 
 .icen-kb-seg {
@@ -511,10 +492,7 @@
   cursor: pointer;
   user-select: none;
 }
-.icen-kb-segment-clean-item input {
-  accent-color: var(--icen-token-accent);
-  margin: 0;
-}
+.icen-kb-segment-clean-item .icen-checkbox { flex: 0 0 auto; }
 
 .icen-kb-segment-preview {
   display: flex;

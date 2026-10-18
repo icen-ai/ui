@@ -53,6 +53,7 @@ import {
   type KbEvalGrade,
   type KbEvalRow,
 } from './kb-core';
+import { kbSelect, type KbSelectHandle } from './kb-select';
 import { emitIcen } from './events';
 import { t } from './i18n';
 
@@ -146,21 +147,18 @@ function labelOf(runs: KbEvalRunRef[], id: string): string {
   return runs.find((r) => r.id === id)?.label ?? id;
 }
 
-function buildRunSelect(runs: KbEvalRunRef[], selected: string, tag: string): HTMLSelectElement {
-  const sel = h('select', 'icen-kb-eval-run');
-  sel.dataset.icenRun = tag;
-  sel.setAttribute('aria-label', t('kbEval.runSelectAria'));
-  if (!runs.length) {
-    const o = h('option', undefined, '—');
-    o.value = '';
-    sel.append(o);
-  }
-  for (const r of runs) {
-    const o = h('option', undefined, r.label || r.id);
-    o.value = r.id;
-    sel.append(o);
-  }
-  sel.value = selected;
+function buildRunSelect(runs: KbEvalRunRef[], selected: string, tag: string): KbSelectHandle {
+  const options = runs.length
+    ? runs.map((r) => ({ value: r.id, label: r.label || r.id }))
+    : [{ value: '', label: '—' }];
+  const sel = kbSelect({
+    cls: 'icen-kb-eval-run',
+    sm: true,
+    options,
+    value: selected,
+    ariaLabel: t('kbEval.runSelectAria'),
+  });
+  sel.el.dataset.icenRun = tag;
   return sel;
 }
 
@@ -197,11 +195,11 @@ export function renderKbEvalCompare(el: HTMLElement, model: KbEvalCompareModel):
   const selA = buildRunSelect(runs, runA, 'a');
   const selB = buildRunSelect(runs, runB, 'b');
   const emitCompare = (): void => {
-    emitIcen(el, 'icen:kb-eval-compare', { runA: selA.value, runB: selB.value });
+    emitIcen(el, 'icen:kb-eval-compare', { runA: selA.getValue(), runB: selB.getValue() });
   };
-  selA.addEventListener('change', emitCompare);
-  selB.addEventListener('change', emitCompare);
-  bar.append(selA, h('span', undefined, 'vs'), selB);
+  selA.el.addEventListener('icen:select-change', emitCompare);
+  selB.el.addEventListener('icen:select-change', emitCompare);
+  bar.append(selA.el, h('span', undefined, 'vs'), selB.el);
   el.append(bar);
 
   if (!model.rows.length) {

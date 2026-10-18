@@ -7,6 +7,9 @@ import '../../../src/tokens/colors.css';
 import '../../../src/tokens/style-profiles.css';
 import '../../../src/tokens/typography.css';
 import '../../../src/base.css';
+/* 输入面 recipe：.icen-kb-input / -retrieval-query / -hittest-input / -filter-field / -filter-value
+   的背景/边框/聚焦都在这里（0.10.0 起 kb 域 css 只管宽度布局，不再自持面样式） */
+import '../../../src/components/input.css';
 /* kb 族：共享基座 + 六域 + 权限域（v0.9.1 增补） */
 import '../../../src/components/kb.css';
 import '../../../src/components/kb-ground.css';
@@ -36,6 +39,9 @@ import '../../../src/components/panel.css';
 import '../../../src/components/btn.css';
 import '../../../src/components/empty.css';
 import '../../../src/components/tabs.css';
+/* kb 域内使用的原语面：弹层选择器 + 勾选框（分段清理选项） */
+import '../../../src/components/select.css';
+import '../../../src/components/switch.css';
 
 /* 参考文献锚点：全页连续编号（文献格式），静态渲染 */
 let refNo = 0;
