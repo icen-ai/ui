@@ -24,6 +24,29 @@ function fixture() {
 
 afterEach(() => { cleanup.splice(0).reverse().forEach(fn => fn()); document.body.replaceChildren(); });
 
+test('real panel height positions above its anchor and resize observers retire on close',async()=>{
+  const original=globalThis.ResizeObserver;
+  const observers:Array<{notify:()=>void;disconnected:boolean}>=[];
+  class Observer implements ResizeObserver {
+    disconnected=false;
+    constructor(private callback:ResizeObserverCallback){observers.push(this)}
+    observe(){}unobserve(){}disconnect(){this.disconnected=true}
+    notify(){this.callback([],this)}
+  }
+  globalThis.ResizeObserver=Observer;
+  const {trigger,panel,host}=fixture();let height=400;
+  trigger.getBoundingClientRect=()=>({x:100,y:600,left:100,top:600,right:140,bottom:630,width:40,height:30,toJSON(){return {}}});
+  Object.defineProperty(panel,'offsetHeight',{get:()=>height});
+  try {
+    openPopover(panel,{anchor:trigger,side:'top',sizing:{width:320,maxHeight:420}});
+    expect(parseFloat(panel.style.top)+height).toBeLessThanOrEqual(592);
+    height=160;observers[0].notify();await wait(30);
+    expect(parseFloat(panel.style.top)+height).toBe(592);
+    observers[0].notify();closePopover(panel,{immediate:true});await wait(30);
+    expect(observers[0].disconnected).toBe(true);expect(panel.parentElement===host).toBe(true);expect(panel.hidden).toBe(true);
+  } finally {closePopover(panel,{immediate:true});globalThis.ResizeObserver=original;}
+});
+
 test('declarative trigger toggles the portalled panel and syncs aria state', async () => {
   const { host, trigger, panel } = fixture();
   cleanup.push(initPopover(host));

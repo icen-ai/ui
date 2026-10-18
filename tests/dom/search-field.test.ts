@@ -23,3 +23,14 @@ test('search clear is a single labelled SVG action with native input semantics a
     next.destroy();expect(input.classList.contains('icen-search-input')).toBe(false);
   } finally {handle.destroy();host.remove();}
 });
+
+test('enhancement keeps the original field, draft selection and sibling order across teardown',()=>{
+  const host=document.createElement('div'),before=document.createElement('span'),input=document.createElement('input'),after=document.createElement('span');
+  input.value='仍在编辑的草稿';host.append(before,input,after);document.body.append(host);input.focus();input.setSelectionRange(1,4);
+  const handle=enhanceSearchField(input);
+  try{
+    expect(document.activeElement===input).toBe(true);expect(input.value).toBe('仍在编辑的草稿');expect([input.selectionStart,input.selectionEnd]).toEqual([1,4]);
+    handle.destroy();expect(Array.from(host.childNodes).map(n=>n===before?'before':n===input?'input':n===after?'after':'extra')).toEqual(['before','input','after']);
+    expect(document.activeElement===input).toBe(true);expect(input.value).toBe('仍在编辑的草稿');
+  }finally{handle.destroy();host.remove()}
+});

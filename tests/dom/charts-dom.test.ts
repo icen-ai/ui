@@ -13,6 +13,20 @@ afterEach(() => {
   document.querySelectorAll<HTMLElement>('.icen-chart-tooltip').forEach((t) => { t.hidden = true; });
 });
 
+test('radar default series have distinct matching colors and legend choices survive updates', () => {
+  const el = host();
+  const h = renderChart(el, {type:'radar',axes:['设计','性能','易用'],series:[{name:'Web',values:[1,2,3]},{name:'App',values:[2,3,1]},{name:'API',values:[3,1,2]}]});
+  const colors = Array.from(el.querySelectorAll('polygon[data-icen-chart-series]'), p => p.getAttribute('stroke'));
+  expect(new Set(colors).size).toBe(3);
+  const row = el.querySelector<HTMLElement>('.icen-chart-legend-toggle-item')!;
+  row.click();
+  expect(el.querySelector('polygon[data-icen-chart-series="0"]')!.classList.contains('is-off')).toBe(true);
+  h.update(h.spec);
+  expect(el.querySelector('.icen-chart-legend-toggle-item')!.getAttribute('aria-pressed')).toBe('false');
+  expect(el.querySelector('polygon[data-icen-chart-series="0"]')!.classList.contains('is-off')).toBe(true);
+  h.destroy();
+});
+
 function host(): HTMLElement {
   mount('<div class="chart-host"></div>');
   return document.querySelector<HTMLElement>('.chart-host')!;

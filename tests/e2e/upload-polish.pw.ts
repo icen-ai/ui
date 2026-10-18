@@ -2,6 +2,52 @@ import {test, expect} from '@playwright/test';
 import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 
+test('rejected or duplicate selections preserve submitted files; keyboard removal and reset keep state coherent', async ({page}) => {
+  await page.goto('/components/upload/');
+  const zone=page.locator('.icen-upload[data-icen-upload-list]'), input=zone.locator('input[type=file]');
+  const initial=await input.evaluate(el=>Array.from((el as HTMLInputElement).files ?? [],f=>f.name));
+  expect(initial).toEqual(['changelog.pdf','cover.png']);
+  await input.setInputFiles({name:'invalid.exe',mimeType:'application/octet-stream',buffer:Buffer.from('x')});
+  expect(await input.evaluate(el=>Array.from((el as HTMLInputElement).files ?? [],f=>f.name))).toEqual(initial);
+  await input.setInputFiles({name:'third.pdf',mimeType:'application/pdf',buffer:Buffer.from('pdf')});
+  const accepted=await input.evaluate(el=>Array.from((el as HTMLInputElement).files ?? [],f=>f.name));
+  await input.evaluate(el=>{
+    const field=el as HTMLInputElement, dt=new DataTransfer();dt.items.add(field.files![0]);
+    field.files=dt.files;field.dispatchEvent(new Event('change',{bubbles:true}));
+  });
+  // Rejection and duplicates must never clear files that are still in the list.
+  expect(await input.evaluate(el=>Array.from((el as HTMLInputElement).files ?? [],f=>f.name))).toEqual(accepted);
+  const first=zone.locator('.icen-upload-list-item-x').first();
+  await first.focus(); await first.press('Enter');
+  await expect(zone.locator('.icen-upload-list-item-x').first()).toBeFocused();
+  await zone.evaluate(el=>{
+    const form=document.createElement('form'); form.id='review-upload-form'; el.before(form); form.appendChild(el);
+    const field=el.querySelector('input')!; field.name='documents';
+  });
+  expect(await page.locator('#review-upload-form').evaluate(el=>new FormData(el as HTMLFormElement).getAll('documents').map(f=>(f as File).name))).toEqual(await input.evaluate(el=>Array.from((el as HTMLInputElement).files ?? [],f=>f.name)));
+  await page.locator('#review-upload-form').evaluate(el=>(el as HTMLFormElement).reset());
+  await expect(zone.locator('.icen-upload-list-item')).toHaveCount(0);
+  expect(await input.evaluate(el=>(el as HTMLInputElement).files!.length)).toBe(0);
+});
+
+test('disabled and busy upload zones reject keyboard picking and dropped files', async ({page}) => {
+  await page.goto('/components/upload/');
+  const zone=page.locator('.icen-upload[data-icen-upload-list]');
+  for(const attribute of ['aria-disabled','aria-busy']) {
+    const result=await zone.evaluate((el,attribute)=>{
+      el.setAttribute(attribute,'true');
+      const input=el.querySelector('input')!; let picks=0; input.click=()=>{picks++};
+      const before=input.files!.length;
+      el.querySelector('.icen-upload-dropzone')!.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+      const dt=new DataTransfer();dt.items.add(new File(['pdf'],'disabled.pdf',{type:'application/pdf'}));
+      el.dispatchEvent(new DragEvent('drop',{dataTransfer:dt,bubbles:true,cancelable:true}));
+      el.removeAttribute(attribute);
+      return {picks,before,after:input.files!.length};
+    },attribute);
+    expect(result.picks).toBe(0); expect(result.after).toBe(result.before);
+  }
+});
+
 test('seeded list renders real thumbnails and quiet removal, errors surface honestly', async ({page}) => {
   await page.goto('/components/upload/');
   const zone = page.locator('.icen-upload[data-icen-upload-list]');

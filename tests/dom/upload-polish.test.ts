@@ -12,6 +12,7 @@ function fixture(list = true) {
   zone.setAttribute('data-icen-max-files', '3');
   const input = document.createElement('input');
   input.type = 'file';
+  input.multiple = true;
   input.setAttribute('accept', '.png,.md');
   zone.append(input);
   document.body.append(zone);
@@ -48,6 +49,21 @@ test('list renders rows with shared icons, dedupes by identity and enforces acce
   choose(input, [file('big.md', 2048)]); // 超大小
   choose(input, [file('notes.txt', 10, 'text/plain')]); // 类型不符
   expect(events.filter(e => e === 'error')).toHaveLength(3);
+  expect(Array.from(input.files ?? [], f => f.name)).toEqual(['a.md','b.md','c.md']);
+});
+
+test('non-list forms contain accepted files only and honor native single-file selection', () => {
+  const {zone,input} = fixture(false);
+  const changes: string[][] = [];
+  zone.addEventListener('change',()=>changes.push(Array.from(input.files ?? [],f=>f.name)));
+  cleanup.push(initUpload());
+  choose(input,[file('accepted.md'),file('invalid.exe')]);
+  expect(Array.from(input.files ?? [],f=>f.name)).toEqual(['accepted.md']);
+  input.multiple=false;
+  choose(input,[file('first.md'),file('second.md')]);
+  expect(Array.from(input.files ?? [],f=>f.name)).toEqual(['first.md']);
+  expect(changes).toEqual([['accepted.md'],['first.md']]);
+  expect(zone.querySelectorAll('.icen-upload-list-item')).toHaveLength(0);
 });
 
 test('row removal emits events and disposal releases rows, listeners and the idempotency mark', () => {
@@ -71,8 +87,10 @@ test('row removal emits events and disposal releases rows, listeners and the ide
   expect(zone.querySelector('.icen-upload-list')).toBeNull();
 
   cleanup.push(initUpload()); // 销毁后可重新 init
+  expect(zone.querySelectorAll('.icen-upload-list-item')).toHaveLength(1); // Rehydrate the native FileList.
   choose(input, [file('d.md')]);
-  expect(zone.querySelectorAll('.icen-upload-list-item')).toHaveLength(1);
+  expect(Array.from(input.files ?? [],f=>f.name)).toEqual(['c.md','d.md']);
+  expect(zone.querySelectorAll('.icen-upload-list-item')).toHaveLength(2);
 });
 
 test('author-provided list containers survive disposal (cleared, not removed)', () => {

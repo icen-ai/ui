@@ -1,5 +1,50 @@
 import {test, expect} from '@playwright/test';
 
+test('Escape suppresses the CSS fallback and removes only the owned description after hover plus focus', async ({page}) => {
+  await page.goto('/components/tooltip/');
+  const trigger = page.locator('.demo-stage button[data-icen-tooltip="默认在上方"]');
+  await trigger.evaluate(el => el.setAttribute('aria-describedby', 'original-help'));
+  await trigger.hover();
+  await expect(page.locator('.icen-tooltip')).toBeVisible();
+  await trigger.focus();
+  await trigger.evaluate(el => el.setAttribute('aria-describedby', el.getAttribute('aria-describedby') + ' live-help'));
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.icen-tooltip')).toHaveCount(0);
+  await expect(trigger).toHaveAttribute('aria-describedby', 'original-help live-help');
+  await page.waitForTimeout(450);
+  expect(await trigger.evaluate(el => getComputedStyle(el, '::after').content)).toBe('none');
+  // Leave both input modalities before a fresh hover can open another tooltip.
+  await trigger.blur(); await page.mouse.move(0, 800); await trigger.hover();
+  await expect(page.locator('.icen-tooltip')).toBeVisible();
+});
+
+test('a reader can move across the gap onto a tooltip; keyboard focus keeps it open', async ({page}) => {
+  await page.goto('/components/tooltip/');
+  const trigger = page.locator('.demo-stage button[data-icen-tooltip-multiline="true"]');
+  await trigger.hover();
+  const tip = page.locator('.icen-tooltip');
+  await expect(tip).toBeVisible();
+  await tip.hover();
+  await page.waitForTimeout(600);
+  await expect(tip).toBeVisible();
+  await page.mouse.move(0, 800);
+  await expect(tip).toHaveCount(0);
+  await trigger.focus();
+  await expect(tip).toBeVisible();
+  await trigger.hover(); await page.mouse.move(0, 800);
+  await page.waitForTimeout(400);
+  await expect(tip).toBeVisible();
+});
+
+test('clicking during the hover delay does not resurrect a CSS tooltip', async ({page}) => {
+  await page.goto('/components/tooltip/');
+  const trigger = page.locator('.demo-stage button[data-icen-tooltip="默认在上方"]');
+  await trigger.hover(); await trigger.click();
+  await page.waitForTimeout(500);
+  await expect(page.locator('.icen-tooltip')).toHaveCount(0);
+  expect(await trigger.evaluate(el => getComputedStyle(el, '::after').content)).toBe('none');
+});
+
 test('code block toolbar tooltip portals to body and stays fully visible above the block edge', async ({page}) => {
   await page.goto('/components/code-block/');
   const btn = page.locator('.icen-code-block [data-icen-code-block-copy]').first();

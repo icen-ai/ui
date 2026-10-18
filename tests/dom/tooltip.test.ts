@@ -46,7 +46,7 @@ test('hover intent portals one delayed bubble to body and leaving cancels or clo
   expect(tip!.dataset.icenSide).toBe('top');
 
   out(btn);
-  await wait(300);
+  await wait(400);
   expect(bubble()).toBeNull();
   expect(btn.hasAttribute('aria-describedby')).toBe(false);
 });
@@ -60,6 +60,7 @@ test('pointer between triggers retargets the single bubble instead of stacking',
   cleanup.push(initTooltip());
   over(a); await wait(450);
   expect(bubble()!.textContent).toBe('第一处');
+  out(a);
   over(b); await wait(450);
   expect(document.body.querySelectorAll('.icen-tooltip')).toHaveLength(1);
   expect(bubble()!.textContent).toBe('第二处');
@@ -75,17 +76,19 @@ test('Escape, click and scroll each dismiss; invalid side falls back to top', as
   await wait(300);
   expect(bubble()).toBeNull();
 
+  out(btn); // Escape stays dismissed until the pointer leaves.
   over(btn); await wait(450);
   expect(bubble()).not.toBeNull();
   btn.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
   await wait(300);
   expect(bubble()).toBeNull();
 
+  out(btn);
   over(btn); await wait(450);
   expect(bubble()).not.toBeNull();
   window.dispatchEvent(new Event('scroll'));
   expect(bubble()).toBeNull(); // 滚动即时摘除，无残留
-  expect(btn.hasAttribute('data-icen-tooltip-live')).toBe(false);
+  expect(btn.hasAttribute('data-icen-tooltip-live')).toBe(true); // JS keeps the fallback suppressed until leave/blur.
 });
 
 test('live text and side updates follow attribute changes; removal or empty text closes', async () => {
@@ -117,7 +120,7 @@ test('existing describedby is merged then restored; multiline toggles the varian
   const tip = bubble()!;
   expect(btn.getAttribute('aria-describedby')).toBe(`field-help ${tip.id}`);
   expect(tip.classList.contains('is-multiline')).toBe(true);
-  out(btn); await wait(300);
+  out(btn); await wait(400);
   expect(btn.getAttribute('aria-describedby')).toBe('field-help');
 });
 

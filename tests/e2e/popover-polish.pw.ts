@@ -44,6 +44,8 @@ test('header close button works in both primitives and modes with clean a11y', a
     const panel = page.locator('#popover-demo-panel');
     await expect(panel).toBeVisible();
     const issues = await panel.evaluate(async el => {
+      // Scan the settled panel, not the first transparent frame of its entrance.
+      await Promise.all(el.getAnimations({subtree:true}).filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})));
       const r = await (window as any).axe.run(el, {runOnly:{type:'tag',values:['wcag2a','wcag2aa']}});
       return r.violations.filter((v:any) => ['serious','critical'].includes(v.impact)).map((v:any) => v.id);
     });
