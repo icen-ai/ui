@@ -49,6 +49,17 @@ const canonical = new URL(Astro.url.pathname, 'https://ui.icen.ai').toString();
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <title>{title}</title>
+    <script is:inline>
+      (() => {
+        let language = '';
+        try { language = localStorage.getItem('icen.ui.language') || ''; } catch (_) {}
+        if (language !== 'zh-CN' && language !== 'en-US') {
+          language = Array.from(navigator.languages || [navigator.language]).some((value) => /^zh(?:-|$)/i.test(value)) ? 'zh-CN' : 'en-US';
+        }
+        document.documentElement.lang = language;
+        document.documentElement.dataset.iceLanguage = language;
+      })();
+    </script>
     <ThemeRestore />
   </head>
   <body>

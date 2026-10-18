@@ -191,6 +191,32 @@ a:hover { text-decoration: none; }
 }
 .nav-icon-btn:hover { color: var(--icen-token-text); border-color: var(--icen-token-line-soft); background: var(--icen-token-bg-soft); text-decoration: none; }
 
+.site-language-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding-inline: 8px;
+  color: var(--icen-token-text-muted);
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-bg);
+}
+.site-language-label:focus-within { border-color: var(--icen-token-accent); color: var(--icen-token-text); }
+.site-language-icon { font-size: 13px; line-height: 1; }
+.site-language-label select {
+  max-width: 82px;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.site-language-label select:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 3px; border-radius: 2px; }
+
 /* select 文档演示里的三圆点色卡凹槽（底色 / 主色 / 冷色——内容数据，非 UI 样式） */
 .opt-dots { display: inline-flex; flex: none; }
 .opt-dots i {

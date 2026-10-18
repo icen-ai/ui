@@ -48,6 +48,17 @@ const isActive = (href: string): boolean =>
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <title>{title}</title>
+    <script is:inline>
+      (() => {
+        let language = '';
+        try { language = localStorage.getItem('icen.ui.language') || ''; } catch (_) {}
+        if (language !== 'zh-CN' && language !== 'en-US') {
+          language = Array.from(navigator.languages || [navigator.language]).some((value) => /^zh(?:-|$)/i.test(value)) ? 'zh-CN' : 'en-US';
+        }
+        document.documentElement.lang = language;
+        document.documentElement.dataset.iceLanguage = language;
+      })();
+    </script>
     <ThemeRestore />
     {/* 文档域内客户端换页（组件↔原语↔色彩↔各组件页）：页头/页脚 transition:persist
         常驻，仅主区与侧栏换血；首页走 Base 布局无路由，进出仍整页加载（两套 CSS 集） */}
