@@ -8,7 +8,7 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
 afterEach(()=>{off.splice(0).reverse().forEach(f=>f());document.body.replaceChildren()});
 function fixture(){
   const el=document.createElement('div');el.className='icen-ai-composer';el.dataset.icenAiComposer='';
-  el.innerHTML='<div class="icen-ai-composer-queue" hidden></div><div class="icen-ai-composer-box"><textarea class="icen-ai-composer-input"></textarea><div class="icen-ai-composer-actions"><button data-icen-ai-attach type="button"></button><button data-icen-ai-send type="button"></button></div></div>';
+  el.innerHTML='<div class="icen-ai-composer-queue" hidden></div><div class="icen-ai-composer-box"><textarea class="icen-ai-composer-input"></textarea><div class="icen-ai-composer-toolbar"><button data-icen-ai-attach type="button"></button><button data-icen-ai-send type="button"></button></div></div>';
   document.body.append(el);off.push(initAiComposer(el));
   const ta=el.querySelector('textarea')!;
   const key=(key:string)=>ta.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));
@@ -60,7 +60,7 @@ test('files are actual draft state; removal emits the remaining set and restores
 
 test('queued submissions snapshot files and references independently, and editing restores them',()=>{
   const {el,ta,key,paste}=fixture();setComposerRefs(el,skills);openComposerLibrary(el);option('same').click();document.querySelector<HTMLInputElement>('.icen-ai-composer-popup-search-input')!.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
-  const file=new File(['本真'],'design.txt');paste([file]);let queued:AiComposerSubmission|undefined;el.addEventListener('icen:ai-queue',e=>queued=(e as CustomEvent).detail);
+  const file=new File(['现代'],'design.txt');paste([file]);let queued:AiComposerSubmission|undefined;el.addEventListener('icen:ai-queue',e=>queued=(e as CustomEvent).detail);
   setComposerRunning(el,true);ta.value='整理材料';key('Enter');expect(queued?.refs?.[0]?.kind).toBe('skill');expect(queued?.files?.[0]===file).toBe(true);expect(getComposerDraft(el)).toEqual({text:''});
   setComposerRunning(el,false);key('ArrowUp');expect(getComposerDraft(el).text).toBe('整理材料');expect(getComposerDraft(el).files?.[0]===file).toBe(true);expect(getComposerDraft(el).refs).toHaveLength(1);
 });

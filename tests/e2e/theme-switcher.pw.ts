@@ -5,29 +5,29 @@ const require = createRequire(import.meta.url);
 test('homepage, header and component instances share all three axes through navigation and reload', async ({page}) => {
   const errors:string[]=[]; page.on('pageerror',(e)=>errors.push(e.message));
   await page.goto('/');
-  await page.locator('.presets-sec [data-icen-value="ink"]').click();
-  await expect(page.locator('#preset-select .icen-theme-switcher-name')).toHaveText('墨');
+  await page.locator('.presets-sec [data-icen-value="monet"]').click();
+  await expect(page.locator('#preset-select .icen-theme-switcher-name')).toHaveText('莫奈');
   await page.locator('#preset-select button').first().click();
   await page.locator('[role="dialog"]:visible [data-icen-value="piano"]').click();
   await expect(page.locator('.presets-sec [data-icen-value="piano"]')).toHaveAttribute('aria-pressed','true');
-  await expect(page.locator('.presets-sec [data-icen-value="ink"]')).toHaveAttribute('aria-pressed','false');
+  await expect(page.locator('.presets-sec [data-icen-value="monet"]')).toHaveAttribute('aria-pressed','false');
   await page.goto('/components/theme-switcher/');
   const settings=page.locator('.demo-stage [data-icen-layout="inline"]');
-  await settings.locator('[data-icen-value="art"]').click();
-  await expect(page.locator('#preset-select .icen-theme-switcher-name')).toHaveText('艺术');
+  await settings.locator('[data-icen-value="vangogh"]').click();
+  await expect(page.locator('#preset-select .icen-theme-switcher-name')).toHaveText('梵高');
   await settings.locator('[data-icen-value="pixel"]').click();
   await expect(page.locator('#style-select .icen-theme-switcher-name')).toHaveText('像素');
   await settings.locator('[data-icen-value="dark"]').click();
   await expect(page.locator('#dark-toggle button')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('html')).toHaveAttribute('data-icen-theme','dark');
   await page.locator('.nav-links a[href="/tokens/"]').click();
-  await expect(page.locator('html')).toHaveAttribute('data-icen-preset','art');
+  await expect(page.locator('html')).toHaveAttribute('data-icen-preset','vangogh');
   await page.goBack();
   /* popstate 恢复 = 网络取页 + ClientRouter 换页，并行套件下静态伺服可能排队——给足等待 */
   await expect(page.locator('#style-select .icen-theme-switcher-name')).toHaveText('像素',{timeout:15000});
   await expect(settings.locator('[data-icen-value="dark"]')).toHaveAttribute('aria-pressed','true',{timeout:15000});
   await page.reload();
-  await expect(settings.locator('[data-icen-value="art"]')).toHaveAttribute('aria-pressed','true');
+  await expect(settings.locator('[data-icen-value="vangogh"]')).toHaveAttribute('aria-pressed','true');
   expect(errors).toEqual([]);
 });
 
@@ -40,9 +40,9 @@ test('portalled appearance menus support keyboard, focus return, view constraint
   await expect(dialog.locator('[data-icen-value="light"]').first()).toBeFocused();
   await page.keyboard.press('End'); await expect(dialog.locator('[data-icen-value="pixel"]')).toBeFocused();
   await page.keyboard.press('Tab'); await expect(dialog.locator('button').first()).toBeFocused();
-  await dialog.locator('[data-icen-value="ink"]').click();
+  await dialog.locator('[data-icen-value="monet"]').click();
   await expect(dialog).toBeVisible();
-  await expect(trigger).toHaveAccessibleName('外观：墨');
+  await expect(trigger).toHaveAccessibleName('外观：莫奈');
   await dialog.locator('[data-icen-value="dark"]').click();
   await page.screenshot({path:'test-results/switcher-dark-menu.png',fullPage:false});
   await page.keyboard.press('Escape'); await expect(trigger).toBeFocused(); await expect(dialog).toBeHidden();

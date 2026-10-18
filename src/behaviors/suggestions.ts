@@ -19,7 +19,7 @@ export function canQuery(input:HTMLInputElement | HTMLTextAreaElement):boolean {
   return true;
 }
 /** Follow inherited disabled/hidden state as well as local sizing and direction. */
-export function watchSuggestionField(input:HTMLInputElement | HTMLTextAreaElement,changed:()=>void):()=>void {
+export function watchSuggestionField(input:HTMLElement,changed:()=>void):()=>void {
   if(typeof document === 'undefined')return ()=>{};
   const observer=new MutationObserver(changed);
   for(let node:HTMLElement | null=input;node;node=node.parentElement)observer.observe(node,{attributes:true,attributeFilter:['disabled','readonly','aria-disabled','hidden','inert','dir','style','class','data-icen-panel-width','data-icen-panel-min','data-icen-panel-max','data-icen-panel-max-height']});

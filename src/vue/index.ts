@@ -256,7 +256,8 @@ export const IcenAiComposer = defineComponent({
       h('div', { class: 'icen-ai-composer-attach', hidden: true }),
       h('div', { class: 'icen-ai-composer-box icen-control' }, [
         h('textarea', { class: 'icen-ai-composer-input', rows: 1, placeholder: '输入消息，Enter 发送 · 运行中回车排队' }),
-        h('div', { class: 'icen-ai-composer-actions' }, [
+        h('div', { class: 'icen-ai-composer-toolbar' }, [
+          h('span', { class: 'icen-ai-composer-spacer' }),
           h('button', { class: 'icen-ai-composer-btn', 'data-icen-ai-attach': '', type: 'button', ariaLabel: '附件' }),
           h('button', { class: 'icen-ai-composer-send', 'data-icen-ai-send': '', type: 'button', ariaLabel: '发送' }),
         ]),

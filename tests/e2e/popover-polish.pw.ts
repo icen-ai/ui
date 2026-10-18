@@ -37,7 +37,7 @@ test('declarative popover opens with focus, syncs the trigger and retires with a
 test('header close button works in both primitives and modes with clean a11y', async ({page}) => {
   await page.goto('/components/popover/');
   await page.addScriptTag({path: require.resolve('axe-core')});
-  for (const primitive of ['benzhen','pixel']) for (const dark of [false,true]) {
+  for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
     await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     const trigger = page.getByRole('button', {name: '筛选', exact: true});
     await trigger.click();

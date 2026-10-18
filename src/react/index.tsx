@@ -288,7 +288,8 @@ export function AiComposer(props: AiComposerProps): ReactElement {
       <div className="icen-ai-composer-attach" hidden />
       <div className="icen-ai-composer-box icen-control">
         <textarea className="icen-ai-composer-input" rows={1} placeholder="输入消息，Enter 发送 · 运行中回车排队" />
-        <div className="icen-ai-composer-actions">
+        <div className="icen-ai-composer-toolbar">
+          <span className="icen-ai-composer-spacer" />
           <button className="icen-ai-composer-btn" data-icen-ai-attach type="button" aria-label="附件" />
           <button className="icen-ai-composer-send" data-icen-ai-send type="button" aria-label="发送" />
         </div>

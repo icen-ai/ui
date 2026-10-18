@@ -1,6 +1,6 @@
 // 构建 CSS 产物：拷贝 src 的 css 到 dist，拼合 tokens.css / ui.css，生成 registry.json
 // 另生成：kit 一行入口 dist/components/<slug>.mjs（import css + re-export behavior）与 CLI（dist/cli.mjs）
-// v0.10 起全部产物包进 cascade layers（@layer icen.tokens/base/components）——消费方无层样式
+// 全部产物包进 cascade layers（@layer icen.tokens/base/components）——消费方无层样式
 // 永远赢库样式（可覆盖性保证），库内部不再有优先级战争；层序由 tokens.css 顶部声明锚定。
 // 运行：bun scripts/build-css.ts（在 tsup 之后执行）
 import { readdir, readFile, writeFile, mkdir, access } from 'node:fs/promises';
@@ -15,7 +15,7 @@ const SRC = join(ROOT, 'src');
 const DIST = join(ROOT, 'dist');
 
 // 进 tokens.css 拼合的核心 token 文件（按此顺序串接）
-const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css', 'design.css', 'pixel.css', 'icon-masks.css'];
+const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css', 'design.css', 'chinese.css', 'soviet.css', 'pixel.css', 'icon-masks.css'];
 // 可选 token 文件：单独拷贝、暴露 exports，但不进 tokens.css / ui.css 默认拼合
 const TOKEN_EXTRAS: string[] = [];
 
@@ -43,7 +43,7 @@ for (const f of TOKEN_ORDER) {
 // Opt-in material adapters accompany tokens even for individual kit imports.
 // Input is a foundation, including fields composed inside portalled components.
 // Shipping the same CSS here prevents kit-only consumers from getting naked inner inputs.
-const materialCss = await readSrc('components/material.css') + '\n' + await readSrc('components/icon.css') + '\n' + await readSrc('components/input.css');
+const materialCss = (await Promise.all(['material.css', 'material-chinese.css', 'material-soviet.css', 'icon.css', 'input.css'].map(f => readSrc(`components/${f}`)))).join('\n');
 const tokensOut = `/* @icen.ai/ui — tokens + opt-in design materials */\n${LAYER_ORDER}\n${inLayer('icen.tokens', tokensBody)}\n${inLayer('icen.components', materialCss)}`;
 const bundledTokens = tokensOut.replaceAll("url('../fonts/", "url('./fonts/");
 await writeFile(join(DIST, 'tokens.css'), bundledTokens);
@@ -58,7 +58,7 @@ async function copyFontTree(source: string, target: string): Promise<void> {
 }
 await copyFontTree(join(SRC,'fonts'),join(DIST,'fonts'));
 
-// 1b. token extras：按需引入的独立 token 层（如 retro-effects.css）
+// 1b. token extras：按需引入的独立 token 层
 for (const f of TOKEN_EXTRAS) {
   const css = await readSrc(join('tokens', f));
   await writeFile(join(DIST, 'tokens', f), inLayer('icen.components', css));
@@ -142,14 +142,8 @@ await writeFile(join(DIST, 'registry.json'), JSON.stringify({
   slugs: slugsRegistry,
 }, null, 2) + '\n');
 
-// 5. CLI（bunx @icen.ai/ui add <slug> / migrate <paths>）：cli + 迁移引擎，纯 node 标准库，直接拷贝
+// 5. CLI（bunx @icen.ai/ui add <slug>）：纯 node 标准库，直接拷贝
 await writeFile(join(DIST, 'cli.mjs'), await readFile(join(ROOT, 'scripts', 'cli.mjs'), 'utf8'));
-await writeFile(join(DIST, 'migrate-engine.mjs'), await readFile(join(ROOT, 'scripts', 'migrate-engine.mjs'), 'utf8'));
-
-// 6. migrate-map.json（CLI `icen-ui migrate` 用）：v0→v1 命名空间迁移映射是**冻结资产**
-//    （scripts/migrate-map.v1.json，自迁移前 git HEAD 生成一次后入库——不可随构建重建，
-//     否则迁移合入后 HEAD 已是新形态，映射会退化为 icen-→icen-icen- 垃圾）。
-await writeFile(join(DIST, 'migrate-map.json'), await readFile(join(ROOT, 'scripts', 'migrate-map.v1.json'), 'utf8'));
 
 console.log(
   `build-css: ${TOKEN_ORDER.length} tokens + ${TOKEN_EXTRAS.length} extras + base + ${components.length} components + ${SLUGS.length} kit 入口 → dist/`,

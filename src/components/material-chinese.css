@@ -1,0 +1,70 @@
+/* 中式 material adapter. DOM contract: html[data-icen-style="chinese"] with
+ * existing ICEN components or [data-icen-material="content|chrome|floating"].
+ * No additional wrappers, decorative pseudo-elements or JavaScript required.
+ */
+:root[data-icen-style="chinese"] {
+  --icen-press: scale(.995);
+  --icen-press-soft: scale(.995);
+  --icen-hover-border: var(--icen-token-line);
+  --icen-hover-border-strong: var(--icen-token-line-strong);
+  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-accent);
+  --icen-ring-soft: 0 0 0 3px var(--icen-token-accent-subtle);
+  --icen-control-focus-shadow: var(--icen-ring-soft);
+  --icen-control-focus-border: var(--icen-token-accent);
+}
+:root[data-icen-style="chinese"] :is([data-icen-material],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
+  background: var(--icen-token-surface);
+  border-color: var(--icen-token-line);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:root[data-icen-style="chinese"] :is(h1,h2,h3,h4,h5,h6,.icen-card-title,.icen-modal-title) {
+  font-family: var(--icen-font-heading);
+  font-weight: 500;
+  letter-spacing: var(--icen-letter-spacing-heading);
+  line-height: var(--icen-line-height-heading);
+}
+:root[data-icen-style="chinese"] :is(.icen-btn,.icen-page-tab,.icen-segmented-item) {
+  font-family: var(--icen-font-body);
+  letter-spacing: .025em;
+  font-weight: 500;
+}
+:root[data-icen-style="chinese"] :is(.icen-card,.icen-panel,[data-icen-material="content"]) {
+  border-color: var(--icen-token-line-soft);
+  box-shadow: none;
+}
+:root[data-icen-style="chinese"] .icen-card--elevated { box-shadow: var(--icen-token-shadow-card); }
+:root[data-icen-style="chinese"] :is(.icen-card.is-selected,.icen-card--interactive:focus-within) { box-shadow: var(--icen-ring); }
+:root[data-icen-style="chinese"] .icen-panel-title {
+  padding-block: var(--icen-density-space-md);
+  color: var(--icen-token-text);
+  letter-spacing: .06em;
+  text-transform: none;
+}
+:root[data-icen-style="chinese"] :is(.icen-card-desc,.icen-modal-desc,.icen-panel-subtitle) { line-height: var(--icen-line-height-body); }
+:root[data-icen-style="chinese"] .icen-segmented {
+  background: var(--icen-token-bg-soft);
+  border-color: var(--icen-token-line-soft);
+}
+:root[data-icen-style="chinese"] :is(.icen-segmented-item.is-active,.icen-segmented-item[aria-checked="true"],.icen-toggle-group-btn.is-active) {
+  box-shadow: inset 0 0 0 1px var(--icen-token-line), var(--icen-token-shadow-card);
+}
+/* A quiet ink rule makes navigation legible without changing its layout. */
+:root[data-icen-style="chinese"] .icen-tabs:not(.icen-tabs--cards):not(.icen-tabs--segment):not(.icen-tabs--vertical) .icen-page-tab { border-block-end-width: 1px; }
+:root[data-icen-style="chinese"] :is(.icen-btn,.icen-menu-item,.icen-select-option,.icen-segmented-item):focus-visible {
+  outline: 2px solid var(--icen-token-accent);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-icen-style="chinese"] { --icen-press: none; --icen-press-soft: none; }
+}
+@media (forced-colors: active) {
+  :root[data-icen-style="chinese"] :is([data-icen-material],.icen-card,.icen-panel,.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-modal,.icen-nav) {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+  :root[data-icen-style="chinese"] :focus-visible { outline: 2px solid Highlight; outline-offset: 3px; }
+  :root[data-icen-style="chinese"] :is(.icen-card.is-selected,.icen-card--interactive:focus-within) { box-shadow: none; outline: 2px solid Highlight; outline-offset: 2px; }
+}

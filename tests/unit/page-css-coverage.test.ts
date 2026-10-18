@@ -69,7 +69,7 @@ const TARGETS: Array<{ page: string; extra: string[] }> = [
     page: 'pages/index.astro',
     extra: ['layouts/Base.astro', 'components/SiteHeader.astro', 'components/SiteFooter.astro', 'components/ThemeRestore.astro', 'components/CodeBlock.astro', 'components/PmInstall.astro'],
   },
-  { page: 'pages/benzhen.astro', extra: [] },
+  { page: 'pages/modern.astro', extra: [] },
   { page: 'pages/kb.astro', extra: [] },
 ];
 

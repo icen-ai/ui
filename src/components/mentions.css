@@ -1,12 +1,20 @@
 /*
  * @icen.ai/ui — Component: mentions
- * Native textarea in .icen-mentions; createMentions renders a portal at its caret.
- * .icen-mentions-list is the named listbox, containing only option rows.
- * Loading, empty and error/retry statuses are siblings. Textarea keeps its native
- * multiline role with aria-controls/activedescendant, not aria-expanded.
+ * 声明式宿主不变：<div class="icen-mentions"><textarea class="icen-input"></textarea></div>；
+ * createMentions 把 textarea 替换为富文本编辑区
+ *   <div class="icen-input icen-mentions-editor" contenteditable="true" role="textbox"
+ *        aria-multiline="true" tabindex="0" data-icen-placeholder="…" [.is-empty]>
+ * id/class/aria-label/rows 转移到编辑区；有 name 的 textarea 生成同名 hidden input 承载纯文本；
+ * destroy 时恢复 textarea 并回填纯文本。提及是对象单元：
+ *   <span class="icen-mention-token is-directory|is-custom" contenteditable="false"
+ *         data-icen-mention-id="…"><bdi>@名称</bdi>[<span class="icen-mention-badge">自定义</span>]</span>
+ * token 光标不可进入（原子），Backspace/Delete 整体删除；自定义提及 = 虚线边 + 徽标。
+ * 弹层 .icen-mentions-panel portal 到 body：.icen-mentions-list 是 named listbox（只含
+ * .icen-mentions-option，custom 模式的「创建 …」项带 .icen-mentions-option-badge），
+ * loading/empty/error-retry 状态是 listbox 的并列兄弟。多行 textbox 语义不带 aria-expanded。
  */
 
-/* 宿主壳：输入框视觉自治（不套 .icen-input-wrap——那是单行固定高控件壳，多行 textarea 会被压爆） */
+/* 宿主壳：输入框视觉自治（不套 .icen-input-wrap——那是单行固定高控件壳，多行会被压爆） */
 .icen-mentions {
   display: block;
   width: 100%;
@@ -23,7 +31,68 @@
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
 }
-.icen-mentions > .icen-input { display: block; width: 100%; resize: vertical; }
+.icen-mentions > .icen-input { display: block; width: 100%; }
+
+/* 富文本编辑区：多行输入壳视觉沿用宿主，排版 pre-wrap 随内容纵向生长 */
+.icen-mentions > .icen-mentions-editor {
+  display: block;
+  inline-size: 100%;
+  min-block-size: calc(var(--icen-mentions-rows, 3) * 1lh);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  outline: none;
+  cursor: text;
+}
+/* 占位文本走数据属性 + ::before，不进值（.is-empty 由行为层按纯文本是否为空切换） */
+.icen-mentions > .icen-mentions-editor.is-empty::before {
+  content: attr(data-icen-placeholder);
+  color: var(--icen-token-text-faint);
+  pointer-events: none;
+}
+.icen-mentions > .icen-mentions-editor[aria-disabled='true'] {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
+  user-select: none;
+}
+
+/* 提及 token：文本流中的 inline pill（原子单元，光标不可进入，整体删除） */
+.icen-mention-token {
+  display: inline-block;
+  padding-inline: var(--icen-density-space-xs);
+  border: 1px solid color-mix(in srgb, var(--icen-token-accent) 40%, transparent);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent-text);
+  font-size: var(--icen-density-font-size-sm);
+  line-height: var(--icen-line-height-body);
+  white-space: nowrap;
+  cursor: default;
+  transition: background-color var(--icen-tx-fast), border-color var(--icen-tx-fast);
+}
+.icen-mention-token:hover {
+  background: var(--icen-token-accent-glow);
+  border-color: var(--icen-token-accent);
+}
+/* 自定义提及：虚线边 + 中性浅底 + 「自定义」徽标（i18n 注入），与目录提及一眼区分 */
+.icen-mention-token.is-custom {
+  border-style: dashed;
+  border-color: var(--icen-token-outline-strong);
+  background: var(--icen-token-fill-1);
+  color: var(--icen-token-text);
+}
+.icen-mention-token.is-custom:hover {
+  background: var(--icen-token-fill-2);
+  border-color: var(--icen-token-text-muted);
+}
+.icen-mention-badge {
+  margin-inline-start: var(--icen-density-space-xs);
+  padding-inline: var(--icen-density-space-xs);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
+  font-size: var(--icen-density-font-size-sm);
+}
 
 .icen-mentions-panel {
   position: fixed;
@@ -63,12 +132,30 @@
 }
 .icen-mentions-empty { padding: var(--icen-density-space-sm); font-size: var(--icen-density-font-size-sm); color: var(--icen-token-text-muted); text-align: center; }
 @media (pointer: coarse) { .icen-mentions-option { min-block-size: 44px; } }
-@media (prefers-reduced-motion: reduce) { .icen-mentions-panel { animation: none; } .icen-mentions-option { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .icen-mentions-panel { animation: none; }
+  .icen-mentions-option,
+  .icen-mention-token { transition: none; }
+}
 .icen-mentions-option:hover:not(.is-disabled) { background: var(--icen-token-fill-1); }
 .icen-mentions-option.is-active { background: var(--icen-token-fill-2); }
 .icen-mentions-option.is-disabled {
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
+}
+
+/* custom 模式的「创建 …」项：accent 文案 + 自定义徽标 */
+.icen-mentions-option--create .icen-mentions-option-label { color: var(--icen-token-accent-text); }
+.icen-mentions-option-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--icen-density-space-xs);
+  border-radius: var(--icen-radius-full);
+  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-on-accent);
+  font-size: var(--icen-density-font-size-sm);
+  line-height: var(--icen-line-height-body);
 }
 
 .icen-mentions-option-label {
@@ -77,4 +164,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 强制对比度模式：token 失去彩色底，但边界与文字必须仍可辨认 */
+@media (forced-colors: active) {
+  .icen-mention-token {
+    border-color: Highlight;
+    background: transparent;
+    color: Highlight;
+  }
+  .icen-mention-token.is-custom {
+    border-color: CanvasText;
+    color: CanvasText;
+  }
+  .icen-mention-badge,
+  .icen-mentions-option-badge {
+    border: 1px solid CanvasText;
+    background: transparent;
+    color: CanvasText;
+  }
 }

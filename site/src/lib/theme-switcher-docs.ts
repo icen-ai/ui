@@ -69,7 +69,7 @@ initThemeSwitcher();
 
 // 所有入口共享 theme.ts。代码修改也立即反映到每个控件。
 import { setTheme, getCurrentTheme, registerThemePreset } from '@icen.ai/ui/behaviors/theme';
-setTheme({ preset: 'ink', style: 'pixel', dark: true });
+setTheme({ preset: 'monet', style: 'pixel', dark: true });
 getCurrentTheme(); // 当前实际生效状态（包括存储不可写时）
 
 // 自定义主题：先提供该主题的 token CSS，再登记。

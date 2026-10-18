@@ -4,49 +4,26 @@ import Docs from '../layouts/Docs.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 ---
 
-<Docs title="定制 · 迁移 · ICEN UI" description="主题三层正交、级联层覆盖、RTL、国际化、v0.10 迁移 codemod 与设计工具导出">
-  <h1 class="doc-title">定制与迁移</h1>
-  <p class="doc-desc">主题 / 密度 / 级联层 / RTL / 国际化 / 设计工具导出，以及 v0.9 → v0.10 命名空间迁移 codemod。</p>
+<Docs title="定制 · ICEN UI" description="主题工作台：色彩 × 明暗 × 原语 × 密度 × 品牌色 × 圆角实时预览，一键生成覆盖 CSS">
+  <h1 class="doc-title">定制</h1>
+  <p class="doc-desc">调旋钮，看预览，拿走 CSS。</p>
 
-  <h2 class="doc-h2">主题：三层正交，全部 data 属性</h2>
-  <p class="doc-note">
-    色彩预设 × 明暗 × 风格三层正交，全部挂在 <code>&lt;html&gt;</code> 的 data 属性上（不再是类——<code>[data-icen-theme="dark"]</code> 是全业界最危险的类名，v0.10 起废弃类形态）：
-    <code>data-icen-preset</code>（benzhen 默认 / clay / piano / art / vangogh / ink）· <code>data-icen-theme="dark"</code>（摘除即亮色）· <code>data-icen-style</code>（benzhen 本真 / pixel 像素）。
-  </p>
-  <CodeBlock lang="html" code={`<html data-icen-preset="piano" data-icen-theme="dark" data-icen-style="benzhen">
-
-<!-- 运行时切换（含持久化与系统跟随）： -->
-<script>
-import { initTheme, setTheme, toggleDark, setStyle, registerThemePreset } from '@icen.ai/ui/behaviors/theme';
-
-initTheme();                          // 尽早调用（读 localStorage 防闪烁；无偏好时跟随系统）
-toggleDark();                         // 明暗
-setTheme({ preset: 'piano' });        // 色彩预设
-setStyle('benzhen');                    // 原语（与色彩正交）
-registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 token 面即可
-</script>`} />
-  <p class="doc-note">
-    自建预设 = 在自家 CSS 写两块完整 token 面：<code>[data-icen-preset="brand"]</code> 与
-    <code>[data-icen-preset="brand"][data-icen-theme="dark"]</code>（仿照 colors.css 现有 6 套）。
-    防闪烁：首帧前内联脚本同步恢复（本站 ThemeRestore 组件即参考实现）。
-  </p>
-
-  <h2 class="doc-h2">主题工作台：调旋钮 → 拿覆盖 CSS</h2>
-  <p class="doc-note">
-    工作台本身全部用本库组件搭成。左侧旋钮实时作用于右侧预览卡（容器级 data 属性 + CSS 变量子树覆盖），底部生成可复制的覆盖片段。
-    accent 明度三档的对比度<b>实时验算、如实展示</b>——不达标会明说，不会悄悄给你一个不过 AA 的品牌色。
-  </p>
+  <!-- ═══ 主题工作台：本页第一件东西 ═══ -->
+  <h2 class="doc-h2">主题工作台</h2>
   <div class="tw">
     <div class="tw-controls">
       <div class="tw-field">
-        <label class="tw-label" for="tw-preset">色彩预设</label>
+        <label class="tw-label" for="tw-preset-wrap">色彩预设</label>
         <div class="icen-select" data-icen-select id="tw-preset-wrap" style="width:100%">
           <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
-            <span class="icen-select-value">本真（默认）</span>
-            <svg class="icen-select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            <span class="icen-select-value">现代（默认）</span>
           </button>
           <div class="icen-select-panel" hidden>
-            {themes.map((theme)=><button class="icen-select-option" type="button" data-icen-value={theme.id}>{theme.label}</button>)}
+            {themes.map((theme, i) => (
+              <button class:list={['icen-select-option', { 'is-selected': i === 0 }]} type="button" data-icen-value={theme.id}>
+                <span class="tw-dot" style={`background:${theme.light.accent}`}></span>{theme.label.replace(/^[a-z-]+\s+/, '')}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -60,19 +37,21 @@ registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 
       <div class="tw-field">
         <span class="tw-label" id="tw-style-label">原语</span>
         <div class="icen-segmented" role="radiogroup" aria-labelledby="tw-style-label" data-icen-segmented>
-          <button class="icen-segmented-item is-active" role="radio" aria-checked="true" data-icen-value="benzhen" type="button">本真</button>
+          <button class="icen-segmented-item is-active" role="radio" aria-checked="true" data-icen-value="modern" type="button">现代</button>
+          <button class="icen-segmented-item" role="radio" aria-checked="false" data-icen-value="chinese" type="button">中式</button>
+          <button class="icen-segmented-item" role="radio" aria-checked="false" data-icen-value="soviet" type="button">苏式</button>
           <button class="icen-segmented-item" role="radio" aria-checked="false" data-icen-value="pixel" type="button">像素</button>
         </div>
       </div>
       <div class="tw-field">
-        <span class="tw-label" id="tw-density-label">密度（预览卡容器级）</span>
+        <span class="tw-label" id="tw-density-label">密度</span>
         <div class="icen-segmented" role="radiogroup" aria-labelledby="tw-density-label" data-icen-segmented>
           <button class="icen-segmented-item is-active" role="radio" aria-checked="true" data-icen-value="" type="button">normal</button>
           <button class="icen-segmented-item" role="radio" aria-checked="false" data-icen-value="compact" type="button">compact</button>
         </div>
       </div>
       <div class="tw-field">
-        <label class="tw-label" for="tw-accent">品牌色 accent（留空 = 预设原生）</label>
+        <label class="tw-label" for="tw-accent">品牌色</label>
         <div class="tw-accent-row">
           <input type="color" id="tw-accent" class="tw-colorwell" value="#d97757" aria-label="选择品牌色" />
           <button class="icen-btn icen-btn-sm" type="button" id="tw-accent-clear">还原</button>
@@ -80,15 +59,27 @@ registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 
         </div>
       </div>
       <div class="tw-field">
-        <label class="tw-label" for="tw-radius">圆角基准 radius-md：<output id="tw-radius-val" for="tw-radius">10px（预设原生）</output></label>
+        <label class="tw-label" for="tw-radius">圆角基准 <output id="tw-radius-val" for="tw-radius">10px</output></label>
         <div class="icen-slider"><input type="range" class="icen-slider-native" id="tw-radius" min="0" max="16" step="1" value="10" aria-label="圆角基准" /></div>
       </div>
+      <div class="tw-field tw-actions">
+        <button class="icen-btn icen-btn-primary icen-btn-sm" type="button" id="tw-apply-site">应用到全站</button>
+        <button class="icen-btn icen-btn-ghost icen-btn-sm" type="button" id="tw-random">随机搭配</button>
+      </div>
     </div>
+
     <div class="tw-stage">
-      <div class="tw-preview" id="tw-preview" data-icen-preset="clay">
-        <div class="icen-panel" style="max-width:520px;margin:0 auto">
-          <div class="icen-panel-title"><span>订单总览</span><span style="position:relative;display:inline-flex"><button class="icen-btn icen-btn-sm" type="button">待办</button><span class="icen-badge icen-badge--accent">3</span></span></div>
-          <div class="icen-panel-body" style="display:flex;flex-direction:column;gap:12px">
+      <div class="tw-preview" id="tw-preview">
+        <div class="icen-panel tw-card">
+          <div class="icen-panel-title">
+            <span>订单总览</span>
+            <span class="tw-badge-wrap"><button class="icen-btn icen-btn-sm" type="button">待办</button><span class="icen-badge icen-badge--accent">3</span></span>
+          </div>
+          <div class="icen-tabs" role="tablist" style="padding:0 2px">
+            <button class="icen-page-tab is-active" role="tab" type="button" aria-selected="true">概览</button>
+            <button class="icen-page-tab" role="tab" type="button" aria-selected="false">明细</button>
+          </div>
+          <div class="icen-panel-body tw-card-body">
             <div class="icen-input-wrap icen-control" style="width:100%">
               <input class="icen-input" placeholder="搜索订单号 / 客户名" aria-label="搜索订单" />
             </div>
@@ -96,6 +87,17 @@ registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 
               <span class="icen-pill icen-pill--success">已支付</span>
               <span class="icen-pill icen-pill--warning">待审核</span>
               <span class="icen-pill icen-pill--error">已逾期</span>
+              <span class="icen-tag icen-tag--sm"><span class="icen-tag-label">华东区</span></span>
+            </div>
+            <div class="tw-row">
+              <button class="icen-switch" role="switch" aria-checked="true" type="button" aria-label="自动续费"><span class="icen-switch-thumb"></span></button>
+              <span class="tw-row-label">自动续费</span>
+              <div class="icen-slider tw-row-slider">
+                <div class="icen-slider-track"></div>
+                <div class="icen-slider-fill" style="width:40%"></div>
+                <div class="icen-slider-thumb" style="left:calc(40% - 8px)"></div>
+                <input class="icen-slider-native" type="range" min="0" max="100" value="40" aria-label="折扣率" />
+              </div>
             </div>
             <div class="icen-progress" aria-hidden="true">
               <div class="icen-progress-track"><div class="icen-progress-bar" style="width:64%"></div></div>
@@ -109,12 +111,15 @@ registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 
             </div>
           </div>
         </div>
+        <div class="icen-alert icen-alert--info tw-alert">
+          <div class="icen-alert-body">本周回款进度正常，64% 的订单已回款。</div>
+        </div>
       </div>
     </div>
   </div>
   <div class="tw-output">
     <div class="tw-output-head">
-      <span class="tw-label">生成的覆盖片段（含实测对比度注释）</span>
+      <span class="tw-label">覆盖 CSS（含实测对比度）</span>
       <button class="icen-copy-btn icen-copy-btn--md" type="button" id="tw-copy" data-icen-copy="" data-icen-copy-icon>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
         <span>复制</span>
@@ -123,67 +128,53 @@ registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 
     <pre class="tw-pre"><code id="tw-out"></code></pre>
   </div>
 
-  <h2 class="doc-h2">密度</h2>
+  <h2 class="doc-h2">挂载与运行时</h2>
+  <p class="doc-note">色彩、明暗、原语三轴全部挂在 <code>&lt;html&gt;</code> 的 data 属性上；密度是容器级。</p>
+  <CodeBlock lang="html" code={`<html data-icen-preset="piano" data-icen-theme="dark" data-icen-style="modern">
+
+<script>
+import { initTheme, setTheme, toggleDark, setPrimitive, registerThemePreset } from '@icen.ai/ui/behaviors/theme';
+
+initTheme();                   // 尽早调用（读 localStorage 防闪烁；无偏好时跟随系统）
+toggleDark();                  // 明暗
+setTheme({ preset: 'piano' }); // 色彩预设
+setPrimitive('chinese');       // 原语（与色彩正交）
+registerThemePreset('brand');  // 自建品牌主题：自家 CSS 写两块 token 面即可
+</script>`} />
   <p class="doc-note">
-    容器挂 <code>data-icen-density="compact|normal"</code>（AI 族另有 <code>summary</code> 档）——行高/间距/字号/控件高度全部经
-    <code>--icen-density-*</code> 标尺联动，组件不写死尺寸。
+    自建预设 = 写 <code>[data-icen-preset="brand"]</code> 与它的 dark 两块完整 token 面（仿照 colors.css 现有六套）。
+    防闪烁参考本站 ThemeRestore：首帧前内联脚本同步恢复。
   </p>
 
-  <h2 class="doc-h2">级联层：你的样式永远赢</h2>
-  <p class="doc-note">
-    v0.10 起库的全部产物 CSS 包在 <code>@layer icen.tokens / icen.base / icen.components</code>（层序由 tokens.css 顶部声明锚定）。
-    你项目里<b>不写层</b>的样式优先级恒高于库——覆盖库样式不需要提权重、不需要 <code>!important</code>：
-  </p>
+  <h2 class="doc-h2">密度</h2>
+  <p class="doc-note">容器挂 <code>data-icen-density="compact|normal"</code>，行高、间距、字号、控件高度经 <code>--icen-density-*</code> 标尺联动。</p>
+
+  <h2 class="doc-h2">级联层</h2>
+  <p class="doc-note">库的全部 CSS 包在 <code>@layer icen.tokens / base / components</code>。你不写层的样式恒赢库，覆盖不需要提权重。</p>
   <CodeBlock lang="css" code={`/* 你的样式表（无层 = 恒赢库的三层） */
-.icen-btn { border-radius: 999px; }        /* 直接生效 */
+.icen-btn { border-radius: 999px; }
 
 /* 想插队到库的层序里也可以显式入层： */
 @layer icen.components {
   .icen-btn { letter-spacing: 0.02em; }
 }`} />
 
-  <h2 class="doc-h2">RTL（从右到左）</h2>
-  <p class="doc-note">
-    全库流向布局已迁移到 CSS 逻辑属性（<code>margin-inline-start</code> 等），方向性图标在 RTL 下自动镜像。
-    消费方零接线：<code>&lt;html dir="rtl"&gt;</code> 即生效。图表坐标系与浮层定位保持物理坐标（按设计不镜像）。
-  </p>
+  <h2 class="doc-h2">RTL</h2>
+  <p class="doc-note">全库流向布局使用 CSS 逻辑属性，<code>&lt;html dir="rtl"&gt;</code> 即整体镜像；图表坐标系与浮层定位按设计保持物理坐标。</p>
 
-  <h2 class="doc-h2">国际化（i18n）</h2>
-  <p class="doc-note">
-    行为层每一句面向用户的文案都收敛在 <code>IcenLocale</code> 注册表（683 key：AI 族 / kb 族 / charts / datatable / 表单族 / 控件族全覆盖）。
-    内置中文（默认）与英文；局部覆盖任意 key；组件监听 <code>icen:locale-change</code> 即可响应切换。
-  </p>
+  <h2 class="doc-h2">国际化</h2>
+  <p class="doc-note">行为层文案全部收敛在 <code>IcenLocale</code> 注册表，内置中英双语，可逐 key 覆盖。</p>
   <CodeBlock lang="ts" code={`import { setIcenLocale, resetIcenLocale, ICEN_LOCALE_EN_US } from '@icen.ai/ui/behaviors/i18n';
 import { onIcen } from '@icen.ai/ui/behaviors/events';
 
-setIcenLocale(ICEN_LOCALE_EN_US);                 // 整站切英文
-setIcenLocale({ 'select.searchPlaceholder': '搜索组件…' });   // 只改一句
-resetIcenLocale();                                 // 回中文默认
+setIcenLocale(ICEN_LOCALE_EN_US);                        // 整站切英文
+setIcenLocale({ 'select.searchPlaceholder': '搜索组件…' }); // 只改一句
+resetIcenLocale();                                        // 回中文默认
 
 onIcen('icen:locale-change', (e) => console.log('变化的 key：', e.detail.changed));`} />
 
   <h2 class="doc-h2">设计工具导出</h2>
-  <p class="doc-note">
-    设计 tokens 三种标准产物：<code>bun run dtcg</code> 产 W3C DTCG 经典版（Style Dictionary 生态）；
-    <code>bun run design-tokens</code> 再产 Tokens Studio 与 Figma Variables 两种格式。
-    产物路径与色板见 <a href="/tokens/">色彩 Tokens 页</a>。
-  </p>
-
-  <h2 class="doc-h2">v0.9 → v0.10 迁移（codemod 随包发布）</h2>
-  <p class="doc-note">
-    v0.10 完成命名空间跃迁：<code>.btn</code>→<code>.icen-btn</code>、<code>data-tabs</code>→<code>data-icen-tabs</code>、
-    <code>--token-*</code>→<code>--icen-token-*</code>、主题类→data 属性。包内自带迁移工具（API 感知 tokenizer；歧义 token 保守跳过并给人工清单）：
-  </p>
-  <CodeBlock lang="bash" code={`# 先看报告（dry-run，不写盘）
-bunx @icen.ai/ui migrate src
-
-# 确认后落盘
-bunx @icen.ai/ui migrate src --write
-
-# 迁移后跑项目自身的类型检查/构建验证；歧义处（类名∩标签名∩领域词）按打印的人工清单逐条确认`} />
-  <p class="doc-note">
-    手写主题切换代码的项目（<code>classList.add('dark')</code> 等）需人工改为 <code>data-icen-*</code> 属性或走 <code>setTheme()</code>——codemod 会在报告中列出这些点。
-  </p>
+  <p class="doc-note">构建链自动产出 DTCG / Tokens Studio / Figma Variables 三份设计 token；色板与路径见 <a href="/tokens/">色彩 Tokens 页</a>。</p>
 
   <style is:global>
     /* 主题工作台布局（仅此页） */
@@ -192,6 +183,8 @@ bunx @icen.ai/ui migrate src --write
     .tw-controls { display: flex; flex-direction: column; gap: 14px; }
     .tw-field { display: flex; flex-direction: column; gap: 6px; }
     .tw-label { font-size: 12px; color: var(--icen-token-text-muted); font-weight: 500; }
+    .tw-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-inline-end: 8px; vertical-align: -1px; }
+    .tw-actions { flex-direction: row; gap: 8px; margin-top: 4px; }
     .tw-accent-row { display: flex; align-items: center; gap: 10px; }
     .tw-colorwell {
       width: 56px; height: 30px; padding: 2px; cursor: pointer;
@@ -203,6 +196,13 @@ bunx @icen.ai/ui migrate src --write
       border-radius: var(--icen-radius-lg); background: var(--icen-token-bg-soft);
     }
     .tw-preview { border-radius: var(--icen-radius-md); transition: background-color var(--icen-tx-normal); }
+    .tw-card { max-width: 520px; margin: 0 auto; }
+    .tw-card-body { display: flex; flex-direction: column; gap: 12px; }
+    .tw-badge-wrap { position: relative; display: inline-flex; }
+    .tw-row { display: flex; align-items: center; gap: 10px; }
+    .tw-row-label { font-size: 13px; color: var(--icen-token-text); }
+    .tw-row-slider { flex: 1; }
+    .tw-alert { max-width: 520px; margin: 12px auto 0; }
     .tw-output { margin: 0 0 8px; }
     .tw-output-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
     .tw-pre {
@@ -216,17 +216,18 @@ bunx @icen.ai/ui migrate src --write
 
   <script>
     import { initSelect } from '../../../src/behaviors/select.ts';
-    import { initSegmented } from '../../../src/behaviors/controls.ts';
+    import { initSegmented, initSwitch } from '../../../src/behaviors/controls.ts';
     import { initCopy } from '../../../src/behaviors/copy.ts';
+    import { setTheme } from '../../../src/behaviors/theme.ts';
 
     /* ClientRouter 纪律：页面级模块脚本一律 astro:page-load 驱动（首载 + 每次换页重入） */
     document.addEventListener('astro:page-load', () => {
       const preview = document.getElementById('tw-preview');
       const out = document.getElementById('tw-out');
       if (!preview || !out) return; /* 不在本页则静默退场 */
-      initSelect(); initSegmented(); initCopy(); /* 全部幂等 */
+      initSelect(); initSegmented(); initSwitch(); initCopy(); /* 全部幂等 */
 
-      const state = { preset: 'benzhen', theme: '', style: 'benzhen', density: '', accent: '', radius: null };
+      const state = { preset: 'modern', theme: '', style: 'modern', density: '', accent: '', radius: null };
       const touched = { accent: false, radius: false };
 
       const lum = (hex) => {
@@ -234,7 +235,7 @@ bunx @icen.ai/ui migrate src --write
         return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
       };
       const contrast = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
-      /* color-mix(80%) 与 clay 定案同档；JS 里用近似线性换算估 strong/text 供预览与 AA 验算 */
+      /* color-mix(80%) 与主题定案同档；JS 里用近似线性换算估 strong/text 供预览与 AA 验算 */
       const mixBlack = (hex, keep) => {
         const k = keep / 100;
         const ch = [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * k));
@@ -266,7 +267,6 @@ bunx @icen.ai/ui migrate src --write
 
         /* AA 实测：等一帧让变量落定，读计算值验算 accent-strong × on-accent */
         requestAnimationFrame(() => {
-          const cs = getComputedStyle(preview);
           const probe = document.createElement('span');
           preview.appendChild(probe);
           probe.style.color = 'var(--icen-token-accent-strong)';
@@ -293,16 +293,14 @@ bunx @icen.ai/ui migrate src --write
 
       function render(strongHex, onHex, ratio) {
         const attrs = [
-          state.preset !== 'clay' ? `data-icen-preset="${state.preset}"` : '',
+          `data-icen-preset="${state.preset}"`,
           state.theme ? 'data-icen-theme="dark"' : '',
-          state.style ? `data-icen-style="${state.style}"` : '',
+          state.style !== 'modern' ? `data-icen-style="${state.style}"` : '',
         ].filter(Boolean).join(' ');
         const lines = [];
-        lines.push(`<!-- 挂载（色彩预设 × 明暗 × 风格，三轴正交）： -->`);
-        lines.push(`<html${attrs ? ' ' + attrs : ''}>`);
+        lines.push(`<html ${attrs}>`);
         if (state.density) {
           lines.push('');
-          lines.push(`<!-- 密度是容器级（ Admin 台/密集区局部用 compact）： -->`);
           lines.push(`<div class="admin-zone" data-icen-density="compact">…</div>`);
         }
         const vars = [];
@@ -335,9 +333,8 @@ bunx @icen.ai/ui migrate src --write
       }
 
       /* 控件接线 */
-      preview.closest('.tw')?.querySelector('#tw-preset-wrap');
       document.getElementById('tw-preset-wrap')?.addEventListener('icen:select-change', (e) => {
-        state.preset = e.detail?.value ?? 'clay';
+        state.preset = e.detail?.value ?? 'modern';
         apply();
       });
       document.querySelectorAll('.tw-controls .icen-segmented').forEach((seg, i) => {
@@ -365,6 +362,46 @@ bunx @icen.ai/ui migrate src --write
         touched.radius = true;
         if (radiusVal) radiusVal.textContent = state.radius + 'px';
         apply();
+      });
+      document.getElementById('tw-apply-site')?.addEventListener('click', () => {
+        setTheme({ preset: state.preset, dark: state.theme === 'dark', style: state.style });
+      });
+      document.getElementById('tw-random')?.addEventListener('click', () => {
+        const presets = ['modern', 'dongyun', 'jugou', 'piano', 'monet', 'vangogh'];
+        const styles = ['modern', 'chinese', 'soviet', 'pixel'];
+        state.preset = presets[Math.floor(Math.random() * presets.length)];
+        state.style = styles[Math.floor(Math.random() * styles.length)];
+        state.theme = Math.random() < 0.4 ? 'dark' : '';
+        state.accent = '#' + Array.from({ length: 3 }, () => Math.floor(60 + Math.random() * 150).toString(16).padStart(2, '0')).join('');
+        touched.accent = true;
+        /* 回写控件视觉 */
+        const colorwell = document.getElementById('tw-accent');
+        if (colorwell) colorwell.value = state.accent;
+        document.querySelectorAll('.tw-controls .icen-select-option').forEach((o) => {
+          o.classList.toggle('is-selected', o.getAttribute('data-icen-value') === state.preset);
+        });
+        const valEl = document.querySelector('#tw-preset-wrap .icen-select-value');
+        const opt = document.querySelector(`.tw-controls .icen-select-option[data-icen-value="${state.preset}"]`);
+        if (valEl && opt) valEl.textContent = opt.textContent.trim();
+        const segs = document.querySelectorAll('.tw-controls .icen-segmented');
+        const sync = (seg, value) => seg.querySelectorAll('.icen-segmented-item').forEach((it) => {
+          const on = it.getAttribute('data-icen-value') === value;
+          it.classList.toggle('is-active', on);
+          it.setAttribute('aria-checked', String(on));
+        });
+        sync(segs[0], state.theme === 'dark' ? 'dark' : 'light');
+        sync(segs[1], state.style);
+        apply();
+      });
+      /* 预览卡 tab 纯视觉切换（无面板，仅样式演示） */
+      preview.querySelectorAll('.icen-page-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          preview.querySelectorAll('.icen-page-tab').forEach((t2) => {
+            const on = t2 === tab;
+            t2.classList.toggle('is-active', on);
+            t2.setAttribute('aria-selected', String(on));
+          });
+        });
       });
       apply();
     });

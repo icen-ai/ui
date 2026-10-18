@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url);
 test('dots stay readable over colored media in both primitives and modes', async ({page}) => {
   await page.goto('/components/carousel/');
   await page.addScriptTag({path: require.resolve('axe-core')});
-  for (const primitive of ['benzhen','pixel']) for (const dark of [false,true]) {
+  for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
     await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     const dots = page.locator('.icen-carousel-dot');
     await expect(dots).toHaveCount(3);

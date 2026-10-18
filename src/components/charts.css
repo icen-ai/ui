@@ -7,7 +7,7 @@
  * chart-stack / chart-heatmap / chart-sparkline / chart-gauge / chart-radar / chart-area），
  * 按需引入——kit/chart-<type> 入口会自动带上本基座 + 对应专属 CSS。
  *
- * v0.10 重度数据场景追加契约（renderChart 管线产出）：
+ * 重度数据场景契约（renderChart 管线产出）：
  *   头部行 .icen-chart-head 附加件——.icen-chart-note（降采样诚实提示「已抽样 N→M 点」）、
  *   .icen-chart-zoom-reset（缩放态「重置缩放」chip）；
  *   .icen-chart-zoom-rect（缩放手势选区，拖拽期挂 body，--icen-token-accent 10% 填充）；
@@ -197,7 +197,7 @@ svg circle[data-icen-chart-mark].is-hover { stroke-width: 3; }
 }
 .icen-chart-legend--toggle .is-off .icen-chart-legend-dot { opacity: 0.3; }
 
-/* ═══ 重度数据场景（renderChart 管线产出；v0.10）═══ */
+/* ═══ 重度数据场景（renderChart 管线产出）═══ */
 
 /* 头部行附加件：降采样诚实提示（faint）+ 缩放态「重置缩放」chip */
 .icen-chart-note {

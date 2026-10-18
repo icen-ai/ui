@@ -13,7 +13,7 @@ test('permission requests retain native controls, selection and duration across 
   el.querySelector<HTMLButtonElement>('.icen-kb-access-duration .icen-select-trigger')!.click();
   document.querySelector<HTMLButtonElement>('.icen-select-option[data-icen-value="7"]')!.click();
   const duration=el.querySelector<HTMLInputElement>('.icen-kb-access-duration input[data-icen-select-value]')!;
-  field.value='核对本真的排版与交互';field.focus();field.setSelectionRange(2,5);
+  field.value='核对现代的排版与交互';field.focus();field.setSelectionRange(2,5);
   const role=el.querySelector<HTMLButtonElement>('[data-icen-role="editor"]')!;role.focus();role.click();
   expect(el.querySelector('textarea')===field).toBe(true);expect(document.activeElement===role).toBe(true);
   field.focus();field.setSelectionRange(2,5);h.setState({approverNote:'新的负责人'});

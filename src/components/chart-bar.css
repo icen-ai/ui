@@ -6,7 +6,7 @@
  *   .icen-chart-vbar > .icen-chart-vbar-track > .icen-chart-vbar-bar
  *   .icen-chart-hbar > .icen-chart-hbar-row > .icen-chart-hbar-label + .icen-chart-hbar-track > .icen-chart-hbar-bar + .icen-chart-hbar-value
  *
- * v0.10 追加契约（renderChart spec.marks 的 vbar DOM 变体；百分比绝对定位于 plot 内，
+ * renderChart spec.marks 的 vbar DOM 变体；百分比绝对定位于 plot 内，
  * 标记色经 --chart-mark-tone 注入，缺省 faint 参考线 / accent 标记点）：
  *   .icen-chart-vbar > .icen-chart-mark-line--h（水平参考线）/ .icen-chart-mark-line--v（垂直参考线）
  *     > .icen-chart-mark-label（尾部标注，视口内夹取）

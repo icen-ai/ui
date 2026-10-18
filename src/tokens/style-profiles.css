@@ -1,4 +1,4 @@
-/* 本真 · sole built-in primitive. Common defaults; full recipe in design.css. */
+/* Shared fallback defaults. Built-in primitive recipes live in design/pixel/chinese/soviet.css. */
 :root {
   /* ══════════════════════════════════════════════════════════════
      风格底层 token（兜底值）

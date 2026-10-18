@@ -279,7 +279,7 @@ function setup(zone: HTMLElement): (() => void) | undefined {
 
   const openPicker = (): void => { if (!unavailable()) input.click(); };
   /* 推荐结构：交互落在 .icen-upload-dropzone（role=button），列表是它的兄弟不嵌套；
-     旧结构回落 zone 本体（视觉与行为不变，但列表模式的移除钮会与外层 role=button 嵌套） */
+     单元素结构回落 zone 本体（视觉与行为不变，但列表模式的移除钮会与外层 role=button 嵌套） */
   const clickTarget = zone.querySelector<HTMLElement>('.icen-upload-dropzone') ?? zone;
   const dragTarget = clickTarget;
 

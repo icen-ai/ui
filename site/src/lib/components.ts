@@ -421,10 +421,10 @@ initTabs(); // 点击 + 方向键/Home/End；派发 icen:tab-change { tab, panel
     name: '轻提示',
     summary: '及时确认操作结果，也给撤销与重试留出时间。键盘焦点、鼠标停留和异步操作都会暂停倒计时。',
     group: '基础',
-    desc: '瞬时轻提示：角落滑入、自动消散，ok / err / warn 三态语义色。',
+    desc: '瞬时轻提示：角落滑入、自动消散，success / error / warn / info 四态语义色。',
     detail: {
       features: [
-        '**三态**：`toast.ok` / `toast.err` / `toast.warn` 语义色',
+        '**四态**：`toast.success` / `toast.error` / `toast.warn` / `toast.info` 语义色',
         '**动作**：`toast.action` 支持撤销钮与失败重试；`closable` 可关闭、`progress` 倒计时条、`ms` 驻留时长',
         '**职责**：`toast.css` 提供容器与滑入动画；触发、排队与生命周期在 `behaviors/toast`',
       ],
@@ -439,8 +439,8 @@ initTabs(); // 点击 + 方向键/Home/End；派发 icen:tab-change { tab, panel
 </div>
 <p class="demo-label"><bdi>异步示例首次模拟失败，重试后成功。</bdi></p>`,
     usage: `import { toast } from '@icen.ai/ui/behaviors/toast';
-toast.ok('已保存');
-toast.err('保存失败');
+toast.success('已保存');
+toast.error('保存失败');
 toast.warn('配额将尽');
 toast.success('内容已更新', { closable: true, ms: 10000 });
 const h = toast.action('文档已删除', '撤销', async (signal) => {
@@ -450,8 +450,8 @@ h.pause(); h.resume(); h.dismiss(); // hover / focus 的暂停彼此独立`,
 
     behaviors: ['toast'],
     script: `const toast = toastMod.toast;
-document.getElementById('toast-demo-ok')?.addEventListener('click', () => toast.ok('保存成功'));
-document.getElementById('toast-demo-err')?.addEventListener('click', () => toast.err('保存失败：网络超时'));
+document.getElementById('toast-demo-ok')?.addEventListener('click', () => toast.success('保存成功'));
+document.getElementById('toast-demo-err')?.addEventListener('click', () => toast.error('保存失败：网络超时'));
 document.getElementById('toast-demo-warn')?.addEventListener('click', () => toast.warn('配额已用 80%'));
 document.getElementById('toast-demo-close')?.addEventListener('click', () => toast.success('内容已更新', { closable: true, ms: 10000 }));
 document.getElementById('toast-demo-async')?.addEventListener('click', () => {
@@ -1320,7 +1320,7 @@ COMPONENTS.push(
       <button class="icen-modal-close" data-icen-modal-close aria-label="关闭">${iconHTML('close')}</button>
     </div>
     <div class="icen-modal-body">
-      <p>本真设计规范：让材质、排版和交互保持一致。</p>
+      <p>现代设计规范：让材质、排版和交互保持一致。</p>
       <p>从按钮和菜单到完整的工作区，以清楚的层级承载内容，让操作自然出现。</p>
     </div>
     <div class="icen-modal-footer">
@@ -1413,9 +1413,9 @@ closeDropdown();                        // 关闭并归还焦点
 const toast = toastMod.toast;
 const updates = document.getElementById('dd-updates');
 updates?.addEventListener('click', () => updates.setAttribute('aria-checked', String(updates.getAttribute('aria-checked') !== 'true')));
-document.getElementById('dd-rename')?.addEventListener('click', () => toast.ok('重命名'));
-document.getElementById('dd-share')?.addEventListener('click', () => toast.ok('已创建分享链接'));
-document.getElementById('dd-delete')?.addEventListener('click', () => toast.err('已删除'));
+document.getElementById('dd-rename')?.addEventListener('click', () => toast.success('重命名'));
+document.getElementById('dd-share')?.addEventListener('click', () => toast.success('已创建分享链接'));
+document.getElementById('dd-delete')?.addEventListener('click', () => toast.error('已删除'));
 return dispose;`,
   },
   {
@@ -1440,8 +1440,8 @@ return dispose;`,
 
 registerContextMenu('demo-file', [
   { type: 'header', label: 'report-2026.qmd', description: '文档 · 2.4 MB' },
-  { label: '重命名', iconName: 'edit', shortcut: 'F2', onClick: () => toast.ok('重命名') },
-  { label: '复制链接', iconName: 'link', onClick: () => toast.ok('已复制链接') },
+  { label: '重命名', iconName: 'edit', shortcut: 'F2', onClick: () => toast.success('重命名') },
+  { label: '复制链接', iconName: 'link', onClick: () => toast.success('已复制链接') },
   { type: 'separator' },
   { label: '移到回收站', iconName: 'trash', danger: true, shortcut: '⌫', onClick: () => toast.warn('已移到回收站') },
   { label: '高级操作（不可用）', disabled: true },
@@ -1453,8 +1453,8 @@ const registerContextMenu = contextMenuMod.registerContextMenu;
 const toast = toastMod.toast;
 registerContextMenu('demo-file', [
   { type: 'header', label: 'report-2026.qmd', description: '文档 · 2.4 MB' },
-  { label: '重命名', iconName: 'edit', shortcut: 'F2', onClick: () => toast.ok('重命名') },
-  { label: '复制链接', iconName: 'link', onClick: () => toast.ok('已复制链接') },
+  { label: '重命名', iconName: 'edit', shortcut: 'F2', onClick: () => toast.success('重命名') },
+  { label: '复制链接', iconName: 'link', onClick: () => toast.success('已复制链接') },
   { type: 'separator' },
   { label: '移到回收站', iconName: 'trash', danger: true, shortcut: '⌫', onClick: () => toast.warn('已移到回收站') },
   { label: '高级操作（不可用）', disabled: true },
@@ -1512,7 +1512,7 @@ const ac = new AbortController();
 document.getElementById('popover-demo-apply')?.addEventListener('click', () => {
   const keyword = document.getElementById('popover-demo-input')?.value.trim();
   if (popPanel) closePopover(popPanel);
-  toast.ok(keyword ? '已应用筛选：' + keyword : '已清除筛选条件');
+  toast.success(keyword ? '已应用筛选：' + keyword : '已清除筛选条件');
 }, { signal: ac.signal });
 return () => { ac.abort(); if (popPanel) closePopover(popPanel); };`,
   },
@@ -1632,7 +1632,7 @@ initCommandPalette(); // 全局 ⌘K / Ctrl+K 自动触发
 document.querySelectorAll('#demo-cp, .icen-command-palette-backdrop[data-icen-command-palette="demo-cp"] .icen-command-palette-item').forEach((item) => {
   item.addEventListener('click', () => {
     const label = item.querySelector('.icen-command-palette-item-label')?.textContent ?? '';
-    if (label) toast.ok('已执行：' + label);
+    if (label) toast.success('已执行：' + label);
   });
 });`,
   },
@@ -1948,7 +1948,7 @@ return () => { ac.abort(); clearInterval(timer); };`,
     },
     demo: `<div class="demo-row">
   <button type="button" class="icen-copy-btn icen-copy-btn--sm" data-icen-copy="bun add @icen.ai/ui">复制安装命令</button>
-  <button type="button" class="icen-copy-btn icen-copy-btn--md icen-copy-btn--ghost" data-icen-copy="https://ui.icen.ai/benzhen/">复制作品链接</button>
+  <button type="button" class="icen-copy-btn icen-copy-btn--md icen-copy-btn--ghost" data-icen-copy="https://ui.icen.ai/modern/">复制作品链接</button>
   <button type="button" class="icen-copy-btn icen-copy-btn--lg" disabled data-icen-copy="">暂不可用</button>
 </div>
 <div class="icen-copy-scope demo-row" style="margin-block:var(--icen-density-space-lg);padding:var(--icen-density-space-md);border:1px solid var(--icen-token-line-soft);border-radius:var(--icen-radius-md)">
@@ -1957,7 +1957,7 @@ return () => { ac.abort(); clearInterval(timer); };`,
 </div>
 <div id="copy-retry-demo">
   <p class="icen-muted" dir="auto">先模拟一次失败，再尝试真实复制。等待时可以继续阅读，重复点击不会重复执行。</p>
-  <button type="button" class="icen-copy-btn icen-copy-btn--md" data-icen-copy="https://ui.icen.ai/benzhen/">复制分享地址</button>
+  <button type="button" class="icen-copy-btn icen-copy-btn--md" data-icen-copy="https://ui.icen.ai/modern/">复制分享地址</button>
 </div>
 <p id="copy-demo-log" class="icen-muted" dir="auto" role="status" style="margin-block-start:var(--icen-density-space-md)">选择一项，复制后会在这里确认。</p>`,
     usage: `import { initCopy, copyText } from '@icen.ai/ui/behaviors/copy';
@@ -2155,7 +2155,7 @@ document.getElementById('notif-group')?.addEventListener('click', () => {
   ['林晚晴补充了批注', '沈墨回复了批注', '作品有新的修改意见'].forEach((title,index) => notify.info(title, {
     id: 'docs-review-' + index, tag: 'docs-review', unread: true,
     description: '《海边的房间》 · 团队审阅',
-    actions: [{ label: '查看批注', keepOpen: true, onClick: () => { toast.ok('已定位到这条批注'); } }],
+    actions: [{ label: '查看批注', keepOpen: true, onClick: () => { toast.success('已定位到这条批注'); } }],
   }));refreshCount();
 });
 document.getElementById('notif-async')?.addEventListener('click', () => {
@@ -2224,7 +2224,7 @@ document.getElementById('notif-confirm')?.addEventListener('click', async () => 
     cancelLabel: '取消',
   });
   if(disposed) return;
-  if (ok) toast.ok('已删除（演示）');
+  if (ok) toast.success('已删除（演示）');
   else toast.warn('已取消');
 });
 
@@ -2233,8 +2233,8 @@ document.getElementById('notif-multi')?.addEventListener('click', () => {
   notify.info('构建失败', {
     description: 'tsup 报错：src/index.ts 第 12 行类型不匹配',
     actions: [
-      { label: '查看日志', type: 'primary', onClick: () => toast.ok('打开日志') },
-      { label: '重试', onClick: () => toast.ok('已重新触发构建') },
+      { label: '查看日志', type: 'primary', onClick: () => toast.success('打开日志') },
+      { label: '重试', onClick: () => toast.success('已重新触发构建') },
       { label: '忽略' },
     ],
   });
@@ -2255,7 +2255,7 @@ document.getElementById('notif-priority')?.addEventListener('click', () => {
     description: '剩余 128 MB，构建任务可能失败',
     priority: 'high',
     unread: true,
-    actions: [{ label: '清理缓存', type: 'primary', onClick: () => toast.ok('已清理 256 MB') }],
+    actions: [{ label: '清理缓存', type: 'primary', onClick: () => toast.success('已清理 256 MB') }],
   });
   refreshCount();
 });
@@ -2272,9 +2272,9 @@ document.getElementById('notif-avatar')?.addEventListener('click', () => {
 
 // ── 链接 ──
 document.getElementById('notif-link')?.addEventListener('click', () => {
-  notify.info('本真主题已就绪', {
+  notify.info('现代主题已就绪', {
     description: '查看材质、色彩与组件组合的完整效果。',
-    link: '/benzhen/',
+    link: '/modern/',
     linkLabel: '打开主题工作室',
   });
   refreshCount();
@@ -2285,7 +2285,7 @@ document.getElementById('notif-unread')?.addEventListener('click', () => {
   notify.info('你有 3 条新评论', {
     description: '来自「星野之下」、「雨停之前」',
     unread: true,
-    onClick: (h) => { h.markRead(); toast.ok('已标记为已读'); },
+    onClick: (h) => { h.markRead(); toast.success('已标记为已读'); },
   });
   refreshCount();
 });
@@ -2298,7 +2298,7 @@ document.getElementById('notif-actions')?.addEventListener('click', () => {
     onClick: (h) => { toast.info('点击了通知体'); h.markRead(); },
     onClose: () => console.log('[notif] onClose'),
     actions: [
-      { label: '继续编辑', type: 'primary', onClick: () => toast.ok('打开编辑器') },
+      { label: '继续编辑', type: 'primary', onClick: () => toast.success('打开编辑器') },
       { label: '查看', keepOpen: true, onClick: () => toast.info('保持打开') },
     ],
   });
@@ -2318,12 +2318,12 @@ document.getElementById('notif-update')?.addEventListener('click', () => {
 // ── 全局操作 ──
 document.getElementById('notif-read')?.addEventListener('click', () => {
   notify.markRead();
-  toast.ok('已全部标记为已读');
+  toast.success('已全部标记为已读');
   refreshCount();
 });
 document.getElementById('notif-clear')?.addEventListener('click', () => {
   notify.clear();
-  toast.ok('已清空');
+  toast.success('已清空');
   refreshCount();
 });
 return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clearTimeout(id); }); timers.clear(); archiveCenter?.destroy(); archiveCenter=null; notify.clear(); toast.dismiss(); };`,
@@ -2509,7 +2509,7 @@ const html = codeBlockHTML({ html: shikiHighlighted, lang: 'ts', file: 'src/app.
   </div>
   <div class="icen-accordion-item">
     <button class="icen-accordion-trigger" type="button" aria-expanded="false"><span>如何切换色彩预设？</span>${accChevron}</button>
-    <div class="icen-accordion-panel"><div class="icen-accordion-panel-inner">预设类挂在 html 上：benzhen 本真（默认）/ clay / piano / art / vangogh / ink / retro；明暗用 data-icen-theme，原语用 data-icen-style="benzhen|pixel"，两轴独立。</div></div>
+    <div class="icen-accordion-panel"><div class="icen-accordion-panel-inner">预设类挂在 html 上：modern 现代（默认）/ dongyun 东韵 / jugou 巨构 / piano 钢琴 / monet 莫奈 / vangogh 梵高；明暗用 data-icen-theme，原语用 data-icen-style="modern|chinese|soviet|pixel"，两轴独立。</div></div>
   </div>
   <div class="icen-accordion-item">
     <button class="icen-accordion-trigger" type="button" aria-expanded="false"><span>组件可以直接写死颜色吗？</span>${accChevron}</button>
@@ -2670,7 +2670,7 @@ initTree();
     demo: `<div class="icen-carousel">
   <div class="icen-carousel-track">
     <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-accent),var(--icen-token-accent-deep));color:var(--icen-token-on-accent)"><strong>随手的组件</strong><span style="font-size:12px;opacity:.85">一行引入，行为自动接上</span></div></div>
-    <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-success),var(--icen-token-info));color:#fff"><strong>六套主题</strong><span style="font-size:12px;opacity:.85">同一套 tokens，六副面孔</span></div></div>
+    <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-success),var(--icen-token-info));color:#fff"><strong>六套主题</strong><span style="font-size:12px;opacity:.85">同一套令牌，六种气质</span></div></div>
     <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-accent-cold),var(--icen-token-accent));color:#fff"><strong>键盘与触屏</strong><span style="font-size:12px;opacity:.85">方向键、滑动、圆点直达</span></div></div>
   </div>
   <button class="icen-carousel-arrow icen-carousel-arrow--prev" type="button" aria-label="上一张">${iconHTML('chevron-left')}</button>
@@ -3435,7 +3435,7 @@ const table = createTable(el, {
   rowClassName: (row) => row.status === '已停止' ? 'row-offline' : '',
   expandable: (row) => detailNode(row),       // 行展开（虚拟模式外可用）
   contextMenu: (row) => [                     // 行右键（复用 context-menu，kit 已带 menu.css）
-    { label: '重命名', shortcut: 'F2', onClick: () => toast.ok('重命名') },
+    { label: '重命名', shortcut: 'F2', onClick: () => toast.success('重命名') },
     { type: 'separator' },
     { label: '停止服务', danger: true, onClick: () => toast.warn('已停止') },
   ],
@@ -3482,7 +3482,7 @@ const opsNode = (row) => {
   const view = document.createElement('button');
   view.className = 'icen-btn icen-btn-sm';
   view.textContent = '查看';
-  view.addEventListener('click', (ev) => { ev.stopPropagation(); toast.ok('查看 ' + row.name); });
+  view.addEventListener('click', (ev) => { ev.stopPropagation(); toast.success('查看 ' + row.name); });
   const restart = document.createElement('button');
   restart.className = 'icen-btn icen-btn-sm';
   restart.textContent = '重启';
@@ -3529,12 +3529,12 @@ if (mainEl) {
       '（' + row.updated + '），当前状态「' + row.status + '」。这里是行展开区域，可以嵌套任意 Node。',
     contextMenu: (row) => [
       { type: 'header', label: row.name, description: row.cat + ' · ' + row.owner },
-      { label: '重命名', shortcut: 'F2', onClick: () => toast.ok('重命名 ' + row.name) },
-      { label: '复制链接', onClick: () => toast.ok('已复制链接') },
+      { label: '重命名', shortcut: 'F2', onClick: () => toast.success('重命名 ' + row.name) },
+      { label: '复制链接', onClick: () => toast.success('已复制链接') },
       { type: 'separator' },
       { label: '停止服务', danger: true, shortcut: '⌫', onClick: () => toast.warn('已停止 ' + row.name) },
     ],
-    onRowClick: (row) => toast.ok('行点击：' + row.name),
+    onRowClick: (row) => toast.success('行点击：' + row.name),
   });
 }
 
@@ -3598,7 +3598,7 @@ COMPONENTS.push(
     },
     demo: `<nav class="icen-nav icen-nav--sticky" data-icen-scroll-reactive>
   <div class="icen-nav-left">
-    <span class="demo-logo">${iconHTML('benzhen', { size: 15 })} ICEN</span>
+    <span class="demo-logo">${iconHTML('modern', { size: 15 })} ICEN</span>
   </div>
   <div class="icen-nav-center">
     <button class="icen-nav-btn icen-motion icen-pressable icen-focus-ring is-active">概览</button>
@@ -3952,7 +3952,8 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
   <div class="icen-ai-composer-attach" hidden></div>
   <div class="icen-ai-composer-box icen-control">
     <textarea class="icen-ai-composer-input" rows="1" placeholder="播放中回车会排队（icen:ai-queue）· / 命令 · @ 引用"></textarea>
-    <div class="icen-ai-composer-actions">
+    <div class="icen-ai-composer-toolbar">
+      <span class="icen-ai-composer-spacer"></span>
       <button class="icen-ai-composer-btn" data-icen-ai-attach type="button" aria-label="附件"></button>
       <button class="icen-ai-composer-send" data-icen-ai-send type="button" aria-label="发送"></button>
     </div>
@@ -4316,7 +4317,8 @@ refreshAudit();`,
   <div class="icen-ai-composer-attach" hidden></div>
   <div class="icen-ai-composer-box icen-control">
     <textarea class="icen-ai-composer-input" rows="1" placeholder="输入消息，/ 命令 · @ 引用 · Enter 发送 · 运行中回车排队"></textarea>
-    <div class="icen-ai-composer-actions">
+    <div class="icen-ai-composer-toolbar">
+      <span class="icen-ai-composer-spacer"></span>
       <button class="icen-ai-composer-btn" data-icen-ai-attach type="button" aria-label="附件"></button>
       <button class="icen-ai-composer-send" data-icen-ai-send type="button" aria-label="发送"></button>
     </div>
@@ -4664,7 +4666,8 @@ if (target) {
   <div class="icen-ai-composer-attach" hidden></div>
   <div class="icen-ai-composer-box icen-control">
     <textarea class="icen-ai-composer-input" rows="1" aria-label="消息" placeholder="描述你的想法，或用 ＋ 添加上下文"></textarea>
-    <div class="icen-ai-composer-actions">
+    <div class="icen-ai-composer-toolbar">
+      <span class="icen-ai-composer-spacer"></span>
       <button class="icen-ai-composer-btn" data-icen-ai-attach type="button" aria-label="附件"></button>
       <button class="icen-ai-composer-send" data-icen-ai-send type="button" aria-label="发送"></button>
     </div>
@@ -4683,7 +4686,8 @@ initAiComposer();
   <div class="icen-ai-composer-attach" hidden></div>
   <div class="icen-ai-composer-box icen-control">
     <textarea class="icen-ai-composer-input" rows="1" placeholder="输入消息，/ 命令 · @ 引用 · Enter 发送"></textarea>
-    <div class="icen-ai-composer-actions">
+    <div class="icen-ai-composer-toolbar">
+      <span class="icen-ai-composer-spacer"></span>
       <button class="icen-ai-composer-btn" data-icen-ai-attach aria-label="附件"></button>
       <button class="icen-ai-composer-send" data-icen-ai-send aria-label="发送"></button>
     </div>

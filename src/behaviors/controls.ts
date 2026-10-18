@@ -89,7 +89,7 @@
  *   同表其他 th 一并复位为各自 key。
  * 事件：icen:sort-change { th, key: 原始 data-icen-sort 列 key, dir: 'asc'|'desc'|null }。
  *
- * kit 兼容：segmented 的 kit 入口（scripts/slugs.mjs SLUG_EXPORTS）从本模块统一
+ * kit 出口：segmented 的 kit 入口（scripts/slugs.mjs SLUG_EXPORTS）从本模块统一
  * re-export，故此处转发 input.ts 的 initInput（OTP 行为），保证 kit/segmented
  * 同时带出 OTP 与分段 / 步进接线。
  */
@@ -546,7 +546,7 @@ function onSortClick(ev: MouseEvent): void {
  */
 export const initTableSort = createDelegatedInit({ click: onSortClick });
 
-/* ── kit 兼容 re-export ──
+/* ── kit re-export ──
  * segmented 的 kit 入口（scripts/slugs.mjs SLUG_BEHAVIOR/SLUG_EXPORTS）指向本模块，
  * OTP 行为仍在 input.ts：这里转发 initInput，使 kit/segmented 一条 import 同时
  * 带出 OTP（initInput）与分段 / 步进（initSegmented / initStepper）。 */

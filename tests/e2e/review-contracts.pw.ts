@@ -43,7 +43,7 @@ test('sampled chart ticks match their actual data points at narrow widths and in
 
 test('documentation previews inherit the selected primitive typography', async ({page}) => {
   await page.goto('/components/upload/');
-  for(const primitive of ['benzhen','pixel']) {
+  for(const primitive of ['modern','pixel']) {
     await page.locator('html').evaluate((el,primitive)=>el.dataset.icenStyle=primitive,primitive);
     const fonts=await page.locator('.demo-stage').evaluate(el=>{
       const probe=document.createElement('span');probe.style.fontFamily='var(--icen-font-body)';el.appendChild(probe);

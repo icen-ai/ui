@@ -1,5 +1,5 @@
 // 构建产物契约测试：dist/registry.json 与 scripts/slugs.mjs 对齐（slug 数 / kit 入口文件存在）、
-// dist/tokens.css 顶部层序声明、dist/migrate-map.json 冻结迁移映射非空。
+// dist/tokens.css 顶部层序声明。
 // dist 缺失或 slug 数失配时先用 bun scripts/build-css.ts 自举再断言。
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
@@ -45,8 +45,6 @@ describe('dist/registry.json（与 slugs.mjs 对齐）', () => {
     expect(orphans).toEqual([]);
   });
 
-  /* 历史阻塞记录：SLUGS 曾登记 'form-validate' 但 src 资产缺失（guard/build 基线红），
-     彼时本断言以 todo 休眠；src 补齐后转为全量硬断言。 */
   test('slug 数 = slugs.mjs 的 SLUGS 数（全量对齐）', () => {
     expect(Object.keys(registry!.slugs).length).toBe((SLUGS as string[]).length);
   });
@@ -70,14 +68,4 @@ describe('dist 产物形态', () => {
     expect(head).toContain('@layer icen.tokens, icen.base, icen.components;');
   });
 
-  test('dist/migrate-map.json 存在：冻结迁移映射，classes 非空、状态类前缀 is-', () => {
-    const p = join(ROOT, 'dist', 'migrate-map.json');
-    expect(existsSync(p)).toBe(true);
-    const map = JSON.parse(readFileSync(p, 'utf8')) as { classes: Record<string, string>; stateClassPrefix: string };
-    expect(Object.keys(map.classes).length).toBeGreaterThan(0);
-    expect(map.stateClassPrefix).toBe('is-');
-    /* 命名空间样本：迁移目标全部 icen- 前缀 */
-    const sample = Object.values(map.classes).slice(0, 50);
-    expect(sample.every((c) => c.startsWith('icen-'))).toBe(true);
-  });
 });

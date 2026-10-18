@@ -1,7 +1,6 @@
 // 类名同步守卫：JS/TS 侧引用的组件类名必须与 CSS 侧定义同形态。
-// 历史教训（v0.10 迁移事故）：codemod 只迁移了 CSS 侧的 BEM 修饰族（.x--mod → .icen-x--mod），
-// JS 模板字面量的静态段（`ai-msg--${role}`）漏迁，导致消息角色/diff 行/通知语义色/用量环
-// 等一大批修饰样式静默失效——单测绿（happy-dom 不管样式）、冒烟绿（不抛错），只有像素才知道。
+//  why：BEM 修饰族在 CSS 与 JS 模板字面量两侧各写一次（.icen-ai-msg--error ↔ `icen-ai-msg--${role}`），
+//  一侧改形另一侧静默失效——单测绿（happy-dom 不管样式）、冒烟绿（不抛错），只有像素才知道。
 // 规则：JS 引用「带连字符的未前缀类 X」且 CSS 中不存在 .X 但存在 .icen-X → 违规。
 //   覆盖模板静态段（`ai-msg--` 前缀族按族判定）。is-* 状态类、站点本地类（demo-*/kbws-* 等）豁免。
 // 豁免：行尾 /* guard:allow-class-sync 理由 */。

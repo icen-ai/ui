@@ -34,21 +34,6 @@ const HEX_ALLOWLIST: Array<{ file: string; pattern: RegExp; reason: string }> = 
     pattern: /mask-image[\s\S]*?#000/,
     reason: 'mask 渐变遮罩色（折叠态底部渐隐）——同 scroll-area：mask 空间语义是「不透明」，与主题色无关',
   },
-  {
-    file: 'kb-perm.css',
-    pattern: /var\(--(?:icen-)*token-(?:error|on-accent),\s*#(?:c0392b|fff)\)/,
-    reason: 'v0.9 kb 族遗留的 var() 回退值写法（token 未导入时兜底），全库仅此文件与该域同型；迁移稳定后应剥除回退统一裸 var',
-  },
-  {
-    file: 'kb-ops.css',
-    pattern: /var\(--(?:icen-)?token-on-accent,\s*#fff\)/,
-    reason: '同上：kb 族遗留的 var() 回退值写法',
-  },
-  {
-    file: 'kb.css',
-    pattern: /var\(--(?:icen-)?token-error,\s*#c0392b\)/,
-    reason: '同上：kb 族遗留的 var() 回退值写法',
-  },
 ];
 
 /** 字面量 z-index 豁免。--icen-z-* 是全局浮层 portal 标尺（base.css 定义），

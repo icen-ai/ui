@@ -23,7 +23,7 @@
   padding-inline: calc(8px + var(--depth, 0) * 16px) 8px;
   border: none;
   background: none;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   font: inherit;
   font-size: 12.5px;
   color: var(--icen-token-text-muted);
@@ -92,7 +92,7 @@
   background: var(--icen-token-line);
   transition: width 0.16s ease-out;
 }
-.icen-kb-span.is-error .icen-kb-span-bar { background: var(--icen-token-danger, var(--icen-token-error)); }
+.icen-kb-span.is-error .icen-kb-span-bar { background: var(--icen-token-error); }
 .icen-kb-span.is-running .icen-kb-span-bar {
   background: var(--icen-token-accent);
   animation: kb-ops-pulse 1.6s ease-in-out infinite;
@@ -119,7 +119,7 @@
 }
 .icen-kb-trace-detail { white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
 .icen-kb-trace-usage { display: flex; flex-wrap: wrap; gap: 4px 12px; }
-.icen-kb-trace-error { color: var(--icen-token-danger, var(--icen-token-error)); font-size: 12px; word-break: break-word; }
+.icen-kb-trace-error { color: var(--icen-token-error); font-size: 12px; word-break: break-word; }
 
 /* retrieval span 内嵌迷你命中列表（rank + title + .icen-kb-score 序数条） */
 .icen-kb-trace-hits { display: flex; flex-direction: column; gap: 2px; }
@@ -174,7 +174,7 @@
   padding: 3px 8px;
   border: none;
   background: none;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   font: inherit;
   font-size: 12.5px;
   color: var(--icen-token-text-muted);
@@ -214,8 +214,8 @@
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md, 8px);
-  background: var(--icen-token-surface, var(--icen-token-bg));
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-surface);
 }
 .icen-kb-review-card:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: -2px; }
 .icen-kb-review-card-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -247,7 +247,7 @@
   gap: 6px;
   padding: 8px 10px;
   background: var(--icen-token-bg-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
 }
 .icen-kb-review-rubric-name { font-size: 12.5px; font-weight: 500; color: var(--icen-token-text); }
 .icen-kb-review-rubric-desc { font-size: 11.5px; font-weight: 400; color: var(--icen-token-text-faint); margin-inline-start: 6px; }
@@ -271,7 +271,7 @@
 .icen-kb-review-chip.is-on {
   color: var(--icen-token-accent);
   border-color: color-mix(in srgb, var(--icen-token-accent) 50%, transparent);
-  background: var(--icen-token-accent-subtle, transparent);
+  background: var(--icen-token-accent-subtle);
 }
 
 .icen-kb-review-slider-row { display: flex; align-items: center; gap: 10px; }
@@ -286,14 +286,14 @@
   gap: 8px;
   font: inherit;
   font-size: 12.5px;
-  color: var(--icen-token-on-accent, #fff);
+  color: var(--icen-token-on-accent);
   background: var(--icen-token-accent-strong);
   border: none;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   padding: 6px 14px;
   cursor: pointer;
 }
-.icen-kb-review-submit:hover { background: var(--icen-token-accent-deep, var(--icen-token-accent)); }
+.icen-kb-review-submit:hover { background: var(--icen-token-accent-deep); }
 .icen-kb-review-submit:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 2px; }
 .icen-kb-review-hint { font-size: 11.5px; color: var(--icen-token-text-faint); }
 
@@ -308,10 +308,10 @@
   gap: 6px;
   padding: 10px 12px;
   min-width: 208px;
-  background: var(--icen-token-surface, var(--icen-token-bg));
+  background: var(--icen-token-surface);
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md, 8px);
-  box-shadow: var(--icen-token-shadow-elevated, none);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-elevated);
 }
 .icen-kb-review-keys-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--icen-token-text-muted); }
 .icen-kb-review-keys-row .icen-kb-key { flex: 0 0 auto; }
@@ -357,7 +357,7 @@
   border-bottom: 1px solid var(--icen-token-line);
 }
 .icen-kb-gap-query {
-  font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(--icen-font-mono);
   font-size: 12px;
   color: var(--icen-token-text);
   overflow: hidden;
@@ -382,7 +382,7 @@
   color: var(--icen-token-text-muted);
   background: none;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   padding: 2px 8px;
   cursor: pointer;
   white-space: nowrap;
@@ -416,14 +416,14 @@
   background: color-mix(in srgb, var(--icen-token-success) 8%, transparent);
 }
 .icen-kb-eval-grade.is-regression {
-  color: var(--icen-token-danger, var(--icen-token-error));
-  border-color: color-mix(in srgb, var(--icen-token-danger, var(--icen-token-error)) 45%, transparent);
-  background: color-mix(in srgb, var(--icen-token-danger, var(--icen-token-error)) 8%, transparent);
+  color: var(--icen-token-error);
+  border-color: color-mix(in srgb, var(--icen-token-error) 45%, transparent);
+  background: color-mix(in srgb, var(--icen-token-error) 8%, transparent);
 }
 .icen-kb-eval-grade.is-tradeoff {
   color: var(--icen-token-warning);
   border-color: color-mix(in srgb, var(--icen-token-warning) 45%, transparent);
-  background: var(--icen-token-warning-muted, transparent);
+  background: var(--icen-token-warning-muted);
 }
 
 .icen-kb-eval-filter {
@@ -442,7 +442,7 @@
 .icen-kb-eval-filter.is-on {
   color: var(--icen-token-accent);
   border-color: color-mix(in srgb, var(--icen-token-accent) 50%, transparent);
-  background: var(--icen-token-accent-subtle, transparent);
+  background: var(--icen-token-accent-subtle);
 }
 
 /* 结果表：横向滚动容器 + 行内 grid 模板（列由 JS 按指标数生成） */
@@ -481,7 +481,7 @@
 }
 .icen-kb-eval-cell--input { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .icen-kb-eval-key {
-  font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(--icen-font-mono);
   font-size: 10.5px;
   color: var(--icen-token-text-faint);
   overflow: hidden;
@@ -491,7 +491,7 @@
 /* delta 列：宽 64 物理右对齐（数字惯例）；is-up 绿 / is-down 红 */
 .icen-kb-eval-delta { min-width: 64px; }
 .icen-kb-eval-delta.is-up { color: var(--icen-token-success); }
-.icen-kb-eval-delta.is-down { color: var(--icen-token-danger, var(--icen-token-error)); }
+.icen-kb-eval-delta.is-down { color: var(--icen-token-error); }
 
 /* 展开体：双栏对照 + 字符级 diff（A 独有红 / B 独有绿，color-mix 底色） */
 .icen-kb-eval-detail {
@@ -500,13 +500,13 @@
   gap: 10px;
   padding: 10px 8px;
   background: var(--icen-token-bg-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
 }
 .icen-kb-eval-detail-col { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .icen-kb-eval-detail-label { font-size: 11px; color: var(--icen-token-text-faint); }
 .icen-kb-eval-detail-pre {
   margin: 0;
-  font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(--icen-font-mono);
   font-size: 12px;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -515,8 +515,8 @@
 }
 .icen-kb-eval-detail-expected { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .icen-kb-eval-diff-del {
-  background: color-mix(in srgb, var(--icen-token-danger, var(--icen-token-error)) 14%, transparent);
-  color: var(--icen-token-danger, var(--icen-token-error));
+  background: color-mix(in srgb, var(--icen-token-error) 14%, transparent);
+  color: var(--icen-token-error);
   border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
 }
 .icen-kb-eval-diff-ins {

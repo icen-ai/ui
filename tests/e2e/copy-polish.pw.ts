@@ -10,7 +10,7 @@ async function clipboard(page: Page) {
 
 test('copy retains stable slots and keyboard feedback across both primitives and modes', async ({page}) => {
   await clipboard(page);
-  for (const primitive of ['benzhen', 'pixel']) for (const dark of [false, true]) {
+  for (const primitive of ['modern', 'pixel']) for (const dark of [false, true]) {
     await page.goto('/components/copy/');
     await page.locator('html').evaluate((el, {primitive, dark}) => {el.dataset.icenStyle = primitive; el.dataset.icenTheme = dark ? 'dark' : 'light';}, {primitive, dark});
     const button = page.locator('.demo-stage .icen-copy-btn').first();
@@ -39,7 +39,7 @@ test('copy exposes pending, visible failure and retry without duplicate work or 
   expect(await page.evaluate(() => (window as any).writes.length)).toBe(0);
   await button.press('Enter'); await expect(button).toHaveClass(/is-done/);
   await expect(button).not.toHaveAttribute('aria-describedby');
-  expect(await page.evaluate(() => (window as any).writes)).toEqual(['https://ui.icen.ai/benzhen/']);
+  expect(await page.evaluate(() => (window as any).writes)).toEqual(['https://ui.icen.ai/modern/']);
   await expect(host.locator('.icen-copy-feedback')).toHaveCount(1);
 });
 
@@ -48,7 +48,7 @@ test('copy feedback is readable in every palette and quiet actions reveal on key
   const button = page.locator('.demo-stage .icen-copy-btn').first(), icon = page.locator('.demo-stage .icen-copy-btn--quiet');
   await page.mouse.move(0, 0); await expect(icon).toHaveCSS('opacity', '0'); await icon.focus(); await expect(icon).toHaveCSS('opacity', '1');
   await expect(icon.locator('svg').first()).toHaveAttribute('viewBox', '0 0 20 20');
-  for (const preset of ['benzhen', 'clay', 'piano', 'art', 'vangogh', 'ink']) for (const dark of [false, true]) {
+  for (const preset of ['modern', 'dongyun', 'jugou', 'piano', 'monet', 'vangogh']) for (const dark of [false, true]) {
     await page.locator('html').evaluate((el, {preset, dark}) => {el.dataset.icenPreset = preset; el.dataset.icenTheme = dark ? 'dark' : 'light';}, {preset, dark});
     await button.click(); await page.waitForTimeout(400);
     const issues = await page.locator('.demo-stage').evaluate(async root => {

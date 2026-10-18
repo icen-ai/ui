@@ -1,7 +1,6 @@
-/** Theme = palette + dark mode + primitive. The default theme and primitive are 本真; 像素 is an independent primitive.
+/** Theme = palette + dark mode + primitive. 现代、像素、中式、苏式 are independent primitives.
  * data-icen-preset selects color; data-icen-style selects the primitive.
- * Legacy modern/retro/terminal preferences migrate to benzhen, retaining palette
- * and dark mode. Geometry/materials never replace the selected color theme. */
+ * Geometry/materials never replace the selected color theme. */
 
 import themes from '../tokens/themes.json';
 import { emitIcen } from './events';
@@ -14,31 +13,28 @@ export interface ThemeState {
 }
 
 export const PRESETS = themes.map((theme)=>theme.id);
-export const PRIMITIVES = ['benzhen', 'pixel'] as const;
-/** @deprecated Use PRIMITIVES. The style field/attribute now selects a primitive. */
-export const STYLES = PRIMITIVES;
+export const PRIMITIVES = ['modern', 'chinese', 'soviet', 'pixel'] as const;
 const customPrimitives = new Set<string>();
-const REMOVED_STYLES = new Set(['modern','retro','terminal']);
 export function registerPrimitive(name: string): boolean {
-  if (!/^[a-z][a-z0-9-]{1,20}$/.test(name) || REMOVED_STYLES.has(name)) return false;
+  if (!/^[a-z][a-z0-9-]{1,20}$/.test(name)) return false;
   if ((PRIMITIVES as readonly string[]).includes(name)) return true;
   customPrimitives.add(name); return true;
 }
 export function listPrimitives(): string[] { return [...PRIMITIVES,...customPrimitives]; }
 function normalizePrimitive(name: unknown): string {
-  return typeof name === 'string' && listPrimitives().includes(name) ? name : 'benzhen';
+  return typeof name === 'string' && listPrimitives().includes(name) ? name : 'modern';
 }
 export const STORAGE_KEY = 'icen.ui.theme';
 
 /** 自建预设的合法名（2–21 位，小写字母开头，仅小写字母/数字/连字符）。 */
 const PRESET_NAME_RE = /^[a-z][a-z0-9-]{1,20}$/;
-/** 与主题机制冲突的保留名：dark = 明暗切换；style-* = 风格 profile。 */
-const RESERVED_PRESET_NAMES = new Set<string>(['retro', 'dark', 'style-modern', 'style-retro', 'style-terminal', ...STYLES.map((s) => `style-${s}`)]);
+/** 与明暗机制冲突的保留名。 */
+const RESERVED_PRESET_NAMES = new Set<string>(['dark']);
 
 /** 已注册的自建预设（registerThemePreset 登记，listThemePresets 一并列出）。 */
 const customPresets = new Set<string>();
 
-const FALLBACK: ThemeState = { preset: 'benzhen', dark: false, style: 'benzhen' };
+const FALLBACK: ThemeState = { preset: 'modern', dark: false, style: 'modern' };
 
 function isBrowser(): boolean {
   return typeof document !== 'undefined';
@@ -69,15 +65,15 @@ export function listThemePresets(): string[] {
   return [...new Set([...PRESETS, ...customPresets])];
 }
 
-/** 默认主题：本真主题 + 跟随系统明暗 + 本真原语。SSR 下返回离线兜底值。 */
+/** 默认主题：现代主题 + 跟随系统明暗 + 现代原语。SSR 下返回离线兜底值。 */
 export function getDefaultTheme(): ThemeState {
   if (!isBrowser() || typeof window.matchMedia !== 'function') {
     return { ...FALLBACK };
   }
   return {
-    preset: 'benzhen',
+    preset: 'modern',
     dark: window.matchMedia('(prefers-color-scheme: dark)').matches,
-    style: 'benzhen',
+    style: 'modern',
   };
 }
 
@@ -87,7 +83,7 @@ function isThemeState(v: unknown): v is ThemeState {
   return (
     typeof t.preset === 'string' &&
     /* 持久化路径与 setTheme 同一开放白名单：自建预设跨刷新存活 */
-    (isValidPreset(t.preset) || t.preset === 'retro') &&
+    isValidPreset(t.preset) &&
     typeof t.dark === 'boolean' &&
     typeof t.style === 'string'
   );
@@ -101,7 +97,7 @@ export function getTheme(): ThemeState {
     if (!raw) return getDefaultTheme();
     const parsed: unknown = JSON.parse(raw);
     if (!isThemeState(parsed)) return getDefaultTheme();
-    const normalized = { preset: parsed.preset === 'retro' ? FALLBACK.preset : parsed.preset, dark: parsed.dark, style: normalizePrimitive(parsed.style) };
+    const normalized = { preset: parsed.preset, dark: parsed.dark, style: normalizePrimitive(parsed.style) };
     if (normalized.style !== parsed.style || normalized.preset !== parsed.preset) {
       try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized)); } catch { /* Keep normalized appearance when storage is read-only. */ }
     }
@@ -116,10 +112,10 @@ let lastApplied: ThemeState | null = null;
 
 /**
  * 唯一生效点（私有 apply）：主题层全部落在 <html> 的 data 属性上——
- *   data-icen-preset="clay|piano|…"（clay 也显式写，与缺省 :root 默认等价）
+ *   data-icen-preset="dongyun|piano|…"（modern 为缺省 :root 基值，其余预设显式写）
  *   data-icen-theme="dark"（亮色 = 摘除该属性）
- *   data-icen-style="benzhen"
- * 选择器自我文档化且与任何第三方类名零冲突（[data-icen-theme="dark"] 是全业界最危险的类名，类形态已废弃）。
+ *   data-icen-style="modern"
+ * 选择器自我文档化且与任何第三方类名零冲突。
  * 与上次生效状态不同时，从 documentElement 派发 icen:theme-change { preset, dark, style }；
  * 首次应用（页面初始化）不派发——同 tabs「初始化定位不派发」纪律。
  */
@@ -131,7 +127,6 @@ function apply(t: ThemeState): void {
   root.setAttribute('data-icen-preset', t.preset);
   if (t.dark) root.setAttribute('data-icen-theme', 'dark');
   else root.removeAttribute('data-icen-theme');
-  root.removeAttribute('data-icen-design'); // obsolete fourth axis
   root.setAttribute('data-icen-style', t.style);
 
   const changed =
@@ -189,10 +184,8 @@ export function toggleDark(): ThemeState {
   return setTheme({ dark: !getCurrentTheme().dark });
 }
 
-/** 只切原语（本真 / 像素；旧风格与非法值回退本真），返回新态。 */
+/** 只切原语（现代 / 中式 / 苏式 / 像素；非法值回退现代），返回新态。 */
 export function setPrimitive(primitive: string): ThemeState { return setTheme({style:primitive}); }
-/** @deprecated Use setPrimitive; deleted styles are normalized to benzhen. */
-export function setStyle(style: string): ThemeState { return setPrimitive(style); }
 
 /* 模块级幂等守卫：mql change 监听只挂一次 */
 let systemListenerAttached = false;

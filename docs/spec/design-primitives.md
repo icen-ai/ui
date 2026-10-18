@@ -1,6 +1,6 @@
-# 设计原语与「本真」
+# 设计原语与「现代」
 
-本真（Benzhen）是 ICEN UI 的第一套完整设计方案。它把材料、字体、几何、密度、光影与反馈组织成同一套规则：内容安静，操作轻盈。它不宣称在主观审美上胜过某个平台；验收对象是可读性、层次、定制成本与真实交互品质。
+现代（modern）是 ICEN UI 的第一套完整设计方案。它把材料、字体、几何、密度、光影与反馈组织成同一套规则：内容安静，操作轻盈。它不宣称在主观审美上胜过某个平台；验收对象是可读性、层次、定制成本与真实交互品质。
 
 ## 启用
 
@@ -11,12 +11,12 @@
 ```
 
 ```html
-<html lang="zh-CN" data-icen-preset="benzhen">
+<html lang="zh-CN" data-icen-preset="modern">
 ```
 
 明暗继续使用 `data-icen-theme="dark"`；去掉这个属性就是亮色。支持 SSR，把属性在首屏直接写入 HTML 即可，无需客户端初始化。若产品跟随系统，在自己的首屏主题脚本中解析系统偏好。`data-icen-preset` 必须挂在 html，body portal 的菜单与弹窗才能继承同样的原语。
 
-主题与原语是独立轴：`data-icen-preset` 选择配色主题，`data-icen-style` 选择原语。本真同时是默认主题和默认原语；像素是另一套原语。现保留本真、陶土、钢琴、艺术、梵高、墨六套主题；retro 复古主题已删除，modern / retro / terminal 原语及其特效已删除。旧偏好保留主题和明暗，原语自动迁移到本真。
+主题与原语是独立轴：`data-icen-preset` 选择配色主题，`data-icen-style` 选择原语。现代同时是默认主题和默认原语；另有中式、苏式、像素三套原语。共六套主题：现代、东韵、巨构、钢琴、莫奈、梵高；modern 为默认原语。
 
 ## 四层结构
 
@@ -25,9 +25,9 @@
 3. **材料角色**：content / chrome / floating，共享边缘、模糊和阴影配方。
 4. **组件适配**：按钮、输入、分段选择、菜单、弹窗等，处理仅靠变量无法表达的细节。
 
-本真主题为中性瓷白＋冷蓝，独立于陶土；没有复用陶土的配色。
+现代主题为中性瓷白＋冷蓝，独立校准，不继承其它主题的配色。
 
-代码真相：`src/tokens/themes.json` 是全部主题的明暗配色与材料参数，`colors.css` 是生成的语义映射；`src/tokens/design.css` 是原语的几何与光影配方；`src/components/material.css` 是材料与组件规则；`src/behaviors/design.ts` 是可选的品牌编译 API。材料规则随 tokens.css 进入 icen.components layer，单组件按需引入同样成立，不要求导入全量 ui.css。不写属性时也默认使用本真。
+代码真相：`src/tokens/themes.json` 是全部主题的明暗配色与材料参数，`colors.css` 是生成的语义映射；`src/tokens/design.css` 是原语的几何与光影配方；`src/components/material.css` 是材料与组件规则；`src/behaviors/design.ts` 是可选的品牌编译 API。材料规则随 tokens.css 进入 icen.components layer，单组件按需引入同样成立，不要求导入全量 ui.css。不写属性时也默认使用现代。
 
 ## 材料
 
@@ -52,13 +52,13 @@
 简单微调只写 CSS，消费方无 layer 的样式优先于库：
 
 ```css
-:root[data-icen-preset="benzhen"] {
+:root[data-icen-preset="modern"] {
   --icen-design-radius: 12px;
   --icen-design-glass-blur: 16px;
 }
 ```
 
-任何合法的新名字都可以复用配方。它默认继承本真种子；独立品牌建议提供完整明暗文字与表面色，并按需求替换语义色。
+任何合法的新名字都可以复用配方。它默认继承现代种子；独立品牌建议提供完整明暗文字与表面色，并按需求替换语义色。
 
 ```css
 :root[data-icen-preset="my-brand"] {
@@ -100,14 +100,14 @@ const brand = createDesign({
 // 浏览器：也可动态挂载，支持可选 CSP nonce；卸载函数只移除这份样式。
 const unmount = mountDesign(brand);
 setDesign(brand.name);
-// 恢复本真主题：setDesign(null); unmount();
+// 恢复现代主题：setDesign(null); unmount();
 ```
 
 `createDesign` 不自动改写作者颜色；对比度不够时抛错。工作室里的颜色选择器会演示按明暗分别调节色调的做法，导出的是处理后的真实配方。`mountDesign` 的参数应来自可信作者代码；它不是用于渲染任意终端用户 CSS 的安全沙箱。CSP 不允许内联样式时使用静态 CSS；需要内联时可传 `mountDesign(brand, nonce)`。
 
 ## 作者旋钮
 
-| 名称（均以 --icen-design- 开头） | 本真亮 / 暗默认 | 意义 |
+| 名称（均以 --icen-design- 开头） | 现代亮 / 暗默认 | 意义 |
 | --- | --- | --- |
 | canvas / surface | #f5f6f8 / #fff；#15171b / #25282e | 页面与内容面 |
 | ink / muted | #202124 / #616671；#f2f4f7 / #aeb5c2 | 正文与辅助字 |
@@ -125,7 +125,7 @@ setDesign(brand.name);
 
 CSS 作者可以直接覆盖全部种子；类型 API 暴露常用旋钮，并对数值范围进行检查。需要新材料配方时，用自有 data 属性消费既有语义 token，或扩展材料文件中的角色；无需复制每个组件。
 
-## 本真的具体判断
+## 现代的具体判断
 
 - **文字**：界面系统无衬线；代码单独等宽；数据才使用 tabular-nums。取消全局 Numeric Math 混排。正文阅读可在业务排版中提高到 16px。
 - **几何**：xs/sm/md/lg/xl 从共同控件半径推导；贴合内外轮廓同心，独立控件保留自身半径。分段选择内角扣掉外壳 padding 与边框。
@@ -137,30 +137,45 @@ CSS 作者可以直接覆盖全部种子；类型 API 暴露常用旋钮，并�
 
 ## 验收与边界
 
-工作室 `/benzhen/` 使用库的真实 CSS 与行为，不是图片。三个场景覆盖资料保存、开关、资料搜索、新建笔记、菜单 portal、弹窗和本地对话反馈；不连接真实账户或 AI 服务。配方编译 API、DOM 生命周期与浏览器用例见 `tests/{unit,dom}/design.test.ts` 和 `tests/e2e/design.pw.ts`。
+工作室 `/modern/` 使用库的真实 CSS 与行为，不是图片。三个场景覆盖资料保存、开关、资料搜索、新建笔记、菜单 portal、弹窗和本地对话反馈；不连接真实账户或 AI 服务。配方编译 API、DOM 生命周期与浏览器用例见 `tests/{unit,dom}/design.test.ts` 和 `tests/e2e/design.pw.ts`。
 
 框架、用户字体和背后内容可能改变最终阅读效果；品牌作者仍应在目标系统与复杂背景中检查。任何“极其优雅”或“胜过 Apple”的判断都需要人的实际使用评审，本实现不以测试通过冒充审美结论。
 
 ## 像素原语
 
-`<html data-icen-preset="benzhen" data-icen-style="pixel">`。顶部原语菜单可独立切换本真／像素。
+`<html data-icen-preset="modern" data-icen-style="pixel">`。顶部原语菜单可独立切换现代／中式／苏式／像素。
 
 像素采用 4px 网格、12px 原生中英文点阵、24/36/48px 标题、直角、2px 轮廓、2/4/8px 阶梯投影、机械按压和局部排线。内容与浮层都不透明，所有颜色继承当前主题；不附加 CRT 扫描线或闪烁。代码见 `src/tokens/pixel.css`，适配见 material.css。Fusion Pixel Font 按 OFL 1.1 本地分发，版本、校验和与上游许可证见 `src/fonts/README.md`。
 
 运行时使用 `setPrimitive("pixel")`；自建原语先 `registerPrimitive("brand-shape")`，再用 `[data-icen-style="brand-shape"]` 覆盖几何、字体、光影参数。主题仍单独由 setTheme({preset:...}) 选择。
 
-Apple 研究参考：[Materials](https://developer.apple.com/design/human-interface-guidelines/materials)、[Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/)。本真实现以内容／操作分层、同心几何、文字可读性为准则；Web 材料不是系统 Liquid Glass 的光学模拟。
+Apple 研究参考：[Materials](https://developer.apple.com/design/human-interface-guidelines/materials)、[Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/)。现代实现以内容／操作分层、同心几何、文字可读性为准则；Web 材料不是系统 Liquid Glass 的光学模拟。
+
+## 中式与苏式原语
+
+**中式 chinese** 从宋式器物的比例与书卷的疏朗出发：纤细边界、低曲率轮廓、宋体标题、舒展行距和浅淡投影。表单正文保留清楚的界面字体；标题负责书写气息，操作保持安静而明确。推荐与宣纸、青瓷、朱砂组成的「东韵 dongyun」主题搭配。
+
+**苏式 soviet** 从构成主义与纪念建筑的结构出发：方正轮廓、有分量的字重、清楚的分区和定向投影；主次通过比例与结构线建立。推荐与石灰岩、炭黑、氧化红组成的「巨构 jugou」主题搭配。
+
+```ts
+setTheme({ preset: 'dongyun' });
+setPrimitive('chinese');
+// 两轴分别控制；保留东韵配色也可以切换苏式几何。
+setPrimitive('soviet');
+```
+
+两套原语的几何与排版分别位于 `src/tokens/chinese.css`、`src/tokens/soviet.css`，组件适配位于 `src/components/material-chinese.css`、`src/components/material-soviet.css`。与现代、像素相同，随 tokens.css 分发；切换不会强制修改当前配色与明暗，首屏恢复、跨页面与跨标签页使用同一持久化状态。
 
 ## 六套主题的校准
 
 | 主题 | 日间 | 夜间 | 材料取向 |
 | --- | --- | --- | --- |
-| 本真 | 瓷白、清晰冷蓝 | 冷调石墨、浅蓝动作 | 清透、柔光，弱化边框 |
-| 陶土 | 暖纸、陶红与棕墨 | 深陶棕、杏色动作 | 更厚、更不透明，漫射投影 |
+| 现代 | 瓷白、清晰冷蓝 | 冷调石墨、浅蓝动作 | 清透、柔光，弱化边框 |
+| 东韵 | 宣纸、青瓷与朱砂 | 深墨、温润玉色 | 纸与瓷的细腻层次，疏朗而克制 |
+| 巨构 | 石灰岩、炭黑与氧化红 | 深炭、暖石与朱红 | 厚重实色，清楚的结构层次 |
 | 钢琴 | 象牙白、乌木字、克制金棕 | 黑漆、香槟金 | 清晰边缘与细薄反光 |
-| 艺术 | 画廊白、朱红锚点 | 中性炭灰、珊瑚红 | 低投影、稳定背景 |
+| 莫奈 | 青灰水面、睡莲绿 | 深潭蓝绿、微光紫意 | 低反光、柔光，紫调含蓄 |
 | 梵高 | 麦色画布、钴蓝动作 | 深蓝、星光金 | 保留暖冷对照，控制大面积饱和度 |
-| 墨 | 青灰纸、深松墨 | 墨绿、浅青玉 | 低反光、实色与安静留白 |
 
 每套显式配置 bg / surface / raised 三层，正文／辅助／次要文字、文字强调和四类语义色在三层均验证 4.5:1；按钮另验 accentStrong × onAccent。图形强调、按钮填充、文字强调分别配置，使用原语或更换主题不会混淆其职责。
 

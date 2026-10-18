@@ -7,7 +7,7 @@ const materialNames={glassOpacity:'glass-opacity',shadowStrength:'shadow-strengt
 const roles={bg:'canvas','bg-soft':'bg-soft',surface:'surface','surface-strong':'raised',text:'ink','text-muted':'muted','text-faint':'faint',accent:'accent','accent-strong':'accent-strong','accent-text':'accent-text','accent-deep':'accent-strong','accent-cold':'cold','on-accent':'on-accent',success:'success','success-text':'success',warning:'warning',error:'error',danger:'error',info:'info'};
 
 export function renderThemeColors(themes) {
-  let css='/* GENERATED from themes.json by bun run colors. Edit the catalogue, never this file.\n * Six complete themes × light/dark; 本真 is the default. Primitives are separate. */\n';
+  let css=`/* GENERATED from themes.json by bun run colors. Edit the catalogue, never this file.\n * ${themes.length} complete themes × light/dark; 现代 is the default. Primitives are separate. */\n`;
   for(const [index,theme] of themes.entries()) {
     for(const mode of ['light','dark']) {
       const palette=theme[mode];
@@ -65,12 +65,11 @@ export function renderThemeColors(themes) {
   --icen-token-scrollbar-button: transparent;
 `;
   const bridges={
-    'accent-clay':'accent','accent-clay-dark':'accent-strong','accent-clay-light':'accent-subtle','accent-cold':'accent-cold',
+    'accent-cold':'accent-cold',
     'bg-primary':'bg','bg-secondary':'bg-soft','bg-tertiary':'surface','bg-card':'card','bg-card-muted':'bg-soft','bg-panel':'panel','bg-hover':'surface-hover',
     'text-primary':'text','text-secondary':'text','text-tertiary':'text-muted','text-muted':'text-muted','text-subtle':'text-faint',
     'border-subtle':'line-soft','border-default':'line','border-strong':'line-strong','shadow-sm':'shadow-elevated','shadow-md':'shadow-overlay',
-    'color-success':'success','color-success-bg':'success-muted','color-warning':'warning','color-warning-bg':'warning-muted','color-error':'error','color-error-bg':'error-muted','color-info':'info','color-info-bg':'info-muted','color-pending':'text-muted','color-pending-bg':'bg-soft',
-    'accent-clay-bg':'accent-subtle','accent-clay-bg-strong':'accent-subtle','accent-clay-border':'accent-subtle'
+    'color-success':'success','color-success-bg':'success-muted','color-warning':'warning','color-warning-bg':'warning-muted','color-error':'error','color-error-bg':'error-muted','color-info':'info','color-info-bg':'info-muted','color-pending':'text-muted','color-pending-bg':'bg-soft'
   };
   for(const [name,token] of Object.entries(bridges)) css+=`  --icen-${name}: var(--icen-token-${token});\n`;
   return css+'}\n';

@@ -11,7 +11,7 @@ test('appearance controls omit arrows and check slots while every palette has a 
   const panel = page.locator('.icen-theme-switcher-panel[role=dialog]:visible');
   await expect(page.locator('.icen-theme-switcher-chevron')).toHaveCount(0); await expect(panel.locator('.icen-theme-switcher-check')).toHaveCount(0);
   await page.addScriptTag({path: require.resolve('axe-core')});
-  for (const preset of ['benzhen','clay','piano','art','vangogh','ink']) {
+  for (const preset of ['modern','dongyun','jugou','piano','monet','vangogh']) {
     const card = panel.locator('[data-icen-value="' + preset + '"]'); await card.click(); await page.locator('#preset-select button').first().click(); await expect(card).toHaveAttribute('aria-pressed','true');
     for (const dark of [false,true]) {
       await page.locator('html').evaluate((el,dark) => el.dataset.icenTheme = dark ? 'dark' : 'light', dark); await page.waitForTimeout(350);
@@ -21,7 +21,7 @@ test('appearance controls omit arrows and check slots while every palette has a 
       expect(issues).toEqual([]);
     }
   }
-  await panel.locator('[data-icen-value="benzhen"]').click(); await page.locator('#preset-select button').first().click(); await page.locator('html').evaluate(el => el.dataset.icenTheme = 'light'); await page.waitForTimeout(350);
+  await panel.locator('[data-icen-value="modern"]').click(); await page.locator('#preset-select button').first().click(); await page.locator('html').evaluate(el => el.dataset.icenTheme = 'light'); await page.waitForTimeout(350);
   await panel.screenshot({path:'.ui-audit/selection-theme.png',animations:'disabled'});
   const cardBounds=(await panel.boundingBox())!, triggerBounds=(await page.locator('#preset-select').boundingBox())!;
   const x=Math.max(0,Math.min(cardBounds.x,triggerBounds.x)-12), y=Math.max(0,Math.min(cardBounds.y,triggerBounds.y)-12);
@@ -30,7 +30,7 @@ test('appearance controls omit arrows and check slots while every palette has a 
 });
 
 test('select, cascading and tree choices use geometry without dropdown arrows or selection ticks', async ({page}) => {
-  for (const primitive of ['benzhen','pixel']) for (const dark of [false,true]) {
+  for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
     await page.goto('/components/select/'); await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     const trigger = page.locator('.demo-stage .icen-select-trigger').first(); await expect(trigger.locator('.icen-select-chevron')).toHaveCount(0); await trigger.click();
     const panel = page.locator('.icen-select-panel:visible'); const option = panel.getByRole('option').first(); await option.click(); await trigger.click();

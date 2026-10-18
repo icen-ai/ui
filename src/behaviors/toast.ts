@@ -17,8 +17,6 @@ import { parseSvg } from './svg-parse';
  *   toast.error('提交失败')                   error（规范词表）
  *   toast.warn('额度告警')                    warning
  *   toast.info('提示')                        info
- *   toast.ok('已保存')                        success（deprecated，见 JSDoc）
- *   toast.err('提交失败')                     error（deprecated，见 JSDoc）
  *   toast.action('已删除', '撤销', () => …)   带 action 按钮，6s 后自动消失
  *   toast('已保存', 'success', { icon: SVG, closable: true, progress: true })
  *   toast.dismiss()                           清空所有
@@ -31,7 +29,7 @@ import { parseSvg } from './svg-parse';
  * 同屏最多 5 条（默认），超出移除最早的；可通过 toast.config({ maxStack }) 调整。
  */
 
-export type ToastKind = 'ok' | 'err' | 'warn' | 'info' | 'success' | 'error';
+export type ToastKind = 'warn' | 'info' | 'success' | 'error';
 
 export interface ToastOptions {
   /** 保留时长（毫秒），默认 2600；action 默认 6000；0 常驻。焦点/hover/后台/忙碌时暂停。 */
@@ -67,20 +65,10 @@ type ToastTiming = number | ToastOptions;
 const timingOptions = (value?: ToastTiming): ToastOptions => typeof value === 'number' ? { ms: value } : value ?? {};
 interface ToastFn {
   (message: string, kind?: ToastKind, ms?: ToastTiming): ToastHandle;
-  /** success 语义（.icen-toast--success），规范词表入口 */
+  /** success 语义（.icen-toast--success） */
   success(message: string, ms?: ToastTiming): ToastHandle;
-  /**
-   * success 语义（.icen-toast--success）。
-   * @deprecated 词表统一：改用 toast.success()，本别名下个大版本删除。
-   */
-  ok(message: string, ms?: ToastTiming): ToastHandle;
-  /** error 语义（.icen-toast--error），规范词表入口 */
+  /** error 语义（.icen-toast--error） */
   error(message: string, ms?: ToastTiming): ToastHandle;
-  /**
-   * error 语义（.icen-toast--error）。
-   * @deprecated 词表统一：改用 toast.error()，本别名下个大版本删除。
-   */
-  err(message: string, ms?: ToastTiming): ToastHandle;
   warn(message: string, ms?: ToastTiming): ToastHandle;
   info(message: string, ms?: ToastTiming): ToastHandle;
   action(message: string, actionLabel: string, onAction: FeedbackAction, ms?: ToastTiming): ToastHandle;
@@ -109,11 +97,9 @@ function ensureContainer(): HTMLElement {
   return el;
 }
 
-/** kind → 语义类名（ok/err 为兼容别名，success/error 为规范词表；均映射到现有语义类）。 */
+/** kind → 语义类名。 */
 const KIND_CLASS: Record<ToastKind, string> = {
-  ok: 'icen-toast--success',
   success: 'icen-toast--success',
-  err: 'icen-toast--error',
   error: 'icen-toast--error',
   warn: 'icen-toast--warning',
   info: 'icen-toast--info',
@@ -148,7 +134,7 @@ function show(message: string, kind: ToastKind = 'info', opts: ToastOptions = {}
 
   const el = document.createElement('div');
   el.className = `icen-toast ${KIND_CLASS[kind]}`;
-  el.setAttribute('role', kind === 'err' || kind === 'error' ? 'alert' : 'status');
+  el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
   rememberFeedbackOrigin(el);
 
   /* 可选前置图标（消毒后的内联 SVG） */
@@ -239,9 +225,7 @@ export const toast: ToastFn = Object.assign(
   (message: string, kind: ToastKind = 'info', ms?: ToastTiming) => show(message, kind, timingOptions(ms)),
   {
     success: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'success', timingOptions(ms)),
-    ok: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'ok', timingOptions(ms)),
     error: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'error', timingOptions(ms)),
-    err: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'err', timingOptions(ms)),
     warn: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'warn', timingOptions(ms)),
     info: (message: string, ms?: ToastTiming): ToastHandle => show(message, 'info', timingOptions(ms)),
     action: (message: string, actionLabel: string, onAction: FeedbackAction, ms?: ToastTiming): ToastHandle =>

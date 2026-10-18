@@ -17,7 +17,7 @@
 7. **无障碍底线是设计的一部分**：AA 对比度是硬约束（accent 明度三档由此而来）、焦点环永可见、状态不只靠颜色传达（图标/文字/形状冗余编码）。
 8. **明暗同构**：dark 不是反色，是同一空间换了灯光。同一组件在两态下结构、节奏、层级完全一致，只有"光照"变化。
 
-正交轴：**主题配色 × 原语 × 明暗 × 密度** 四个轴自由组合，任何一轴的切换不应破坏其它轴的决策。本真同时是默认原语与默认主题的名字；像素是另一套原语。
+正交轴：**主题配色 × 原语 × 明暗 × 密度** 四个轴自由组合，任何一轴的切换不应破坏其它轴的决策。现代同时是默认原语与默认主题的名字；另有中式、苏式、像素三套原语。
 
 ---
 
@@ -28,7 +28,7 @@
 - 中性阶梯是界面骨架：`bg → bg-soft → surface → surface-strong`（明度递进），`text → text-muted → text-faint`（注意力递减），`line-soft → line → line-strong`（分隔强度递进）。三级皆有意图：soft 是"分区"、line 是"边界"、strong 是"结构"。
 - 派生色一律 `color-mix()` 从 token 现场推导（`accent-subtle = accent 14%`），不写死第二个色值——单一事实源在色彩上的体现。
 
-### 1.2 accent 明度三档（v0.10 定案）
+### 1.2 accent 明度三档
 | 档 | 角色 | 用于 |
 |---|---|---|
 | `accent` 亮档 | 品牌色 | 图标、边框、数据可视化等纯图形面 |
@@ -45,7 +45,7 @@ GitHub Primer 的语义色纪律、Radix Colors 的阶梯尺、Stripe 的"深档
 ## 2. 几何（圆角与线）
 
 ### 2.1 圆角六档职责
-| 档 | 本真默认值（随 design-radius 联动） | 职责 |
+| 档 | 现代默认值（随 design-radius 联动） | 职责 |
 |---|---|---|
 | `xs` | 4px | 微型件内角：芯片、徽标、小标签 |
 | `sm` | 8px | 控件内嵌：按钮、输入框、小卡 |
@@ -95,7 +95,7 @@ GitHub Primer 的语义色纪律、Radix Colors 的阶梯尺、Stripe 的"深档
 
 ## 5. 字体排印
 
-- 三族分工：`--icen-font-body`（界面与 prose）/ `--icen-font-mono`（代码、标识、需要等宽的数字）/ `--icen-font-heading`（标题）。本真的 body 与 heading 默认使用系统无衬线；像素原语决定自己的排版。数值对齐优先使用 tabular-nums，无需把所有界面文字改为等宽。
+- 三族分工：`--icen-font-body`（界面与 prose）/ `--icen-font-mono`（代码、标识、需要等宽的数字）/ `--icen-font-heading`（标题）。现代的 body 与 heading 默认使用系统无衬线；像素原语决定自己的排版。数值对齐优先使用 tabular-nums，无需把所有界面文字改为等宽。
 - **CJK 纪律**：小字号中文不走宋体/通用 monospace 回退（糊）；中文正文 ≥12px；数据用 tabular-nums。
 - 字号/行高由 density token 出（`--icen-density-font-size-*`），组件不写死字号。
 - 行长纪律：prose 60–75 字符；表单标签与控件同行（水平表单）或顶置（纵向表单）二选一不混用。
@@ -111,7 +111,7 @@ GitHub Primer 的语义色纪律、Radix Colors 的阶梯尺、Stripe 的"深档
 ## 7. 图标
 
 - 线性图标族：`viewBox="0 0 24 24"`、stroke currentColor、stroke-width 2（通用）/ 1.5（kb 族细线）、圆头线帽。
-- **尺寸契约**：图标 svg 必须自带 `width/height` 属性或有 CSS 类尺寸约束——无尺寸 svg 在 CSS 失效时会失控（默认 300×150）。这是 v0.10 的血泪条款。
+- **尺寸契约**：图标 svg 必须自带 `width/height` 属性或有 CSS 类尺寸约束——无尺寸 svg 在 CSS 失效时会失控（默认 300×150）。这是血泪条款。
 - `xmlns` 必备（DOMParser XML 严格解析的空命名空间陷阱——svg-parse 单点已兜底，作者仍应写全）。
 - 图标不携带文字意义（旁边必有文本或 aria-label）；状态图标用语义色。
 
@@ -119,21 +119,22 @@ GitHub Primer 的语义色纪律、Radix Colors 的阶梯尺、Stripe 的"深档
 
 | 预设 | 材质隐喻 | 气质 | 关键决策 |
 |---|---|---|---|
-| **本真** Benzhen | 瓷面 × 柔光 | 清透、精确、安静 | 中性瓷白、冷蓝动作、冷调石墨夜间；独立于陶土 |
-| **clay** 陶土 | 手作陶器 × 牛皮纸 | 温暖、可信、工程感 | 纸白底 #faf9f5、陶土橙、hairline 半透明线、柔和投影。icen 门面，校准自 accounts 线上 |
+| **modern** 现代 | 瓷面 × 柔光 | 清透、精确、安静 | 中性瓷白、冷蓝动作、冷调石墨夜间；独立校准 |
+| **dongyun** 东韵 | 绢本 × 青瓷 × 沉墨 | 温润、疏朗、克制 | 宣纸暖白与低饱和青瓷，细边界和轻微纸面层次 |
+| **jugou** 巨构 | 混凝土 × 搪瓷 × 氧化铁 | 坚实、纪念性、结构感 | 石灰白与炭黑承重，深朱红只标记关键动作 |
 | **piano** 钢琴 | 象牙琴键 × 乌木 × 大漆 | 精致、对比、仪式感 | 高对比黑白骨架、金棕点缀（金底乌木字是 AA 设计）、漆面冷反光 glow |
-| **art** 艺术 | 画廊白墙 × 藏品 | 留白、策展、克制 | 大量留白、橙红点缀只给主角、阴影极柔 |
+| **monet** 莫奈 | 睡莲 × 水面柔光 | 静谧、通透、含蓄 | 蓝绿水面的柔光层叠，紫调只作含蓄点缀；取自莫奈《睡莲》 |
 | **vangogh** 梵高 | 麦田 × 星空 × 杏花 | 浓烈、厚涂、浪漫 | 高饱和黄蓝对撞；粉底深字（杏花气质）——亮色承深字而非白字 |
-| **ink** 墨 | 宣纸 × 墨 × 朱砂 | 东方、留白、书写感 | 冷灰墨阶、深青 accent、宋体标题最合身的一套 |
 
-每套预设都必须是**完整 token 面**（12 base + glow + derived + semantic + fill + shadow + outline + depth + scrollbar），不是改六个色——换预设 = 换材质，不是换滤镜。新增第七套预设的完整清单见 `colors.css` 头注释与本文件 §11。
+每套预设都必须是**完整 token 面**（12 base + glow + derived + semantic + fill + shadow + outline + depth + scrollbar），不是改六个色——换预设 = 换材质，不是换滤镜。新增预设的完整清单见 `colors.css` 头注释与本文件 §11。
 
 ## 9. 原语（与配色主题独立）
 
-- **本真 benzhen**（默认）：连续几何、系统排版、轻盈材料、双层柔影。
+- **现代 modern**（默认）：连续几何、系统排版、轻盈材料、双层柔影。
+- **中式 chinese**：低曲率轮廓、宋体展示字、舒展行距、纤细边线与浅淡纸面投影；小字号和密集信息仍用无衬线。
+- **苏式 soviet**：方正体块、凝练展示字、清楚结构线、定向投影与短促反馈；力量来自比例而非装饰符号。
 - **像素 pixel**：整数网格、中英文点阵、实色材料、直角与阶梯投影、机械按压。
-- modern / retro / terminal 原语与其 CRT 特效已删除；旧偏好迁移为本真。
-- 本真同时是一套独立的瓷白＋冷蓝主题，配色不继承陶土。六个主题均可与两套原语组合。
+- 现代同时是一套独立的瓷白＋冷蓝主题。六个主题均可与四套原语组合。
 - 最新架构、种子与配方以 `design-primitives.md` 为准。
 
 ## 10. 业界对标矩阵（我们取法谁，以及不抄什么）
@@ -168,9 +169,9 @@ GitHub Primer 的语义色纪律、Radix Colors 的阶梯尺、Stripe 的"深档
 
 高频旋钮清单：`accent 三档` / `radius 六档` / `--icen-density-*` 三族 / 字体三族 / `tx-*` 动效三档 / `--icen-token-text-muted|faint`。文档站「定制」页的主题工作台可在线调这些旋钮并生成这段 CSS。
 
-**② 预设作者面（写第七套）**：在 `themes.json` 新增完整明暗色板与材料参数，运行 `bun run colors`；运行时、站点与导出自动同步。要求：明暗双面完整、accent 三档实测 AA、语义五色齐备、depth 阶梯完整。
+**② 预设作者面（写新一套）**：在 `themes.json` 新增完整明暗色板与材料参数，运行 `bun run colors`；运行时、站点与导出自动同步。要求：明暗双面完整、accent 三档实测 AA、语义五色齐备、depth 阶梯完整。
 
-**③ 正交组合面**：`<html data-icen-preset="ink" data-icen-theme="dark" data-icen-style="terminal">` + 容器级 `data-icen-density="compact"`——四轴自由组合。
+**③ 正交组合面**：`<html data-icen-preset="dongyun" data-icen-theme="dark" data-icen-style="chinese">` + 容器级 `data-icen-density="compact"`——四轴自由组合。
 
 兜底纪律：`@layer icen.tokens/base/components` 保证消费方无层样式恒赢；Tokens Studio / Figma Variables 导出（`bun run design-tokens`）让设计稿与代码同值。
 

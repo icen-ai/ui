@@ -3,6 +3,12 @@ import Docs from '../layouts/Docs.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import { COMPONENTS } from '../lib/components';
 const componentCount = COMPONENTS.length;
+const appearanceStudies = [
+  { style: 'modern', preset: 'modern', name: '现代', pairing: '现代', title: '日常，自有分寸。', note: '瓷白与柔光，轻盈的操作层。' },
+  { style: 'chinese', preset: 'dongyun', name: '中式', pairing: '东韵', title: '留白之间，自有回响。', note: '纸、瓷与墨，让内容舒展生长。' },
+  { style: 'soviet', preset: 'jugou', name: '苏式', pairing: '巨构', title: '秩序，构成力量。', note: '石材、结构与有分量的比例。' },
+  { style: 'pixel', preset: 'piano', name: '像素', pairing: '钢琴', title: '每一格，都有想法。', note: '整数网格与清楚的机械反馈。' },
+];
 const primitives = [
   {
     cls: 'icen-pressable',
@@ -82,9 +88,30 @@ const tokens = [
     <strong><code>--icen-*</code> 原语变量层</strong>（CSS 自洽消费）。换原语只需覆盖少数变量，全局组件自动换肤。
   </p>
   <p class="page-desc">
-    <strong>本真</strong>：连续几何、轻盈材料、系统排版。<strong>像素</strong>：整数网格、点阵字体、阶梯投影。
-    用顶部「原语」切换，配色主题独立保留；也可以进 <a href="/benzhen/">「本真」原语工作室</a> 实时调节并导出品牌配方。
+    <strong>现代</strong>：连续几何、轻盈材料、系统排版。<strong>中式</strong>：宋式器物、纤细边线、书卷排版与疏朗留白。
+    <strong>苏式</strong>：纪念建筑、方正构成、厚重秩序与结构投影。<strong>像素</strong>：整数网格、点阵字体、阶梯投影。
+    用顶部「原语」切换，配色主题独立保留；也可以进 <a href="/modern/">「现代」原语工作室</a> 实时调节并导出品牌配方。
   </p>
+
+  <section class="icen-panel primitive-study" aria-labelledby="primitive-study-heading">
+    <div class="icen-panel-title"><span id="primitive-study-heading">四种原语，即刻体验</span><span>真实组件</span></div>
+    <div class="icen-panel-body">
+      <p class="icen-dim">选择一组，整页随之切换。标题、输入、按钮与浮层使用同一套规则；之后仍可在顶栏单独换主题。</p>
+      <div class="primitive-study-choices" role="group" aria-label="原语与配套主题">
+        {appearanceStudies.map((study) => <button class="icen-btn" type="button" data-study-style={study.style} data-study-preset={study.preset} data-study-title={study.title} data-study-note={study.note} aria-pressed="false">{study.name}<span class="primitive-study-pair"> / {study.pairing}</span></button>)}
+      </div>
+      <div class="primitive-study-sample" data-icen-material="content">
+        <p class="primitive-study-eyebrow">ICEN / MATERIAL STUDY</p>
+        <h2 id="primitive-study-title">日常，自有分寸。</h2>
+        <p id="primitive-study-note">瓷白与柔光，轻盈的操作层。</p>
+        <form id="primitive-study-form" class="primitive-study-form">
+          <label class="icen-field" for="primitive-study-input"><span class="icen-field-label">为这一刻命名</span><input class="icen-input-control" id="primitive-study-input" name="name" placeholder="一页新章" maxlength="40" /></label>
+          <button class="icen-btn icen-btn-primary" type="submit">保存灵感</button>
+        </form>
+        <p class="primitive-study-status" id="primitive-study-status" role="status">在此输入，感受同一套组件的不同表达。</p>
+      </div>
+    </div>
+  </section>
 
   <section class="icen-panel">
     <div class="icen-panel-title"><span>6 个交互基元</span><span>composition API</span></div>
@@ -112,7 +139,7 @@ const tokens = [
       <p class="icen-dim">所有组件消费这组原语变量；切换原语（如 data-icen-style="pixel"）只覆盖这里的少数变量即可全局生效。</p>
       <table class="icen-table icen-table--compact">
         <thead>
-          <tr><th>变量</th><th>说明</th><th>值（本真原语）</th></tr>
+          <tr><th>变量</th><th>说明</th><th>值（现代原语）</th></tr>
         </thead>
         <tbody>
           {tokens.map((t) => (
@@ -124,12 +151,12 @@ const tokens = [
           ))}
         </tbody>
       </table>
-      <p class="icen-dim" style="margin-top:14px">retro profile 覆盖示例：</p>
-      <CodeBlock code={`.style-retro {
-  --icen-ring: 2px solid var(--icen-token-accent);
-  --icen-press: translate(2px, 2px);
-  --icen-hover-border: var(--icen-token-accent);
-  /* 全部组件自动获得像素风聚焦环 + 按下位移 */
+      <p class="icen-dim" style="margin-top:14px">中式原语的反馈覆盖示例：</p>
+      <CodeBlock code={`:root[data-icen-style="chinese"] {
+  --icen-press: scale(.995);
+  --icen-hover-border: var(--icen-token-line);
+  --icen-duration-normal: 240ms;
+  /* 全部组件自动获得安静的按压、边界与节奏 */
 }`} lang="css" />
     </div>
   </section>
@@ -202,6 +229,7 @@ emitIcen(el, 'icen:my-change', { value });`} lang="js" />
 
 <script>
   import { initGestures, onIcen, setEventPolicy } from '../../../src/behaviors/events.ts';
+  import { getCurrentTheme, setTheme } from '../../../src/behaviors/theme.ts';
 
   /* page-load 驱动（首载 + ClientRouter 每次换页）：onIcen 是全局监听，
      重入前先退订上一代，防叠加多写 */
@@ -209,6 +237,23 @@ emitIcen(el, 'icen:my-change', { value });`} lang="js" />
   const init = (): void => {
     offs.forEach((off) => off());
     offs = [];
+    const studyButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-study-style]')];
+    const reflectStudy = () => {
+      const state = getCurrentTheme();
+      studyButtons.forEach((button) => button.setAttribute('aria-pressed',String(button.dataset.studyStyle === state.style && button.dataset.studyPreset === state.preset)));
+      const current = studyButtons.find((button) => button.dataset.studyStyle === state.style);
+      const title = document.getElementById('primitive-study-title'), note = document.getElementById('primitive-study-note');
+      if (current && title && note) { title.textContent = current.dataset.studyTitle!; note.textContent = current.dataset.studyNote!; }
+    };
+    studyButtons.forEach((button) => button.addEventListener('click',() => setTheme({style:button.dataset.studyStyle!,preset:button.dataset.studyPreset!})));
+    offs.push(onIcen('icen:theme-change',reflectStudy));
+    reflectStudy();
+    document.getElementById('primitive-study-form')?.addEventListener('submit',(event) => {
+      event.preventDefault();
+      const value = document.querySelector<HTMLInputElement>('#primitive-study-input')?.value.trim();
+      const status = document.getElementById('primitive-study-status');
+      if (status) status.textContent = value ? `已在本页记下「${value}」。` : '已在本页记下一页新章。';
+    });
     initGestures(); // 幂等（模块级单例手势层）
     const log = document.getElementById('gesture-log');
     const demo = document.querySelector('.gesture-demo');
@@ -243,6 +288,16 @@ emitIcen(el, 'icen:my-change', { value });`} lang="js" />
 </script>
 
 <style is:global>
+  .primitive-study { margin-block-end: 28px; }
+  .primitive-study-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 20px; }
+  .primitive-study-pair { color: var(--icen-token-text-muted); }
+  .primitive-study-sample { padding: clamp(20px, 4vw, 36px); border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-lg); }
+  .primitive-study-eyebrow { font-size: 11px; letter-spacing: .16em; color: var(--icen-token-text-muted); }
+  .primitive-study-sample h2 { font-family: var(--icen-font-heading); font-size: clamp(26px, 4vw, 40px); line-height: 1.3; margin-block: 16px; }
+  .primitive-study-sample > p { color: var(--icen-token-text-muted); }
+  .primitive-study-form { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-block-start: 24px; }
+  .primitive-study-form .icen-field { flex: 1 1 220px; min-inline-size: 0; }
+  .primitive-study-status { font-size: 12px; min-height: 1.6em; margin-block: 14px 0; }
   .gesture-demo {
     border: 1px dashed var(--icen-token-line-dashed);
     border-radius: var(--icen-radius-md);

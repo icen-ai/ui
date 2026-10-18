@@ -8,7 +8,7 @@ import themes from '../src/tokens/themes.json' with {type:'json'};
 // 诚实纪律与 dtcg.mjs 一致：不可表示/无映射/断链项一律跳过并打印，不猜、不进产物。
 //
 // tokens-studio.json：$themes（每 预设×明暗 一个 theme）+ 每组合一个 token set 键
-//   "clay/light"（直接映射 dtcg.json 的 clay.light 段：组层级/组级 $type/$description/$extensions 原样保留）
+//   "modern/light"（直接映射 dtcg.json 的 modern.light 段：组层级/组级 $type/$description/$extensions 原样保留）
 //   + $metadata.tokenSetOrder。
 //
 // figma.variables.json：variableCollections 每预设一个（modes: light/dark），variable 携带
@@ -18,7 +18,7 @@ import themes from '../src/tokens/themes.json' with {type:'json'};
 //   别名 {preset.mode.group.token} → { type:'VARIABLE_ALIAS', id }，id 为路径编码
 //   `icen/<preset>/<组路径>`，文件内自洽。
 //
-// Figma 变量要求 collection 内每个 mode 都有值：只在单一模式存在的 token（如 clay 的
+// Figma 变量要求 collection 内每个 mode 都有值：只在单一模式存在的 token（如某主题的
 // dark-only 静音色）无法表示 → 跳过并打印（连带其别名引用一并检查）。
 
 import { access, readFile, writeFile, mkdir } from 'node:fs/promises';

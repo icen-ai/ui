@@ -52,7 +52,7 @@ function unavailable(button: HTMLButtonElement): boolean {
   return false;
 }
 
-function legacyCopy(text: string): boolean {
+function fallbackCopy(text: string): boolean {
   const previous=document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const ta = document.createElement('textarea');
   ta.value = text;
@@ -93,13 +93,13 @@ export async function copyText(text: string,options:{signal?:AbortSignal}={}): P
     } catch (err) {
       if(options.signal?.aborted)return {ok:false,reason:'AbortError'};
       /* clipboard 被拒（权限/非安全上下文）→ 回落 execCommand */
-      const fallbackOk = legacyCopy(text);
+      const fallbackOk = fallbackCopy(text);
       if (fallbackOk) return { ok: true };
       const reason = err instanceof Error ? err.message : String(err);
       return { ok: false, reason: t('copy.denied', { p0: reason }) };
     }
   }
-  if (legacyCopy(text)) return { ok: true };
+  if (fallbackCopy(text)) return { ok: true };
   return { ok: false, reason: t('copy.unavailable') };
 }
 

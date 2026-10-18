@@ -295,11 +295,11 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 ## 8. 验收
 
-- `bun run build` 绿（tsc + tsup + dts-ext + build-css assertSrc）；`kit/kb-citation` 等 32 个新 kit 入口可独立安装（v0.9.1 权限域 +5：kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility）。
+- `bun run build` 绿（tsc + tsup + dts-ext + build-css assertSrc）；`kit/kb-citation` 等 32 个 kit 入口可独立安装（含权限域 kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility）。
 - 文档站：新增「知识库」分组（每组件 API + demo 页）+ `/kb` 最佳实践工作台页（问答+引用溯源 / 摄取管线 / 检索调试 / 问数 / 观测 / 权限 / Agent / 参考 八标签全流程演示）。
 - AGENTS.md / README / CHANGELOG 同步。
 
-## 9. 权限域 kb-perm（v0.9.1 增补；调研依据 docs/research/2026-10-03-kb-permissions.md）
+## 9. 权限域 kb-perm（调研依据 docs/research/2026-10-03-kb-permissions.md）
 
 > 心法：**ai 族描述思考，kb 族呈现证据；权限域呈现边界**——知识从哪来、可信吗、怎么用之后第三问：**谁能看到什么，以及为什么**。
 > 五组件一域文件：`kb-perm.css`；slug：`kb-acl` / `kb-who-can` / `kb-access` / `kb-audit` / `kb-visibility`（EXTRA_CSS = kb.css + kb-perm.css；`kb` umbrella 追加 kb-perm.css）。
@@ -429,10 +429,10 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 
 `KbRole`（viewer|commenter|editor|owner，权限序单调）/`KB_ROLES`/`kbRoleLabel`；`KbVisibility`（hidden|metadata|restricted|summary|full）/`KB_VISIBILITIES`/`kbVisibilityLabel`；`KbSubject`（kind: user|group|org|anyone|link + label + note）；`KbAclEntry`（subject+role+inheritedFrom?+expiresAt?+deny?+system?）；`KbIdentity`（user+groups[]+label?）；`KbVisibilityPolicy`（discoverable? 缺省 true=企业内部「知道存在」常态；summaryAllowed? 缺省 false）；`visibilityForRole(role, policy?)`；`KbAclDecision`（role|null、visibility、chain[]、deniedBy?、expiresAt?）；`evaluateAcl(entries, identity, policy?, now?)`（**先 deny→并集→默认拒绝，纯函数**——`now` 可注入（Date|number，缺省 `new Date()`）保证求值可复现可测试；**expiresAt 求值语义 = 到期自动回收**：已过期的条目不计入求值——deny/allow 并集/原因链全部视同不存在，全过期 = 无授权 → fail-closed；不可解析的 expiresAt 视为永不过期；decision.expiresAt 携带存活授权中最近的将来到期（倒计时呈现数据源），deny 分支无到期）；`KbAccessState`/`KB_ACCESS_STATES`/`kbAccessStateLabel`/`normalizeAccessRequest`；`KbAccessRequest`（含 approverNote 路由明示）；`KbAuditAction`/`KB_AUDIT_ACTIONS`/`KbAuditEntry`/`KbAuditChannel`/`auditChannelOf`/`normalizeAuditEntry`；`KbHygieneKind`（org_wide_link|broad_group|sensitive_mismatch|broken_inheritance|orphaned_owner|overexposed）/`KB_HYGIENE_KINDS`/`kbHygieneLabel`/`KbHygieneIssue`/`normalizeHygieneIssue`。
 
-### 9.7 存量增强与修正（v0.9.0 的泄露式文案修正）
+### 9.7 存量增强与修正
 
 - **kb-retrieval**：参数栏加「检索身份」（固定身份集，见总纲 8）；过滤层徽标三态可切换（pre ✓ 默认 / post ⚠「分数已可观察——缺陷层」/ none ✕「fail-open 危险——Kendra 教训」）；命中计数只显示授权集合内安全计数；hit 的 ACL 元数据徽标行仅 `opts.admin` 模式。
-- **kb-trace / 工作台 mock**：guard span 文案改恒定事实「pre-filter 已按身份裁剪候选集」——删除一切被裁数量表述（v0.9.0 的「1 条 L4 块已剔除」「命中 5 块（4 有分+1 受限无分）」均为泄露式文案，全部修正；受限块 score:null 保留）。
+- **kb-trace / 工作台 mock**：guard span 文案改恒定事实「pre-filter 已按身份裁剪候选集」——删除一切被裁数量表述（「1 条 L4 块已剔除」「命中 5 块（4 有分+1 受限无分）」式文案均为泄露，禁止出现；受限块 score:null 保留）。
 - **kb-sources**：`permission` 三级映射五级（requestable→metadata+申请通道；hidden=不渲染该行）；打码两形态（文档场景=锁+标题+申请；数据列场景=打码条），默认前者。
 - **kb-citation**：注释补引用白名单纪律；新增 `.is-revoked` 中性态（「来源已不可用」，权限收回后的历史引用）。
 
@@ -442,7 +442,7 @@ chart-*                    →  图形层（ChartSpec 纯 JSON）
 - **安全文案全局 grep**：`grep -rn "剔除\|被过滤.*条\|被隐藏.*条" src/ site/src/` 零残留（kb-visibility 教学段与 CHANGELOG 例外）。
 - AGENTS.md / README / CHANGELOG 同步。
 
-### 9.9 纪律即代码（v0.10 增补：从「文档纪律」到「测试强制执行的工程契约」）
+### 9.9 纪律即代码（从「文档纪律」到「测试强制执行的工程契约」）
 
 §9.0 的八条总纲不再只是评审清单——每一条都有自动化证明，**违规即 CI 红**（`bun test` / `bun run guard`）。本节是映射表的单一事实源；改组件行为必须先改测试预期，禁止反手放松断言。
 

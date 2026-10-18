@@ -119,7 +119,7 @@ const opsCell = function (value, row) {
     btn.appendChild(iconsMod.createIcon(pair[0], { size: 14 }));
     btn.addEventListener('click', function (ev) {
       ev.stopPropagation();
-      toastMod.toast.ok(pair[1] + '：' + row.name + ' · ' + row.dept);
+      toastMod.toast.success(pair[1] + '：' + row.name + ' · ' + row.dept);
     });
     wrap.appendChild(btn);
   });

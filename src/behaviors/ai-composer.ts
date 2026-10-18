@@ -1,15 +1,14 @@
 /*
- * @icen.ai/ui — Behavior: ai-composer（AI 输入台 v2，与 components/ai-chat.css 配套）
+ * @icen.ai/ui — Behavior: ai-composer（AI 输入台，与 components/ai-chat.css 配套）
  *
- * DOM 契约（v2，规格 §8；v1 旧结构无 toolbar 时照常工作，见「向后兼容」）：
+ * DOM 契约（规格 §8）：
  *   <div class="icen-ai-composer" data-icen-ai-composer [.is-running]>
- *     <div class="icen-ai-composer-queue" hidden><!-- 排队消息 chips（v1 已有） --></div>
+ *     <div class="icen-ai-composer-queue" hidden><!-- 排队消息 chips --></div>
  *     <div class="icen-ai-composer-refs" hidden><!-- @ 引用 chips（setComposerRefs） --></div>
- *     <div class="icen-ai-composer-attach" hidden><!-- 附件 chips（v1 已有） --></div>
+ *     <div class="icen-ai-composer-attach" hidden><!-- 附件 chips --></div>
  *     <div class="icen-ai-composer-box icen-control">
  *       <icen-textarea class="icen-ai-composer-input" rows="1" placeholder="…"></icen-textarea>
- *       <div class="icen-ai-composer-actions"><!-- v1 旧结构：附件 + 发送 --></div>
- *       <div class="icen-ai-composer-toolbar"><!-- v2 工具条：models/usage 配置时出现 -->
+ *       <div class="icen-ai-composer-toolbar"><!-- 工具条：手写或 models/usage 配置时装配 -->
  *         <button class="icen-ai-composer-model" data-icen-ai-model-open>provider 图标 + 模型名</button>
  *         <span class="icen-ai-composer-spacer"></span>
  *         <span class="icen-ai-composer-usage" data-icen-ai-usage></span>   <!-- 用量环挂载点 -->
@@ -23,7 +22,7 @@
  *     尺寸走 PanelSizing 契约：composer 根 data-panel-* 为用户覆盖（四弹层共用），
  *     bindComposer opts.popoverSizing 整体覆盖，原内置魔数仅为默认。
  *
- * v1 契约（§4.3，全部保留）：
+ * 基础契约（§4.3）：
  *   initAiComposer(root?)        幂等（__icenAiComposerInit）；autosize（默认上限 8 行后内滚）；
  *                                Enter 发送 / Shift+Enter 换行 / IME 组合态安全。发送派
  *                                icen:ai-send {text} 并清空。附件钮打开 file input，选中文件
@@ -32,7 +31,7 @@
  *                                此时回车转为入队：queue chip + 派 icen:ai-queue {text}；
  *                                chip × 移除 + 派 icen:ai-dequeue {index}。
  *
- * v2 新增（§8，全部可选配置）：
+ * 可选配置（§8）：
  *   setComposerModels(el, providers, current?)   工具条出现模型钮；弹层按 provider 分组 +
  *                                搜索过滤 + 当前轻高亮；选择派 icen:ai-model-change
  *                                {provider, model, label, context}；选中模型的 context 自动成为
@@ -61,8 +60,8 @@
  *         管理（send→running / icen:ai-done→解除）。不传 client 为纯状态绑定（渐进采用）。
  *         opts.popoverSizing（PanelSizing）整体覆盖四弹层尺寸（> composer 根 data-panel-*）。
  *
- * 向后兼容：未配置 models/usage 时工具条不出现，v1 markup（.icen-ai-composer-actions 旧结构）
- *   零改动可用；配置后 v1 的 attach/send 按钮被移入工具条（事件监听不受影响）。
+ * 工具条：作者手写 .icen-ai-composer-toolbar 时只补缺不重排；未手写且配置 models/usage
+ *   或命令/引用时由 JS 装配（attach/send 按钮随元素移动，事件监听不受影响）。
  * 按钮图标：data-icen-ai-send / data-icen-ai-attach 为空时注入库内默认 SVG（经 ai-core svgIcon() 消毒）。
  * SSR 下为 no-op；文本一律 textContent，禁 innerHTML。
  */
@@ -439,7 +438,7 @@ function updateModelButton(composer: HTMLElement): void {
 
 /**
  * 工具条装配/重排（幂等）。仅当配置了 models 或 usage 时创建工具条；
- * v1 的 attach/send 按钮被移入工具条（事件监听挂在元素上，随元素移动保留）。
+ * attach/send 按钮被移入工具条（事件监听挂在元素上，随元素移动保留）。
  * 作者手写的 .icen-ai-composer-toolbar 结构只补缺、不重排。
  */
 function syncToolbar(composer: HTMLElement): void {
@@ -498,11 +497,6 @@ function syncToolbar(composer: HTMLElement): void {
     box.appendChild(bar);
   }
 
-  /* 清空后的 v1 按钮容器移除（忽略空白文本节点） */
-  const legacy = composer.querySelector<HTMLElement>('.icen-ai-composer-actions');
-  if (legacy && legacy.childElementCount === 0 && !(legacy.textContent ?? '').trim()) {
-    legacy.remove();
-  }
   let library = composer.querySelector<HTMLButtonElement>('[data-icen-ai-library]');
   if (hasLibrary && !library) {
     library = document.createElement('button');
@@ -624,7 +618,7 @@ function popupKeydown(composer: HTMLElement, s: ComposerPopup, e: KeyboardEvent)
     case 'Enter':
     case 'Tab': {
       if (e.key === 'Tab' && (s.mode === 'library' || s.mode === 'model')) {
-        // Let focus leave a browse/search panel naturally. Typing-trigger completion keeps legacy Tab picking.
+        // Let focus leave a browse/search panel naturally. Typing-trigger completion keeps Tab picking.
         return;
       }
       e.preventDefault();
@@ -1270,7 +1264,7 @@ export function getComposerDraft(el: HTMLElement): AiComposerSubmission {
   return {text:getTextarea(c)?.value??'',...(refs.length?{refs:refs.map(r=>({...r}))}:{}),...(files.length?{files:[...files]}:{})};
 }
 
-/* ══════════════ v2 历史（每 composer 独立）══════════════ */
+/* ══════════════ 输入历史（每 composer 独立）══════════════ */
 
 function pushHistory(composer: HTMLElement, text: string): void {
   const h = HISTORIES.get(composer) ?? { items: [], index: -1 };

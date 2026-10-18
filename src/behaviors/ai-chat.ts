@@ -388,7 +388,7 @@ export function createAiStream(el: HTMLElement): AiStreamHandle {
       setReasoningOpen(r, false);
     };
     if (typeof window === 'undefined') {
-      close(); // SSR/无计时器环境退化为立即收起（旧契约行为）
+      close(); // SSR/无计时器环境退化为立即收起
       return;
     }
     window.setTimeout(close, REASONING_AUTO_CLOSE_MS);

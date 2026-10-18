@@ -140,7 +140,7 @@
   overflow: hidden;
   min-height: 0;
   /* 块距随开合动画：静态 padding-bottom 会成为 0fr 轨道的最小内容贡献，
-     收起态露出首行文字上缘（内边距不被 overflow 裁切的历史坑） */
+     收起态露出首行文字上缘（内边距不被 overflow 裁切） */
   padding: 0 var(--icen-density-space-sm);
   padding-block-end: 0;
   transition: padding-block-end var(--icen-tx-normal);
@@ -576,5 +576,5 @@
 .icen-code-inline--warning { color: var(--icen-token-warning); }
 .icen-code-inline--error   { color: var(--icen-token-error); }
 
-/* 代码块（多行，非行内）：v0.11 起升级为独立组件 code-block.css（标题栏/行号/折叠/diff/
+/* 代码块（多行，非行内）：由独立组件 code-block.css 承担（标题栏/行号/折叠/diff/
  * shiki 协同），本文件不再承载 .icen-code-block 样式。 */

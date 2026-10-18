@@ -2,16 +2,16 @@ import { afterEach, expect, test } from 'bun:test';
 import { createDesign, mountDesign, setDesign } from '../../src/behaviors/design';
 
 afterEach(() => { setDesign(null); });
-test('design axis survives color theme changes and reset selects 本真 and preserves the primitive', () => {
+test('design axis survives color theme changes and reset selects 现代 and preserves the primitive', () => {
   const root = document.documentElement;
-  root.setAttribute('data-icen-preset','ink');
-  root.setAttribute('data-icen-style','benzhen');
-  setDesign('benzhen');
+  root.setAttribute('data-icen-preset','monet');
+  root.setAttribute('data-icen-style','modern');
+  setDesign('modern');
   root.setAttribute('data-icen-theme','dark');
-  expect(root.getAttribute('data-icen-preset')).toBe('benzhen');
+  expect(root.getAttribute('data-icen-preset')).toBe('modern');
   setDesign(null);
-  expect(root.getAttribute('data-icen-preset')).toBe('benzhen');
-  expect(root.getAttribute('data-icen-style')).toBe('benzhen');
+  expect(root.getAttribute('data-icen-preset')).toBe('modern');
+  expect(root.getAttribute('data-icen-style')).toBe('modern');
   root.removeAttribute('data-icen-theme');
 });
 test('mounted brand styles have independent, reversible lifetimes', () => {

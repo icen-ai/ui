@@ -24,7 +24,7 @@ import { createIcon } from './icons';
  *     提交派 icen:table-cell-edit + onCellEdit，宿主调 updateCell/setData 采纳；number 非法值抖动不提交）
  *   - 汇总行（summaryRow：表尾 sticky 一行，按当前管线（搜索/筛选后）数据聚合；'label' 列显示「合计」）
  *   - 键盘导航 + 复制（tbody roving tabindex：方向键/Home/End/PageUp/Down；Enter 进编辑；
- *     Ctrl/Cmd+C 复制当前格或选中行集（TSV，clipboard + legacy 回退））
+ *     Ctrl/Cmd+C 复制当前格或选中行集（TSV，clipboard + execCommand 回退））
  *   - 行右键（contextMenu(row) → ContextMenuItem[]，复用 context-menu 浮层）
  *   - 列宽拖拽（resizable，拖表头边界改列宽；结束派 icen:table-column-resize，过程不派）
  *   - 列显隐（columnVisibility，工具栏齿轮开关）
@@ -293,7 +293,7 @@ export function createTable<Row = Record<string, unknown>>(
   let search = '';
   let page = 1;
   let pageSize = opts.pageSize ?? 10;
-  /** 排序栈：[0] = 主排序（单排序 = 长度为 1 的退化形态，事件/API 语义与旧版一致） */
+  /** 排序栈：[0] = 主排序（单排序 = 长度为 1 的退化形态） */
   let sorts: TableSortEntry[] = [];
   let scrollTop = 0;
   const filters = new Map<string, Set<string>>();
@@ -628,8 +628,8 @@ export function createTable<Row = Record<string, unknown>>(
     return input;
   }
 
-  /* ═══ 排序内核（单排序 = 单元素栈；事件/回调语义与旧版完全一致）═══ */
-  /** 应用新排序栈：emit 只派主排序（旧口径），onSortChange 收主键或 null */
+  /* ═══ 排序内核（单排序 = 单元素栈）═══ */
+  /** 应用新排序栈：emit 只派主排序，onSortChange 收主键或 null */
   function applySorts(next: TableSortEntry[], nullDir: 'asc' | 'desc' = 'asc', emit = true): void {
     sorts = next;
     invalidate();
@@ -642,7 +642,7 @@ export function createTable<Row = Record<string, unknown>>(
   function toggleSort(key: string, append: boolean): void {
     const cur = sorts.find((s) => s.key === key);
     if (!multiSort || !append) {
-      /* 单排序路径（与旧版逐字节同义）：他列 → 升序；本列 → 升→降→取消 */
+      /* 单排序路径：他列 → 升序；本列 → 升→降→取消 */
       if (!cur) applySorts([{ key, dir: 'asc' }]);
       else if (cur.dir === 'asc') applySorts([{ key, dir: 'desc' }]);
       else applySorts([], cur.dir);
@@ -1395,7 +1395,7 @@ export function createTable<Row = Record<string, unknown>>(
         shiftClicked = false;
         if (shift && lastClickedIndex >= 0 && lastClickedIndex !== flatIndex) {
           /* Shift+点击：范围选（统一按 flatRows 区间取数据行，组头自然跳过；
-             无分组时 flatRows 与管线序一一对应，语义与旧版一致） */
+             无分组时 flatRows 与管线序一一对应） */
           const entries = flatEntries();
           const [lo, hi] = lastClickedIndex < flatIndex
             ? [lastClickedIndex, flatIndex]
@@ -1679,13 +1679,13 @@ export function createTable<Row = Record<string, unknown>>(
   function writeClipboard(text: string): void {
     const nav = typeof navigator !== 'undefined' ? navigator : undefined;
     if (nav?.clipboard && typeof nav.clipboard.writeText === 'function') {
-      nav.clipboard.writeText(text).catch(() => legacyCopy(text));
+      nav.clipboard.writeText(text).catch(() => fallbackCopy(text));
       return;
     }
-    legacyCopy(text);
+    fallbackCopy(text);
   }
 
-  function legacyCopy(text: string): void {
+  function fallbackCopy(text: string): void {
     try {
       const ta = document.createElement('textarea');
       ta.value = text;
@@ -1979,7 +1979,7 @@ export function createTable<Row = Record<string, unknown>>(
       renderAll();
     },
     setSort(key, dir = 'asc') {
-      /* 旧口径：不派 icen:table-sort-change，只回调 onSortChange */
+      /* 单排序口径：不派 icen:table-sort-change，只回调 onSortChange */
       applySorts(key ? sanitizeSorts([{ key, dir }]) : [], dir, false);
     },
     getSorts() { return sorts.map((s) => ({ ...s })); },

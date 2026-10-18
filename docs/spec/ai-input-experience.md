@@ -1,6 +1,6 @@
 # AI 输入体验：先看见意图，再决定动作
 
-本轮落地到 `ai-composer`，延续本真和像素两套原语、六套配色。它是一组可组合的输入能力，不绑定某个模型、框架、上传服务或工具执行器。
+本轮落地到 `ai-composer`，适配现代、中式、苏式、像素四套原语与六套配色。它是一组可组合的输入能力，不绑定某个模型、框架、上传服务或工具执行器。
 
 ## 三层信息
 
@@ -34,8 +34,8 @@ openComposerLibrary(composer, 'skill');
 const draft = getComposerDraft(composer);
 ```
 
-- 旧 `setComposerRefs` / `setComposerCommands` 参数与事件仍可用。新增字段全部可选。类别仍允许 `registerRefKind` 扩展；资源身份为 `(kind, id)`。
-- 配置资源或命令后自动补充 `＋`；未配置时保留轻量输入。旧 actions DOM 的既有按钮被移动而非重建，监听仍有效。
+- `setComposerRefs` / `setComposerCommands` 的新增字段全部可选。类别仍允许 `registerRefKind` 扩展；资源身份为 `(kind, id)`。
+- 配置资源或命令后自动补充 `＋`；未配置时保留轻量输入。工具条装配时既有按钮被移动而非重建，监听仍有效。
 - `icon` 接受共享 `IconName`，也支持通过 `registerIcon` 注册的名称；既有注册类别的 SVG 和 provider SVG 继续支持。
 - `data-icen-panel-*` 与绑定的 `popoverSizing` 同时作用于模型、命令、引用及目录弹层，仍由共享 popover 限制视口边界。浮层按实际高度定位并观察面板/锚点尺寸，关闭时回收；目录锚定整个输入台，不覆盖草稿。测量保留内部滚动位置，内部滚动不触发自身重定位。
 
@@ -68,7 +68,7 @@ const binding = bindComposer(composer, {
 - 搜索和文本编辑保留 DOM 焦点，`aria-activedescendant` 描述实际活动行。方向键浏览并跳过不可用项，Enter 确认，Escape 返回入口。
 - 搜索文本安全地生成 `mark`，不解释 HTML。Home/End 保留光标移动；Ctrl/Meta + Home/End 可跳至首尾选项。
 - 输入法组合期间不打开候选层、不发送，组合完成后再探测。
-- 目录类别按钮正常进入 Tab 顺序；搜索 Tab 不意外确认选项。`/` 和 `@` 的旧 Tab 补全兼容。
+- 目录类别按钮正常进入 Tab 顺序；搜索 Tab 不意外确认选项。
 - 触屏目标至少 44px，输入至少 16px；RTL 使用逻辑布局；强制颜色下选中与焦点有轮廓；减少动态时取消进场与边框过渡。
 - 原语决定几何和字体，主题决定颜色。共享默认符号为 20×20 / 1.6 stroke；AI 工具卡的内置 kind 与消息操作沿用同一图标源。
 

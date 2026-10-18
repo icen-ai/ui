@@ -16,7 +16,7 @@ test('short viewport scrolls the active day inside the calendar and supports opa
 });
 
 test('calendar keeps one date focus, supports full keyboard movement and resets the native form in every primitive/mode',async({page})=>{
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]){
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]){
     await page.goto('/components/date-picker/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     const trigger=page.locator('#date-publish');await expect(trigger.locator('svg')).toHaveAttribute('viewBox','0 0 20 20');
     await trigger.focus();await trigger.press('ArrowDown');const panel=page.locator('.icen-date-picker-panel');

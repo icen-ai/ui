@@ -18,7 +18,7 @@ bun run verify    # 四道门：tsc --noEmit + guard + test + build
 ## 目录结构速览
 
 ```
-src/tokens/*.css        # 设计 token（colors 6 预设 × 明暗 / style-profiles / typography / retro-effects）
+src/tokens/*.css        # 设计 token（colors 8 主题 × 明暗 / 4 套原语 / style-profiles / typography）
 src/base.css            # 元素基线 + 滚动条 + z-index 标尺 + 6 个交互基元 + a11y 工具类
 src/components/*.css    # 66 个无框架组件 CSS（每文件头注释 = 完整 DOM 契约）
 src/behaviors/*.ts      # 71 个行为模块（SSR 守卫 + 幂等 init + textContent-only）
@@ -58,17 +58,17 @@ site/                   # 文档站（独立 Astro 应用，ui.icen.ai）
 | 命名空间 | 新类名一律 `icen-` 前缀（`.is-*` 状态类只能与根类复合出现）、data 钩子 `data-icen-*`、全局变量 `--icen-*` | 改名；与业界 59 类基准撞名说明前缀缺失，不是守卫误报 |
 | 权限域诚实呈现 | 禁「被裁 N 条 / 剔除 N 块」类泄露文案；`evaluateAcl` 保持纯函数（时间经 `now` 注入） | 换成与命中无关的恒定事实文案（行尾 `guard:allow-honesty 理由` 可豁免并需评审）；时间需求改走参数注入 |
 
-## 命名空间契约（v0.10，防冲突终态）
+## 命名空间契约（防冲突终态）
 
 - 类名：`.icen-*`（唯一例外 `.is-*` 状态类，永不单独出现在选择器里，永远 `.icen-tab.is-active` 复合）。
 - data 钩子：`data-icen-*`；全局 CSS 变量：`--icen-*` 十五族；组件作用域变量（`--btn-*` 等）不前缀（继承链随根类已隔离）。
-- 事件：`icen:` 前缀（deprecated 兼容事件如 `otp:complete` 是登记在案的例外，政策见 [docs/versioning.md](./docs/versioning.md)）。
+- 事件：`icen:` 前缀，无例外。
 - 主题层是 data 属性不是类：`data-icen-preset` / `data-icen-theme` / `data-icen-style` / `data-icen-density`。
 - 全部产物 CSS 在 `@layer icen.tokens / icen.base / icen.components` 内——消费方无层样式永远赢库样式，不要写出层外的选择器。
 
 ## PR 规范
 
-- **描述**：做了什么 + 为什么（链接相关 issue）。破坏性变更必须在描述里显式标注，并附迁移说明或 codemod 计划——0.x 纪律见 [docs/versioning.md](./docs/versioning.md)。
+- **描述**：做了什么 + 为什么（链接相关 issue）。破坏性变更必须在描述里显式标注——0.x 纪律见 [docs/versioning.md](./docs/versioning.md)。
 - **验收输出贴样**：PR 里贴 `bun run verify` 的四道门输出结尾（`✓ 全部守卫通过` + 测试计数 + build 成功行）。差一门就标 Draft，不要挂 Ready 碰 CI。
 - **范围克制**：一个 PR 一件事。重命名 / 格式化 / 行为变更分开提。
 - **文档同步**：改组件 = CSS 头注释 + 文档站 + 测试三处同 PR；只改 site 的 typo 可以不带测试。

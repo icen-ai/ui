@@ -167,9 +167,9 @@ const filter = createKbFilter(el, { node, fields, onChange });  // icen-tree →
 
 ## 6. Theme / dark mode / density
 
-- Presets are classes on `<html>`: `clay` (default) / `piano` / `art` / `vangogh` / `ink` / `retro`; pair with
-  `dark` (`class="piano dark"`). Style profiles: `[data-icen-style="modern"] / [data-icen-style="retro"] / [data-icen-style="terminal"]`
-  (retro-effects.css activates pixel chrome under `[data-icen-style="retro"]` only).
+- Themes and primitives are independent data attributes on `<html>`: `data-icen-preset="modern|dongyun|jugou|piano|monet|vangogh"`
+  and `data-icen-style="modern|chinese|soviet|pixel"`; add `data-icen-theme="dark"` for dark mode.
+  Pair 中式 with 东韵 or 苏式 with 巨构 for a curated look, or compose either axis freely.
 - Density per container: `data-icen-density` attribute. Never hardcode colors/radii/motion — consume `--icen-token-*`.
 
 ## 7. Pitfalls checklist

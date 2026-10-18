@@ -21,7 +21,7 @@ import { initTheme, initTabs, toast, renderLine } from '@icen.ai/ui';
 
 initTheme();                        // 尽早调用，跟随系统偏好
 initTabs();                         // [data-icen-tabs] 契约自动生效
-toast.ok('已保存');
+toast.success('已保存');
 renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 ```
 
@@ -37,7 +37,7 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 
 **知识库。** 32 个组件覆盖 RAG 全链路：摄取、检索、问数、治理、权限。引用可溯源，过程可观测，答案可验证；权限域对授权侧诚实、对受限侧沉默。
 
-**主题。** 六套预设，明暗双模，本真与像素两种原语，全部挂在 `<html>` 的 data 属性上。自建品牌只需在自家 CSS 写一块 token 面，组件代码一行不动。
+**主题。** 六套预设，明暗双模，现代、中式、苏式与像素四种原语，全部挂在 `<html>` 的 data 属性上。配色与原语独立：中式推荐「东韵」，苏式推荐「巨构」，也可自由组合其它主题。自建品牌只需在自家 CSS 写一块 token 面，组件代码一行不动。
 
 **React / Vue。** 官方薄封装 `@icen.ai/ui/react`、`@icen.ai/ui/vue`：只做生命周期接线和事件桥，底下是同一个命令式内核。详见 <https://ui.icen.ai/frameworks/>
 
@@ -47,10 +47,10 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 
 生产环境依赖一个 0.x 库之前该问的问题，直接给证据：
 
-- **793 个测试 + 8 项纪律守卫**挂在每个 PR 的 CI 上，本地 `bun run verify` 同口径。
-- **[SECURITY.md](./SECURITY.md)**：支持版本矩阵与漏洞响应承诺；textContent-only 渲染、权限域 fail-closed、OIDC provenance 发布链，逐条可验证。
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)**：加组件的完整仪式与守卫速查表。
-- **[docs/versioning.md](./docs/versioning.md)**：0.x 破坏性变更纪律——只在 minor，必配 codemod 与迁移指南。v0.10 契约：命名空间全量前缀化，迁移跑 `bunx @icen.ai/ui migrate src --write`，明细见 [CHANGELOG](./CHANGELOG.md)。
+- **800+ 个测试 + 10 项纪律守卫**挂在每个 PR 的 CI 上，本地 `bun run verify` 同口径。
+- **[SECURITY.md](https://github.com/icen-ai/ui/blob/main/SECURITY.md)**：支持版本矩阵与漏洞响应承诺；textContent-only 渲染、权限域 fail-closed、OIDC provenance 发布链，逐条可验证。
+- **[CONTRIBUTING.md](https://github.com/icen-ai/ui/blob/main/CONTRIBUTING.md)**：加组件的完整仪式与守卫速查表。
+- **[docs/versioning.md](https://github.com/icen-ai/ui/blob/main/docs/versioning.md)**：0.x 破坏性变更纪律——只在 minor 发生，CHANGELOG 逐条写明契约变化。
 - **发布链**：`git tag v<x.y.z>` → GitHub Actions 经 OIDC trusted publishing 发 npm，无长期 token，每次发布带 provenance 可审计。
 
 ## 文档站
@@ -61,27 +61,20 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 
 ```bash
 bun install
-bun run build    # tsup + CSS 拼合 → dist/
-bun run verify   # tsc + 守卫 + 793 测试 + 构建，四道门
+bun run build    # tsup + CSS 拼合 + 设计 token 导出 → dist/
+bun run verify   # tsc + 守卫 + 800+ 测试 + 构建，四道门
 ```
 
 产物：`dist/tokens.css`、`dist/ui.css`、`dist/base.css`、`dist/components/*`、`dist/behaviors/*.mjs` + `.d.mts`、`dist/registry.json`、`dist/index.mjs`。
 
 ## 设计 token 导出
 
-tokens 同时导出设计工具格式；设计侧改 token 可走插件回灌，闭环到 `src/tokens/`：
+构建链末尾自动导出设计工具格式（`scripts/dtcg.mjs` + `scripts/design-tokens.mjs`）；设计侧改 token 可走插件回灌，闭环到 `src/tokens/`：
 
-```bash
-bun run dtcg            # → dist/tokens/dtcg.json（W3C DTCG 经典版）
-bun run design-tokens   # → tokens-studio.json + figma.variables.json
-```
-
-- **DTCG 经典版**：每个预设的明暗两态各导出一份有效级联结果；`var()` 引用转为规范别名，文件内自洽、无环。
-- **Tokens Studio**：`$themes` 覆盖全部预设的明暗矩阵，导入后按 theme 切换即对齐 CSS。
-- **Figma Variables**：每预设一个 collection，light / dark 双 mode；rem 按 ×16 记 px。
+- `dist/tokens/dtcg.json`：W3C DTCG 经典版，每个预设的明暗两态各一份有效级联结果；`var()` 引用转为规范别名，文件内自洽、无环。
+- `dist/tokens/tokens-studio.json`：Tokens Studio 的 `$themes` 覆盖全部预设的明暗矩阵，导入后按 theme 切换即对齐 CSS。
+- `dist/tokens/figma.variables.json`：Figma Variables，每预设一个 collection，light / dark 双 mode；rem 按 ×16 记 px。
 - **诚实口径**：color-mix、box-shadow 等规范无法表示的值一律跳过并打印清单，不猜、不静默。
-
-注意顺序：tsup 会清空 dist，`dtcg` 要在 `bun run build` 之后跑。
 
 ## 目录
 
@@ -101,6 +94,6 @@ scripts/          # 构建与导出脚本
 - **vendor 复制**：锁定版本或离线构建场景，把 `dist/` 复制进自家仓库（accounts 走这条路，`bun run sync:ui`）。
 - **给 AI 代理**：包内 `AGENTS.md` + `dist/**/*.d.mts`；站点 <https://ui.icen.ai/llms.txt>（索引）与 `/llms-full.txt`（全文 + 类型面）；场景配方 skill `icen-ui`（skill.icen.ai）。
 
-## 本真原语
+## 现代原语
 
-默认原语「本真」：瓷白内容面、轻盈磨砂操作层、系统排版、统一的几何节奏。想调成自己的品牌，改 `--icen-design-*` 种子即可，`createDesign` 会编译出带明暗与对比度验证的完整配方——本地文档站 `/benzhen/` 有实时工作台。规范与接入见 [设计原语](docs/spec/design-primitives.md)。
+默认原语「现代」：瓷白内容面、轻盈磨砂操作层、系统排版、统一的几何节奏。想调成自己的品牌，改 `--icen-design-*` 种子即可，`createDesign` 会编译出带明暗与对比度验证的完整配方——本地文档站 `/modern/` 有实时工作台。规范与接入见 [设计原语](docs/spec/design-primitives.md)。

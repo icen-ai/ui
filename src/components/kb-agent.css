@@ -152,18 +152,18 @@
   background: var(--icen-token-accent);
 }
 
-/* 划词工具条：浮层三档材质（--icen-z-panel 缺省回落 --icen-z-popover）；1.5s 无操作由 JS 隐藏 */
+/* 划词工具条：浮层三档材质；1.5s 无操作由 JS 隐藏 */
 .icen-kb-canvas-selbar {
   position: absolute;
-  z-index: var(--icen-z-panel, var(--icen-z-popover));
+  z-index: var(--icen-z-popover);
   display: flex;
   gap: 2px;
   padding: 3px;
-  border-radius: var(--icen-radius-md, 10px);
-  background: color-mix(in srgb, var(--icen-token-card-strong, var(--icen-token-bg)) 94%, transparent);
-  border: 1px solid var(--icen-token-outline, var(--icen-token-line));
-  box-shadow: var(--icen-token-shadow-overlay, 0 8px 24px rgba(0, 0, 0, 0.14));
-  animation: icen-pop-in var(--icen-tx-fast, 160ms) ease-out;
+  border-radius: var(--icen-radius-md);
+  background: color-mix(in srgb, var(--icen-token-card-strong) 94%, transparent);
+  border: 1px solid var(--icen-token-outline);
+  box-shadow: var(--icen-token-shadow-overlay);
+  animation: icen-pop-in var(--icen-tx-fast) ease-out;
   user-select: none;
 }
 .icen-kb-canvas-selbar[hidden] {
@@ -172,7 +172,7 @@
 .icen-kb-canvas-selbar-btn {
   border: none;
   background: none;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   padding: 3px 9px;
   font: inherit;
   font-size: 12px;
@@ -206,7 +206,7 @@
   min-height: 28px;
   padding: 2px 10px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   background: var(--icen-token-bg-soft);
   font: inherit;
   font-size: 12px;
@@ -250,11 +250,11 @@
   overscroll-behavior: contain;
   margin: 0;
   padding: 6px;
-  background: color-mix(in srgb, var(--icen-token-card-strong, var(--icen-token-bg)) 94%, transparent);
-  border: 1px solid var(--icen-token-outline, var(--icen-token-line));
+  background: color-mix(in srgb, var(--icen-token-card-strong) 94%, transparent);
+  border: 1px solid var(--icen-token-outline);
   box-shadow: var(--icen-token-shadow-overlay);
-  border-radius: var(--icen-radius-md, 10px);
-  animation: icen-pop-in var(--icen-tx-fast, 160ms) ease-out;
+  border-radius: var(--icen-radius-md);
+  animation: icen-pop-in var(--icen-tx-fast) ease-out;
 }
 .icen-kb-checkpoint-menu-title {
   font-size: 11.5px;
@@ -269,7 +269,7 @@
   padding: 6px 8px;
   border: none;
   background: none;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   font: inherit;
   font-size: 12.5px;
   color: var(--icen-token-text);
@@ -326,7 +326,7 @@
   aspect-ratio: 16 / 9;
   min-height: 320px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md, 10px);
+  border-radius: var(--icen-radius-md);
   overflow: hidden;
   background: var(--icen-token-bg);
 }
@@ -367,7 +367,7 @@
   animation: icen-spin 0.8s linear infinite;
 }
 .icen-kb-sandbox-err {
-  color: var(--icen-token-danger, var(--icen-token-error));
+  color: var(--icen-token-error);
   font-size: 12.5px;
   text-align: center;
 }
@@ -431,7 +431,7 @@
   background: var(--icen-token-success);
 }
 .icen-kb-chain-step.is-error .icen-kb-chain-dot {
-  background: var(--icen-token-danger, var(--icen-token-error));
+  background: var(--icen-token-error);
 }
 
 .icen-kb-chain-label {

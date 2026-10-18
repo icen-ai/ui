@@ -44,7 +44,7 @@ for (const c of REGISTRY) {
 const llms = [
   '# ICEN UI（@icen.ai/ui）',
   '',
-  '> 零依赖设计系统：tokens（6 预设 × 明暗）+ 无框架组件 CSS + 行为 JS + AI 原生组件族'
+  '> 零依赖设计系统：tokens（8 预设 × 4 原语 × 明暗）+ 无框架组件 CSS + 行为 JS + AI 原生组件族'
     + '（7 态状态机 / 多模态内容模型 / provider 定价审计）+ 图表通用层（ChartSpec 纯 JSON，模型可直接调用）'
     + '+ 工具体系（UI 能力注册为模型工具，OpenAI/MCP/manifest 三出口）。',
   '',

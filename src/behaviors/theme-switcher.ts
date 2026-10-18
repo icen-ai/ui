@@ -2,7 +2,7 @@
  * share one tree; all instances consume theme.ts and never keep private theme state. */
 import themes from '../tokens/themes.json';
 import { iconAttributes, iconPath, type IconName } from './icons';
-import { getCurrentTheme, initTheme, listPrimitives, listThemePresets, setTheme, toggleDark, type ThemeState } from './theme';
+import { getCurrentTheme, initTheme, listPrimitives, listThemePresets, PRIMITIVES, setTheme, toggleDark, type ThemeState } from './theme';
 import { openPopover, closePopover, readPanelSizing, type PanelSizing } from './popover';
 import { t } from './i18n';
 
@@ -33,7 +33,7 @@ function options(o: ThemeSwitcherOptions): Required<Pick<ThemeSwitcherOptions, '
   return { ...o, kind: o.kind ?? 'all', display: o.display ?? 'swatch-name', size: o.size ?? 'md', layout: o.layout ?? 'menu' };
 }
 function name(id: string, o: ThemeSwitcherOptions): string {
-  return o.labels?.[id] ?? (themes.some((theme) => theme.id === id) || id === 'pixel' ? t(`themeSwitcher.${id}` as 'themeSwitcher.benzhen') : id);
+  return o.labels?.[id] ?? (themes.some((theme) => theme.id === id) || (PRIMITIVES as readonly string[]).includes(id) ? t(`themeSwitcher.${id}` as 'themeSwitcher.modern') : id);
 }
 function axisName(kind: string): string {
   return kind === 'theme' ? t('themeSwitcher.theme') : kind === 'primitive' ? t('themeSwitcher.primitive') : kind === 'mode' ? t('themeSwitcher.mode') : t('themeSwitcher.appearance');
@@ -47,11 +47,14 @@ function sample(id: string, dark: boolean): Tree {
 function symbol(name: IconName, className: string): Tree {
   return node('svg',iconAttributes({className}),node('path',{d:iconPath(name)!}));
 }
+function primitiveIcon(id: string): IconName {
+  return (PRIMITIVES as readonly string[]).includes(id) ? id as IconName : 'modern';
+}
 function triggerChildren(o: ThemeSwitcherOptions, state: ThemeState): Tree[] {
   const kind = o.kind ?? 'all';
   const label = kind === 'primitive' ? name(state.style,o) : kind === 'mode' ? t(state.dark ? 'themeSwitcher.dark' : 'themeSwitcher.light') : name(state.preset,o);
   return [
-    kind === 'primitive' ? symbol(state.style === 'pixel' ? 'pixel' : 'benzhen','icen-theme-switcher-symbol') : kind === 'mode' ? symbol(state.dark ? 'moon' : 'sun','icen-theme-switcher-symbol') : sample(state.preset,state.dark),
+    kind === 'primitive' ? symbol(primitiveIcon(state.style),'icen-theme-switcher-symbol') : kind === 'mode' ? symbol(state.dark ? 'moon' : 'sun','icen-theme-switcher-symbol') : sample(state.preset,state.dark),
     node('span', { class: 'icen-theme-switcher-name' }, label),
   ];
 }
@@ -62,7 +65,7 @@ function section(kind: 'theme' | 'primitive' | 'mode', o: ThemeSwitcherOptions, 
     node('p', { class: 'icen-theme-switcher-heading' }, axisName(kind)),
     node('div', { class: `icen-theme-switcher-options icen-theme-switcher-options--${kind}`, role: 'group', 'aria-label': axisName(kind) },
       ...ids.map((id) => node('button', { type: 'button', class: 'icen-theme-switcher-option', 'data-icen-axis': kind, 'data-icen-value': id, 'aria-pressed': String(id === active) },
-        ...(kind === 'theme' ? [sample(id,state.dark)] : [symbol(kind === 'primitive' ? id === 'pixel' ? 'pixel' : 'benzhen' : id === 'dark' ? 'moon' : 'sun','icen-theme-switcher-symbol')]),
+        ...(kind === 'theme' ? [sample(id,state.dark)] : [symbol(kind === 'primitive' ? primitiveIcon(id) : id === 'dark' ? 'moon' : 'sun','icen-theme-switcher-symbol')]),
         node('span', {class:'icen-theme-switcher-option-name'}, kind === 'mode' ? t(id === 'dark' ? 'themeSwitcher.dark' : 'themeSwitcher.light') : name(id,o)),
       )),
     ),
@@ -79,7 +82,7 @@ function tree(input: ThemeSwitcherOptions, state: ThemeState): Tree {
   );
 }
 /** Framework-free SSR markup; hydrate with initThemeSwitcher(). Escapes all caller labels. */
-export function themeSwitcherHTML(o: ThemeSwitcherOptions = {}, state: ThemeState = {preset:'benzhen',dark:false,style:'benzhen'}): string {
+export function themeSwitcherHTML(o: ThemeSwitcherOptions = {}, state: ThemeState = {preset:'modern',dark:false,style:'modern'}): string {
   return serialize(tree(o,state));
 }
 

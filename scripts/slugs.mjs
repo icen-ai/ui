@@ -37,7 +37,7 @@ export const SLUGS = [
   'kb-sql', 'kb-answer', 'kb-clarify', 'kb-explain',
   'kb-trace', 'kb-review', 'kb-gap', 'kb-eval',
   'kb-canvas', 'kb-checkpoint', 'kb-sandbox', 'kb-chain',
-  // 权限域 kb-perm（v0.9.1；spec §9；安全纪律：调研 2026-10-03-kb-permissions）
+  // 权限域 kb-perm（spec §9；安全纪律：调研 2026-10-03-kb-permissions）
   'kb-acl', 'kb-who-can', 'kb-access', 'kb-audit', 'kb-visibility',
   'chart-graph', 'chart-map',
 ];

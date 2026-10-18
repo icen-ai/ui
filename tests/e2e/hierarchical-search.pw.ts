@@ -4,7 +4,7 @@ import {ICON_PATHS} from '../../src/behaviors/icons';
 const require=createRequire(import.meta.url);
 
 test('cascader search keeps its caret, announces result paths, and clears from keyboard in both primitives and modes',async({page})=>{
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]) {
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/cascader/');
     await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     const trigger=page.locator('#demo-cascader .icen-cascader-trigger');await trigger.click();
@@ -20,7 +20,7 @@ test('cascader search keeps its caret, announces result paths, and clears from k
 });
 
 test('tree selection preserves focus after redraw, mirrors branch keys in RTL and exits in native tab order',async({page})=>{
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]) {
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/tree-select/');
     await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';el.dir='rtl';},{primitive,dark});
     const trigger=page.locator('#demo-tree-select .icen-tree-select-trigger');await trigger.click();

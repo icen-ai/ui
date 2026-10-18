@@ -20,7 +20,7 @@
   gap: 5px;
   padding: 3px 10px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   background: var(--icen-token-bg-soft);
   color: var(--icen-token-text-muted);
   font: inherit;
@@ -54,10 +54,10 @@
 
 /* Input surface/geometry comes from the shared input recipe in tokens.css. */
 .icen-kb-input[aria-invalid='true'] {
-  border-color: var(--icen-token-danger, var(--icen-token-error));
+  border-color: var(--icen-token-error);
 }
 .icen-kb-input--mono {
-  font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(--icen-font-mono);
   font-size: var(--icen-density-font-size-sm);
 }
 
@@ -66,14 +66,14 @@
   gap: 2px;
   padding: 2px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   background: var(--icen-token-bg-soft);
 }
 .icen-kb-seg-item {
   border: none;
   background: none;
   padding: 2px 10px;
-  border-radius: calc(var(--icen-radius-sm, 6px) - 2px);
+  border-radius: calc(var(--icen-radius-sm) - 2px);
   font: inherit;
   font-size: 12px;
   line-height: 1.5;
@@ -104,7 +104,7 @@
 
 .icen-kb-pipeline {
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md, 10px);
+  border-radius: var(--icen-radius-md);
   background: var(--icen-token-bg-soft);
   padding: 6px 8px;
   min-width: 0;
@@ -139,9 +139,9 @@
   font-size: 11.5px;
   color: var(--icen-token-text-faint);
 }
-.icen-kb-pipeline-state.is-running .icen-kb-pipeline-state-label { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); }
+.icen-kb-pipeline-state.is-running .icen-kb-pipeline-state-label { color: var(--icen-token-accent-text); }
 .icen-kb-pipeline-state.is-done .icen-kb-pipeline-state-label { color: var(--icen-token-success); }
-.icen-kb-pipeline-state.is-fail .icen-kb-pipeline-state-label { color: var(--icen-token-danger, var(--icen-token-error)); }
+.icen-kb-pipeline-state.is-fail .icen-kb-pipeline-state-label { color: var(--icen-token-error); }
 .icen-kb-pipeline-state.is-cancel .icen-kb-pipeline-state-label { color: var(--icen-token-text-muted); }
 
 .icen-kb-pipeline-title {
@@ -189,7 +189,7 @@
   gap: 8px;
   min-height: 26px;
   padding: 1px 2px;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
 }
 .icen-kb-pipeline-step:not(:last-child)::before {
   content: '';
@@ -221,13 +221,13 @@
 /* 状态映射：未开始/排队/取消 中性弱化；进行中 accent；完成 muted；失败 danger */
 .icen-kb-pipeline-step.is-unstart .icen-kb-pipeline-step-label,
 .icen-kb-pipeline-step.is-queued .icen-kb-pipeline-step-label { color: var(--icen-token-text-faint); }
-.icen-kb-pipeline-step.is-running .icen-kb-pipeline-step-label { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); }
+.icen-kb-pipeline-step.is-running .icen-kb-pipeline-step-label { color: var(--icen-token-accent-text); }
 .icen-kb-pipeline-step.is-done .icen-kb-pipeline-step-label { color: var(--icen-token-text-muted); }
 .icen-kb-pipeline-step.is-cancel .icen-kb-pipeline-step-label {
   color: var(--icen-token-text-faint);
   text-decoration: line-through;
 }
-.icen-kb-pipeline-step.is-fail .icen-kb-pipeline-step-label { color: var(--icen-token-danger, var(--icen-token-error)); }
+.icen-kb-pipeline-step.is-fail .icen-kb-pipeline-step-label { color: var(--icen-token-error); }
 .icen-kb-pipeline-step-elapsed {
   margin-inline-start: auto;
   flex: 0 0 auto;
@@ -240,22 +240,22 @@
   gap: 8px;
   margin-top: 8px;
   padding: 8px 10px;
-  border-radius: var(--icen-radius-sm, 6px);
-  background: color-mix(in srgb, var(--icen-token-danger, var(--icen-token-error)) 7%, transparent);
+  border-radius: var(--icen-radius-sm);
+  background: color-mix(in srgb, var(--icen-token-error) 7%, transparent);
 }
 .icen-kb-pipeline-error > svg {
   width: 13px;
   height: 13px;
   flex: 0 0 auto;
-  color: var(--icen-token-danger, var(--icen-token-error));
+  color: var(--icen-token-error);
   margin-top: 2px;
 }
 .icen-kb-pipeline-error-stage {
   flex: 0 0 auto;
-  font-family: var(--icen-font-mono, ui-monospace, monospace);
+  font-family: var(--icen-font-mono);
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--icen-token-danger, var(--icen-token-error));
+  color: var(--icen-token-error);
 }
 .icen-kb-pipeline-error-msg {
   flex: 1 1 auto;
@@ -304,7 +304,7 @@
   gap: 10px;
   padding: 8px 10px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md, 10px);
+  border-radius: var(--icen-radius-md);
   background: var(--icen-token-bg-soft);
   transition: opacity 0.16s ease-out;
 }
@@ -372,7 +372,7 @@
   padding: 2px 6px;
   margin: 0 -6px;
   border: 1px solid transparent;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   font-size: 12.5px;
   line-height: 1.7;
   color: var(--icen-token-text);
@@ -405,7 +405,7 @@
   cursor: pointer;
 }
 .icen-kb-chunk-keyword-x:hover {
-  color: var(--icen-token-danger, var(--icen-token-error));
+  color: var(--icen-token-error);
 }
 .icen-kb-chunk-keyword-x:focus-visible {
   outline: 2px solid var(--icen-token-accent);
@@ -417,7 +417,7 @@
   outline: none;
   padding: 2px 4px;
   width: 96px;
-  font-family: var(--icen-font-mono, ui-monospace, monospace);
+  font-family: var(--icen-font-mono);
   font-size: 11px;
   color: var(--icen-token-text);
 }
@@ -476,7 +476,7 @@
 }
 .icen-kb-segment-overlap-error {
   margin-top: -4px;
-  color: var(--icen-token-danger, var(--icen-token-error));
+  color: var(--icen-token-error);
 }
 .icen-kb-segment-clean {
   display: flex;
@@ -500,7 +500,7 @@
   gap: 8px;
   padding: 10px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md, 10px);
+  border-radius: var(--icen-radius-md);
   background: var(--icen-token-bg);
   min-width: 0;
   min-height: 0;
@@ -530,7 +530,7 @@
   gap: 8px;
   padding: 6px 8px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   background: var(--icen-token-bg-soft);
 }
 .icen-kb-segment-block-no {
@@ -573,14 +573,14 @@
   padding-inline: 14px 12px;
   border: 1px solid var(--icen-token-line-soft);
   border-inline-start: 2px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md, 10px);
+  border-radius: var(--icen-radius-md);
   background: var(--icen-token-bg-soft);
   min-inline-size: 0;
 }
 /* 健康起始缘 2px 色条（connectorHealth 判定；色只在此与状态点上；RTL 镜像） */
 .icen-kb-connector.is-healthy { border-inline-start-color: var(--icen-token-success); }
 .icen-kb-connector.is-stale { border-inline-start-color: var(--icen-token-warning); }
-.icen-kb-connector.is-failing { border-inline-start-color: var(--icen-token-danger, var(--icen-token-error)); }
+.icen-kb-connector.is-failing { border-inline-start-color: var(--icen-token-error); }
 .icen-kb-connector.is-off { border-inline-start-color: var(--icen-token-line); }
 
 .icen-kb-connector-head {
@@ -624,7 +624,7 @@
 /* 同步计划：mono 不换行（cron 原值包 .icen-kb-chip；人类可读文本 .icen-kb-meta）——绝不散点裸渲 */
 .icen-kb-connector-schedule {
   flex: 0 0 auto;
-  font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(--icen-font-mono);
   white-space: nowrap;
 }
 
@@ -663,7 +663,7 @@
 }
 /* 凭证与指标同排版（文字值行内末端对齐同列），仅以颜色区分：过期 = error 红与 failing 一致，未配置 warning，正常 muted */
 .icen-kb-connector-cred.is-expired {
-  color: var(--icen-token-danger, var(--icen-token-error));
+  color: var(--icen-token-error);
   font-weight: 500;
 }
 .icen-kb-connector-cred.is-none {
@@ -728,7 +728,7 @@
   background: var(--icen-token-bg-soft);
 }
 .icen-kb-metadata-key {
-  font-family: var(--icen-font-mono, ui-monospace, monospace);
+  font-family: var(--icen-font-mono);
   font-size: 12px;
   color: var(--icen-token-text);
 }
@@ -745,7 +745,7 @@
   padding: 1px 6px;
 }
 .icen-kb-metadata-type {
-  font-family: var(--icen-font-mono, ui-monospace, monospace);
+  font-family: var(--icen-font-mono);
 }
 .icen-kb-metadata-readonly {
   color: var(--icen-token-text-muted);
@@ -825,7 +825,7 @@
 .icen-kb-qa-q,
 .icen-kb-qa-a {
   outline: none;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   padding: 2px 4px;
   margin: -2px -4px;
   line-height: 1.7;

@@ -16,7 +16,7 @@ export interface DesignPalette {
   info?: string;
 }
 export interface DesignDefinition {
-  /** Lowercase CSS identifier; benzhen is the built-in 本真 recipe. */
+  /** Lowercase CSS identifier; modern is the built-in 现代 recipe. */
   name: string;
   light: DesignPalette;
   dark: DesignPalette;
@@ -123,12 +123,12 @@ export function prepareDesignChange(): void {
     });
   });
 }
-/** Set a compiled brand theme. null restores the 本真 theme; primitives remain independent. */
+/** Set a compiled brand theme. null restores the 现代 theme; primitives remain independent. */
 export function setDesign(name: string | null): void {
   if (name !== null && !NAME.test(name)) throw new Error('Invalid design name.');
   if (typeof document === 'undefined') return;
   prepareDesignChange();
-  document.documentElement.setAttribute('data-icen-preset', name ?? 'benzhen');
-  if (!document.documentElement.hasAttribute('data-icen-style')) document.documentElement.setAttribute('data-icen-style','benzhen');
+  document.documentElement.setAttribute('data-icen-preset', name ?? 'modern');
+  if (!document.documentElement.hasAttribute('data-icen-style')) document.documentElement.setAttribute('data-icen-style','modern');
   document.documentElement.removeAttribute('data-icen-design');
 }

@@ -13,7 +13,7 @@ import { createIcon } from './icons';
  *      （超出上限 LRU 淘汰最旧挂载；tools 支持通配 'chart-*'）
  *   3. 运行时：area.setTools/setMax/clear + unregisterAiTool 全局下架
  *
- * 执行契约（AiToolDef，全部向后兼容扩展）：
+ * 执行契约（AiToolDef）：
  *   run(input, mount, ctx) — ctx: { signal: AbortSignal, progress(line) }；
  *   允许返回 Promise（area 落定后写 record.icen-result——Promise 结果契约）；
  *   timeoutMs 超时 → 结果 { ok:false, error:{ code:'timeout' } }（同步 run 无法中断，
@@ -68,7 +68,7 @@ export interface AiToolDef<TInput = unknown> {
   inputSchema: Record<string, unknown>;
   /**
    * 执行：input → 在 mount 上渲染；返回值作为工具结果（同步直返，或 Promise——
-   * area 落定后写 record.icen-result）。第三参 ctx 可选消费（旧两参签名向后兼容）。
+   * area 落定后写 record.icen-result）。第三参 ctx 可选消费。
    */
   run: (input: TInput, mount: HTMLElement, ctx: AiToolRunContext) => unknown;
   /** 结果呈现：'mount'（默认，渲染即呈现）/ 'data'（run 返回值为准，不占挂载位） */

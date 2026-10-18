@@ -18,8 +18,8 @@
  */
 
 /* ── 单行 ── */
-/* One surface recipe for composed and standalone fields. Legacy KB hooks are
-   kept as aliases; domain CSS owns width/layout, never typography or material. */
+/* One surface recipe for composed and standalone fields. KB domain hooks share
+   the same recipe; domain CSS owns width/layout, never typography or material. */
 .icen-input-wrap,
 .icen-input-control,
 .icen-kb-input,

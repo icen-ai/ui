@@ -1,0 +1,41 @@
+/* 中式 / Chinese — Song-era proportion, book typography and quiet paper planes.
+ * Palette-independent: the active theme supplies every pigment and semantic color.
+ * Display type is serif; small controls and dense information remain sans-serif.
+ */
+:root[data-icen-style="chinese"],
+:root[data-icen-style="chinese"] [data-icen-preset] {
+  --icen-design-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --icen-design-font-size: 14px;
+  --icen-design-radius: 4px;
+  --icen-design-space: 4.5px;
+  --icen-design-control-height: 42px;
+  --icen-design-glass-opacity: 100%;
+  --icen-design-glass-blur: 0px;
+  --icen-radius-xs: max(0px, calc(var(--icen-design-radius) - 2px));
+  --icen-radius-sm: var(--icen-design-radius);
+  --icen-radius-md: var(--icen-design-radius);
+  --icen-radius-lg: calc(var(--icen-design-radius) * 2);
+  --icen-radius-xl: calc(var(--icen-design-radius) * 3);
+  --icen-radius-full: 999px;
+  --icen-font-body: var(--icen-design-font);
+  --icen-font-heading: 'Iowan Old Style', 'Palatino Linotype', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'STSong', 'SimSun', serif;
+  --icen-font-cjk: var(--icen-design-font);
+  --icen-line-height-body: 1.75;
+  --icen-line-height-heading: 1.4;
+  --icen-letter-spacing-body: .012em;
+  --icen-letter-spacing-heading: .045em;
+  --icen-duration-fast: calc(140ms * var(--icen-design-motion));
+  --icen-duration-normal: calc(240ms * var(--icen-design-motion));
+  --icen-duration-slow: calc(340ms * var(--icen-design-motion));
+  --icen-ease-out: cubic-bezier(.22, .68, .2, 1);
+  --icen-ease-bounce: var(--icen-ease-out);
+  --icen-token-surface-glass: var(--icen-token-surface);
+  --icen-token-shadow-card: 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .45), transparent), 0 6px 18px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .25), transparent);
+  --icen-token-shadow-elevated: 0 1px 3px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .65), transparent), 0 12px 30px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .55), transparent);
+  --icen-token-shadow-overlay: 0 2px 5px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent), 0 24px 64px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .7), transparent);
+  --icen-token-shadow-popover: var(--icen-token-shadow-elevated);
+  --icen-token-shadow-inset: inset 0 0 0 0 transparent;
+  --icen-token-material-light: inset 0 0 0 0 transparent;
+  --icen-token-top-highlight: transparent;
+  --icen-token-material-edge: var(--icen-token-line);
+}

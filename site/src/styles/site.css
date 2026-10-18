@@ -50,6 +50,10 @@ body {
   font-family: var(--icen-font-body);
 }
 
+/* 全站去 hover 下划线：现代界面用颜色/位移做反馈，下划线只保留给文段内链接
+  （文尾 doc-note/doc-desc/page-desc 的 a11y link-in-text-block 纪律规则同优先级、位置在后，仍赢本规则） */
+a:hover { text-decoration: none; }
+
 /* ═══════════ 顶部导航（沉静铬架：顶端无界，滚动显形 hairline） ═══════════ */
 .site-nav {
   position: sticky;
@@ -98,13 +102,12 @@ body {
   transition: color var(--icen-duration-fast) var(--icen-ease-out);
 }
 .brand:hover .brand-ver { color: var(--icen-token-accent-text); }
-/* logo 内菱形 hover 转 45°（菱↔方）：品牌微愉悦，纯 CSS */
-.brand svg path {
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 0.35s var(--icen-ease-out);
+/* 雪花 hover 转 60°（六分之一周 = 雪花对称周期）：品牌微愉悦，纯 CSS */
+.brand svg .brand-flake {
+  transform-origin: 12px 12px;
+  transition: transform 0.4s var(--icen-ease-out);
 }
-.brand:hover svg path { transform: rotate(45deg); }
+.brand:hover svg .brand-flake { transform: rotate(60deg); }
 
 /* 导航链接：墨条是唯一位置指示——hover 只提字色，预览时墨条滑到悬停链接 */
 .nav-links { display: flex; align-items: center; gap: 4px; position: relative; padding: 4px 0; }
@@ -117,6 +120,12 @@ body {
 }
 .nav-links a:hover { color: var(--icen-token-text); text-decoration: none; }
 .nav-links a.active { color: var(--icen-token-text); font-weight: 600; }
+/* 组件是全库的心脏：主导航唯一常驻主题色入口（规则置于 .active 之后，同优先级压过中性色） */
+.nav-links a.nav-primary { color: var(--icen-token-accent-text); font-weight: 600; }
+.nav-links a.nav-primary:hover { color: var(--icen-token-accent); }
+.nav-links a.nav-primary.active { color: var(--icen-token-accent-strong); }
+/* 主导航分簇分隔符：左簇文档骨架（组件/色彩/原语/框架/定制），右簇能力入口（AI 原生/知识库/数据图表） */
+.nav-links-sep { width: 1px; height: 14px; background: var(--icen-token-line); margin: 0 8px; flex: none; }
 .nav-ink {
   position: absolute;
   bottom: 0;
@@ -369,11 +378,11 @@ body {
 .docs-side::-webkit-scrollbar { display: none; }
 .docs-group { margin-bottom: 14px; }
 .docs-group-name {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--icen-token-text);
   margin: 0 0 4px;
-  padding: 4px 10px;
+  padding: 5px 10px;
 }
 /* 折叠组：summary 即组头（chevron + 名称 + 计数），details 天然多开 */
 
@@ -417,7 +426,9 @@ body {
   border-radius: 999px;
   padding: 2px 6px;
 }
-.docs-group-links { display: block; }
+/* 子列表整体内缩：链接文字与组标题文字同一条竖线（12 + 10 = 组头 10 + chevron 6 + 6），
+   选中/悬停底色随块内缩，层级一眼可辨 */
+.docs-group-links { display: block; padding-inline-start: 12px; }
 .docs-link {
   display: block;
   font-size: 13px;
@@ -645,7 +656,7 @@ body {
   .docs-main { width: 100%; padding: 24px 18px 64px; }
   .docs-group { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 2px; margin-bottom: 10px; }
   .docs-group-name { flex: 0 0 100%; padding: 0 6px; }
-  .docs-group-links { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 2px; flex: 0 0 100%; }
+  .docs-group-links { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 2px; flex: 0 0 100%; padding-inline-start: 0; }
   .docs-link { border-left: 0; padding: 4px 8px; }
   .doc-actions { display: none; }
 }

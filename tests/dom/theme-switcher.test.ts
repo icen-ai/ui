@@ -15,10 +15,10 @@ test('independent controls share state and persistence is current inside the cha
   let persisted = '';
   const listener = () => { persisted = getTheme().preset; };
   document.addEventListener('icen:theme-change',listener);
-  a.querySelector<HTMLButtonElement>('[data-icen-axis="theme"][data-icen-value="ink"]')!.click();
-  expect(persisted).toBe('ink');
+  a.querySelector<HTMLButtonElement>('[data-icen-axis="theme"][data-icen-value="monet"]')!.click();
+  expect(persisted).toBe('monet');
   b.querySelector<HTMLButtonElement>('button')!.click();
-  expect(getCurrentTheme()).toEqual({preset:'ink',style:'benzhen',dark:true});
+  expect(getCurrentTheme()).toEqual({preset:'monet',style:'modern',dark:true});
   expect(a.querySelector('[data-icen-axis="mode"][data-icen-value="dark"]')?.getAttribute('aria-pressed')).toBe('true');
   document.removeEventListener('icen:theme-change',listener);
 });
@@ -31,13 +31,13 @@ test('applied-only and storage-blocked changes retain all axes across consecutiv
     const a = mount(); disposers.push(createThemeSwitcher(a,{kind:'mode'}).destroy);
     a.querySelector<HTMLButtonElement>('button')!.click();
     expect(getCurrentTheme()).toEqual({preset:'piano',dark:false,style:'pixel'});
-    setTheme({preset:'ink'});
-    expect(getCurrentTheme()).toEqual({preset:'ink',dark:false,style:'pixel'});
+    setTheme({preset:'monet'});
+    expect(getCurrentTheme()).toEqual({preset:'monet',dark:false,style:'pixel'});
   } finally { spy.mockRestore(); }
 });
 
 test('SSR labels escape markup, hydrate idempotently and preserve caller labels and sizing', () => {
-  const a=mount(); a.innerHTML=themeSwitcherHTML({labels:{benzhen:'<img onerror="oops">'},sizing:{width:280},size:'sm'});
+  const a=mount(); a.innerHTML=themeSwitcherHTML({labels:{modern:'<img onerror="oops">'},sizing:{width:280},size:'sm'});
   expect(a.querySelector('img')).toBeNull();
   initThemeSwitcher(a); initThemeSwitcher(a);
   expect(a.querySelector('.icen-theme-switcher-name')?.textContent).toBe('<img onerror="oops">');
@@ -59,12 +59,12 @@ test('empty declarative roots initialize only once and changing mode never opens
 
 test('other tabs update every instance; live locale updates retain the selected theme', () => {
   const a=mount(); disposers.push(createThemeSwitcher(a,{layout:'inline'}).destroy);
-  localStorage.setItem(STORAGE_KEY,JSON.stringify({preset:'clay',style:'pixel',dark:true}));
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({preset:'dongyun',style:'pixel',dark:true}));
   window.dispatchEvent(new StorageEvent('storage',{key:STORAGE_KEY}));
-  expect(getCurrentTheme()).toEqual({preset:'clay',style:'pixel',dark:true});
-  expect(a.querySelector('[data-icen-value="clay"]')?.getAttribute('aria-pressed')).toBe('true');
+  expect(getCurrentTheme()).toEqual({preset:'dongyun',style:'pixel',dark:true});
+  expect(a.querySelector('[data-icen-value="dongyun"]')?.getAttribute('aria-pressed')).toBe('true');
   setIcenLocale(ICEN_LOCALE_EN_US);
-  expect(a.querySelector('[data-icen-value="clay"]')?.textContent).toContain('Clay');
+  expect(a.querySelector('[data-icen-value="dongyun"]')?.textContent).toContain('Dongyun');
 });
 
 test('destroy removes open portals and recreated controls have one listener', () => {
@@ -75,4 +75,21 @@ test('destroy removes open portals and recreated controls have one listener', ()
   const current=createThemeSwitcher(a,{kind:'mode'}); disposers.push(current.destroy);
   initThemeSwitcher(a); a.querySelector<HTMLButtonElement>('button')!.click();
   expect(getCurrentTheme().dark).toBe(true);
+});
+
+test('new primitives and paired themes are labeled, independently selectable and localized', () => {
+  const a=mount(); disposers.push(createThemeSwitcher(a,{layout:'inline'}).destroy);
+  for (const [style,preset,label] of [['chinese','dongyun','中式'],['soviet','jugou','苏式']]) {
+    const primitive=a.querySelector<HTMLButtonElement>(`[data-icen-axis="primitive"][data-icen-value="${style}"]`)!;
+    expect(primitive.textContent).toContain(label);
+    expect(primitive.querySelector('path')?.getAttribute('d')).toBeTruthy();
+    a.querySelector<HTMLButtonElement>(`[data-icen-axis="theme"][data-icen-value="${preset}"]`)!.click();
+    primitive.click();
+    expect(getTheme()).toEqual({preset,style,dark:false});
+    expect(primitive.getAttribute('aria-pressed')).toBe('true');
+  }
+  setIcenLocale(ICEN_LOCALE_EN_US);
+  expect(a.querySelector('[data-icen-value="chinese"]')?.textContent).toContain('Chinese');
+  expect(a.querySelector('[data-icen-value="soviet"]')?.textContent).toContain('Soviet');
+  expect(getCurrentTheme()).toEqual({preset:'jugou',style:'soviet',dark:false});
 });

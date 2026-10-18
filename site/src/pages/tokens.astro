@@ -14,7 +14,7 @@ const swatches = [
 
 <Docs title="主题 · ICEN UI">
   <h1 class="page-title">主题</h1>
-  <p class="page-sub">6 套主题，各带明暗双模，每套都定义完整的 <code>--icen-token-*</code> 色彩面。组件只消费 token——换肤不改一行组件代码。在导航栏切换预设与明暗，本页色板实时跟随。</p>
+  <p class="page-sub">{presets.length} 套主题，各带明暗双模，每套都定义完整的 <code>--icen-token-*</code> 色彩面。组件只消费 token——换肤不改一行组件代码。在导航栏切换预设与明暗，本页色板实时跟随。</p>
 
   {presets.map((p) => (
     <section class="icen-panel">
@@ -79,7 +79,7 @@ const swatches = [
         </div>
         <div class="export-row">
           <code>dist/tokens/tokens-studio.json</code>
-          <span>Tokens Studio 插件原生格式（$themes 12 组，token set 键 <code>clay/light</code> 式）</span>
+          <span>Tokens Studio 插件原生格式（$themes 12 组，token set 键 <code>modern/light</code> 式）</span>
         </div>
         <div class="export-row">
           <code>dist/tokens/figma.variables.json</code>

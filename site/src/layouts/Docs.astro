@@ -5,10 +5,14 @@ import '../../../src/tokens/typography.css';
 import 'misans/lib/Normal/MiSansVF.min.css'; /* 全站中文统一 MiSans（56 片 unicode-range 动态切片懒加载，与 Base 布局同源） */
 import '../../../src/base.css';
 import '../../../src/tokens/design.css';
+import '../../../src/tokens/chinese.css';
+import '../../../src/tokens/soviet.css';
 import '../../../src/tokens/pixel.css';
 import '../../../src/tokens/icon-masks.css';
 import '../../../src/components/icon.css';
 import '../../../src/components/material.css';
+import '../../../src/components/material-chinese.css';
+import '../../../src/components/material-soviet.css';
 import '../lib/component-css';
 import '../styles/site.css';
 import SiteHeader from '../components/SiteHeader.astro';
@@ -24,7 +28,7 @@ interface Props {
 }
 const {
   title = 'ICEN UI · 设计系统',
-  description = 'ICEN UI（@icen.ai/ui）—— icen.ai 生态的统一设计系统：6 套色彩预设 × 明暗双模 × 无框架组件与行为 JS',
+  description = 'ICEN UI（@icen.ai/ui）—— icen.ai 生态的统一设计系统：6 套色彩预设 × 4 套原语 × 明暗双模 × 无框架组件与行为 JS',
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, 'https://ui.icen.ai').toString();
 const path = Astro.url.pathname;
@@ -33,7 +37,7 @@ const isActive = (href: string): boolean =>
   href === '/' ? path === '/' : path.startsWith(href);
 ---
 <!doctype html>
-<html lang="zh-CN" data-icen-preset="benzhen" data-icen-style="benzhen">
+<html lang="zh-CN" data-icen-preset="modern" data-icen-style="modern">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -68,7 +72,7 @@ const isActive = (href: string): boolean =>
               <a class:list={['docs-link', { active: path === '/' }]} href="/">介绍</a>
               <a class:list={['docs-link', { active: isActive('/primitives/') }]} href="/primitives/">原语</a>
               <a class:list={['docs-link', { active: isActive('/frameworks/') }]} href="/frameworks/">框架接入</a>
-              <a class:list={['docs-link', { active: isActive('/customize/') }]} href="/customize/">定制与迁移</a>
+              <a class:list={['docs-link', { active: isActive('/customize/') }]} href="/customize/">定制</a>
               <a class:list={['docs-link', { active: isActive('/tokens/') }]} href="/tokens/">色彩 Tokens</a>
             </div>
           </details>

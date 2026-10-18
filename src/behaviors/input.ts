@@ -368,8 +368,6 @@ function setupOtp(group: Element): void {
       // 完成时挂 .icen-otp.is-complete（segmented.css 既有状态样式，此前无行为接线；classList.add 天然幂等）
       group.classList.add('is-complete');
       emitIcen(group, 'icen:otp-complete', { code });
-      /** @deprecated 旧事件名（无 icen: 前缀），仅为兼容保留，请迁移到 icen:otp-complete */
-      group.dispatchEvent(new CustomEvent('otp:complete', { detail: { code }, bubbles: true }));
     }
   };
   cells.forEach((cell) => cell.addEventListener('input', fireComplete));

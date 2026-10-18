@@ -62,7 +62,7 @@ test('Escape retires softly, restores focus and reopening continues seamlessly',
 test('open palette is readable in both primitives and modes; mobile stays inside the viewport', async ({page}) => {
   await page.goto('/components/command-palette/');
   await page.addScriptTag({path: require.resolve('axe-core')});
-  for (const primitive of ['benzhen','pixel']) for (const dark of [false,true]) {
+  for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
     await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     await page.locator('.demo-stage [data-icen-command-palette-open="demo-cp"]').click();
     const backdrop = demo(page);

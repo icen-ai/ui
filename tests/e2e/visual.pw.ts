@@ -57,7 +57,7 @@ for (const p of THEME_VARIANT_PAGES) {
   test(`dark: ${p.path}`, async ({ browser }) => {
     await shoot(browser, `${p.name}-dark`, p.path, () => {
       // 契约同 src/behaviors/theme.ts + site ThemeRestore：首帧渲染前写入，防闪烁
-      localStorage.setItem('icen.ui.theme', '{"preset":"clay","dark":true,"style":"modern"}');
+      localStorage.setItem('icen.ui.theme', '{"preset":"dongyun","dark":true,"style":"modern"}');
     });
   });
 

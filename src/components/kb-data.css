@@ -20,7 +20,7 @@
   min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md, 10px);
+  border-radius: var(--icen-radius-md);
   background: var(--icen-token-surface);
 }
 
@@ -67,7 +67,7 @@
   color: var(--icen-token-text-muted);
   background: transparent;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -97,13 +97,13 @@
 .icen-kb-sql-btn--run:hover:not(:disabled) {
   color: var(--icen-token-accent);
   border-color: var(--icen-token-accent);
-  background: var(--icen-token-accent-subtle, transparent);
+  background: var(--icen-token-accent-subtle);
 }
 /* 修正卡内的主行动（一屏一个 accent 级操作：此处告警色承载） */
 .icen-kb-sql-btn--apply {
   color: var(--icen-token-warning);
   border-color: color-mix(in srgb, var(--icen-token-warning) 45%, transparent);
-  background: var(--icen-token-warning-muted, transparent);
+  background: var(--icen-token-warning-muted);
 }
 .icen-kb-sql-btn--apply:hover:not(:disabled) {
   color: var(--icen-token-warning);
@@ -116,8 +116,8 @@
   padding: 10px 12px;
   background: var(--icen-token-bg-soft);
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
-  font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  border-radius: var(--icen-radius-sm);
+  font-family: var(--icen-font-mono);
   font-size: 12px;
   line-height: 1.65;
   color: var(--icen-token-text);
@@ -132,7 +132,7 @@
 }
 
 /* 语法 token：color-mix 半透明降饱和（语法层级，非装饰） */
-.icen-kb-sql-tok--kw  { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); }
+.icen-kb-sql-tok--kw  { color: var(--icen-token-accent-text); }
 .icen-kb-sql-tok--str { color: color-mix(in srgb, var(--icen-token-success) 82%, transparent); }
 .icen-kb-sql-tok--num { color: color-mix(in srgb, var(--icen-token-warning) 50%, var(--icen-token-text)); }
 .icen-kb-sql-tok--fn  { color: var(--icen-token-info); }
@@ -145,7 +145,7 @@
   gap: 8px;
   padding: 8px 10px;
   border: 1px solid color-mix(in srgb, var(--icen-token-warning) 45%, transparent);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   background: color-mix(in srgb, var(--icen-token-warning) 5%, transparent);
 }
 .icen-kb-sql-fix-head {
@@ -172,7 +172,7 @@
 }
 .icen-kb-sql-fix-diff {
   min-inline-size: 0;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   overflow: hidden;
 }
 .icen-kb-sql-fix-diff .icen-ai-diff-file {
@@ -192,13 +192,13 @@
   width: 100%;
   min-height: 132px;
   padding: 10px 12px;
-  font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(--icen-font-mono);
   font-size: 12px;
   line-height: 1.65;
   color: var(--icen-token-text);
   background: var(--icen-token-bg-soft);
   border: 1px solid var(--icen-token-line);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   resize: vertical;
   tab-size: 2;
 }
@@ -222,8 +222,8 @@
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
-  border: 1px dashed var(--icen-token-line-dashed, var(--icen-token-line-soft));
-  border-radius: var(--icen-radius-sm, 6px);
+  border: 1px dashed var(--icen-token-line-dashed);
+  border-radius: var(--icen-radius-sm);
   background: var(--icen-token-bg-soft);
 }
 .icen-kb-clarify.is-answered {
@@ -277,7 +277,7 @@
 .icen-kb-clarify-opt.is-picked {
   color: var(--icen-token-accent);
   border-color: color-mix(in srgb, var(--icen-token-accent) 55%, transparent);
-  background: var(--icen-token-accent-subtle, transparent);
+  background: var(--icen-token-accent-subtle);
 }
 .icen-kb-clarify-opt:disabled {
   opacity: 0.55;
@@ -301,7 +301,7 @@
 .icen-kb-explain {
   min-width: 0;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   background: var(--icen-token-bg-soft);
   overflow: hidden;
 }
@@ -309,7 +309,7 @@
   border-radius: 0;
 }
 .icen-kb-explain-head:hover {
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
 }
 .icen-kb-explain-title {
   white-space: nowrap;
@@ -340,7 +340,7 @@
   flex-direction: column;
   gap: 4px;
   padding-top: 8px;
-  border-top: 1px dashed var(--icen-token-line-dashed, var(--icen-token-line-soft));
+  border-top: 1px dashed var(--icen-token-line-dashed);
 }
 .icen-kb-explain-metric {
   display: flex;
@@ -398,7 +398,7 @@
 .icen-kb-verified:focus-visible {
   outline: 2px solid var(--icen-token-accent);
   outline-offset: 3px;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
 }
 .icen-kb-verified-via {
   font-size: 11.5px;
@@ -426,7 +426,7 @@
   flex-wrap: wrap;
   width: 100%;
   padding: 4px 8px;
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   background: var(--icen-token-bg-soft);
   font-size: 11.5px;
   color: var(--icen-token-text-muted);
@@ -508,7 +508,7 @@
   color: var(--icen-token-text-muted);
   background: transparent;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   cursor: pointer;
 }
 .icen-kb-result-export-btn:hover:not(:disabled) {
@@ -528,7 +528,7 @@
   overflow: auto;
   max-height: 360px;
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm, 6px);
+  border-radius: var(--icen-radius-sm);
   background: var(--icen-token-surface);
 }
 .icen-kb-result-table {
@@ -565,7 +565,7 @@
 /* 数字列：等宽 + tabular-nums + 右对齐（数字是 LTR 文种，物理右对齐惯例，RTL 不镜像） */
 .icen-kb-result-table th.icen-kb-num,
 .icen-kb-result-table td.icen-kb-num {
-  font-family: var(--icen-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-family: var(--icen-font-mono);
   font-variant-numeric: tabular-nums;
   text-align: right; /* guard:allow-physical 数字列物理右对齐惯例，RTL 不镜像 */
 }
@@ -609,9 +609,9 @@
   outline-offset: 1px;
 }
 .icen-kb-chart-chip.is-active {
-  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
+  color: var(--icen-token-accent-text);
   border-color: color-mix(in srgb, var(--icen-token-accent) 55%, transparent);
-  background: var(--icen-token-accent-subtle, transparent);
+  background: var(--icen-token-accent-subtle);
 }
 .icen-kb-chart-mount {
   min-height: 0;

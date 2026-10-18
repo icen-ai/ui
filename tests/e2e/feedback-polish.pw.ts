@@ -4,7 +4,7 @@ import {ICON_PATHS} from '../../src/behaviors/icons';
 const require=createRequire(import.meta.url);
 
 test('group disclosure keeps actions aligned and keyboard focus stable across primitives and modes',async({page})=>{
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]){
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]){
     await page.goto('/components/notification/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     await page.locator('#notif-group').click();const latest=page.locator('#docs-review-2'),first=page.locator('#docs-review-0'),button=latest.locator('.icen-notification-group-toggle');
     await expect(first).toBeHidden();await expect(button).toHaveAttribute('aria-expanded','false');await expect(button).toHaveText('3 条同组通知，3 条未读');
@@ -49,7 +49,7 @@ test('saved notification survives unmount, unrelated activity, page navigation a
 });
 
 test('async toast has a stable SVG busy slot, inline retry and one successful continuation across primitives/modes',async({page})=>{
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]) {
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/toast/');
     await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     await page.locator('#toast-demo-async').click();const row=page.locator('.icen-toast').filter({hasText:'已移到回收站'}),action=row.getByRole('button',{name:'撤销',exact:true});
@@ -118,5 +118,5 @@ test('body navigation and sibling action buttons are independently keyboard-oper
   await row.getByRole('button',{name:'继续编辑',exact:true}).press('Enter');await expect(row).toHaveCount(0);
   await expect(page.locator('.icen-toast-msg').last()).toHaveText('打开编辑器');
   await page.locator('#notif-link').click();await page.locator('.icen-notification').getByRole('link',{name:'打开主题工作室'}).click();
-  await expect(page).toHaveURL(/\/benzhen\//);
+  await expect(page).toHaveURL(/\/modern\//);
 });

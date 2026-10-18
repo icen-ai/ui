@@ -7,7 +7,7 @@ Task playbooks for the ICEN design system (@icen.ai/ui). When you say "draw a ch
 - **Charts, decided for you**: describe the data shape (time series / parts-of-whole / comparison / calendar activity / correlation / network graph / map…) and get the correct chart type rendered from one pure-JSON spec — hover, click, double-click, right-click, and the legend eye are all built in
 - **AI chat in five steps**: from provider setup to streaming, tool-call cards, todo state, usage and audit — one zero-wiring binding closes the loop
 - **Knowledge-base evidence family**: everything a RAG product needs to show where knowledge came from — inline citations, source lists, retrieval tuning, rerank A/B, NL2SQL answers, eval and governance, plus permission boundaries (who can see what, and why); the "honest to the authorized, silent to the restricted" discipline is built into the components
-- **Theme & dark mode**: six color presets × three style profiles × light/dark, switched in one sentence without hardcoding a single color
+- **Theme & dark mode**: eight color themes × four primitives × light/dark, switched in one sentence without hardcoding a single color
 - **Install on demand**: 114 components addressable per slug (CLI / one-line kit entries / registry.json), zero dependency, no framework binding
 
 ## Facts and playbooks, separated

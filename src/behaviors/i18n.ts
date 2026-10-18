@@ -70,7 +70,7 @@
  *   kbTrace（kb-trace 调用链）：empty hits
  *   kbVisibility（kb-visibility 可见性对照（权限域））：adminOnlyNote adminWarn failOpenNote focusColumn layerValue leakageNote postFilterNote queryLabel safeCount sourceUnavailable unnamedHit
  *   kbWhoCan（kb-who-can 谁能看（权限域））：check checkIdentity daysUntil deniedBy denyVeto direct expiresSoon hoursUntil inherit link noDeny noIdentity none recheckTip stackRule
- *   mentions（mentions 提及）：loading
+ *   mentions（mentions 提及）：create customBadge loading
  *   notification（notification 通知）：ariaLabel viewDetails
  *   pagination（pagination 分页（datatable 工具栏））：next pageSize prev
  *   select（select 搜索/空态）：noMatch remove searchPlaceholder
@@ -303,12 +303,14 @@ export interface IcenLocale {
   'themeSwitcher.mode': string;
   'themeSwitcher.light': string;
   'themeSwitcher.dark': string;
-  'themeSwitcher.benzhen': string;
-  'themeSwitcher.clay': string;
+  'themeSwitcher.modern': string;
+  'themeSwitcher.dongyun': string;
+  'themeSwitcher.jugou': string;
   'themeSwitcher.piano': string;
-  'themeSwitcher.art': string;
+  'themeSwitcher.monet': string;
   'themeSwitcher.vangogh': string;
-  'themeSwitcher.ink': string;
+  'themeSwitcher.chinese': string;
+  'themeSwitcher.soviet': string;
   'themeSwitcher.pixel': string;
   /* ── codeBlock ── */
   'codeBlock.collapse': string;
@@ -879,6 +881,8 @@ export interface IcenLocale {
   'kbWhoCan.recheckTip': string;
   'kbWhoCan.stackRule': string;
   /* ── mentions ── */
+  'mentions.create': string;
+  'mentions.customBadge': string;
   'mentions.loading': string;
   /* ── notification ── */
   'notification.groupBusy': string;
@@ -918,7 +922,7 @@ export interface IcenLocale {
   'upload.typeNotAllowed': string;
 }
 
-/** 默认语言：zh-CN（= 库内历史硬编码文案，逐字迁移）。 */
+/** 默认语言：zh-CN。 */
 export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   /* ── aiBranch ── */
   'aiBranch.nextVersion': '下一版本',
@@ -1136,12 +1140,14 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'themeSwitcher.mode': '明暗',
   'themeSwitcher.light': '浅色',
   'themeSwitcher.dark': '深色',
-  'themeSwitcher.benzhen': '本真',
-  'themeSwitcher.clay': '陶土',
+  'themeSwitcher.modern': '现代',
+  'themeSwitcher.dongyun': '东韵',
+  'themeSwitcher.jugou': '巨构',
   'themeSwitcher.piano': '钢琴',
-  'themeSwitcher.art': '艺术',
+  'themeSwitcher.monet': '莫奈',
   'themeSwitcher.vangogh': '梵高',
-  'themeSwitcher.ink': '墨',
+  'themeSwitcher.chinese': '中式',
+  'themeSwitcher.soviet': '苏式',
   'themeSwitcher.pixel': '像素',
   /* ── codeBlock ── */
   'codeBlock.collapse': '收起',
@@ -1712,6 +1718,8 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'kbWhoCan.recheckTip': '重新检查当前身份的有效权限',
   'kbWhoCan.stackRule': '叠加规则：多来源并集 → {p0}；{p1}',
   /* ── mentions ── */
+  'mentions.create': '创建“{p0}”',
+  'mentions.customBadge': '自定义',
   'mentions.loading': '加载中…',
   /* ── notification ── */
   'notification.groupBusy': '操作结束后可以收起这组通知。',
@@ -1969,12 +1977,14 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'themeSwitcher.mode': 'Color mode',
   'themeSwitcher.light': 'Light',
   'themeSwitcher.dark': 'Dark',
-  'themeSwitcher.benzhen': 'Benzhen',
-  'themeSwitcher.clay': 'Clay',
+  'themeSwitcher.modern': 'Modern',
+  'themeSwitcher.dongyun': 'Dongyun',
+  'themeSwitcher.jugou': 'Jugou',
   'themeSwitcher.piano': 'Piano',
-  'themeSwitcher.art': 'Art',
+  'themeSwitcher.monet': 'Monet',
   'themeSwitcher.vangogh': 'Van Gogh',
-  'themeSwitcher.ink': 'Ink',
+  'themeSwitcher.chinese': 'Chinese',
+  'themeSwitcher.soviet': 'Soviet',
   'themeSwitcher.pixel': 'Pixel',
   /* ── codeBlock ── */
   'codeBlock.collapse': 'Collapse',
@@ -2545,6 +2555,8 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'kbWhoCan.recheckTip': 'Re-check effective permissions for the current identity',
   'kbWhoCan.stackRule': 'Stacking rule: union of sources → {p0};',
   /* ── mentions ── */
+  'mentions.create': 'Create "{p0}"',
+  'mentions.customBadge': 'Custom',
   'mentions.loading': 'Loading…',
   /* ── notification ── */
   'notification.groupBusy': 'This group can be collapsed when its action finishes.',

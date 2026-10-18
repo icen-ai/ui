@@ -1,0 +1,41 @@
+/* 苏式 / Soviet — architectural mass and constructivist typographic hierarchy.
+ * Square slabs, strong load-bearing edges and short, deliberate feedback.
+ * No ideological emblems or palette overrides: color remains a separate axis.
+ */
+:root[data-icen-style="soviet"],
+:root[data-icen-style="soviet"] [data-icen-preset] {
+  --icen-design-font: 'Segoe UI', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  --icen-design-font-size: 14px;
+  --icen-design-radius: 0px;
+  --icen-design-space: 4px;
+  --icen-design-control-height: 44px;
+  --icen-design-glass-opacity: 100%;
+  --icen-design-glass-blur: 0px;
+  --icen-radius-xs: var(--icen-design-radius);
+  --icen-radius-sm: var(--icen-design-radius);
+  --icen-radius-md: var(--icen-design-radius);
+  --icen-radius-lg: var(--icen-design-radius);
+  --icen-radius-xl: var(--icen-design-radius);
+  --icen-radius-full: var(--icen-design-radius);
+  --icen-font-body: var(--icen-design-font);
+  --icen-font-heading: 'Bahnschrift', 'DIN Alternate', 'Arial Narrow', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --icen-font-cjk: var(--icen-design-font);
+  --icen-line-height-body: 1.6;
+  --icen-line-height-heading: 1.12;
+  --icen-letter-spacing-body: 0;
+  --icen-letter-spacing-heading: -.025em;
+  --icen-duration-fast: calc(90ms * var(--icen-design-motion));
+  --icen-duration-normal: calc(150ms * var(--icen-design-motion));
+  --icen-duration-slow: calc(220ms * var(--icen-design-motion));
+  --icen-ease-out: cubic-bezier(.2, 0, .2, 1);
+  --icen-ease-bounce: var(--icen-ease-out);
+  --icen-token-surface-glass: var(--icen-token-surface);
+  --icen-token-shadow-card: 0 3px 0 var(--icen-token-line);
+  --icen-token-shadow-elevated: 0 4px 0 var(--icen-token-line-strong), 0 12px 24px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .65), transparent);
+  --icen-token-shadow-overlay: 0 6px 0 var(--icen-token-line-strong), 0 24px 48px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent);
+  --icen-token-shadow-popover: var(--icen-token-shadow-elevated);
+  --icen-token-shadow-inset: inset 0 -1px 0 var(--icen-token-line);
+  --icen-token-material-light: inset 0 0 0 0 transparent;
+  --icen-token-top-highlight: transparent;
+  --icen-token-material-edge: var(--icen-token-line-strong);
+}

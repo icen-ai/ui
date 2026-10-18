@@ -14,7 +14,7 @@
  *     <!-- behavior 生成的 .icen-upload-list 是 dropzone 的兄弟，不在可点区域内 -->
  *   </div>
  *
- * 旧结构兼容：.icen-upload 自身带 role="button" 且没有 dropzone 子级时，
+ * 单元素结构：.icen-upload 自身带 role="button" 且没有 dropzone 子级时，
  * 视觉与行为全部回落到 zone 本体（但列表模式的移除钮会与外层 role=button 构成嵌套交互，
  * 请迁移到推荐结构）。
  *
@@ -24,7 +24,7 @@
  *   - 文件列表（可选）渲染为 dropzone 的兄弟 <ul class="icen-upload-list">
  */
 
-/* 交互外壳：默认 zone 本体（旧结构）；有 dropzone 子级时镀铬迁移到它（推荐结构） */
+/* 交互外壳：默认 zone 本体（单元素结构）；有 dropzone 子级时镀铬迁移到它（推荐结构） */
 .icen-upload {
   display: flex;
   flex-direction: column;

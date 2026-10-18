@@ -264,14 +264,6 @@ export function closeContextMenu(restoreFocus = false): void {
   window.removeEventListener('keydown', onKeyDown, true);
 }
 
-/**
- * @deprecated 已更名 closeContextMenu（与全库浮层 close* 命名对齐）；
- * 本别名仅为兼容保留，下个大版本删除。
- */
-export function closeMenu(): void {
-  closeContextMenu();
-}
-
 function setFocused(next: number): void {
   if (!panel || focusableItems.length === 0) return;
   focusedIndex = ((next % focusableItems.length) + focusableItems.length) % focusableItems.length;

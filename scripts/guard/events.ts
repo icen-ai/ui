@@ -3,8 +3,7 @@
 //  2. emitIcen 的字符串/模板字面量事件名必须 ^icen:[a-z0-9-]+ 且已登记 IcenEventMap；
 //  3. 反向核对：IcenEventMap 每个登记事件必须在 behaviors 源码里有字面提及
 //     （发射/监听/模板前缀均可）——抓「登记了却没人用」的死条目与拼写漂移。
-// 注意：本地 emit/emitArea/dispatch 包装最终都汇到 emitIcen，字面量会被本守卫收编；
-//       input.ts 的 otp:complete 双发是 deprecated 兼容事件（非 icen: 前缀），不在禁则内。
+// 注意：本地 emit/emitArea/dispatch 包装最终都汇到 emitIcen，字面量会被本守卫收编。
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { SRC, listFiles, type GuardResult } from './shared';
@@ -12,16 +11,13 @@ import { SRC, listFiles, type GuardResult } from './shared';
 /** 手势层豁免：由 events.ts 的 emit(host, type, …) 按 IcenGestureEvent 联合类型变量派发，
  *  类型联合与 IcenEventMap 同表维护，结构性保证，不重复字面核对。
  *  swipe 四向同此豁免：由 events.ts 手势引擎经 emitIcen 模板 `icen:swipe-${dir}` 派发
- *  （策略层不收，无策略查找），实现已于 v0.10 落地。 */
+ *  （策略层不收，无策略查找）。 */
 const GESTURE_EXEMPT = new Set([
   'icen:click', 'icen:dblclick', 'icen:contextmenu', 'icen:longpress', 'icen:text-select',
   'icen:swipe-left', 'icen:swipe-right', 'icen:swipe-up', 'icen:swipe-down',
 ]);
 
-/** 前瞻登记豁免：契约先于实现冻结（防止并行施工各自注册冲突），随附实现模块落地后移除。
- *  v0.10：datatable 重度场景（cell-edit/column-reorder/group-toggle/column-resize）与
- *  form-validate（form-field-validate/form-valid/form-invalid）由对应 Phase C 模块实现；
- *  cascader-change / tree-select-change 已随 cascader.ts / tree-select.ts 落地移除。 */
+/** 前瞻登记豁免：契约先于实现冻结（防止并行施工各自注册冲突），随附实现模块落地后移除。 */
 const FORWARD_EXEMPT = new Set([
   'icen:table-cell-edit', 'icen:table-column-reorder', 'icen:table-group-toggle', 'icen:table-column-resize',
   'icen:form-field-validate', 'icen:form-valid', 'icen:form-invalid',

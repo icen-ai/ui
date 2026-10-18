@@ -1,4 +1,4 @@
-# AI 原生组件族 · 设计规格（v0.6.x 新增）
+# AI 原生组件族 · 设计规格
 
 > 唯一事实源。施工代理按此文件执行，不得偏离契约（类名 / 导出签名 / 事件名）。
 > 设计调研依据：AG-UI 协议、Vercel AI SDK UIMessage parts、OpenAI/Anthropic wire 格式、
@@ -136,7 +136,8 @@ interface AiMessageModel {
   <div class="icen-ai-composer-attach" hidden><!-- 附件 chips --></div>
   <div class="icen-ai-composer-box icen-control">
     <textarea class="icen-ai-composer-input" rows="1" placeholder="…"></textarea>
-    <div class="icen-ai-composer-actions">
+    <div class="icen-ai-composer-toolbar">
+      <span class="icen-ai-composer-spacer"></span>
       <button class="icen-ai-composer-btn" data-icen-ai-attach aria-label="附件"></button>
       <button class="icen-ai-composer-send" data-icen-ai-send></button>  <!-- 运行态变 .is-stop 停止钮 -->
     </div>
@@ -491,7 +492,7 @@ client 每次请求自动产审计记录（onAudit 回调 + 若传了 auditor �
 
 ---
 
-## 10. 标准化内容模型 `AiContent`（v0.7.1 新增，ai-core）
+## 10. 标准化内容模型 `AiContent`（ai-core）
 
 > 调研依据（2026-10）：Vercel AI SDK v5 UIMessage parts（text / reasoning / tool-\<name\> 六态 / file{mediaType,url} / source-url / source-document / data-*）、
 > MCP 内容类型（TextContent / ImageContent / AudioContent / ResourceLink / EmbeddedResource + structuredContent，全部带 annotations）、
@@ -553,7 +554,7 @@ export function contextEstimate(usage: AiUsage): number;
 
 ---
 
-## 11. 绑定层 `bindComposer`（v0.7.1 新增，ai-composer.ts）
+## 11. 绑定层 `bindComposer`（ai-composer.ts）
 
 「零接线全链路」的胶水：**事件驱动、消费方拥有传输会话的所有权不变**。绑定层监听 §5 的 `icen:ai-*` 事件把 composer ↔ 消息区 ↔ client ↔ 用量环接成闭环。
 
@@ -582,7 +583,7 @@ export function bindComposer(el: HTMLElement, opts?: AiComposerBindOpts): AiComp
 
 ---
 
-## 12. 定价与审计闭环（v0.7.1 新增，ai-provider.ts + ai-panel.ts）
+## 12. 定价与审计闭环（ai-provider.ts + ai-panel.ts）
 
 ### 12.1 定价表（注册表内联，USD / MTok，2026-10 调研近似值）
 
@@ -611,7 +612,7 @@ GLM-5.x ~$0.5/$3 档；Kimi K3 $3/$15、缓存读 ~$0.3，K2.6 ~$0.95/$3）。ca
 
 ---
 
-## 13. AI 工具体系（v0.8，`src/behaviors/ai-tools.ts`）
+## 13. AI 工具体系（`src/behaviors/ai-tools.ts`）
 
 > 任何 UI 能力（图表渲染、未来的 diff 应用 / todo 写入……）注册为 **AiToolDef**，
 > 模型侧可调用、宿主侧全控。库内置 `render_chart` 一个工具（吃 ChartSpec 纯 JSON）。
@@ -749,4 +750,4 @@ parseAiToolArgs(raw)       // tool_call 参数容错解析（JSON 字符串/对�
 
 ## 输入体验续修（2026-10-18）
 
-资源目录、技能/工具分组、可取消上传适配、独立请求快照和键盘/视觉契约见 [AI 输入体验](ai-input-experience.md)。旧接口继续兼容；新字段全部可选。纯文本没有额外 payload 字段；选中文件需要宿主 prepareMessage 上传适配，不会默认丢弃附件。
+资源目录、技能/工具分组、可取消上传适配、独立请求快照和键盘/视觉契约见 [AI 输入体验](ai-input-experience.md)。新增字段全部可选。纯文本没有额外 payload 字段；选中文件需要宿主 prepareMessage 上传适配，不会默认丢弃附件。

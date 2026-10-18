@@ -14,7 +14,7 @@ function exportsName(src: string, name: string): boolean {
 }
 
 /** SLUG_INIT 映射缺口豁免（slug → init 函数真实所在模块）。
- *  v0.10 起 slugs.mjs 已补登 SLUG_BEHAVIOR 四映射（ai-tool-call/ai-subagent→ai-tool、
+ *  slugs.mjs 的 SLUG_BEHAVIOR 已登记跨模块映射（ai-tool-call/ai-subagent→ai-tool、
  *  ai-todo/ai-context→ai-panel），本表清空仅留结构——新增豁免须附原因注释。 */
 const INIT_MODULE_DRIFT: Record<string, string> = {};
 

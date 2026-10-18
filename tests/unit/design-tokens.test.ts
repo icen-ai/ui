@@ -15,7 +15,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const PRESETS = ['benzhen', 'clay', 'piano', 'art', 'vangogh', 'ink'];
+const PRESETS = ['modern', 'dongyun', 'jugou', 'piano', 'monet', 'vangogh'];
 
 type TokensStudio = {
   $themes: { id: string; name: string; selectedTokenSets: Record<string, string> }[];
@@ -88,13 +88,13 @@ describe('tokens-studio.json', () => {
       }
     }
     // 抽查：组级 $type 与别名形态与上游 dtcg 一致（直映射语义）
-    const clayLight = ts['clay/light'] as Record<string, any>;
-    expect(clayLight.token.$type).toBe('color');
-    expect(clayLight.radius.$type).toBe('dimension');
-    expect(clayLight.design.canvas.$value).toBe('#faf7f2');
-    expect(clayLight.token.bg.$value).toBe('{clay.light.design.canvas}');
-    expect(clayLight.token.canvas.$value).toBe('{clay.light.token.bg}');
-    expect(clayLight.token.accent.$extensions['ai.icen.raw']).toBe('--icen-token-accent');
+    const pianoLight = ts['piano/light'] as Record<string, any>;
+    expect(pianoLight.token.$type).toBe('color');
+    expect(pianoLight.radius.$type).toBe('dimension');
+    expect(pianoLight.design.canvas.$value).toBe('#f5f3ed');
+    expect(pianoLight.token.bg.$value).toBe('{piano.light.design.canvas}');
+    expect(pianoLight.token.canvas.$value).toBe('{piano.light.token.bg}');
+    expect(pianoLight.token.accent.$extensions['ai.icen.raw']).toBe('--icen-token-accent');
   });
 });
 
@@ -158,8 +158,8 @@ describe('figma.variables.json', () => {
   });
 
   test('dimension 保留原语空间种子 4px；计算式密度按诚实跳过规则处理', () => {
-    const clay = fv.variableCollections[0];
-    const spaceXs = clay.variables.find((v) => v.name === 'design/space');
+    const piano = fv.variableCollections.find((c) => c.name === 'icen / piano');
+    const spaceXs = piano?.variables.find((v) => v.name === 'design/space');
     expect(spaceXs?.type).toBe('FLOAT');
     expect(spaceXs?.valuesByMode.light).toBe(4);
   });
@@ -211,11 +211,11 @@ describe('诚实跳过', () => {
   test('derived semantic fills are consistently skipped in both modes', () => {
     expect(runLog).toContain('--icen-token-success-muted');
     expect(runLog).toContain('--icen-token-error-muted');
-    const clay = fv.variableCollections.find((c) => c.name === 'icen / clay');
-    const clayNames = new Set(clay?.variables.map((v) => v.name));
-    expect(clayNames.has('token/success-muted')).toBe(false);
-    expect(clayNames.has('token/error-muted')).toBe(false);
-    expect(clayNames.has('color/success-bg')).toBe(false);
-    expect(clayNames.has('color/error-bg')).toBe(false);
+    const monet = fv.variableCollections.find((c) => c.name === 'icen / monet');
+    const monetNames = new Set(monet?.variables.map((v) => v.name));
+    expect(monetNames.has('token/success-muted')).toBe(false);
+    expect(monetNames.has('token/error-muted')).toBe(false);
+    expect(monetNames.has('color/success-bg')).toBe(false);
+    expect(monetNames.has('color/error-bg')).toBe(false);
   });
 });

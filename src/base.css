@@ -22,8 +22,8 @@
  *      .icen-btn:focus-visible { box-shadow: var(--icen-ring); }
  *      .icen-btn:disabled { opacity: var(--icen-disabled-opacity); }
  *
- *    风格 profile 覆盖原语：
- *      [data-icen-style="retro"] { --icen-ring: 2px solid var(--icen-token-accent); --icen-press: translate(2px,2px); }
+ *    原语覆盖反馈配方：
+ *      [data-icen-style="chinese"] { --icen-press: scale(.995); --icen-hover-border: var(--icen-token-line); }
  *
  * ── 层 2：6 个交互基元 class（HTML 显式组合 API）
  *    .icen-pressable / .icen-control / .icen-field / .icen-lift / .icen-surface-elevated / .icen-focus-ring
@@ -54,7 +54,7 @@
  *
  * 暴露的契约：
  *   - 元素基线：box-sizing / body / a / code / pre / img / ::selection
- *   - 滚动条：贴 --icen-token-scrollbar-*（retro profile 另有硬覆盖）
+ *   - 滚动条：贴 --icen-token-scrollbar-*
  *   - 工具类：.icen-mono / .icen-serif / .icen-dim / .icen-faint / .icen-numeric / .icen-sr-only / .icen-skip-link
  *   - z-index 标尺：--icen-z-* （浮层一律 portal 到 body）
  *   - 共享 keyframes：icen-pop-in（弹层进场）/ icen-spin（旋转）/ icen-skeleton-pulse（骨架脉冲）
@@ -69,8 +69,7 @@
    icen 统一抽象层（--icen-* 原语 token）
    ───────────────────────────────────────────────────────────────
    所有组件消费的"原语级"变量：聚焦环、悬停、按下、禁用、过渡。
-   风格 profile（如 [data-icen-style="retro"]）只需覆盖这里的少数变量，
-   即可让 56 个组件整体换肤；组件自身无需感知风格切换。
+   原语只需覆盖这里的少数变量即可让组件整体换肤；组件自身无需感知风格切换。
    ══════════════════════════════════════════════════════════════ */
 :root {
   /* ── 聚焦环（focus-visible） ── */
@@ -164,7 +163,7 @@ h1, h2, h3, h4, h5, h6 {
 /* 段落兜底（消费项目可以覆盖） */
 p { margin: 0 0 1em; }
 
-/* 选区：亮色 accent 25%，retro 在 retro-effects.css 里硬覆盖 */
+/* 选区随当前主题强调色变化；深色提高覆盖度。 */
 ::selection {
   background: color-mix(in srgb, var(--icen-token-accent) 25%, transparent);
   color: inherit;
@@ -176,8 +175,7 @@ p { margin: 0 0 1em; }
 /* ══════════════════════════════════════════════════════════════
    全局滚动条：细薄、无上下箭头、贴 token
    尺寸/轨道/滑块/按钮全部走 --icen-token-scrollbar-*，
-   每个色彩预设可在自己的块里覆盖以表达品牌色差；
-   [data-icen-style="retro"] 在 style-profiles.css 里另有像素化硬覆盖。
+   每个色彩预设可在自己的块里覆盖以表达品牌色差。
    ══════════════════════════════════════════════════════════════ */
 
 ::-webkit-scrollbar { width: var(--icen-token-scrollbar-size); height: var(--icen-token-scrollbar-size); }
@@ -260,7 +258,7 @@ html {
      dialog    → 模态对话框 + backdrop
      popover   → 弹出层/下拉菜单（高于 dialog 因为常常 portal 出去）
      tooltip   → 工具提示
-     fx        → 效果层（retro 扫描线/噪点等，永远在最上）
+     fx        → 效果层（永远在最上）
    ══════════════════════════════════════════════════════════════ */
 :root {
   --icen-z-base: 0;
@@ -298,8 +296,7 @@ html {
 /* ══════════════════════════════════════════════════════════════
    交互基元（全组件地基）
    规格：源 self-contained，命名空间不含 opengal 的 og-/vn- 前缀。
-   style-profiles.css 的 [data-icen-style="retro"] 段会按 .icen-pressable/.icen-control/.icen-lift
-   这些类名施加像素化覆盖；改名前请同步修 style-profiles.css。
+   原语通过 --icen-* 反馈变量覆盖这些基元，类名契约保持稳定。
    ══════════════════════════════════════════════════════════════ */
 
 /* ── .icen-pressable — 可按压（按钮、卡片按钮、tag close 等）
@@ -388,7 +385,7 @@ html {
   box-shadow: none;
 }
 
-/* ── .icen-field — 带 label / hint / error 的表单字段容器（取代旧 .vn-editable-field）
+/* ── .icen-field — 带 label / hint / error 的表单字段容器
    契约：
      <label class="icen-field">
        <span class="icen-field-label">姓名</span>

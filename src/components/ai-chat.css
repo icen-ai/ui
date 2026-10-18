@@ -30,11 +30,9 @@
  *     <div class="icen-ai-composer-attach" hidden><!-- 附件 chips，结构同上 --></div>
  *     <div class="icen-ai-composer-box icen-control">
  *       <icen-textarea class="icen-ai-composer-input" rows="1" placeholder="…"></icen-textarea>
- *       <div class="icen-ai-composer-actions"><!-- v1 旧结构（无 icen-toolbar 配置时保留）： -->
+ *       <div class="icen-ai-composer-toolbar"><!-- 工具条（手写或 setComposerModels/Usage 配置时 JS 装配）：
  *         <button class="icen-ai-composer-btn" data-icen-ai-attach aria-label="附件"></button>
  *         <button class="icen-ai-composer-send" data-icen-ai-send aria-label="发送"></button>  ← 运行态 .is-stop
- *       </div>
- *       <div class="icen-ai-composer-toolbar"><!-- v2 工具条（setComposerModels/Usage 配置时 JS 装配）：
  *         <button class="icen-ai-composer-model" data-icen-ai-model-open>provider 图标/首字母章 + 模型名 + chevron</button>
  *         <span class="icen-ai-composer-spacer"></span>
  *         <span class="icen-ai-composer-usage" data-icen-ai-usage></span>   ← 用量环挂载点（renderAiUsageRing）
@@ -514,7 +512,7 @@
 
 /* 输入框（.icen-control 基元提供 hover/focus 边框与光晕）；flex-wrap 让工具条独占下一行 */
 .icen-ai-composer-box {
-  /* The outer composer owns text focus, including legacy .icen-control markup. */
+  /* The outer composer owns text focus. */
   --icen-control-focus-shadow: none;
   --icen-control-focus-border: transparent;
   display: flex;
@@ -545,15 +543,7 @@
   overflow-y: auto;
 }
 
-/* v1 旧结构按钮行（无 toolbar 配置时保留）；v2 中按钮被移入工具条后此容器由 JS 移除 */
-.icen-ai-composer-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--icen-density-space-xs);
-  flex-shrink: 0;
-}
-
-/* ── v2 工具条（composer-box 内底部，业界主流形态）── */
+/* ── 工具条（composer-box 内底部，业界主流形态）── */
 
 .icen-ai-composer-toolbar {
   flex: 0 0 100%;
@@ -854,7 +844,7 @@
   color: var(--icen-token-warning);
 }
 
-/* ── 工具条按钮统一 28px 方形、svg 14px 居中（v1 旧结构按钮同样收敛）── */
+/* ── 工具条按钮统一 28px 方形、svg 14px 居中 ── */
 
 .icen-ai-composer-btn {
   display: inline-flex;

@@ -55,7 +55,7 @@ test('restoration validates entries, deduplicates ids, clamps progress and enfor
   c.destroy();localStorage.setItem(keys[0],'{broken');expect(center(keys[0]).getAll()).toHaveLength(0);
 });
 
-test('changing keys migrates live records, and timed updates and stack eviction delete their saved entries',()=>{
+test('changing keys moves live records, and timed updates and stack eviction delete their saved entries',()=>{
   const c=center(keys[0]);const h=c.push({title:'Move',options:{id:'archive-move'}})!;
   c.config({persist:keys[1]});expect(snapshot(keys[0])).toEqual([]);expect(snapshot(keys[1])[0].id).toBe(h.id);
   h.update({duration:10000});expect(snapshot(keys[1])).toEqual([]);

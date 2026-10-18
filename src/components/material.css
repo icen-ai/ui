@@ -1,10 +1,24 @@
-/* Material contract (default 本真 primitive; theme via data-icen-preset):
+/* Material contract (default 现代 primitive; theme via data-icen-preset):
  * <section data-icen-material="content|chrome|floating">arbitrary content</section>
  * content = opaque reading; chrome = translucent navigation; floating = temporary
  * operations. HTML primitives need no JS. Existing components consume the same
  * recipes automatically. Force opaque via html[data-icen-transparency="reduced"].
  * This file ships with tokens.css as well as ui.css; kit consumers need no extras.
  */
+/* The base layer also defines interaction defaults. Keep the primitive's
+ * interaction recipe in the components layer so separately imported base.css
+ * cannot quietly restore a different press/focus model. */
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) {
+  --icen-press: scale(.985);
+  --icen-press-soft: scale(.99);
+  --icen-hover-border: var(--icen-token-line);
+  --icen-hover-border-strong: var(--icen-token-line-strong);
+  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-accent);
+  --icen-ring-soft: 0 0 0 3px var(--icen-token-accent-subtle);
+  --icen-control-focus-border: var(--icen-token-accent);
+  --icen-control-focus-shadow: var(--icen-token-shadow-inset), var(--icen-ring-soft);
+  --icen-disabled-opacity: .48;
+}
 /* Selection is a contained surface, never a check glyph. ARIA remains the source
  * of truth for keyboard/assistive technology; focus has its own outer outline. */
 :root :is(.icen-theme-switcher-option[aria-pressed="true"], .icen-select-option.is-selected, .icen-cascader-item.is-selected, .icen-cascader-item.is-active, .icen-tree-select-row.is-selected, .icen-tree-select-row.is-checked, .icen-menu-item[aria-checked="true"], .icen-menu-item--checked:not([aria-checked="false"]), .icen-ai-composer-popup-option[aria-selected="true"], .icen-kb-checkpoint-menu-item.is-checked) {
@@ -117,7 +131,7 @@
 :root :is(.icen-btn-ghost,.icen-btn-link) { --btn-border-hover: transparent; }
 :root .icen-btn-link { --btn-fg: var(--icen-token-accent-text); }
 :root .icen-btn-primary:hover:not(:focus-visible) { box-shadow: none; }
-:root .icen-btn:active { transform: var(--icen-press-soft); }
+:root .icen-btn:active:not(:disabled):not([aria-disabled="true"]):not([data-icen-disabled]):not(.is-loading) { transform: var(--icen-press-soft); }
 :root .icen-btn-danger:hover { color: var(--icen-token-error); background: var(--icen-token-error-muted); }
 :root .icen-segmented { padding: var(--icen-density-space-xs); gap: var(--icen-density-space-xs); }
 :root .icen-segmented-item { border-radius: max(0px, calc(var(--icen-radius-md) - var(--icen-density-space-xs) - 1px)); }
@@ -142,6 +156,28 @@
 :root .icen-switch-thumb { background: var(--icen-token-text-muted); }
 :root .icen-switch[aria-checked="true"] .icen-switch-thumb { background: var(--icen-token-on-accent); }
 :root .icen-input-wrap--sm { padding-inline: var(--icen-density-space-sm); }
+/* 现代: small controls have a legible edge and a quiet, tactile surface. Keep
+ * these optical refinements local to the default primitive; other primitives
+ * supply their own surface physics without fighting a global component rule. */
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-btn:not(.icen-btn-ghost):not(.icen-btn-link) {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 45%, transparent), 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .35), transparent);
+}
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-btn:focus-visible {
+  box-shadow: var(--icen-ring);
+}
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-btn:active:not(:disabled):not([aria-disabled="true"]):not([data-icen-disabled]):not(.is-loading) {
+  box-shadow: var(--icen-token-shadow-inset);
+}
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-btn:active:focus-visible {
+  box-shadow: var(--icen-token-shadow-inset), var(--icen-ring);
+}
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) :is(.icen-input-wrap,.icen-textarea-wrap) {
+  padding-inline: var(--icen-density-space-md);
+}
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) :is(.icen-input,.icen-textarea)::placeholder {
+  color: var(--icen-token-text-faint);
+  opacity: 1;
+}
 /* Data readability is explicit, never applied to every numeral in prose. */
 :root :is(.icen-numeric,.icen-table,.icen-datatable,.icen-stat-num) { font-variant-numeric: lining-nums tabular-nums; }
 /* Any translucent material has an opaque alternative, including native controls. */

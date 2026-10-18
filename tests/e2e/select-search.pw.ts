@@ -7,7 +7,7 @@ test('published tokens preserve hidden semantics for flex/grid components and pr
   await page.goto('/components/select/');
   await page.setContent('<html><head></head><body>'+['icen-select-option','icen-cascader-cols','icen-tree-select-chips','icen-ai-msg-actions','icen-btn'].map((name)=>`<div class="${name}" hidden>Hidden</div>`).join('')+'<div class="icen-btn" hidden="until-found" id="findable">Findable</div></body></html>');
   for (const file of ['tokens.css','components/select.css','components/cascader.css','components/tree-select.css','components/ai-chat.css','components/btn.css']) await page.addStyleTag({content:readFileSync('dist/'+file,'utf8')});
-  for (const primitive of ['benzhen','pixel']) for (const dark of [false,true]) {
+  for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
     await page.locator('html').evaluate((root,{primitive,dark})=>{root.setAttribute('data-icen-style',primitive);root.setAttribute('data-icen-theme',dark?'dark':'light');},{primitive,dark});
     for(const el of await page.locator('[hidden]:not([hidden="until-found"])').all()) await expect(el).toHaveCSS('display','none');
     await expect(page.locator('#findable')).not.toHaveCSS('display','none');
@@ -15,7 +15,7 @@ test('published tokens preserve hidden semantics for flex/grid components and pr
 });
 
 test('search filters visually, keeps typing focus, announces results and supports two-stage Escape in every primitive/mode',async({page})=>{
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]) {
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/select/');
     await page.locator('html').evaluate((root,{primitive,dark})=>{root.setAttribute('data-icen-style',primitive);root.setAttribute('data-icen-theme',dark?'dark':'light');},{primitive,dark});
     const trigger=page.locator('.demo-stage [data-icen-select-search] .icen-select-trigger');await trigger.click();

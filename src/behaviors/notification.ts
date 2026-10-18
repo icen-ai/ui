@@ -83,7 +83,7 @@ export interface NotificationOptions {
   unread?: boolean;
   /** 多动作按钮（actions 优先于 actionLabel） */
   actions?: NotificationAction[];
-  /** 兼容旧版单按钮 */
+  /** 单按钮简写（actions 的快捷形态） */
   actionLabel?: string;
   onAction?: FeedbackAction;
   /** Inline copy for a rejected action; defaults to localized retry guidance. */

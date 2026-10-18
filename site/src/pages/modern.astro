@@ -1,0 +1,374 @@
+---
+import themes from '../../../src/tokens/themes.json';
+import { iconHTML } from '../../../src/behaviors/icons';
+import '../../../src/tokens/colors.css';
+import '../../../src/tokens/style-profiles.css';
+import '../../../src/tokens/typography.css';
+import '../../../src/base.css';
+import '../../../src/tokens/design.css';
+import '../../../src/tokens/chinese.css';
+import '../../../src/tokens/soviet.css';
+import '../../../src/tokens/pixel.css';
+import '../../../src/components/btn.css';
+import '../../../src/components/input.css';
+import '../../../src/components/select.css';
+import '../../../src/components/segmented.css';
+import '../../../src/components/switch.css';
+import '../../../src/components/menu.css';
+import '../../../src/components/modal.css';
+import '../../../src/components/pill.css';
+import '../../../src/components/table.css';
+import '../../../src/components/material.css';
+import '../../../src/components/material-chinese.css';
+import '../../../src/components/material-soviet.css';
+---
+<!doctype html>
+<html lang="zh-CN" data-icen-preset="modern">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="现代 · ICEN UI 原语体系。瓷白内容面、轻盈操作层，以及可以成为你品牌的设计规则。" />
+    <title>现代 · ICEN UI 原语工作室</title>
+  </head>
+  <body>
+    <a class="icen-skip-link" href="#studio-content">跳到内容</a>
+    <header class="studio-header" data-icen-material="chrome">
+      <a href="/primitives/" class="studio-wordmark">icen<span> / 原语工作室</span></a>
+      <div class="studio-header-actions"><span class="studio-muted">原语 <span class="icen-select studio-header-select" data-icen-select data-icen-value="modern"><button class="icen-select-trigger icen-pressable icen-focus-ring icen-select-trigger--sm" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="原语"><span class="icen-select-value">现代</span></button><div class="icen-select-panel" hidden><button class="icen-select-option" type="button" data-icen-value="modern">现代</button><button class="icen-select-option" type="button" data-icen-value="chinese">中式</button><button class="icen-select-option" type="button" data-icen-value="soviet">苏式</button><button class="icen-select-option" type="button" data-icen-value="pixel">像素</button></div><input type="hidden" data-icen-select-value value="modern" id="primitive-control" /></span></span><button class="icen-btn icen-btn-ghost" id="theme-toggle" aria-pressed="false">深色模式</button></div>
+    </header>
+    <main id="studio-content" class="studio-layout">
+      <aside class="studio-inspector" aria-label="设计原语设置">
+        <p class="studio-eyebrow">ICEN DESIGN PRIMITIVES</p>
+        <h1><span id="primitive-title">现代</span><span class="studio-period">。</span></h1>
+        <p class="studio-intro" id="primitive-intro">让内容清楚，<br />让操作轻盈。</p>
+        <p class="studio-description" id="primitive-description">细微的光，清楚的字，恰到好处的距离。每一次操作，都有稳稳的回应。</p>
+        <div class="studio-controls">
+          <span class="studio-control-label">色彩主题</span>
+          <span class="icen-select" data-icen-select data-icen-value="modern"><button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="色彩主题"><span class="icen-select-value">现代</span></button><div class="icen-select-panel" hidden>{themes.map((theme) => <button class="icen-select-option" type="button" data-icen-value={theme.id}>{theme.name}</button>)}</div><input type="hidden" data-icen-select-value value="modern" id="palette-control" /></span>
+          <label>品牌强调色<input id="accent-control" type="color" value="#0062cc" /><span id="accent-value">#0062cc</span></label>
+          <label for="radius-control">控件圆角 <output id="radius-value">10 px</output></label>
+          <input id="radius-control" type="range" min="0" max="20" value="10" />
+          <label for="glass-control">操作层透光 <output id="glass-value">16%</output></label>
+          <input id="glass-control" type="range" min="0" max="30" value="16" />
+          <label for="density-control">布局密度</label>
+          <span class="icen-select" data-icen-select data-icen-value="normal"><button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="布局密度"><span class="icen-select-value">标准 · 从容清晰</span></button><div class="icen-select-panel" hidden><button class="icen-select-option" type="button" data-icen-value="normal">标准 · 从容清晰</button><button class="icen-select-option" type="button" data-icen-value="compact">紧凑 · 更多信息</button><button class="icen-select-option" type="button" data-icen-value="comfortable">宽松 · 更多留白</button></div><input type="hidden" data-icen-select-value value="normal" id="density-control" /></span>
+          <label class="studio-checkbox"><input id="opaque-control" type="checkbox" />减少透明效果</label>
+          <button class="icen-btn" id="reset-design">恢复现代</button>
+        </div>
+        <p class="studio-note">调节会同时作用于页面、菜单与弹窗。<br />小字号保持清晰，密度只改变节奏。</p>
+        <a class="studio-doc-link" href="#authoring">创建自己的原语方案 ↗</a>
+      </aside>
+      <div class="studio-stage">
+        <div class="studio-stage-heading"><div><p class="studio-eyebrow">在真实界面中感受</p><h2 id="primitive-headline">安静，也有分寸。</h2></div><span class="studio-version" id="primitive-version">现代 / 实时预览</span></div>
+        <div class="studio-materials" aria-label="三种材料">
+          <div data-icen-material="content"><span class="studio-sample-symbol" aria-hidden="true">阅</span><strong>内容</strong><span>稳定的底色，安放文字</span></div>
+          <div class="studio-material-backdrop"><div data-icen-material="chrome"><span class="studio-sample-symbol" aria-hidden="true">序</span><strong>操作</strong><span>有序的层次，清楚的动作</span></div></div>
+          <div class="studio-material-backdrop studio-material-offset"><div data-icen-material="floating"><span class="studio-sample-symbol" aria-hidden="true">浮</span><strong>浮层</strong><span>一层距离，聚焦此刻</span></div></div>
+        </div>
+        <section class="studio-workbench" data-icen-material="content" aria-label="组件场景">
+          <div class="studio-workbench-nav"><div class="icen-segmented" role="tablist" aria-label="示例场景">
+            <button class="icen-segmented-item is-active" id="tab-settings" role="tab" aria-selected="true" aria-controls="scene-settings" data-scene="settings">账户设置</button>
+            <button class="icen-segmented-item" id="tab-workspace" role="tab" aria-selected="false" aria-controls="scene-workspace" tabindex="-1" data-scene="workspace">知识工作台</button>
+            <button class="icen-segmented-item" id="tab-chat" role="tab" aria-selected="false" aria-controls="scene-chat" tabindex="-1" data-scene="chat">AI 对话</button>
+          </div><button class="icen-btn icen-btn-ghost" id="menu-trigger" aria-haspopup="menu" aria-expanded="false"><span>更多操作</span><Fragment set:html={iconHTML('more')} /></button></div>
+          <div id="scene-settings" role="tabpanel" aria-labelledby="tab-settings" class="studio-scene">
+            <div class="studio-section-title"><div><h3>个人资料</h3><p>你的名字，会出现在协作与分享中。</p></div><div class="studio-avatar" aria-hidden="true">林</div></div>
+            <form id="profile-form">
+              <div class="studio-form-grid"><label>显示名称<span class="icen-input-wrap"><input class="icen-input" name="displayName" value="林知白" required /></span></label><label>电子邮箱<span class="icen-input-wrap"><input class="icen-input" type="email" name="email" value="zhibai@example.com" required /></span></label></div>
+              <div class="studio-setting-row"><div><strong>产品动态</strong><p>只在有值得告诉你的变化时发送邮件。</p></div><button type="button" class="icen-switch" role="switch" aria-checked="true" aria-label="接收产品动态"><span class="icen-switch-thumb"></span></button></div>
+              <div class="studio-form-actions"><p id="save-status" role="status">资料仅用于此预览。</p><button class="icen-btn icen-btn-primary" type="submit">保存更改</button></div>
+            </form>
+          </div>
+          <div id="scene-workspace" role="tabpanel" aria-labelledby="tab-workspace" class="studio-scene" hidden>
+            <div class="studio-section-title"><div><h3>团队知识库</h3><p>最近更新的资料，随时可以接着读。</p></div><button class="icen-btn" data-icen-modal-open="new-note">新建笔记</button></div>
+            <div class="studio-search icen-input-wrap"><input class="icen-input" id="knowledge-search" type="search" placeholder="搜索资料" aria-label="搜索资料" /></div>
+            <table class="icen-table studio-table"><thead><tr><th>资料</th><th>更新日期</th><th>状态</th></tr></thead><tbody>
+              <tr><td>产品设计原则<span>设计规范 · 12 页</span></td><td>10 月 16 日</td><td><span class="icen-pill icen-pill--success">已同步</span></td></tr>
+              <tr><td>品牌语言与写作<span>内容指南 · 8 页</span></td><td>10 月 15 日</td><td><span class="icen-pill icen-pill--success">已同步</span></td></tr>
+              <tr><td>秋季产品访谈<span>用户研究 · 24 页</span></td><td>10 月 12 日</td><td><span class="icen-pill">草稿</span></td></tr>
+            </tbody></table><p id="search-status" class="studio-muted" role="status"></p>
+          </div>
+          <div id="scene-chat" role="tabpanel" aria-labelledby="tab-chat" class="studio-scene" hidden>
+            <div class="studio-section-title"><div><h3>一起，把想法变清楚。</h3><p>稳定的阅读，轻巧的工具反馈。</p></div><span class="studio-muted">新的对话</span></div>
+            <div class="studio-conversation" aria-live="polite"><p class="studio-message-user">好的界面，应该带来什么感受？</p><div><span class="studio-assistant-label">icen</span><p>你知道自己在哪里，也知道下一步可以做什么。<br />文字清楚，操作及时，界面给思考留下空间。</p><details><summary>已参考设计原则 · 2 条</summary><p>内容保持稳定；反馈紧随操作。</p></details></div></div>
+            <form id="chat-form" class="studio-composer"><label for="chat-input" class="icen-sr-only">继续对话</label><input id="chat-input" placeholder="从一个想法开始…" required /><button class="icen-btn icen-btn-primary" type="submit">发送</button></form>
+          </div>
+        </section>
+        <section class="studio-principles"><div><span>光</span><h3>看得见的距离</h3><p>近处的影清楚，远处的影柔和。深色里，边缘依然可辨。</p></div><div><span>形</span><h3>触手可及的分寸</h3><p>轮廓彼此呼应。鼠标、键盘和指尖，都有自己的从容。</p></div><div><span>字</span><h3>读起来更轻松</h3><p>标题有轻重，正文有呼吸。复杂的信息，也能一眼找到重点。</p></div></section>
+        <section id="authoring" class="studio-authoring" data-icen-material="content"><div><p class="studio-eyebrow">属于你的设计</p><h2>一个名字，一组原语。</h2><p>以现代为起点，修改品牌色、几何与材质。共享配方会照顾现有组件。</p></div><pre><code id="design-export">&lt;html data-icen-preset="modern"&gt;
+
+/* 自己的 CSS，无需复制组件 */
+:root[data-icen-preset="my-brand"] &#123;
+  --icen-design-accent: #0062cc;
+  --icen-design-radius: 10px;
+&#125;</code></pre><button class="icen-btn" id="copy-design">复制当前配方</button><p id="copy-status" role="status"></p></section>
+        <footer class="studio-footer"><span>icen / 现代</span><span>精确，在每一处不经意。</span><a href="/primitives/">查看原语文档 ↗</a></footer>
+      </div>
+    </main>
+    <div class="icen-menu" id="studio-menu" role="menu" aria-label="更多操作" hidden><button class="icen-menu-item" role="menuitem" data-icen-modal-open="new-note">新建笔记</button><button class="icen-menu-item" role="menuitem" id="export-recipe">查看当前配方</button></div>
+    <div class="icen-modal-backdrop" data-icen-modal="new-note" hidden><section class="icen-modal" role="dialog" aria-modal="true" aria-labelledby="note-title"><div class="icen-modal-header"><h2 id="note-title" class="icen-modal-title">留下一点想法</h2><button class="icen-btn icen-btn-ghost" data-icen-modal-close aria-label="关闭"><Fragment set:html={iconHTML('close')} /></button></div><div class="icen-modal-body"><p>一个安静的空间，收好此刻的灵感。</p><label>笔记标题<span class="icen-input-wrap"><input class="icen-input" id="note-input" placeholder="例如：界面里的留白" /></span></label></div><div class="icen-modal-footer"><button class="icen-btn" data-icen-modal-close>取消</button><button class="icen-btn icen-btn-primary" id="save-note">保存笔记</button></div></section></div>
+    <script>
+      import themes from '../../../src/tokens/themes.json';
+      import { initModal, closeModal } from '../../../src/behaviors/modal';
+      import { initSwitch } from '../../../src/behaviors/controls';
+      import { initSelect, refreshSelect } from '../../../src/behaviors/select';
+      import { createDesign, mountDesign, setDesign, prepareDesignChange } from '../../../src/behaviors/design';
+      import { openPopover, closePopover } from '../../../src/behaviors/popover';
+      initModal();
+      initSwitch();
+      initSelect();
+      const root = document.documentElement;
+      const setStudioSelect = (id: string, value: string): void => {
+        const input = document.getElementById(id) as HTMLInputElement | null;
+        if (!input) return;
+        input.value = value;
+        input.closest('.icen-select')?.setAttribute('data-icen-value', value);
+        refreshSelect();
+      };
+      const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+      const primitiveCopy: Record<string, {name:string;intro:string;description:string;headline:string}> = {
+        modern: {name:'现代',intro:'让内容清楚，\n让操作轻盈。',description:'细微的光，清楚的字，恰到好处的距离。每一次操作，都有稳稳的回应。',headline:'安静，也有分寸。'},
+        chinese: {name:'中式',intro:'留白有意，\n落笔有度。',description:'书页的呼吸，器物的温润，印记的分寸。让东方的从容，成为日常的使用感受。',headline:'疏密之间，自见风骨。'},
+        soviet: {name:'苏式',intro:'以结构，\n承托每一次行动。',description:'坚实的体块，明确的轴线，果断的字形。把纪念性建筑的力量，收进清楚好用的界面。',headline:'秩序，拥有自己的力量。'},
+        pixel: {name:'像素',intro:'每一格，\n都有自己的位置。',description:'整齐的网格、清晰的点阵与利落的按压。用最少的像素，表达完整的秩序。',headline:'小小方寸，自有秩序。'},
+      };
+      let customAccent = '';
+      let removeBrand = () => {};
+      const themeButton = $<HTMLButtonElement>('theme-toggle');
+      themeButton.addEventListener('click', () => {
+        prepareDesignChange();
+        const dark = root.getAttribute('data-icen-theme') !== 'dark';
+        root.toggleAttribute('data-icen-theme', dark);
+        if (dark) root.setAttribute('data-icen-theme','dark');
+        themeButton.setAttribute('aria-pressed', String(dark));
+        themeButton.textContent = dark ? '浅色模式' : '深色模式';
+        syncControls();
+        updateExport();
+      });
+      const radius = $<HTMLInputElement>('radius-control');
+      const glass = $<HTMLInputElement>('glass-control');
+      const accent = $<HTMLInputElement>('accent-control');
+      function syncControls() {
+        const computed = getComputedStyle(root);
+        radius.value = String(parseFloat(computed.getPropertyValue('--icen-design-radius')) || 0);
+        glass.value = String(Math.round(100 - parseFloat(computed.getPropertyValue('--icen-design-glass-opacity'))));
+        $('radius-value').textContent = `${radius.value} px`;
+        $('glass-value').textContent = `${glass.value}%`;
+        const theme = themes.find((item)=>item.id===root.getAttribute('data-icen-preset'));
+        const palette = root.getAttribute('data-icen-theme')==='dark' ? theme?.dark : theme?.light;
+        if (palette && !customAccent) { accent.value=palette.accentStrong; $('accent-value').textContent=palette.accentStrong; }
+      }
+      function syncPrimitive() {
+        const profile = primitiveCopy[root.getAttribute('data-icen-style') || 'modern'] || primitiveCopy.modern;
+        $('primitive-title').textContent = profile.name;
+        $('primitive-intro').textContent = profile.intro;
+        $('primitive-description').textContent = profile.description;
+        $('primitive-headline').textContent = profile.headline;
+        $('primitive-version').textContent = `${profile.name} / 实时预览`;
+        syncControls(); updateExport();
+      }
+      $('primitive-control').addEventListener('change',(event)=>{prepareDesignChange();root.setAttribute('data-icen-style',(event.target as HTMLInputElement).value);syncPrimitive();});
+      $('palette-control').addEventListener('change',(event)=>{removeBrand();customAccent='';setDesign((event.target as HTMLInputElement).value);syncControls();updateExport();});
+      function updateExport() {
+        const density=root.getAttribute('data-icen-density');
+        const opaque=root.getAttribute('data-icen-transparency');
+        const overrides = ['--icen-design-radius','--icen-design-glass-opacity'].filter((property)=>root.style.getPropertyValue(property)).map((property)=>`  ${property}: ${root.style.getPropertyValue(property)};`).join('\n');
+        $('design-export').textContent = `<html data-icen-preset="${root.getAttribute('data-icen-preset') || 'modern'}" data-icen-style="${root.getAttribute('data-icen-style') || 'modern'}"${root.hasAttribute('data-icen-theme') ? ' data-icen-theme="dark"' : ''}${density ? ` data-icen-density="${density}"` : ''}${opaque ? ' data-icen-transparency="reduced"' : ''}>\n\n/* Import @icen.ai/ui/tokens.css first. */${customAccent ? `\n${$('brand-style')?.textContent || ''}` : ''}${overrides ? `\n:root[data-icen-preset] {\n${overrides}\n}` : ''}`;
+      }
+      radius.addEventListener('input', () => { root.style.setProperty('--icen-design-radius', `${radius.value}px`); $('radius-value').textContent = `${radius.value} px`; updateExport(); });
+      glass.addEventListener('input', () => { root.style.setProperty('--icen-design-glass-opacity', `${100 - Number(glass.value)}%`); $('glass-value').textContent = `${glass.value}%`; updateExport(); });
+      accent.addEventListener('input', () => {
+        const value = accent.value;
+        // A picker accepts every color. Use the chosen hue with a readable ink
+        // tone for light mode and a light tone for dark; compiler verifies pairs.
+        const rgb = [1,3,5].map((i) => parseInt(value.slice(i,i+2),16));
+        const mix = (amount: number, target: number) => '#' + rgb.map((v) => Math.round(v*(1-amount)+target*amount).toString(16).padStart(2,'0')).join('');
+        let compiled;
+        for (let step = 0; step <= 10; step++) {
+          try {
+            compiled = createDesign({ name:'my-brand', light:{canvas:'#f5f6f8',surface:'#ffffff',ink:'#202124',muted:'#616671',accent:mix(step/10,0),onAccent:'#ffffff'},dark:{canvas:'#15171b',surface:'#25282e',ink:'#f2f4f7',muted:'#aeb5c2',accent:mix(Math.max(.5,step/10),255),onAccent:'#10223c'} }); break;
+          } catch { /* Increase contrast, preserving the chosen hue family. */ }
+        }
+        if (!compiled) return;
+        removeBrand(); removeBrand = mountDesign(compiled); setDesign(compiled.name);
+        customAccent = value; $('accent-value').textContent = value;
+        const style = document.head.lastElementChild; if (style) style.id = 'brand-style';
+        updateExport();
+      });
+      $('density-control').addEventListener('change', (event) => {root.setAttribute('data-icen-density',(event.target as HTMLInputElement).value);updateExport();});
+      $('opaque-control').addEventListener('change', (event) => { if ((event.target as HTMLInputElement).checked) root.setAttribute('data-icen-transparency','reduced'); else root.removeAttribute('data-icen-transparency'); updateExport(); });
+      $('reset-design').addEventListener('click', () => { removeBrand(); customAccent=''; setDesign('modern'); root.removeAttribute('style'); root.setAttribute('data-icen-style','modern'); root.removeAttribute('data-icen-density'); root.removeAttribute('data-icen-transparency'); setStudioSelect('primitive-control','modern'); setStudioSelect('palette-control','modern'); setStudioSelect('density-control','normal'); $<HTMLInputElement>('opaque-control').checked=false; syncPrimitive(); });
+      const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-scene]'));
+      function selectTab(tab: HTMLButtonElement) { tabs.forEach((button) => { const active=button===tab; button.setAttribute('aria-selected',String(active)); button.classList.toggle('is-active',active); button.tabIndex=active ? 0 : -1; $(`scene-${button.dataset.scene}`).hidden=!active; }); }
+      tabs.forEach((tab,index) => { tab.addEventListener('click',()=>selectTab(tab)); tab.addEventListener('keydown',(event)=> { const direction=root.dir==='rtl' ? -1 : 1; let next=index; if(event.key==='ArrowRight') next=(index+direction+tabs.length)%tabs.length; else if(event.key==='ArrowLeft') next=(index-direction+tabs.length)%tabs.length; else if(event.key==='Home') next=0; else if(event.key==='End') next=tabs.length-1; else return; event.preventDefault(); selectTab(tabs[next]); tabs[next].focus(); }); });
+      $('profile-form').addEventListener('submit',(event)=>{ event.preventDefault(); $('save-status').textContent='已保存到本次预览。'; });
+      $('knowledge-search').addEventListener('input',(event)=>{ const query=(event.target as HTMLInputElement).value.trim(); let count=0; document.querySelectorAll<HTMLTableRowElement>('.studio-table tbody tr').forEach((row)=>{row.hidden=!(row.textContent||'').includes(query); if(!row.hidden)count++;}); $('search-status').textContent=`${count} 份资料`; });
+      const menuTrigger = $<HTMLButtonElement>('menu-trigger');
+      const menu = $('studio-menu');
+      menuTrigger.addEventListener('click',()=> { if (!menu.hidden) { closePopover(menu); return; } openPopover(menu,{anchor:menuTrigger,side:'bottom',align:'end',onClose:()=>{ menuTrigger.setAttribute('aria-expanded','false'); if(menu.contains(document.activeElement))menuTrigger.focus(); }}); menuTrigger.setAttribute('aria-expanded','true'); menu.querySelector<HTMLButtonElement>('button')?.focus(); });
+      menu.addEventListener('click',()=>closePopover(menu));
+      menu.addEventListener('keydown',(event)=>{const items=Array.from(menu.querySelectorAll<HTMLButtonElement>('button'));const index=items.indexOf(document.activeElement as HTMLButtonElement);if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();items[(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length].focus();}if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closePopover(menu);menuTrigger.focus();}if(event.key==='Tab')closePopover(menu);});
+      $('export-recipe').addEventListener('click',()=>{updateExport(); $('authoring').scrollIntoView({behavior:'smooth'});});
+      $('save-note').addEventListener('click',()=>{const title=$<HTMLInputElement>('note-input').value.trim(); if(!title){$<HTMLInputElement>('note-input').focus();return;} const row=document.createElement('tr'); [title,'刚刚','草稿'].forEach((text)=>{const cell=document.createElement('td');cell.textContent=text;row.append(cell);}); document.querySelector('.studio-table tbody')?.prepend(row);closeModal('new-note'); selectTab(tabs[1]);});
+      $('chat-form').addEventListener('submit',(event)=>{event.preventDefault();const input=$<HTMLInputElement>('chat-input');if(!input.value.trim())return;const message=document.createElement('p');message.className='studio-message-user';message.textContent=input.value;document.querySelector('.studio-conversation')?.append(message);const reply=document.createElement('p');reply.textContent='已记下这个想法。这是本地交互预览，尚未接入 AI 服务。';document.querySelector('.studio-conversation')?.append(reply);input.value='';});
+      $('copy-design').addEventListener('click',async()=>{updateExport();try{await navigator.clipboard.writeText($('design-export').textContent||'');$('copy-status').textContent='已复制当前配方。';}catch{$('copy-status').textContent='请选中上方配方手动复制。';}});
+      syncPrimitive();
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  button, input, select { font: inherit; }
+  button, a, input, select, summary { touch-action: manipulation; }
+  a { color: inherit; text-decoration: none; }
+  button { white-space: nowrap; }
+  [hidden] { display: none !important; }
+  .studio-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 4vw; position: sticky; inset-block-start: 0; z-index: var(--icen-z-chrome); }
+  :root .studio-header[data-icen-material] { border-radius: 0; border-inline: 0; border-block-start: 0; }
+  .studio-header-select { inline-size: auto; }
+  .studio-wordmark { font-size: 25px; font-weight: 650; letter-spacing: -.06em; }
+  .studio-wordmark span { font-size: 12px; color: var(--icen-token-text-muted); font-weight: 450; letter-spacing: 0; margin-inline-start: 16px; }
+  .studio-header-actions, .studio-header-actions > .studio-muted { display: flex; align-items: center; gap: 14px; }
+  .studio-muted { color: var(--icen-token-text-muted); font-size: 13px; }
+  .studio-layout { max-inline-size: 1480px; margin-inline: auto; padding: 64px 5vw 36px; display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: clamp(40px, 5vw, 80px); }
+  .studio-inspector { align-self: start; position: sticky; inset-block-start: 108px; }
+  .studio-eyebrow { font-size: 11px; letter-spacing: .12em; color: var(--icen-token-text-muted); font-weight: 600; margin: 0 0 20px; }
+  .studio-inspector h1 { font-size: clamp(58px, 5.5vw, 80px); font-weight: 580; letter-spacing: var(--icen-letter-spacing-heading); line-height: 1.12; margin: 0 0 22px; }
+  .studio-period { color: var(--icen-token-accent); }
+  .studio-intro { font-size: 24px; line-height: 1.6; margin: 0 0 20px; letter-spacing: -.02em; white-space: pre-line; }
+  .studio-description { font-size: 13px; line-height: 1.9; color: var(--icen-token-text-muted); margin: 0 0 30px; max-inline-size: 26em; text-wrap: pretty; }
+  .studio-controls { border-block-start: 1px solid var(--icen-token-line-soft); padding-block-start: 22px; display: grid; gap: 12px; font-size: 13px; }
+  .studio-controls label { display: flex; align-items: center; gap: 8px; min-inline-size: 0; }
+  .studio-control-label { color: var(--icen-token-text-muted); }
+  .studio-controls output { margin-inline-start: auto; color: var(--icen-token-text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .studio-controls input[type=color] { inline-size: 28px; block-size: 28px; padding: 0; border: 0; background: none; margin-inline-start: auto; border-radius: var(--icen-radius-xs); cursor: pointer; }
+  .studio-controls input[type=range] { inline-size: 100%; accent-color: var(--icen-token-accent-strong); margin: -3px 0 4px; min-block-size: 28px; cursor: pointer; }
+  .studio-controls .icen-select { inline-size: 100%; }
+  .studio-controls .studio-checkbox { margin-block: 6px; min-block-size: 28px; }
+  .studio-checkbox input { accent-color: var(--icen-token-accent-strong); inline-size: 16px; block-size: 16px; }
+  .studio-note { font-size: 12px; line-height: 1.8; color: var(--icen-token-text-muted); margin-block: 18px; }
+  .studio-doc-link { font-size: 12px; color: var(--icen-token-accent-text); }
+  .studio-stage { min-inline-size: 0; }
+  .studio-stage-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-block-end: 34px; padding-block: 5px 0; }
+  .studio-stage-heading h2 { font-size: clamp(28px, 3vw, 43px); font-weight: 560; margin: 0; line-height: 1.24; }
+  .studio-version { flex-shrink: 0; font-size: 11px; color: var(--icen-token-text-muted); padding-block-end: 5px; }
+  .studio-stage-heading .studio-eyebrow { margin-block-end: 14px; }
+  .studio-materials { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-block-end: 36px; }
+  .studio-materials > div { min-inline-size: 0; }
+  .studio-materials [data-icen-material] { display: flex; flex-direction: column; padding: 26px 22px 22px; min-block-size: 210px; gap: 7px; }
+  .studio-sample-symbol { font-family: var(--icen-font-heading); font-size: 46px; font-weight: 450; line-height: 1.25; margin-block-end: 24px; }
+  .studio-materials strong { font-size: 14px; font-weight: 600; }
+  .studio-materials span:last-child { font-size: 12px; color: var(--icen-token-text-muted); line-height: 1.7; }
+  .studio-material-backdrop { position: relative; background: var(--icen-token-bg-soft); border-radius: var(--icen-radius-lg); isolation: isolate; }
+  .studio-material-backdrop::before { content: ''; position: absolute; inset-block: 25% 28%; inset-inline: 15% -3%; background: var(--icen-token-accent-subtle); border-radius: var(--icen-radius-md); transform: rotate(-8deg); z-index: -1; }
+  .studio-material-offset::before { inset-block: 35% 20%; inset-inline: 6% 15%; transform: rotate(8deg); }
+  .studio-material-offset [data-icen-material] { transform: translateY(-5px); }
+  .studio-workbench { overflow: visible; min-block-size: 420px; }
+  :root .studio-workbench[data-icen-material] { border-color: var(--icen-token-material-edge); border-radius: var(--icen-radius-xl); }
+  .studio-workbench-nav { display: flex; align-items: center; justify-content: space-between; padding: var(--icen-density-space-lg); border-block-end: 1px solid var(--icen-token-line-soft); gap: 12px; }
+  .studio-workbench-nav .icen-segmented { max-inline-size: 100%; flex-wrap: wrap; }
+  .studio-scene { padding: var(--icen-density-space-2xl); }
+  .studio-section-title { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-block-end: 30px; }
+  .studio-section-title h3 { font-size: 23px; margin: 0 0 8px; font-weight: 560; }
+  .studio-section-title p, .studio-setting-row p { font-size: 13px; color: var(--icen-token-text-muted); margin: 0; line-height: 1.7; }
+  .studio-avatar { display: grid; place-items: center; inline-size: 52px; block-size: 52px; flex-shrink: 0; background: var(--icen-token-bg-soft); color: var(--icen-token-text); border: 1px solid var(--icen-token-line-soft); border-radius: 50%; font-size: 20px; }
+  .studio-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--icen-density-space-xl); }
+  .studio-form-grid label, .icen-modal-body label { display: grid; gap: var(--icen-density-space-sm); font-size: 13px; min-inline-size: 0; }
+  .studio-setting-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-block: var(--icen-density-space-xl); padding-block: var(--icen-density-space-lg); border-block: 1px solid var(--icen-token-line-soft); }
+  .studio-setting-row strong { font-size: 14px; font-weight: 550; display: block; margin-block-end: 4px; }
+  .studio-form-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .studio-form-actions p { font-size: 12px; color: var(--icen-token-text-muted); margin: 0; }
+  .studio-search { max-inline-size: 320px; margin-block-end: 16px; }
+  .studio-table { inline-size: 100%; border-collapse: collapse; font-size: 13px; }
+  .studio-table th { text-align: start; color: var(--icen-token-text-muted); font-size: 12px; font-weight: 400; padding: 8px 0; }
+  .studio-table td { padding: var(--icen-density-space-lg) 0; border-block-start: 1px solid var(--icen-token-line-soft); }
+  .studio-table td span:not(.icen-pill) { display: block; font-size: 12px; color: var(--icen-token-text-muted); margin-block-start: 4px; }
+  .studio-table td:not(:first-child) { white-space: nowrap; }
+  .studio-table th:first-child { inline-size: 55%; }
+  .studio-conversation { display: grid; gap: 24px; font-size: 15px; line-height: 1.9; max-block-size: 340px; overflow: auto; overscroll-behavior: contain; padding-block: 4px; }
+  .studio-conversation p { margin: 0; }
+  .studio-message-user { justify-self: end; padding: 12px 18px; background: var(--icen-token-bg-soft); border-radius: var(--icen-radius-lg); max-inline-size: 90%; overflow-wrap: anywhere; }
+  .studio-assistant-label { display: inline-block; margin-block-end: 8px; font-weight: 650; font-size: 14px; color: var(--icen-token-accent-text); }
+  .studio-conversation details { margin-block-start: 16px; color: var(--icen-token-text-muted); font-size: 12px; }
+  .studio-conversation summary { cursor: pointer; }
+  .studio-composer { display: flex; gap: 12px; margin-block-start: 28px; padding: 8px; background: var(--icen-token-control); border: 1px solid var(--icen-token-line); border-radius: var(--icen-radius-lg); box-shadow: var(--icen-token-shadow-inset); transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast); }
+  .studio-composer:focus-within { border-color: var(--icen-control-focus-border); box-shadow: var(--icen-control-focus-shadow); }
+  .studio-composer input { min-inline-size: 0; flex: 1; padding-inline: 8px; background: none; color: var(--icen-token-text); border: 0; outline-offset: 4px; }
+  .studio-composer input::placeholder { color: var(--icen-token-text-faint); opacity: 1; }
+  .studio-principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin-block: 48px 56px; }
+  .studio-principles > div { border-block-start: 1px solid var(--icen-token-line-soft); padding-block-start: 18px; }
+  .studio-principles > div > span { font-size: 12px; color: var(--icen-token-accent-text); }
+  .studio-principles h3 { font-size: 15px; font-weight: 550; margin: 12px 0 10px; }
+  .studio-principles p { font-size: 13px; line-height: 1.85; color: var(--icen-token-text-muted); margin: 0; text-wrap: pretty; }
+  .studio-authoring { padding: 32px; scroll-margin-block-start: 96px; }
+  .studio-authoring h2 { font-size: 28px; font-weight: 550; margin: 0 0 12px; }
+  .studio-authoring p { font-size: 13px; color: var(--icen-token-text-muted); }
+  .studio-authoring pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--icen-font-mono); background: var(--icen-token-bg-soft); padding: 22px; border-radius: var(--icen-radius-md); font-size: 12px; line-height: 1.9; margin-block: 24px; }
+  .studio-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding-block-start: 30px; font-size: 12px; color: var(--icen-token-text-muted); }
+  #studio-menu { min-inline-size: 190px; }
+  input:focus-visible, select:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 3px; }
+  #accent-value { font-size: 11px; font-family: var(--icen-font-mono); }
+  @media (max-width: 1100px) {
+    .studio-layout { gap: 32px; grid-template-columns: 210px minmax(0, 1fr); padding-block: 40px; }
+    .studio-materials { gap: 12px; }
+    .studio-materials [data-icen-material] { padding: 20px 15px; min-block-size: 195px; }
+    .studio-workbench-nav { flex-wrap: wrap; }
+    .studio-version { display: none; }
+    .studio-scene { padding: 24px; }
+    .studio-principles { gap: 20px; }
+  }
+  @media (max-width: 760px) {
+    .studio-header { padding: 12px 20px; gap: 12px; }
+    .studio-header-actions, .studio-header-actions > .studio-muted { gap: 8px; }
+    .studio-header-actions > .studio-muted { font-size: 0; }
+    .studio-header-select .icen-select-trigger { font-size: 13px; }
+    .studio-wordmark span { display: none; }
+    .studio-layout { display: flex; flex-direction: column; padding: 32px 20px; gap: 40px; }
+    .studio-inspector { position: static; inline-size: 100%; display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+    .studio-inspector > .studio-eyebrow, .studio-inspector h1, .studio-intro, .studio-description, .studio-controls, .studio-doc-link { grid-column: 1 / -1; }
+    .studio-inspector h1 { font-size: 64px; margin-block-end: 16px; }
+    .studio-intro { font-size: 22px; }
+    .studio-description { max-inline-size: 38em; margin-block-end: 22px; }
+    .studio-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 20px; padding-block-start: 18px; }
+    .studio-controls > label:has(input[type=color]), .studio-controls > input[type=range], .studio-controls > label[for=radius-control], .studio-controls > label[for=glass-control] { grid-column: 1 / -1; }
+    .studio-controls > .studio-control-label { align-self: center; }
+    .studio-note { display: none; }
+    .studio-doc-link { display: inline-block; margin-block-start: 18px; }
+    .studio-stage-heading { margin-block-end: 24px; }
+    .studio-stage-heading h2 { font-size: 28px; }
+    .studio-materials { gap: 8px; margin-block-end: 28px; }
+    .studio-materials [data-icen-material] { padding: 18px 12px; min-block-size: 175px; }
+    .studio-sample-symbol { font-size: 36px; margin-block-end: 16px; }
+    .studio-materials span:last-child { font-size: 11px; }
+    .studio-material-backdrop::before { inset-inline-end: 0; }
+    .studio-workbench-nav { padding: 12px; }
+    .studio-workbench-nav > .icen-btn { margin-inline-start: auto; }
+    .studio-form-grid { grid-template-columns: 1fr; gap: 16px; }
+    .studio-scene { padding: 20px; }
+    .studio-section-title { gap: 12px; }
+    .studio-section-title h3 { font-size: 20px; }
+    .studio-principles { gap: 18px; margin-block: 32px; grid-template-columns: 1fr; }
+    .studio-principles > div { display: grid; grid-template-columns: 24px 1fr; column-gap: 10px; }
+    .studio-principles > div > span { grid-row: 1 / 3; padding-block-start: 2px; }
+    .studio-principles h3 { margin: 0 0 6px; }
+    .studio-authoring { padding: 22px; }
+    .studio-authoring h2 { font-size: 24px; }
+    .studio-authoring pre { padding: 16px; }
+    .studio-table { font-size: 12px; }
+    .studio-table td:nth-child(2), .studio-table th:nth-child(2) { display: none; }
+    .studio-form-actions { align-items: center; }
+    .studio-form-actions p { max-inline-size: 11em; }
+  }
+  @media (pointer: coarse) {
+    .studio-controls input[type=range], .studio-controls .studio-checkbox { min-block-size: 44px; }
+    .studio-controls input[type=color] { inline-size: 44px; block-size: 44px; }
+    .studio-composer input { font-size: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  @media (forced-colors: active) {
+    .studio-material-backdrop::before { display: none; }
+    .studio-composer:focus-within { outline: 2px solid Highlight; }
+  }
+</style>

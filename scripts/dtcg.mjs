@@ -3,9 +3,8 @@
 //
 // 解析来源：src/tokens/{colors,style-profiles,typography}.css（与 scripts/build-css.ts 的 TOKEN_ORDER
 // 同序拼接）——选源文件而非 dist/tokens.css：不依赖先跑 build，且 build 对这三份文件是原样拷贝，内容等价。
-// retro-effects.css 是按需 extras 层（不进 tokens.css 拼合），不在导出范围。
 //
-// 结构：{ $description, $extensions, clay: { light: {…}, dark: {…} }, piano: {…}, … }
+// 结构：{ $description, $extensions, modern: { light: {…}, dark: {…} }, dongyun: {…}, … }
 //   - 每个 (预设, 明/暗) 是「有效级联结果」：:root → [data-icen-theme="dark"] / .预设 → .预设[data-icen-theme="dark"]（按特异性分层、同层按源序）
 //   - 组内按变量前缀分子组并提升组级 $type（token 级 $type 恒最高优先，仅例外 token 携带）
 //   - $value 用经典版标量：颜色 #rrggbb[aa]、尺寸 "8px"/"0.25rem"（仅 px/rem）、时长 "150ms"、
@@ -30,7 +29,7 @@ await generateThemeColors();
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 // ── 与 build-css.ts 的 TOKEN_ORDER 保持一致 ──
-const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css', 'design.css', 'pixel.css'];
+const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css', 'design.css', 'pixel.css', 'chinese.css', 'soviet.css'];
 const PRESETS = themes.map((theme)=>theme.id);
 
 // 变量名前缀 → (子组, $type)。类型来自命名语义，不从值猜。
@@ -229,7 +228,7 @@ const out = {
       source: 'src/tokens/{colors,style-profiles,typography}.css（同 build-css.ts 的 TOKEN_ORDER）',
       exclusions: [
         'box-shadow 值与 color-mix() 派生色不可表示为经典版标量 → 跳过（见 ai.icen.skipped）',
-        '本真/像素原语与主题独立，预设×明暗矩阵导出默认本真原语',
+        '现代/像素/中式/苏式原语与主题独立，预设×明暗矩阵导出默认现代原语',
         '已删除复古主题与旧 CRT 特效',
       ],
     },
@@ -242,7 +241,7 @@ let totalExported = 0, totalSkipped = 0, totalAliases = 0;
 
 for (const preset of PRESETS) {
   out[preset] = {
-    $description: `${preset} 预设（${preset === 'clay' ? '默认主题，:root 基值' : `[data-icen-preset="${preset}"]` }）——每个模式为该组合下的有效级联结果`,
+    $description: `${preset} 预设（${preset === 'modern' ? '默认主题，:root 基值' : `[data-icen-preset="${preset}"]` }）——每个模式为该组合下的有效级联结果`,
   };
   for (const mode of ['light', 'dark']) {
     const eff = effective(preset, mode);
@@ -285,7 +284,7 @@ for (const preset of PRESETS) {
 
     // 3c. 组装：子组（组级 $type 提升）→ token 对象
     /** @type {Record<string, any>} */
-    const modeGroup = { $description: `${MODE_LABEL[mode]}——有效级联：:root${mode === 'dark' ? ' + [data-icen-theme="dark"]' : ''}${preset !== 'clay' ? ` + [data-icen-preset="${preset}"]` : ''}` };
+    const modeGroup = { $description: `${MODE_LABEL[mode]}——有效级联：:root${mode === 'dark' ? ' + [data-icen-theme="dark"]' : ''}${preset !== 'modern' ? ` + [data-icen-preset="${preset}"]` : ''}` };
     const groups = new Map(); // group -> { $type, tokens: [[name, tokenObj]] }
     const skips = [];
     let exported = 0, aliases = 0;

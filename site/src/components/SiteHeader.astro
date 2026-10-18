@@ -6,6 +6,13 @@ import pkg from '../../../package.json';
 const path = Astro.url.pathname;
 const isActive = (href: string): boolean => path.startsWith(href);
 
+/* 顶导右侧三个能力入口挂在组件树内的落地页上——active 归属按分组 slug 判定，
+   避免与「组件」的 /components/ 前缀互相点亮；slug 清单同时喂给客户端换页脚本 */
+const aiSlugs = COMPONENTS.filter((c) => c.group === 'AI 原生').map((c) => c.slug);
+const chartSlugs = COMPONENTS.filter((c) => c.group === '图表').map((c) => c.slug);
+const inSlugs = (slugs: string[]): boolean => slugs.some((s) => path.startsWith(`/components/${s}/`));
+const componentsActive = path.startsWith('/components/') && !inSlugs(aiSlugs) && !inSlugs(chartSlugs);
+
 // ⌘K 命令面板条目：顶层页面 + 全部组件（按分组）
 const pages = [
   { name: '首页 · 介绍', slug: '', href: '/', kw: 'home intro 首页' },
@@ -20,7 +27,10 @@ const paletteGroups = GROUPS.map((g) => ({
 
 const searchSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`;
 const githubSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.35.77 1.05.77 2.12v3.15c0 .3.21.67.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>`;
-const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="var(--icen-token-accent)"/><path d="M12 6.5 17.5 12 12 17.5 6.5 12z" fill="var(--icen-token-bg)"/><circle cx="12" cy="12" r="1.6" fill="var(--icen-token-accent)"/></svg>`;
+const snowArm = '<path d="M12 12V5.4"/><path d="M12 8.9 10.2 7"/><path d="M12 8.9 13.8 7"/><path d="M12 6.6 11.1 5.6"/><path d="M12 6.6 12.9 5.6"/>';
+const snowArms = [0, 60, 120, 180, 240, 300].map((a) => '<g transform="rotate(' + a + ' 12 12)">' + snowArm + '</g>').join('');
+/* 品牌雪花：accent 底方 + bg 色六臂雪花，随主题 accent 换色 */
+const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="5.5" fill="var(--icen-token-accent)"/><g class="brand-flake" stroke="var(--icen-token-bg)" stroke-width="1.6" stroke-linecap="round">${snowArms}</g><circle cx="12" cy="12" r="1.3" fill="var(--icen-token-bg)"/></svg>`;
 ---
 <header class="site-nav" transition:persist="site-nav">
   <div class="site-nav-inner">
@@ -29,13 +39,16 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
       <span class="brand-name">ICEN UI</span>
       <span class="brand-ver" aria-hidden="true">v{pkg.version}</span>
     </a>
-    <nav class="nav-links" aria-label="主导航">
-      <a class:list={[{ active: isActive('/components/') }]} href="/components/">组件</a>
-      <a class:list={[{ active: isActive('/kb/') }]} href="/kb/">知识库</a>
+    <nav class="nav-links" aria-label="主导航" data-ai-slugs={aiSlugs.join(',')} data-chart-slugs={chartSlugs.join(',')}>
+      <a data-nav="components" class:list={['nav-primary', { active: componentsActive }]} href="/components/">组件</a>
+      <a class:list={[{ active: isActive('/tokens/') }]} href="/tokens/">色彩</a>
       <a class:list={[{ active: isActive('/primitives/') }]} href="/primitives/">原语</a>
       <a class:list={[{ active: isActive('/frameworks/') }]} href="/frameworks/">框架</a>
       <a class:list={[{ active: isActive('/customize/') }]} href="/customize/">定制</a>
-      <a class:list={[{ active: isActive('/tokens/') }]} href="/tokens/">色彩</a>
+      <span class="nav-links-sep" aria-hidden="true"></span>
+      <a data-nav="ai" class:list={[{ active: inSlugs(aiSlugs) }]} href="/components/ai-overview/">AI 原生</a>
+      <a class:list={[{ active: isActive('/kb/') }]} href="/kb/">知识库</a>
+      <a data-nav="charts" class:list={[{ active: inSlugs(chartSlugs) }]} href="/components/charts/">数据图表</a>
       <span class="nav-ink" aria-hidden="true"></span>
     </nav>
     <div class="nav-controls">
@@ -129,9 +142,18 @@ const logoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" ari
   document.addEventListener('astro:after-swap', () => {
     initTheme(); initThemeSwitcher(); // Restore persisted axes after ClientRouter replaces html attributes.
     const p = window.location.pathname;
+    const aiSlugs = (navLinks?.dataset.aiSlugs ?? '').split(',').filter(Boolean);
+    const chartSlugs = (navLinks?.dataset.chartSlugs ?? '').split(',').filter(Boolean);
+    const inSlugs = (list: string[]): boolean => list.some((s) => p.startsWith(`/components/${s}/`));
     navLinks?.querySelectorAll('a').forEach((a) => {
       const href = a.getAttribute('href') ?? '/';
-      a.classList.toggle('active', href === '/' ? p === '/' : p.startsWith(href));
+      const key = a.getAttribute('data-nav');
+      const on =
+        key === 'ai' ? inSlugs(aiSlugs)
+        : key === 'charts' ? inSlugs(chartSlugs)
+        : key === 'components' ? p.startsWith('/components/') && !inSlugs(aiSlugs) && !inSlugs(chartSlugs)
+        : href === '/' ? p === '/' : p.startsWith(href);
+      a.classList.toggle('active', on);
     });
     placeInk();
   });

@@ -42,6 +42,7 @@ import type { ChartEventDetail } from './charts';
 import type { AiUsage } from './ai-core';
 import type { AiDoneEventDetail } from './ai-provider';
 import type { AiComposerRefSource } from './ai-composer';
+import type { MentionEntity, MentionValue } from './mentions';
 import type {
   KbAccessRequest, KbAclDecision, KbAclEntry, KbAuditChannel, KbCitation, KbChainStep, KbCheckpointScope,
   KbFilterNode, KbHygieneIssue, KbIdentity, KbRetrievalQuery, KbRole, KbSegmentConfig, KbSandboxMessage,
@@ -178,7 +179,8 @@ export interface IcenEventMap {
   /* 级联/树选择/提及/自动补全（cascader.ts / tree-select.ts / mentions.ts / autocomplete.ts） */
   'icen:cascader-change': { value: string[]; path: string[] };
   'icen:tree-select-change': { value: string[]; labels: string[] };
-  'icen:mention-select': { id: string; label: string; query: string };
+  'icen:mention-select': { item: MentionEntity<unknown>; query: string };
+  'icen:mention-change': { value: MentionValue<unknown>[]; text: string; mentions: MentionEntity<unknown>[] };
   'icen:autocomplete-select': { value: string; label: string };
   'icen:autocomplete-change': { value: string };
   /* 上传（upload.ts） */

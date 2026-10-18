@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 
-for(const preset of ['benzhen','clay','piano','art','vangogh','ink'])test(`code paper stays readable in ${preset} light and dark`,async({page})=>{
+for(const preset of ['modern','dongyun','jugou','piano','monet','vangogh'])test(`code paper stays readable in ${preset} light and dark`,async({page})=>{
   await page.goto('/components/code-block/');
   await page.addScriptTag({path:require.resolve('axe-core')});
   for(const dark of [false,true]){

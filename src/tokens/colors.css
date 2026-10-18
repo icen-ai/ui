@@ -1,8 +1,8 @@
 /* GENERATED from themes.json by bun run colors. Edit the catalogue, never this file.
- * Six complete themes × light/dark; 本真 is the default. Primitives are separate. */
+ * 6 complete themes × light/dark; 现代 is the default. Primitives are separate. */
 
-/* 本真 · 清透瓷面 · 冷调柔光 · light */
-:root, [data-icen-preset="benzhen"] {
+/* 现代 · 清透瓷面 · 冷调柔光 · light */
+:root, [data-icen-preset="modern"] {
   --icen-design-canvas: #f5f6f8;
   --icen-design-surface: #ffffff;
   --icen-design-raised: #edf0f5;
@@ -26,8 +26,8 @@
   color-scheme: light;
 }
 
-/* 本真 · 清透瓷面 · 冷调柔光 · dark */
-[data-icen-theme="dark"], [data-icen-preset="benzhen"][data-icen-theme="dark"] {
+/* 现代 · 清透瓷面 · 冷调柔光 · dark */
+[data-icen-theme="dark"], [data-icen-preset="modern"][data-icen-theme="dark"] {
   --icen-design-canvas: #15171b;
   --icen-design-surface: #22272f;
   --icen-design-raised: #2c333e;
@@ -51,53 +51,103 @@
   color-scheme: dark;
 }
 
-/* 陶土 · 未釉陶器 · 暖纸与漫射光 · light */
-[data-icen-preset="clay"] {
-  --icen-design-canvas: #faf7f2;
-  --icen-design-surface: #fffdf9;
-  --icen-design-raised: #f2ebe2;
-  --icen-design-ink: #342b25;
-  --icen-design-muted: #746559;
-  --icen-design-faint: #756357;
-  --icen-design-accent: #c9704e;
-  --icen-design-accent-strong: #9f432c;
-  --icen-design-accent-text: #963e28;
-  --icen-design-on-accent: #fffdf9;
-  --icen-design-cold: #667e82;
-  --icen-design-success: #346e45;
-  --icen-design-warning: #845b12;
-  --icen-design-error: #ad3d32;
-  --icen-design-info: #456e85;
-  --icen-design-shadow-color: #4a3020;
-  --icen-design-glass-opacity: 91%;
-  --icen-design-shadow-strength: 9%;
-  --icen-design-edge-strength: 12%;
-  --icen-design-highlight-strength: 54%;
+/* 东韵 · 绢本与青瓷 · 温润细光 · light */
+[data-icen-preset="dongyun"] {
+  --icen-design-canvas: #f4f1e9;
+  --icen-design-surface: #fffdf7;
+  --icen-design-raised: #e9e6db;
+  --icen-design-ink: #293a34;
+  --icen-design-muted: #60695c;
+  --icen-design-faint: #626957;
+  --icen-design-accent: #477668;
+  --icen-design-accent-strong: #305c4e;
+  --icen-design-accent-text: #315748;
+  --icen-design-on-accent: #fffdf7;
+  --icen-design-cold: #85724d;
+  --icen-design-success: #3b6544;
+  --icen-design-warning: #795517;
+  --icen-design-error: #a33e37;
+  --icen-design-info: #426477;
+  --icen-design-shadow-color: #343c2e;
+  --icen-design-glass-opacity: 97%;
+  --icen-design-shadow-strength: 7%;
+  --icen-design-edge-strength: 14%;
+  --icen-design-highlight-strength: 40%;
   color-scheme: light;
 }
 
-/* 陶土 · 未釉陶器 · 暖纸与漫射光 · dark */
-[data-icen-preset="clay"][data-icen-theme="dark"] {
-  --icen-design-canvas: #211a17;
-  --icen-design-surface: #302621;
-  --icen-design-raised: #3c3029;
-  --icen-design-ink: #f5ede5;
-  --icen-design-muted: #c2afa0;
-  --icen-design-faint: #b6a293;
-  --icen-design-accent: #e9aa87;
-  --icen-design-accent-strong: #edb391;
-  --icen-design-accent-text: #f0b99a;
-  --icen-design-on-accent: #352014;
-  --icen-design-cold: #a8c1be;
-  --icen-design-success: #a1ce9e;
-  --icen-design-warning: #e7c57c;
-  --icen-design-error: #efaa9b;
-  --icen-design-info: #a3c7d5;
-  --icen-design-shadow-color: #100906;
-  --icen-design-glass-opacity: 94%;
-  --icen-design-shadow-strength: 29%;
-  --icen-design-edge-strength: 15%;
-  --icen-design-highlight-strength: 6%;
+/* 东韵 · 绢本与青瓷 · 温润细光 · dark */
+[data-icen-preset="dongyun"][data-icen-theme="dark"] {
+  --icen-design-canvas: #181e1b;
+  --icen-design-surface: #242e28;
+  --icen-design-raised: #334037;
+  --icen-design-ink: #f0eee0;
+  --icen-design-muted: #bfc8b6;
+  --icen-design-faint: #b2bea9;
+  --icen-design-accent: #a0c5ac;
+  --icen-design-accent-strong: #b0d0b6;
+  --icen-design-accent-text: #bdd9c1;
+  --icen-design-on-accent: #24382b;
+  --icen-design-cold: #d0bd8d;
+  --icen-design-success: #accd9e;
+  --icen-design-warning: #e1c68d;
+  --icen-design-error: #edada2;
+  --icen-design-info: #accbda;
+  --icen-design-shadow-color: #080e0a;
+  --icen-design-glass-opacity: 98%;
+  --icen-design-shadow-strength: 25%;
+  --icen-design-edge-strength: 17%;
+  --icen-design-highlight-strength: 5%;
+  color-scheme: dark;
+}
+
+/* 巨构 · 混凝土与搪瓷 · 实体承重 · light */
+[data-icen-preset="jugou"] {
+  --icen-design-canvas: #edece6;
+  --icen-design-surface: #faf9f3;
+  --icen-design-raised: #e1e0d8;
+  --icen-design-ink: #252723;
+  --icen-design-muted: #5e625b;
+  --icen-design-faint: #62645b;
+  --icen-design-accent: #b53c2d;
+  --icen-design-accent-strong: #9e3025;
+  --icen-design-accent-text: #912e24;
+  --icen-design-on-accent: #fffaf0;
+  --icen-design-cold: #596d75;
+  --icen-design-success: #3d6141;
+  --icen-design-warning: #765413;
+  --icen-design-error: #9a3138;
+  --icen-design-info: #3c6078;
+  --icen-design-shadow-color: #242821;
+  --icen-design-glass-opacity: 100%;
+  --icen-design-shadow-strength: 16%;
+  --icen-design-edge-strength: 24%;
+  --icen-design-highlight-strength: 20%;
+  color-scheme: light;
+}
+
+/* 巨构 · 混凝土与搪瓷 · 实体承重 · dark */
+[data-icen-preset="jugou"][data-icen-theme="dark"] {
+  --icen-design-canvas: #1b1d1c;
+  --icen-design-surface: #2a2e2c;
+  --icen-design-raised: #393e3b;
+  --icen-design-ink: #f4f0e3;
+  --icen-design-muted: #c3c6ba;
+  --icen-design-faint: #b8bdae;
+  --icen-design-accent: #ed9d86;
+  --icen-design-accent-strong: #f1ac92;
+  --icen-design-accent-text: #f6bba3;
+  --icen-design-on-accent: #3c211b;
+  --icen-design-cold: #b1c5ce;
+  --icen-design-success: #aecb9f;
+  --icen-design-warning: #e6c88b;
+  --icen-design-error: #f0b1ad;
+  --icen-design-info: #accbdc;
+  --icen-design-shadow-color: #090d0b;
+  --icen-design-glass-opacity: 100%;
+  --icen-design-shadow-strength: 38%;
+  --icen-design-edge-strength: 25%;
+  --icen-design-highlight-strength: 4%;
   color-scheme: dark;
 }
 
@@ -151,52 +201,52 @@
   color-scheme: dark;
 }
 
-/* 艺术 · 画廊白墙 · 安静背景与朱红标记 · light */
-[data-icen-preset="art"] {
-  --icen-design-canvas: #f8f8f7;
-  --icen-design-surface: #ffffff;
-  --icen-design-raised: #efefec;
-  --icen-design-ink: #222323;
-  --icen-design-muted: #656965;
-  --icen-design-faint: #656963;
-  --icen-design-accent: #df4b32;
-  --icen-design-accent-strong: #b32e1c;
-  --icen-design-accent-text: #aa2b1a;
+/* 莫奈 · 睡莲水面 · 蓝绿柔光与含蓄紫调 · light */
+[data-icen-preset="monet"] {
+  --icen-design-canvas: #f4f7f4;
+  --icen-design-surface: #fcfdfb;
+  --icen-design-raised: #e8eeea;
+  --icen-design-ink: #20332e;
+  --icen-design-muted: #5b6f65;
+  --icen-design-faint: #5b6e64;
+  --icen-design-accent: #2b675c;
+  --icen-design-accent-strong: #245c50;
+  --icen-design-accent-text: #24574c;
   --icen-design-on-accent: #ffffff;
-  --icen-design-cold: #426c86;
-  --icen-design-success: #347448;
-  --icen-design-warning: #855c13;
-  --icen-design-error: #a83340;
-  --icen-design-info: #3e6e8c;
-  --icen-design-shadow-color: #252927;
-  --icen-design-glass-opacity: 95%;
-  --icen-design-shadow-strength: 7%;
-  --icen-design-edge-strength: 9%;
-  --icen-design-highlight-strength: 58%;
+  --icen-design-cold: #667c8a;
+  --icen-design-success: #307449;
+  --icen-design-warning: #805f1b;
+  --icen-design-error: #a43d42;
+  --icen-design-info: #3d6a82;
+  --icen-design-shadow-color: #23372f;
+  --icen-design-glass-opacity: 93%;
+  --icen-design-shadow-strength: 8%;
+  --icen-design-edge-strength: 12%;
+  --icen-design-highlight-strength: 52%;
   color-scheme: light;
 }
 
-/* 艺术 · 画廊白墙 · 安静背景与朱红标记 · dark */
-[data-icen-preset="art"][data-icen-theme="dark"] {
-  --icen-design-canvas: #18191a;
-  --icen-design-surface: #282a2b;
-  --icen-design-raised: #343737;
-  --icen-design-ink: #f5f4ef;
-  --icen-design-muted: #b5b9b5;
-  --icen-design-faint: #a4aea6;
-  --icen-design-accent: #ffab98;
-  --icen-design-accent-strong: #ffb09e;
-  --icen-design-accent-text: #ffb9a8;
-  --icen-design-on-accent: #3b1b15;
-  --icen-design-cold: #a0c2d7;
-  --icen-design-success: #98d3ac;
-  --icen-design-warning: #e2c784;
-  --icen-design-error: #f2a7b3;
-  --icen-design-info: #9ac5e2;
-  --icen-design-shadow-color: #000000;
+/* 莫奈 · 睡莲水面 · 蓝绿柔光与含蓄紫调 · dark */
+[data-icen-preset="monet"][data-icen-theme="dark"] {
+  --icen-design-canvas: #121d1a;
+  --icen-design-surface: #1d2d27;
+  --icen-design-raised: #2c3d34;
+  --icen-design-ink: #e6f0e7;
+  --icen-design-muted: #a7c0b1;
+  --icen-design-faint: #9cb1a4;
+  --icen-design-accent: #93c9ad;
+  --icen-design-accent-strong: #a0d2b7;
+  --icen-design-accent-text: #a5d8bd;
+  --icen-design-on-accent: #173328;
+  --icen-design-cold: #a1baca;
+  --icen-design-success: #91d2a2;
+  --icen-design-warning: #dac487;
+  --icen-design-error: #e8a7ad;
+  --icen-design-info: #9bc4da;
+  --icen-design-shadow-color: #06100b;
   --icen-design-glass-opacity: 95%;
-  --icen-design-shadow-strength: 23%;
-  --icen-design-edge-strength: 11%;
+  --icen-design-shadow-strength: 27%;
+  --icen-design-edge-strength: 14%;
   --icen-design-highlight-strength: 6%;
   color-scheme: dark;
 }
@@ -248,56 +298,6 @@
   --icen-design-shadow-strength: 30%;
   --icen-design-edge-strength: 16%;
   --icen-design-highlight-strength: 7%;
-  color-scheme: dark;
-}
-
-/* 墨 · 冷调宣纸 · 青墨与干净笔触 · light */
-[data-icen-preset="ink"] {
-  --icen-design-canvas: #f4f7f4;
-  --icen-design-surface: #fcfdfb;
-  --icen-design-raised: #e8eeea;
-  --icen-design-ink: #20332e;
-  --icen-design-muted: #5b6f65;
-  --icen-design-faint: #5b6e64;
-  --icen-design-accent: #2b675c;
-  --icen-design-accent-strong: #245c50;
-  --icen-design-accent-text: #24574c;
-  --icen-design-on-accent: #ffffff;
-  --icen-design-cold: #667c8a;
-  --icen-design-success: #307449;
-  --icen-design-warning: #805f1b;
-  --icen-design-error: #a43d42;
-  --icen-design-info: #3d6a82;
-  --icen-design-shadow-color: #23372f;
-  --icen-design-glass-opacity: 93%;
-  --icen-design-shadow-strength: 8%;
-  --icen-design-edge-strength: 12%;
-  --icen-design-highlight-strength: 52%;
-  color-scheme: light;
-}
-
-/* 墨 · 冷调宣纸 · 青墨与干净笔触 · dark */
-[data-icen-preset="ink"][data-icen-theme="dark"] {
-  --icen-design-canvas: #121d1a;
-  --icen-design-surface: #1d2d27;
-  --icen-design-raised: #2c3d34;
-  --icen-design-ink: #e6f0e7;
-  --icen-design-muted: #a7c0b1;
-  --icen-design-faint: #9cb1a4;
-  --icen-design-accent: #93c9ad;
-  --icen-design-accent-strong: #a0d2b7;
-  --icen-design-accent-text: #a5d8bd;
-  --icen-design-on-accent: #173328;
-  --icen-design-cold: #a1baca;
-  --icen-design-success: #91d2a2;
-  --icen-design-warning: #dac487;
-  --icen-design-error: #e8a7ad;
-  --icen-design-info: #9bc4da;
-  --icen-design-shadow-color: #06100b;
-  --icen-design-glass-opacity: 95%;
-  --icen-design-shadow-strength: 27%;
-  --icen-design-edge-strength: 14%;
-  --icen-design-highlight-strength: 6%;
   color-scheme: dark;
 }
 
@@ -358,9 +358,6 @@
   --icen-token-scrollbar-thumb: color-mix(in srgb, var(--icen-design-ink) 22%, transparent);
   --icen-token-scrollbar-thumb-hover: color-mix(in srgb, var(--icen-design-ink) 38%, transparent);
   --icen-token-scrollbar-button: transparent;
-  --icen-accent-clay: var(--icen-token-accent);
-  --icen-accent-clay-dark: var(--icen-token-accent-strong);
-  --icen-accent-clay-light: var(--icen-token-accent-subtle);
   --icen-accent-cold: var(--icen-token-accent-cold);
   --icen-bg-primary: var(--icen-token-bg);
   --icen-bg-secondary: var(--icen-token-bg-soft);
@@ -389,7 +386,4 @@
   --icen-color-info-bg: var(--icen-token-info-muted);
   --icen-color-pending: var(--icen-token-text-muted);
   --icen-color-pending-bg: var(--icen-token-bg-soft);
-  --icen-accent-clay-bg: var(--icen-token-accent-subtle);
-  --icen-accent-clay-bg-strong: var(--icen-token-accent-subtle);
-  --icen-accent-clay-border: var(--icen-token-accent-subtle);
 }

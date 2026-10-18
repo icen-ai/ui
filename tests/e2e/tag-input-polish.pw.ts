@@ -3,7 +3,7 @@ import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 
 test('tag editing keeps nodes and keyboard focus, explains rejected drafts and submits native values', async ({page}) => {
-  for (const primitive of ['benzhen','pixel']) for (const dark of [false,true]) {
+  for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
     await page.goto('/components/tag-input/'); await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     const root=page.locator('#tags-topics'), field=page.locator('#tags-topics-field');
     await root.locator('.icen-tag-chip').first().evaluate(el => (window as any).firstTag=el);
@@ -31,16 +31,16 @@ test('paste, IME, required forms and read-only transitions preserve real native 
   expect(await field.evaluate(el => (el as HTMLInputElement).checkValidity())).toBe(false); await field.fill('新主题'); await page.getByRole('button',{name:'保存主题',exact:true}).click(); await expect(page.locator('#tags-form-result')).toHaveText('已保存主题：新主题。');
 });
 
-for (const preset of ['benzhen','clay','piano','art','vangogh','ink']) test(`tag sizes and error feedback stay readable in ${preset}`, async ({page}) => {
+for (const preset of ['modern','dongyun','jugou','piano','monet','vangogh']) test(`tag sizes and error feedback stay readable in ${preset}`, async ({page}) => {
   await page.goto('/components/tag-input/'); await page.addScriptTag({path:require.resolve('axe-core')});
-  for (const primitive of ['benzhen','pixel']) for (const dark of [false,true]) {
+  for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
     await page.locator('html').evaluate((el,{preset,primitive,dark}) => {el.dataset.icenPreset=preset;el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{preset,primitive,dark});
     const field=page.locator('#tags-topics-field'); await field.fill('界面设计'); await field.press('Enter'); await page.waitForTimeout(400);
     const issues=await page.locator('.demo-stage').evaluate(async root => {const result=await (window as any).axe.run(root,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});return result.violations.filter((v:any) => ['serious','critical'].includes(v.impact)).map((v:any) => ({id:v.id,targets:v.nodes.map((n:any) => n.target)}));});
     expect(issues).toEqual([]);
     await expect(page.locator('#tags-topics .icen-tag-chip-x svg').first()).toHaveAttribute('viewBox','0 0 20 20');
   }
-  if(preset==='benzhen')await page.locator('.demo-stage').screenshot({path:'.ui-audit/tags-desktop.png',animations:'disabled'});
+  if(preset==='modern')await page.locator('.demo-stage').screenshot({path:'.ui-audit/tags-desktop.png',animations:'disabled'});
 });
 
 test('touch RTL removal keeps the draft, uses generous stable slots and never scrolls the document sideways', async ({browser}) => {

@@ -176,7 +176,7 @@
   color: var(--icen-token-text-faint);
 }
 
-/* Legacy check slots are removed visually; checked items use the shared selected surface. */
+/* Check slots are removed visually; checked items use the shared selected surface. */
 .icen-menu-item-check { display: none; }
 
 .icen-menu-separator {

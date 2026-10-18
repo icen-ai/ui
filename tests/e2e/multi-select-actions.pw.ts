@@ -30,7 +30,7 @@ test('mobile documents show the component first and keep navigation and all appe
 });
 
 test('multiselect chips have stable slots, real keyboard actions and no nested controls in either primitive/mode',async({page})=>{
-  for(const primitive of ['benzhen','pixel']) for(const dark of [false,true]) {
+  for(const primitive of ['modern','pixel']) for(const dark of [false,true]) {
     await page.goto('/components/select/');
     await page.evaluate(({primitive,dark})=>{document.documentElement.setAttribute('data-icen-style',primitive);document.documentElement.toggleAttribute('data-icen-theme',dark);if(dark)document.documentElement.setAttribute('data-icen-theme','dark');},{primitive,dark});
     const root=page.locator('.demo-stage [data-icen-select-multiple]');

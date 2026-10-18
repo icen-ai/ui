@@ -37,7 +37,7 @@ type AxeViolation = {
 // 既有债的修法提示（按规则 id），打印进报告，清债时逐条核销
 const FIX_HINTS: Record<string, string> = {
   'color-contrast':
-    'clay 的 muted 灰 #9d9b93 对纸白仅 2.78:1（WCAG AA 需 4.5:1）——调 --icen-token-text-muted 基值或站壳 site.css 的次级文字色；tok-* 高亮色需按背景重校',
+    '旧预设的 muted 灰对纸白对比不足（WCAG AA 需 4.5:1）——调 --icen-token-text-muted 基值或站壳 site.css 的次级文字色；tok-* 高亮色需按背景重校',
   'label-content-name-mismatch':
     'SiteHeader 品牌链的可见文案未进可访问名（aria-label 覆盖）——可访问名须含可见文本（site/src/components/SiteHeader.astro）',
   'scrollable-region-focusable':

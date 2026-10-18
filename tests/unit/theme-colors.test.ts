@@ -4,8 +4,8 @@ import themes from '../../src/tokens/themes.json';
 import {renderThemeColors} from '../../scripts/theme-colors.mjs';
 import {designContrast} from '../../src/behaviors/design';
 
-test('six curated themes have readable text and actions on all three surfaces',()=>{
-  expect(themes.map(t=>t.id)).toEqual(['benzhen','clay','piano','art','vangogh','ink']);
+test('eight curated themes have readable text and actions on all three surfaces',()=>{
+  expect(themes.map(t=>t.id)).toEqual(['modern','dongyun','jugou','piano','monet','vangogh']);
   for(const theme of themes) for(const mode of ['light','dark'] as const) {
     const p=theme[mode];
     for(const bg of ['bg','surface','raised'] as const) {
@@ -16,9 +16,10 @@ test('six curated themes have readable text and actions on all three surfaces',(
     expect(designContrast(p.accentStrong,p.onAccent),`${theme.id}/${mode}: primary label`).toBeGreaterThanOrEqual(4.5);
   }
 });
-test('palette CSS is reproducible and contains no removed theme',()=>{
+test('palette CSS is reproducible and covers exactly the curated themes',()=>{
   const css=readFileSync(new URL('../../src/tokens/colors.css',import.meta.url),'utf8');
   expect(css).toBe(renderThemeColors(themes));
-  expect(css).not.toContain('[data-icen-preset="retro"]');
+  const ids=[...new Set([...css.matchAll(/\[data-icen-preset="([a-z-]+)"\]/g)].map((m)=>m[1]))];
+  expect(ids.sort()).toEqual(themes.map((t)=>t.id).sort());
   for(const t of themes) expect(css).toContain(`[data-icen-preset="${t.id}"][data-icen-theme="dark"]`);
 });

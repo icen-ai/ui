@@ -7,7 +7,7 @@ test('AI stop pauses pending work; retry keeps the response and next draft stabl
   await page.goto('/components/ai-chat/');
   const messages=page.locator('#ai-chat-demo .icen-ai-chat-scroll'),field=page.locator('#ai-chat-composer textarea');
   const users=await messages.locator('.icen-ai-msg--user').count();
-  await field.fill('梳理本真材料');await field.press('Enter');
+  await field.fill('梳理现代材料');await field.press('Enter');
   const response=messages.locator('.icen-ai-msg--assistant').last();await expect(response).toHaveClass(/is-streaming/);
   await response.evaluate(el=>(window as any).stableResponse=el);
   await field.fill('接着核对配色');await field.press('Enter');
@@ -43,11 +43,11 @@ test('AI failure is visible and retryable; navigation cancels the demo stream cl
 });
 
 test('permission form retains selection, role and duration before submission in both primitives and modes',async({page})=>{
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]){
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]){
     await page.goto('/components/kb-access/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light'},{primitive,dark});
     const root=page.locator('#kb-access-demo');const open=root.locator('[data-icen-access-request]');await open.click();
     const field=root.locator('.icen-kb-access-reason');await expect(field).toBeFocused();
-    await field.fill('为本真核对排版和材料');await field.evaluate(el=>(window as any).reasonNode=el);
+    await field.fill('为现代核对排版和材料');await field.evaluate(el=>(window as any).reasonNode=el);
     /* 时长选择器是弹层 icen-select：开面板 → 点选项，值落在 hidden input */
     await root.locator('.icen-kb-access-duration .icen-select-trigger').click();
     await page.locator('body > .icen-select-panel [data-icen-value="7"]').click();
@@ -55,7 +55,7 @@ test('permission form retains selection, role and duration before submission in 
     const editor=root.locator('[data-icen-role=editor]');await editor.focus();await editor.press('Space');
     await expect(editor).toBeFocused();await expect(editor).toHaveAttribute('aria-pressed','true');
     expect(await field.evaluate(el=>el===(window as any).reasonNode)).toBe(true);await expect(duration).toHaveValue('7');
-    await open.click();await expect(field).toBeHidden();await open.click();await expect(field).toHaveValue('为本真核对排版和材料');
+    await open.click();await expect(field).toBeHidden();await open.click();await expect(field).toHaveValue('为现代核对排版和材料');
     await expect(duration).toHaveValue('7');await root.locator('[data-icen-access-submit]').click();
     await expect(root.locator('.icen-kb-access-state')).toBeFocused();await expect(open).toBeDisabled();await expect(root).toHaveAttribute('data-icen-state','requested');
     // A seven-day grant enters the existing seven-day expiry warning window.
@@ -67,7 +67,7 @@ test('permission form retains selection, role and duration before submission in 
 test('opened checkpoint choices stay readable and named in both primitives and modes',async({page})=>{
   await page.goto('/components/kb-checkpoint/');await page.addScriptTag({path:require.resolve('axe-core')});
   const trigger=page.locator('#kb-checkpoint-demo .icen-kb-checkpoint').first();
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]) {
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light'},{primitive,dark});
     await trigger.press('ArrowDown');const menu=page.locator('.icen-kb-checkpoint-menu');
     const issues=await menu.evaluate(async el=>{
@@ -76,7 +76,7 @@ test('opened checkpoint choices stay readable and named in both primitives and m
       return result.violations.filter((v:any)=>['serious','critical'].includes(v.impact)).map((v:any)=>({id:v.id,targets:v.nodes.map((n:any)=>n.target)}));
     });
     expect(issues).toEqual([]);await expect(menu.locator('.icen-kb-checkpoint-menu-check')).toHaveCount(0);
-    if(primitive==='benzhen'&&!dark)await menu.screenshot({path:'.ui-audit/workflow-checkpoint-menu.png'});
+    if(primitive==='modern'&&!dark)await menu.screenshot({path:'.ui-audit/workflow-checkpoint-menu.png'});
     await page.keyboard.press('Escape');await expect(trigger).toBeFocused();
   }
 });

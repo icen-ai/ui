@@ -11,4 +11,4 @@ the included licenses. Font license: SIL Open Font License 1.1.
 
 OFL.txt and all three upstream licenses from the distribution are retained.
 The build copies this directory into dist/fonts. The font loads only when the
-Pixel primitive or its selector preview uses it; 本真 does not request it.
+Pixel primitive or its selector preview uses it; 现代 does not request it.

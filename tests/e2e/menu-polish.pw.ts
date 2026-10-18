@@ -3,7 +3,7 @@ import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 
 test('dropdown has real focus, fixed icon/selection slots and keyboard checkbox actions in every primitive/mode',async({page})=>{
-  for(const primitive of ['benzhen','pixel'])for(const dark of [false,true]) {
+  for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/dropdown/');
     await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
     const trigger=page.locator('.demo-stage [data-icen-dropdown-trigger]');await trigger.press('ArrowDown');

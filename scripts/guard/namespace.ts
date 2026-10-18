@@ -1,7 +1,6 @@
-// 命名空间守卫（v0.10）：库自有类名必须 icen- 前缀（.is-* 状态类豁免）、
+// 命名空间守卫：库自有类名必须 icen- 前缀（.is-* 状态类豁免）、
 // 库自有 data 钩子必须 data-icen- 前缀、全局变量族必须 --icen-*——
 // 与 Bootstrap 类名表的碰撞报告应恒为零（类名防冲突的验收证明）。
-/* icen-migrate: off —— 本文件的 INDUSTRY_CLASSES 是「迁移前业界形态」基线，codemod 不得改写 */
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { SRC, listFiles, type GuardResult } from './shared';
