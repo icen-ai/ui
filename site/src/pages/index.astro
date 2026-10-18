@@ -9,6 +9,8 @@ import pkg from '../../../package.json';
 
 import '../../../src/components/input.css';
 import '../../../src/components/switch.css';
+import '../../../src/components/kb.css';
+import '../../../src/components/kb-search.css';
 import '../../../src/components/feedback.css';
 import '../../../src/components/media.css';
 import '../../../src/components/content.css';
@@ -42,11 +44,9 @@ const importCss = `import '@icen.ai/ui/tokens.css';
 import '@icen.ai/ui/ui.css';`;
 const htmlPreset = `<html class=" " data-icen-theme="dark" data-icen-preset="piano"> … </html>`;
 
-const copySvg = `${iconHTML('copy',{size:14,className:'ic-copy'})}`;
-const checkSvg = `${iconHTML('check',{size:14,className:'ic-check'})}`;
+const copySvg = `${iconHTML('copy',{size:14,className:'icen-copy-icon-clipboard'})}`;
+const checkSvg = `${iconHTML('check',{size:14,className:'icen-copy-icon-check'})}`;
 const searchSvg = `${iconHTML('search',{size:13})}`;
-const starSvg = `${iconHTML('star')}`;
-const rocketSvg = `${iconHTML('rocket',{size:14})}`;
 const featureIcons = {
   ai: `${iconHTML('sparkle',{size:16})}`,
   chart: `${iconHTML('chart-line',{size:16})}`,
@@ -76,9 +76,8 @@ const featureIcons = {
         <span class="reveal-line"><span>为 <em class="hero-grad">AI 时代</em> 而生</span></span>
       </h1>
       <p class="hero-sub fade-up fade-up--2">
-        设计 tokens（6 预设 × 明暗）× 无框架组件 × AI 原生族（7 态状态机 / 多模态 / 定价审计）
-        × 图表通用层（ChartSpec 纯 JSON）。全部消费同一套 <code>--icen-token-*</code>，换肤零改动；
-        UI 能力可直接注册为模型调用的工具。
+        组件、图表和 AI 界面，共用一套设计令牌。
+        换肤不用改代码，UI 也能直接交给模型调用。
       </p>
       <div class="hero-actions fade-up fade-up--3">
         <a class="icen-btn icen-btn-primary icen-btn-lg" href="#quickstart">开始使用</a>
@@ -86,7 +85,7 @@ const featureIcons = {
         <span class="install-chip">
           <span class="install-prompt" aria-hidden="true">$</span>
           <code class="install-cmd">bun add @icen.ai/ui</code>
-          <button class="icen-copy-btn install-copy" type="button" data-icen-copy="bun add @icen.ai/ui" data-icen-copy-icon aria-label="复制安装命令">
+          <button class="icen-copy-btn icen-copy-btn--icon install-copy" type="button" data-icen-copy="bun add @icen.ai/ui" data-icen-copy-icon aria-label="复制安装命令">
             <Fragment set:html={copySvg + checkSvg} />
           </button>
         </span>
@@ -94,9 +93,9 @@ const featureIcons = {
 
       <!-- 数字带：一眼看清规模（滚动入场时计数） -->
       <div class="hero-stats fade-up fade-up--4" role="list">
-        <div class="hero-stat" role="listitem"><b data-icen-count={SLUGS.length}>0</b><span>kit 入口</span></div>
+        <div class="hero-stat" role="listitem"><b data-icen-count={SLUGS.length}>0</b><span>组件入口</span></div>
         <div class="hero-stat" role="listitem"><b data-icen-count={behaviorCount}>0</b><span>行为模块</span></div>
-        <div class="hero-stat" role="listitem"><b data-icen-count={chartKitCount}>0</b><span>图表 kit</span></div>
+        <div class="hero-stat" role="listitem"><b data-icen-count={chartKitCount}>0</b><span>图表类型</span></div>
         <div class="hero-stat" role="listitem"><b data-icen-count={aiCount}>0</b><span>AI 原生</span></div>
         <div class="hero-stat" role="listitem"><b data-icen-count="0">0</b><span>运行时依赖</span></div>
       </div>
@@ -108,224 +107,128 @@ const featureIcons = {
     <div class="sec-head">
       <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>SHOWCASE · 精选组件</p>
       <h2 class="sec-title">先体验，再安装</h2>
-      <p class="sec-desc">这里没有一个截图 —— 每个组件都由 @icen.ai/ui 当场渲染，可以直接点击、拖动、输入。悬停任意卡片查看组件名。</p>
+      <p class="sec-desc">下面都是实时渲染，不妨试试——悬停卡片看名字。</p>
     </div>
-    <div class="stage" id="stage">
-      <span class="stage-glow" aria-hidden="true"></span>
-      <span class="stage-orbit" aria-hidden="true"></span>
-      <div class="f-canvas">
+    <div class="isle-canvas" id="isle-canvas">
+      <span class="isle-orbit" aria-hidden="true"></span>
+      <span class="isle-glow" aria-hidden="true"></span>
+      <span class="isle-glow isle-glow--cold" aria-hidden="true"></span>
 
-        <div class="f-cell" data-icen-depth="14" data-icen-label="统计 + 迷你趋势线 · stat / sparkline" style="left:27%;top:1%">
-          <div class="f-lev" style="--in-delay:.05s;--lev-duration:7.4s;--lev-delay:1.1s">
-            <article class="mini-card" style="--w:180px">
-              <p class="mn-label">周活跃用户</p>
-              <div class="mn-stat-row"><b class="mn-num">8,642</b><span class="icen-pill icen-pill--success">+12.4%</span></div>
-              <div id="mc-spark"></div>
-            </article>
+      <div class="isle" data-icen-label="统计 + 迷你趋势 · stat / chart-sparkline" style="left:21%;top:0%">
+        <article class="isle-card" style="--w:208px;--lev-duration:7.2s;--lev-delay:.4s">
+          <p class="isle-label">周活跃用户</p>
+          <div class="isle-stat-row"><b class="isle-stat-num">8,642</b><span class="icen-pill icen-pill--success">+12.4%</span></div>
+          <div id="mc-spark"></div>
+        </article>
+      </div>
+
+      <div class="isle" data-icen-label="贡献日历 · chart-calendar" style="left:41%;top:0%">
+        <article class="isle-card" style="--w:230px;--lev-duration:6.6s;--lev-delay:1.2s">
+          <div id="mc-cal"></div>
+        </article>
+      </div>
+
+      <div class="isle" data-icen-label="仪表盘 · chart-gauge 轮询" style="left:78%;top:2%">
+        <article class="isle-card isle-card--center" style="--w:132px;--lev-duration:8s;--lev-delay:.2s">
+          <div id="mc-gauge"></div>
+          <span class="icen-pill icen-pill--success isle-live"><span class="isle-live-dot" aria-hidden="true"></span>LIVE</span>
+        </article>
+      </div>
+
+      <div class="isle" data-icen-label="任务 + 用量环 · ai-todo / ai-usage" style="left:1%;top:26%">
+        <article class="isle-card" style="--w:232px;--lev-duration:6.2s;--lev-delay:.9s">
+          <div class="isle-split">
+            <div id="mc-todo"></div>
+            <div id="mc-ring"></div>
           </div>
-        </div>
+        </article>
+      </div>
 
-        <div class="f-cell" data-icen-depth="8" data-icen-label="贡献日历 · renderCalendar" style="left:46%;top:0%">
-          <div class="f-lev" style="--in-delay:.11s;--lev-duration:6.8s;--lev-delay:.8s">
-            <article class="mini-card" style="--w:190px">
-              <div id="mc-cal"></div>
-            </article>
+      <div class="isle" data-icen-label="AI 会话 · ai-chat 流式" style="left:27%;top:25%">
+        <article class="isle-card" style="--w:252px;--lev-duration:7.6s;--lev-delay:1.5s">
+          <div class="mc-chat" id="mc-chat"></div>
+        </article>
+      </div>
+
+      <div class="isle" data-icen-label="环形占比 · chart-pie" style="left:61%;top:24%">
+        <article class="isle-card" style="--w:186px;--lev-duration:6.9s;--lev-delay:.6s">
+          <div id="mc-donut"></div>
+        </article>
+      </div>
+
+      <div class="isle" data-icen-label="搜索输入 · input" style="left:82%;top:30%">
+        <article class="isle-card" style="--w:200px;--lev-duration:7.4s;--lev-delay:1.1s">
+          <div class="icen-input-wrap icen-control icen-input-wrap--sm">
+            <span class="icen-input-leading"><Fragment set:html={searchSvg} /></span>
+            <input class="icen-input" type="search" placeholder="搜索组件…" aria-label="搜索组件" />
           </div>
-        </div>
+        </article>
+      </div>
 
-        <div class="f-cell" data-icen-depth="11" data-icen-label="环形占比 · renderDonut" style="left:64%;top:4%">
-          <div class="f-lev" style="--in-delay:.17s;--lev-duration:6.2s;--lev-delay:1.3s">
-            <article class="mini-card" style="--w:200px">
-              <div id="mc-donut"></div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="18" data-icen-label="开关 · switch" style="left:79%;top:2%">
-          <div class="f-lev" style="--in-delay:.23s;--lev-duration:5.9s;--lev-delay:1s">
-            <article class="mini-card" style="--w:110px">
-              <div class="mn-row"><button class="icen-switch icen-switch--sm" type="button" role="switch" aria-checked="true" aria-label="自动发布"><span class="icen-switch-thumb"></span></button><span class="mn-lb">自动</span></div>
-              <div class="mn-row"><button class="icen-switch icen-switch--sm" type="button" role="switch" aria-checked="false" aria-label="预览"><span class="icen-switch-thumb"></span></button><span class="mn-lb">预览</span></div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="22" data-icen-label="仪表盘 · renderGauge 轮询" style="left:90%;top:14%">
-          <div class="f-lev" style="--in-delay:.29s;--lev-duration:8.1s;--lev-delay:1.45s">
-            <article class="mini-card" style="--w:130px">
-              <div class="mn-gauge">
-                <div id="mc-gauge"></div>
-                <span class="icen-pill icen-pill--success gauge-live"><span class="live-dot" aria-hidden="true"></span>LIVE</span>
+      <div class="isle" data-icen-label="知识库检索 · kb-retrieval" style="left:9%;top:57%">
+        <article class="isle-card" style="--w:278px;--lev-duration:6.4s;--lev-delay:.3s">
+          <div class="icen-kb-hits">
+            <div class="icen-kb-hit">
+              <div class="icen-kb-hit-rank icen-kb-num">1</div>
+              <div class="icen-kb-hit-main">
+                <div class="icen-kb-hit-title">三季度经营分析月报</div>
+                <div class="icen-kb-hit-snippet">销售额 3.42 亿，环比下滑 6.8%…</div>
               </div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="16" data-icen-label="通知 · notification" style="left:3%;top:8%">
-          <div class="f-lev" style="--in-delay:.35s;--lev-duration:6.4s;--lev-delay:.9s">
-            <article class="mini-card" style="--w:220px">
-              <div class="mn-row mn-row--top">
-                <span class="mn-ic" aria-hidden="true"><Fragment set:html={rocketSvg} /></span>
-                <div class="mn-main">
-                  <p class="mn-t">部署成功 <span class="icen-pill icen-pill--success">新</span></p>
-                  <p class="mn-d">gateway · 32 秒前</p>
-                </div>
+              <div class="icen-kb-hit-side">
+                <span class="icen-kb-score"><span class="icen-kb-score-bar"><i style="width:93%"></i></span><span class="icen-kb-score-value">0.930</span></span>
               </div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="10" data-icen-label="待办 + 上下文环 · ai-todo / ai-usage" style="left:12%;top:28%">
-          <div class="f-lev" style="--in-delay:.41s;--lev-duration:6.6s;--lev-delay:1.05s">
-            <article class="mini-card" style="--w:220px">
-              <div class="mn-split">
-                <div id="mc-todo"></div>
-                <div id="mc-ring" class="mn-ring"></div>
+            </div>
+            <div class="icen-kb-hit">
+              <div class="icen-kb-hit-rank icen-kb-num">2</div>
+              <div class="icen-kb-hit-main">
+                <div class="icen-kb-hit-title">供应链季度复盘</div>
+                <div class="icen-kb-hit-snippet">交付周期从 14 天拉长到 21 天…</div>
               </div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="6" data-icen-label="AI 会话 · renderAiMessage 流式" style="left:37%;top:22%">
-          <div class="f-lev" style="--in-delay:.47s;--lev-duration:7.1s;--lev-delay:1.2s">
-            <article class="mini-card" style="--w:230px">
-              <div class="mc-chat" id="mc-chat"></div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="20" data-icen-label="状态徽章 · pill" style="left:60%;top:26%">
-          <div class="f-lev" style="--in-delay:.53s;--lev-duration:5.7s;--lev-delay:1.35s">
-            <article class="mini-card" style="--w:150px">
-              <div class="mn-wrap">
-                <span class="icen-pill icen-pill--success">稳定</span>
-                <span class="icen-pill icen-pill--warning">排队</span>
-                <span class="icen-pill icen-pill--error">失败</span>
-                <span class="icen-pill icen-pill--info">Beta</span>
+              <div class="icen-kb-hit-side">
+                <span class="icen-kb-score"><span class="icen-kb-score-bar"><i style="width:86%"></i></span><span class="icen-kb-score-value">0.860</span></span>
               </div>
-            </article>
+            </div>
           </div>
-        </div>
+        </article>
+      </div>
 
-        <div class="f-cell" data-icen-depth="24" data-icen-label="搜索输入 · input" style="left:76%;top:32%">
-          <div class="f-lev" style="--in-delay:.59s;--lev-duration:7.6s;--lev-delay:.95s">
-            <article class="mini-card" style="--w:190px">
-              <div class="icen-input-wrap icen-control icen-input-wrap--sm">
-                <span class="icen-input-leading"><Fragment set:html={searchSvg} /></span>
-                <input class="icen-input" placeholder="搜索组件…" aria-label="搜索组件" />
-              </div>
-            </article>
+      <div class="isle" data-icen-label="徽章与标签 · pill / tag" style="left:46%;top:55%">
+        <article class="isle-card" style="--w:178px;--lev-duration:5.8s;--lev-delay:1.4s">
+          <div class="isle-wrap">
+            <span class="icen-pill icen-pill--success">稳定</span>
+            <span class="icen-pill icen-pill--warning">排队</span>
+            <span class="icen-pill icen-pill--error">失败</span>
           </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="26" data-icen-label="头像组 · avatar" style="left:90%;top:40%">
-          <div class="f-lev" style="--in-delay:.65s;--lev-duration:7.8s;--lev-delay:1.4s">
-            <article class="mini-card" style="--w:150px">
-              <div class="mn-row">
-                <span class="mn-avatars">
-                  <span class="icen-avatar" style="background:#d97757;color:#fff">林</span>
-                  <span class="icen-avatar">沈</span>
-                  <span class="icen-avatar">顾</span>
-                </span>
-                <span class="mn-lb"><span class="mn-dot" aria-hidden="true"></span>5 位</span>
-              </div>
-            </article>
+          <div class="isle-wrap" style="margin-top:8px">
+            <span class="icen-tag icen-tag--sm"><span class="icen-tag-label">设计系统</span></span>
+            <span class="icen-tag icen-tag--sm icen-tag--accent"><span class="icen-tag-label">AI 原生</span></span>
           </div>
-        </div>
+        </article>
+      </div>
 
-        <div class="f-cell" data-icen-depth="9" data-icen-label="工具调用 · renderAiToolCall" style="left:8%;top:52%">
-          <div class="f-lev" style="--in-delay:.71s;--lev-duration:6.1s;--lev-delay:1.25s">
-            <article class="mini-card" style="--w:210px">
-              <div id="mc-tool"></div>
-            </article>
+      <div class="isle" data-icen-label="开关 · switch" style="left:74%;top:57%">
+        <article class="isle-card" style="--w:142px;--lev-duration:6.8s;--lev-delay:1s">
+          <div class="isle-row"><button class="icen-switch icen-switch--sm" type="button" role="switch" aria-checked="true" aria-label="自动发布"><span class="icen-switch-thumb"></span></button><span class="isle-lb">自动</span></div>
+          <div class="isle-row"><button class="icen-switch icen-switch--sm" type="button" role="switch" aria-checked="false" aria-label="预览"><span class="icen-switch-thumb"></span></button><span class="isle-lb">预览</span></div>
+        </article>
+      </div>
+
+      <div class="isle" data-icen-label="AI 工具调用 · ai-tool-call" style="left:24%;top:79%">
+        <article class="isle-card" style="--w:246px;--lev-duration:7s;--lev-delay:.8s">
+          <div id="mc-tool"></div>
+        </article>
+      </div>
+
+      <div class="isle" data-icen-label="滑块 · slider 可拖拽" style="left:57%;top:80%">
+        <article class="isle-card" style="--w:200px;--lev-duration:6.3s;--lev-delay:1.25s">
+          <div class="isle-row isle-row--spread"><span class="isle-lb">音量</span><span class="isle-dim" id="mc-slider-val">40</span></div>
+          <div class="icen-slider">
+            <div class="icen-slider-track"></div>
+            <div class="icen-slider-fill" style="width:40%"></div>
+            <div class="icen-slider-thumb" style="left:calc(40% - 8px)"></div>
+            <input class="icen-slider-native" type="range" min="0" max="100" value="40" aria-label="音量" />
           </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="17" data-icen-label="评分 · rating" style="left:30%;top:48%">
-          <div class="f-lev" style="--in-delay:.77s;--lev-duration:7.2s;--lev-delay:1.5s">
-            <article class="mini-card" style="--w:160px">
-              <div class="icen-rating" role="group" aria-label="评分 4.5 星，满分 5 星">
-                <button class="icen-rating-star is-filled" type="button" aria-label="1 星"><Fragment set:html={starSvg} /></button>
-                <button class="icen-rating-star is-filled" type="button" aria-label="2 星"><Fragment set:html={starSvg} /></button>
-                <button class="icen-rating-star is-filled" type="button" aria-label="3 星"><Fragment set:html={starSvg} /></button>
-                <button class="icen-rating-star is-filled" type="button" aria-label="4 星"><Fragment set:html={starSvg} /></button>
-                <button class="icen-rating-star is-half" type="button" aria-label="5 星"><Fragment set:html={starSvg} /></button>
-              </div>
-              <p class="mn-d" style="margin:7px 0 0">4.5 · 128 条评价</p>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="13" data-icen-label="进度 · progress" style="left:50%;top:52%">
-          <div class="f-lev" style="--in-delay:.83s;--lev-duration:6.3s;--lev-delay:.85s">
-            <article class="mini-card" style="--w:180px">
-              <p class="mn-label">构建中</p>
-              <div class="icen-progress">
-                <div class="icen-progress-track"><div class="icen-progress-bar" style="width:64%"></div></div>
-                <span class="icen-progress-label">64%</span>
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="19" data-icen-label="复选 · checkbox" style="left:68%;top:50%">
-          <div class="f-lev" style="--in-delay:.89s;--lev-duration:6.9s;--lev-delay:1.15s">
-            <article class="mini-card" style="--w:140px">
-              <div class="mn-row"><button class="icen-checkbox icen-focus-ring" type="button" role="checkbox" aria-checked="true" aria-label="全量"></button><span class="mn-lb">全量</span></div>
-              <div class="mn-row"><button class="icen-checkbox icen-focus-ring" type="button" role="checkbox" aria-checked="mixed" aria-label="增量"></button><span class="mn-lb">增量</span></div>
-              <div class="mn-row"><button class="icen-checkbox icen-focus-ring" type="button" role="checkbox" aria-checked="false" aria-label="跳过"></button><span class="mn-lb">跳过</span></div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="21" data-icen-label="快捷键 · kbd" style="left:84%;top:58%">
-          <div class="f-lev" style="--in-delay:.95s;--lev-duration:5.8s;--lev-delay:1.3s">
-            <article class="mini-card" style="--w:120px">
-              <div class="mn-row mn-row--center">
-                <kbd class="icen-kbd">⌘</kbd><kbd class="icen-kbd">K</kbd>
-              </div>
-              <p class="mn-d" style="margin:7px 0 0;text-align:center">命令面板</p>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="15" data-icen-label="滑块 · slider" style="left:20%;top:70%">
-          <div class="f-lev" style="--in-delay:1.01s;--lev-duration:6.7s;--lev-delay:1.05s">
-            <article class="mini-card" style="--w:180px">
-              <div class="mn-row mn-row--spread"><span class="mn-lb">音量</span><span class="mn-d" id="mc-slider-val">40</span></div>
-              <div class="icen-slider">
-                <div class="icen-slider-track"></div>
-                <div class="icen-slider-fill" style="width:40%"></div>
-                <div class="icen-slider-thumb" style="left:calc(40% - 8px)"></div>
-                <input class="icen-slider-native" type="range" min="0" max="100" value="40" aria-label="音量" />
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="12" data-icen-label="加载 · spinner" style="left:42%;top:72%">
-          <div class="f-lev" style="--in-delay:1.07s;--lev-duration:7.3s;--lev-delay:1.2s">
-            <article class="mini-card" style="--w:130px">
-              <div class="mn-row mn-row--center">
-                <span class="icen-spinner icen-spinner--sm" aria-hidden="true"></span>
-                <span class="mn-lb">构建中…</span>
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <div class="f-cell" data-icen-depth="23" data-icen-label="标签 · tag" style="left:64%;top:72%">
-          <div class="f-lev" style="--in-delay:1.13s;--lev-duration:6s;--lev-delay:.9s">
-            <article class="mini-card" style="--w:150px">
-              <div class="mn-wrap">
-                <span class="icen-tag icen-tag--sm"><span class="icen-tag-label">设计系统</span></span>
-                <span class="icen-tag icen-tag--sm icen-tag--accent"><span class="icen-tag-label">v{pkg.version}</span></span>
-                <span class="icen-tag icen-tag--sm"><span class="icen-tag-label">AI 原生</span></span>
-              </div>
-            </article>
-          </div>
-        </div>
-
+        </article>
       </div>
     </div>
   </section>
@@ -333,12 +236,12 @@ const featureIcons = {
   <!-- ═══ 预设换肤带：点击即换肤，全站零改动 ═══ -->
   <section class="presets-sec" aria-label="色彩预设">
     <div class="sec-head">
-      <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>TOKENS · 三层正交</p>
+      <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>TOKENS · 色彩预设</p>
       <h2 class="sec-title">一套 tokens，六副面孔</h2>
-      <p class="sec-desc">主题、原语与明暗自由组合。点一张色卡，首页、顶部和所有组件同步变换。</p>
+      <p class="sec-desc">六套预设，明暗双模。点一张色卡，整站即刻换装。</p>
     </div>
     <Fragment set:html={themeSwitcherHTML({kind:"theme",layout:"inline",size:"lg"})} />
-    <p class="preset-hint">{COMPONENTS.length} 个组件共享同一套 <code>--icen-token-*</code> —— 换肤不改一行组件代码。</p>
+    <p class="preset-hint">{COMPONENTS.length} 个组件共享同一套设计令牌（<code>--icen-token-*</code>）——换肤不改一行组件代码。</p>
   </section>
 
   <!-- ═══ 特性 ═══ -->
@@ -351,22 +254,22 @@ const featureIcons = {
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.ai} /></span>
         <h3 class="feature-title">AI 原生族</h3>
-        <p class="feature-desc">7 态状态机 + 多模态内容模型（对标 AI SDK v5 / MCP / OpenAI / Anthropic）+ 定价审计闭环，零接线一行绑定。</p>
+        <p class="feature-desc">做 AI 界面要用的零件都在：对话、推理、工具调用、审批。兼容主流模型协议，token 和成本自动记账。</p>
       </div>
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.chart} /></span>
         <h3 class="feature-title">图表通用层</h3>
-        <p class="feature-desc"><code>renderChart</code> 吃纯 JSON ChartSpec，12 种图；悬停 / 单击 / 双击 / 右键事件与图例眼睛内建。</p>
+        <p class="feature-desc">一份 JSON，十二种图。悬停、点击、右键与图例开关全部内建，不依赖任何图表库。</p>
       </div>
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.layers} /></span>
         <h3 class="feature-title">三层正交</h3>
-        <p class="feature-desc">色彩预设 × 风格 profile × 明暗，三层互不耦合；{COMPONENTS.length} 个组件共享同一套 <code>--icen-token-*</code>，换肤零改动。</p>
+        <p class="feature-desc">色彩、质感、明暗三层分开调，互不影响。{COMPONENTS.length} 个组件消费同一套令牌，换肤零改动。</p>
       </div>
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.box} /></span>
         <h3 class="feature-title">零依赖无框架</h3>
-        <p class="feature-desc">纯 CSS class 契约 + 按需 behavior JS，SSR 安全；React / Vue / 原生都能接，类型面（.d.mts）随包发布。</p>
+        <p class="feature-desc">零运行时依赖，不挑框架：React、Vue、原生 JS 都行，SSR 安全。</p>
       </div>
     </div>
   </section>
@@ -386,15 +289,15 @@ const featureIcons = {
   <section class="quickstart" id="quickstart">
     <h2 class="qs-title">快速开始</h2>
     <div class="qs-step">
-      <h3 class="qs-step-title"><span class="qs-num">1</span>安装设计系统包</h3>
+      <h3 class="qs-step-title"><span class="qs-num">1</span>安装</h3>
       <PmInstall />
     </div>
     <div class="qs-step">
-      <h3 class="qs-step-title"><span class="qs-num">2</span>在入口引入 tokens 与全部组件样式</h3>
+      <h3 class="qs-step-title"><span class="qs-num">2</span>引入样式</h3>
       <CodeBlock code={importCss} lang="js" />
     </div>
     <div class="qs-step">
-      <h3 class="qs-step-title"><span class="qs-num">3</span>在 <code>&lt;html&gt;</code> 上挂预设与明暗（data 属性）</h3>
+      <h3 class="qs-step-title"><span class="qs-num">3</span>选择预设与明暗</h3>
       <CodeBlock code={htmlPreset} lang="html" />
       <p class="doc-note" style="margin-top:8px">
         从 v0.9 升级？跑包内 codemod：<code>bunx @icen.ai/ui migrate src --write</code>（详见 <a href="/customize/">定制与迁移</a>）。
@@ -403,7 +306,7 @@ const featureIcons = {
   </section>
 
   <script>
-    import { renderCalendar, renderGauge, renderDonut, renderSparkline } from '../../../src/behaviors/charts.ts';
+    import { renderCalendar, renderDonut, renderGauge, renderSparkline } from '../../../src/behaviors/charts.ts';
     import { renderAiMessage } from '../../../src/behaviors/ai-chat.ts';
     import { renderAiToolCall, initAiTool } from '../../../src/behaviors/ai-tool.ts';
     import { renderAiTodo, renderAiUsageRing } from '../../../src/behaviors/ai-panel.ts';
@@ -411,29 +314,22 @@ const featureIcons = {
     import { initSlider } from '../../../src/behaviors/slider.ts';
     import { initCopy } from '../../../src/behaviors/copy.ts';
     import { initTooltip } from '../../../src/behaviors/tooltip.ts';
+    import { initSwitch } from '../../../src/behaviors/controls.ts';
 
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     initInput();
+    initSwitch();
     initSlider();
+    initAiTool();
     initCopy();
     initTooltip();
-    initAiTool();
+
 
     /* ── 统计卡：迷你趋势线 ── */
     const sparkEl = document.getElementById('mc-spark');
     if (sparkEl) renderSparkline(sparkEl, { values: [4, 6, 5, 8, 7, 9, 11, 10, 13, 12, 15, 14] });
-
-    /* ── 环形占比卡（显式 tone 三色分段 + 图例百分比） ── */
-    const donutEl = document.getElementById('mc-donut');
-    if (donutEl) renderDonut(donutEl, {
-      segments: [
-        { name: '组件', value: 67, tone: 'accent' },
-        { name: 'AI 原生', value: 13, tone: 'success' },
-        { name: '图表类型', value: 12, tone: 'muted' },
-      ],
-    });
 
     /* ── 贡献日历：确定性伪随机（近 63 天，dates+values 配对） ── */
     const calEl = document.getElementById('mc-cal');
@@ -512,14 +408,17 @@ const featureIcons = {
     const ringEl = document.getElementById('mc-ring');
     if (ringEl) renderAiUsageRing(ringEl, { input: 420000 }, { total: 1000000 });
 
-    /* ── 工具调用卡：静态完成态（默认折叠一行摘要，点击展开） ── */
-    const toolEl = document.getElementById('mc-tool');
-    if (toolEl) renderAiToolCall(toolEl, {
-      id: 'mc-tc', name: 'WebSearch', kind: 'search', status: 'done',
-      input: { query: 'icen ui 设计系统' }, output: '命中 24 条结果', durationMs: 1800,
+        /* ── 环形占比（label 字段 + 图例百分比） ── */
+    const donutEl = document.getElementById('mc-donut');
+    if (donutEl) renderDonut(donutEl, {
+      segments: [
+        { label: '组件', value: 67, tone: 'accent' },
+        { label: 'AI 原生', value: 13, tone: 'success' },
+        { label: '图表类型', value: 12, tone: 'muted' },
+      ],
     });
 
-    /* ── 仪表盘卡：renderGauge 初始渲染后只改 dasharray / 数值（CSS 过渡平滑接管） ── */
+    /* ── 仪表盘：初始渲染后只改 dasharray / 数值（CSS 过渡平滑接管） ── */
     const gaugeEl = document.getElementById('mc-gauge');
     if (gaugeEl) {
       const GAUGE_R = 42;
@@ -539,11 +438,18 @@ const featureIcons = {
       }
     }
 
-    /* ── 纯 CSS 状态组件的演示接线（实际项目由使用方状态驱动） ── */
-    document.querySelectorAll('.icen-switch[role="switch"], .icen-checkbox[role="checkbox"]').forEach((el) => {
-      el.addEventListener('click', () => {
-        el.setAttribute('aria-checked', el.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
-      });
+    /* ── AI 工具调用卡：静态完成态（默认折叠一行摘要，点击展开） ── */
+    const toolEl = document.getElementById('mc-tool');
+    if (toolEl) renderAiToolCall(toolEl, {
+      id: 'mc-tc', name: 'WebSearch', kind: 'search', status: 'done',
+      input: { query: 'icen ui 设计系统' }, output: '命中 24 条结果', durationMs: 1800,
+    });
+
+    /* ── 滑块读数回显 ── */
+    const sliderEl = document.querySelector('.icen-slider-native');
+    const sliderVal = document.getElementById('mc-slider-val');
+    sliderEl?.addEventListener('input', () => {
+      if (sliderVal) sliderVal.textContent = (sliderEl as HTMLInputElement).value;
     });
 
     /* ── 数字带：滚动入场计数（reduced-motion 直接落终值） ── */
@@ -571,32 +477,7 @@ const featureIcons = {
       statNums.forEach((el) => io.observe(el));
     }
 
-    /* ── 指针视差：rAF 插值逼近，data-icen-depth 决定景深（触屏/reduced-motion/窄屏关闭） ── */
-    const stage = document.getElementById('stage');
-    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)').matches;
-    if (stage && finePointer && !reducedMotion) {
-      const layers = stage.querySelectorAll('[data-icen-depth]');
-      let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
-      const step = () => {
-        cx += (tx - cx) * 0.08;
-        cy += (ty - cy) * 0.08;
-        layers.forEach((layer) => {
-          const d = parseFloat(layer.getAttribute('data-icen-depth') || '10');
-          layer.style.transform = `translate3d(${(-cx * d).toFixed(2)}px, ${(-cy * d).toFixed(2)}px, 0)`;
-        });
-        raf = (Math.abs(tx - cx) > 0.0006 || Math.abs(ty - cy) > 0.0006) ? requestAnimationFrame(step) : 0;
-      };
-      const kick = () => { if (!raf) raf = requestAnimationFrame(step); };
-      stage.addEventListener('pointermove', (e) => {
-        const r = stage.getBoundingClientRect();
-        tx = (e.clientX - r.left) / r.width - 0.5;
-        ty = (e.clientY - r.top) / r.height - 0.5;
-        kick();
-      });
-      stage.addEventListener('pointerleave', () => { tx = 0; ty = 0; kick(); });
-    }
-
-  </script>
+</script>
 </Base>
 
 <style is:global>
@@ -763,10 +644,8 @@ const featureIcons = {
   }
   .install-prompt { color: var(--icen-token-text-faint); user-select: none; }
   .install-cmd { background: none; border: 0; padding: 0; font-size: inherit; color: var(--icen-token-text); }
+  /* 图标居中交给组件契约（inline-grid + 双层同格叠加），此处只改皮肤，绝不能动 display */
   .install-copy {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 30px; height: 30px;
     border: 0;
     border-radius: 50%;
@@ -776,10 +655,7 @@ const featureIcons = {
     transition: color var(--icen-duration-fast) var(--icen-ease-out), background var(--icen-duration-fast) var(--icen-ease-out);
   }
   .install-copy:hover { color: var(--icen-token-accent); background: var(--icen-token-accent-subtle); }
-  .install-copy .ic-check { display: none; }
   .install-copy.is-done { color: var(--icen-token-success); }
-  .install-copy.is-done .ic-copy { display: none; }
-  .install-copy.is-done .ic-check { display: inline; }
 
   .hero-stats {
     display: flex;
@@ -835,39 +711,43 @@ const featureIcons = {
   }
   .sec-desc { color: var(--icen-token-text-muted); font-size: 14px; line-height: 1.85; margin: 0; }
 
-  /* ═══ 袖珍组件群岛 ═══ */
+  /* ═══ 精选组件小岛云：12 策展格，呼吸漂浮 + 悬停揭晓名字 ═══ */
   .stage-sec { padding: 84px 0 8px; }
-  .stage { position: relative; }
-  .stage-glow {
-    position: absolute;
-    left: 50%; top: 50%;
-    width: 720px; height: 720px;
+  .isle-canvas { position: relative; height: 620px; max-width: 1120px; margin: 0 auto; }
+  .isle-orbit {
+    position: absolute; left: 50%; top: 52%;
+    width: 760px; height: 760px;
     transform: translate(-50%, -50%);
+    border: 1px dashed var(--icen-token-line-soft);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  /* 主题环境光晕：accent 暖团居中 + 冷团偏左下，双团错峰呼吸 */
+  .isle-glow {
+    position: absolute; left: 50%; top: 50%;
+    width: 880px; height: 880px;
+    translate: -50% -50%;
     background: radial-gradient(closest-side, var(--icen-token-accent-glow), transparent);
     pointer-events: none;
   }
-  /* 装饰轨道环：群岛的「星座线」 */
-  .stage-orbit {
-    position: absolute;
-    left: 50%; top: 50%;
-    width: 640px; height: 640px;
-    transform: translate(-50%, -50%);
-    border: 1px dashed var(--icen-token-line-dashed);
-    border-radius: 50%;
-    pointer-events: none;
-    -webkit-mask-image: radial-gradient(closest-side, transparent 62%, black 78%);
-    mask-image: radial-gradient(closest-side, transparent 62%, black 78%);
+  .isle-glow--cold {
+    left: 22%; top: 68%;
+    width: 620px; height: 620px;
+    background: radial-gradient(closest-side, var(--icen-token-glow-cold, var(--icen-token-accent-glow)), transparent);
   }
   @media (prefers-reduced-motion: no-preference) {
-    .stage-orbit { animation: orbit-spin 90s linear infinite; }
-    @keyframes orbit-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+    .isle-glow { animation: isle-glow-breathe 9s ease-in-out infinite; }
+    .isle-glow--cold { animation-delay: -4.5s; }
+    @keyframes isle-glow-breathe {
+      0%, 100% { opacity: 0.55; scale: 1; }
+      50% { opacity: 1; scale: 1.06; }
+    }
   }
-  .f-canvas { position: relative; z-index: 1; height: 660px; }
-  .f-cell { position: absolute; min-width: 0; }
+  .isle { position: absolute; min-width: 0; }
 
-  /* 悬停揭晓的组件名标签：挂在未缩放的 .f-cell 上（mini-card 有 zoom，标签要保持清晰） */
-  .f-cell::after {
-    content: attr(data-label);
+  /* 悬停揭晓的组件名标签（attr 读 data-icen-label——旧版读错属性名只剩空药丸） */
+  .isle::after {
+    content: attr(data-icen-label);
     position: absolute;
     top: -9px; left: 6px;
     z-index: 6;
@@ -886,14 +766,11 @@ const featureIcons = {
     transition: opacity var(--icen-duration-fast) var(--icen-ease-out), transform var(--icen-duration-fast) var(--icen-ease-out);
     pointer-events: none;
   }
-  .f-cell:hover::after,
-  .f-cell:focus-within::after { opacity: 1; transform: none; }
+  .isle:hover::after, .isle:focus-within::after { opacity: 1; transform: none; }
 
-  /* 袖珍卡：zoom 0.8 整体缩微（约等于上版的 1/3.5 面积），文字层级保持可读 */
-  .mini-card {
+  .isle-card {
     --mc-shadow: 0 1px 2px rgba(28, 25, 23, 0.05), 0 14px 30px -12px rgba(28, 25, 23, 0.16);
     --mc-shadow-hover: 0 2px 4px rgba(28, 25, 23, 0.07), 0 22px 52px -16px rgba(28, 25, 23, 0.3);
-    zoom: 0.8;
     position: relative;
     width: var(--w);
     box-sizing: border-box;
@@ -909,115 +786,67 @@ const featureIcons = {
       box-shadow var(--icen-duration-slow) var(--icen-ease-out),
       border-color var(--icen-duration-fast) var(--icen-ease-out);
   }
-  [data-icen-theme="dark"] .mini-card {
+  [data-icen-theme="dark"] .isle-card {
     --mc-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 30px -12px rgba(0, 0, 0, 0.55);
-    --mc-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.45), 0 22px 52px -16px rgba(0, 0, 0, 0.72);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), var(--mc-shadow);
+    --mc-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.5), 0 22px 52px -16px rgba(0, 0, 0, 0.7);
   }
   @media (hover: hover) and (pointer: fine) {
-    /* hover 抬升作用在卡片自身；呼吸在 .f-lev、视差在 .f-cell，三层变换互不覆盖 */
-    .mini-card:hover {
-      transform: translateY(-4px);
+    .isle-card:hover {
+      transform: translateY(-3px);
       border-color: var(--icen-token-line);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), var(--mc-shadow-hover);
-    }
-    [data-icen-theme="dark"] .mini-card:hover {
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), var(--mc-shadow-hover);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), var(--mc-shadow-hover);
     }
   }
-  .mini-card:focus-within { border-color: var(--icen-token-accent); }
+  .isle-card--center { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 
-  /* 迷你卡内容件 */
-  .mn-label { margin: 0 0 5px; font-size: 11px; color: var(--icen-token-text-faint); }
-  .mn-stat-row { display: flex; align-items: baseline; gap: 7px; margin-bottom: 6px; }
-  .mn-num {
-    font-family: var(--icen-font-mono);
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--icen-token-text);
-    font-variant-numeric: tabular-nums;
+  /* 呼吸漂浮：每格不同时长/相位，reduced-motion 全停 */
+  @media (prefers-reduced-motion: no-preference) {
+    .isle-card { animation: isle-breathe var(--lev-duration, 7s) ease-in-out var(--lev-delay, 0s) infinite; }
+    @keyframes isle-breathe { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
   }
-  .mn-row { display: flex; align-items: center; gap: 8px; }
-  .mn-row + .mn-row { margin-top: 8px; }
-  .mn-row--top { align-items: flex-start; }
-  .mn-row--spread { justify-content: space-between; margin-bottom: 7px; }
-  .mn-row--center { justify-content: center; }
-  .mn-lb { font-size: 11.5px; color: var(--icen-token-text-muted); white-space: nowrap; }
-  .mn-t { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--icen-token-text); display: flex; align-items: center; gap: 6px; }
-  .mn-d { margin: 2px 0 0; font-size: 10.5px; color: var(--icen-token-text-muted); }
-  .mn-main { min-width: 0; }
-  .mn-ic {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px; height: 24px;
-    flex: none;
-    border-radius: 7px;
-    background: var(--icen-token-accent-subtle);
-    color: var(--icen-token-accent);
-  }
-  .mn-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
-  .mn-avatars { display: inline-flex; }
-  .mn-avatars .icen-avatar { width: 24px; height: 24px; font-size: 10px; margin-left: -7px; box-shadow: 0 0 0 2px var(--icen-token-surface); }
-  .mn-avatars .icen-avatar:first-child { margin-left: 0; }
-  .mn-dot {
-    display: inline-block;
-    width: 6px; height: 6px;
-    margin-right: 4px;
-    border-radius: 50%;
-    background: var(--icen-token-success);
-  }
-  .mn-split { display: flex; align-items: center; gap: 10px; }
-  .mn-split > #mc-todo { flex: 1; min-width: 0; }
-  .mn-ring { flex: none; width: 64px; }
-  .mn-gauge { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  /* chart-gauge 默认 132px 硬宽会溢出袖珍卡：环体与中心值一起缩 */
-  .mn-gauge .icen-chart-gauge { width: 76px; }
-  .mn-gauge .icen-chart-gauge > svg { width: 76px; height: 76px; }
-  .mn-gauge .icen-chart-gauge-value { font-size: 15px; }
-  .mn-gauge .icen-chart-gauge-label { font-size: 9px; }
-  .mini-card--center { text-align: center; }
 
-  /* 环形卡在袖珍卡里纵向排布 + 缩小环体（默认 132px 侧排在窄卡会溢出） */
+  /* 格内小件 */
+  .isle-label { margin: 0 0 4px; font-size: 12px; color: var(--icen-token-text-faint); }
+  .isle-stat-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .isle-stat-num { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--icen-token-text); }
+  .isle-row { display: flex; align-items: center; gap: 8px; }
+  .isle-row + .isle-row { margin-top: 8px; }
+  .isle-row--spread { justify-content: space-between; margin-bottom: 8px; }
+  .isle-lb { font-size: 12.5px; color: var(--icen-token-text-muted); }
+  .isle-dim { font-size: 12px; color: var(--icen-token-text-faint); font-variant-numeric: tabular-nums; }
+  .isle-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .isle-split { display: flex; align-items: center; gap: 12px; }
+  .isle-split > #mc-todo { flex: 1; min-width: 0; }
+  .isle-live { display: inline-flex; align-items: center; gap: 5px; }
+  .isle-live-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  @media (prefers-reduced-motion: no-preference) {
+    .isle-live-dot { animation: live-breathe 1.6s ease-in-out infinite; }
+    @keyframes live-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  }
+
+  /* 图表格内缩尺（默认 132px 环体会溢出小卡） */
   #mc-donut .icen-chart-donut { flex-direction: column; gap: 8px; min-height: 0; }
   #mc-donut .icen-chart-donut > svg { width: 88px; height: 96px; flex: none; }
   #mc-donut .icen-chart-legend { font-size: 10.5px; }
+  #mc-gauge .icen-chart-gauge { width: 84px; }
+  #mc-gauge svg { width: 100%; height: auto; }
+  .isle-card .icen-chart-gauge-value { font-size: 14px; }
+  .isle-card .icen-chart-gauge-label { display: none; }
 
-  /* AI 会话卡：固定高度——流式循环清空重建时卡片高度恒定，不挤兑群岛里的其他卡 */
-  .mc-chat { height: 148px; overflow: hidden; display: flex; flex-direction: column; gap: 9px; }
-  /* 袖珍卡内省略模型名标签，避免拥挤换行 */
+  /* AI 会话格：固定高度、消息钉底——流式循环清空重建时格子高度恒定 */
+  .mc-chat { height: 148px; overflow: hidden; display: flex; flex-direction: column; gap: 9px; justify-content: flex-end; }
   .mc-chat .icen-ai-msg-model { display: none; }
+  .mc-chat .icen-ai-msg { padding: var(--icen-density-space-xs) var(--icen-density-space-sm); }
 
-  .gauge-live { display: inline-flex; align-items: center; gap: 5px; }
-  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-  @media (prefers-reduced-motion: no-preference) {
-    .live-dot { animation: live-breathe 1.6s ease-in-out infinite; }
-    @keyframes live-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  }
-  /* gauge 实时轮询：dasharray 变更由 CSS 过渡平滑接管 */
-  .mn-gauge .icen-chart-gauge svg circle[stroke-dasharray] {
+  /* kb 格：标题与摘要单行省略， score 条不被挤扁 */
+  .isle-card .icen-kb-hit-title, .isle-card .icen-kb-hit-snippet { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* gauge 轮询：dasharray 变更由 CSS 过渡平滑接管 */
+  .isle-card .icen-chart-gauge svg circle[stroke-dasharray] {
     transition: stroke-dasharray 1.1s var(--icen-ease-out);
   }
   @media (prefers-reduced-motion: reduce) {
-    .mn-gauge .icen-chart-gauge svg circle[stroke-dasharray] { transition: none; }
-  }
-
-  /* 进场（一次性，逐卡错拍）+ 持续呼吸漂浮（每卡不同时长/相位，有机错落）。
-     呼吸作用在 .f-lev，与视差（.f-cell）、hover 抬升（.mini-card）三层分离。 */
-  @media (prefers-reduced-motion: no-preference) {
-    .f-lev {
-      animation:
-        float-in 0.6s var(--icen-ease-out) var(--in-delay, 0s) backwards,
-        levitate var(--lev-duration, 6.5s) ease-in-out var(--lev-delay, 1s) infinite;
-    }
-    @keyframes float-in {
-      from { opacity: 0; transform: translateY(26px) scale(0.985); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes levitate {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
-    }
+    .isle-card .icen-chart-gauge svg circle[stroke-dasharray] { transition: none; }
   }
 
   /* ═══ 预设换肤带 ═══ */
@@ -1125,18 +954,13 @@ const featureIcons = {
     font-size: 12px; font-weight: 700; flex: none;
   }
 
-  /* ═══ 响应式：群岛在窄屏退化为规整网格（取消缩微） ═══ */
+  /* ═══ 响应式：小岛在窄屏退化为规整网格 ═══ */
   @media (max-width: 1023px) {
-    .stage-orbit { display: none; }
-    .f-canvas {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      height: auto;
-    }
-    .f-cell { position: static; }
-    .f-cell::after { display: none; }
-    .mini-card { width: auto; zoom: 1; }
+    .isle-orbit { display: none; }
+    .isle-canvas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; height: auto; }
+    .isle { position: static; }
+    .isle::after { display: none; }
+    .isle-card { width: 100%; }
   }
   @media (max-width: 720px) {
     .hero { padding: 64px 0 40px; }
@@ -1144,6 +968,7 @@ const featureIcons = {
     .install-chip { width: 100%; justify-content: center; }
   }
   @media (max-width: 560px) {
-    .f-canvas { grid-template-columns: 1fr; }
+    .isle-canvas { grid-template-columns: 1fr; }
   }
+
 </style>

@@ -83,11 +83,14 @@ function setup(zone: HTMLElement): (() => void) | undefined {
   const accept = input.getAttribute('accept') ?? '';
 
   /** 当前文件列表（列表模式的唯一事实源）。 */
-  let currentFiles: File[] = [];
+  let currentFiles: File[] = hasList ? Array.from(input.files ?? []) : [];
   /** 对象 URL 映射，移除/重渲染时回收。 */
   const urlMap = new Map<File, string>();
   /** 同步守卫：setInputFiles 程序化回写期间忽略 input 的 change，防止重入 handleFiles。 */
   let syncing = false;
+  let handlingNativeChange = false;
+  let disposed = false;
+  const unavailable = (): boolean => input.matches(':disabled') || !!zone.closest('.is-disabled,[aria-disabled="true"],[data-icen-disabled],.is-loading,[aria-busy="true"]');
 
   /** 查找或创建文件列表容器。 */
   function getListEl(): HTMLUListElement | null {
@@ -176,10 +179,17 @@ function setup(zone: HTMLElement): (() => void) | undefined {
       if (xSvg) removeBtn.appendChild(xSvg);
       removeBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
+        if (unavailable()) return;
+        const restoreFocus = document.activeElement === removeBtn;
+        const index = currentFiles.indexOf(file);
         currentFiles = currentFiles.filter((f) => f !== file);
         emitIcen(zone, 'icen:upload-remove', { file });
         renderList();
         syncInputFiles();
+        if (restoreFocus) {
+          const actions = zone.querySelectorAll<HTMLButtonElement>('.icen-upload-list-item-x');
+          (actions[Math.min(index, actions.length - 1)] ?? clickTarget).focus({preventScroll:true});
+        }
       });
       li.appendChild(removeBtn);
 
@@ -195,7 +205,7 @@ function setup(zone: HTMLElement): (() => void) | undefined {
       for (const f of files) dt.items.add(f);
       syncing = true;
       input!.files = dt.files;
-      input!.dispatchEvent(new Event('change', { bubbles: true }));
+      if (!handlingNativeChange) input!.dispatchEvent(new Event('change', { bubbles: true }));
     } catch {
       /* DataTransfer 不支持时静默——使用方可监听 icen:upload 事件 */
     } finally {
@@ -216,7 +226,7 @@ function setup(zone: HTMLElement): (() => void) | undefined {
   }
 
   /** 处理新文件：校验 → 去重 → 累积/替换 → 渲染列表 → 派发事件。 */
-  function handleFiles(files: File[]): void {
+  function handleFiles(files: File[]): File[] {
     const valid: File[] = [];
     for (const file of files) {
       const reason = validate(file);
@@ -226,7 +236,10 @@ function setup(zone: HTMLElement): (() => void) | undefined {
       }
       valid.push(file);
     }
-    if (valid.length === 0) return;
+    if (valid.length === 0) {
+      if (hasList) syncInputFiles();
+      return [];
+    }
 
     if (hasList) {
       // 累积模式：只追加新文件（按 name+size+lastModified 对已有列表与本批去重）
@@ -235,12 +248,13 @@ function setup(zone: HTMLElement): (() => void) | undefined {
         if (currentFiles.some((c) => sameFile(c, f)) || fresh.some((c) => sameFile(c, f))) continue;
         fresh.push(f);
       }
-      if (fresh.length === 0) return;
+      if (fresh.length === 0) { syncInputFiles(); return []; }
       if (maxFiles > 0) {
         const remaining = maxFiles - currentFiles.length;
         if (remaining <= 0) {
           emitIcen(zone, 'icen:upload-error', { file: null, reason: t('upload.tooMany', { p0: maxFiles }) });
-          return;
+          syncInputFiles();
+          return [];
         }
         if (fresh.length > remaining) {
           fresh.length = remaining;
@@ -252,13 +266,18 @@ function setup(zone: HTMLElement): (() => void) | undefined {
       renderList();
       syncInputFiles();
       emitIcen(zone, 'icen:upload', { files: fresh });
-      return;
+      return fresh;
     }
 
-    emitIcen(zone, 'icen:upload', { files: valid });
+    const limit = input!.multiple ? maxFiles : 1;
+    const accepted = limit > 0 ? valid.slice(0, limit) : valid;
+    if (accepted.length < valid.length) emitIcen(zone, 'icen:upload-error', {file:null, reason:t('upload.tooMany',{p0:limit})});
+    setInputFiles(accepted);
+    emitIcen(zone, 'icen:upload', { files: accepted });
+    return accepted;
   }
 
-  const openPicker = (): void => input.click();
+  const openPicker = (): void => { if (!unavailable()) input.click(); };
   /* 推荐结构：交互落在 .icen-upload-dropzone（role=button），列表是它的兄弟不嵌套；
      旧结构回落 zone 本体（视觉与行为不变，但列表模式的移除钮会与外层 role=button 嵌套） */
   const clickTarget = zone.querySelector<HTMLElement>('.icen-upload-dropzone') ?? zone;
@@ -285,37 +304,56 @@ function setup(zone: HTMLElement): (() => void) | undefined {
   // input change（用户通过选择器选了文件）
   on(input, 'change', () => {
     if (syncing) return; // syncInputFiles 的程序化回写，忽略
+    if (unavailable()) return;
     if (!input.files) return;
-    const files = Array.from(input.files);
-    if (hasList) {
-      // 先清空再处理：currentFiles 才是事实源；清空避免重复选择同名文件不触发 change
-      input.value = '';
+    handlingNativeChange = true;
+    try {
+      const files = Array.from(input.files);
+      if (hasList) {
+        // The original event bubbles after the validated FileList is restored.
+        input.value = '';
+      }
+      const accepted = handleFiles(files);
+      if (!hasList && accepted.length === 0) setInputFiles([]);
+    } finally {
+      handlingNativeChange = false;
     }
-    handleFiles(files);
   });
 
   on(zone, 'dragover', (ev) => {
     ev.preventDefault();
+    if (unavailable()) return;
     dragTarget.classList.add('is-drag');
   });
   on(zone, 'dragleave', (ev) => {
     // 只在离开 zone 本身时移除（子元素 dragleave 忽略）
-    if (ev.target === zone) dragTarget.classList.remove('is-drag');
+    if (!(ev.relatedTarget instanceof Node && zone.contains(ev.relatedTarget))) dragTarget.classList.remove('is-drag');
   });
   on(zone, 'drop', (ev) => {
     ev.preventDefault();
     dragTarget.classList.remove('is-drag');
+    if (unavailable()) return;
     const files = ev.dataTransfer?.files;
     if (!files || files.length === 0) return;
     handleFiles(Array.from(files));
 
-    // 非 list 模式把拖放结果回写 input.files（与 list 模式共用 setInputFiles，
-    // 守卫期内派发的 change 不会重复触发 icen:upload）
-    if (!hasList) setInputFiles(Array.from(files));
   });
+
+  const onReset = (event: Event): void => {
+    if (event.target !== input.form) return;
+    queueMicrotask(() => {
+      if (disposed || event.defaultPrevented) return;
+      currentFiles = [];
+      renderList();
+    });
+  };
+  document.addEventListener('reset', onReset, true);
+  offs.push(() => document.removeEventListener('reset', onReset, true));
+  if (hasList) renderList();
 
   /* 销毁：摘全部监听、回收对象 URL、清理生成的列表、复位幂等标记（可重新 init） */
   return () => {
+    disposed = true;
     for (const off of offs) off();
     offs.length = 0;
     urlMap.forEach((url) => {

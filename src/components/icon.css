@@ -42,24 +42,18 @@
    wrapper and input, plus one labelled button with a decorative SVG.
    Zero specificity positioning preserves component sticky search headers. */
 :where(.icen-search-field) { position: relative; }
-.icen-search-field > .icen-search-input {
-  padding-inline-end: calc(var(--icen-density-input-height-sm) + var(--icen-density-space-xs));
-}
 .icen-search-input::-webkit-search-cancel-button,
 .icen-search-input::-webkit-search-decoration {
   -webkit-appearance: none;
   appearance: none;
 }
 .icen-search-clear {
-  position: absolute;
-  inset-inline-end: var(--icen-density-space-xs);
-  inset-block-start: 50%;
-  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: var(--icen-density-input-height-sm);
-  block-size: var(--icen-density-input-height-sm);
+  inline-size: 24px;
+  block-size: 24px;
+  flex-shrink: 0;
   padding: 0;
   border: 0;
   border-radius: var(--icen-radius-sm);

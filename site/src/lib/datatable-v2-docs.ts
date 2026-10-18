@@ -14,7 +14,19 @@ export const DATATABLE_V2_DOCS: ComponentDoc[] = [
     slug: 'datatable',
     name: '数据表格',
     group: '数据展示',
-    desc: 'createTable 函数式 API，重度数据场景对齐 AG Grid 社区版核心心智：搜索 / 排序 / 多列排序（Shift+点击追加，徽标优先级）/ 列重排（拖拽 + 冻结分区）/ 筛选 / 多选 / 分页 / 虚拟滚动 / 行分组聚合（组头可折叠，状态跨 setData）/ 单元格编辑（text·number·select，事件 + 回调双通道，宿主决定是否采纳）/ 左·右冻结 / 汇总行（按筛选后数据实时重算）/ 键盘导航（roving tabindex）+ TSV 复制 / 行展开 / 列宽拖拽 / 列显隐 / CSV 导出 / 行右键。管线缓存，零依赖。',
+    desc: '`createTable` 重度数据表格：对齐 AG Grid 社区版核心心智，零依赖函数式 API。',
+    detail: {
+      features: [
+        '**排序**：单列 / 多列排序——Shift+点击追加次级，徽标显示优先级',
+        '**列**：拖拽重排（冻结分区互不跨越）、显隐、列宽拖拽、左 / 右冻结',
+        '**数据**：搜索 / 筛选 / 多选 / 分页 / 虚拟滚动 / 行展开 / 行右键 / CSV 导出',
+        '**分组**：`groupBy` 行分组聚合，组头可折叠，状态跨 `setData` 保持',
+        '**编辑**：`text` / `number` / `select` 单元格编辑，事件 + 回调双通道',
+        '**汇总**：`summaryRow` 按筛选后数据实时重算（`sum` / `avg` / `count` 等）',
+        '**键盘**：roving tabindex 方向键导航，Ctrl/Cmd+C 复制当前格或选中行（TSV）',
+      ],
+      notes: ['编辑提交派 `icen:table-cell-edit`，宿主调 `updateCell` 采纳或 `setData` 整体替换；管线缓存，零依赖。'],
+    },
     demo: `<div class="demo-col-wide" style="width:100%">
   <p class="chart-cap">多列排序 + 列重排：Shift+点击表头追加次级排序（徽标 = 优先级序号）；拖表头换位（影子 + 插入指示线），完成派 icen:table-column-reorder</p>
   <div id="dtv-multisort"></div>

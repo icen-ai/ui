@@ -68,8 +68,11 @@ export interface ComponentDoc {
   slug: string;
   name: string;
   group: string;
+  /** 一句话简介（卡片与页头导语共用）：只回答「是什么」，特性清单进 detail。 */
   desc: string;
   summary?: string;
+  /** 结构化细节：features 要点列表 / notes 补充段落，支持 `code` 与 **强调** 行内标记（见 doc-text.ts）。 */
+  detail?: { features?: string[]; notes?: string[] };
   demo: string;
   demoLayout?: 'center' | 'stretch';
   usage: string;
@@ -111,7 +114,16 @@ export const COMPONENTS: ComponentDoc[] = [
     slug: 'btn',
     name: '按钮',
     group: '基础',
-    desc: '5 变体（默认 / primary / danger / ghost / link）+ 3 尺寸（sm / 默认 / lg）+ 图标钮 + loading spinner + 错误态 + block 通栏。',
+    desc: '动作触发控件：5 变体 × 3 尺寸，覆盖图标、加载、错误与通栏形态。',
+    detail: {
+      features: [
+        '**变体**：默认 / `icen-btn-primary` / `icen-btn-danger` / `icen-btn-ghost` / `icen-btn-link`',
+        '**尺寸**：`icen-btn-sm` / 默认 / `icen-btn-lg`，高度与内距同步缩放',
+        '**图标**：前置图标挂 `icen-btn-icon-start`；纯图标钮用 `icen-btn-icon`，必须配 `aria-label`',
+        '**状态**：`is-loading` 旋钮（同步 `aria-busy="true"`）、`is-error` 错误态、原生 `disabled`',
+        '**通栏**：`icen-btn-block` 撑满父容器宽度',
+      ],
+    },
     demo: `<div class="demo-row">
   <button class="icen-btn">默认</button>
   <button class="icen-btn icen-btn-primary">主要</button>
@@ -155,7 +167,15 @@ export const COMPONENTS: ComponentDoc[] = [
     slug: 'panel',
     name: '面板',
     group: '基础',
-    desc: '白卡片容器（panel）+ 标题栏（panel-title），用于承载一组相关内容。增强：副标题（panel-subtitle）、可折叠（--collapsible + .is-collapsed）、强调变体（--accent）、平面变体（--flat）。',
+    desc: '承载一组相关内容的卡片容器：标题栏、副标题、底栏与可折叠变体。',
+    detail: {
+      features: [
+        '**结构**：`icen-panel` 外壳 + `icen-panel-title` 标题栏 + `icen-panel-body` / `icen-panel-foot` 底栏',
+        '**标题区**：`icen-panel-subtitle` 副标题、`icen-panel-title-actions` 右侧动作位',
+        '**折叠**：`icen-panel--collapsible` + `.is-collapsed`，开关钮 `icen-panel-toggle` 同步 `aria-expanded`',
+        '**变体**：`icen-panel--accent` 强调边条、`icen-panel--flat` 平面、`icen-panel--flush` 去内距',
+      ],
+    },
     demo: `<div class="icen-panel">
   <div class="icen-panel-title">
     <div class="icen-panel-title-text">
@@ -202,7 +222,14 @@ export const COMPONENTS: ComponentDoc[] = [
     slug: 'pill',
     name: '徽章',
     group: '基础',
-    desc: '语义色状态徽章，纪律：仅绿 / 黄 / 红 + 品牌 accent。',
+    desc: '行内状态徽章：仅绿 / 黄 / 红三档语义色 + 品牌 accent。',
+    detail: {
+      features: [
+        '**变体**：`icen-pill--success` / `--warning` / `--error` / `--accent`，缺省中性',
+        '**纪律**：语义色只表达状态——绿正常、黄警告、红异常，其余场景用默认或 accent',
+      ],
+      notes: ['与标签（tag）分工：pill 专达状态语义；中性展示、筛选条件与可移除词条用 `icen-tag`。'],
+    },
     demo: `<div class="demo-row">
   <span class="icen-pill">默认</span>
   <span class="icen-pill icen-pill--success">正常</span>
@@ -218,7 +245,16 @@ export const COMPONENTS: ComponentDoc[] = [
     slug: 'tag',
     name: '标签',
     group: '基础',
-    desc: '中性展示标签（区别于 pill 的状态语义）：可选关闭按钮、选中态、图标、五档语义色与三档尺寸。',
+    desc: '中性展示标签：可关闭、可选中、可带图标，五档配色 × 三档尺寸。',
+    detail: {
+      features: [
+        '**结构**：`icen-tag` + `icen-tag-label`；移除钮 `icen-tag-close` 必须配 `aria-label`',
+        '**状态**：`is-selected` 选中态，适合筛选条件场景',
+        '**配色**：`icen-tag--accent` / `--success` / `--warning` / `--error` / `--info`',
+        '**尺寸**：`icen-tag--sm` / 默认 / `icen-tag--lg`',
+      ],
+      notes: ['与徽章（pill）分工：tag 是中性展示与筛选载体，状态语义（正常 / 警告 / 异常）归 pill。'],
+    },
     demo: `<div class="demo-row">
   <span class="icen-tag">默认</span>
   <span class="icen-tag is-selected">已选中</span>
@@ -268,7 +304,16 @@ document.querySelectorAll('.icen-tag-close').forEach((btn) => {
     name: '标签页',
     group: '基础',
     summary: '分区内容各就各位。指示条会滑动，键盘与地址栏都知道当前位置。',
-    desc: 'data 契约分区导航：←/→/↑↓ 方向键与 Home/End 移动焦点（manual 模式移动不激活，auto 模式跟随激活），roving tabindex 只留一个 tab 进 Tab 序。挂 data-icen-tabs-ink 获得滑动墨水条（宽度与位移走过渡，reduced-motion 直落）；data-icen-tabs-hash 把激活态同步进地址栏（push/replace 可选），刷新后位置不丢。',
+    desc: '分区内容导航：滑动墨水条、完整键盘契约，激活态可同步地址栏。',
+    detail: {
+      features: [
+        '**键盘**：←/→/↑↓ 移动焦点，Home/End 跳首尾；roving tabindex 只留一个 tab 进 Tab 序',
+        '**激活模式**：缺省 manual 只移焦点；`data-icen-tabs-activation="auto"` 移动即激活',
+        '**墨水条**：tablist 挂 `data-icen-tabs-ink`，宽度与位移走过渡（reduced-motion 直落）',
+        '**地址同步**：容器挂 `data-icen-tabs-hash="push|replace"`，刷新后位置不丢',
+        '**事件**：切换派发 `icen:tab-change`（detail 含 `tab` / `panel` / `index`）',
+      ],
+    },
     demo: `<div data-icen-tabs data-icen-tabs-hash="replace">
   <nav class="icen-tabs" data-icen-tabs-ink role="tablist" aria-label="发布流程">
     <button class="icen-page-tab is-active" type="button" data-icen-tab="overview">概览</button>
@@ -297,7 +342,15 @@ initTabs(); // 点击 + 方向键/Home/End；派发 icen:tab-change { tab, panel
     slug: 'stat',
     name: '指标卡',
     group: '基础',
-    desc: 'stat-grid 自适应网格 + stat-card；支持趋势 delta、图标、交互 hover。增强：横向布局（dashboard 顶栏）、迷你 sparkline 槽、SVG 进度环、加载骨架态。',
+    desc: '关键指标数值卡 + 自适应网格：趋势 delta、图标、进度环与骨架态。',
+    detail: {
+      features: [
+        '**结构**：`icen-stat-grid` 自适应网格承载 `icen-stat-card`（头 / 体 / 槽位三段）',
+        '**数值**：`icen-stat-num` 大数字；`icen-stat-delta` 趋势用 `icen-up` / `icen-down` 着色',
+        '**变体**：`icen-stat-card--horizontal` 横向顶栏布局、`--interactive` 悬停反馈',
+        '**槽位**：迷你 sparkline、SVG 进度环 `icen-stat-ring`、加载骨架态',
+      ],
+    },
     demo: `<div class="icen-stat-grid">
   <div class="icen-stat-card icen-stat-card--interactive">
     <div class="icen-stat-head">
@@ -368,7 +421,15 @@ initTabs(); // 点击 + 方向键/Home/End；派发 icen:tab-change { tab, panel
     name: '轻提示',
     summary: '及时确认操作结果，也给撤销与重试留出时间。键盘焦点、鼠标停留和异步操作都会暂停倒计时。',
     group: '基础',
-    desc: '与 behaviors/toast 配套（toast.css 提供容器与滑入动画）：toast.ok / err / warn。',
+    desc: '瞬时轻提示：角落滑入、自动消散，ok / err / warn 三态语义色。',
+    detail: {
+      features: [
+        '**三态**：`toast.ok` / `toast.err` / `toast.warn` 语义色',
+        '**动作**：`toast.action` 支持撤销钮与失败重试；`closable` 可关闭、`progress` 倒计时条、`ms` 驻留时长',
+        '**职责**：`toast.css` 提供容器与滑入动画；触发、排队与生命周期在 `behaviors/toast`',
+      ],
+      notes: ['反馈族边界：瞬时反应用 toast；需要持久、进度与多按钮的用通知中心；内嵌页面警示用 alert。'],
+    },
     demo: `<div class="demo-row">
   <button class="icen-btn" id="toast-demo-ok">成功提示</button>
   <button class="icen-btn" id="toast-demo-err">错误提示</button>
@@ -411,7 +472,16 @@ return () => toast.dismiss();`,
     slug: 'toolbar',
     name: '工具条',
     group: '基础',
-    desc: '横向承载按钮 / 控件的容器。与 segmented 区别——toolbar 是宽松容器（可分组、可分隔、可换行），segmented 是紧贴互斥分段选择。',
+    desc: '横向承载按钮与控件的宽松容器：分组、分隔、弹性占位与换行。',
+    detail: {
+      features: [
+        '**分组**：`icen-toolbar-group` 聚合一组关联控件',
+        '**分隔**：`icen-toolbar-separator` 竖线分隔；`icen-toolbar-spacer` 弹性占位推开左右',
+        '**文字**：`icen-toolbar-label` 内嵌说明文字',
+        '**变体**：`icen-toolbar--sm` / `--lg` 尺寸、`--wrap` 允许换行、`--elevated` 浮起、`--borderless` 无边',
+      ],
+      notes: ['与分段控件（segmented）分工：toolbar 是宽松容器；segmented 是紧贴的互斥单选。'],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:14px">
   <div class="icen-toolbar-group">
     <button class="icen-btn icen-btn-sm" aria-label="加粗">${iconHTML('bold',{size:14})}</button>
@@ -459,12 +529,20 @@ return () => toast.dismiss();`,
     slug: 'split-pane',
     name: '分栏拖拽',
     group: '基础',
-    desc: '与 behaviors/split-pane 配套：可拖拽的分栏容器，支持水平 / 垂直方向，双击分隔条复位 50%，键盘 ←→ ↑↓ 调整。',
+    desc: '可拖拽分栏容器：水平 / 垂直两向，双击复位，键盘可微调。',
+    detail: {
+      features: [
+        '**方向**：默认水平；`icen-split-pane--vertical` 垂直上下分栏',
+        '**复位**：双击分隔条回到 50%；初始比例用 `--split` 变量',
+        '**键盘**：聚焦分隔条后 ←→ ↑↓ 步进调整，Home/End 到极值',
+        '**结构**：`icen-split-pane-first` / `icen-split-pane-divider` / `icen-split-pane-second`，分隔条带 `role="separator"`',
+      ],
+    },
     demo: `<p class="chart-cap">水平分栏（拖拽中间分隔条）</p>
 <div class="icen-split-pane" data-icen-split-pane style="height:200px;margin-top:6px">
-  <div class="icen-split-pane-first" style="padding:14px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">左侧面板：常用于文件树 / 列表 / 导航。拖动中间分隔条调整比例，双击复位到 50%。</div>
+  <div class="icen-split-pane-first" style="padding:14px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">左侧面板 · 文件树 / 列表 / 导航</div>
   <div class="icen-split-pane-divider" role="separator" aria-label="拖拽调整"></div>
-  <div class="icen-split-pane-second" style="padding:14px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">右侧面板：主内容 / 详情区。键盘聚焦分隔条后可用 ← → 调整，Home/End 复位极值。</div>
+  <div class="icen-split-pane-second" style="padding:14px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">右侧面板 · 主内容 / 详情区</div>
 </div>
 <p class="chart-cap" style="margin-top:20px">垂直分栏（上下）</p>
 <div class="icen-split-pane icen-split-pane--vertical" data-icen-split-pane style="height:240px;margin-top:6px">
@@ -491,7 +569,16 @@ initSplitPane();
     slug: 'form',
     name: '表单布局',
     group: '表单',
-    desc: '字段结构（form / form-field / form-label / form-hint / form-error）+ 裸 form-input / form-textarea + 页面级 banner-ok / banner-err 横幅。与 input.css 的 wrapper 互补：input 处理"单控件外壳"，form 处理"字段→label→hint 的纵向布局"。',
+    desc: '表单的纵向字段布局：标签、辅助提示、错误信息与页面级结果横幅。',
+    detail: {
+      features: [
+        '**结构**：`icen-form` → `icen-form-field` → `icen-form-label` + 控件 + `icen-form-hint` / `icen-form-error`',
+        '**必填**：`icen-req` 星号标记',
+        '**错误态**：`data-icen-invalid="true"` 或原生 `:invalid` 驱动',
+        '**横幅**：`icen-banner-ok` / `icen-banner-err` 页面级成功 / 失败反馈',
+      ],
+      notes: ['与输入框（input）分工：input 负责单控件外壳（前后缀、清除钮），form 负责「字段 → 标签 → 提示」的纵向排版。'],
+    },
     demo: `<form class="icen-form" style="width:100%;max-width:420px">
   <fieldset class="icen-form-field">
     <label class="icen-form-label" for="demo-form-name">作品名称<span class="icen-req">*</span></label>
@@ -514,7 +601,7 @@ initSplitPane();
   </fieldset>
 </form>
 <div class="icen-banner-ok icen-banner-block" style="margin-top:20px">${iconHTML('circle-check',{size:14})} 已保存：表单校验通过</div>
-<div class="icen-banner-err icen-banner-block">✗ 提交失败：网络错误，请稍后重试</div>`,
+<div class="icen-banner-err icen-banner-block">${iconHTML('circle-error',{size:14})} 提交失败：网络错误，请稍后重试</div>`,
     usage: `<form class="icen-form">
   <fieldset class="icen-form-field">
     <label class="icen-form-label" for="x">姓名<span class="icen-req">*</span></label>
@@ -529,7 +616,19 @@ initSplitPane();
     slug: 'input',
     name: '输入框',
     group: '表单',
-    desc: 'wrapper 式输入族：三档尺寸，前后缀、清除钮、密码切换、错误/禁用态，含多行与搜索框。增强：字符计数器（maxlength / data-icen-count）、输入掩码（data-icen-mask）、IME 安全、blur 自动 trim。',
+    desc: '单行与多行输入的外壳族：前后缀、清除钮、密码切换、计数与掩码。',
+    detail: {
+      features: [
+        '**尺寸**：`icen-input-wrap--sm` / 默认 / `--lg`（32 / 36 / 40px）',
+        '**前后缀**：`icen-input-leading` / `icen-input-trailing` 放图标或文字',
+        '**内嵌动作**：`icen-input-clear` 清除钮、`icen-input-pw-toggle` 密码可见切换',
+        '**计数与掩码**：`maxlength` 自动计数；`data-icen-mask` 按 `#` 数字 / `A` 字母 / `*` 任意格式化',
+        '**多行**：`icen-textarea` + `data-icen-autosize` 自适应高度，`data-icen-min-rows` / `-max-rows` 夹取',
+        '**细节**：IME 组合态安全；`data-icen-trim` 失焦自动去空白',
+        '**状态**：`is-error` / `is-disabled` 挂在 wrap 上',
+      ],
+      notes: ['专用搜索框用 `enhanceSearchField`：单个清空钮、自动派发 input 并保留焦点。'],
+    },
     demo: `<div class="demo-col">
   <div class="icen-input-wrap icen-control icen-input-wrap--sm">
     <input class="icen-input" placeholder="小号（32px）" />
@@ -548,7 +647,7 @@ initSplitPane();
     <span class="icen-input-trailing">元</span>
   </div>
   <div class="icen-input-wrap icen-control">
-    <input class="icen-input" value="点右侧 × 可清空" aria-label="可清空输入示例" />
+    <input class="icen-input" value="可清空的内容" aria-label="可清空输入示例" />
     <button class="icen-input-clear" type="button" aria-label="清空">${svgX}</button>
   </div>
   <div class="icen-input-wrap icen-control">
@@ -566,7 +665,7 @@ initSplitPane();
   </div>
 </div>
 <div class="demo-col" style="margin-top:16px">
-  <p class="chart-cap" style="margin:0 0 6px">输入掩码（data-icen-mask）——手机号 / 信用卡</p>
+  <p class="chart-cap" style="margin:0 0 6px">输入掩码 · 手机号 / 信用卡</p>
   <div class="icen-input-wrap icen-control" style="width:100%;max-width:240px">
     <input class="icen-input" data-icen-mask="###-####-####" placeholder="138-1234-5678" />
   </div>
@@ -607,7 +706,17 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
     summary: '单选、分组搜索和多选标签。支持首字定位与完整键盘操作，动态选项会自动更新。',
     name: '选择器',
     group: '表单',
-    desc: '触发器与 input 同视觉；弹层支持 ↑↓ 移动、Enter 选中、Esc / 外点关闭，选中值同步隐藏 input。选项内容支持任意 HTML（色卡/图标/多行）。增强：data-icen-select-search 可搜索过滤、data-icen-select-multiple 多选（逗号分隔）、data-icen-select-max 上限；面板尺寸走全库统一 PanelSizing 契约：data-icen-panel-width 固定宽 / -min / -max 夹取 / -max-height 高度上限。',
+    desc: '自定义下拉选择：单选、可搜索、多选上限，选项可放任意内容。',
+    detail: {
+      features: [
+        '**形态**：缺省单选；`data-icen-select-search` 可搜索（支持分组 `icen-select-group`）；`data-icen-select-multiple` 多选 + `data-icen-select-max` 上限',
+        '**键盘**：↑↓ 移动、Enter 选中、Esc / 外点关闭，支持首字定位',
+        '**富选项**：`icen-select-option` 内可写任意 HTML（色卡 / 图标 / 多行）',
+        '**面板尺寸**：全库统一 PanelSizing 契约——`data-icen-panel-width` 固定宽 / `-min` / `-max` 夹取 / `-max-height` 高度上限（默认 240）',
+        '**数据**：选中值同步隐藏 input（`name` 直接进表单）；子节点与文案变更自动同步，手动改类后调 `refreshSelect`',
+      ],
+      notes: ['触发器与输入框同视觉，表单里混排不跳脱；多选的移除按钮原生可聚焦，键盘可直接操作。'],
+    },
     demo: `<div class="demo-col">
   <p class="chart-cap" style="margin:0 0 6px">基础单选</p>
   <div class="icen-select" data-icen-select style="width:100%;max-width:280px">
@@ -624,7 +733,7 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
     </div>
     <input type="hidden" data-icen-select-value name="fruit" />
   </div>
-  <p class="chart-cap" style="margin:14px 0 6px">可搜索（data-icen-select-search）</p>
+  <p class="chart-cap" style="margin:14px 0 6px">可搜索 · 分组</p>
   <div class="icen-select" data-icen-select data-icen-select-search style="width:100%;max-width:280px">
     <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="icen-select-value is-empty">搜索城市…</span>
@@ -650,7 +759,7 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
     </div>
     <input type="hidden" data-icen-select-value name="city" />
   </div>
-  <p class="chart-cap" style="margin:14px 0 6px">多选（data-icen-select-multiple + data-icen-select-max="3"；移除按钮在悬停或聚焦时显现，可用键盘直接操作）</p>
+  <p class="chart-cap" style="margin:14px 0 6px">多选 · 最多 3 个</p>
   <div class="icen-select" data-icen-select data-icen-select-multiple data-icen-select-max="3" data-icen-select-placeholder="选择标签（最多 3 个）" style="width:100%;max-width:280px">
     <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="icen-select-value is-empty">选择标签（最多 3 个）</span>
@@ -667,7 +776,7 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
     </div>
     <input type="hidden" data-icen-select-value name="tags" />
   </div>
-  <p class="chart-cap" style="margin:14px 0 6px">富选项（任意 HTML）+ 固定面板宽（data-icen-panel-width，全库浮层统一 PanelSizing 契约）</p>
+  <p class="chart-cap" style="margin:14px 0 6px">富选项 · 固定面板宽</p>
   <div class="icen-select" data-icen-select data-icen-panel-width="216" style="width:100%;max-width:216px">
     <button class="icen-select-trigger icen-pressable icen-focus-ring" type="button" aria-haspopup="listbox" aria-expanded="false">
       <span class="icen-select-value is-empty">选择色彩预设</span>
@@ -708,7 +817,16 @@ refreshSelect(root);
     slug: 'slider',
     name: '滑块',
     group: '表单',
-    desc: '透明原生 range 覆盖层驱动填充与滑块；双滑块带选中段与 lo ≤ hi − step 钳制。',
+    desc: '数值滑块：单值与双值区间两种形态，样式自由、键盘可达。',
+    detail: {
+      features: [
+        '**原理**：透明原生 `range` 覆盖层驱动填充与滑块——样式随便改，可访问性白得',
+        '**单值**：`icen-slider` + `icen-slider-track` / `-fill` / `-thumb` + `icen-slider-native`',
+        '**双值**：`icen-slider--dual` + `icen-slider-range` 选中段，`data-icen-thumb="lo|hi"` 两枚原生 range',
+        '**钳制**：双值保证 lo ≤ hi − step，两端不会交叉',
+      ],
+      notes: ['读数回显由使用方监听原生 input 事件驱动（见演示接线）。'],
+    },
     demo: `<div class="demo-col" style="width:100%;max-width:420px">
   <div class="icen-slider-row"><span>音量</span><span id="demo-slider-val">40</span></div>
   <div class="icen-slider">
@@ -755,7 +873,17 @@ dual?.querySelectorAll('.icen-slider-native').forEach((n) => {
     name: '标签输入',
     summary: '把零散词句整理成标签。安静地添加、移除与修正，保留每一步编辑的连续性。',
     group: '表单',
-    desc: 'Enter、中英文逗号或离开字段时提交，也能粘贴多行词条。重复或超出数量时保留未接纳的草稿并说明原因；到达上限本身不显示警告。标签节点保留身份，删除后焦点回到相邻动作或输入框，触屏移除不会意外提交草稿。支持三档尺寸、只读、禁用、动态数据与原生表单；命名字段以重复表单项提交，重置恢复最初标签。',
+    desc: '把零散词句收成标签的输入控件：回车、逗号或粘贴成词条，重复与超限有明确反馈。',
+    detail: {
+      features: [
+        '**提交**：Enter、中英文逗号或离开字段提交；支持粘贴多行词条',
+        '**拒绝语义**：重复或超限时保留未接纳的草稿并说明原因；到达上限本身不告警',
+        '**焦点连续**：标签节点保留身份，删除后焦点回到相邻动作或输入框；触屏移除不会误提交草稿',
+        '**表单**：`name` 字段以重复表单项提交（草稿不提交）；reset 恢复最初标签',
+        '**形态**：`icen-tag-input--sm` / `--lg` 两档尺寸；`data-icen-disabled` 禁用；`createTagInput` 动态读写',
+      ],
+      notes: ['`initTagInput` 幂等，重复调用返回同一销毁函数；宿主卸载时调 `dispose()`。'],
+    },
     demo: `<div class="demo-col-wide" style="inline-size:min(100%,560px);gap:var(--icen-density-space-lg)">
   <form id="tags-form" class="demo-col-wide">
     <label for="tags-topics-field" id="tags-topics-label">作品主题</label>
@@ -848,7 +976,16 @@ return () => { ac.abort(); topics.destroy(); keywords.destroy(); review.destroy(
     slug: 'switch',
     name: '开关与选择',
     group: '表单',
-    desc: '纯 CSS 状态组件：开关两档尺寸；勾选框三态（未选 / 已选 / 半选）；单选行组排他。',
+    desc: '开关、勾选框、单选行组三件套：纯 CSS 状态组件。',
+    detail: {
+      features: [
+        '**开关**：`icen-switch`（`role="switch"`）+ `icen-switch--sm` 小号',
+        '**勾选框**：`icen-checkbox` 三态——未选 / 已选 / 半选（`aria-checked="mixed"`）',
+        '**单选**：`icen-radio-group` + `icen-radio-item` 行组排他，`is-selected` 标记选中',
+        '**驱动**：状态由使用方切换 `aria-checked`，CSS 负责全部视觉；点击与键盘由 `initSwitch` 接管',
+      ],
+      notes: ['没有私有状态机——你的框架数据是唯一事实源，组件只管呈现。'],
+    },
     demo: `<div class="demo-row">
   <button class="icen-switch" type="button" role="switch" aria-checked="true" aria-label="标准开关（开）"><span class="icen-switch-thumb"></span></button>
   <button class="icen-switch" type="button" role="switch" aria-checked="false" aria-label="标准开关（关）"><span class="icen-switch-thumb"></span></button>
@@ -890,7 +1027,16 @@ document.querySelectorAll('.icen-radio-group').forEach((group) => {
     slug: 'segmented',
     name: '分段选择',
     group: '表单',
-    desc: '同族四件：分段控件（两档尺寸）、toggle-group、数字步进器、OTP 单元格（输入跳格 / 粘贴分摊）。分段是完整 radiogroup：方向键移动并选中（RTL 镜像）、Home/End 跳首尾；步进器按 min/max 钳制。',
+    desc: '四件紧凑小控件：分段选择、切换组、数字步进器、验证码格。',
+    detail: {
+      features: [
+        '**分段**：`icen-segmented`（`--sm` 小号）是完整 radiogroup：方向键移动并选中（RTL 镜像）、Home/End 跳首尾，派 `icen:segmented-change`',
+        '**切换组**：`icen-toggle-group` + `icen-toggle-item` 纯 CSS 契约，选中态由使用方切换',
+        '**步进器**：`icen-stepper` ±step 并按 min/max 钳制，派 `icen:stepper-change`',
+        '**验证码**：`icen-otp-cell` 输入自动跳格、粘贴分摊到各格',
+      ],
+      notes: ['与工具条（toolbar）分工：segmented 是紧贴的互斥单选；toolbar 是宽松容器。'],
+    },
     demo: `<div class="demo-row">
   <div class="icen-segmented icen-control" role="radiogroup" aria-label="统计周期">
     <button class="icen-segmented-item icen-motion icen-pressable" type="button" role="radio" aria-checked="false">日</button>
@@ -947,7 +1093,16 @@ return () => ac.abort();`,
     slug: 'upload',
     name: '上传',
     group: '表单',
-    desc: '点击 / Enter / Space 打开文件选择；拖入高亮，drop 后文件写入 input.files 并派发 change。增强（data-icen-upload-list）：自动渲染文件列表，图片缩略图、大小格式化、单文件移除、accept/max-size/max-files 校验。',
+    desc: '文件上传：点击或拖拽入区，自动渲染文件列表与校验错误。',
+    detail: {
+      features: [
+        '**触发**：点击 / Enter / Space 打开文件选择；拖入高亮，drop 写入 `input.files` 并派发 change',
+        '**列表**：`data-icen-upload-list` 自动渲染——图片缩略图、大小格式化、单文件移除',
+        '**校验**：`accept` / `data-icen-max-size` / `data-icen-max-files`，失败派 `icen:upload-error`',
+        '**事件**：`icen:upload { files }` / `icen:upload-error { file, reason }` / `icen:upload-remove { file }`',
+      ],
+      notes: ['列表是 dropzone 的兄弟节点，不与可点区域嵌套；`initUpload()` 返回销毁函数，摘监听、回收缩略图 URL、移除生成列表。'],
+    },
     demo: `<div class="demo-col">
   <div class="icen-upload" data-icen-upload-list data-icen-max-size="5242880" data-icen-max-files="6" role="group" aria-label="上传文件" style="width:100%;max-width:480px">
     <div class="icen-upload-dropzone icen-control icen-lift icen-focus-ring" role="button" tabindex="0" aria-label="拖放或点击选择文件">
@@ -1023,7 +1178,15 @@ return () => { ac.abort(); clearTimeout(timer); };`,
     name: '日期选择',
     group: '表单',
     summary: '用安静的日历选择一个确定的日期。支持范围、清除、键盘移动和原生表单。',
-    desc: '日历以原生按钮组成可连续导航的日期网格。方向键按天/周移动，Home/End 定位周首尾，PageUp/PageDown 翻月，Shift 配合翻年；日期范围、今日入口、禁用、重置与表单值保持一致。',
+    desc: '日历选日期：单选、范围、禁用与清除，键盘可全程操作。',
+    detail: {
+      features: [
+        '**键盘**：方向键按天 / 周移动，Home/End 定位周首尾，PageUp/PageDown 翻月，加 Shift 翻年',
+        '**结构**：日历由原生按钮组成，可连续导航的日期网格',
+        '**形态**：单日期 / 日期范围 / 今日入口 / 禁用日期 / 清除重置',
+        '**表单**：选中值与原生表单字段保持一致',
+      ],
+    },
     demo: `<form id="date-demo-form">
 <div class="demo-row">
   <div style="display:grid;gap:6px">
@@ -1092,7 +1255,15 @@ COMPONENTS.push(
     name: '对话框',
     summary: '让当前任务保持专注。支持多种尺寸、贴边面板、焦点约束和轻柔的进出场。',
     group: '浮层',
-    desc: 'data-icen-modal 契约 + behaviors/modal：焦点陷阱、滚动锁、Esc/遮罩关闭、焦点还原；Sheet 四向贴边滑入。',
+    desc: '模态对话框与四向贴边 Sheet：焦点陷阱、滚动锁、Esc 关闭一应俱全。',
+    detail: {
+      features: [
+        '**契约**：`data-icen-modal` 声明 + `behaviors/modal` 接管行为',
+        '**焦点**：焦点陷阱圈在框内，关闭后还原到触发元素',
+        '**关闭**：Esc / 遮罩点击；打开期间页面滚动锁定',
+        '**Sheet**：四向贴边滑入的抽屉变体',
+      ],
+    },
     demo: `<div class="demo-row">
   <button class="icen-btn" data-icen-modal-open="demo-modal-sm">小号对话框</button>
   <button class="icen-btn" data-icen-modal-open="demo-modal-md">默认对话框</button>
@@ -1197,7 +1368,13 @@ return () => { ac.abort(); dispose(); };`,
     name: '下拉菜单',
     summary: '把相关操作收进一个安静的入口。支持图标、快捷键、选中项与完整键盘导航。',
     group: '浮层',
-    desc: 'trigger + [data-icen-dropdown-menu] 模板；面板 fixed 定位在 trigger 下方 4px，视口 12px margin 内 clamp，空间不足翻上。',
+    desc: '触发器下方的下拉菜单：模板声明，自动定位与翻转。',
+    detail: {
+      features: [
+        '**结构**：trigger + `data-icen-dropdown-menu` 模板',
+        '**定位**：面板 fixed 落在 trigger 下方 4px，视口 12px 边距内夹取，空间不足翻上',
+      ],
+    },
     demo: `<div class="dropdown" data-icen-dropdown>
   <button class="icen-btn dropdown-trigger" data-icen-dropdown-trigger aria-haspopup="menu">文档操作</button>
   <div data-icen-dropdown-menu hidden>
@@ -1246,7 +1423,15 @@ return dispose;`,
     summary: '在当前位置展开相关操作。支持右键、触屏长按和键盘，关闭后回到原来的焦点。',
     name: '右键菜单',
     group: '浮层',
-    desc: '全局单例：registerContextMenu(id, items) 注册，[data-icen-context-menu="id"] 命中；支持 header / separator / danger / disabled，触屏长按触发。',
+    desc: '右键菜单：全局单例注册，触屏长按同样唤起。',
+    detail: {
+      features: [
+        '**注册**：`registerContextMenu(id, items)` 注册；元素挂 `data-icen-context-menu="id"` 即命中',
+        '**条目**：支持 header / separator / danger / disabled',
+        '**触屏**：长按触发',
+        '**单例**：全局同时只存在一个菜单',
+      ],
+    },
     demo: `<div class="ctx-zone" tabindex="0" aria-label="文档操作区域" data-icen-context-menu="demo-file">
   右键打开文档操作；也可以聚焦后按 Shift + F10，或在触屏上长按。
 </div>
@@ -1281,7 +1466,16 @@ return () => { dispose(); contextMenuMod.unregisterContextMenu('demo-file'); };`
     name: '浮层',
     summary: '在当前操作旁展开补充内容。随锚点定位，支持键盘关闭和焦点归还。',
     group: '浮层',
-    desc: '声明式接入：触发器写 data-icen-popover-target 指向面板 id，点击开合、面板内关闭钮生效、触发器状态自动同步。面板 portal 到 body，computePopoverLayout 选侧（prefer → 翻对侧 → 取大侧）并避开视口边缘；外点 / Esc 关闭，焦点归还触发器；退场淡出可中断，快速重开从当前位置续接。程序面 openPopover / closePopover 同样可用。',
+    desc: '声明式弹出层：点击开合、智能选侧、焦点归还。',
+    detail: {
+      features: [
+        '**接入**：触发器写 `data-icen-popover-target` 指向面板 id，零 JS 接线',
+        '**选侧**：`computePopoverLayout` 按 prefer → 翻对侧 → 取大侧，避开视口边缘',
+        '**关闭**：外点 / Esc，焦点归还触发器；面板 portal 到 body，不受祖先裁切',
+        '**动效**：退场淡出可中断，快速重开从当前位置续接',
+        '**程序面**：`openPopover` / `closePopover` 同样可用',
+      ],
+    },
     demo: `<button class="icen-btn" data-icen-popover-target="popover-demo-panel">筛选</button>
 <div class="icen-popover" id="popover-demo-panel" role="dialog" aria-label="筛选条件" hidden>
   <div class="icen-popover-header">
@@ -1327,7 +1521,16 @@ return () => { ac.abort(); if (popPanel) closePopover(popPanel); };`,
     name: '提示',
     group: '浮层',
     summary: '一句话说明，出现在恰好需要的位置。永远不被容器裁切，永远能找到空间。',
-    desc: 'data-icen-tooltip 声明文案，side / align / multiline 控制方向与换行。initTooltip() 后气泡 portal 到 body，随视口空间翻转并避开边缘，任何祖先的 overflow 或圆角裁切都不再影响它；无 JS 时 CSS 回退照常工作。鼠标悬停延迟 400ms，键盘聚焦立即出现；离开、点击、Escape 或滚动即关闭，全局至多一个。触屏不抢首次点按。',
+    desc: '声明式气泡提示：属性写文案，悬停与聚焦自动浮现。',
+    detail: {
+      features: [
+        '**声明**：`data-icen-tooltip` 写文案；`side` / `align` / `multiline` 控制方向与换行',
+        '**时机**：鼠标悬停延迟 400ms，键盘聚焦立即出现；离开、点击、Esc 或滚动即关闭',
+        '**定位**：portal 到 body，随视口空间翻转并避开边缘，祖先的 overflow 与圆角裁切不再影响',
+        '**单例**：全局至多一个；触屏不抢首次点按',
+      ],
+      notes: ['无 JS 时 CSS 回退照常工作——提示不会因脚本失败而消失。'],
+    },
     demo: `<div class="demo-row">
   <button class="icen-btn" data-icen-tooltip="默认在上方">上</button>
   <button class="icen-btn" data-icen-tooltip="下方提示" data-icen-tooltip-side="bottom">下</button>
@@ -1353,7 +1556,16 @@ const dispose = initTooltip(); // 可省略容器；动态插入同样接入，�
     slug: 'command-palette',
     name: '命令面板',
     group: '浮层',
-    desc: '⌘K / Ctrl+K 唤起。输入框是完整 combobox（listbox + activedescendant），↑↓ 回卷、Home/End 跳首尾、Enter 执行、ESC 或外点关闭；选中候选是安静的表面而非文字变色。关闭有一段可打断的淡出，销毁与减少动效时立即收束。支持编程条目（openCommandPalette 传 items + 自定义过滤）与 keep-open 连续操作。',
+    desc: '⌘K 命令面板：搜索即执行的全局命令入口。',
+    detail: {
+      features: [
+        '**唤起**：⌘K / Ctrl+K',
+        '**交互**：输入框是完整 combobox（listbox + activedescendant）；↑↓ 回卷、Home/End 跳首尾、Enter 执行、Esc / 外点关闭',
+        '**选中态**：安静的表面高亮，不做文字变色',
+        '**编程条目**：`openCommandPalette` 传 items + 自定义过滤；keep-open 支持连续操作',
+        '**退场**：可打断的淡出；销毁或减少动效时立即收束',
+      ],
+    },
     demo: `<div class="demo-row">
   <button class="icen-btn icen-btn-primary" data-icen-command-palette-open="demo-cp">打开命令面板</button>
   <span class="icen-dim" style="font-size:12px;align-self:center">或按 <kbd class="icen-kbd icen-kbd--sm">Ctrl</kbd> + <kbd class="icen-kbd icen-kbd--sm">K</kbd></span>
@@ -1432,7 +1644,14 @@ COMPONENTS.push(
     slug: 'card',
     name: '卡片',
     group: '数据展示',
-    desc: '四变体（默认 / elevated / outlined / glass）+ interactive 浮起 + is-selected 双圈选中。',
+    desc: '内容卡片：四种表面变体 + 悬停浮起与选中态。',
+    detail: {
+      features: [
+        '**变体**：默认 / `icen-card--elevated` 浮起 / `--outlined` 描边 / `--glass` 玻璃',
+        '**结构**：`icen-card-head`（`icen-card-title` + `icen-card-desc`）+ `icen-card-body` + `icen-card-foot`',
+        '**交互**：`icen-card--interactive` 悬停浮起；`is-selected` accent 双圈选中',
+      ],
+    },
     demo: `<div class="demo-row">
   <div class="icen-card" style="width:230px">
     <div class="icen-card-head">
@@ -1481,7 +1700,13 @@ COMPONENTS.push(
     slug: 'empty',
     name: '空状态',
     group: '数据展示',
-    desc: '图标 + 标题 + 描述 + 可选动作按钮。类型预设：--error / --404 / --search / --maintenance / --network，自动改图标底色与基调。',
+    desc: '空状态：图标 + 标题 + 引导动作，五种场景预设。',
+    detail: {
+      features: [
+        '**结构**：`icen-empty-icon` + `icen-empty-title` + `icen-empty-desc` + `icen-empty-action` 动作位',
+        '**预设**：`--error` / `--404` / `--search` / `--maintenance` / `--network`，自动换图标底色与基调',
+      ],
+    },
     demo: `<div class="demo-row" style="align-items:flex-start;gap:16px">
   <div class="icen-empty icen-empty--illustrated" style="flex:1;min-width:200px">
     <div class="icen-empty-icon">${inboxSvg}</div>
@@ -1522,7 +1747,15 @@ COMPONENTS.push(
     slug: 'alert',
     name: '警示',
     group: '反馈',
-    desc: 'info / success / warning / error 四态警示条。关闭动作隐式待命——悬停或键盘进入警示条即现身，触屏常显且命中区不小于 44px；关闭演示带柔和退场。',
+    desc: '页面内嵌的警示条：info / success / warning / error 四态，可关闭。',
+    detail: {
+      features: [
+        '**四态**：`icen-alert--info` / `--success` / `--warning` / `--error`',
+        '**结构**：`icen-alert-icon` 图标 + `icen-alert-title` / `icen-alert-body` 内容 + `icen-alert-close` 关闭钮',
+        '**关闭钮**：隐式待命——悬停或键盘进入警示条即现身；触屏常显，命中区 ≥ 44px',
+      ],
+      notes: ['与 toast / 通知中心正交：alert 内嵌在页面流里，不自动消散。'],
+    },
     demo: `<div class="demo-col-wide">
   <div class="icen-alert icen-alert--info">
     <span class="icen-alert-icon">${infoSvg}</span>
@@ -1586,7 +1819,13 @@ return () => ac.abort();`,
     slug: 'result',
     name: '结果页',
     group: '反馈',
-    desc: '终态展示（success 一例；另有 error / warning / info 变体）。',
+    desc: '操作终态的全幅展示：成功、失败、警告、信息四种收场。',
+    detail: {
+      features: [
+        '**变体**：`icen-result--success` / `--error` / `--warning` / `--info`',
+        '**结构**：`icen-result-icon` + `icen-result-title` + `icen-result-desc` + `icen-result-extra` 动作区',
+      ],
+    },
     demo: `<div class="icen-result icen-result--success">
   <div class="icen-result-icon">${checkSvg}</div>
   <h3 class="icen-result-title">发布成功</h3>
@@ -1608,7 +1847,14 @@ return () => ac.abort();`,
     name: '进度条',
     group: '反馈',
     summary: '进度肉眼可见地往前走。宽度变化走过渡，标签等宽数字不抖动。',
-    desc: '默认 6px 轨道 / progress--sm 4px，右侧 tabular-nums 百分比标签。宽度经 style.width 驱动即得平滑过渡（reduced-motion 直落）。',
+    desc: '线性进度条：轨道 + 填充 + 等宽数字标签，宽度变化平滑过渡。',
+    detail: {
+      features: [
+        '**尺寸**：默认 6px 轨道；`icen-progress--sm` 4px 细轨',
+        '**标签**：`icen-progress-label` tabular-nums 百分比，数字变化不抖版式',
+        '**驱动**：`style.width` 赋值即得平滑过渡（reduced-motion 直落）；`role="progressbar"` + `aria-valuenow` 同步读屏',
+      ],
+    },
     demo: `<div style="width:100%;max-width:460px">
 <div class="icen-progress" role="progressbar" aria-valuenow="24" aria-valuemin="0" aria-valuemax="100" aria-label="构建进度" id="demo-progress">
   <div class="icen-progress-track"><div class="icen-progress-bar" id="demo-progress-bar" style="width:24%"></div></div>
@@ -1645,7 +1891,14 @@ return () => { ac.abort(); clearInterval(timer); };`,
     slug: 'spinner',
     name: '加载指示',
     group: '反馈',
-    desc: 'sm 16px / 默认 20px / lg 32px，1s 线性旋转。',
+    desc: '旋转加载指示：sm / 默认 / lg 三档。',
+    detail: {
+      features: [
+        '**尺寸**：`icen-spinner--sm` 16px / 默认 20px / `icen-spinner--lg` 32px',
+        '**动效**：1s 线性旋转',
+      ],
+      notes: ['按钮内的加载态直接用 `icen-btn.is-loading`，无需手动嵌 spinner。'],
+    },
     demo: `<div class="demo-row">
   <div class="icen-spinner icen-spinner--sm"></div>
   <div class="icen-spinner"></div>
@@ -1659,7 +1912,14 @@ return () => { ac.abort(); clearInterval(timer); };`,
     slug: 'skeleton',
     name: '骨架屏',
     group: '反馈',
-    desc: '呼吸脉冲占位块；skeleton--circle 为圆形。',
+    desc: '加载占位：呼吸脉冲的灰块，拼出内容轮廓。',
+    detail: {
+      features: [
+        '**形态**：`icen-skeleton` 矩形块，宽高用内联 style 按需拼；`icen-skeleton--circle` 圆形',
+        '**动效**：呼吸脉冲',
+      ],
+      notes: ['按真实内容的行高与宽度拼骨架，加载完成后整片替换，避免布局跳动。'],
+    },
     demo: `<div style="display:flex;align-items:center;gap:12px">
   <div class="icen-skeleton icen-skeleton--circle" style="width:40px;height:40px"></div>
   <div style="flex:1;display:flex;flex-direction:column;gap:8px">
@@ -1677,7 +1937,15 @@ return () => { ac.abort(); clearInterval(timer); };`,
     name: '复制按钮',
     summary: '复制一条命令或一个链接，等待、完成与重试都留在原处。',
     group: '反馈',
-    desc: '文本、透明与图标按钮共用同一复制行为，支持三档尺寸。原始插槽节点始终保留，等待与完成不改变按钮宽度；失败会显示可读提示，直接点击原按钮即可重试。上下文内可用 quiet 变体：桌面随悬停或焦点显现，触屏始终可用。默认使用系统剪贴板与兼容回退，也可传入 write 接入原生桥或权限流程。',
+    desc: '一键复制：文本、透明、图标三种按钮形态共用同一复制行为。',
+    detail: {
+      features: [
+        '**形态**：文本钮 / 透明钮 / 图标钮，三档尺寸共用同一行为',
+        '**反馈**：等待与完成不改变按钮宽度，原始插槽节点始终保留；失败显示可读提示，点原按钮即可重试',
+        '**quiet 变体**：上下文内随悬停或焦点显现，触屏常显',
+        '**剪贴板**：默认系统剪贴板 + 兼容回退；可传 `write` 接入原生桥或权限流程',
+      ],
+    },
     demo: `<div class="demo-row">
   <button type="button" class="icen-copy-btn icen-copy-btn--sm" data-icen-copy="bun add @icen.ai/ui">复制安装命令</button>
   <button type="button" class="icen-copy-btn icen-copy-btn--md icen-copy-btn--ghost" data-icen-copy="https://ui.icen.ai/benzhen/">复制作品链接</button>
@@ -1737,7 +2005,17 @@ return () => { ac.abort(); dispose(); };`,
     name: '通知栈',
     summary: '承载长任务、协作消息与重要变更。支持进度、异步操作、暂停计时和有分寸的堆叠。',
     group: '反馈',
-    desc: '与 behaviors/notification 配套：工程级持久通知栈——进度通知、Promise confirm、多按钮、hover 暂停+倒计时进度、优先级置顶、已读未读、自定义图标/头像、详情链接、localStorage 持久化、多容器。与 toast（瞬时）/ alert（内嵌）正交。',
+    desc: '工程级持久通知栈：进度、多按钮、已读未读、localStorage 持久化。',
+    detail: {
+      features: [
+        '**能力**：进度通知、Promise confirm、多按钮、优先级置顶、详情链接',
+        '**交互**：hover 暂停 + 倒计时进度条；已读 / 未读状态',
+        '**外观**：自定义图标 / 头像；多容器并存',
+        '**持久**：localStorage 持久化，刷新不丢',
+        '**配套**：行为在 `behaviors/notification`',
+      ],
+      notes: ['与 toast（瞬时）/ alert（内嵌）正交：需要持久与可操作的通知才用它。'],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <span class="icen-toolbar-label">语义</span>
   <button class="icen-btn icen-btn-sm" id="notif-async">异步同步与重试</button>
@@ -2054,7 +2332,13 @@ return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clea
     slug: 'avatar',
     name: '头像',
     group: '数据展示',
-    desc: 'xs 20 / sm 28 / 默认 36 / lg 48；文字兜底或 img 填充（object-fit: cover）。',
+    desc: '头像：五档尺寸，文字兜底或图片填充。',
+    detail: {
+      features: [
+        '**尺寸**：`icen-avatar--xs` 20 / `--sm` 28 / 默认 36 / `--lg` 48 / `--xl` 80px',
+        '**内容**：文字兜底或 `img` 填充（`object-fit: cover`）',
+      ],
+    },
     demo: `<div class="demo-row">
   <span class="icen-avatar icen-avatar--xs">沈</span>
   <span class="icen-avatar icen-avatar--sm">顾</span>
@@ -2068,7 +2352,13 @@ return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clea
     slug: 'media-card',
     name: '媒体卡',
     group: '数据展示',
-    desc: '2/3 封面（此处用色块代替图片）；hover 上浮 6px + accent 辉光，底部信息条滑出（延迟 80ms）。',
+    desc: '媒体卡：2/3 封面 + 悬停上浮与底部信息条。',
+    detail: {
+      features: [
+        '**结构**：2/3 封面区 + 底部信息条',
+        '**交互**：hover 上浮 6px + accent 辉光，信息条延迟 80ms 滑出',
+      ],
+    },
     demo: `<div class="demo-row">
   <div class="icen-media-card" style="width:148px">
     <div class="icen-media-card-cover" style="background:linear-gradient(160deg,var(--icen-token-accent),var(--icen-token-accent-deep))"></div>
@@ -2097,7 +2387,13 @@ return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clea
     slug: 'rating',
     name: '评分',
     group: '数据展示',
-    desc: 'is-filled 实星 / is-half 半星（warning 色）；另有 rating--sm / rating--lg 尺寸。',
+    desc: '评分：实星 / 半星两档精度，warning 色。',
+    detail: {
+      features: [
+        '**精度**：`is-filled` 实星 / `is-half` 半星',
+        '**尺寸**：`icen-rating--sm` / 默认 / `icen-rating--lg`',
+      ],
+    },
     demo: `<div class="demo-row">
   <div class="icen-rating" role="group" aria-label="评分 3.5 星，满分 5 星">
     <button class="icen-rating-star is-filled" type="button" aria-label="1 星">${starSvg}</button>
@@ -2121,7 +2417,13 @@ return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clea
     slug: 'kbd',
     name: '键盘键',
     group: '数据展示',
-    desc: '按键帽（含 kbd--sm）与行内代码片 code-inline。',
+    desc: '键帽与行内代码片：键盘按键和行内代码的排版件。',
+    detail: {
+      features: [
+        '**键帽**：`icen-kbd`（`icen-kbd--sm` 小号）；`icen-kbd-group` 组合键',
+        '**代码**：`icen-code-inline` 行内代码片',
+      ],
+    },
     demo: `<p style="margin:0">按 <kbd class="icen-kbd">Ctrl</kbd> + <kbd class="icen-kbd">K</kbd> 打开命令面板，输入 <code class="icen-code-inline">preset piano dark</code> 切换预设，<kbd class="icen-kbd icen-kbd--sm">Esc</kbd> 关闭。</p>`,
     usage: `<kbd class="icen-kbd">Ctrl</kbd> + <kbd class="icen-kbd icen-kbd--sm">K</kbd>
 <code class="icen-code-inline">行内代码</code>`,
@@ -2131,7 +2433,16 @@ return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clea
     summary: '让长代码易读、可查、可复制。行号、换行与折叠安静地留在手边。',
     name: '代码块',
     group: '数据展示',
-    desc: '适合源码、终端记录和 diff。工具栏在悬停或键盘进入时显现，触屏始终可用；代码区域可聚焦并横向滚动，行号、换行和折叠同步读屏状态。复制保留空行，等待时避免重复操作，失败提供重试。浏览器用 renderCodeBlock，构建期用 codeBlockHTML；两者共用 initCodeBlock 委托与销毁。code 是安全文本入口，html 仅接收可信高亮结果，调用方负责其语法配色对比度；本站高亮已适配六套主题的明暗底色。下方展示双主题 TypeScript、长终端记录和增删差异。',
+    desc: '代码块：高亮、行号、折叠、复制与 diff 着色，浏览器与构建期双入口。',
+    detail: {
+      features: [
+        '**适用**：源码、终端记录与 diff（增删差异双行号）',
+        '**工具栏**：悬停或键盘进入显现，触屏常显；复制保留空行，等待防重复，失败可重试',
+        '**阅读**：代码区可聚焦并横向滚动；行号、换行和折叠同步读屏状态',
+        '**渲染**：浏览器用 `renderCodeBlock`，构建期用 `codeBlockHTML`；共用 `initCodeBlock` 委托与销毁',
+      ],
+      notes: ['`code` 是安全文本入口；`html` 只接收可信高亮结果，语法配色对比度由调用方负责。本站高亮已适配六套主题的明暗底色。'],
+    },
     demo: CB_DEMO,
     usage: `import { renderCodeBlock, codeBlockHTML, initCodeBlock } from '@icen.ai/ui/behaviors/code-block';
 
@@ -2162,7 +2473,13 @@ const html = codeBlockHTML({ html: shikiHighlighted, lang: 'ts', file: 'src/app.
     slug: 'list',
     name: '列表',
     group: '数据展示',
-    desc: '行间 1px 分隔线 + hover 底色的分隔列表。',
+    desc: '分隔列表：行间细分隔线 + 悬停底色的纵向条目。',
+    detail: {
+      features: [
+        '**结构**：`icen-list` + `icen-list-item`；行间 1px 分隔线，hover 出底色',
+        '**密度**：`icen-list--compact` 紧凑档',
+      ],
+    },
     demo: `<ul class="icen-list">
   <li class="icen-list-item" style="display:flex;align-items:center;gap:8px"><span>账号安全</span><span class="icen-faint" style="margin-left:auto;font-size:11px">已开启二次验证</span></li>
   <li class="icen-list-item" style="display:flex;align-items:center;gap:8px"><span>消息通知</span><span class="icen-faint" style="margin-left:auto;font-size:11px">仅关注的人</span></li>
@@ -2177,7 +2494,14 @@ const html = codeBlockHTML({ html: shikiHighlighted, lang: 'ts', file: 'src/app.
     slug: 'accordion',
     name: '折叠面板',
     group: '数据展示',
-    desc: '与 behaviors/accordion 配套；本例容器带 data-icen-single（展开一项自动收起其余）。',
+    desc: '手风琴：分区展开收起，支持单开模式。',
+    detail: {
+      features: [
+        '**结构**：`icen-accordion-item` + `icen-accordion-trigger` + `icen-accordion-panel`，chevron 随开合旋转',
+        '**单开**：容器挂 `data-icen-single`，展开一项自动收起其余',
+        '**变体**：`icen-accordion--cards` 卡片分栏外观',
+      ],
+    },
     demo: `<div class="accordion" data-icen-single>
   <div class="icen-accordion-item is-open">
     <button class="icen-accordion-trigger" type="button" aria-expanded="true"><span>什么是 @icen.ai/ui？</span>${accChevron}</button>
@@ -2202,7 +2526,14 @@ initAccordion();
     slug: 'timeline',
     name: '时间线',
     group: '数据展示',
-    desc: '五档语义色圆点 + 连接线，时间右对齐 tabular-nums。',
+    desc: '时间线：语义色圆点 + 连接线，时间右对齐等宽数字。',
+    detail: {
+      features: [
+        '**结构**：`icen-timeline-item` + `icen-timeline-dot` + `icen-timeline-body`（`icen-timeline-head` / `-title`）',
+        '**语义色**：圆点五档 `--accent` / `--success` / `--warning` / `--error` / `--info`',
+        '**排版**：时间右对齐 tabular-nums',
+      ],
+    },
     demo: `<div class="icen-timeline">
   <div class="icen-timeline-item">
     <div class="icen-timeline-dot icen-timeline-dot--success">${checkSvg}</div>
@@ -2247,7 +2578,14 @@ initAccordion();
     slug: 'desc',
     name: '描述列表',
     group: '数据展示',
-    desc: 'desc--bordered 格线列表（--desc-cols 控制列数，--desc-span 跨列）。',
+    desc: '描述列表：格线分明的键值对排版，列数与跨列可控。',
+    detail: {
+      features: [
+        '**结构**：`icen-desc` + `icen-desc-grid` + `icen-desc-item`（`dt` / `dd`）',
+        '**格线**：`icen-desc--bordered` 格线列表；`--desc-cols` 控制列数、`--desc-span` 跨列',
+        '**变体**：`icen-desc--inline` 行内、`icen-desc--vertical` 纵向',
+      ],
+    },
     demo: `<div class="icen-desc icen-desc--bordered">
   <p class="icen-desc-title">发布信息</p>
   <dl class="icen-desc-grid" style="--desc-cols:2">
@@ -2269,7 +2607,14 @@ initAccordion();
     slug: 'tree',
     name: '树形',
     group: '数据展示',
-    desc: '与 behaviors/tree 配套：三层可折叠 + 叶子单选 + 禁用节点。',
+    desc: '树形列表：多层可折叠、叶子单选、禁用节点。',
+    detail: {
+      features: [
+        '**结构**：`icen-tree-node` 节点，多层可折叠 + 叶子单选',
+        '**状态**：`is-disabled` / `aria-disabled` 禁用节点',
+        '**配套**：行为在 `behaviors/tree`',
+      ],
+    },
     demo: `<ul class="icen-tree">
   <li>
     <div class="icen-tree-node" style="--depth:0">
@@ -2313,7 +2658,15 @@ initTree();
     name: '轮播',
     group: '数据展示',
     summary: '内容是主角。控制件退到画面边缘，需要时才被注意到。',
-    desc: '箭头/圆点/滑动/键盘四条通道同一个切换引擎，首尾循环。圆点与箭头用覆盖件玻璃语言，在任何深浅媒质上都可辨；触屏命中区不小于 44px。RTL 下左右键按视觉方向镜像。读屏经隐藏状态行通报「第 i / n 张」，slide 带 W3C 语义；标记里放 .icen-carousel-index 槽位即同步「i / n」索引。',
+    desc: '轮播：箭头、圆点、滑动、键盘四条通道同一个切换引擎。',
+    detail: {
+      features: [
+        '**通道**：箭头 / 圆点 / 触摸滑动 / 键盘，首尾循环',
+        '**覆盖件**：圆点与箭头用玻璃语言，深浅媒质上都可辨；触屏命中区 ≥ 44px',
+        '**RTL**：方向键按视觉方向镜像',
+        '**读屏**：隐藏状态行通报「第 i / n 张」；标记里放 `.icen-carousel-index` 槽位即同步索引',
+      ],
+    },
     demo: `<div class="icen-carousel">
   <div class="icen-carousel-track">
     <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-accent),var(--icen-token-accent-deep));color:var(--icen-token-on-accent)"><strong>随手的组件</strong><span style="font-size:12px;opacity:.85">一行引入，行为自动接上</span></div></div>
@@ -2345,7 +2698,14 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     slug: 'badge',
     name: '徽标',
     group: '数据展示',
-    desc: '角标式徽标：数字计数 / 纯圆点，挂在外层元素的角上（外层需 position: relative）。区别于 pill（行内状态徽章）。',
+    desc: '角标徽标：数字计数或纯圆点，挂在外层元素的角上。',
+    detail: {
+      features: [
+        '**形态**：数字计数 / 纯圆点两种',
+        '**挂载**：外层元素需 `position: relative`，角标吸附在角上',
+      ],
+      notes: ['与徽章（pill）分工：badge 是挂在元素角上的计数提醒，pill 是行内状态徽章。'],
+    },
     demo: `<div class="demo-row">
   <span class="icen-badge-host">
     <button class="icen-btn" type="button">消息</button>
@@ -2389,7 +2749,13 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     slug: 'scroll-area',
     name: '滚动容器',
     group: '数据展示',
-    desc: '显式带视觉边界的滚动区。全局已有细薄滚动条（base.css），本组件用于强调"可滚动"或限定方向的场景。',
+    desc: '显式滚动区：给「可滚动」一个看得见的边界。',
+    detail: {
+      features: [
+        '**方向**：`icen-scroll-area--x` / `--y` / `--both` 限定滚动方向',
+      ],
+      notes: ['全局已有细薄滚动条（base.css）；本组件用于强调「可滚动」或限定方向的场景。'],
+    },
     demo: `<div class="demo-row" style="align-items:flex-start">
   <div class="icen-scroll-area icen-scroll-area--inset" tabindex="0" style="width:240px;height:140px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">
     <p>inset 变体：内嵌阴影 + 背景色 + 圆角边框，<strong>强烈暗示可滚动</strong>。</p>
@@ -2430,7 +2796,16 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     slug: 'charts',
     name: '图表总览',
     group: '图表',
-    desc: '零依赖纯 SVG/DOM 渲染（无 ECharts）——12 种图表 + 通用层。renderChart 统一入口吃一份纯 JSON 规格（ChartSpec）：type 缺省自动推断、data[] + dims 任意维度透视、内置 tooltip、icen:chart-hover/click/dblclick/contextmenu 交互事件族、图例点击切换系列。下方 demo 可切换图型并实时看事件日志；实际使用请按需安装细分类型（kit/chart-line 等）。',
+    desc: '图表族总览：零依赖纯 SVG 渲染，12 种图型共用一份 JSON 规格。',
+    detail: {
+      features: [
+        '**统一入口**：`renderChart` 吃一份纯 JSON 规格（ChartSpec）；`type` 缺省自动推断',
+        '**数据**：`data[]` + `dims` 任意维度透视',
+        '**交互**：内置 tooltip；`icen:chart-hover` / `click` / `dblclick` / `contextmenu` 事件族；图例点击切换系列',
+        '**安装**：按需引入细分类型（`kit/chart-line` 等），不必整包引入',
+      ],
+      notes: ['下方演示可切换图型并实时查看事件日志。'],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <span class="icen-toolbar-label">通用层</span>
   <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" data-chart-spec="line">多系列折线</button>
@@ -2440,7 +2815,7 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
   <button class="icen-btn icen-btn-sm" type="button" data-chart-spec="calendar">贡献日历</button>
   <button class="icen-btn icen-btn-sm" type="button" data-chart-spec="donut">环形占比</button>
 </div>
-<p class="demo-label" style="margin:0 0 10px">悬停看 tooltip · 单击/双击/右键数据点 · 点图例行切换系列 · 标题右侧小眼睛隐藏/显示图例——事件日志在下方</p>
+<p class="demo-label" style="margin:0 0 10px">悬停看 tooltip · 单击 / 双击 / 右键数据点 · 点图例行切换系列——事件日志在下方</p>
 <div class="icen-chart" id="chart-universal" style="border:1px solid var(--icen-token-line-soft);border-radius:var(--icen-radius-md);padding:12px"></div>
 <p class="demo-label" id="chart-event-log" style="margin-top:8px">事件日志：等待交互…</p>
 <div class="chart-grid" style="margin-top:16px">
@@ -2609,7 +2984,14 @@ on('icen-chart-heatmap', (el) => {
     slug: 'chart-line',
     name: '折线图',
     group: '图表',
-    desc: '面积渐变 + 网格 + 数据点的折线趋势图；series 多系列走调色盘 + 可切换图例（点击图例行显隐系列）。独立安装：只引这一份 CSS + renderLine。',
+    desc: '折线趋势图：面积渐变 + 网格 + 数据点，多系列可切换。',
+    detail: {
+      features: [
+        '**视觉**：面积渐变 + 网格 + 数据点',
+        '**多系列**：series 走调色盘；点击图例行显隐系列',
+        '**独立安装**：只引这一份 CSS + `renderLine`',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div style="grid-column:1/-1">
     <p class="chart-cap">一周活跃用户趋势（多系列 · 点图例切换）</p>
@@ -2645,7 +3027,13 @@ if (el) renderLine(el, {
     slug: 'chart-bar',
     name: '柱状图',
     group: '图表',
-    desc: 'renderVBar 垂直柱状 + renderHBar 水平条形两种形态，同一 kit 入口。',
+    desc: '柱状与条形图：垂直、水平两种形态同一入口。',
+    detail: {
+      features: [
+        '**两形态**：`renderVBar` 垂直柱状 / `renderHBar` 水平条形',
+        '**入口**：同一 kit 引入',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div>
     <p class="chart-cap">月度投稿（垂直柱状）</p>
@@ -2671,7 +3059,13 @@ on('bar-hbar', (el) => renderHBar(el, { labels: ['搜索', '推荐', '分享', '
     slug: 'chart-pie',
     name: '饼图',
     group: '图表',
-    desc: '环形分割图（renderDonut）+ 图例百分比。支持多段、自定义色调与格式化。',
+    desc: '环形分割图：多段占比 + 图例百分比。',
+    detail: {
+      features: [
+        '**渲染**：`renderDonut`；支持多段、自定义色调与格式化',
+        '**图例**：随段带百分比',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div>
     <p class="chart-cap">工时分布（环形）</p>
@@ -2696,7 +3090,13 @@ if (el) renderDonut(el, { segments: [{ label: '研发', value: 48 }, { label: '�
     slug: 'chart-radar',
     name: '雷达图',
     group: '图表',
-    desc: 'N 轴蛛网雷达图（renderRadar），支持多系列叠加对比 + 图例。',
+    desc: '蛛网雷达图：N 轴多维对比，多系列叠加。',
+    detail: {
+      features: [
+        '**渲染**：`renderRadar`',
+        '**对比**：N 轴多维，多系列叠加 + 图例',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div>
     <p class="chart-cap">角色能力对比</p>
@@ -2727,7 +3127,14 @@ if (el) renderRadar(el, {
     slug: 'chart-heatmap',
     name: '热力图',
     group: '图表',
-    desc: 'GitHub 式贡献图热力格（renderHeatmap）：7 行 × N 周，5 档色阶。支持精确日期或便捷数组。',
+    desc: '贡献热力格：GitHub 式 7 行 × N 周，5 档色阶。',
+    detail: {
+      features: [
+        '**渲染**：`renderHeatmap`；7 行 × N 周网格',
+        '**色阶**：5 档',
+        '**数据**：精确日期或便捷数组两种喂法',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div style="grid-column:1/-1">
     <p class="chart-cap">近 26 周活跃热力图</p>
@@ -2755,7 +3162,12 @@ if (el) {
     slug: 'chart-area',
     name: '面积图',
     group: '图表',
-    desc: '以面积填充为主体的趋势图（renderArea），与折线同族但视觉更厚重。',
+    desc: '面积趋势图：与折线同族，填充更厚重。',
+    detail: {
+      features: [
+        '**渲染**：`renderArea`；以面积填充为主体',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div style="grid-column:1/-1">
     <p class="chart-cap">季度营收趋势（面积）</p>
@@ -2778,7 +3190,12 @@ if (el) renderArea(el, { labels: ['Q1', 'Q2', 'Q3', 'Q4'], values: [120, 180, 15
     slug: 'chart-stack',
     name: '堆叠条',
     group: '图表',
-    desc: '100% 堆叠条形图（renderStack），展示各部分占比 + 图例。',
+    desc: '100% 堆叠条形图：各部分占比一目了然。',
+    detail: {
+      features: [
+        '**渲染**：`renderStack`；占比分解 + 图例',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div style="grid-column:1/-1">
     <p class="chart-cap">任务进度分布</p>
@@ -2803,7 +3220,12 @@ if (el) renderStack(el, { segments: [{ label: '已完成', value: 45, tone: 'suc
     slug: 'chart-gauge',
     name: '仪表盘',
     group: '图表',
-    desc: '环形单值仪表盘（renderGauge），中心显示百分比，适合 KPI 完成率。',
+    desc: '环形仪表盘：中心百分比，适合 KPI 完成率。',
+    detail: {
+      features: [
+        '**渲染**：`renderGauge`；环形单值，中心显示百分比',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div>
     <p class="chart-cap">发布完成率</p>
@@ -2822,7 +3244,13 @@ if (el) renderGauge(el, { value: 64, label: '完成率' });`,
     slug: 'chart-sparkline',
     name: '迷你趋势',
     group: '图表',
-    desc: '无轴迷你趋势线（renderSparkline），嵌入指标卡 / 表格单元格的利器。',
+    desc: '迷你趋势线：无轴小图，嵌进指标卡与表格单元格。',
+    detail: {
+      features: [
+        '**渲染**：`renderSparkline`；无轴迷你形态',
+        '**场景**：指标卡 / 表格单元格内嵌',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div>
     <p class="chart-cap">近 14 天活跃（迷你）</p>
@@ -2841,7 +3269,14 @@ if (el) renderSparkline(el, { values: [4, 7, 5, 9, 6, 11, 8, 13, 10, 15, 12, 17,
     slug: 'chart-scatter',
     name: '散点气泡',
     group: '图表',
-    desc: '散点/气泡图（renderScatter）：坐标域自动 nice 取整 + 边界刻度；points 的 size 为第三维时映射气泡半径 3–10。数据点带交互标记（hover/单击/双击/右键走 renderChart 通用层）。',
+    desc: '散点与气泡图：坐标域自动取整，第三维映射气泡半径。',
+    detail: {
+      features: [
+        '**渲染**：`renderScatter`；坐标域自动 nice 取整 + 边界刻度',
+        '**气泡**：points 的 `size` 为第三维时映射半径 3–10px',
+        '**交互**：数据点 hover / 单击 / 双击 / 右键走 `renderChart` 通用层',
+      ],
+    },
     demo: `<div class="chart-grid">
   <div style="grid-column:1/-1">
     <p class="chart-cap">构建时长 × 包体积（气泡 = 测试数）</p>
@@ -2874,7 +3309,14 @@ if (el && chartsMod.renderScatter) {
     slug: 'chart-calendar',
     name: '贡献日历',
     group: '图表',
-    desc: '贡献日历（renderCalendar，GitHub 提交图同款）：dates + values 自动按周布局，月份标签 + 星期列 + 5 档色阶图例。周格热力（renderHeatmap）的日历完整形态。',
+    desc: '贡献日历：GitHub 提交图同款，按周自动布局。',
+    detail: {
+      features: [
+        '**渲染**：`renderCalendar`；`dates` + `values` 自动按周布局',
+        '**标注**：月份标签 + 星期列 + 5 档色阶图例',
+      ],
+      notes: ['周格热力（`renderHeatmap`）的日历完整形态。'],
+    },
     demo: `<div class="chart-grid">
   <div style="grid-column:1/-1">
     <p class="chart-cap">近 18 周提交</p>
@@ -2906,7 +3348,14 @@ if (el && chartsMod.renderCalendar) {
     slug: 'table',
     name: '表格',
     group: '数据展示',
-    desc: 'table-wrap 负责窄屏横向滚动；行 hover 高亮，ops 列右对齐放 btn-sm。增强：--zebra 斑马纹、caption 标题、--sticky-col 首列粘滞、行状态色（row-success/warning/error）、展开行（row-expand）。',
+    desc: '基础表格：窄屏横向滚动、行悬停、斑马纹与首列粘滞。',
+    detail: {
+      features: [
+        '**滚动**：`icen-table-wrap` 负责窄屏横向滚动',
+        '**行**：hover 高亮；ops 列右对齐放 `icen-btn-sm`',
+        '**增强**：`--zebra` 斑马纹、`caption` 标题、`--sticky-col` 首列粘滞、行状态色（`row-success` / `warning` / `error`）、`row-expand` 展开行',
+      ],
+    },
     demo: `<div class="icen-table-wrap icen-table-wrap--bordered">
   <table class="icen-table icen-table--zebra">
     <caption class="icen-table-caption">服务实例清单 · 2026 年 7 月</caption>
@@ -2946,7 +3395,16 @@ if (el && chartsMod.renderCalendar) {
     slug: 'datatable',
     name: '数据表格',
     group: '数据展示',
-    desc: 'createTable 函数式 API：搜索 / 排序 / 筛选 / 多选（Shift 范围选）/ 分页 / 虚拟滚动（万级行）/ 行展开 / 列宽拖拽 / 列显隐 / 冻结列 / CSV 导出 / 行右键。管线缓存，零依赖。',
+    desc: '函数式数据表：搜索、排序、筛选、分页、虚拟滚动、导出，零依赖。',
+    detail: {
+      features: [
+        '**入口**：`createTable` 一行建表，管线缓存、零依赖',
+        '**数据**：搜索 / 排序 / 筛选 / 多选（Shift 范围选）/ 分页',
+        '**大数据**：虚拟滚动承载万级行',
+        '**列**：列宽拖拽 / 列显隐 / 冻结列',
+        '**扩展**：行展开、行右键、CSV 导出',
+      ],
+    },
     demo: `<div class="demo-col-wide" style="width:100%">
   <p class="chart-cap">全功能：搜索 / 排序 / 列筛选 / 多选 / 分页 / 行展开 / 列宽拖拽 / 列显隐 / 导出 / 冻结列 / 右键行</p>
   <div id="dt-main"></div>
@@ -3130,7 +3588,14 @@ COMPONENTS.push(
     slug: 'nav',
     name: '顶栏',
     group: '导航',
-    desc: '三段式玻璃顶栏（左 / 中 / 右）+ pill 导航钮；data-icen-scroll-reactive 时滚动超过 12px 切 .is-scrolled。',
+    desc: '站点顶部导航：左中右三段玻璃栏，滚动时自动收边。',
+    detail: {
+      features: [
+        '**结构**：`icen-nav-left` / `-center` / `-right` 三段；`icen-nav-btn` pill 导航钮，`--icon` 图标钮',
+        '**玻璃**：`icen-nav--sticky` 吸顶 + 模糊背景；`icen-nav-divider` 分隔线',
+        '**滚动**：挂 `data-icen-scroll-reactive` 后滚动超 12px 自动切 `.is-scrolled`',
+      ],
+    },
     demo: `<nav class="icen-nav icen-nav--sticky" data-icen-scroll-reactive>
   <div class="icen-nav-left">
     <span class="demo-logo">${iconHTML('benzhen', { size: 15 })} ICEN</span>
@@ -3157,7 +3622,14 @@ initNav(); // scrollY > 12 时给 .nav[data-icen-scroll-reactive] 加 .is-scroll
     slug: 'sidebar',
     name: '侧栏',
     group: '导航',
-    desc: '分组可折叠（grid 0fr↔1fr 动画，chevron 随开合旋转），条目支持图标与 .is-active。',
+    desc: '分组可折叠的侧栏导航：条目带图标与当前态。',
+    detail: {
+      features: [
+        '**分组**：`icen-sidebar-group` + `is-open` 开合（grid 0fr↔1fr 动画，chevron 随开合旋转）',
+        '**条目**：`icen-sidebar-item` + `icen-sidebar-item-icon`；`is-active` 标记当前页',
+        '**行为**：`initSidebar` 接管点击，同步 `aria-expanded`',
+      ],
+    },
     demo: `<aside class="icen-sidebar">
   <div class="icen-sidebar-group is-open">
     <button class="icen-sidebar-group-title" aria-expanded="true">快速开始</button>
@@ -3191,7 +3663,13 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
     slug: 'breadcrumb',
     name: '面包屑',
     group: '导航',
-    desc: '分隔符由 .breadcrumb-sep 的 ::after（›）提供；当前页挂 aria-current="page"。',
+    desc: '面包屑：逐级回跳的路径导航。',
+    detail: {
+      features: [
+        '**结构**：`nav` + `ol` + `icen-breadcrumb-link`；末级 `icen-breadcrumb-current` 挂 `aria-current="page"`',
+        '**分隔符**：`icen-breadcrumb-sep` 的 `::after`（›）提供，无需手写字符',
+      ],
+    },
     demo: `<nav class="icen-breadcrumb" aria-label="面包屑">
   <ol>
     <li><a class="icen-breadcrumb-link" href="/">首页</a><span class="icen-breadcrumb-sep" aria-hidden="true"></span></li>
@@ -3211,7 +3689,13 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
     slug: 'pagination',
     name: '分页',
     group: '导航',
-    desc: '纯样式契约（翻页逻辑归消费方）：1 … 4 [5] 6 … 12 静态演示，含禁用态与省略号。',
+    desc: '分页页码条：纯样式契约，含当前页、禁用与省略号。',
+    detail: {
+      features: [
+        '**结构**：`icen-page-btn` 页码钮；`is-active` + `aria-current="page"` 当前页；`is-disabled` 禁用；`icen-page-ellipsis` 省略号',
+        '**职责**：翻页逻辑归消费方，组件只管呈现',
+      ],
+    },
     demo: `<nav class="icen-pagination" aria-label="分页">
   <button class="icen-page-btn icen-motion is-disabled" aria-label="上一页">${iconHTML('chevron-left')}</button>
   <button class="icen-page-btn icen-motion">1</button>
@@ -3236,7 +3720,13 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
     slug: 'steps',
     name: '步骤条',
     group: '导航',
-    desc: '三态 finish / process / wait，连接线颜色跟随已完成步骤；横向与垂直共用同一 DOM，仅容器加 .steps--vertical。',
+    desc: '步骤条：多阶段流程的进度导航，横向与垂直同一 DOM。',
+    detail: {
+      features: [
+        '**三态**：`finish` / `process` / `wait`；连接线颜色跟随已完成步骤',
+        '**方向**：横向与垂直共用同一 DOM，容器加 `icen-steps--vertical` 即换向',
+      ],
+    },
     demo: `<ol class="icen-steps">
   <li class="icen-step icen-step--finish">
     <span class="icen-step-line"></span>
@@ -3317,7 +3807,13 @@ initSidebar(); // 点击 .sidebar-group-title 切父 group 的 .is-open + aria-e
     slug: 'back-top',
     name: '回到顶部',
     group: '导航',
-    desc: '与 behaviors/back-top 配套：滚动超过阈值（默认 320px）出现的悬浮按钮，点击平滑滚回顶部。支持手写按钮或 autoCreate 全自动。',
+    desc: '回到顶部：滚动过阈值浮出的悬浮钮。',
+    detail: {
+      features: [
+        '**触发**：滚动超过阈值（默认 320px）出现，点击平滑滚回顶部',
+        '**接入**：手写按钮挂属性，或 `autoCreate` 全自动建钮',
+      ],
+    },
     demo: `<div class="demo-row">
   <button class="icen-btn" id="back-top-demo">向下滚动本页试试</button>
 </div>
@@ -3342,7 +3838,13 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
     slug: 'layout',
     name: '布局工具',
     group: '导航',
-    desc: 'stack / divider / surface / text / grid / center / container / aspect / visually-hidden 全部工具类，无 JS。',
+    desc: '零 JS 的布局工具类全集：堆叠、网格、容器、宽高比与可读性件。',
+    detail: {
+      features: [
+        '**全集**：`stack` / `divider` / `surface` / `text` / `grid` / `center` / `container` / `aspect` / `visually-hidden`',
+        '**零 JS**：纯 CSS 工具类，挂类即用',
+      ],
+    },
     demo: `<h3 class="demo-sub">stack 间距与分布</h3>
 <div class="icen-stack icen-stack--gap-4">
   <p class="demo-label">stack--gap-1（4px）</p>
@@ -3426,7 +3928,15 @@ document.getElementById('back-top-demo')?.addEventListener('click', () => {
     slug: 'ai-overview',
     name: 'AI 总览',
     group: 'AI 原生',
-    desc: '一段可播放的完整对话《分析 AI 迭代历史》——把 AI 族全部能力按真实工作流串起来：思考（reasoning 流式+自动折叠）→ 规划（todo activeForm 推进）→ 网络搜索 / 接口调用（工具卡）→ 二次思考 → 正文流式 → render_chart 可视化（默认展开）→ 人工审批（点「允许」继续）→ history.md 差异审阅（accept/reject）→ 文件标签 → 子智能体（嵌套活动流）→ 失败重试（自动展开）→ 多模态回执（架构图）→ 收尾（token/成本、上下文抽屉、审计面板）。输入台 v2（模型切换/命令/@引用/上下文环）全程参与。',
+    desc: 'AI 族总览：一段可播放的完整对话，把全部能力按真实工作流串起来。',
+    detail: {
+      features: [
+        '**剧本**：思考 → 规划 → 工具调用 → 二次思考 → 正文流式 → 图表可视化 → 人工审批 → 差异审阅 → 文件标签 → 子智能体 → 失败重试 → 多模态回执',
+        '**全程**：输入台 v2（模型切换 / 命令 / @引用 / 上下文环）参与每一步',
+        '**收尾**：token 与成本统计、上下文抽屉、审计面板',
+      ],
+      notes: ['这是纯文档聚合页，包内无对应 kit 入口；各能力的独立文档见左侧 AI 原生分组。'],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" id="ai-ov-play">${iconHTML('play',{size:13})} 播放全流程</button>
   <button class="icen-btn icen-btn-sm" type="button" id="ai-ov-reset">${iconHTML('refresh',{size:13})} 重置</button>
@@ -3744,16 +4254,25 @@ refreshAudit();`,
     slug: 'ai-chat',
     name: 'AI 会话',
     group: 'AI 原生',
-    desc: 'AI 会话容器（AI 族门面条目）：滚动钉底跟随、上滚暂停跟随并浮出「回到底部 · N 条」浮动钮（缺失自动补建）；消息 copy / retry 操作委托（icen:ai-copy / icen:ai-retry）；reasoning 折叠委托。配套 createAiStream 流式追加（含 fail() 错误路径）与 renderAiMessage 消息渲染原语（多模态部件 + 错误变体）；data-icen-density 三档控制信息密度。下方 demo 是零接线全链路：bindComposer 一行把 composer ↔ 消息区 ↔ createAiClient（mock provider SSE 流式）↔ 上下文环（contextEstimate 正确口径）接成闭环，排队消息自动续发，审计自动累计成本。',
+    desc: 'AI 会话容器：滚动跟随、消息操作与流式渲染的门面组件。',
+    detail: {
+      features: [
+        '**滚动**：钉底跟随；上滚暂停并浮出「回到底部 · N 条」钮（缺失自动补建）',
+        '**消息**：copy / retry 操作委托（`icen:ai-copy` / `icen:ai-retry`）；reasoning 折叠委托',
+        '**渲染**：`renderAiMessage` 消息原语（多模态部件 + 错误变体）；`createAiStream` 流式追加，含 `fail()` 错误路径',
+        '**密度**：`data-icen-density` 三档信息密度',
+      ],
+      notes: ['下方 demo 是零接线全链路：`bindComposer` 连接输入台、消息与离线流式客户端。成功后续发队列；停止或失败后暂停队列，可用空输入框的 ↑ 取回编辑。最近失败或停止的回答可直接重试，保留当前输入草稿。'],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <span class="icen-toolbar-label">密度</span>
   <button class="icen-btn icen-btn-sm" type="button" data-ai-density="verbose">verbose</button>
   <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" data-ai-density="normal">normal</button>
   <button class="icen-btn icen-btn-sm" type="button" data-ai-density="summary">summary</button>
   <span class="icen-toolbar-spacer"></span>
-  <span class="icen-toolbar-label">发消息试试</span>
+  <button class="icen-btn icen-btn-sm icen-btn-ghost" type="button" id="ai-chat-fail-next" aria-pressed="false">让下一次请求失败</button>
 </div>
-<p class="demo-label" style="margin:0 0 10px">bindComposer 零接线：mock provider 流式回包 · 上下文环 = contextEstimate（下一轮估算）口径</p>
+<p class="demo-label" id="ai-chat-feedback" role="status" style="margin:0 0 10px">发送后可停止生成，也可以继续输入，把下一条排入队列。</p>
 <div class="icen-ai-chat" id="ai-chat-demo" data-icen-density="normal" style="height:380px;border:1px solid var(--icen-token-line-soft);border-radius:var(--icen-radius-md);padding:10px">
   <div class="icen-ai-chat-scroll">
     <div class="icen-ai-msg icen-ai-msg--user">
@@ -3825,7 +4344,7 @@ const binding = bindComposer(composer, {
   messages: scrollEl,            // renderAiMessage 挂载点
   usage: { from: 'context' },    // 环 = contextEstimate（正确口径）；'billing' | AiAuditor 亦可
 });
-// binding.unbind() 解绑`,
+// binding.retry() 重试最近失败/停止的回答；binding.unbind() 中止请求并解绑`,
     behaviors: ['ai-chat', 'ai-tool', 'ai-composer', 'ai-provider'],
     behaviorInit: { 'ai-chat': 'initAiChat', 'ai-tool': 'initAiTool', 'ai-composer': 'initAiComposer' },
     script: `const chatEl = document.getElementById('ai-chat-demo');
@@ -3834,11 +4353,20 @@ const scrollEl = chatEl ? chatEl.querySelector('.icen-ai-chat-scroll') : null;
 
 /* 模拟 provider：mock fetch 返回 OpenAI 族 SSE 流（离线演示全链路） */
 const REPLIES = [
-  '构建已验证通过（3.2s，55 组件 + 75 kit 入口）。发布检查清单：\\n1. 构建 · bun run build 全绿\\n2. 类型 · tsc --noEmit 零错误\\n3. 回滚 · revert tag 即可，本次无数据库变更',
+  '发布前可依次核对三件事：\\n1. 执行构建和类型检查，记录实际结果。\\n2. 用键盘和触屏走完主要操作路径。\\n3. 留存当前版本与回滚步骤，核对数据是否需要独立恢复。',
   '收到，已计入会话上下文。注意右下角上下文环——口径是「下一轮上下文估算」（本轮输入+缓存+输出），不是累计计费；切模型时环的 total 会跟着所选模型的窗口走。',
 ];
 let turn = 0;
-function mockFetch() {
+let failNext = false;
+const feedback = document.getElementById('ai-chat-feedback');
+const failButton = document.getElementById('ai-chat-fail-next');
+function mockFetch(url, init) {
+  if (failNext) {
+    failNext = false;
+    failButton?.setAttribute('aria-pressed', 'false');
+    if (feedback) feedback.textContent = '本次请求演示临时失败。点击回答中的继续生成即可重试，当前草稿会保留。';
+    return Promise.resolve(new Response('演示服务暂时不可用，请重试。', {status:503}));
+  }
   const t = turn++;
   const text = REPLIES[t % REPLIES.length];
   const frames = [];
@@ -3847,15 +4375,31 @@ function mockFetch() {
   }
   frames.push('data: ' + JSON.stringify({ choices: [], usage: { prompt_tokens: 138000 + t * 42000, completion_tokens: 180 + t * 60, prompt_tokens_details: { cached_tokens: 96000 } } }) + '\\n\\n');
   frames.push('data: [DONE]\\n\\n');
+  let timer;
+  let ended = false;
+  let abort;
+  const signal = init?.signal;
+  function cleanup() {
+    clearTimeout(timer);
+    if (abort) signal?.removeEventListener('abort', abort);
+  }
   return Promise.resolve(new Response(new ReadableStream({
     start(c) {
+      abort = function () {
+        if (ended) return;
+        ended = true; cleanup(); c.error(new DOMException('已停止', 'AbortError'));
+      };
+      if (signal?.aborted) { abort(); return; }
+      signal?.addEventListener('abort', abort, {once:true});
       (function push() {
+        if (ended) return;
         const f = frames.shift();
-        if (f == null) return c.close();
+        if (f == null) { ended = true; cleanup(); c.close(); return; }
         c.enqueue(new TextEncoder().encode(f));
-        setTimeout(push, 24);
+        timer = setTimeout(push, 24);
       })();
     },
+    cancel() { ended = true; cleanup(); },
   }), { status: 200, headers: { 'content-type': 'text/event-stream' } }));
 }
 
@@ -3871,18 +4415,23 @@ aiComposerMod.setComposerCommands(composer, [
   { name: 'compact', description: '压缩对话历史' },
 ]);
 aiComposerMod.setComposerRefs(composer, [
+  { kind: 'skill', id: 'design', label: '界面设计', description: '排版、材料与交互打磨' },
+  { kind: 'tool', id: 'search', label: '工作区搜索', icon: 'search', description: '定位相关项目文件' },
   { kind: 'file', id: 'f1', label: 'src/app.ts', sub: '2.1k tok' },
   { kind: 'folder', id: 'f2', label: 'src/auth/', sub: '12 文件' },
   { kind: 'agent', id: 'a1', label: 'explore', sub: '搜索型子代理' },
 ]);
 
 /* 零接线全链路：一行绑定（消息渲染 / 运行态 / 停止 / 排队续发 / 上下文环 / 错误路径全接管） */
-if (composer && scrollEl) {
-  aiComposerMod.bindComposer(composer, { client: client, messages: scrollEl, usage: { from: 'context' } });
-}
+const binding = composer && scrollEl ? aiComposerMod.bindComposer(composer, { client: client, messages: scrollEl, usage: { from: 'context' } }) : null;
 
 /* 密度三档切换（ac 统一回收；换页不残留） */
 const densityCtl = new AbortController();
+failButton?.addEventListener('click', function () {
+  failNext = !failNext;
+  failButton.setAttribute('aria-pressed', String(failNext));
+  if (feedback) feedback.textContent = failNext ? '下一次发送将演示临时失败，可以直接重试。' : '发送后可停止生成，也可以继续输入，把下一条排入队列。';
+}, {signal:densityCtl.signal});
 document.querySelectorAll('[data-ai-density]').forEach(function (btn) {
   btn.addEventListener('click', function () {
     chatEl?.setAttribute('data-icen-density', btn.getAttribute('data-ai-density') || 'normal');
@@ -3891,13 +4440,22 @@ document.querySelectorAll('[data-ai-density]').forEach(function (btn) {
     });
   }, { signal: densityCtl.signal });
 });
-return () => densityCtl.abort();`,
+return () => { densityCtl.abort(); binding?.unbind(); };`,
   },
   {
     slug: 'ai-message',
     name: 'AI 消息',
     group: 'AI 原生',
-    desc: '消息行基元 .ai-msg：user / assistant / system / tool 四角色（avatar 语义色）+ meta 时间 · token（summary 档隐藏）+ hover / focus-within 浮出 copy · retry 操作钮。renderAiMessage 渲染原语消费标准化内容（spec §10）：字符串或部件数组——文字 / 图片 / 音频 / 视频 / 文件 / 资源链接（MCP ResourceLink）任意组合，另支持错误变体（.ai-msg--error）与流式节点。操作委托由 initAiChat 提供（消息须挂在 .ai-chat 容器内）。',
+    desc: '消息行基元：四种角色气泡，多模态部件任意组合。',
+    detail: {
+      features: [
+        '**角色**：user / assistant / system / tool，avatar 带语义色',
+        '**元信息**：时间 · token（summary 密度档隐藏）',
+        '**操作**：hover / focus-within 浮出 copy · retry（委托由 `initAiChat` 提供，消息须挂在 `.ai-chat` 容器内）',
+        '**内容**：`renderAiMessage` 消费标准化内容——文字 / 图片 / 音频 / 视频 / 文件 / 资源链接（MCP ResourceLink）任意组合',
+        '**变体**：`.ai-msg--error` 错误变体；支持流式节点',
+      ],
+    },
     demo: `<div class="icen-ai-chat" style="height:auto">
   <div class="icen-ai-msg icen-ai-msg--user" style="margin-bottom:10px">
     <span class="icen-ai-msg-avatar">我</span>
@@ -4031,7 +4589,14 @@ document.getElementById('ai-msg-add-err')?.addEventListener('click', function ()
     slug: 'ai-reasoning',
     name: 'AI 推理',
     group: 'AI 原生',
-    desc: '推理块 .ai-reasoning：流式中 head 显示 shimmer「正在思考…」（--ai-shimmer-duration 变量化时长）；createAiStream 的 done() 自动折叠并回填耗时；head 点击展开 / 折叠（initAiChat 委托）。summary 密度档默认折叠。',
+    desc: '推理块：流式思考的折叠区块，完成后自动收起并回填耗时。',
+    detail: {
+      features: [
+        '**流式中**：头部 shimmer「正在思考…」，时长走 `--ai-shimmer-duration` 变量',
+        '**完成**：`createAiStream` 的 `done()` 自动折叠并回填耗时',
+        '**开合**：点击头部展开 / 折叠（`initAiChat` 委托）；summary 密度档默认折叠',
+      ],
+    },
     demo: `<div class="icen-ai-chat" style="height:auto">
   <div class="icen-ai-reasoning is-streaming" id="ai-reasoning-live">
     <button class="icen-ai-reasoning-head" type="button" aria-expanded="true">
@@ -4082,12 +4647,23 @@ if (target) {
     slug: 'ai-composer',
     name: 'AI 输入台',
     group: 'AI 原生',
-    desc: 'AI 输入台：autosize（默认 8 行上限后内滚）、Enter 发送 / Shift+Enter 换行、IME 组合态安全、附件 chips（钮选 / 粘贴文件 / 拖放文件三入口共用 icen:ai-attach，拖放时输入框高亮）；setComposerRunning 切换运行态——发送钮变停止钮（icen:ai-stop），运行中回车转为排队 chip（icen:ai-queue / icen:ai-dequeue，可单个 × 移除）。事件 icen:ai-send {text} / icen:ai-attach {files}。bindComposer 绑定层可一行接通全链路（见 ai-chat 页 demo）。',
+    desc: '一个安静、有层次的 AI 输入台：技能、工具、文件与命令触手可及。',
+    detail: {
+      features: [
+        '**资源浏览器**：点 `＋` 浏览技能 / 工具 / 文件 / 命令，按类别筛选和搜索；选中用轻高亮与内描边呈现，命令先填入草稿再执行',
+        '**上下文快照**：`icen:ai-send` / `icen:ai-queue` 携带 `{text, refs?, files?}`；移除附件同步状态，取回排队消息恢复上下文',
+        '**输入**：autosize（默认 8 行上限后内滚）；Enter 发送 / Shift+Enter 换行；IME 组合态安全',
+        '**附件**：钮选 / 粘贴 / 拖放三入口共用 `icen:ai-attach`，拖放时输入框高亮',
+        '**运行态**：`setComposerRunning` 切换——发送钮变停止钮（`icen:ai-stop`）；运行中回车转为排队 chip（`icen:ai-queue` / `icen:ai-dequeue`，可单个移除）',
+        '**事件**：`icen:ai-send {text}` / `icen:ai-attach {files}`',
+      ],
+      notes: ['`bindComposer` 绑定层一行接通全链路（见 AI 会话页演示）。'],
+    },
     demo: `<div class="icen-ai-composer" data-icen-ai-composer id="ai-composer-demo">
   <div class="icen-ai-composer-queue" hidden></div>
   <div class="icen-ai-composer-attach" hidden></div>
   <div class="icen-ai-composer-box icen-control">
-    <textarea class="icen-ai-composer-input" rows="1" placeholder="输入消息，/ 命令 · @ 引用 · Enter 发送"></textarea>
+    <textarea class="icen-ai-composer-input" rows="1" aria-label="消息" placeholder="描述你的想法，或用 ＋ 添加上下文"></textarea>
     <div class="icen-ai-composer-actions">
       <button class="icen-ai-composer-btn" data-icen-ai-attach type="button" aria-label="附件"></button>
       <button class="icen-ai-composer-send" data-icen-ai-send type="button" aria-label="发送"></button>
@@ -4096,7 +4672,7 @@ if (target) {
 </div>
 <div class="icen-toolbar" style="margin-top:10px">
   <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" id="ai-composer-run">模拟运行 / 解除</button>
-  <span class="icen-toolbar-label" id="ai-composer-log">模型切换 / /命令 / @引用 / 发送事件回显在这里</span>
+  <span class="icen-toolbar-label" id="ai-composer-log" role="status">点 ＋ 浏览 · / 执行命令 · @ 引用资源</span>
 </div>
 <div id="ai-composer-out" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>`,
     usage: `import { initAiComposer, setComposerRunning, setComposerModels, setComposerCommands, setComposerRefs, setComposerUsage } from '@icen.ai/ui/kit/ai-composer';
@@ -4118,8 +4694,14 @@ initAiComposer();
 setComposerModels(el, providers, { provider: 'kimi', model: 'kimi-k3' });
 // / 斜杠命令（拦截执行不进消息流，icen:ai-command {name, args}）
 setComposerCommands(el, [{ name: 'plan', description: '进入计划模式', argsHint: '[任务]' }]);
-// @ 引用（file/folder/doc/agent 分组，chip 分离渲染，icen:ai-ref）
-setComposerRefs(el, [{ kind: 'file', id: 'f1', label: 'src/app.ts', sub: '2.1k tok' }]);
+// ＋ 直接浏览，@ 快速引用；内置 skill/tool/file/folder/doc/agent，支持注册自定义类别
+setComposerRefs(el, [
+  { kind: 'skill', id: 'design', label: '界面设计', description: '排版与交互打磨' },
+  { kind: 'tool', id: 'search', label: '工作区搜索', icon: 'search' },
+  { kind: 'file', id: 'f1', label: 'src/app.ts', sub: '2.1k tok' },
+]);
+// openComposerLibrary(el, 'skill') 可从应用任意入口打开指定类别。
+// data-icen-composer-size="compact" 用于侧栏等紧凑场景。
 // 上下文环（模型 context 自动作 total；bindComposer 的 usage.from='context' 自动驱动）
 setComposerUsage(el, usage, { cost: 0.3124 });
 
@@ -4134,7 +4716,9 @@ const binding = bindComposer(el, {
   messages: scrollEl,              // renderAiMessage 挂载点
   usage: { from: 'context' },      // 环口径：'context'（正确口径）| 'billing' | auditor
 });
-// binding.unbind() 解绑`,
+// 附件 / 授权资源：用 prepareMessage(draft, {signal}) 上传并转 AiContent parts；
+// 库不猜上传端点或擅自执行工具；无适配器的附件会给出可重试错误。
+// binding.unbind() 解绑并中止请求与准备过程`,
     behaviors: ['ai-composer', 'ai-provider'],
     behaviorInit: { 'ai-composer': 'initAiComposer' },
     script: `const composer = document.getElementById('ai-composer-demo');
@@ -4144,12 +4728,16 @@ function log(msg) { if (logEl) logEl.textContent = msg; }
 /* v2 配置：模型切换（真实 provider 注册表）+ 斜杠命令 + @ 引用 + 上下文环 */
 aiComposerMod.setComposerModels(composer, aiProviderMod.listAiProviders(), { provider: 'kimi', model: 'kimi-k3' });
 aiComposerMod.setComposerCommands(composer, [
-  { name: 'plan', description: '先出计划再执行', argsHint: '[任务]' },
+  { name: 'plan', label: '制定计划', icon: 'list', group: '工作流', description: '拆解任务，确认执行顺序', argsHint: '[任务]' },
   { name: 'clear', description: '清空上下文' },
   { name: 'compact', description: '压缩对话历史' },
-  { name: 'review', description: '审查代码', argsHint: '[路径]' },
+  { name: 'review', label: '审查实现', icon: 'eye', group: '工作流', description: '查找缺陷并给出具体建议', argsHint: '[路径]' },
 ]);
 aiComposerMod.setComposerRefs(composer, [
+  { kind: 'skill', id: 's1', label: '界面设计', description: '排版、材料与交互的细节打磨', keywords: ['design', 'ui'] },
+  { kind: 'skill', id: 's2', label: '代码审查', description: '沿着真实使用流程寻找问题', keywords: ['review'] },
+  { kind: 'tool', id: 't1', label: '工作区搜索', icon: 'search', description: '从项目文件中定位线索', sub: 'workspace' },
+  { kind: 'tool', id: 't2', label: 'GitHub', icon: 'branch', description: '连接后访问仓库与议题', disabled: true },
   { kind: 'file', id: 'f1', label: 'src/app.ts', sub: '2.1k tok' },
   { kind: 'file', id: 'f2', label: 'src/auth/index.ts', sub: '860 tok' },
   { kind: 'folder', id: 'f3', label: 'src/components/', sub: '55 文件' },
@@ -4174,7 +4762,8 @@ function addMsg(text) {
 }
 composer?.addEventListener('icen:ai-send', function (e) {
   addMsg(e.detail.text);
-  log('icen:ai-send · ' + e.detail.text);
+  const refs = e.detail.refs || [], files = e.detail.files || [];
+  log('已提交 · ' + refs.length + ' 项上下文 · ' + files.length + ' 个附件');
 });
 composer?.addEventListener('icen:ai-model-change', function (e) {
   log('icen:ai-model-change · ' + e.detail.provider + ' / ' + e.detail.model + (e.detail.context ? '（' + Math.round(e.detail.context / 1000) + 'k 上下文）' : ''));
@@ -4202,7 +4791,17 @@ document.getElementById('ai-composer-run')?.addEventListener('click', function (
     slug: 'ai-tool-call',
     name: 'AI 工具调用',
     group: 'AI 原生',
-    desc: '工具调用卡 .icen-ai-tool：kind 修饰类（--shell/--read/--edit/--mcp/--rm…，kind 注册表驱动 --ai-item-tint 与图标）+ 7 态状态机（失败条目自动展开）+ 审批内联按钮（icen:ai-approve / icen:ai-reject，detail {id, kind}）。renderAiToolCall(el, model) 动态建卡，返回 { el, update(patch) } 做流式状态流转；输入/输出走注册表 summarize 或压缩 JSON。工具体系（ai-tools）v0.10 深化：四族模型侧导出（OpenAI/MCP/Anthropic/AI SDK）+ validateToolArgs 参数校验（不支持的关键字进 unvalidated 清单）+ requiresApproval 审批流 + timeoutMs + idempotent 去重 + ctx.progress 活动流 + Promise 结果；内置工具 render_chart / render_datatable / show_form。',
+    desc: '工具调用卡：kind 驱动图标与色调，7 态状态机 + 内联审批。',
+    detail: {
+      features: [
+        '**kind 注册表**：`--shell` / `--read` / `--edit` / `--mcp` / `--rm` 等修饰类驱动 `--ai-item-tint` 与图标',
+        '**状态机**：7 态流转；失败条目自动展开',
+        '**审批**：内联按钮派发 `icen:ai-approve` / `icen:ai-reject`（detail `{id, kind}`）',
+        '**渲染**：`renderAiToolCall(el, model)` 建卡，返回 `{el, update(patch)}` 做流式状态流转；输入/输出走注册表 summarize 或压缩 JSON',
+        '**模型侧**：四族导出（OpenAI / MCP / Anthropic / AI SDK）+ `validateToolArgs` 参数校验 + `requiresApproval` 审批流 + `timeoutMs` + `idempotent` 去重',
+      ],
+      notes: ['内置工具 `render_chart` / `render_datatable` / `show_form`；`ctx.progress` 上报活动流，Promise 结果。'],
+    },
     demo: `<div style="display:flex;flex-direction:column;gap:8px;width:100%">
   <div class="icen-ai-tool icen-ai-tool--shell is-done" data-icen-ai-id="demo-t1" data-icen-ai-kind="shell">
     <button class="icen-ai-tool-head" type="button" aria-expanded="false">
@@ -4417,7 +5016,16 @@ document.getElementById('ai-tools-chart-receipt')?.addEventListener('click', fun
     slug: 'ai-subagent',
     name: 'AI 子智能体',
     group: 'AI 原生',
-    desc: '子智能体卡 .ai-subagent：activities（AiToolCallModel[]）递归渲染工具卡 / 推理块 / 再嵌套子代理（缩进 + 左侧引导线表达层级）；展开时活动项按 --ai-activity-index 逐条 icen-pop-in 渐入；底部完成回执区。renderAiSubagent(el, model) 返回 update(patch)；第三方 kind 走 ai-core 的 registerAiKind 扩展（demo 里注册了一个 deploy kind）。',
+    desc: '子智能体卡：递归渲染嵌套活动流，层级用缩进与引导线表达。',
+    detail: {
+      features: [
+        '**递归**：activities 渲染工具卡 / 推理块 / 再嵌套子代理',
+        '**层级**：缩进 + 左侧引导线',
+        '**动效**：展开时活动项按 `--ai-activity-index` 逐条渐入',
+        '**渲染**：`renderAiSubagent(el, model)` 返回 `update(patch)`；底部完成回执区',
+      ],
+      notes: ['第三方 kind 走 `registerAiKind` 扩展（演示里注册了一个 deploy kind）。'],
+    },
     demo: `<div style="display:flex;flex-direction:column;gap:12px;width:100%">
   <div id="ai-sub-live"></div>
   <div id="ai-sub-done"></div>
@@ -4510,7 +5118,14 @@ aiToolMod.initAiTool();`,
     slug: 'ai-diff',
     name: 'AI 差异审阅',
     group: 'AI 原生',
-    desc: '差异审阅卡 .ai-diff：parseUnifiedDiff(text) 解析 unified diff（git / 传统头、add/del/rename/binary 均可）→ renderAiDiff(el, {files}) DOM 渲染（行号 + add/del 着色 + hunk 头，全 textContent）；initAiDiff 委托展开 / 接受 / 拒绝——icen:ai-diff-accept / icen:ai-diff-reject（detail {path}），决策后盖状态章并淡化。',
+    desc: '差异审阅卡：解析 unified diff，逐文件接受或拒绝。',
+    detail: {
+      features: [
+        '**解析**：`parseUnifiedDiff(text)` 吃 unified diff（git / 传统头，add / del / rename / binary 均可）',
+        '**渲染**：`renderAiDiff(el, {files})` DOM 渲染——行号 + 增删着色 + hunk 头，全 textContent 无注入',
+        '**决策**：`initAiDiff` 委托展开 / 接受 / 拒绝——`icen:ai-diff-accept` / `icen:ai-diff-reject`（detail `{path}`）；决策后盖状态章并淡化',
+      ],
+    },
     demo: `<div id="ai-diff-demo" style="width:100%"></div>
 <p class="demo-label" id="ai-diff-log" style="margin-top:8px">点头展开行号与着色 · 「接受 / 拒绝」后盖状态章（icen:ai-diff-accept / icen:ai-diff-reject）</p>`,
     usage: `import { initAiDiff, renderAiDiff, parseUnifiedDiff } from '@icen.ai/ui/kit/ai-diff';
@@ -4570,7 +5185,15 @@ host?.addEventListener('icen:ai-diff-reject', function (e) {
     slug: 'ai-files',
     name: 'AI 文件标签',
     group: 'AI 原生',
-    desc: '文件 chips .ai-file-chip（纯 CSS 族，无 behavior）：is-added / is-modified / is-deleted 三态 × 类型修饰类（--ts/--js/--css/--json/--md/--img/--other，图标由消费方注入 svg）；renderAiContext 的文件区复用同款 chips。',
+    desc: '文件 chips：增删改三态 × 七类文件修饰的纯 CSS 小组件。',
+    detail: {
+      features: [
+        '**三态**：`is-added` / `is-modified` / `is-deleted`',
+        '**类型**：`--ts` / `--js` / `--css` / `--json` / `--md` / `--img` / `--other` 修饰类，图标由消费方注入 svg',
+        '**复用**：`renderAiContext` 的文件区同款 chips',
+      ],
+      notes: ['纯 CSS 族，无 behavior。'],
+    },
     demo: `<div class="icen-ai-files">
   <span class="icen-ai-file-chip is-added icen-ai-file-chip--ts"><span class="icen-ai-file-icon">${iconHTML('file')}</span>src/utils/format.ts</span>
   <span class="icen-ai-file-chip is-modified icen-ai-file-chip--css"><span class="icen-ai-file-icon">${iconHTML('file')}</span>src/components/ai-chat.css</span>
@@ -4592,7 +5215,15 @@ host?.addEventListener('icen:ai-diff-reject', function (e) {
     slug: 'ai-todo',
     name: 'AI 任务清单',
     group: 'AI 原生',
-    desc: '任务清单 .ai-todo：进度条（feedback progress 视觉）+ N/M 计数 + 7 态条目；running 条目用 activeForm 替换文案（Claude Code 模式）。renderAiTodo(el, items) 渲染；data-icen-ai-todo-interactive 容器可点击循环状态 pending → running → done（icen:ai-todo-toggle {index, status}），默认只读。',
+    desc: '任务清单：进度条 + 7 态条目，进行中条目用进行时文案。',
+    detail: {
+      features: [
+        '**总览**：进度条（feedback progress 视觉）+ N/M 计数',
+        '**条目**：7 态状态机；running 条目用 `activeForm` 替换文案',
+        '**渲染**：`renderAiTodo(el, items)`；默认只读',
+        '**交互**：`data-icen-ai-todo-interactive` 容器可点击循环 pending → running → done（`icen:ai-todo-toggle {index, status}`）',
+      ],
+    },
     demo: `<div id="ai-todo-demo" data-icen-ai-todo-interactive style="width:100%"></div>
 <p class="demo-label" id="ai-todo-log" style="margin-top:8px">点击任意任务循环状态 pending → running → done（running 时文案切 activeForm）</p>`,
     usage: `import { renderAiTodo, initAiTodo } from '@icen.ai/ui/kit/ai-todo';
@@ -4638,7 +5269,17 @@ if (host) {
     slug: 'ai-usage',
     name: 'AI 用量条',
     group: 'AI 原生',
-    desc: '上下文用量 .ai-usage 双形态：分段条（renderAiUsage）+ 上下文窗口环形指示器（renderAiUsageRing，Claude Desktop 式常驻小环，点击弹出完整分解，弹层复用 popover）。分段条 = 分段条 + 图例 + 占比行；配色契约 input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint。缓存分列计费诚实：cacheRead ≈ 0.1× 输入价、cacheWrite ≈ 1.25× 输入价（行业惯例，展示与算账口径一致）。配套 renderAiAudit 审计面板：totals（请求数/失败/累计 tokens/累计成本/平均 TTFT）+ byModel 分组 + 最近条目，与 createAiAuditor 的条目（含 cost 定价估算与 ttftMs）闭环。',
+    desc: '上下文用量双形态：分段条 + 常驻环形指示器，配套审计面板。',
+    detail: {
+      features: [
+        '**分段条**：`renderAiUsage`——分段条 + 图例 + 占比行',
+        '**环形**：`renderAiUsageRing` 常驻小环，点击弹出完整分解（弹层复用 popover）',
+        '**配色契约**：input=accent / output=success / cacheRead=info / cacheWrite=warning / reasoning=faint',
+        '**计费诚实**：cacheRead ≈ 0.1× 输入价、cacheWrite ≈ 1.25× 输入价，展示与算账口径一致',
+        '**审计**：`renderAiAudit` 面板——totals（请求数 / 失败 / 累计 tokens / 累计成本 / 平均 TTFT）+ byModel 分组 + 最近条目',
+      ],
+      notes: ['与 `createAiAuditor` 的条目（含 cost 定价估算与 ttftMs）闭环。'],
+    },
     demo: `<div style="display:flex;align-items:center;gap:12px;width:100%;margin-bottom:14px">
   <div id="ai-usage-ring-demo"></div>
   <span class="demo-label">上下文窗口环（Claude Desktop 式）：点击弹出完整分解</span>
@@ -4727,7 +5368,15 @@ document.getElementById('ai-audit-seed')?.addEventListener('click', function () 
     slug: 'ai-context',
     name: 'AI 上下文面板',
     group: 'AI 原生',
-    desc: '上下文抽屉 .ai-context：触发器 [data-icen-ai-context-open] 全局委托开合（属性值可为 #id 选择器），fixed 右侧滑入（--icen-z-chrome），Esc / 外点关闭、Tab 焦点圈禁；renderAiContext 组合渲染用量（renderAiUsage）+ 审计节（audit 传 auditor 或条目数组，紧凑形态）+ 文件 chips + MCP server 行（.ai-item：connected→is-done / disconnected→is-error）+ Skills 列表；.ai-context--inline 为页面流内嵌变体（不参与开合）。',
+    desc: '上下文抽屉：右侧滑入的用量、审计、文件与 MCP 状态总览。',
+    detail: {
+      features: [
+        '**开合**：`data-icen-ai-context-open` 全局委托（属性值可为 #id 选择器）；fixed 右侧滑入，Esc / 外点关闭，Tab 焦点圈禁',
+        '**内容**：`renderAiContext` 组合渲染——用量（`renderAiUsage`）+ 审计节 + 文件 chips + MCP server 行 + Skills 列表',
+        '**状态**：MCP server 行 `is-done`（connected）/ `is-error`（disconnected）',
+        '**变体**：`icen-ai-context--inline` 页面流内嵌，不参与开合',
+      ],
+    },
     demo: `<div class="icen-toolbar">
   <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" data-icen-ai-context-open>打开上下文面板</button>
   <span class="icen-toolbar-spacer"></span>

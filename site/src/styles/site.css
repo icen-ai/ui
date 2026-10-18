@@ -14,9 +14,8 @@
    - 代码 / 数字       → --icen-font-mono（站点级覆写为 JetBrains Mono 栈：可变字重
      woff2 自托管 @fontsource-variable/jetbrains-mono，本文件顶部引入；base.css 负责
      code/pre/kbd/code-inline 全部消费该变量，站点无层样式赢库 token 层）
-   - 演示区等宽        → --site-font-mono（同 JetBrains Mono 领头；Latin 等宽精密感，
-     CJK 显式回退 MiSans 无衬线，避免落到通用 monospace 在 Windows 上解析成细宋体）
-   - 展示级标题        → --icen-font-heading（宋体衬线，只用于大字，小标题一律 sans） */
+   - 演示区            → --icen-font-body（由当前原语决定，忠实呈现消费者拿到的组件）
+   - 展示级标题        → --icen-font-heading（由当前原语决定） */
 :root {
   --site-font-sans: 'MiSans', 'MiSans VF', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
@@ -44,10 +43,11 @@ body {
   font-family: var(--site-font-sans);
 }
 
-/* 演示区：展示组件真实等宽形态（CJK 显式无衬线回退） */
+/* Preview actual component typography. Code and numeric utilities still opt
+ * into mono themselves; a documentation shell must not change the primitive. */
 .demo-stage,
 .preview {
-  font-family: var(--site-font-mono);
+  font-family: var(--icen-font-body);
 }
 
 /* ═══════════ 顶部导航（沉静铬架：顶端无界，滚动显形 hairline） ═══════════ */
@@ -454,10 +454,8 @@ body {
 .doc-desc { color: var(--icen-token-text-muted); font-size: 14px; line-height: 1.7; margin: 0; max-width: 640px; }
 .doc-actions { display: flex; align-items: center; gap: 6px; flex: none; }
 
+/* 图标/文字居中与成功叠加交给组件契约（inline-grid + 双层同格），此处只改皮肤，绝不能动 display */
 .doc-copy-page {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   height: 32px;
   padding: 0 12px;
   font: inherit;
@@ -471,9 +469,6 @@ body {
 }
 .doc-copy-page:hover { color: var(--icen-token-text); border-color: var(--icen-token-accent); }
 .doc-copy-page.is-done { color: var(--icen-token-success); border-color: var(--icen-token-success); }
-.doc-copy-page .ic-check { display: none; }
-.doc-copy-page.is-done .ic-copy { display: none; }
-.doc-copy-page.is-done .ic-check { display: inline; }
 
 .doc-arrow {
   display: inline-flex;
@@ -701,6 +696,14 @@ body {
 
 html { scroll-padding-block-start: 76px; }
 .docs-main :is(button,input,textarea,select,[tabindex]) { scroll-margin-block-start: 76px; }
+
+/* 特性要点列表：accent 小方块引导，术语加粗回正文色，代码片走组件库 icen-code-inline */
+.doc-feats { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 7px; max-width: 720px; }
+.doc-feats li { position: relative; padding-left: 18px; font-size: 13.5px; line-height: 1.75; color: var(--icen-token-text-muted); overflow-wrap: anywhere; }
+.doc-feats li::before { content: ''; position: absolute; left: 2px; top: 0.68em; width: 6px; height: 6px; border-radius: 2px; background: var(--icen-token-accent); opacity: 0.55; }
+.doc-feats li strong { color: var(--icen-token-text); font-weight: 600; }
+.doc-notes { max-width: 720px; margin-bottom: 6px; }
+.doc-notes p { font-size: 13px; line-height: 1.8; color: var(--icen-token-text-muted); margin: 10px 0 0; overflow-wrap: anywhere; }
 
 .doc-details { margin-block: 20px; padding: 12px 16px; border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-md); }
 .doc-details > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; color: var(--icen-token-text-muted); font-size: 13px; list-style: none; }

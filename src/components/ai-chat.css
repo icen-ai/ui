@@ -246,6 +246,7 @@
 
 /* meta：时间 · token 数（summary 档隐藏） */
 .icen-ai-msg-meta {
+  grid-column: 2; /* 归属正文列：落在 auto 第一列会把列宽撑到 meta 宽度，正文被挤窄（流式收尾时突跳） */
   margin-top: 2px;
   font-family: var(--icen-font-mono);
   font-size: var(--icen-density-font-size-2xs);
@@ -434,14 +435,20 @@
   display: flex;
   flex-direction: column;
   gap: var(--icen-density-space-xs);
+  min-inline-size: 0;
   padding: var(--icen-density-space-sm);
-  border: 1px solid var(--icen-token-line-soft);
+  border: 1px solid var(--icen-token-line);
   border-radius: var(--icen-radius-lg);
   background: var(--icen-token-surface);
   box-shadow: var(--icen-token-shadow-card);
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
 .icen-ai-composer:focus-within {
-  border-color: var(--icen-hover-border);
+  border-color: var(--icen-hover-border, var(--icen-token-accent));
+}
+.icen-ai-composer:has(.icen-ai-composer-input:focus-visible) {
+  border-color: var(--icen-control-focus-border);
+  box-shadow: var(--icen-token-shadow-card), 0 0 0 2px color-mix(in srgb, var(--icen-token-accent) 12%, transparent);
 }
 
 /* 排队 / 引用 / 附件 chips 行 */
@@ -462,12 +469,13 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  max-width: 240px;
-  padding: 2px var(--icen-density-space-xs);
+  max-inline-size: min(100%, 280px);
+  min-block-size: 30px;
+  padding: 2px 4px 2px 6px; /* guard:allow-physical symmetric chip padding */
   border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-full);
-  background: var(--icen-token-surface-strong);
-  color: var(--icen-token-text-muted);
+  border-radius: var(--icen-radius-sm);
+  background: var(--icen-token-fill-1);
+  color: var(--icen-token-text);
   font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
 }
@@ -480,11 +488,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
+  inline-size: 24px;
+  block-size: 24px;
+  flex-shrink: 0;
   padding: 0;
   border: 0;
-  border-radius: var(--icen-radius-full);
+  border-radius: var(--icen-radius-sm);
   background: transparent;
   color: var(--icen-token-text-faint);
   font-size: 12px;
@@ -505,20 +514,25 @@
 
 /* 输入框（.icen-control 基元提供 hover/focus 边框与光晕）；flex-wrap 让工具条独占下一行 */
 .icen-ai-composer-box {
+  /* The outer composer owns text focus, including legacy .icen-control markup. */
+  --icen-control-focus-shadow: none;
+  --icen-control-focus-border: transparent;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--icen-density-space-sm);
   padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
-  border: 1px solid var(--icen-token-line-soft);
+  min-inline-size: 0;
+  border: 0;
   border-radius: var(--icen-radius-md);
-  background: var(--icen-token-panel);
-  box-shadow: var(--icen-token-shadow-inset);
+  background: transparent;
+  box-shadow: none;
 }
 
 .icen-ai-composer-input {
   flex: 1;
-  min-width: 0;
+  min-inline-size: 0;
+  min-block-size: 64px;
   padding: var(--icen-density-space-xs) 0;
   border: 0;
   outline: none;
@@ -547,7 +561,9 @@
   align-items: center;
   gap: var(--icen-density-space-xs);
   padding-top: var(--icen-density-space-xs);
-  border-top: 1px solid var(--icen-token-line-soft);
+  min-inline-size: 0;
+  flex-wrap: wrap;
+  border-top: 0;
 }
 .icen-ai-composer-toolbar[hidden] {
   display: none;
@@ -653,9 +669,9 @@
   z-index: var(--icen-z-popover);
   display: flex;
   flex-direction: column;
-  padding: var(--icen-density-space-2xs);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md);
+  padding: 6px;
+  border: 1px solid var(--icen-token-line);
+  border-radius: var(--icen-radius-lg);
   background: var(--icen-token-card-strong);
   box-shadow: var(--icen-token-shadow-popover, var(--icen-token-shadow-card));
   overflow: hidden;
@@ -664,24 +680,16 @@
 
 /* 搜索框（模型/引用过滤） */
 .icen-ai-composer-popup-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
-  padding: var(--icen-density-space-2xs);
+  padding: 4px 8px 8px;
+  color: var(--icen-token-text-muted);
   border-bottom: 1px solid var(--icen-token-line-soft);
 }
-.icen-ai-composer-popup-search-input {
-  width: 100%;
-  padding: var(--icen-density-space-2xs) var(--icen-density-space-xs);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm);
-  background: var(--icen-token-panel);
-  color: var(--icen-token-text);
-  font-size: var(--icen-density-font-size-sm);
-  outline: none;
-  transition: border-color var(--icen-tx-fast);
-}
-.icen-ai-composer-popup-search-input:focus {
-  border-color: var(--icen-token-accent);
-}
+.icen-ai-composer-popup-search-input { min-inline-size: 0; }
+
 .icen-ai-composer-popup-search-input::placeholder {
   color: var(--icen-token-text-faint);
 }
@@ -731,9 +739,11 @@
   align-items: center;
   gap: var(--icen-density-space-xs);
   width: 100%;
-  padding: var(--icen-density-space-xs);
+  min-block-size: 48px;
+  min-inline-size: 0;
+  padding: 8px;
   border: 0;
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-radius-md);
   background: transparent;
   color: var(--icen-token-text);
   font-size: var(--icen-density-font-size-sm);
@@ -773,9 +783,10 @@
   white-space: nowrap;
 }
 .icen-ai-composer-popup-option-sub {
-  margin-inline-start: 6px;
-  font-size: var(--icen-density-font-size-2xs);
-  color: var(--icen-token-text-faint);
+  display: block;
+  margin-block-start: 2px;
+  font-size: var(--icen-density-font-size-xs);
+  color: var(--icen-token-text-muted);
 }
 .icen-ai-composer-popup-option-meta {
   margin-inline-start: auto;
@@ -788,9 +799,8 @@
 
 /* 命令行：/name <argsHint> + 描述 */
 .icen-ai-composer-popup-cmd {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
+  flex-direction: row;
+  align-items: center;
 }
 .icen-ai-composer-popup-cmd-line {
   display: flex;
@@ -800,7 +810,7 @@
 }
 .icen-ai-composer-popup-cmd-name {
   font-family: var(--icen-font-mono);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-text-muted);
 }
 .icen-ai-composer-popup-cmd-args {
   font-family: var(--icen-font-mono);
@@ -1338,3 +1348,85 @@
 :is([dir='rtl']) .icen-ai-threads-group-head[aria-expanded='true']::before { transform: rotate(90deg) scaleX(-1); }
 
 .icen-ai-composer-model-chevron, .icen-ai-composer-popup-option-check { display: none; }
+
+/* Context has its own quiet material: icon tile → readable name → secondary detail.
+   The theme owns all hues; primitive tokens own geometry. No brand-specific gradients. */
+.icen-ai-composer-popup-option-copy { display: flex; flex: 1; flex-direction: column; min-inline-size: 0; }
+.icen-ai-composer-popup-option-copy > .icen-ai-composer-popup-option-label { font-weight: 550; }
+.icen-ai-composer-popup-option-icon,
+.icen-ai-composer-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: var(--icen-radius-sm);
+  background: color-mix(in srgb, var(--icen-token-accent) 9%, var(--icen-token-surface));
+  color: var(--icen-token-accent);
+}
+.icen-ai-composer-popup-option-icon svg { inline-size: 18px; block-size: 18px; }
+.icen-ai-composer-chip-icon,
+.icen-ai-composer-chip > .icen-ai-composer-popup-option-icon { inline-size: 22px; block-size: 22px; background: transparent; }
+.icen-ai-composer-chip-icon svg,
+.icen-ai-composer-chip > .icen-ai-composer-popup-option-icon svg { inline-size: 16px; block-size: 16px; }
+.icen-ai-composer-chip-remove svg { inline-size: 14px; block-size: 14px; }
+.icen-ai-composer-chip-text { min-inline-size: 0; }
+.icen-ai-composer-chip-meta { color: var(--icen-token-text-muted); font-size: var(--icen-density-font-size-2xs); white-space: nowrap; }
+.icen-ai-msg-context { display: flex; flex-wrap: wrap; gap: 6px; margin-block-start: 8px; min-inline-size: 0; }
+.icen-ai-composer-refs .icen-ai-composer-chip {
+  border-color: color-mix(in srgb, var(--icen-token-accent) 18%, var(--icen-token-line-soft));
+  background: color-mix(in srgb, var(--icen-token-accent) 5%, var(--icen-token-surface));
+}
+.icen-ai-composer-popup-option-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icen-ai-composer-popup-option[aria-selected='true'] {
+  background: color-mix(in srgb, var(--icen-token-accent) 9%, var(--icen-token-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 34%, transparent);
+}
+.icen-ai-composer-popup-option[aria-disabled='true'] { opacity: .5; cursor: default; }
+.icen-ai-composer-popup-option[hidden] { display: none; }
+.icen-ai-composer-popup-option mark {
+  padding: 0;
+  border-radius: var(--icen-radius-xs);
+  color: inherit;
+  background: color-mix(in srgb, var(--icen-token-accent) 18%, transparent);
+}
+.icen-ai-composer-popup-filters {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 8px 2px;
+}
+.icen-ai-composer-popup-filters button {
+  flex: 0 0 auto;
+  min-block-size: 32px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--icen-radius-sm);
+  background: transparent;
+  color: var(--icen-token-text-muted);
+  font: inherit;
+  font-size: var(--icen-density-font-size-xs);
+  cursor: pointer;
+}
+.icen-ai-composer-popup-filters button[aria-pressed='true'] { background: var(--icen-token-fill-2); color: var(--icen-token-text); box-shadow: inset 0 0 0 1px var(--icen-token-line); }
+.icen-ai-composer-popup-filters button:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: -2px; }
+.icen-ai-composer-popup-cmd-line { min-inline-size: 0; flex-wrap: wrap; row-gap: 0; }
+.icen-ai-composer-popup-cmd-name, .icen-ai-composer-popup-cmd-args { overflow-wrap: anywhere; }
+.icen-ai-composer-library { background: var(--icen-token-fill-2); color: var(--icen-token-text); }
+.icen-ai-composer-model { min-inline-size: 0; max-inline-size: min(180px, 46%); }
+.icen-ai-composer[data-icen-composer-size='compact'] .icen-ai-composer-input { min-block-size: 32px; }
+@media (pointer: coarse) {
+  .icen-ai-composer-chip-remove, .icen-ai-composer-btn, .icen-ai-composer-send,
+  .icen-ai-composer-model, .icen-ai-composer-popup-filters button { min-inline-size: 44px; min-block-size: 44px; }
+  .icen-ai-composer-input { font-size: max(16px, var(--icen-density-font-size-md)); }
+}
+@media (forced-colors: active) {
+  .icen-ai-composer:focus-within { outline: 1px solid Highlight; }
+  .icen-ai-composer-popup-option[aria-selected='true'], .icen-ai-composer-popup-filters button[aria-pressed='true'] { outline: 2px solid Highlight; outline-offset: -2px; }
+  .icen-ai-composer-popup-option.is-focused { outline: 1px solid CanvasText; outline-offset: -1px; }
+  .icen-ai-composer-popup-option-icon { border: 1px solid ButtonText; }
+}
+@media (prefers-reduced-motion: reduce) { .icen-ai-composer { transition: none; } }

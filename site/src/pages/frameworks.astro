@@ -12,10 +12,13 @@ import CodeBlock from '../components/CodeBlock.astro';
 
   <h1 class="page-title">React / Vue 接入（薄封装层）</h1>
   <p class="page-desc">
-    <code>@icen.ai/ui/react</code> 与 <code>@icen.ai/ui/vue</code> 是官方薄封装层，设计哲学是<strong>薄如蝉翼</strong>：
-    不复制状态、不重新实现组件逻辑，只做三件事——<strong>生命周期接线</strong>（mount → create / props 变 → update /
-    unmount → destroy）、<strong>事件桥</strong>（onIcen ↔ 回调，卸载自动清理）、<strong>类型面 re-export</strong>。
-    底下仍是同一个命令式行为内核，行为层文档与事件契约对两个框架完全适用。
+    <code>@icen.ai/ui/react</code> 与 <code>@icen.ai/ui/vue</code> 是官方薄封装层：<strong>薄如蝉翼</strong>——
+    不复制状态、不重新实现组件逻辑，底下仍是同一个命令式行为内核。
+  </p>
+  <p class="page-desc">
+    封装层只做三件事：<strong>生命周期接线</strong>（mount → create / props 变 → update / unmount → destroy）、
+    <strong>事件桥</strong>（onIcen ↔ 回调，卸载自动清理）、<strong>类型面 re-export</strong>。
+    行为层文档与事件契约对两个框架完全适用。
   </p>
 
   <section class="icen-panel">

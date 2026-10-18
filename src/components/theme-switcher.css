@@ -68,10 +68,17 @@
 .icen-theme-switcher-option { position: relative; min-block-size: var(--icen-density-input-height-md); padding: var(--icen-density-space-sm); }
 .icen-theme-switcher-options--theme .icen-theme-switcher-option { flex-direction: column; align-items: stretch; gap: var(--icen-density-space-sm); text-align: start; }
 .icen-theme-switcher-options--theme .icen-theme-switcher-sample { inline-size: 100%; block-size: 28px; }
-.icen-theme-switcher-option[aria-pressed="true"] { border-color: var(--icen-token-accent); background: var(--icen-token-accent-faint); }
-.icen-theme-switcher[data-icen-layout="inline"] { display: block; }
+.icen-theme-switcher-option[aria-pressed="true"] { border-color: var(--icen-token-accent); background: var(--icen-token-accent-subtle); }
+.icen-theme-switcher[data-icen-layout="inline"] { display: block; inline-size: 100%; container: icen-appearance / inline-size; }
 .icen-theme-switcher[data-icen-layout="inline"] > .icen-theme-switcher-panel { position: static; inline-size: 100%; box-shadow: none; background: var(--icen-token-surface); }
-.icen-theme-switcher[data-icen-layout="inline"] .icen-theme-switcher-options--theme { grid-template-columns: repeat(auto-fit,minmax(min(100%,120px),1fr)); }
+/* Six built-ins form complete rows. Query the host, so sidebars and embedded
+ * settings do not inherit the viewport's column count. */
+@container icen-appearance (min-width: 420px) {
+  .icen-theme-switcher-options--theme { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@container icen-appearance (min-width: 840px) {
+  .icen-theme-switcher-options--theme { grid-template-columns: repeat(6,minmax(0,1fr)); }
+}
 @media (pointer: coarse) {
   .icen-theme-switcher-trigger { min-block-size: 44px; min-inline-size: 44px; }
   .icen-theme-switcher-option { min-block-size: 44px; }

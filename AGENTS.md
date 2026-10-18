@@ -97,6 +97,8 @@ initAiTool(); initAiSubagent();      // 事件委托，页面级一次
 
 ## 输入台 + 零接线绑定
 
+输入台资源目录与兼容契约见 `docs/spec/ai-input-experience.md`。`setComposerRefs` 内置 skill/tool/file/folder/doc/agent，可选 description/icon/keywords/disabled；配置后自动出现 ＋。`openComposerLibrary(el, kind?)` 可从任意入口打开，命令在目录中仅填入草稿，`/` 快捷入口仍执行。`getComposerDraft` / send / queue 快照携带 refs?/files?；移除附件必须改真实状态并派 attachment-remove。`bindComposer.prepareMessage(draft,{signal})` 由宿主处理上传与授权资源，不能猜服务端或静默丢文件；未接适配器的附件给可重试错误。client 模式用量按本请求更新，纯事件多会话传 eventTarget 隔离。
+
 ```ts
 import { initAiComposer, bindComposer, setComposerTodo, setComposerModels } from '@icen.ai/ui/behaviors/ai-composer';
 
@@ -350,6 +352,8 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 - **/kb 工作台**（`site/src/pages/kb.astro` + `site/src/lib/kb-showcase.ts`）：mock 数据与接线全在 showcase 模块；八标签 = 问答 / 摄取 / 检索 / 问数 / 观测 / 权限 / Agent / 参考（参考为静态 SSR，数据在 kb-references.ts）。改 mock 数据只动 kb-showcase.ts；页面脚本遵守 `astro:page-load` 驱动约定。
 
 ## 图标与次要操作
+
+- **AI 托管会话连续性**：`bindComposer` 返回 `retry(): boolean` 与 `unbind()`。成功后续发队列；停止或失败暂停队列，空输入框 ↑ 可取回待发消息。最近失败/停止的回答可由 `retry()` 或消息继续钮原位重试，保留当前草稿且不重复用户消息；更早或成功回答的重试由宿主处理。`unbind()` 必须在页面/组件卸载时调用，迟到的 chunk/done 不得改动新会话。
 
 - **选中态纪律（用户明确要求）**：所有选择组件与菜单不使用 ✓、check SVG 或 check mask 表示选中，也不替换为「已选」等文字标记。选项共用 material.css 的轻底色 + 内描边；复选框用实心几何内核，半选用 CSS 短横，保留真实 checked/indeterminate/aria-*。弹出式选择器、主题/原语切换、模型选择和下拉触发器不展示上下箭头；树内层级导航及前后翻页仍可保留方向图形。完成/成功反馈与选中不同，状态 check 图标仍可按语义使用。
 

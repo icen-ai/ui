@@ -10,7 +10,22 @@ export const FORM_VALIDATE_DOCS: ComponentDoc = {
   slug: 'form-validate',
   name: '表单校验',
   group: '表单',
-  desc: '原生约束优先的零依赖校验层：required / type / minlength / maxlength / pattern / min / max / step 即 schema，data-icen-validate 只承载额外规则（matches:<字段名> 跨字段、registerValidator 注册的具名自定义校验可异步）；data-icen-msg-<rule> 单字段消息，setValidateMessages 全局 i18n。默认策略 submit 优先：首次提交全量校验，之后出错字段 input 即时复验（160ms 防抖）、未触碰字段 blur 补验；IME 组合态挂起。错误呈现：最近 .icen-field 挂 .is-error + 自动 <p class="icen-field-error" role="alert">，控件 aria-invalid + aria-describedby 接线；异步校验 .is-validating + aria-busy，竞态守卫最新为准；data-icen-validate-summary 顶部错误清单 + 聚焦首错。事件 icen:form-field-validate { name, valid, message? } / icen:form-valid { names } / icen:form-invalid { errors, first }。import 本模块自动注册 AI 工具 show_form（向用户渲染结构化表单收集输入，run 返回 Promise：提交 resolve 值对象，取消 resolve { cancelled: true }）。',
+  desc: '原生约束优先的零依赖校验层：HTML5 属性即 schema，submit 优先策略 + 可异步具名校验。',
+  detail: {
+    features: [
+      '**规则**：`required` / `type` / `minlength` / `maxlength` / `pattern` / `min` / `max` / `step` 即 schema',
+      '**扩展**：`data-icen-validate` 只承载额外规则（`matches:<字段名>` 跨字段）',
+      '**自定义**：`registerValidator` 注册具名校验，可异步',
+      '**消息**：`data-icen-msg-<rule>` 单字段消息；`setValidateMessages` 全局 i18n',
+      '**策略**：首次提交全量校验，出错字段 input 即时复验（160ms 防抖），未触碰字段 blur 补验',
+      '**呈现**：`.icen-field` 挂 `.is-error`，自动插入 `role=alert` 错误文案并接线 ARIA',
+      '**事件**：`icen:form-field-validate` / `icen:form-valid` / `icen:form-invalid`',
+    ],
+    notes: [
+      '异步校验挂 `.is-validating` + `aria-busy`，竞态守卫最新为准；`data-icen-validate-summary` 顶部错误清单并聚焦首错；IME 组合态挂起。',
+      'import 本模块自动注册 AI 工具 `show_form`：渲染结构化表单收集输入，提交 resolve 值对象，取消 resolve `{ cancelled: true }`。',
+    ],
+  },
   demo: `<form class="icen-form" id="demo-fv-form" data-icen-validate data-icen-validate-summary data-icen-validate-show-valid style="max-width:460px">
   <div class="icen-field">
     <label class="icen-field-label" for="demo-fv-user">用户名</label>

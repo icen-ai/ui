@@ -48,12 +48,11 @@
 import { aiContentUrl, formatDuration, h, svgIcon, type AiContent, type AiContentPart, type AiTextPart } from './ai-core';
 import { emitIcen, type IcenEventMap } from './events';
 import { t } from './i18n';
+import { iconHTML } from './icons';
 
-/* 消息操作图标（lucide 风格 24×24，与静态 DOM 契约同款；svgIcon 消毒解析） */
-const ICON_COPY =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>';
-const ICON_RETRY =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
+/* Message actions share the same optical geometry as the input and tools. */
+const ICON_COPY = iconHTML('copy');
+const ICON_RETRY = iconHTML('refresh');
 
 interface MarkedElement extends HTMLElement {
   __icenAiChatInit?: boolean;
@@ -624,6 +623,7 @@ export function renderAiMessage(scrollEl: HTMLElement, model: AiMessageModel): A
       let errEl = row.querySelector<HTMLElement>('.icen-ai-msg-error-text');
       if (!errEl) {
         errEl = h('div', 'icen-ai-msg-error-text');
+        errEl.setAttribute('role', 'status');
         body.appendChild(errEl);
       }
       errEl.textContent = message;

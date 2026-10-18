@@ -16,7 +16,20 @@ export const KB_DOCS_PERM: ComponentDoc[] = [
     slug: 'kb-acl',
     name: '文档权限面板',
     group: '知识库',
-    desc: 'SharePoint 权限页范式的资源级 ACL 面板：继承 banner 三态（继承含父链 / 已断继承警示 / 例外 N 项 is-partial）、授权行主体五类（user/group/org/anyone/link，组行带「24 成员 · 由 IT 管理」注记）、显式 deny 一票否决置顶红（order:-1）、Limited Access 类系统行不可删（is-system 隐藏删除钮）、链接授权带范围与到期（is-expiring）、exposureCount 过度授权警示「对 1,204 人可见」（不去重计数）。renderKbAcl(el, model, opts?) 快照渲染；求值语义（先显式 deny → allow 并集 → 默认拒绝）由 kb-core evaluateAcl 提供。',
+    desc: 'SharePoint 权限页范式的资源级 ACL 面板，覆盖继承、授权行、链接与过度授权警示。',
+    detail: {
+      features: [
+        '**继承**：banner 三态——继承含父链 / 已断继承警示 / 例外 N 项（`is-partial`）',
+        '**主体**：授权行五类——user / group / org / anyone / link，组行带成员注记',
+        '**deny**：显式 deny 一票否决置顶红（`order:-1`）',
+        '**系统行**：Limited Access 类系统行不可删（`is-system` 隐藏删除钮）',
+        '**链接**：链接授权带范围与到期（`is-expiring`）',
+        '**警示**：`exposureCount` 过度授权警示「对 1,204 人可见」（不去重计数）',
+      ],
+      notes: [
+        '`renderKbAcl(el, model, opts?)` 为快照渲染；求值语义（先显式 deny → allow 并集 → 默认拒绝）由 kb-core `evaluateAcl` 提供。',
+      ],
+    },
     demo: `<div id="kb-acl-demo">
   <section class="icen-kb-acl">
     <div class="icen-kb-acl-inherit">继承自：公司库 <span class="icen-kb-acl-chain-link">${iconHTML('chevron-right')}</span> 财务部空间 <span class="icen-kb-meta">例外 1 项</span></div>
@@ -106,7 +119,20 @@ if (host && kbAclMod) {
     slug: 'kb-who-can',
     name: '有效权限检查器',
     group: '知识库',
-    desc: 'SharePoint「Check Permissions」/ Jira Permission Helper 范式的 view-as 检查器（差异化组件——Confluence 连原因链都没做全，业界缺口即本组件定位）：固定身份集下拉（来自服务端验证 token，不接受自由输入——Kendra 自报身份教训）→ 结论（有效角色 / 无权限 / 被策略拒绝）+ 扁平原因链（继承 / 直接 / 链接来源逐条列出，不做树）+ 叠加规则说明（多来源并集取权限序最大；deny 一票否决置顶红）。renderKbWhoCan(el, { identities, entries, evaluate? }) → handle { setIdentity(id), getResult() }；evaluate 缺省 = kb-core evaluateAcl（先显式 deny → allow 并集 → 默认拒绝 fail-closed）。',
+    desc: 'SharePoint「Check Permissions」范式的 view-as 检查器，结论加扁平原因链。',
+    detail: {
+      features: [
+        '**身份**：固定身份集下拉来自服务端验证 token，不接受自由输入',
+        '**结论**：有效角色 / 无权限 / 被策略拒绝三态',
+        '**原因链**：继承 / 直接 / 链接来源逐条扁平列出，不做树',
+        '**叠加**：多来源并集取权限序最大；deny 一票否决置顶红',
+        '**句柄**：返回 `{ setIdentity(id), getResult() }`',
+      ],
+      notes: [
+        '`evaluate` 可注入宿主策略，缺省为 kb-core `evaluateAcl`（先 deny → allow 并集 → 默认拒绝 fail-closed）。',
+        '差异化组件——业界原因链常做不全（Confluence 都没做全），此缺口即本组件定位。',
+      ],
+    },
     demo: `<div id="kb-whocan-demo">
   <div class="icen-kb-whocan">
     <div class="icen-kb-whocan-bar"><span class="icen-kb-meta">身份：固定身份集（服务端 token，不接受自由输入）</span></div>
@@ -169,7 +195,20 @@ if (host && kbWhoCanMod) {
     slug: 'kb-access',
     name: '访问申请流',
     group: '知识库',
-    desc: 'Google Drive「请求访问」范式的访问申请流：被拒五件套（资源名 / 原因 / owner / 申请入口 / 切换身份）+ 申请表单（理由可必填、角色与时长、路由明示「请求将发送给：内容 owner 李四」——Confluence 十年路由踩坑的解）+ 九态状态机徽章族（idle → requested → pending_review → granted(expiresAt 倒计时) → expiring → expired → 重交；revoked 审批侧撤销；denied 不做刺眼红色终态——业界静默默契）+ mode="approver" 审批方视角（请求卡 + 批准选权限级 / 拒绝附留言）。createKbAccess(el, { request, mode?, onRequest?, onDecide? }) → handle { setState(next), getState() }；到期是一等公民：每条 grant 可带 expiresAt 三态呈现（永不过期 / 倒计时+续期 / 已过期+重交）。',
+    desc: 'Google Drive「请求访问」范式的访问申请流，含被拒页、申请表单与状态机徽章。',
+    detail: {
+      features: [
+        '**被拒**：被拒五件套——资源名 / 原因 / owner / 申请入口 / 切换身份',
+        '**表单**：理由可必填、角色与时长，路由明示「请求将发送给：内容 owner」',
+        '**状态机**：九态徽章族，idle → requested → granted → expiring → expired → 重交',
+        '**审批**：`mode="approver"` 审批方视角——请求卡、批准选权限级、拒绝附留言',
+        '**到期**：每条 grant 可带 `expiresAt`——永不过期 / 倒计时续期 / 已过期重交',
+        '**句柄**：`createKbAccess` 返回 `{ setState(next), getState() }`',
+      ],
+      notes: [
+        'denied 不做刺眼红色终态（业界静默默契）；revoked 为审批侧撤销。',
+      ],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <button class="icen-btn icen-btn-sm" type="button" id="kb-access-advance">推进状态机 →</button>
 </div>
@@ -196,7 +235,7 @@ const request: KbAccessRequest = {
 const access = createKbAccess(el, {
   request,
   onRequest: (r) => api.submit(r),                        // 与 icen:kb-access-request 双通道
-  onDecide: (d) => api.decide(d.id, d.decision, d.role),  // 与 icen:kb-access-decide 双通道
+  onDecide: (id, decision, role) => api.decide(id, decision, role),
 });
 access.setState({ ...request, state: 'granted', decidedBy: '李四', decidedAt: new Date().toISOString(),
   expiresAt: new Date(Date.now() + 30 * 864e5).toISOString() });   // 到期一等公民
@@ -207,6 +246,7 @@ access.getState();   // 当前 KbAccessRequest 快照
 const log = document.getElementById('kb-access-log');
 const tlog = function (msg) { if (log) log.textContent = msg; };
 if (host && kbAccessMod) {
+  const controller = new AbortController();
   const req = {
     id: 'req-2026-1101', requester: '张三', resource: '2026 财务规划', role: 'viewer',
     reason: 'Q4 区域预算对齐需要财务口径', state: 'idle',
@@ -215,34 +255,48 @@ if (host && kbAccessMod) {
   };
   const h = kbAccessMod.createKbAccess(host, {
     request: req,
-    onRequest: function (r) { tlog('icen:kb-access-request · ' + r.requester + ' → ' + (r.approverNote || 'owner')); }
+    onRequest: function (r) { Object.assign(req, r); step = 0; tlog('申请已提交给' + (r.approverNote || '内容负责人')); }
   });
   const NEXT = ['requested', 'granted', 'expired', 'idle'];
   const LABEL = {
     requested: '已提交——路由给内容负责人李四（approverNote 明示）',
-    granted: '已批准 viewer——30 天到期，倒计时与续期入口就位',
+    granted: '已批准，授权范围与实际到期时间见下方状态',
     expired: '已过期——中性呈现「可重新申请」，不做刺眼终态',
     idle: '回到未申请——被拒五件套重新出现'
   };
-  let step = 0;
+  let step = -1;
   document.getElementById('kb-access-advance')?.addEventListener('click', function () {
     step = (step + 1) % NEXT.length;
     req.state = NEXT[step];
     if (req.state === 'granted') {
       req.decidedBy = '李四';
       req.decidedAt = new Date().toISOString();
-      req.expiresAt = new Date(Date.now() + 30 * 86400000).toISOString();
+      req.expiresAt = req.expiresAt || new Date(Date.now() + 30 * 86400000).toISOString();
     }
     h.setState(req);
     tlog('setState → ' + req.state + ' · ' + LABEL[req.state]);
-  });
+  }, {signal:controller.signal});
+  return () => { controller.abort(); h.destroy(); };
 }`,
   },
   {
     slug: 'kb-audit',
     name: '权限审计时间线',
     group: '知识库',
-    desc: 'Microsoft Purview / Box 审计骨架的权限时间线：通道过滤 chips（全部 / 读取 / 权限变更 / 申请 / 系统）+ 导出 CSV；权限异味节（admin 治理发现六枚举：过度暴露 / 组织级链接 / 过宽组授权 / 敏感度错配 / 断继承 / 负责人缺位——源系统权限卫生问题，RAG 只是放大器）分高 / 中 / 低级；时间线行 actor 三类（human / app / system），读取与预览分列（Purview 范式）；break-glass 行常驻警示色 +「实时告警已通知安全团队」，审计粒度 ≥ 常规。renderKbAudit(el, { entries, hygiene? }) 快照 + initKbAudit(root?) document 级委托（通道过滤 / 导出 / 异味处置）；同用户同资源 5 分钟读取去重是数据侧纪律——UI 不重复渲染也不声明条数。',
+    desc: 'Purview / Box 范式的权限审计时间线，含通道过滤、权限异味与 break-glass 警示。',
+    detail: {
+      features: [
+        '**过滤**：通道 chips（全部 / 读取 / 权限变更 / 申请 / 系统）+ 导出 CSV',
+        '**异味**：权限卫生六枚举治理发现，分高 / 中 / 低三级',
+        '**时间线**：actor 三类（human / app / system），读取与预览分列',
+        '**break-glass**：应急行常驻警示色 +「实时告警已通知安全团队」',
+        '**事件**：`icen:kb-audit-filter` / `-export` / `icen:kb-hygiene-action`',
+      ],
+      notes: [
+        '异味六枚举：过度暴露 / 组织级链接 / 过宽组授权 / 敏感度错配 / 断继承 / 负责人缺位——源系统权限卫生问题，RAG 只是放大器。',
+        '同用户同资源 5 分钟读取去重是数据侧纪律——UI 不重复渲染也不声明条数。',
+      ],
+    },
     demo: `<div id="kb-audit-demo">
   <div class="icen-kb-audit">
     <div class="icen-kb-audit-bar">
@@ -318,7 +372,19 @@ if (host && kbAuditMod) {
     slug: 'kb-visibility',
     name: '检索可见性对照器',
     group: '知识库',
-    desc: 'admin/审计专用的检索可见性对照器（安全对照组件，组件头常驻警示条：命中差异对照对普通用户构成泄露——任何随受限集合变化的可观察量都是侧信道）：固定身份集 × 同一查询的命中对照网格，每身份一列（有效角色 + 授权集合内安全计数 + 命中列表），可见性五级呈现（hidden 不渲染 / metadata 锁+标题+打码+申请 / restricted 附申请通道 / summary AI 摘要可见原文不可用 / full 正常）；过滤层徽标三态（pre ✓ 唯一安全基线——ANN 与 BM25 两侧同时生效 / post ⚠ 分数已可观察——缺陷层 / none ✕ fail-open——Kendra 教训）；教学段讲 volume leakage 与 padding 取整缓解。renderKbVisibility(el, { query, identities, hits, evaluateHit }) → handle { setFilterLayer(l), getVisibility(id, hit) }。',
+    desc: 'admin / 审计专用的检索可见性对照器：固定身份集 × 同一查询的命中对照网格。',
+    detail: {
+      features: [
+        '**网格**：每身份一列——有效角色 + 授权集合内安全计数 + 命中列表',
+        '**可见性**：hidden 不渲染 / metadata 打码 / restricted 附申请 / summary 摘要 / full',
+        '**过滤层**：徽标三态——pre ✓ 唯一安全基线 / post ⚠ 分数已可观察 / none ✕ fail-open',
+        '**教学**：教学段讲 volume leakage 与 padding 取整缓解',
+        '**句柄**：`{ setFilterLayer(l), getVisibility(id, hit) }`，`evaluateHit` 可注入',
+      ],
+      notes: [
+        '组件头常驻警示条：命中差异对照对普通用户构成泄露——任何随受限集合变化的可观察量都是侧信道；勿嵌入终端用户界面。',
+      ],
+    },
     demo: `<div id="kb-visibility-demo">
   <div class="icen-kb-visibility">
     <div class="icen-kb-visibility-warn">admin 审计视图——勿嵌入终端用户界面</div>

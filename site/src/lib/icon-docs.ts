@@ -2,7 +2,20 @@ import { ICON_PATHS, iconHTML } from '../../../src/behaviors/icons';
 import type { ComponentDoc } from './components';
 export const ICON_DOC: ComponentDoc = {
   slug:'icon',name:'界面图标',group:'基础',
-  desc:'操作、方向与状态使用同一套精确绘制的 SVG。固定 20px 光学网格，统一线宽和端点；可输出服务端 HTML 或原生 DOM，无字体依赖。次要操作在悬停或键盘聚焦时显现，触屏始终可见。',
+  desc:'同一套精确绘制的 SVG 图标：操作、方向与状态通用，可输出服务端 HTML 或原生 DOM。',
+  detail:{
+    features:[
+      '**网格**：固定 20px 光学网格，统一线宽与端点，不同字号保持对齐',
+      '**输出**：`iconHTML` 服务端 HTML（全转义）；`createIcon` 原生 DOM，无字体依赖',
+      '**语义**：带 `label` 自动 `role="img"`；在已有名称的按钮中默认 `aria-hidden`',
+      '**扩展**：`registerIcon` 注册自有图形走同一网格；只接受 SVG path，不执行脚本',
+      '**次要动作**：`.icen-icon-action` + `data-icen-reveal` 悬停 / 聚焦显现，触屏常显',
+    ],
+    notes:[
+      '次要动作槽位固定、显现不位移；只用于次要操作，不要隐藏主要操作或关键状态。',
+      '方向图标的 RTL 语义由所在组件决定，通用图标不会擅自翻转。',
+    ],
+  },
   demoLayout: 'stretch',
   demo:`<div class="icon-demo-grid">${Object.keys(ICON_PATHS).map((name)=>`<div class="icon-demo-cell">${iconHTML(name,{size:20})}<code>${name}</code></div>`).join('')}</div>
   <p class="doc-note">同一个图形在不同字号下保持对齐。</p>

@@ -77,12 +77,13 @@ const tokens = [
   </nav>
 
   <h1 class="page-title">原语（统一抽象层）</h1>
-  <p class="page-desc"><strong>本真</strong>：连续几何、轻盈材料、系统排版。<strong>像素</strong>：整数网格、点阵字体、阶梯投影。使用顶部「原语」切换；配色主题独立保留。</p>
-  <p class="page-desc"><a href="/benzhen/">进入「本真」原语工作室 ↗</a> · 体验材料、字体、几何与密度，实时调节并导出品牌配方。</p>
   <p class="page-desc">
-    所有 {componentCount} 个组件共享同一套抽象：(1) <strong>6 个交互基元 class</strong>（HTML 显式组合 API）+
-    (2) <strong><code>--icen-*</code> 原语 token 层</strong>（CSS 自洽消费）。原语 只需覆盖少数变量，
-    全局 {componentCount} 个组件自动换肤。
+    所有 {componentCount} 个组件共享同一套抽象：<strong>6 个交互基元 class</strong>（HTML 显式组合）与
+    <strong><code>--icen-*</code> 原语变量层</strong>（CSS 自洽消费）。换原语只需覆盖少数变量，全局组件自动换肤。
+  </p>
+  <p class="page-desc">
+    <strong>本真</strong>：连续几何、轻盈材料、系统排版。<strong>像素</strong>：整数网格、点阵字体、阶梯投影。
+    用顶部「原语」切换，配色主题独立保留；也可以进 <a href="/benzhen/">「本真」原语工作室</a> 实时调节并导出品牌配方。
   </p>
 
   <section class="icen-panel">
@@ -149,15 +150,15 @@ const tokens = [
   <section class="icen-panel">
     <div class="icen-panel-title"><span>事件体系</span><span>手势 × 协议 × 策略</span></div>
     <div class="icen-panel-body">
+      <p class="icen-dim">组件事件收敛为三层：</p>
+      <ul class="doc-feats ev-layers">
+        <li><strong>手势层</strong>：任意容器挂 <code>data-icen-gestures</code> 即开通 <code>icen:click / dblclick / contextmenu / longpress / text-select / swipe-*</code> 归一化手势事件。</li>
+        <li><strong>协议层</strong>：全部 CustomEvent（bubbles + composed + cancelable），detail 统一 <code>{'{ source, originalEvent, x, y, text? }'}</code>；组件作者派发一律走 <code>emitIcen</code> 唯一派生口。</li>
+        <li><strong>策略层</strong>：<code>setEventPolicy</code> 一处赋予 / 覆盖 / 禁用全站默认行为。</li>
+      </ul>
       <p class="icen-dim">
-        组件事件收敛为三层：<strong>手势层</strong>（任意容器挂 <code>data-icen-gestures</code> 即开通
-        <code>icen:click / dblclick / contextmenu / longpress / text-select / swipe-*</code> 归一化手势事件）→
-        <strong>协议层</strong>（全部 CustomEvent，bubbles + composed + cancelable，detail 统一
-        <code>{'{ source, originalEvent, x, y, text? }'}</code>；组件作者派发一律走 <code>emitIcen</code> 唯一派生口）→
-        <strong>策略层</strong>（<code>setEventPolicy</code> 一处赋予/覆盖/禁用全站默认行为）。
-        领域事件（<code>icen:chart-*</code> / <code>icen:ai-*</code>）与手势层互补不变。
-        绑定期许一个入口：<code>onIcen</code> —— 类型推断（IcenEventMap 注册表）+ 选择器委托 + 子树限定，
-        返回解绑函数，React/Vue/原生同写法。
+        绑定收敛为一个入口 <code>onIcen</code>：类型推断（IcenEventMap 注册表）+ 选择器委托 + 子树限定，
+        返回解绑函数，React / Vue / 原生同写法。领域事件（<code>icen:chart-*</code> / <code>icen:ai-*</code>）与手势层互补不变。
       </p>
       <CodeBlock code={`import { initGestures, onIcen, setEventPolicy, emitIcen } from '@icen.ai/ui/behaviors/events';
 
@@ -192,7 +193,7 @@ emitIcen(el, 'icen:my-change', { value });`} lang="js" />
       <p class="icen-dim" style="margin:14px 0 8px">活演示 —— 对下面卡片单击 / 双击 / 右键 / 长按 / 划词：</p>
       <div class="gesture-demo" data-icen-gestures="click dblclick contextmenu longpress text-select" tabindex="0">
         <p class="gesture-demo-title">手势试验田</p>
-        <p class="gesture-demo-hint">这是一段可以划选的文本。Try me: click, double-click, right-click, long-press, or select this text.</p>
+        <p class="gesture-demo-hint">这是一段可以划选的文本——试试单击、双击、右键、长按或划选。</p>
       </div>
       <p class="gesture-log" id="gesture-log" aria-live="polite">等待手势…</p>
     </div>
@@ -285,6 +286,7 @@ emitIcen(el, 'icen:my-change', { value });`} lang="js" />
   .primitive-name { font-size: 14px; font-weight: 600; }
   .primitive-desc { font-size: 13px; line-height: 1.5; }
   .primitive-desc.icen-dim { color: var(--icen-token-text-muted); }
+  .ev-layers { margin: 8px 0 12px; }
 
   /* 演示元素：直接挂原语 class 即可见效果（无需任何组件类） */
   .btn-demo {

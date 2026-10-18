@@ -36,11 +36,22 @@ export function enhanceSearchField(input: HTMLInputElement): SearchFieldHandle {
   if (typeof document === 'undefined' || !input.parentElement) return {refresh() {},destroy() {}};
   const previous=searchFields.get(input);if(previous)return previous;
   const host=input.parentElement;
+  const wasFocused=document.activeElement===input;
   const hadHostClass=host.classList.contains('icen-search-field');
   const hadInputClass=input.classList.contains('icen-search-input');
-  host.classList.add('icen-search-field');input.classList.add('icen-search-input');
+  const hadStandardClass=input.classList.contains('icen-input');
+  const ownedWrap=!host.classList.contains('icen-input-wrap');
+  const next=input.nextSibling;
+  const wrap=ownedWrap?document.createElement('div'):host;
+  if(ownedWrap){
+    wrap.className='icen-input-wrap icen-input-wrap--sm icen-input-wrap--search icen-control';
+    host.insertBefore(wrap,input);wrap.append(input);
+  }
+  const leading=wrap.querySelector('.icen-input-leading')?null:document.createElement('span');
+  if(leading){leading.className='icen-input-leading';leading.append(createIcon('search')!);wrap.prepend(leading);}
+  host.classList.add('icen-search-field');input.classList.add('icen-search-input','icen-input');
   const clear=document.createElement('button');clear.type='button';
-  clear.className='icen-search-clear';clear.append(createIcon('close')!);host.append(clear);
+  clear.className='icen-input-clear icen-search-clear';clear.append(createIcon('close')!);wrap.append(clear);
   const ac=new AbortController();
   let disposed=false;
   const refresh=()=>{
@@ -59,11 +70,16 @@ export function enhanceSearchField(input: HTMLInputElement): SearchFieldHandle {
   const observer=new MutationObserver(refresh);
   observer.observe(input,{attributes:true,attributeFilter:['disabled','readonly']});
   refresh();
+  if(wasFocused)input.focus({preventScroll:true});
   const handle={refresh,destroy(){
     if(disposed)return;
-    disposed=true;observer.disconnect();ac.abort();clear.remove();searchFields.delete(input);
+    disposed=true;observer.disconnect();ac.abort();clear.remove();leading?.remove();searchFields.delete(input);
+    const focused=document.activeElement===input;
+    if(ownedWrap){host.insertBefore(input,next?.parentNode===host?next:null);wrap.remove();}
+    if(focused)input.focus({preventScroll:true});
     if(!hadHostClass)host.classList.remove('icen-search-field');
     if(!hadInputClass)input.classList.remove('icen-search-input');
+    if(!hadStandardClass)input.classList.remove('icen-input');
   }};
   searchFields.set(input,handle);return handle;
 }

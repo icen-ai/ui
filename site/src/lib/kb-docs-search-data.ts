@@ -12,7 +12,20 @@ export const KB_DOCS_SEARCH_DATA: ComponentDoc[] = [
     slug: 'kb-retrieval',
     name: '检索调试台',
     group: '知识库',
-    desc: 'createKbRetrieval 装配检索 playground：参数栏（向量/关键词/混合模式 · topK 步进 · alpha 混合权重滑杆 · 重排开关 · 阈值滑杆联动「存活 N 条」）+ 可复制参数 JSON 行 + 命中列表。分数纪律：score null → 值「—」不渲条、scoreKind 必显 chip、vectorPart/keywordPart 微型双段条、explain 折叠拆解；Enter 或「运行」派 icen:kb-retrieval-run（onRun 双通道）。',
+    desc: '检索调试 playground：向量 / 关键词 / 混合三模式，参数栏 + 命中列表。',
+    detail: {
+      features: [
+        '**参数**：模式三选 + `topK` 步进 + `alpha` 权重滑杆 + 重排开关',
+        '**阈值**：滑杆联动「存活 N 条」计数',
+        '**分数**：无分命中显「—」不渲条，`scoreKind` 必显 chip',
+        '**拆解**：`vectorPart` / `keywordPart` 双段微条',
+        '**事件**：Enter 或「运行」派 `icen:kb-retrieval-run`',
+      ],
+      notes: [
+        '`explain` 折叠拆解打分构成；可复制参数 JSON 行随参数实时同步。',
+        '参数宽进严出（`normalizeRetrievalParams`）；重排关闭时 `threshold` 投影为 `null`。',
+      ],
+    },
     demo: `<div id="demo-kb-retrieval"></div>
 <p class="demo-label" id="kb-retrieval-log" style="margin-top:8px">Enter 或点「运行」→ 300ms mock 检索回填命中 · 切模式看 scoreKind 变化 · 第 5 条为无分命中（「—」态）· 点「拆解」看打分构成</p>`,
     usage: `import { createKbRetrieval } from '@icen.ai/ui/kit/kb-retrieval';
@@ -105,7 +118,19 @@ handle.renderHits(mockHits({ mode: 'hybrid', topK: 5, alpha: 0.6 }));`,
     slug: 'kb-filter',
     name: '过滤构建器',
     group: '知识库',
-    desc: 'createKbFilter 行式过滤器构建器：rule 行（字段 / 9 种操作符 / 值）+ AND/OR 组嵌套（≤2 层，超层禁用增钮不隐藏）+ DSL 双表示镜像（filterToMongo 的 JSON ↔ filterToOData 字符串，tab 切换可复制）。DOM 即状态（随时从树解析 KbFilterNode，无并行漂移）；任意变更派 icen:kb-filter-change {node, valid}（onChange 双通道）。',
+    desc: '行式过滤器构建器：规则行 + AND/OR 组嵌套 + DSL 双表示镜像。',
+    detail: {
+      features: [
+        '**结构**：rule 行（字段 / 9 种操作符 / 值）',
+        '**嵌套**：AND/OR 组嵌套 ≤2 层，超层禁用增钮不隐藏',
+        '**序列化**：Mongo JSON ↔ OData 字符串双镜像，tab 可复制',
+        '**状态**：DOM 即状态，随时解析 `KbFilterNode`，无并行漂移',
+        '**事件**：任意变更派 `icen:kb-filter-change`',
+      ],
+      notes: [
+        '序列化走 `filterToMongo` / `filterToOData`；空构建器 = 无过滤 = valid。',
+      ],
+    },
     demo: `<div id="demo-kb-filter"></div>
 <p class="demo-label" id="kb-filter-log" style="margin-top:8px">任意增删规则 / 切 AND-OR / 输入值 → icen:kb-filter-change · 底部 DSL 镜像实时同步（Mongo / OData tab 可切换复制）· 属于（in）用逗号分隔多值</p>`,
     usage: `import { createKbFilter } from '@icen.ai/ui/kit/kb-filter';
@@ -159,7 +184,20 @@ if (host) {
     slug: 'kb-rerank',
     name: '重排对比',
     group: '知识库',
-    desc: 'renderKbRerankCompare 三列 grid（重排前 | Δ | 重排后）：按 documentId+chunkId 稳定 join，after 名次优先、before-only 条目（落选）殿后；Δ 用 after.rank − before.rank（↑N 绿 / ↓N 红 / —），单侧缺失标「新进 / 落选」；双分数列各按列内 max 归一，after 列 scoreKind 一律 rerank。顶部模型徽标 + 开关（icen:kb-rerank-toggle，关闭后重排后列压淡不隐藏）。',
+    desc: '重排对比三列视图（重排前 | Δ | 重排后），名次变化与双分数一屏看全。',
+    detail: {
+      features: [
+        '**结构**：三列 grid（重排前 | Δ | 重排后）',
+        '**对齐**：按 `documentId` + `chunkId` 稳定 join',
+        '**Δ**：`after.rank − before.rank`，↑N 绿 / ↓N 红 / —',
+        '**单侧**：缺失标「新进 / 落选」，after 名次优先',
+        '**分数**：双列各按列内 max 归一，after 列一律 `rerank`',
+        '**开关**：`icen:kb-rerank-toggle`，关闭后重排后列压淡不隐藏',
+      ],
+      notes: [
+        '顶部挂模型徽标，缺省 `rerank`。',
+      ],
+    },
     demo: `<div id="demo-kb-rerank"></div>
 <p class="demo-label" id="kb-rerank-log" style="margin-top:8px">↑3 / ↓2 / — 与「新进 / 落选」一次看全 · 点右上开关对比开/关（关闭 = 重排后列压淡，显式禁用不隐藏）</p>`,
     usage: `import { renderKbRerankCompare } from '@icen.ai/ui/kit/kb-rerank';
@@ -219,7 +257,19 @@ if (host) {
     slug: 'kb-hittest',
     name: '召回测试',
     group: '知识库',
-    desc: 'createKbHitTest 召回回归测试集：问题列表（pin 置顶 / 期望 chunk chips（超 3 折 +N）/ 最近结果 ✓✗— / 删除）+ 新增问题 + 「运行全部」。passed 由 lastHits ∩ expectedChunkIds 派生（不信任外部传入）；统计头走 hitTestStats（命中率 null = 未跑过而非 0），renderKbHitStats 可脱离列表单独渲染；徽标「参数仅本次会话生效」。',
+    desc: '召回回归测试集：问题列表 + 期望 chunk + 统计头，一键运行全部。',
+    detail: {
+      features: [
+        '**列表**：pin 置顶 / 期望 chunk chips（超 3 折 +N）/ 删除',
+        '**判定**：`passed` 按命中 ∩ 期望集合派生，不信任外部传入',
+        '**统计**：`hitTestStats` 命中率 null = 未跑过而非 0',
+        '**复用**：`renderKbHitStats` 统计头可脱离列表单独渲染',
+        '**事件**：「运行全部」与新增问题派事件，检索由宿主执行',
+      ],
+      notes: [
+        '测试参数仅本次会话生效（徽标明示）；未设期望的问题结果「—」不进分母。',
+      ],
+    },
     demo: `<div id="demo-kb-hittest"></div>
 <p class="demo-label" id="kb-hittest-log" style="margin-top:8px">「运行全部」→ 300ms mock 检索逐题回填 lastHits（期望命中在前排 → ✓，否则 ✗）· Enter 新增问题 · pin 图标置顶固定</p>`,
     usage: `import { createKbHitTest, renderKbHitStats } from '@icen.ai/ui/kit/kb-hittest';
@@ -299,7 +349,20 @@ if (host) {
     slug: 'kb-sql',
     name: 'SQL 卡片',
     group: '知识库',
-    desc: 'renderKbSql 生成 SQL 卡片：头（可见性徽标「仅管理员可见」/ dialect / 引用表 chips / 复制 / 编辑重跑）+ highlightSql 零依赖着色（关键词/字符串/注释/数字/函数名，流式安全）+ prevSql 修正卡（makeSqlDiff 行级 unified diff → 复用 ai-diff 渲染 + 「应用修复并重跑」）+ 编辑态 textarea（Ctrl/Cmd+Enter 确认、Esc 取消）。initKbSql 幂等委托：icen:kb-sql-edit / icen:kb-sql-rerun（内部一并挂 initAiDiff）。',
+    desc: '生成 SQL 卡片：着色代码 + 引用表 chips + 编辑重跑 + 修正 diff。',
+    detail: {
+      features: [
+        '**头部**：可见性徽标 / `dialect` / 引用表 / 复制 / 编辑重跑',
+        '**着色**：`highlightSql` 零依赖着色，流式安全',
+        '**修正**：`prevSql` ≠ 当前 → 行级 diff 修正卡',
+        '**编辑**：textarea 编辑态，Ctrl/Cmd+Enter 确认、Esc 取消',
+        '**委托**：`initKbSql` 幂等委托复制 / 编辑 / 应用修复',
+      ],
+      notes: [
+        '事件 `icen:kb-sql-edit` / `icen:kb-sql-rerun`；`initKbSql` 一并挂 `initAiDiff`。',
+        '修正卡由 `makeSqlDiff` 生成行级 diff，复用 `ai-diff` 渲染。',
+      ],
+    },
     demo: `<div id="demo-kb-sql"></div>
 <p class="demo-label" id="kb-sql-log" style="margin-top:8px">「编辑重跑」→ textarea 改 SQL · Ctrl+Enter 确认 · Esc 取消 · 修正卡是 prevSql → 当前版的 diff（复用 ai-diff，行号 + 着色）· 「应用修复并重跑」派 icen:kb-sql-rerun</p>`,
     usage: `import { renderKbSql, initKbSql, highlightSql, makeSqlDiff } from '@icen.ai/ui/kit/kb-sql';
@@ -380,7 +443,21 @@ if (host) {
     slug: 'kb-answer',
     name: '问数答案',
     group: '知识库',
-    desc: 'renderKbAnswer 问数答案组合容器（快照渲染，各槽有才渲）：认证徽章（verified 命中可信资产，数字本身永远中性）+ 权限提示（行级过滤 + 已脱敏列，不可关闭）+ 正文 [n] 角标流（无效编号降级纯文本）+ 澄清反问 / 口径解释内嵌槽 + 结果表（sticky 表头、null「—」、截断声明、导出）+ ChartSpec 图表（折线/柱状/饼图切换，复用 renderChart）+ 追问建议。事件与回调双通道：icen:kb-verified-open / onExport / onFollowUp。',
+    desc: '问数答案组合容器：快照渲染，认证徽章、正文角标、结果表、图表各槽有才渲。',
+    detail: {
+      features: [
+        '**认证**：`verified` 命中可信资产挂徽章，数字本身永远中性',
+        '**权限**：行级过滤 + 已脱敏列提示，不可关闭（诚实呈现）',
+        '**正文**：`[n]` 角标流，无效编号降级纯文本',
+        '**结果**：sticky 表头、null「—」、截断声明、导出',
+        '**图表**：折线 / 柱状 / 饼图切换，复用 `renderChart`',
+        '**内嵌**：澄清反问 / 口径解释槽 + 追问建议',
+        '**事件**：认证 / 导出 / 追问走事件与回调双通道',
+      ],
+      notes: [
+        '认证徽章派 `icen:kb-verified-open`；导出回调 `onExport` 缺席时按钮禁用（不给假按钮）。',
+      ],
+    },
     demo: `<div id="demo-kb-answer"></div>
 <p class="demo-label" id="kb-answer-log" style="margin-top:8px">点认证徽章 / 图表类型 chips（折线→柱状→饼图）/ 追问 chips / 导出 → 事件与回调双通道回显 · 结果表含截断声明与 null「—」· 权限提示不可关闭（诚实呈现）</p>`,
     usage: `import { renderKbAnswer } from '@icen.ai/ui/kit/kb-answer';
@@ -479,7 +556,19 @@ if (host) {
     slug: 'kb-clarify',
     name: '澄清反问',
     group: '知识库',
-    desc: 'renderKbClarify 澄清反问卡（快照渲染，重渲重置为未答态）：问题行 + 选项 chips 点选（点选非打字）+ 答后回显「已解析：…」并禁用其余选项（同一卡只能答一次）+ reason 弱化小字。点选派 icen:kb-clarify-answer {id, value, label}（onAnswer 双通道）；kb-answer 的澄清槽内部复用本组件。',
+    desc: '澄清反问卡：选项 chips 点选作答，答后锁定并回显解析结果。',
+    detail: {
+      features: [
+        '**交互**：选项 chips 点选作答（点选非打字）',
+        '**答后**：回显「已解析：…」并禁用其余选项，一卡只答一次',
+        '**辅助**：`reason` 弱化小字，有才渲',
+        '**事件**：点选派 `icen:kb-clarify-answer`',
+      ],
+      notes: [
+        '快照渲染，重渲即重置为未答态；`kb-answer` 的澄清槽内部复用本组件。',
+        '`onAnswer` 回调与事件同 `detail` 双通道。',
+      ],
+    },
     demo: `<div id="demo-kb-clarify"></div>
 <div class="icen-toolbar" style="margin-top:12px">
   <span class="icen-toolbar-label">答过即锁定 · 重答 = 数据快照重渲</span>
@@ -537,7 +626,19 @@ document.getElementById('kb-clarify-reset')?.addEventListener('click', function 
     slug: 'kb-explain',
     name: '口径解释',
     group: '知识库',
-    desc: 'renderKbExplain 口径解释折叠面板（快照渲染，默认折叠）：摘要行「这个数字是怎么算出来的」+ 参与要素计数徽标；展开体为 表/列/筛选/聚合 四组 chips（有才渲）+ 指标口径行（name + ref 深链「查看口径」），全空给空态无死路。切换派 icen:kb-explain-toggle {el, open}；kb-answer 的口径槽内部复用本组件。',
+    desc: '口径解释折叠面板：拆解数字的表 / 列 / 筛选 / 聚合与指标口径。',
+    detail: {
+      features: [
+        '**摘要**：「这个数字是怎么算出来的」+ 参与要素计数徽标',
+        '**展开**：表 / 列 / 筛选 / 聚合四组 chips，有才渲',
+        '**指标**：口径行 `name` + `ref` 深链「查看口径」',
+        '**空态**：四组与指标全空给空态，无死路',
+        '**事件**：切换派 `icen:kb-explain-toggle`',
+      ],
+      notes: [
+        '快照渲染，默认折叠；`kb-answer` 的口径槽内部复用本组件。',
+      ],
+    },
     demo: `<div style="display:flex;flex-direction:column;gap:12px;width:100%">
   <div id="demo-kb-explain"></div>
   <div id="demo-kb-explain-2"></div>

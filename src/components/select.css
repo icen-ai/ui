@@ -205,22 +205,8 @@
   background: var(--icen-token-card-strong);
   z-index: 1;
 }
-.icen-select-search-input {
-  inline-size: 100%;
-  height: var(--icen-density-input-height-sm);
-  padding: 0 var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-sm);
-  color: var(--icen-token-text);
-  background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-sm);
-  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
-}
-.icen-select-search-input:focus {
-  outline: none;
-  border-color: var(--icen-control-focus-border);
-  box-shadow: var(--icen-control-focus-shadow);
-}
+.icen-select-search-input { min-inline-size: 0; }
+
 
 /* ── 多选清除按钮（与 trigger 同级，绝对定位叠进 trigger 行内末端侧、chevron 内侧） ── */
 .icen-select-clear {

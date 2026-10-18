@@ -164,7 +164,7 @@
 .icen-command-palette-item:hover { background: var(--icen-token-fill-1); }
 .icen-command-palette-item.is-active {
   /* 当前候选 = 选中表面（accent 微底 + 内描边），不改文字色；与菜单/选择器同语言 */
-  background: var(--icen-token-accent-faint);
+  background: var(--icen-token-accent-subtle);
   color: var(--icen-token-text);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 65%, var(--icen-token-line-soft));
 }

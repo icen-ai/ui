@@ -14,22 +14,24 @@
 ## 阶段
 
 - [x] 共享 SVG 图标 API（SSR + DOM + 自定义）、静态图形与隐式动作槽位
-- [x] 级联、下拉选择、树选择、日期及自动完成的触发器和面板
+- [ ] 级联、下拉选择、树选择、日期及自动完成的触发器和面板
 - [x] 外观切换全部形态、尺寸、全局同步
-- [x] 标签/输入附件/面包屑/分页/步骤/工具条/导航
-- [x] 模态/下拉/菜单/通知/告警/折叠及面板
-- [x] 数据表与图表、AI 与知识库全部交互
-- [x] 全站示例与用法同步、全部组件矩阵浏览器验收
-- [x] 完整 verify、站点 build、交互与 a11y、提交清空工作区（不升版、不发布）
+- [ ] 标签/输入附件/面包屑/分页/步骤/工具条/导航
+- [ ] 模态/下拉/菜单/通知/告警/折叠及面板
+- [ ] 数据表与图表、AI 与知识库全部交互
+- [ ] 全站示例与用法同步、全部组件矩阵浏览器验收
+- [ ] 完整 verify、站点 build、交互与 a11y、提交清空工作区（不升版、不发布）
 
-## 复核状态（本轮核销）
+## 复核状态（2026-10-18 独立复查更正）
 
-- 35 项达全量标准（源码+示例+浏览器交互+双原语明暗+键盘/触屏/RTL/a11y）：已勾。
-- 其余静态/展示族（icon/btn/panel/pill/tag/stat/toolbar/split-pane/form/card/avatar/kbd/list/timeline/desc/tree/badge/table/spinner/skeleton/result/nav/sidebar/steps/breadcrumb/pagination/media-card/rating/empty/accordion/scroll-area/layout + ai 余部 + kb 30 + charts 子类型）经双态+展开态全量巡检（axe 双宽度、溢出、文字图标、脚本异常）零问题，以巡检为准，未逐件写专项交互谱——可视后续需要补。
+- 上轮标记完成 35 项；这代表已实施专项，不足以证明所有交互矩阵完成。独立复查在已勾的 tooltip、upload、charts 中复现了真实缺陷，修复与证据见 [复查报告](review-2026-10-18.md)。
+- 其余组件有基础巡检证据，尚不能核销完整交互验收。其中 tree、split-pane、AI 与知识库包含实际交互，不能归作静态展示而免验。
+- `expanded-audit.pw.ts` 实际检查每页展开后的默认配色/原语、1440/390px 页面级溢出，以及桌面演示区的 serious/critical axe 问题；没有打开菜单或对话框，没有覆盖全部明暗/原语/复杂状态，也没有验证提交数据、销毁后重绘或组件内部裁切。
+- 全阶段关闭已撤回。测试通过、视觉基线更新和工作区干净分别是工程证据，均不能替代逐组件交互及主观视觉验收，也不能证明“超过 Apple”。
 
 ## 逐组件复核
 
-每项完成需包括：源码、示例与用法、真实浏览器交互、浅/深色与本真/像素、键盘/触屏/RTL。
+下列勾选保留上轮专项实施记录，不等同于 1.0 最终签收。最终签收每项需包括：源码、示例与用法、真实浏览器交互、浅/深色与本真/像素、键盘/触屏/RTL。
 
 - [x] theme-switcher
 - [ ] icon
@@ -479,6 +481,9 @@
 - 验证：verify 767 测试、286 条浏览器回归、129 页×两档巡检 0 问题。
 
 ### 下一批待处理（保留完整目标）
+
+- 2026-10-18 续查已落实 AI 停止/失败/重试/解绑、申请人表单节点与选区保持、检查点键盘/尺寸/门户所有权；见 `tests/dom/{composer,kb}-workflow.test.ts` 和 `tests/e2e/workflow-continuity.pw.ts`。这些是具体工作流证据，未核销全部 AI/知识库矩阵。
+- 同日 AI 输入台续修：资源目录、skill/tool 类别、图标块与选中视觉、真实文件状态、请求/排队快照、可取消 prepareMessage 与独立用量，见 `docs/spec/ai-input-experience.md`、`tests/dom/composer-library.test.ts`、`tests/e2e/composer-library.pw.ts`。六套主题明暗对比度、两套原语弹层、触屏 RTL 长文件名已专项验收；仍不替代全库矩阵。
 
 - 选择器尚需完整触屏、forced-colors、跨页卸载与每种状态的视觉验收；基础键盘/搜索/动态数据/销毁与滚动专项已完成。
 - Date picker / cascader / tree select / autocomplete / mentions：全部尺寸、搜索/空/加载/错误/禁用状态，完整键盘与两轴视觉矩阵。

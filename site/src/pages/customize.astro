@@ -33,8 +33,8 @@ registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 
 
   <h2 class="doc-h2">主题工作台：调旋钮 → 拿覆盖 CSS</h2>
   <p class="doc-note">
-    下面的工作台全部用本库组件搭成（吃狗粮）：左侧旋钮改动实时作用于右侧预览卡（容器级 data 属性 + CSS 变量子树覆盖），
-    底部生成可复制片段。accent 明度三档的对比度<b>实时验算并如实展示</b>——不达标会明说（诚实呈现纪律），不会悄悄给你一个不过 AA 的品牌色。
+    工作台本身全部用本库组件搭成。左侧旋钮实时作用于右侧预览卡（容器级 data 属性 + CSS 变量子树覆盖），底部生成可复制的覆盖片段。
+    accent 明度三档的对比度<b>实时验算、如实展示</b>——不达标会明说，不会悄悄给你一个不过 AA 的品牌色。
   </p>
   <div class="tw">
     <div class="tw-controls">
@@ -115,7 +115,7 @@ registerThemePreset('brand');         // 自建品牌主题：自家 CSS 写好 
   <div class="tw-output">
     <div class="tw-output-head">
       <span class="tw-label">生成的覆盖片段（含实测对比度注释）</span>
-      <button class="icen-copy-btn icen-btn icen-btn-sm" type="button" id="tw-copy" data-icen-copy="" data-icen-copy-icon>
+      <button class="icen-copy-btn icen-copy-btn--md" type="button" id="tw-copy" data-icen-copy="" data-icen-copy-icon>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
         <span>复制</span>
       </button>

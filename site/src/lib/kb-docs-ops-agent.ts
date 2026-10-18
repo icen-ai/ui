@@ -14,7 +14,20 @@ export const KB_DOCS_OPS_AGENT: ComponentDoc[] = [
     slug: 'kb-trace',
     name: '调用链追踪',
     group: '知识库',
-    desc: 'RAG/LLM 调用链 span 树：query → 检索（展开体内嵌命中列表与分数条）→ 重排 → 生成的嵌套耗时条（宽度按同级最大耗时占比），error / running 分支默认展开，展开体自动渲染 detail、usage（↑↓ tok / $ 成本）与错误原因。initKbTrace 为 document 级委托（click 选中+折叠 / Enter / Space），动态插入免重跑；事件 icen:kb-trace-select / icen:kb-trace-toggle。数据经 kb-core normalizeSpans 归一（父先子后、孤儿容忍为顶层）。',
+    desc: 'RAG/LLM 调用链 span 树，覆盖查询、检索、重排、生成、工具等节点的嵌套耗时展示。',
+    detail: {
+      features: [
+        '**结构**：span 树嵌套耗时条，宽度按同级最大耗时占比',
+        '**展开**：error / running 分支默认展开，展开体渲染 detail、usage 与错误原因',
+        '**检索**：检索 span 内嵌命中列表与分数条，无分命中显示「—」',
+        '**键盘**：`initKbTrace` 为 document 级委托，click 选中折叠、Enter / Space',
+        '**事件**：`icen:kb-trace-select` 与 `icen:kb-trace-toggle`',
+        '**数据**：经 `normalizeSpans` 归一，父先子后、孤儿容忍为顶层',
+      ],
+      notes: [
+        '委托为 document 级且幂等，动态插入的 span 树免重跑初始化。',
+      ],
+    },
     demo: `<div id="kb-trace-demo"></div>
 <p class="demo-label" id="kb-trace-log" style="margin-top:8px">点击行选中并折叠子 span · error 分支默认展开 · 展开「检索」span 看内嵌命中与分数条（无分命中显示「—」）</p>`,
     usage: `import { renderKbTrace, initKbTrace } from '@icen.ai/ui/kit/kb-trace';
@@ -66,7 +79,19 @@ if (host && kbTraceMod) {
     slug: 'kb-review',
     name: '标注队列',
     group: '知识库',
-    desc: '人工标注 / 审查队列：左侧队列（分配人过滤 + 状态点）+ 右侧审查卡（rubric 行——categorical chips（前 9 项带数字角标）与 numeric 0–10 滑杆）。全键盘流内建：←/→ 切条目、1–9 选选项、⌘/Ctrl+Enter 完成并下一条、? 显隐快捷键浮层。createKbReview 返回 { current, next, prev, submit, destroy } 句柄；打分 / 提交 / 分配走事件（icen:kb-review-score / -submit / -assign）与 onAction 回调双通道。',
+    desc: '人工标注审查队列，左侧队列加右侧审查卡，支持选项打分与数值滑杆。',
+    detail: {
+      features: [
+        '**结构**：左侧队列（分配人过滤 + 状态点）+ 右侧审查卡',
+        '**打分**：rubric 行含 categorical chips（前 9 项带数字角标）与 numeric 0–10 滑杆',
+        '**键盘**：←/→ 切条目、1–9 选选项、⌘/Ctrl+Enter 完成并下一条、? 快捷键浮层',
+        '**句柄**：`createKbReview` 返回 `current` / `next` / `prev` / `submit` / `destroy`',
+        '**事件**：`icen:kb-review-score` / `-submit` / `-assign`，与 `onAction` 回调双通道',
+      ],
+      notes: [
+        '全键盘流内建在审查卡上，无需宿主接线。',
+      ],
+    },
     demo: `<div id="kb-review-demo"></div>
 <p class="demo-label" id="kb-review-log" style="margin-top:8px">全键盘流（先点进右侧审查卡）：← → 切条目 · 1–9 选选项 · ⌘/Ctrl+↵ 完成并下一条 · ? 快捷键 · Esc 关闭 · 左上可按分配人过滤</p>`,
     usage: `import { createKbReview } from '@icen.ai/ui/kit/kb-review';
@@ -114,7 +139,19 @@ if (host && kbReviewMod) {
     slug: 'kb-gap',
     name: '无答案分析',
     group: '知识库',
-    desc: '无答案 / 未命中查询分析：顶部 12 根自绘趋势柱（纯 div/i，不依赖 charts）+ 零结果 Top 表（次数 / 占比 / 零点击率 / 最近出现 / 行内行动钮「建文档」「加同义词」）。口径纪律内建：「零点击 ≠ 失败」以表头小字 + tooltip 声明，不染告警色；queries 为空渲染空态「没有未命中查询——覆盖良好」。initKbGap 为 document 级 click 委托 → icen:kb-gap-action { query, action }。',
+    desc: '无答案 / 未命中查询分析，含趋势柱与零结果 Top 表。',
+    detail: {
+      features: [
+        '**趋势**：顶部 12 根自绘趋势柱，纯 div 实现不依赖 charts',
+        '**表格**：零结果 Top 表含次数、占比、零点击率、最近出现',
+        '**操作**：行内行动钮「建文档」「加同义词」→ `icen:kb-gap-action`',
+        '**口径**：「零点击 ≠ 失败」以表头小字与 tooltip 声明，不染告警色',
+        '**空态**：`queries` 为空渲染「没有未命中查询——覆盖良好」',
+      ],
+      notes: [
+        '`initKbGap` 为 document 级 click 委托（幂等），动态插入免重跑。',
+      ],
+    },
     demo: `<div id="kb-gap-demo"></div>
 <p class="demo-label" id="kb-gap-log" style="margin-top:8px">行内「建文档 / 加同义词」→ icen:kb-gap-action · 悬停表头「零点击 ≠ 失败」看口径注释 · 悬停趋势柱看日期与次数</p>`,
     usage: `import { renderKbGap, initKbGap } from '@icen.ai/ui/kit/kb-gap';
@@ -163,7 +200,19 @@ if (host && kbGapMod) {
     slug: 'kb-eval',
     name: '评估对比',
     group: '知识库',
-    desc: '评估 run 对比表（Braintrust 心智）：头部 runA/runB 下拉切换 → icen:kb-eval-compare，Summary 行自动判级徽章（提升 / 回归 / 权衡 / 持平，kb-core evalGrade）+ 全行均分与百分点差；结果表每指标 A / B / Δ 三列（正绿负负红、null 显「—」），行点击展开双栏字符级 diff（A 独有红 / B 独有绿，零依赖自写简版）；存在回归行时自动出现「仅看回归」过滤钮。',
+    desc: '评估 run 对比表（Braintrust 心智），覆盖判级汇总、指标对比与双栏 diff。',
+    detail: {
+      features: [
+        '**对比**：头部 runA / runB 下拉切换 → `icen:kb-eval-compare`',
+        '**汇总**：Summary 行自动判级徽章（提升 / 回归 / 权衡 / 持平）+ 均分与百分点差',
+        '**指标**：结果表每指标 A / B / Δ 三列，正绿负红、null 显「—」',
+        '**diff**：行点击展开双栏字符级 diff，A 独有红、B 独有绿',
+        '**过滤**：存在回归行时自动出现「仅看回归」过滤钮',
+      ],
+      notes: [
+        '判级由 kb-core `evalGrade` 提供；字符级 diff 为零依赖自写简版。',
+      ],
+    },
     demo: `<div id="kb-eval-demo"></div>
 <p class="demo-label" id="kb-eval-log" style="margin-top:8px">点行展开双栏字符级 diff · Q-03 是回归行（v4 忠实度掉到 0.4）→「仅看回归」过滤钮自动出现 · 切头部下拉派发 icen:kb-eval-compare</p>`,
     usage: `import { renderKbEvalCompare } from '@icen.ai/ui/kit/kb-eval';
@@ -216,7 +265,19 @@ if (host && kbEvalMod) {
     slug: 'kb-canvas',
     name: '双栏工作台',
     group: '知识库',
-    desc: 'Agent 双栏工作台画布：左对话流 / 右文档（各自滚动容器，宿主内容经 setChat / setDoc 挂入）+ 6px 比例分隔条（pointer 拖拽 rAF 批处理、←/→ 微调、双击复位 0.42，自实现不依赖 split-pane）+ 右栏内联 diff（复用 ai-diff，addDiff 接 parseUnifiedDiff 产物）+ 底部版本时间轴（addVersion，current 抢占高亮）+ 划词 AI 工具条（setSelectionTools 注入，选中文本浮「改写 / 补引用 / 总结」→ icen:kb-canvas-ai {instruction, selection}）。',
+    desc: 'Agent 双栏工作台画布，覆盖对话流、文档栏、内联 diff、版本轴与划词 AI 工具条。',
+    detail: {
+      features: [
+        '**结构**：左对话流 / 右文档各自滚动，宿主内容经 `setChat` / `setDoc` 挂入',
+        '**分隔条**：6px 拖拽 rAF 批处理，←/→ 微调、双击复位 0.42，不依赖 split-pane',
+        '**diff**：右栏内联 diff 复用 ai-diff，`addDiff` 接 `parseUnifiedDiff` 产物',
+        '**版本**：底部版本时间轴 `addVersion`，current 抢占高亮',
+        '**划词**：`setSelectionTools` 注入工具条，选中文本浮操作 → `icen:kb-canvas-ai`',
+      ],
+      notes: [
+        '分隔条自实现但保持 split-pane 心智；划词工具条传空数组即关闭。',
+      ],
+    },
     demo: `<div id="kb-canvas-demo"></div>
 <p class="demo-label" id="kb-canvas-log" style="margin-top:8px">拖中间分隔条调比例（双击复位）· 右栏划选文本浮 AI 工具条 · 底部版本轴点击切换 · 右侧 diff 卡可展开并接受 / 拒绝</p>`,
     usage: `import { createKbCanvas } from '@icen.ai/ui/kit/kb-canvas';
@@ -296,7 +357,21 @@ if (host && kbCanvasMod && aiDiffMod) {
     slug: 'kb-checkpoint',
     name: '检查点',
     group: '知识库',
-    desc: 'Agent 检查点时间轴：时钟 icon + 相对时间 + label / reason 的时间轴按钮；initKbCheckpoint 点击弹出恢复菜单（挂 body、fixed 定位、视口夹取），scope 三选默认预选「仅内容（保留对话）」——Cursor 语义，回滚产物、保留讨论过程，审计友好。scopeOptions 未提供的恢复范围禁用；Esc / 外点 / 滚动关闭；选择 → icen:kb-checkpoint-restore { checkpointId, scope }。',
+    desc: 'Agent 检查点时间轴，点击弹出恢复菜单按范围回滚。',
+    detail: {
+      features: [
+        '**结构**：时钟 icon + 相对时间 + label / reason 的时间轴按钮',
+        '**菜单**：`initKbCheckpoint` 委托点击弹恢复菜单，挂 body、fixed 定位、视口夹取',
+        '**范围**：scope 三选默认预选「仅内容（保留对话）」（Cursor 语义）',
+        '**受限**：`scopeOptions` 未提供的恢复范围禁用',
+        '**键盘**：方向键打开与导航，Home / End 跳首尾；跳过禁用范围，Escape 返回检查点',
+        '**关闭**：Tab 离开、外点、文档滚动关闭；菜单复用共享尺寸与浮层材质',
+        '**事件**：选择派发 `icen:kb-checkpoint-restore` `{ checkpointId, scope }`',
+      ],
+      notes: [
+        '默认预选「仅内容」是审计友好语义：回滚产物、保留讨论过程。',
+      ],
+    },
     demo: `<div id="kb-checkpoint-demo"></div>
 <p class="demo-label" id="kb-checkpoint-log" style="margin-top:8px">点击检查点弹恢复菜单（默认预选「仅内容 · 保留对话」）·「补引用后」scopeOptions 受限：仅 content 可选，其余两项禁用</p>`,
     usage: `import { renderKbCheckpoints, initKbCheckpoint } from '@icen.ai/ui/kit/kb-checkpoint';
@@ -305,7 +380,7 @@ initKbCheckpoint();   // 委托点击弹恢复菜单（幂等 + 销毁函数）
 renderKbCheckpoints(el, [
   { id: 'cp-3', label: '批量改写前', reason: '每页重切前自动保存', at: Date.now() - 14 * 60000 },
   { id: 'cp-2', label: '补引用后', at: Date.now() - 52 * 60000, scopeOptions: ['content'] },
-  // scopeOptions 缺省 = 内容 / 对话 / 两者三项全开；提供则未列项禁用（该检查点未包含此范围）
+  // scopeOptions 缺省 = 三项全开；提供则未列项禁用，空数组表示没有可恢复范围
 ]);
 // 恢复菜单默认预选「仅内容（保留对话）」：回滚产物、保留讨论（审计与复盘友好）
 el.addEventListener('icen:kb-checkpoint-restore', (e) => restore(e.detail.checkpointId, e.detail.scope));`,
@@ -328,7 +403,20 @@ if (host && kbCheckpointMod) {
     slug: 'kb-sandbox',
     name: '沙箱工具容器',
     group: '知识库',
-    desc: 'MCP App 沙箱工具容器（MCP Apps 对齐）：iframe sandbox="allow-scripts"（绝不加 allow-same-origin）+ postMessage JSON-RPC 2.0 双向桥。load 三种来源（ui:// 声明式资源走 opts.resolve / html 片段 srcdoc / URL），idle / loading / ready / error 四态由 data-icen-state 纯 CSS 驱动；call(name, args) 返回 Promise（默认 8s 超时，重载 / 销毁一律 reject pending）；全部出入站信封经 icen:kb-sandbox-message + onMessage 双通道可观测，子帧 app.ready 通知即就绪。',
+    desc: 'MCP App 沙箱工具容器（MCP Apps 对齐），iframe 隔离加 JSON-RPC 双向桥。',
+    detail: {
+      features: [
+        '**隔离**：iframe `sandbox="allow-scripts"`，绝不加 `allow-same-origin`',
+        '**桥**：postMessage JSON-RPC 2.0 双向桥，子帧 `app.ready` 通知即就绪',
+        '**加载**：`load` 三种来源——`ui://` 资源走 `opts.resolve` / html 片段 / URL',
+        '**状态**：idle / loading / ready / error 四态由 `data-icen-state` 纯 CSS 驱动',
+        '**调用**：`call(name, args)` 返回 Promise，默认 8s 超时，重载销毁一律 reject',
+        '**观测**：出入站信封经 `icen:kb-sandbox-message` 与 `onMessage` 双通道',
+      ],
+      notes: [
+        '入站双闸——只信自家帧，可选 origin 白名单。',
+      ],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" id="kb-sandbox-load">load('ui://demo/echo')</button>
   <button class="icen-btn icen-btn-sm" type="button" id="kb-sandbox-call">call('echo', { text, n })</button>
@@ -394,7 +482,18 @@ if (host && kbSandboxMod) {
     slug: 'kb-chain',
     name: '工具链条',
     group: '知识库',
-    desc: 'Agent 工具链条横向摘要条（与 ai-tool-call 单卡互补的「一屏看完整个链」视角）：检索 → 重排 → 生成 → 引用核对等步骤，四态状态点（pending 空心 / running accent 脉冲 / done 实心绿 / error 实心红，运动感来自动效不来自颜色）。幂等重渲：同一 el 重复调用只原位更新状态类 / label / title / 可点性，不重建 DOM（流式安全无闪烁）；running（或 error）及之前的步骤可点击 → icen:kb-chain-step { index, step }。',
+    desc: 'Agent 工具链条横向摘要条，一屏看完检索到引用核对的整链状态。',
+    detail: {
+      features: [
+        '**步骤**：检索 → 重排 → 生成 → 引用核对等步骤横向排布',
+        '**状态**：四态状态点——pending 空心 / running 脉冲 / done 实心绿 / error 实心红',
+        '**重渲**：幂等重渲只原位更新状态类与文案，不重建 DOM（流式安全无闪烁）',
+        '**交互**：running / error 及之前步骤可点击 → `icen:kb-chain-step`',
+      ],
+      notes: [
+        '与 ai-tool-call 单卡互补；运动感来自动效不来自颜色。',
+      ],
+    },
     demo: `<div id="kb-chain-demo"></div>
 <p class="demo-label" id="kb-chain-log" style="margin-top:8px">2.6s 后生成完成、引用核对转 running（幂等重渲不重建 DOM）· 点击已到达步骤派发 icen:kb-chain-step · 未到达步骤置灰不可点</p>`,
     usage: `import { renderKbChain, initKbChain } from '@icen.ai/ui/kit/kb-chain';
@@ -437,7 +536,16 @@ if (host && kbChainMod) {
     slug: 'ai-threads',
     name: '会话列表',
     group: 'AI 原生',
-    desc: 'AI 会话列表：分组模式（今天 / 昨天 / 更早，组头可折叠；archived 项沉底收进「已归档」组并降透明）或平铺模式，activeKey 高亮当前会话（aria-current），每项带「···」动作钮（只做事件挂载点，菜单本体由宿主实现）。initAiThreads 委托选择 / 动作 / 组头折叠；setAiThreadsActive 供外部路由同步激活态，对静态手写 DOM 一视同仁。事件 icen:ai-thread-select { key } / icen:ai-thread-action { action, key }。',
+    desc: 'AI 会话列表，支持分组（可折叠、归档沉底）与平铺两种模式。',
+    detail: {
+      features: [
+        '**分组**：今天 / 昨天 / 更早组头可折叠；archived 项沉底收进「已归档」并降透明',
+        '**激活**：`activeKey` 高亮当前会话（`aria-current`）',
+        '**同步**：`setAiThreadsActive` 供外部路由同步激活态，对手写 DOM 一视同仁',
+        '**动作**：每项「···」钮只做事件挂载点，菜单本体由宿主实现',
+        '**事件**：`icen:ai-thread-select` `{ key }` 与 `icen:ai-thread-action` `{ action, key }`',
+      ],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <button class="icen-btn icen-btn-sm" type="button" id="ai-threads-route">模拟外部路由切换激活态</button>
 </div>
@@ -495,7 +603,18 @@ if (host && aiThreadsMod) {
     slug: 'ai-feedback',
     name: '回答反馈',
     group: 'AI 原生',
-    desc: '回答级反馈：有帮助 / 无帮助双钮 + 踩后原因枚举 chips（默认五项：答案有误 / 引用不符 / 内容过时 / 无引用依据 / 越权信息，可自定义）+ 提交终态。状态机内建：点赞锁定不展开原因；点踩锁定并展开 chips（单选可切换），提交后进入 .is-done 终态显示感谢文案；再点已选钮回中性。每次投票与提交派 icen:ai-feedback { value: 1|-1|0, reason? }，与 onFeedback 回调双通道。',
+    desc: '回答级反馈组件，有帮助 / 无帮助双钮加踩后原因枚举与提交终态。',
+    detail: {
+      features: [
+        '**状态机**：点赞锁定不展开原因；点踩锁定并展开原因 chips（单选可切换）',
+        '**原因**：默认五项枚举——答案有误 / 引用不符 / 内容过时 / 无引用依据 / 越权信息',
+        '**终态**：提交后进入 `.is-done` 显示感谢文案；再点已选钮回中性（value 0）',
+        '**事件**：投票与提交派 `icen:ai-feedback` `{ value: 1|-1|0, reason? }`',
+      ],
+      notes: [
+        '原因枚举可自定义；事件与 `onFeedback` 回调为双通道。',
+      ],
+    },
     demo: `<div id="ai-feedback-demo"></div>
 <p class="demo-label" id="ai-feedback-log" style="margin-top:8px">点「踩」展开原因 chips（默认五项）· 选因提交进入感谢终态 · 再点已选钮回中性 · 点「赞」不展开原因</p>`,
     usage: `import { renderAiFeedback, initAiFeedback } from '@icen.ai/ui/kit/ai-feedback';
@@ -524,7 +643,19 @@ if (host && aiFeedbackMod) {
     slug: 'ai-branch',
     name: '分支切换',
     group: 'AI 原生',
-    desc: '回答分支版本切换器「‹ 2/3 ›」：当前从 1 计的页码 + 边界方向钮禁用；count ≤ 1 时容器渲染为空并置 hidden + aria-hidden（单版本无切换语义）。initAiBranch 委托 prev/next 点击：DOM 自动同步页码 / data-icen-index / 边界禁用态（宿主不重渲染也可用，重渲染覆盖亦安全），并派发 icen:ai-branch-change { index, count }；按钮为原生 button，键盘走原生 click。',
+    desc: '回答分支版本切换器「‹ 2/3 ›」，页码加边界方向钮。',
+    detail: {
+      features: [
+        '**页码**：当前从 1 计页码，边界方向钮禁用',
+        '**隐藏**：`count` ≤ 1 时容器渲染为空并置 `hidden` + `aria-hidden`',
+        '**同步**：`initAiBranch` 委托点击，DOM 自动同步页码与禁用态',
+        '**事件**：切换派发 `icen:ai-branch-change` `{ index, count }`',
+        '**键盘**：按钮为原生 button，键盘走原生 click',
+      ],
+      notes: [
+        '单版本无切换语义故自动隐藏；宿主不重渲染也可用，重渲染覆盖亦安全。',
+      ],
+    },
     demo: `<div id="ai-branch-demo"></div>
 <p class="demo-label" id="ai-branch-log" style="margin-top:8px">‹ 2/3 ›：边界方向钮禁用 · 切换派发 icen:ai-branch-change（宿主按 index 换分支内容）· count ≤ 1 时自动隐藏</p>`,
     usage: `import { renderAiBranch, initAiBranch } from '@icen.ai/ui/kit/ai-branch';
@@ -549,7 +680,20 @@ if (host && aiBranchMod) {
     slug: 'chart-graph',
     name: '知识图谱',
     group: '图表',
-    desc: 'renderGraph：GraphRAG 实体关系力导向 node-link——确定性布局（id 升序环初始化 + 300 轮松弛，无随机源，同数据同布局）、簇着色走既有调色盘（图例可点隐藏整簇，边随任一端簇隐藏淡化）、weight 映射节点半径 6–18px（缺省用度中心性）与边宽 0.6–2.5px、节点可拖拽（局部松弛 20 轮 / rAF 批处理）；事件走既有 icen:chart-* 通道，detail.datum = { id, label, cluster?, meta? } 点击节点回实体卡数据；directed: true 时边带箭头。layoutGraph 为可单测纯函数。',
+    desc: '`renderGraph`：GraphRAG 实体关系力导向 node-link 图，支持簇着色与节点拖拽。',
+    detail: {
+      features: [
+        '**布局**：确定性布局——id 升序环初始化 + 300 轮松弛，无随机源，同数据同布局',
+        '**着色**：簇着色走既有调色盘，图例可点隐藏整簇，边随任一端簇隐藏淡化',
+        '**映射**：weight 映射节点半径 6–18px（缺省用度中心性）与边宽 0.6–2.5px',
+        '**拖拽**：节点可拖拽，局部松弛 20 轮 / rAF 批处理',
+        '**事件**：走既有 `icen:chart-*` 通道，点击节点 `detail.datum` 回实体卡数据',
+        '**方向**：`directed: true` 时边带箭头',
+      ],
+      notes: [
+        '`layoutGraph` 为可单测纯函数。',
+      ],
+    },
     demo: `<div class="icen-chart" id="chart-graph-demo"></div>
 <p class="demo-label" id="chart-graph-log" style="margin-top:8px">悬停看实体 · 点击节点回实体卡数据（detail.datum.meta）· 拖拽节点局部松弛 · 点图例隐藏整簇（边随端点淡化）</p>`,
     usage: `import { renderGraph, layoutGraph } from '@icen.ai/ui/kit/chart-graph';
@@ -615,7 +759,18 @@ if (host && chartsMod) {
     slug: 'chart-map',
     name: '嵌入地图',
     group: '图表',
-    desc: 'renderMap：embedding 2D 投影地图（renderScatter 的去轴变体）——坐标为预投影值（UMAP / t-SNE 产物，本组件只做视口 min-max 缩放不算投影），无轴刻度只留细虚线网格；点 4px 半透明（fill-opacity 0.7，高密度层叠可辨），簇着色走既有调色盘 + 可点击图例隐藏整簇；点选走 icen:chart-click，detail.datum = { id, label, cluster?, meta? } 回 chunk 数据（meta 原样回传）。',
+    desc: '`renderMap`：embedding 2D 投影地图，是 `renderScatter` 的去轴变体。',
+    detail: {
+      features: [
+        '**坐标**：x / y 为预投影值（UMAP / t-SNE 产物），只做视口 min-max 缩放',
+        '**画布**：无轴刻度只留细虚线网格，点 4px 半透明高密度层叠可辨',
+        '**着色**：簇着色走既有调色盘，可点击图例隐藏整簇',
+        '**事件**：点选派 `icen:chart-click`，`detail.datum` 回 chunk 数据',
+      ],
+      notes: [
+        '本组件不做投影计算，投影由上游（UMAP / t-SNE）产生；`meta` 原样回传。',
+      ],
+    },
     demo: `<div class="icen-chart" id="chart-map-demo"></div>
 <p class="demo-label" id="chart-map-log" style="margin-top:8px">悬停看簇名 · 点击点回 chunk 数据 · 点图例隐藏整簇 · 坐标为预投影值（UMAP / t-SNE 产物，组件不做投影）</p>`,
     usage: `import { renderMap } from '@icen.ai/ui/kit/chart-map';

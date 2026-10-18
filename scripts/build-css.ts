@@ -41,7 +41,9 @@ for (const f of TOKEN_ORDER) {
   tokensBody += `\n/* ── tokens/${f} ── */\n${css}\n`;
 }
 // Opt-in material adapters accompany tokens even for individual kit imports.
-const materialCss = await readSrc('components/material.css') + '\n' + await readSrc('components/icon.css');
+// Input is a foundation, including fields composed inside portalled components.
+// Shipping the same CSS here prevents kit-only consumers from getting naked inner inputs.
+const materialCss = await readSrc('components/material.css') + '\n' + await readSrc('components/icon.css') + '\n' + await readSrc('components/input.css');
 const tokensOut = `/* @icen.ai/ui — tokens + opt-in design materials */\n${LAYER_ORDER}\n${inLayer('icen.tokens', tokensBody)}\n${inLayer('icen.components', materialCss)}`;
 const bundledTokens = tokensOut.replaceAll("url('../fonts/", "url('./fonts/");
 await writeFile(join(DIST, 'tokens.css'), bundledTokens);

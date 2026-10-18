@@ -3,6 +3,7 @@ import Docs from '../../layouts/Docs.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import PmInstall from '../../components/PmInstall.astro';
 import { COMPONENTS, cssFor, type ComponentDoc } from '../../lib/components';
+import { inlineMd } from '../../lib/doc-text';
 import { SLUGS } from '../../../../scripts/slugs.mjs';
 import { iconHTML } from '../../../../src/behaviors/icons';
 
@@ -45,8 +46,8 @@ const isKit = SLUGS.includes(doc.slug);
 const usageLang = /^\s*(import|const|\/\/)/.test(doc.usage) ? 'js' : 'html';
 const pageLink = `[${doc.name} · ICEN UI](https://ui.icen.ai/components/${doc.slug}/)`;
 
-const copySvg = iconHTML('copy',{size:13,className:'ic-copy'});
-const checkSvg = iconHTML('check',{size:13,className:'ic-check'});
+const copySvg = iconHTML('copy',{size:13,className:'icen-copy-icon-clipboard'});
+const checkSvg = iconHTML('check',{size:13,className:'icen-copy-icon-check'});
 const leftSvg = iconHTML('chevron-left',{size:14});
 const rightSvg = iconHTML('chevron-right',{size:14});
 
@@ -88,7 +89,20 @@ const bootData = JSON.stringify({
     <div class="demo-stage" data-demo-layout={doc.demoLayout} set:html={doc.demo} />
     <CodeBlock code={doc.demo} lang="html" collapsible />
   </section>
-  {lead !== doc.desc && (
+  {doc.detail?.features?.length ? (
+    <>
+      <h2 class="doc-h2">特性</h2>
+      <ul class="doc-feats">
+        {doc.detail.features.map((f) => <li set:html={inlineMd(f)} />)}
+      </ul>
+    </>
+  ) : null}
+  {doc.detail?.notes?.length ? (
+    <div class="doc-notes">
+      {doc.detail.notes.map((n) => <p set:html={inlineMd(n)} />)}
+    </div>
+  ) : null}
+  {!doc.detail && lead !== doc.desc && (
     <details class="doc-details">
       <summary>行为与接口说明 <Fragment set:html={iconHTML('chevron-down')} /></summary>
       <p>{doc.desc}</p>

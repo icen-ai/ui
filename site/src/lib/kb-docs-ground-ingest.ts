@@ -15,7 +15,19 @@ export const KB_DOCS_GROUND_INGEST: ComponentDoc[] = [
     slug: 'kb',
     name: '知识库总览',
     group: '知识库',
-    desc: 'kb 族伞形入口：ai 族描述思考（ai-chat / ai-tool… 呈现「AI 在做什么」），kb 族呈现证据（「知识从哪来、可信吗、怎么用」）——引用角标、解析管线、chunk、检索分数、SQL、trace 全部是让知识工作可验证的界面。数据契约与纯函数统一在 kb-core，视觉基座 kb.css（.kb-row / .kb-num 等宽数字 / .kb-quote 引用体 / 徽标），六域各持一份合并 CSS；kit/kb 一行装全家，细分 slug 可独立安装。',
+    desc: 'kb 族伞形入口：呈现「知识从哪来、可信吗、怎么用」的证据界面，覆盖六域 27 个组件。',
+    detail: {
+      features: [
+        '**定位**：呈现证据（知识从哪来、可信吗、怎么用），与 ai 族互补',
+        '**数据**：契约与纯函数统一在 `kb-core`（类型 + 来源类型注册表）',
+        '**样式**：视觉基座 `kb.css`（等宽数字 / 引用体 / 徽标）',
+        '**分域**：六域 27 个组件，各持一份合并 CSS',
+        '**安装**：`kit/kb` 一行装全家，细分 slug 可独立安装',
+      ],
+      notes: [
+        '数字一律 `.kb-num` 等宽、引文一律 `.kb-quote` 引用体、来源 / 分数 / 日期只用语义色。',
+      ],
+    },
     demo: `<p class="demo-label" style="margin:0 0 12px">ai 族描述思考，kb 族呈现证据。六域 27 个组件，共享数据契约 kb-core（类型 + 纯函数 + 来源类型注册表）与视觉基座 kb.css——数字一律等宽、引文一律引用体、来源 / 分数 / 日期只用语义色。</p>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;width:100%">
   <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-accent);border-radius:var(--icen-radius-md);padding:12px 14px">
@@ -87,7 +99,21 @@ import { normalizeCitation, segmentText, connectorHealth, formatScore } from '@i
     slug: 'kb-citation',
     name: '行内引用',
     group: '知识库',
-    desc: '行内引用角标 .kb-citation + hover 引用卡：renderCitationText(el, text, sources) 把含 [3] 的答案文本切成「文本节点 + 角标」混合流（流式安全：delta 边界的 "[3" 自然留在文本段，增量重渲该 el 即可），sources 同时写入模块级注册表供 hover 卡取数；hover ≥300ms 经 popover portal 浮 .kb-citation-card（类型图标 / 域名 / 引文 ≤150 字 / 官方·过期·受限徽标，受限引文打码）；超界编号自动降级 .is-dead 灰显不可点——「不信任模型生成编号」纪律。点击派 icen:kb-citation-open { citation }。',
+    desc: '行内引用角标 + hover 引用卡：把含 `[n]` 的答案文本渲染成「文本 + 角标」混合流。',
+    detail: {
+      features: [
+        '**渲染**：`renderCitationText` 切「文本节点 + 角标」混合流',
+        '**数据**：`sources` 写入模块级注册表，hover 卡据此取数',
+        '**交互**：hover ≥300ms 经 popover 浮出引用卡',
+        '**卡片**：类型图标 / 域名 / 引文 ≤150 字 + 官方 / 过期 / 受限徽标',
+        '**降级**：超界编号自动 `.is-dead` 灰显不可点',
+        '**事件**：点击派 `icen:kb-citation-open`',
+      ],
+      notes: [
+        '不信任模型生成编号：超界编号一律降级为灰显死角标。',
+        '流式安全：delta 边界的 `"[3"` 留在文本段，增量重渲该 `el` 即可。',
+      ],
+    },
     demo: `<p class="demo-label" style="margin:0 0 8px">答案正文由 renderCitationText 注入角标 —— 悬停角标 ≥300ms 看引用卡（官方 / 过期 / 受限三种徽标态），点击派事件；末尾 [9] 超出来源数，降级为灰显死角标</p>
 <div class="icen-kb-quote" id="demo-kb-citation-answer" style="font-size:13px;line-height:2.1"></div>
 <div class="icen-toolbar" style="margin-top:12px">
@@ -133,7 +159,17 @@ if (answer && kbCitationMod) {
     slug: 'kb-sources',
     name: '来源列表',
     group: '知识库',
-    desc: '来源列表 .kb-sources：--row 答案上方横排 / --rail 侧栏纵列两种布局；useCount 降序（被引 ×N，同计数稳定原序）；徽标覆盖 官方（accent 线框）/ 相对时间（>90 天自动 stale 加警示点）/ 受限（锁形徽标 + 申请访问按钮，行壳降级 role=button 补 Enter/Space 键控）；onlyCited 只保留被引过的来源（流式「随流填充」），空集给引导空态。点击来源行 / 申请访问 → icen:kb-source-open { source }（与冲突组、原文抽屉同一事件契约）。',
+    desc: '来源列表：答案上方横排 / 侧栏纵列两种布局，徽标覆盖官方 / 过期 / 受限。',
+    detail: {
+      features: [
+        '**布局**：`--row` 答案上方横排 / `--rail` 侧栏纵列',
+        '**排序**：`useCount` 降序（被引 ×N），同计数稳定原序',
+        '**徽标**：官方 accent 线框 / >90 天自动 stale / 受限锁标',
+        '**键盘**：受限行降级 `role="button"` 补 Enter/Space 键控',
+        '**数据**：`onlyCited` 只保留被引来源（流式随流填充）',
+        '**事件**：点击派 `icen:kb-source-open`，空集给引导空态',
+      ],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <span class="icen-toolbar-label">布局</span>
   <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" data-kb-sources-variant="row">row 横排</button>
@@ -190,7 +226,21 @@ if (box) box.addEventListener('icen:kb-source-open', function (e) {
     slug: 'kb-passage',
     name: '原文定位',
     group: '知识库',
-    desc: '原文定位查看器 .kb-passage（右侧抽屉，滑入不打断对话）：open(citation) 渲染来源标题 + KbLocation 三分型位置徽标（第 N 页 / 块 a–b / 字符 a–b），getDocument 同异步取 { content, loc, contextBefore, contextAfter }，缺席回落 citedText → snippet；highlight(terms) 纯文本遍历 <mark> 多词轮转分色（data-icen-hit 0|1|2）；expand() 展开上下文；受限权限正文 blur 打码 + 申请访问（派 icen:kb-source-open）。Esc 关闭 / Tab 圈禁 / 焦点还原，跳转派 icen:kb-passage-jump，关闭派 icen:kb-passage-close。',
+    desc: '原文定位查看器：右侧抽屉滑入打开来源正文，支持定位、高亮与上下文展开。',
+    detail: {
+      features: [
+        '**结构**：`open(citation)` 打开右侧抽屉，标题 + 位置徽标',
+        '**定位**：`KbLocation` 三分型——第 N 页 / 块 / 字符',
+        '**数据**：`getDocument` 取正文，缺席回落 `citedText`',
+        '**高亮**：`highlight(terms)` 多词 `<mark>` 轮转分色',
+        '**展开**：`expand()` 展示前后文（一层，幂等）',
+        '**权限**：受限正文打码，申请派 `icen:kb-source-open`',
+        '**键盘**：Esc 关闭 / Tab 圈禁 / 焦点还原',
+      ],
+      notes: [
+        '抽屉滑入不打断对话；事件 `icen:kb-passage-jump`（跳转）/ `icen:kb-passage-close`（关闭）。',
+      ],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <button class="icen-btn icen-btn-sm icen-btn-primary" type="button" id="demo-kb-passage-open">打开可读来源（第 3 页）</button>
   <button class="icen-btn icen-btn-sm" type="button" id="demo-kb-passage-restricted">打开受限来源（打码 + 申请访问）</button>
@@ -252,7 +302,19 @@ document.getElementById('demo-kb-passage-close')?.addEventListener('click', func
     slug: 'kb-conflict',
     name: '来源冲突',
     group: '知识库',
-    desc: '来源冲突组 .kb-conflict（市场空白组件）：同一主张的多版本对勘——claim 警示行 + 版本卡横排；is-current 自动判定（官方优先，否则最新日期，都无则首个版本），其余版本 faded（.is-older）+ 满足 >90 天 stale 判定加过期徽标；对勘场景日期用绝对值（相对时间看不出先后）。点击版本卡 → icen:kb-source-open { source }（与来源列表同一契约，宿主据此打开 passage / 外链）；渲染即接线，无 init。',
+    desc: '来源冲突组：同一主张的多版本对勘，claim 警示行 + 版本卡横排。',
+    detail: {
+      features: [
+        '**结构**：`claim` 警示行 + 版本卡横排',
+        '**判定**：`is-current` 官方优先，否则最新日期，都无则首个',
+        '**状态**：其余版本 `.is-older` 淡化，>90 天 stale 加过期徽标',
+        '**日期**：对勘场景日期用绝对值（相对时间看不出先后）',
+        '**事件**：点击版本卡派 `icen:kb-source-open`',
+      ],
+      notes: [
+        '渲染即接线，无 `init`；与来源列表同一事件契约，宿主据此打开原文抽屉或外链。',
+      ],
+    },
     demo: `<div class="icen-kb-conflict">
   <div class="icen-kb-conflict-claim"><i class="icen-kb-dot is-warn"></i>同一主张：差旅住宿标准为一线城市每晚 600 元</div>
   <div class="icen-kb-conflict-versions">
@@ -336,7 +398,19 @@ if (live && kbConflictMod) {
     slug: 'kb-pipeline',
     name: '解析管线',
     group: '知识库',
-    desc: '文档解析管线时间线 .kb-pipeline：折叠摘要行（状态徽章 + 标题 + N chunks + 耗时 + 步数）+ 步骤 ol + 失败错误区（阶段定位 + 原因），run.progress 可选细粒度进度条。六态状态机（unstart/queued/running/cancel/done/fail）；running / fail 自动展开、用户展开过则不再被自动态覆盖（与 ai-reasoning 同契约），重渲染保留折叠态。失败重跑粒度 = 单文档（无死路）：icen:kb-pipeline-rerun { documentId }；折叠派 icen:kb-pipeline-toggle { el, open }。',
+    desc: '文档解析管线时间线：折叠摘要行 + 步骤列表 + 失败错误区，六态状态机。',
+    detail: {
+      features: [
+        '**结构**：折叠摘要行（徽章 + chunks + 耗时）+ 步骤 `ol` + 失败错误区',
+        '**状态**：六态状态机，含 `unstart`、`running`、`fail` 等',
+        '**进度**：`run.progress` 可选细粒度进度条',
+        '**折叠**：`running` / `fail` 自动展开，用户操作过不再覆盖',
+        '**重跑**：粒度 = 单文档，派 `icen:kb-pipeline-rerun`',
+      ],
+      notes: [
+        '折叠派 `icen:kb-pipeline-toggle { el, open }`；折叠态记忆契约与 `ai-reasoning` 一致。',
+      ],
+    },
     demo: `<p class="demo-label" style="margin:0 0 8px">三态各一张卡：done（折叠）/ running（自动展开 + 进度条）/ fail（自动展开 + 错误区）——点摘要行折叠，点「重跑」派事件</p>
 <div id="demo-kb-pipeline"></div>
 <p class="demo-label" id="demo-kb-pipeline-log" style="margin-top:8px">事件日志：等待交互</p>`,
@@ -409,7 +483,19 @@ if (box && kbPipelineMod) {
     slug: 'kb-chunks',
     name: '分段编辑器',
     group: '知识库',
-    desc: 'chunk 编辑器 .kb-chunks：行内直接编辑（contenteditable，blur 且内容变化才提交，meta 出「已编辑」）+ 启停开关（available=false 不删除、仅排除出检索——RAGFlow 语义，行整体降透明）+ 关键词 chips（域内自实现：× 删除 / Enter 新增）+ 全文|语义双通道搜索（全文本地过滤内容与关键词，语义模式交消费方召回后重渲染，两种模式都派事件）。删除只派事件不删行——不可逆操作由消费方确认后重渲染。事件族 icen:kb-chunk-toggle / edit / remove / add / search。',
+    desc: 'chunk 编辑器：行内编辑正文与关键词、启停开关、全文 / 语义双通道搜索。',
+    detail: {
+      features: [
+        '**编辑**：`contenteditable` 行内编辑，blur 且变化才提交',
+        '**状态**：`available=false` 排除出检索不删除，行降透明',
+        '**关键词**：chips 域内自实现，× 删除 / Enter 新增',
+        '**搜索**：全文本地过滤（200ms 防抖）；语义模式交消费方重渲染',
+      ],
+      notes: [
+        '删除只派事件不删行——不可逆操作由消费方确认后重渲染。',
+        '事件族：`icen:kb-chunk-toggle` / `edit` / `remove` / `add` / `search`。',
+      ],
+    },
     demo: `<p class="demo-label" style="margin:0 0 8px">直接改写正文（失焦提交）/ 点启用开关（第 4 条已停用）/ 敲 Enter 加关键词 / 全文搜索本地过滤（试试「评分」），切「语义」模式只派事件不过滤</p>
 <div id="demo-kb-chunks"></div>
 <p class="demo-label" id="demo-kb-chunks-log" style="margin-top:8px">事件日志：等待交互</p>`,
@@ -457,7 +543,21 @@ if (box && kbChunksMod) {
     slug: 'kb-segment',
     name: '分段策略',
     group: '知识库',
-    desc: '分段策略编辑器 .kb-segment：左表单（模式 auto / custom / parent-child + 分隔符 + 最大长度 + 重叠 + 三项清洗勾选）右实时预览——预览走 kb-core segmentText 纯函数真实切分（非估算），N 段 / 均长 / ≈tokens 三指标 + 前 20 段卡片（200px 截断点击展开）。locked 锁模式不锁参数（Dify 纪律）；重叠 ≥ 最大长度即时校验且不阻断预览。任一变更派 icen:kb-segment-change { config }，句柄 getConfig / setConfig / refresh(sample) 程序化读写。',
+    desc: '分段策略编辑器：左侧参数表单 + 右侧实时预览，真实切分非估算。',
+    detail: {
+      features: [
+        '**表单**：模式三选 + 分隔符 + 最大长度 + 重叠 + 清洗勾选',
+        '**预览**：走 `segmentText` 纯函数真实切分（非估算）',
+        '**指标**：N 段 / 均长 / ≈tokens + 前 20 段卡片（截断点击展开）',
+        '**校验**：重叠 ≥ 最大长度即时提示，不阻断预览',
+        '**事件**：任一变更派 `icen:kb-segment-change`',
+        '**句柄**：`getConfig` / `setConfig` 等程序化读写',
+      ],
+      notes: [
+        '`locked` 锁模式不锁参数：模式创建后不可更改，参数随时可调。',
+        '`refresh(sample)` 换样本重算；`setConfig` 程序化赋值不派事件。',
+      ],
+    },
     demo: `<div class="icen-toolbar" style="margin-bottom:10px">
   <button class="icen-btn icen-btn-sm" type="button" id="demo-kb-segment-lock">setConfig({ mode: 'parent-child', locked: true })</button>
   <span class="icen-toolbar-label">样本：《供应商准入手册》第 3–6 条（真实切分，非估算）</span>
@@ -500,7 +600,19 @@ if (host && kbSegmentMod) {
     slug: 'kb-connector',
     name: '数据源连接',
     group: '知识库',
-    desc: '数据源连接器卡 .kb-connector：Glean 式健康模型（enabled ≠ 健康：24h 未同步 = stale，抓取失败 / 凭证过期 = failing，停用 = off）映射为卡左缘色条 + 状态点；信号行 4 离散信号（健康 / 已同步 / 抓取率 / 变更率）+ 凭证徽标（过期红标 / 未配置灰标）；头部类型图标（来源类型注册表）+ scope + cron 同步计划（mono 展示）。操作三钮 → icen:kb-connector-sync / reauth / schedule { connectorId, schedule }。',
+    desc: '数据源连接器卡：健康模型映射色条与状态点，信号行 + 凭证徽标。',
+    detail: {
+      features: [
+        '**健康**：启用 ≠ 健康——24h 未同步 stale、凭证过期 failing',
+        '**信号**：4 离散信号行 + 凭证徽标（过期红标 / 未配置灰标）',
+        '**头部**：类型图标 + `scope` + cron 同步计划（mono 展示）',
+        '**事件**：三操作钮派 `icen:kb-connector-sync` 等',
+      ],
+      notes: [
+        '另两钮派 `icen:kb-connector-reauth` 与 `icen:kb-connector-schedule`。',
+        '健康判定走 `kb-core` 的 `connectorHealth` 纯函数；`kind` 图标走来源类型注册表。',
+      ],
+    },
     demo: `<p class="demo-label" style="margin:0 0 8px">三张卡各占一态：healthy（3 小时前同步）/ stale（Jira 74 小时未同步）/ failing（HR 凭证过期 + 抓取失败）——点卡上三个操作按钮派事件</p>
 <div id="demo-kb-connectors"></div>
 <p class="demo-label" id="demo-kb-connector-log" style="margin-top:8px">事件日志：等待交互</p>`,
@@ -549,7 +661,19 @@ if (box && kbConnectorMod) {
     slug: 'kb-metadata',
     name: '元数据',
     group: '知识库',
-    desc: '元数据管理 .kb-metadata：字段定义表（类型徽标 string / number / time）+ 值绑定行内编辑；内置字段（title 等）值只读、不可移除（「内置」旗标）；底部新增行自定义字段名 + 类型三选。三类动作统一派 icen:kb-metadata-change { action: bind | define | remove, key }——define / remove 同时做本地 DOM 更新（直接操纵纪律），消费方可凭事件重渲染纠偏；空字段名即时标 aria-invalid 不动作。',
+    desc: '元数据管理：字段定义表 + 值绑定行内编辑 + 自定义字段增删。',
+    detail: {
+      features: [
+        '**字段**：定义表带类型徽标 `string` / `number` / `time`',
+        '**内置**：内置字段值只读、不可移除，挂「内置」旗标',
+        '**新增**：底部新增行自定义字段名 + 类型三选',
+        '**校验**：空字段名即时标 `aria-invalid`，不动作',
+        '**事件**：统一派 `icen:kb-metadata-change`',
+      ],
+      notes: [
+        '`define` / `remove` 已做本地 DOM 更新，消费方可凭事件重渲染纠偏。',
+      ],
+    },
     demo: `<p class="demo-label" style="margin:0 0 8px">改自定义字段的值（change 提交）/ 底部新增字段（类型三选，空字段名即时校验）/ 移除自定义字段——内置字段 title 只读</p>
 <div id="demo-kb-metadata"></div>
 <p class="demo-label" id="demo-kb-metadata-log" style="margin-top:8px">事件日志：等待交互</p>`,
@@ -592,7 +716,19 @@ if (box && kbMetadataMod) {
     slug: 'kb-qa',
     name: 'QA 对',
     group: '知识库',
-    desc: '认证问答对编辑器 .kb-qa（数据域「可信资产」的最小单元）：Q / A 两列表格，单元格 contenteditable 行内编辑（focusout 且内容变化才提交）；新增本地追加空行并聚焦问题格；删除先派事件再删行、后续行序号顺位重排（事件索引稳定）；CSV 模板导入入口（question,answer 每行一对，UTF-8）。事件 icen:kb-qa-change { op: add | edit | remove, index } 与 icen:kb-qa-import { source }。',
+    desc: '认证问答对编辑器：Q / A 两列表格行内编辑，增删行与 CSV 导入。',
+    detail: {
+      features: [
+        '**编辑**：单元格行内编辑，focusout 且内容变化才提交',
+        '**新增**：本地追加空行并聚焦问题格',
+        '**删除**：先派事件再删行，后续行序号顺位重排',
+        '**导入**：CSV 模板（`question,answer` 每行一对，UTF-8）',
+        '**事件**：变更派 `icen:kb-qa-change { op, index }`',
+      ],
+      notes: [
+        '导入派 `icen:kb-qa-import { source }`，宿主弹文件选择、按模板解析后重渲染。',
+      ],
+    },
     demo: `<p class="demo-label" style="margin:0 0 8px">单元格直接改写（失焦提交）/「+ 新增」追加空行并聚焦 / 删除（序号顺位重排）/「导入 CSV」派导入事件</p>
 <div id="demo-kb-qa"></div>
 <p class="demo-label" id="demo-kb-qa-log" style="margin-top:8px">事件日志：等待交互</p>`,

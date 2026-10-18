@@ -6,6 +6,7 @@
      ══════════════════════════════════════════════════════════════ */
 
   /* ── Density 密度 ── */
+  --icen-density-space-2xs: 0.125rem;
   --icen-density-space-xs: 0.25rem;
   --icen-density-space-sm: 0.5rem;
   --icen-density-space-md: 0.75rem;

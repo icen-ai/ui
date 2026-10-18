@@ -5,7 +5,22 @@ export const THEME_SWITCHER_DOC: ComponentDoc = {
   slug: 'theme-switcher',
   name: '外观切换',
   group: '基础',
-  desc: '主题、原语、明暗，共享一个全局状态。图标、双色圆、色卡与名称六种展示，四档尺寸，适合顶栏、侧栏、浮动工具条与设置页。这里的所有实例都是真实控件，改一处，整页与顶部同步。',
+  desc: '外观切换控件：主题、原语、明暗共享全局状态，六种展示 × 四档尺寸。',
+  detail: {
+    features: [
+      '**展示**：`icon` / `color` / `color-name` / `name` / `swatch` / `swatch-name`',
+      '**尺寸**：`xs` / `sm` / `md` / `lg` 四档，触屏自动保留 44px 点击区域',
+      '**组合**：`kind` 取 `all` / `theme` / `primitive` / `mode`，独立与合并入口共享状态',
+      '**布局**：`menu` 下拉与 `inline` 内嵌；`layout: inline` 免展开设置面板',
+      '**接入**：`createThemeSwitcher` 挂载，或 SSR HTML + `initThemeSwitcher` 幂等接管',
+      '**声明式**：空挂载点 `data-icen-theme-switcher` + data 属性，初始化自动生成控件',
+      '**状态**：所有入口共享 `theme.ts`——`setTheme` 改一处，每个控件与全站立即同步',
+    ],
+    notes: [
+      '自定义主题先提供该主题的 token CSS，再 `registerThemePreset` 登记；无色样数据时用当前语义色。',
+      'Astro 布局 frontmatter 需另引 `theme-switcher.css`，避免 client bundle 摇掉 CSS。',
+    ],
+  },
   demoLayout: 'stretch',
   demo: `<section aria-label="展示形态">
     <h3>从一枚色样，到完整的外观入口</h3>

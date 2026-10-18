@@ -87,18 +87,17 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 点位坐标系的轴标签（line/area）：pad 内缩由渲染器按实测宽度写内联 padding-inline，
-   每个 span 零宽、文字以点位为中心——首尾标签精确落在首尾点正下方 */
+/* Point labels use the sampled data index, never equal-width distribution.
+ * A bounded cell truncates long labels instead of overlapping adjacent ticks. */
 .icen-chart-labels--points {
-  justify-content: space-between;
-  gap: 0;
+  display: block;
+  position: relative;
+  min-block-size: 1.5em;
+  font-size: var(--icen-density-font-size-2xs);
 }
 .icen-chart-labels--points > span {
-  flex: none;
-  inline-size: 0;
-  overflow: visible;
-  display: inline-flex;
-  justify-content: center;
+  position: absolute;
+  transform: translateX(-50%);
 }
 
 /* ── 调色盘：手写 markup 调色盘；behavior 走 charts.ts PALETTE_VARS 内联同值（两处值需人工同步） ── */
@@ -143,6 +142,10 @@
 .icen-chart-legend-eye:hover { color: var(--icen-token-text); background: var(--icen-token-fill-1); }
 .icen-chart-legend-eye:focus-visible { outline: none; box-shadow: var(--icen-ring); }
 .icen-chart-legend-eye svg { width: 13px; height: 13px; }
+@media (pointer: coarse) {
+  .icen-chart-legend-eye { min-inline-size: 44px; min-block-size: 44px; }
+  .icen-chart-legend-toggle-item { min-block-size: 44px; }
+}
 
 /* 图例统一隐藏：容器级继承——data-icen-legend-hidden 一条选择器覆盖全部图型的图例 */
 [data-icen-legend-hidden='true'] .icen-chart-legend,

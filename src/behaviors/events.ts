@@ -194,11 +194,12 @@ export interface IcenEventMap {
   'icen:ai-reject': { id: string; kind: string };
   'icen:ai-diff-accept': { path: string };
   'icen:ai-diff-reject': { path: string };
-  'icen:ai-send': { text: string };
+  'icen:ai-send': { text: string; refs?: AiComposerRefSource[]; files?: File[] };
   'icen:ai-stop': Record<string, never>;
-  'icen:ai-queue': { text: string };
+  'icen:ai-queue': { text: string; refs?: AiComposerRefSource[]; files?: File[] };
   'icen:ai-dequeue': { index: number };
   'icen:ai-attach': { files: File[] };
+  'icen:ai-attachment-remove': { file: File; files: File[] };
   'icen:ai-model-change': { provider: string; model: string; label: string; context?: number };
   'icen:ai-command': { name: string; args: string };
   'icen:ai-ref': { action: 'add' | 'remove'; ref: AiComposerRefSource };

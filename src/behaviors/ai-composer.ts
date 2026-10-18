@@ -19,8 +19,8 @@
  *     </div>
  *   </div>
  *   弹层 .icen-ai-composer-popup（portal body，JS 动态创建/移除，listbox 语义）：
- *     模型切换 / 斜杠命令 / @ 引用三模式共用基座，含搜索框、分组、空态、底部提示。
- *     尺寸走 PanelSizing 契约：composer 根 data-panel-* 为用户覆盖（三弹层共用），
+ *     模型切换 / 斜杠命令 / @ 引用 / 资源目录四模式共用基座，含搜索框、分组、空态、底部提示。
+ *     尺寸走 PanelSizing 契约：composer 根 data-panel-* 为用户覆盖（四弹层共用），
  *     bindComposer opts.popoverSizing 整体覆盖，原内置魔数仅为默认。
  *
  * v1 契约（§4.3，全部保留）：
@@ -34,7 +34,7 @@
  *
  * v2 新增（§8，全部可选配置）：
  *   setComposerModels(el, providers, current?)   工具条出现模型钮；弹层按 provider 分组 +
- *                                搜索过滤 + 当前勾选；选择派 icen:ai-model-change
+ *                                搜索过滤 + 当前轻高亮；选择派 icen:ai-model-change
  *                                {provider, model, label, context}；选中模型的 context 自动成为
  *                                setComposerUsage 的 total 默认值（显式 opts.total 优先）。
  *   setComposerCommands(el, commands)            输入开头 `/` 触发命令弹层（随输入过滤，
@@ -53,13 +53,13 @@
  *         拖放时 box 挂 .is-dragover 高亮）。
  *
  * 绑定层（spec §11，「零接线全链路」）：
- *   bindComposer(el, opts?) → { unbind() }：事件驱动把 composer ↔ 消息区 ↔ client ↔
+ *   bindComposer(el, opts?) → { retry(), unbind() }：事件驱动把 composer ↔ 消息区 ↔ client ↔
  *         用量环接成闭环。opts.client + opts.messages = 对话全托管（send → renderAiMessage
  *         用户消息 + client.stream → assistant 流式渲染 → done 收尾；错误 → setError+fail；
- *         stop → cancel；排队消息自动续发）；opts.usage.from = 'context'（默认，环语义
+ *         stop → cancel；成功后队列自动续发，停止/失败暂停；retry() 或消息继续钮就地重试）；opts.usage.from = 'context'（默认，环语义
  *         正确的上下文估算）| 'billing'（计费累加）| AiAuditor（summary()）；running 自动
  *         管理（send→running / icen:ai-done→解除）。不传 client 为纯状态绑定（渐进采用）。
- *         opts.popoverSizing（PanelSizing）整体覆盖三弹层尺寸（> composer 根 data-panel-*）。
+ *         opts.popoverSizing（PanelSizing）整体覆盖四弹层尺寸（> composer 根 data-panel-*）。
  *
  * 向后兼容：未配置 models/usage 时工具条不出现，v1 markup（.icen-ai-composer-actions 旧结构）
  *   零改动可用；配置后 v1 的 attach/send 按钮被移入工具条（事件监听不受影响）。
@@ -67,8 +67,8 @@
  * SSR 下为 no-op；文本一律 textContent，禁 innerHTML。
  */
 
-import { createIcon } from './icons';
-import { formatTokens, contextEstimate, svgIcon, addUsage, type AiUsage } from './ai-core';
+import { createIcon, iconHTML, type IconName } from './icons';
+import { formatTokens, contextEstimate, svgIcon, addUsage, type AiUsage, type AiContent } from './ai-core';
 import { revealPopoverItem, closePopover, openPopover, resolvePanelSizing, type PanelSizing } from './popover';
 import { renderAiUsageRing, renderAiTodo, type AiUsageRingOpts } from './ai-panel';
 import type { AiStatus } from './ai-core';
@@ -81,6 +81,7 @@ import {
 import type { AiAuditor, AiChatMessage, AiClient, AiDoneEventDetail, AiStreamSession } from './ai-provider';
 import { emitIcen, type IcenEventMap } from './events';
 import { t } from './i18n';
+import { enhanceSearchField, type SearchFieldHandle } from './input';
 
 /* ══════════════ 类型 ══════════════ */
 
@@ -106,19 +107,37 @@ export interface AiComposerCurrentModel {
 
 export interface AiComposerCommand {
   name: string;
+  /** Human-readable name; /name remains the stable command identifier. */
+  label?: string;
   description?: string;
+  group?: string;
+  icon?: IconName;
+  keywords?: string[];
+  /** Unavailable choices remain discoverable, with a reason, but cannot execute. */
+  disabled?: boolean;
   /** 参数提示（如 "<path>"），弹层命令行右侧灰色展示 */
   argsHint?: string;
 }
 
-/** 引用 kind：内置 4 种 + 开放注册；`string & {}` 保自动补全同时放行 registerRefKind 注册的任意 kind（照 charts.ts ChartTone 手法） */
-export type AiComposerRefKind = 'file' | 'folder' | 'doc' | 'agent' | (string & {});
+/** 引用 kind：内置 6 种 + 开放注册；`string & {}` 保自动补全同时放行 registerRefKind 注册的任意 kind（照 charts.ts ChartTone 手法） */
+export type AiComposerRefKind = 'skill' | 'tool' | 'file' | 'folder' | 'doc' | 'agent' | (string & {});
 
 export interface AiComposerRefSource {
   kind: AiComposerRefKind;
   id: string;
   label: string;
   sub?: string;
+  description?: string;
+  icon?: IconName;
+  keywords?: string[];
+  disabled?: boolean;
+}
+
+/** A snapshot of one submission. Existing text-only consumers remain compatible. */
+export interface AiComposerSubmission {
+  text: string;
+  refs?: AiComposerRefSource[];
+  files?: File[];
 }
 
 /* ══════════════ 组件局部常量 ══════════════ */
@@ -128,29 +147,14 @@ const HISTORY_LIMIT = 50;
 /** 缓存读占比 ≥ 40% 时，模型弹层底部提示升级为 warning 色（Kimi Code 细节） */
 const CACHE_WARN_RATIO = 0.4;
 
-const SEND_ICON =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>';
-const STOP_ICON =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
-const ATTACH_ICON =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>';
-
-const svgWrap = (body: string): string =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
-
-const ICON_INFO = svgWrap('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>');
-const ICON_FILE = svgWrap(
-  '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
-);
-const ICON_FOLDER = svgWrap(
-  '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
-);
-const ICON_DOC = svgWrap(
-  '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/>',
-);
-const ICON_BOT = svgWrap(
-  '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
-);
+const SEND_ICON = iconHTML('arrow-up');
+const STOP_ICON = iconHTML('stop');
+const ATTACH_ICON = iconHTML('paperclip');
+const ICON_INFO = iconHTML('circle-info');
+const ICON_FILE = iconHTML('file');
+const ICON_FOLDER = iconHTML('folder');
+const ICON_DOC = iconHTML('document');
+const ICON_BOT = iconHTML('agent');
 
 /* ── 引用 kind 注册表（照 ai-core registerAiKind 模式：内置默认 + Map 注册表 + 兜底） ── */
 
@@ -173,6 +177,8 @@ interface ResolvedRefKindDef {
 
 /** 内置 kind 默认（取代原 LABEL/ICON/ORDER 三张硬编码表；注册表可逐项覆盖）。 */
 const REF_KIND_BUILTIN: Record<string, ResolvedRefKindDef> = {
+  skill: { label: t('aiComposer.skills'), icon: iconHTML('sparkle'), order: -2 },
+  tool: { label: t('aiComposer.tools'), icon: iconHTML('box'), order: -1 },
   file: { label: t('aiComposer.attachFile'), icon: ICON_FILE, order: 0 },
   folder: { label: t('aiComposer.attachFolder'), icon: ICON_FOLDER, order: 1 },
   doc: { label: t('aiComposer.attachDoc'), icon: ICON_DOC, order: 2 },
@@ -229,7 +235,8 @@ interface MarkedComposer extends HTMLElement {
 }
 
 const RUNNING = new WeakMap<HTMLElement, boolean>();
-const QUEUES = new WeakMap<HTMLElement, string[]>();
+const QUEUES = new WeakMap<HTMLElement, AiComposerSubmission[]>();
+const FILES = new WeakMap<HTMLElement, File[]>();
 const MODELS = new WeakMap<HTMLElement, { providers: AiProviderOption[]; current: AiComposerCurrentModel }>();
 /** 选中模型的 context——usage ring total 的默认值 */
 const MODEL_CTX = new WeakMap<HTMLElement, number>();
@@ -243,7 +250,7 @@ const HISTORIES = new WeakMap<HTMLElement, { items: string[]; index: number }>()
 const POPUP = new WeakMap<HTMLElement, ComposerPopup>();
 /** setupComposer 注册的 submit 闭包（弹层无匹配 Enter 回退发送用） */
 const SUBMITS = new WeakMap<HTMLElement, () => void>();
-/** bindComposer opts.popoverSizing：三弹层共用的程序面整体覆盖（> composer 根 data-panel-* > 内置默认） */
+/** bindComposer opts.popoverSizing：四弹层共用的程序面整体覆盖（> composer 根 data-panel-* > 内置默认） */
 const POPUP_SIZING = new WeakMap<HTMLElement, PanelSizing>();
 
 /* ══════════════ 小工具 ══════════════ */
@@ -309,9 +316,16 @@ function ensureIcons(
 
 /* chips（queue / attach / refs 共用结构） */
 
-function makeChip(text: string, removable: boolean, ariaLabel: string): HTMLElement {
+function makeChip(text: string, removable: boolean, ariaLabel: string, icon?: IconName): HTMLElement {
   const chip = document.createElement('span');
   chip.className = 'icen-ai-composer-chip';
+  if (icon) {
+    const mark = document.createElement('span');
+    mark.className = 'icen-ai-composer-chip-icon';
+    const svg = createIcon(icon);
+    if (svg) mark.append(svg);
+    chip.append(mark);
+  }
   const label = document.createElement('span');
   label.className = 'icen-ai-composer-chip-text';
   label.textContent = text;
@@ -332,7 +346,7 @@ function renderQueueChips(composer: HTMLElement): void {
   const queueEl = composer.querySelector<HTMLElement>('.icen-ai-composer-queue');
   if (!queueEl) return;
   const queue = QUEUES.get(composer) ?? [];
-  queueEl.replaceChildren(...queue.map((text, i) => makeChip(text, true, t('aiComposer.removeQueued', { p0: i + 1 }))));
+  queueEl.replaceChildren(...queue.map((draft, i) => makeChip(draft.text || [...(draft.files?.map(f=>f.name)??[]),...(draft.refs?.map(r=>r.label)??[])].join(' · '), true, t('aiComposer.removeQueued', { p0: i + 1 }), 'layers')));
   queueEl.hidden = queue.length === 0;
 }
 
@@ -433,7 +447,8 @@ function syncToolbar(composer: HTMLElement): void {
   if (!box || !getTextarea(composer)) return;
   const modelsCfg = MODELS.get(composer);
   const usageCfg = USAGE.get(composer);
-  if (!modelsCfg && !usageCfg) return;
+  const hasLibrary = !!(COMMANDS.get(composer)?.length || REF_SOURCES.get(composer)?.length);
+  if (!modelsCfg && !usageCfg && !hasLibrary && !composer.querySelector('.icen-ai-composer-toolbar')) return;
 
   let bar = composer.querySelector<HTMLElement>('.icen-ai-composer-toolbar');
 
@@ -488,6 +503,22 @@ function syncToolbar(composer: HTMLElement): void {
   if (legacy && legacy.childElementCount === 0 && !(legacy.textContent ?? '').trim()) {
     legacy.remove();
   }
+  let library = composer.querySelector<HTMLButtonElement>('[data-icen-ai-library]');
+  if (hasLibrary && !library) {
+    library = document.createElement('button');
+    library.type = 'button';
+    library.className = 'icen-ai-composer-btn icen-ai-composer-library';
+    library.dataset.icenAiLibrary = 'auto';
+    library.setAttribute('aria-label', t('aiComposer.library'));
+    library.setAttribute('aria-haspopup', 'dialog');
+    library.setAttribute('aria-expanded', 'false');
+    library.append(createIcon('plus')!);
+    library.addEventListener('click', () => {
+      if (POPUP.get(composer)?.mode === 'library') closePopup(composer);
+      else openComposerLibrary(composer);
+    });
+    bar.prepend(library);
+  } else if (!hasLibrary && library?.dataset.icenAiLibrary === 'auto') library.remove();
 }
 
 /** 用量环重渲染：显式 opts.total 优先，否则用选中模型的 context。 */
@@ -505,7 +536,7 @@ function refreshUsageRing(composer: HTMLElement): void {
 /* ══════════════ v2 弹层基座（portal body，一次性动态面板，listbox 语义）══════════════ */
 
 interface ComposerPopup {
-  mode: 'model' | 'command' | 'ref';
+  mode: 'model' | 'command' | 'ref' | 'library';
   panel: HTMLElement;
   groups: HTMLElement[];
   options: HTMLButtonElement[];
@@ -517,21 +548,29 @@ interface ComposerPopup {
   returnFocus: HTMLElement | null;
   keydownHandler: ((e: KeyboardEvent) => void) | null;
   pick: (opt: HTMLButtonElement) => void;
+  control?: HTMLElement | null;
+  category?: string;
+  restoreFocus?: boolean;
+  searchField?: SearchFieldHandle;
 }
 
 const visibleOptions = (s: ComposerPopup): HTMLButtonElement[] =>
-  s.options.filter((o) => !o.hidden);
+  s.options.filter((o) => !o.hidden && o.getAttribute('aria-disabled') !== 'true');
+
+let popupId = 0;
 
 function setPopupFocus(s: ComposerPopup, idx: number): void {
   const vis = visibleOptions(s);
   s.options.forEach((o) => o.classList.remove('is-focused'));
   if (vis.length === 0) {
     s.focused = -1;
+    s.control?.removeAttribute('aria-activedescendant');
     return;
   }
   s.focused = Math.max(0, Math.min(idx, vis.length - 1));
   const cur = vis[s.focused];
   cur.classList.add('is-focused');
+  s.control?.setAttribute('aria-activedescendant', cur.id);
   revealPopoverItem(cur,s.panel.querySelector<HTMLElement>('.icen-ai-composer-popup-list') ?? s.panel);
 }
 
@@ -547,15 +586,26 @@ function settlePopup(s: ComposerPopup): void {
     g.hidden = !Array.from(g.querySelectorAll<HTMLElement>('.icen-ai-composer-popup-option'))
       .some((o) => !o.hidden);
   }
-  s.emptyEl.hidden = visibleOptions(s).length > 0;
+  s.emptyEl.hidden = s.options.some(o => !o.hidden);
   setPopupFocus(s, 0);
 }
 
-/** 弹层选项统一过滤（三弹层共用）：q 非空时按各 option 的 dataset.hay 隐藏不匹配项；hay 组装留在各弹层构建处。 */
+/** 弹层选项统一过滤（四弹层共用）：q 非空时按各 option 的 dataset.hay 隐藏不匹配项；hay 组装留在各弹层构建处。 */
 function filterPopupOptions(s: ComposerPopup, q: string): void {
   const needle = q.trim().toLowerCase();
   for (const opt of s.options) {
-    opt.hidden = needle !== '' && !(opt.dataset.hay ?? '').includes(needle);
+    opt.hidden = (!!s.category && s.category !== 'all' && opt.dataset.category !== s.category)
+      || (needle !== '' && !(opt.dataset.hay ?? '').includes(needle));
+    // Highlight only text leaves, never replace DOM with untrusted search markup.
+    for (const label of opt.querySelectorAll<HTMLElement>('[data-icen-search-text]')) {
+      const text = label.dataset.icenSearchText ?? '';
+      const at = needle ? text.toLowerCase().indexOf(needle) : -1;
+      if (at < 0) label.textContent = text;
+      else {
+        const mark = document.createElement('mark'); mark.textContent = text.slice(at, at + needle.length);
+        label.replaceChildren(document.createTextNode(text.slice(0,at)), mark, document.createTextNode(text.slice(at + needle.length)));
+      }
+    }
   }
   settlePopup(s);
 }
@@ -573,6 +623,10 @@ function popupKeydown(composer: HTMLElement, s: ComposerPopup, e: KeyboardEvent)
       return;
     case 'Enter':
     case 'Tab': {
+      if (e.key === 'Tab' && (s.mode === 'library' || s.mode === 'model')) {
+        // Let focus leave a browse/search panel naturally. Typing-trigger completion keeps legacy Tab picking.
+        return;
+      }
       e.preventDefault();
       const vis = visibleOptions(s);
       const opt = vis[s.focused] ?? vis[0];
@@ -580,11 +634,16 @@ function popupKeydown(composer: HTMLElement, s: ComposerPopup, e: KeyboardEvent)
         s.pick(opt);
         return;
       }
+      if(s.mode==='library'||s.mode==='model')return; // Search never submits the underlying draft.
       /* 无匹配项：Enter 回退为普通发送（未知命令不拦截、进消息流），Tab 仅关弹层 */
       closePopup(composer, false);
       if (e.key === 'Enter') SUBMITS.get(composer)?.();
       return;
     }
+    case 'Home':
+    case 'End':
+      if (e.altKey || e.ctrlKey || e.metaKey) { e.preventDefault(); setPopupFocus(s, e.key === 'Home' ? 0 : visibleOptions(s).length - 1); }
+      return;
     case 'Escape':
       e.preventDefault();
       closePopup(composer);
@@ -596,15 +655,20 @@ function popupKeydown(composer: HTMLElement, s: ComposerPopup, e: KeyboardEvent)
 function closePopup(composer: HTMLElement, restoreFocus = true): void {
   const s = POPUP.get(composer);
   if (!s) return;
+  s.restoreFocus = restoreFocus;
   POPUP.delete(composer);
   if (s.searchInput && s.keydownHandler) {
     s.searchInput.removeEventListener('keydown', s.keydownHandler);
   }
   /* 互补条件合并：model 弹层的展开态锚在模型钮，其余两弹层锚在 textarea */
-  if (s.mode === 'model') {
+  s.control?.removeAttribute('aria-activedescendant');
+  s.control?.removeAttribute('aria-controls');
+  if (s.mode === 'library') {
+    composer.querySelector('[data-icen-ai-library]')?.setAttribute('aria-expanded', 'false');
+  } else if (s.mode === 'model') {
     composer.querySelector('[data-icen-ai-model-open]')?.setAttribute('aria-expanded', 'false');
   } else {
-    getTextarea(composer)?.setAttribute('aria-expanded', 'false');
+    getTextarea(composer)?.removeAttribute('aria-expanded');
   }
   closePopover(s.panel); /* onClose 里移除面板 */
   if (restoreFocus && s.returnFocus && s.returnFocus.isConnected) s.returnFocus.focus();
@@ -622,9 +686,9 @@ interface MountPopupInit {
 }
 
 /**
- * 三弹层（模型/命令/引用）共用的尺寸解析（PanelSizing 契约）：
+ * 四弹层（模型/命令/引用/目录）共用的尺寸解析（PanelSizing 契约）：
  * 用户属性面 = composer 根上的 data-panel-*（data-icen-panel-width/min/max/min-height/max-height，
- * 三弹层共用一套）；程序面 = bindComposer opts.popoverSizing（整体覆盖三个弹层）；
+ * 四弹层共用一套）；程序面 = bindComposer opts.popoverSizing（整体覆盖四个弹层）；
  * init.sizing 的原魔数仅作缺省默认。优先级：popoverSizing > data-panel-* > 内置默认。
  */
 function resolvePopupSizing(composer: HTMLElement, defaults: PanelSizing): PanelSizing {
@@ -638,6 +702,8 @@ function mountPopup(composer: HTMLElement, init: MountPopupInit): ComposerPopup 
   closePopup(composer, false);
   const panel = document.createElement('div');
   panel.className = 'icen-ai-composer-popup';
+  panel.dataset.icenMaterial = 'floating';
+  panel.dataset.icenMode = init.mode;
   panel.hidden = true;
   const session: ComposerPopup = {
     mode: init.mode,
@@ -653,14 +719,34 @@ function mountPopup(composer: HTMLElement, init: MountPopupInit): ComposerPopup 
     pick: init.pick,
   };
   init.build(session);
+  if(session.searchInput)session.searchField=enhanceSearchField(session.searchInput);
+  const list = panel.querySelector<HTMLElement>('[role="listbox"]');
+  if (list) {
+    list.id = `icen-composer-list-${++popupId}`;
+    session.options.forEach((o,i) => {o.id = `${list.id}-${i}`;o.tabIndex=-1;});
+    session.control = session.searchInput ?? getTextarea(composer);
+    session.control?.setAttribute('aria-controls', list.id);
+    session.control?.setAttribute('aria-haspopup', 'listbox');
+  }
   openPopover(panel, {
     anchor: init.anchor,
     side: 'top',
     align: 'start',
     offset: 8,
     sizing: resolvePopupSizing(composer, init.sizing),
+    restoreFocus: false,
     onClose: () => {
       if (POPUP.get(composer) === session) POPUP.delete(composer);
+      session.control?.removeAttribute('aria-activedescendant');
+      session.control?.removeAttribute('aria-controls');
+      composer.querySelector('[data-icen-ai-library]')?.setAttribute('aria-expanded', 'false');
+      composer.querySelector('[data-icen-ai-model-open]')?.setAttribute('aria-expanded', 'false');
+      getTextarea(composer)?.removeAttribute('aria-expanded');
+      // Shared popover handles Escape in capture. Restore the real trigger, not its layout box.
+      if (session.restoreFocus !== false && panel.contains(document.activeElement) && session.returnFocus?.isConnected) {
+        session.returnFocus.focus({preventScroll:true});
+      }
+      session.searchField?.destroy();
       panel.remove();
     },
   });
@@ -670,20 +756,30 @@ function mountPopup(composer: HTMLElement, init: MountPopupInit): ComposerPopup 
     const t = e.target;
     if (!(t instanceof Element)) return;
     const opt = t.closest<HTMLButtonElement>('.icen-ai-composer-popup-option');
-    if (opt && panel.contains(opt) && !opt.hidden) session.pick(opt);
+    if (opt && panel.contains(opt) && !opt.hidden && opt.getAttribute('aria-disabled') !== 'true') session.pick(opt);
   });
   panel.addEventListener('mouseover', (e) => {
     const t = e.target;
     if (!(t instanceof Element)) return;
     const opt = t.closest<HTMLButtonElement>('.icen-ai-composer-popup-option');
-    if (!opt || opt.hidden) return;
+    if (!opt || opt.hidden || opt.getAttribute('aria-disabled') === 'true') return;
     const idx = visibleOptions(session).indexOf(opt);
     if (idx >= 0) setPopupFocus(session, idx);
+  });
+  panel.addEventListener('focusout', e => {
+    const next=e.relatedTarget;
+    if(next instanceof Node && !panel.contains(next) && next!==session.returnFocus)closePopup(composer,false);
+  });
+  panel.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !e.isComposing) {e.preventDefault(); closePopup(composer);}
+    else if (e.target instanceof Element && e.target.closest('.icen-ai-composer-popup-option') && ['ArrowUp','ArrowDown'].includes(e.key)) {
+      popupKeydown(composer,session,e);session.searchInput?.focus({preventScroll:true});
+    }
   });
   return session;
 }
 
-/** 弹层空态装配（三弹层共用：默认隐藏，settlePopup 依可见项数切换）。 */
+/** 弹层空态装配（四弹层共用：默认隐藏，settlePopup 依可见项数切换）。 */
 function appendPopupEmpty(s: ComposerPopup, text: string): void {
   s.emptyEl.className = 'icen-ai-composer-popup-empty';
   s.emptyEl.textContent = text;
@@ -694,7 +790,92 @@ function appendPopupEmpty(s: ComposerPopup, text: string): void {
 /** 命令/引用弹层共用尺寸（随锚宽自适应）：200 下限防窄锚、320 上限防溢出、360 面板高。 */
 function popupSizingFor(box: Element): PanelSizing {
   const w = box.getBoundingClientRect().width;
-  return { minWidth: Math.min(Math.max(w, 200), 320), maxWidth: 360, maxHeight: 320 };
+  return { width: Math.min(Math.max(w, 280), 440), maxWidth: 440, maxHeight: 400 };
+}
+
+function searchLeaf(text: string, className: string): HTMLElement {
+  const el = document.createElement('span');el.className=className;el.textContent=text;el.dataset.icenSearchText=text;return el;
+}
+
+function resourceIcon(source: AiComposerRefSource): HTMLElement {
+  const mark = document.createElement('span');mark.className='icen-ai-composer-popup-option-icon';
+  const svg = (source.icon ? createIcon(source.icon) : null) ?? svgIcon(getRefKindDef(source.kind).icon);
+  if(svg)mark.append(svg);return mark;
+}
+
+function resourceOption(source: AiComposerRefSource): HTMLButtonElement {
+  const opt=document.createElement('button');opt.type='button';opt.className='icen-ai-composer-popup-option';opt.setAttribute('role','option');
+  opt.dataset.refId=source.id;opt.dataset.refKind=source.kind;opt.dataset.category=source.kind;
+  opt.dataset.hay=[source.label,source.description,source.sub,getRefKindDef(source.kind).label,...(source.keywords??[])].join(' ').toLowerCase();
+  opt.setAttribute('aria-selected','false');if(source.disabled)opt.setAttribute('aria-disabled','true');
+  const body=document.createElement('span');body.className='icen-ai-composer-popup-option-copy';
+  body.append(searchLeaf(source.label,'icen-ai-composer-popup-option-label'));
+  if(source.description||source.sub)body.append(searchLeaf(source.description??source.sub??'','icen-ai-composer-popup-option-sub'));
+  opt.append(resourceIcon(source),body);return opt;
+}
+
+function commandOption(c: AiComposerCommand): HTMLButtonElement {
+  const opt=document.createElement('button');opt.type='button';opt.className='icen-ai-composer-popup-option icen-ai-composer-popup-cmd';
+  opt.setAttribute('role','option');opt.setAttribute('aria-selected','false');if(c.disabled)opt.setAttribute('aria-disabled','true');
+  opt.dataset.name=c.name;opt.dataset.category='command';opt.dataset.hay=[c.name,c.label,c.description,c.group,...(c.keywords??[])].join(' ').toLowerCase();
+  const mark=document.createElement('span');mark.className='icen-ai-composer-popup-option-icon';mark.append(createIcon(c.icon??'terminal')??createIcon('terminal')!);
+  const body=document.createElement('span');body.className='icen-ai-composer-popup-option-copy';
+  const line=document.createElement('span');line.className='icen-ai-composer-popup-cmd-line';
+  line.append(searchLeaf(c.label??`/${c.name}`,'icen-ai-composer-popup-option-label'));
+  if(c.label)line.append(searchLeaf(`/${c.name}`,'icen-ai-composer-popup-cmd-name'));
+  if(c.argsHint)line.append(searchLeaf(c.argsHint,'icen-ai-composer-popup-cmd-args'));
+  body.append(line);if(c.description)body.append(searchLeaf(c.description,'icen-ai-composer-popup-option-sub'));
+  opt.append(mark,body);return opt;
+}
+
+function popupFoot(s: ComposerPopup, text: string): void {
+  const foot=document.createElement('div');foot.className='icen-ai-composer-popup-foot';foot.textContent=text;s.panel.append(foot);
+}
+
+/** Browse without remembering syntax. Resource choices toggle; commands are staged for review, never run here. */
+export function openComposerLibrary(el: HTMLElement, category = 'all'): void {
+  if(!isBrowser())return;const composer=resolveComposer(el);if(!composer)return;
+  const ta=getTextarea(composer);if(!ta||ta.disabled||ta.readOnly)return;
+  const anchor=composer.querySelector<HTMLElement>('[data-icen-ai-library]')??ta;
+  const sources=REF_SOURCES.get(composer)??[],commands=COMMANDS.get(composer)??[];
+  if(!sources.length&&!commands.length)return;
+  const session=mountPopup(composer,{
+    mode:'library',anchor:composer,sizing:popupSizingFor(composer),returnFocus:anchor,
+    pick:opt=>{
+      if(opt.dataset.name){
+        const draft=ta.value.replace(/^\/\S*\s?/, '');ta.value=`/${opt.dataset.name} ${draft}`;autosizeTa(ta);closePopup(composer,false);ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);return;
+      }
+      const source=sources.find(r=>r.id===opt.dataset.refId&&r.kind===opt.dataset.refKind);if(!source)return;
+      const active=(ACTIVE_REFS.get(composer)??[]).some(r=>r.id===source.id&&r.kind===source.kind);
+      if(active)removeActiveRef(composer,source);else addActiveRef(composer,source);
+      opt.setAttribute('aria-selected',String(!active));
+    },
+    build:s=>{
+      s.panel.setAttribute('role','dialog');s.panel.setAttribute('aria-label',t('aiComposer.library'));
+      const search=document.createElement('div');search.className='icen-ai-composer-popup-search';
+      const input=document.createElement('input');input.type='search';input.className='icen-ai-composer-popup-search-input';input.placeholder=t('aiComposer.searchLibrary');input.setAttribute('aria-label',t('aiComposer.searchLibrary'));search.append(input);s.searchInput=input;s.panel.append(search);
+      const categories=[{id:'all',label:t('aiComposer.all')},...knownRefKinds(sources).filter(k=>sources.some(r=>r.kind===k)).map(k=>({id:k,label:getRefKindDef(k).label})),...(commands.length?[{id:'command',label:t('aiComposer.commands')}]:[])];
+      s.category=categories.some(c=>c.id===category)?category:'all';
+      const filters=document.createElement('div');filters.className='icen-ai-composer-popup-filters';filters.setAttribute('role','group');filters.setAttribute('aria-label',t('aiComposer.refs'));
+      for(const c of categories){
+        const b=document.createElement('button');b.type='button';b.textContent=c.label;b.setAttribute('aria-pressed',String(c.id===s.category));
+        b.addEventListener('click',()=>{s.category=c.id;for(const node of filters.querySelectorAll('button'))node.setAttribute('aria-pressed',String(node===b));filterPopupOptions(s,input.value);});filters.append(b);
+      }
+      s.panel.append(filters);
+      const list=document.createElement('div');list.className='icen-ai-composer-popup-list';list.setAttribute('role','listbox');list.setAttribute('aria-label',t('aiComposer.library'));list.setAttribute('aria-multiselectable','true');
+      const addGroup=(title:string,options:HTMLButtonElement[])=>{
+        const g=document.createElement('div');g.className='icen-ai-composer-popup-group';g.setAttribute('role','group');g.setAttribute('aria-label',title);g.append(searchLeaf(title,'icen-ai-composer-popup-group-label'),...options);list.append(g);s.groups.push(g);s.options.push(...options);
+      };
+      for(const kind of knownRefKinds(sources)){
+        const options=sources.filter(r=>r.kind===kind).map(r=>{const opt=resourceOption(r);opt.setAttribute('aria-selected',String((ACTIVE_REFS.get(composer)??[]).some(a=>a.id===r.id&&a.kind===r.kind)));return opt;});
+        if(options.length)addGroup(getRefKindDef(kind).label,options);
+      }
+      for(const group of new Set(commands.map(c=>c.group??t('aiComposer.commands'))))addGroup(group,commands.filter(c=>(c.group??t('aiComposer.commands'))===group).map(commandOption));
+      s.panel.append(list);appendPopupEmpty(s,t('aiComposer.noLibraryMatch'));popupFoot(s,t('aiComposer.libraryHint'));
+      input.addEventListener('input',()=>filterPopupOptions(s,input.value));input.addEventListener('keydown',e=>popupKeydown(composer,s,e));
+    },
+  });
+  anchor.setAttribute('aria-expanded','true');filterPopupOptions(session,'');session.searchInput?.focus({preventScroll:true});
 }
 
 /* ── 模型弹层 ── */
@@ -823,6 +1004,15 @@ function openModelPopup(composer: HTMLElement): void {
 
 /* ── 命令弹层 ── */
 
+function runComposerCommand(composer: HTMLElement, name: string): boolean {
+  const command=COMMANDS.get(composer)?.find(c=>c.name===name&&!c.disabled);
+  const ta=getTextarea(composer);
+  if(!command||!ta||ta.disabled||ta.readOnly)return false;
+  const args=/^\/\S*\s+([\s\S]*)$/.exec(ta.value)?.[1]??'';
+  ta.value='';autosizeTa(ta);emit(composer,'icen:ai-command',{name:command.name,args});
+  closePopup(composer);return true;
+}
+
 function openCommandPopup(composer: HTMLElement, token: string): void {
   const commands = COMMANDS.get(composer);
   if (!commands || commands.length === 0) return;
@@ -835,16 +1025,7 @@ function openCommandPopup(composer: HTMLElement, token: string): void {
     sizing: popupSizingFor(box),
     returnFocus: ta,
     pick: (opt) => {
-      const name = opt.dataset.name ?? '';
-      /* args = 输入中命令名后的剩余文本（首个空白起） */
-      const m = /^\/\S*\s+([\s\S]*)$/.exec(ta?.value ?? '');
-      const args = m ? m[1] : '';
-      if (ta) {
-        ta.value = '';
-        autosizeTa(ta);
-      }
-      emit(composer, 'icen:ai-command', { name, args });
-      closePopup(composer);
+      runComposerCommand(composer,opt.dataset.name??'');
     },
     build: (s) => {
       const list = document.createElement('div');
@@ -854,43 +1035,18 @@ function openCommandPopup(composer: HTMLElement, token: string): void {
       const group = document.createElement('div');
       group.className = 'icen-ai-composer-popup-group';
       for (const c of commands) {
-        const opt = document.createElement('button');
-        opt.type = 'button';
-        opt.className = 'icen-ai-composer-popup-option icen-ai-composer-popup-cmd';
-        opt.setAttribute('role', 'option');
-        opt.dataset.name = c.name;
-        opt.dataset.hay = `${c.name} ${c.description ?? ''}`.toLowerCase();
-        const line = document.createElement('span');
-        line.className = 'icen-ai-composer-popup-cmd-line';
-        const nameEl = document.createElement('span');
-        nameEl.className = 'icen-ai-composer-popup-cmd-name';
-        nameEl.textContent = `/${c.name}`;
-        line.appendChild(nameEl);
-        if (c.argsHint) {
-          const argsEl = document.createElement('span');
-          argsEl.className = 'icen-ai-composer-popup-cmd-args';
-          argsEl.textContent = c.argsHint;
-          line.appendChild(argsEl);
-        }
-        opt.appendChild(line);
-        if (c.description) {
-          opt.appendChild(Object.assign(document.createElement('span'), {
-            className: 'icen-ai-composer-popup-cmd-desc',
-            textContent: c.description,
-          }));
-        }
-        group.appendChild(opt);
-        s.options.push(opt);
+        const opt = commandOption(c);
+        group.appendChild(opt); s.options.push(opt);
       }
       list.appendChild(group);
       s.groups.push(group);
       s.panel.appendChild(list);
 
       appendPopupEmpty(s, t('aiComposer.noCommandMatch'));
+      popupFoot(s, t('aiComposer.commandHint'));
     },
   });
 
-  ta?.setAttribute('aria-expanded', 'true');
   filterPopupOptions(session, token);
 }
 
@@ -931,7 +1087,7 @@ function openRefPopup(
     returnFocus: ta,
     refRange: range,
     pick: (opt) => {
-      const source = (REF_SOURCES.get(composer) ?? []).find((r) => r.id === opt.dataset.refId);
+      const source = (REF_SOURCES.get(composer) ?? []).find((r) => r.id === opt.dataset.refId && r.kind === opt.dataset.refKind);
       const cur = POPUP.get(composer);
       const r = cur?.refRange ?? (ta ? findRefToken(ta) : null);
       if (source && ta && r) {
@@ -962,26 +1118,8 @@ function openRefPopup(
           textContent: def.label,
         }));
         for (const r of items) {
-          const opt = document.createElement('button');
-          opt.type = 'button';
-          opt.className = 'icen-ai-composer-popup-option';
-          opt.setAttribute('role', 'option');
-          opt.dataset.refId = r.id;
-          opt.dataset.hay = `${r.label} ${r.sub ?? ''}`.toLowerCase();
-          const icon = document.createElement('span');
-          icon.className = 'icen-ai-composer-popup-option-icon';
-          const svg = svgIcon(def.icon);
-          if (svg) icon.appendChild(svg);
-          const label = document.createElement('span');
-          label.className = 'icen-ai-composer-popup-option-label';
-          label.textContent = r.label;
-          if (r.sub) {
-            const sub = document.createElement('span');
-            sub.className = 'icen-ai-composer-popup-option-sub';
-            sub.textContent = r.sub;
-            label.appendChild(sub);
-          }
-          opt.append(icon, label);
+          const opt = resourceOption(r);
+          opt.setAttribute('aria-selected', String((ACTIVE_REFS.get(composer) ?? []).some(a => a.id === r.id && a.kind === r.kind)));
           group.appendChild(opt);
           s.options.push(opt);
         }
@@ -991,10 +1129,10 @@ function openRefPopup(
       s.panel.appendChild(list);
 
       appendPopupEmpty(s, t('aiComposer.noRefMatch'));
+      popupFoot(s, t('aiComposer.refHint'));
     },
   });
 
-  ta?.setAttribute('aria-expanded', 'true');
   filterPopupOptions(session, filter);
 }
 
@@ -1061,7 +1199,11 @@ function renderRefs(composer: HTMLElement): void {
   row.replaceChildren(
     ...actives.map((src) => {
       const chip = makeChip(src.label, true, t('aiComposer.removeRef', { p0: src.label }));
+      chip.prepend(resourceIcon(src));
+      chip.dataset.icenKind = src.kind;
       chip.dataset.refId = src.id;
+      chip.dataset.refKind = src.kind;
+      chip.title = [src.label,src.description??src.sub].filter(Boolean).join(' · ');
       return chip;
     }),
   );
@@ -1070,7 +1212,7 @@ function renderRefs(composer: HTMLElement): void {
 
 function addActiveRef(composer: HTMLElement, source: AiComposerRefSource): void {
   const actives = ACTIVE_REFS.get(composer) ?? [];
-  if (actives.some((r) => r.id === source.id)) return; /* 同 id 不重复出 chip、不重复派事件 */
+  if (actives.some((r) => r.id === source.id && r.kind === source.kind)) return;
   actives.push(source);
   ACTIVE_REFS.set(composer, actives);
   renderRefs(composer);
@@ -1079,24 +1221,53 @@ function addActiveRef(composer: HTMLElement, source: AiComposerRefSource): void 
 
 function removeActiveRef(composer: HTMLElement, source: AiComposerRefSource): void {
   const actives = ACTIVE_REFS.get(composer) ?? [];
-  const idx = actives.findIndex((r) => r.id === source.id);
+  const idx = actives.findIndex((r) => r.id === source.id && r.kind === source.kind);
   if (idx === -1) return;
   actives.splice(idx, 1);
   ACTIVE_REFS.set(composer, actives);
+  const activeButton = document.activeElement;
+  const restore = activeButton instanceof Element && !!activeButton.closest('.icen-ai-composer-refs');
   renderRefs(composer);
+  if (restore) {
+    const buttons = composer.querySelectorAll<HTMLButtonElement>('.icen-ai-composer-refs .icen-ai-composer-chip-remove');
+    (buttons[Math.min(idx,buttons.length-1)] ?? getTextarea(composer))?.focus({preventScroll:true});
+  }
   /* 同步删文本里首个 `@label`（连同其后一个空白） */
   const ta = getTextarea(composer);
-  if (ta) {
+  if (ta && !actives.some(r=>r.label===source.label)) {
     const needle = `@${source.label}`;
-    const at = ta.value.indexOf(needle);
+    let at = ta.value.indexOf(needle);
+    while(at!==-1 && ((at>0&&!/\s/.test(ta.value[at-1])) || (ta.value[at+needle.length]!==undefined&&!/\s/.test(ta.value[at+needle.length]))))at=ta.value.indexOf(needle,at+needle.length);
     if (at !== -1) {
+      const start=ta.selectionStart,end=ta.selectionEnd,direction=ta.selectionDirection;
       let endIdx = at + needle.length;
       if (ta.value[endIdx] === ' ') endIdx += 1;
       ta.value = ta.value.slice(0, at) + ta.value.slice(endIdx);
+      const shifted=(pos:number):number=>pos<=at?pos:pos<endIdx?at:pos-(endIdx-at);
+      ta.setSelectionRange(shifted(start),shifted(end),direction);
       autosizeTa(ta);
     }
   }
   emit(composer, 'icen:ai-ref', { action: 'remove', ref: source });
+}
+
+function renderFiles(composer: HTMLElement): void {
+  let row=composer.querySelector<HTMLElement>('.icen-ai-composer-attach');
+  const files=FILES.get(composer)??[];
+  if(!row&&files.length){row=document.createElement('div');row.className='icen-ai-composer-attach';composer.insertBefore(row,composer.querySelector('.icen-ai-composer-box'));}
+  if(!row)return;
+  row.replaceChildren(...files.map((file,index)=>{
+    const chip=makeChip(file.name,true,t('aiComposer.removeAttachment',{p0:file.name}),'file');chip.dataset.icenFile=String(index);
+    const size=document.createElement('span');size.className='icen-ai-composer-chip-meta';size.textContent=file.size<1024?`${file.size} B`:`${Math.ceil(file.size/1024)} KB`;chip.insertBefore(size,chip.lastElementChild);chip.title=file.name;return chip;
+  }));row.hidden=!files.length;
+}
+
+/** Read-only snapshot for upload adapters and application-owned draft persistence. */
+export function getComposerDraft(el: HTMLElement): AiComposerSubmission {
+  if(!isBrowser())return {text:''};
+  const c=resolveComposer(el);if(!c)return {text:''};
+  const refs=ACTIVE_REFS.get(c)??[],files=FILES.get(c)??[];
+  return {text:getTextarea(c)?.value??'',...(refs.length?{refs:refs.map(r=>({...r}))}:{}),...(files.length?{files:[...files]}:{})};
 }
 
 /* ══════════════ v2 历史（每 composer 独立）══════════════ */
@@ -1124,7 +1295,6 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     return undefined;
   }
   const queueEl = composer.querySelector<HTMLElement>('.icen-ai-composer-queue');
-  const attachEl = composer.querySelector<HTMLElement>('.icen-ai-composer-attach');
   const { sendBtn, sendIcon, stopIcon } = ensureIcons(composer);
 
   /* v2 默认 placeholder（作者已写 placeholder 则不覆盖） */
@@ -1135,9 +1305,9 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
   /* ── 队列 chips 渲染 ── */
   const renderQueue = (): void => renderQueueChips(composer);
 
-  const enqueue = (text: string): void => {
+  const enqueue = (draft: AiComposerSubmission): void => {
     const queue = QUEUES.get(composer) ?? [];
-    queue.push(text);
+    queue.push({...draft,...(draft.refs?{refs:draft.refs.map(r=>({...r}))}:{}),...(draft.files?{files:[...draft.files]}:{})});
     QUEUES.set(composer, queue);
     renderQueue();
   };
@@ -1146,16 +1316,18 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
   const isRunning = (): boolean => RUNNING.get(composer) ?? false;
 
   const submit = (): void => {
-    const text = ta.value;
-    if (!text.trim()) return;
+    if (ta.disabled || ta.readOnly || composing) return;
+    const draft = getComposerDraft(composer);
+    if (!draft.text.trim() && !draft.files?.length && !draft.refs?.length) return;
     ta.value = '';
     autosizeTa(ta);
+    ACTIVE_REFS.set(composer,[]); FILES.set(composer,[]);renderRefs(composer);renderFiles(composer);
     if (isRunning()) {
-      enqueue(text);
-      emit(composer, 'icen:ai-queue', { text });
+      enqueue(draft);
+      emit(composer, 'icen:ai-queue', draft);
     } else {
-      pushHistory(composer, text);
-      emit(composer, 'icen:ai-send', { text });
+      pushHistory(composer, draft.text);
+      emit(composer, 'icen:ai-send', draft);
     }
   };
   SUBMITS.set(composer, submit);
@@ -1166,10 +1338,13 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     const queue = QUEUES.get(composer) ?? [];
     if (queue.length === 0) return;
     const index = queue.length - 1;
-    const text = queue.pop() ?? ''; /* 上方已验非空，?? 仅安抚类型 */
+    const draft = queue.pop()!;
     QUEUES.set(composer, queue);
     renderQueue();
-    ta.value = text;
+    ta.value = draft.text;
+    // Keep context added for the next draft while restoring this queued submission.
+    for(const ref of draft.refs??[])addActiveRef(composer,ref);
+    const files=FILES.get(composer)??[];FILES.set(composer,Array.from(new Set([...files,...(draft.files??[])])));renderFiles(composer);
     autosizeTa(ta);
     emit(composer, 'icen:ai-dequeue', { index });
   };
@@ -1193,7 +1368,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
   };
 
   const onKeydown = (e: KeyboardEvent): void => {
-    if (composing || e.isComposing) return; /* IME 组合态全程挂起（含方向键，不打断候选选择） */
+    if (composing || e.isComposing || ta.disabled || ta.readOnly) return;
     const session = POPUP.get(composer);
     if (session) {
       popupKeydown(composer, session, e);
@@ -1201,6 +1376,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      if(ta.value.startsWith('/') && runComposerCommand(composer,commandToken(ta.value)))return;
       submit();
       return;
     }
@@ -1208,7 +1384,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
       const h = HISTORIES.get(composer);
       const browsing = (h?.index ?? -1) >= 0;
       if (ta.value === '') {
-        if (isRunning() && (QUEUES.get(composer) ?? []).length > 0) {
+        if ((QUEUES.get(composer) ?? []).length > 0) {
           e.preventDefault();
           takeBackLastQueued();
           return;
@@ -1234,6 +1410,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
 
   const onInput = (): void => {
     autosizeTa(ta);
+    if (composing) return;
     /* 浏览历史中编辑 → 退出浏览态 */
     const h = HISTORIES.get(composer);
     if (h && h.index >= 0 && ta.value !== h.items[h.index]) h.index = -1;
@@ -1250,9 +1427,11 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
   let composing = false;
   const onCompositionStart = (): void => {
     composing = true;
+    closePopup(composer,false);
   };
   const onCompositionEnd = (): void => {
     composing = false;
+    onInput();
   };
 
   const onSendClick = (): void => {
@@ -1263,7 +1442,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     }
   };
 
-  /* chip × 移除（queue 派 icen:ai-dequeue {index}；refs 派 icen:ai-ref remove；attach chip 纯视觉移除） */
+  /* chip × 移除（queue 派 icen:ai-dequeue {index}；refs 派 icen:ai-ref remove；附件移除同步真实文件状态） */
   const onQueueClick = (e: MouseEvent): void => {
     const btn = e.target instanceof Element ? e.target.closest('.icen-ai-composer-chip-remove') : null;
     if (!btn) return;
@@ -1273,6 +1452,8 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
       queue.splice(index, 1);
       QUEUES.set(composer, queue);
       renderQueue();
+      const buttons=queueEl?.querySelectorAll<HTMLButtonElement>('.icen-ai-composer-chip-remove');
+      (buttons?.[Math.min(index,buttons.length-1)]??ta).focus({preventScroll:true});
       emit(composer, 'icen:ai-dequeue', { index });
     }
   };
@@ -1282,7 +1463,8 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     const btn = e.target instanceof Element ? e.target.closest('.icen-ai-composer-chip-remove') : null;
     if (!btn || !btn.closest('.icen-ai-composer-refs')) return;
     const id = btn.closest<HTMLElement>('.icen-ai-composer-chip')?.dataset.refId;
-    const source = (ACTIVE_REFS.get(composer) ?? []).find((r) => r.id === id);
+    const kind=btn.closest<HTMLElement>('.icen-ai-composer-chip')?.dataset.refKind;
+    const source = (ACTIVE_REFS.get(composer) ?? []).find((r) => r.id === id && r.kind === kind);
     if (source) removeActiveRef(composer, source);
   };
 
@@ -1294,21 +1476,27 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
   composer.appendChild(fileInput);
 
   const onAttachClick = (): void => {
-    fileInput.click();
+    if(!ta.disabled&&!ta.readOnly)fileInput.click();
   };
 
   const addFiles = (files: File[]): void => {
-    if (files.length === 0) return;
-    if (attachEl) {
-      for (const f of files) {
-        const chip = makeChip(f.name, true, t('aiComposer.removeAttachment', { p0: f.name }));
-        const remove = chip.querySelector<HTMLButtonElement>('.icen-ai-composer-chip-remove');
-        remove?.addEventListener('click', () => chip.remove(), { once: true });
-        attachEl.appendChild(chip);
-      }
-      attachEl.hidden = false;
+    if (!files.length || ta.disabled || ta.readOnly) return;
+    const current=FILES.get(composer)??[];
+    const accepted:File[]=[];
+    for(const file of files) {
+      if(![...current,...accepted].some(c=>c.name===file.name&&c.size===file.size&&c.lastModified===file.lastModified&&c.type===file.type))accepted.push(file);
     }
-    emit(composer, 'icen:ai-attach', { files });
+    if(!accepted.length)return;
+    FILES.set(composer,[...current,...accepted]);renderFiles(composer);
+    emit(composer, 'icen:ai-attach', { files:accepted });
+  };
+  const onRemoveFile = (e: MouseEvent): void => {
+    const button=e.target instanceof Element?e.target.closest('.icen-ai-composer-attach .icen-ai-composer-chip-remove'):null;if(!button)return;
+    const index=Number(button.closest<HTMLElement>('[data-icen-file]')?.dataset.icenFile);const files=FILES.get(composer)??[];
+    if(!Number.isInteger(index)||index<0||index>=files.length)return;
+    const [file]=files.splice(index,1);FILES.set(composer,files);renderFiles(composer);
+    const buttons=composer.querySelectorAll<HTMLButtonElement>('.icen-ai-composer-attach .icen-ai-composer-chip-remove');(buttons[Math.min(index,buttons.length-1)]??ta).focus({preventScroll:true});
+    emit(composer,'icen:ai-attachment-remove',{file,files:[...files]});
   };
 
   const onFileChange = (): void => {
@@ -1355,6 +1543,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
   sendBtn?.addEventListener('click', onSendClick);
   queueEl?.addEventListener('click', onQueueClick);
   composer.addEventListener('click', onRefsClick);
+  composer.addEventListener('click', onRemoveFile);
   composer.querySelector('[data-icen-ai-attach]')?.addEventListener('click', onAttachClick);
   fileInput.addEventListener('change', onFileChange);
 
@@ -1368,6 +1557,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
   autosizeTa(ta);
   renderQueue();
   renderRefs(composer);
+  renderFiles(composer);
 
   return () => {
     closePopup(composer, false);
@@ -1382,6 +1572,7 @@ function setupComposer(composer: HTMLElement): (() => void) | undefined {
     sendBtn?.removeEventListener('click', onSendClick);
     queueEl?.removeEventListener('click', onQueueClick);
     composer.removeEventListener('click', onRefsClick);
+    composer.removeEventListener('click', onRemoveFile);
     composer.querySelector('[data-icen-ai-attach]')?.removeEventListener('click', onAttachClick);
     fileInput.removeEventListener('change', onFileChange);
     fileInput.remove();
@@ -1416,7 +1607,7 @@ export function initAiComposer(root?: ParentNode): () => void {
 /* ══════════════ v2 配置 API（全部可选；el 传 composer 或其内部任意元素）══════════════ */
 
 /**
- * 配置模型切换（§8）：工具条出现模型钮，弹层按 provider 分组 + 搜索过滤 + 当前勾选。
+ * 配置模型切换（§8）：工具条出现模型钮，弹层按 provider 分组 + 搜索过滤 + 当前轻高亮。
  * current 缺省取第一个 provider 的第一个模型（静默选中，不派事件）。
  * 选择派 icen:ai-model-change {provider, model, label, context}；
  * 选中模型的 context 自动成为 setComposerUsage 的 total 默认值（显式 opts.total 优先）。
@@ -1469,10 +1660,13 @@ export function setComposerCommands(el: HTMLElement, commands: AiComposerCommand
   if (list.length === 0) {
     COMMANDS.delete(composer);
     const session = POPUP.get(composer);
-    if (session?.mode === 'command') closePopup(composer);
+    if (session?.mode === 'command' || session?.mode === 'library') closePopup(composer);
+    syncToolbar(composer);
     return;
   }
   COMMANDS.set(composer, list);
+  syncToolbar(composer);
+  if (POPUP.get(composer)) closePopup(composer);
 }
 
 /**
@@ -1488,6 +1682,8 @@ export function setComposerRefs(el: HTMLElement, sources: AiComposerRefSource[])
   if (!composer) return;
   const list = (Array.isArray(sources) ? sources : []).filter((s) => s && typeof s.label === 'string' && s.label);
   REF_SOURCES.set(composer, list);
+  syncToolbar(composer);
+  if (POPUP.get(composer)) closePopup(composer);
   if (list.length === 0) {
     const session = POPUP.get(composer);
     if (session?.mode === 'ref') closePopup(composer);
@@ -1592,12 +1788,18 @@ export interface AiComposerBindOpts {
   /**
    * 传入即托管对话（client 模式）：icen:ai-send → renderAiMessage 用户消息 + running +
    * client.stream → assistant 消息 + createAiStream 逐 chunk 追加 → done 收尾（meta 自动填
-   * token/成本）；错误 → setError + fail；stop → session.cancel()；排队消息每轮完成自动发送。
+   * token/成本）；错误 → setError + fail；stop → session.cancel()；成功后续发队列，停止/失败暂停。
    * 需要 messages 容器。history 由绑定层维护（system 消息可先经 client 直接对话时自带）。
    */
   client?: AiClient;
   /** 消息挂载容器（.icen-ai-chat-scroll 或任意元素；client 模式必填） */
   messages?: HTMLElement;
+  /** Resolve uploaded files / authorised resources into provider-neutral content parts.
+   * Called for the captured submission, with cancellation. No upload or tool execution is guessed.
+   * Files without an adapter produce a retryable error, rather than being silently dropped. */
+  prepareMessage?: (draft: AiComposerSubmission, context: {signal: AbortSignal}) => AiContent | Promise<AiContent>;
+  /** Pure-event bindings may scope done events to one conversation; defaults to document for compatibility. */
+  eventTarget?: EventTarget;
   /**
    * 用量环自动更新（监听 document 的 icen:ai-done）：
    * 'context'（默认）= 上下文估算口径（ai-core contextEstimate——环语义正确）；
@@ -1608,14 +1810,16 @@ export interface AiComposerBindOpts {
   /** 运行态自动管理（默认 true）：icen:ai-send → running；icen:ai-done → 解除 */
   running?: boolean;
   /**
-   * 三弹层（模型/命令/引用）尺寸的整体程序覆盖（PanelSizing 契约）：
-   * 优先于 composer 根上的 data-panel-*（三弹层共用的用户覆盖面）与各弹层内置默认，
-   * 一次设置对三个弹层同时生效。
+   * 四弹层（模型/命令/引用/目录）尺寸的整体程序覆盖（PanelSizing 契约）：
+   * 优先于 composer 根上的 data-panel-*（四弹层共用的用户覆盖面）与各弹层内置默认，
+   * 一次设置对四个弹层同时生效。
    */
   popoverSizing?: PanelSizing;
 }
 
 export interface AiComposerBinding {
+  /** Retry the latest failed/stopped managed response in place. False when busy or unavailable. */
+  retry(): boolean;
   /** 解绑全部监听并中止进行中的托管会话（composer 本身的 init 不受影响） */
   unbind(): void;
 }
@@ -1630,25 +1834,27 @@ const BOUND = new WeakSet<HTMLElement>();
  */
 export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): AiComposerBinding {
   const noop = (): void => undefined;
-  if (!isBrowser()) return { unbind: noop };
+  if (!isBrowser()) return { unbind: noop, retry: () => false };
   const composer = resolveComposer(el);
-  if (!composer) return { unbind: noop };
-  if (BOUND.has(composer)) return { unbind: noop }; /* 防重复绑定 */
+  if (!composer) return { unbind: noop, retry: () => false };
+  if (BOUND.has(composer)) return { unbind: noop, retry: () => false }; /* 防重复绑定 */
   BOUND.add(composer);
 
-  /* 三弹层尺寸整体覆盖（> composer 根 data-panel-* > 内置默认；跨 bind/unbind 保留的配置） */
+  /* 四弹层尺寸整体覆盖（> composer 根 data-panel-* > 内置默认；跨 bind/unbind 保留的配置） */
   if (opts.popoverSizing) POPUP_SIZING.set(composer, opts.popoverSizing);
 
   const disposers: Array<() => void> = [];
   const usageCfg = opts.usage;
   const manageRunning = opts.running ?? true;
+  let bound = true;
+  let retry = (): boolean => false;
+  let updateUsage = (_detail: {usage?: AiUsage;cost?: number}): void => {};
 
   /* ── 用量环自动更新（icen:ai-done 驱动）── */
   if (usageCfg) {
     let cost = 0;
     let billing: AiUsage = {};
-    const onDone = (e: Event): void => {
-      const detail = (e as CustomEvent<AiDoneEventDetail>).detail;
+    updateUsage = (detail): void => {
       if (!detail?.usage) return;
       if (typeof detail.cost === 'number') cost += detail.cost;
       let usage: AiUsage;
@@ -1674,8 +1880,12 @@ export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): Ai
         cost: cost > 0 ? Math.round(cost * 1e6) / 1e6 : undefined,
       });
     };
-    document.addEventListener('icen:ai-done', onDone);
-    disposers.push(() => document.removeEventListener('icen:ai-done', onDone));
+    if (!opts.client || !opts.messages) {
+      const onDone=(e:Event):void=>updateUsage((e as CustomEvent<AiDoneEventDetail>).detail);
+      const target=opts.eventTarget??document;
+      target.addEventListener('icen:ai-done', onDone);
+      disposers.push(() => target.removeEventListener('icen:ai-done', onDone));
+    }
   }
 
   /* ── client 模式：对话全托管 ── */
@@ -1687,7 +1897,18 @@ export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): Ai
     const client = opts.client;
     const messages = opts.messages;
     const history: AiChatMessage[] = [];
-    let session: AiStreamSession | null = null;
+    interface Turn {
+      assistant: AiMessageHandle;
+      stream: AiStreamHandle;
+      textNode: Element | null;
+      request: AiChatMessage[];
+      session: AiStreamSession | null;
+      text: string;
+      draft?: AiComposerSubmission;
+      preparation: AbortController;
+    }
+    let active: Turn | null = null;
+    let retryable: Turn | null = null;
 
     const metaOf = (r: { usage: AiUsage; cost?: number }): string => {
       const tok = r.usage.total ?? 0;
@@ -1696,79 +1917,147 @@ export function bindComposer(el: HTMLElement, opts: AiComposerBindOpts = {}): Ai
       return t('aiComposer.justNow', { p0: parts.join(' · ') });
     };
 
-    const startTurn = (): void => {
-      const assistant: AiMessageHandle = renderAiMessage(messages, {
+    const startTurn = (previous?: Turn, draft?: AiComposerSubmission): void => {
+      const assistant = previous?.assistant ?? renderAiMessage(messages, {
         role: 'assistant',
         content: '',
         streaming: true,
         model: client.config.model,
       });
+      if (previous) {
+        const restoreRetryFocus = assistant.body.contains(document.activeElement);
+        previous.textNode?.remove();
+        assistant.body.querySelectorAll('.icen-ai-msg-continue,.icen-ai-msg-error-text').forEach(node => node.remove());
+        assistant.el.classList.remove('icen-ai-msg--error');
+        assistant.setMeta('');
+        if (restoreRetryFocus) assistant.el.querySelector<HTMLElement>('[data-icen-ai-msg-action="retry"]')?.focus({preventScroll:true});
+      }
       const streamH: AiStreamHandle = assistant.stream();
+      assistant.el.classList.add('is-streaming');
+      const turn: Turn = {assistant,stream:streamH,textNode:assistant.body.lastElementChild,request:[...history],session:null,text:'',draft:previous?.draft??draft,preparation:new AbortController()};
+      active = turn;
+      retryable = null;
       setComposerRunning(composer, true);
-      const s = client.stream({ messages: [...history] });
-      session = s;
       let failed = false;
       void (async () => {
-        for await (const chunk of s) {
-          if (chunk.type === 'text') streamH.append(chunk.delta);
-          else if (chunk.type === 'error') {
-            failed = true;
-            streamH.fail();
-            assistant.setError(chunk.message);
+        try {
+          if (turn.draft && opts.prepareMessage) {
+            const content=await opts.prepareMessage(turn.draft,{signal:turn.preparation.signal});
+            if(!bound||active!==turn)return;
+            turn.request[turn.request.length-1]={role:'user',content};
+            history.splice(0,history.length,...turn.request);
+          } else if(turn.draft?.files?.length) throw new Error(t('aiComposer.filesNeedAdapter'));
+          const s = client.stream({ messages: turn.request });
+          turn.session = s;
+          // Handle rejected custom clients even if their iterator fails first.
+          void s.done.catch(() => {});
+          for await (const chunk of s) {
+            if (!bound || active !== turn) return;
+            if (chunk.type === 'text') { turn.text += chunk.delta; streamH.append(chunk.delta); }
+            else if (chunk.type === 'error') {
+              failed = true;
+              streamH.fail();
+              assistant.setError(chunk.message);
+            }
           }
-        }
-        const result = await s.done;
-        session = null;
-        if (!failed) streamH.done();
-        assistant.setMeta(metaOf(result));
-        if (result.text) history.push({ role: 'assistant', content: result.text });
-        setComposerRunning(composer, false);
-        /* 排队消息自动发送下一条（Claude Code 模式） */
-        const queue = QUEUES.get(composer) ?? [];
-        if (queue.length > 0) {
-          const next = queue.shift() ?? ''; /* 队列只进非空文本，?? 仅安抚类型 */
-          QUEUES.set(composer, queue);
-          renderQueueChips(composer);
-          emit(composer, 'icen:ai-dequeue', { index: 0 });
-          send(next);
+          const result = await s.done;
+          if (!bound || active !== turn) return;
+          if (!failed) { streamH.done(); assistant.setMeta(metaOf(result)); updateUsage(result); }
+          if (result.text) history.push({ role: 'assistant', content: result.text });
+        } catch (error) {
+          if (!bound || active !== turn) return;
+          failed = true;
+          streamH.fail();
+          assistant.setError(error instanceof Error ? error.message : String(error));
+        } finally {
+          if (!bound || active !== turn) return;
+          active = null;
+          assistant.el.classList.remove('is-streaming');
+          setComposerRunning(composer, false);
+          if (failed) { retryable = turn; return; }
+          /* Queue advances only after a successful response. Stop/error leave it editable. */
+          const queue = QUEUES.get(composer) ?? [];
+          if (queue.length > 0) {
+            const next = queue.shift()!;
+            QUEUES.set(composer, queue);
+            renderQueueChips(composer);
+            emit(composer, 'icen:ai-dequeue', { index: 0 });
+            if (bound) send(next);
+          }
         }
       })();
     };
 
-    const send = (text: string): void => {
-      renderAiMessage(messages, { role: 'user', content: text });
+    const send = (draft: AiComposerSubmission): void => {
+      if (!bound || active) return;
+      const missingRefs=(draft.refs??[]).filter(r=>!draft.text.includes(`@${r.label}`));
+      const text=[draft.text,...missingRefs.map(r=>`@${r.label}`)].filter(Boolean).join('\n');
+      const message=renderAiMessage(messages, { role: 'user', content: draft.text });
+      if(draft.refs?.length||draft.files?.length){
+        const context=document.createElement('div');context.className='icen-ai-msg-context';
+        for(const ref of draft.refs??[]){const chip=makeChip(ref.label,false,'');chip.prepend(resourceIcon(ref));context.append(chip);}
+        for(const file of draft.files??[])context.append(makeChip(file.name,false,'','file'));
+        message.body.append(context);
+      }
       history.push({ role: 'user', content: text });
-      startTurn();
+      startTurn(undefined,draft);
     };
 
     const onSend = (e: Event): void => {
-      const text = (e as CustomEvent<{ text: string }>).detail?.text;
-      if (typeof text === 'string' && text) send(text);
+      const draft = (e as CustomEvent<AiComposerSubmission>).detail;
+      if (typeof draft?.text === 'string' && (draft.text || draft.files?.length || draft.refs?.length)) send(draft);
     };
     const onStop = (): void => {
-      session?.cancel();
+      const turn = active;
+      if (!turn) return;
+      active = null; // Invalidate before abort: late chunks cannot change this or a newer turn.
+      turn.preparation.abort();
+      retryable = turn;
+      turn.stream.cancel();
+      turn.assistant.el.classList.remove('is-streaming');
+      turn.assistant.setMeta(t('aiComposer.stopped'));
+      if (turn.text) history.push({role:'assistant',content:turn.text});
+      setComposerRunning(composer, false);
+      turn.session?.cancel();
+    };
+    retry = (): boolean => {
+      if (!bound || active || !retryable) return false;
+      const turn = retryable;
+      history.splice(0, history.length, ...turn.request);
+      startTurn(turn);
+      return true;
+    };
+    const onRetry = (event: Event): void => {
+      if ((event as CustomEvent<{el: HTMLElement}>).detail?.el === retryable?.assistant.el) retry();
     };
     composer.addEventListener('icen:ai-send', onSend);
     composer.addEventListener('icen:ai-stop', onStop);
+    messages.addEventListener('icen:ai-retry', onRetry);
     disposers.push(() => {
       composer.removeEventListener('icen:ai-send', onSend);
       composer.removeEventListener('icen:ai-stop', onStop);
-      session?.cancel();
+      messages.removeEventListener('icen:ai-retry', onRetry);
+      onStop();
+      retryable = null;
     });
   } else if (manageRunning) {
     /* ── 纯状态绑定：send → running；done → 解除 ── */
     const onSend = (): void => setComposerRunning(composer, true);
     const onDone = (): void => setComposerRunning(composer, false);
     composer.addEventListener('icen:ai-send', onSend);
-    document.addEventListener('icen:ai-done', onDone);
+    const target=opts.eventTarget??document;
+    target.addEventListener('icen:ai-done', onDone);
     disposers.push(() => {
       composer.removeEventListener('icen:ai-send', onSend);
-      document.removeEventListener('icen:ai-done', onDone);
+      target.removeEventListener('icen:ai-done', onDone);
     });
   }
 
   return {
+    retry: () => retry(),
     unbind(): void {
+      if (!bound) return;
+      bound = false;
       for (const dispose of disposers) dispose();
       disposers.length = 0;
       BOUND.delete(composer);

@@ -8,7 +8,7 @@
 /* Selection is a contained surface, never a check glyph. ARIA remains the source
  * of truth for keyboard/assistive technology; focus has its own outer outline. */
 :root :is(.icen-theme-switcher-option[aria-pressed="true"], .icen-select-option.is-selected, .icen-cascader-item.is-selected, .icen-cascader-item.is-active, .icen-tree-select-row.is-selected, .icen-tree-select-row.is-checked, .icen-menu-item[aria-checked="true"], .icen-menu-item--checked:not([aria-checked="false"]), .icen-ai-composer-popup-option[aria-selected="true"], .icen-kb-checkpoint-menu-item.is-checked) {
-  background: var(--icen-token-accent-faint);
+  background: var(--icen-token-accent-subtle);
   color: var(--icen-token-text);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 65%, var(--icen-token-line-soft));
 }

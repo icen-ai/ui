@@ -103,6 +103,16 @@ export interface IcenLocale {
   'aiChat.thinking': string;
   /* ── aiComposer ── */
   'aiComposer.attachAgent': string;
+  'aiComposer.library': string;
+  'aiComposer.searchLibrary': string;
+  'aiComposer.all': string;
+  'aiComposer.skills': string;
+  'aiComposer.tools': string;
+  'aiComposer.libraryHint': string;
+  'aiComposer.commandHint': string;
+  'aiComposer.refHint': string;
+  'aiComposer.noLibraryMatch': string;
+  'aiComposer.filesNeedAdapter': string;
   'aiComposer.attachDoc': string;
   'aiComposer.attachFile': string;
   'aiComposer.attachFolder': string;
@@ -124,6 +134,7 @@ export interface IcenLocale {
   'aiComposer.selectModel': string;
   'aiComposer.send': string;
   'aiComposer.stop': string;
+  'aiComposer.stopped': string;
   'aiComposer.todoChip': string;
   'aiComposer.todoHasError': string;
   /* ── aiCore ── */
@@ -925,6 +936,16 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'aiChat.thinking': '思考 {p0}',
   /* ── aiComposer ── */
   'aiComposer.attachAgent': '代理',
+  'aiComposer.library': '添加上下文与命令',
+  'aiComposer.searchLibrary': '搜索技能、工具、文件与命令',
+  'aiComposer.all': '全部',
+  'aiComposer.skills': '技能',
+  'aiComposer.tools': '工具',
+  'aiComposer.libraryHint': '上下文随消息发送 · 命令先填入输入框',
+  'aiComposer.commandHint': '↑ ↓ 浏览 · Enter 执行 · Esc 返回',
+  'aiComposer.refHint': '↑ ↓ 浏览 · Enter 引用 · Esc 返回',
+  'aiComposer.noLibraryMatch': '没有匹配的项目，试试其他关键词',
+  'aiComposer.filesNeedAdapter': '附件尚未接通上传。请配置 prepareMessage 后重试，文件仍保留在此请求中。',
   'aiComposer.attachDoc': '文档',
   'aiComposer.attachFile': '文件',
   'aiComposer.attachFolder': '文件夹',
@@ -946,6 +967,7 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'aiComposer.selectModel': '选择模型',
   'aiComposer.send': '发送',
   'aiComposer.stop': '停止生成',
+  'aiComposer.stopped': '已停止',
   'aiComposer.todoChip': '当前待办 {p0}/{p1}{p2}',
   'aiComposer.todoHasError': '（有失败项）',
   /* ── aiCore ── */
@@ -1747,6 +1769,16 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'aiChat.thinking': 'Thinking {p0}',
   /* ── aiComposer ── */
   'aiComposer.attachAgent': 'Agent',
+  'aiComposer.library': 'Add context and commands',
+  'aiComposer.searchLibrary': 'Search skills, tools, files and commands',
+  'aiComposer.all': 'All',
+  'aiComposer.skills': 'Skills',
+  'aiComposer.tools': 'Tools',
+  'aiComposer.libraryHint': 'Context travels with the message · Commands open in the editor',
+  'aiComposer.commandHint': '↑ ↓ Browse · Enter Run · Esc Return',
+  'aiComposer.refHint': '↑ ↓ Browse · Enter Reference · Esc Return',
+  'aiComposer.noLibraryMatch': 'No matching items. Try another keyword.',
+  'aiComposer.filesNeedAdapter': 'Connect file uploads with prepareMessage, then retry. Files are retained with this request.',
   'aiComposer.attachDoc': 'Document',
   'aiComposer.attachFile': 'File',
   'aiComposer.attachFolder': 'Folder',
@@ -1768,6 +1800,7 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'aiComposer.selectModel': 'Select model',
   'aiComposer.send': 'Send',
   'aiComposer.stop': 'Stop generating',
+  'aiComposer.stopped': 'Stopped',
   'aiComposer.todoChip': 'Todos {p0}/{p1}',
   'aiComposer.todoHasError': ' (has failures)',
   /* ── aiCore ── */

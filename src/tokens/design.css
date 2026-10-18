@@ -63,6 +63,7 @@
 :root [data-icen-density] {
   --icen-design-density-scale: 1;
   --icen-design-density-offset: 0px;
+  --icen-density-space-2xs: calc(var(--icen-design-space) * var(--icen-design-density-scale) * .5);
   --icen-density-space-xs: calc(var(--icen-design-space) * var(--icen-design-density-scale));
   --icen-density-space-sm: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 2);
   --icen-density-space-md: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 3);

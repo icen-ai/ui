@@ -1,4 +1,5 @@
 import { t } from './i18n';
+import { iconHTML } from './icons';
 import { parseSvg } from './svg-parse';
 /*
  * @icen.ai/ui — Behavior: ai-core（AI 原生组件族核心：状态机 / kind 注册表 / 协议适配器 / 格式化 / svgIcon）
@@ -111,7 +112,7 @@ export type AiKindTint = 'accent' | 'success' | 'warning' | 'error' | 'info' | '
 export interface AiKindDef {
   /** 一行中文名（tool-call 卡片的标题区展示） */
   label: string;
-  /** 内联 SVG 字符串（lucide 风格 24×24 stroke）；渲染时务必经 svgIcon() 消毒 */
+  /** 内联 SVG 字符串（内置为共享 20×20 网格，保留自定义 SVG）；渲染时务必经 svgIcon() 消毒 */
   icon: string;
   /** 图标/状态点着色槽，默认 accent */
   tint?: AiKindTint;
@@ -135,58 +136,24 @@ export interface AiToolCallModel {
   activities?: AiToolCallModel[];
 }
 
-/* ── 图标（lucide 风格 24×24，手写最简路径）── */
-
-const svg = (body: string): string =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
-
-const ICON_TERMINAL = svg('<path d="m4 17 6-6-6-6"/><path d="M12 19h8"/>');
-const ICON_FILE = svg(
-  '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
-);
-const ICON_FILE_PEN = svg(
-  '<path d="M12.5 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8l5 5v3.5"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M19 6.5 16.5 4"/><path d="M21.378 16.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/>',
-);
-const ICON_FILE_PLUS = svg(
-  '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6"/><path d="M12 12v6"/>',
-);
-const ICON_TRASH = svg(
-  '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>',
-);
-const ICON_SEARCH = svg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>');
-const ICON_FOLDER_SEARCH = svg(
-  '<path d="M11 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v4"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/>',
-);
-const ICON_SCAN_SEARCH = svg(
-  '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/>',
-);
-const ICON_GLOBE = svg(
-  '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
-);
-const ICON_DOWNLOAD = svg(
-  '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
-);
-const ICON_BLOCKS = svg(
-  '<rect width="7" height="7" x="4" y="4" rx="1"/><rect width="7" height="7" x="13" y="4" rx="1"/><rect width="7" height="7" x="4" y="13" rx="1"/><rect width="7" height="7" x="13" y="13" rx="1"/>',
-);
-const ICON_ZAP = svg(
-  '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
-);
-const ICON_LIST = svg(
-  '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
-);
-const ICON_LIST_CHECKS = svg(
-  '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
-);
-const ICON_BOT = svg(
-  '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
-);
-const ICON_CHART = svg(
-  '<path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/>',
-);
-const ICON_FILE_TEXT = svg(
-  '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
-);
+/* Built-in AI kinds share the library optical grid; registered SVG overrides stay supported. */
+const ICON_TERMINAL = iconHTML('terminal');
+const ICON_FILE = iconHTML('file');
+const ICON_FILE_PEN = iconHTML('edit');
+const ICON_FILE_PLUS = iconHTML('plus');
+const ICON_TRASH = iconHTML('trash');
+const ICON_SEARCH = iconHTML('search');
+const ICON_FOLDER_SEARCH = iconHTML('folder');
+const ICON_SCAN_SEARCH = iconHTML('search');
+const ICON_GLOBE = iconHTML('globe');
+const ICON_DOWNLOAD = iconHTML('download');
+const ICON_BLOCKS = iconHTML('server');
+const ICON_ZAP = iconHTML('sparkle');
+const ICON_LIST = iconHTML('list');
+const ICON_LIST_CHECKS = iconHTML('list');
+const ICON_BOT = iconHTML('agent');
+const ICON_CHART = iconHTML('chart-line');
+const ICON_FILE_TEXT = iconHTML('document');
 
 /* ── input 摘要辅助 ── */
 

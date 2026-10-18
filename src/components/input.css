@@ -18,26 +18,41 @@
  */
 
 /* ── 单行 ── */
+/* One surface recipe for composed and standalone fields. Legacy KB hooks are
+   kept as aliases; domain CSS owns width/layout, never typography or material. */
+.icen-input-wrap,
+.icen-input-control,
+.icen-kb-input,
+.icen-kb-retrieval-query,
+.icen-kb-hittest-input,
+.icen-kb-filter-field,
+.icen-kb-filter-value {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  block-size: var(--input-height, var(--icen-density-input-height-md));
+  padding: 0 var(--input-padding-inline, var(--icen-density-space-sm));
+  font-family: var(--icen-font-body);
+  font-size: var(--input-font-size, var(--icen-density-font-size-md));
+  line-height: 1.5;
+  color: var(--icen-token-text);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-outline-soft);
+  border-radius: var(--icen-radius-md);
+  box-shadow: var(--icen-token-shadow-inset);
+  transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
+}
 .icen-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
   gap: var(--icen-density-space-xs);
-  width: 100%;
-  height: var(--icen-density-input-height-md);
-  padding: 0 var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-md);
-  background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
-  transition: border-color var(--icen-tx-fast),
-    box-shadow var(--icen-tx-fast);
+  inline-size: 100%;
 }
-.icen-input-wrap:hover {
+:is(.icen-input-wrap,.icen-input-control,.icen-kb-input,.icen-kb-retrieval-query,.icen-kb-hittest-input,.icen-kb-filter-field,.icen-kb-filter-value):hover {
   border-color: var(--icen-hover-border);
 }
-.icen-input-wrap:focus-within {
+:is(.icen-input-wrap,.icen-input-control,.icen-kb-input,.icen-kb-retrieval-query,.icen-kb-hittest-input,.icen-kb-filter-field,.icen-kb-filter-value):focus-within {
+  outline: none;
   box-shadow: var(--icen-control-focus-shadow);
   border-color: var(--icen-control-focus-border);
 }
@@ -59,18 +74,20 @@
 .icen-input-wrap.is-disabled .icen-input { cursor: not-allowed; }
 
 /* 尺寸变体 */
-.icen-input-wrap--sm {
-  height: var(--icen-density-input-height-sm);
-  padding: 0 10px;
-  font-size: var(--icen-density-font-size-sm);
+.icen-input-wrap--sm, .icen-input-control--sm,
+.icen-kb-input, .icen-kb-retrieval-query, .icen-kb-hittest-input, .icen-kb-filter-field, .icen-kb-filter-value {
+  --input-height: var(--icen-density-input-height-sm);
+  --input-padding-inline: max(8px, calc(var(--icen-density-space-sm) * 1.25));
+  --input-font-size: var(--icen-density-font-size-sm);
 }
-.icen-input-wrap--lg {
-  height: var(--icen-density-input-height-lg);
-  padding: 0 var(--icen-density-space-md);
-  font-size: var(--icen-density-font-size-lg);
+.icen-input-wrap--lg, .icen-input-control--lg {
+  --input-height: var(--icen-density-input-height-lg);
+  --input-padding-inline: var(--icen-density-space-md);
+  --input-font-size: var(--icen-density-font-size-lg);
 }
 
 .icen-input {
+  box-sizing: border-box;
   flex: 1;
   min-width: 0;
   padding: 0;
@@ -88,6 +105,34 @@
   cursor: default;
 }
 .icen-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+/* Composed searches use this same wrapper, font, inset and focus recipe. The
+   parent search header owns only sticky placement and separation from results. */
+.icen-search-field > .icen-input-wrap { inline-size: 100%; }
+.icen-input-wrap > .icen-search-input {
+  flex: 1;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: auto;
+  min-block-size: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  color: var(--icen-token-text);
+  font: inherit;
+}
+.icen-input-wrap > .icen-search-input:focus { border: 0; outline: none; box-shadow: none; }
+.icen-input-wrap > .icen-search-input::placeholder { color: var(--icen-token-text-muted); }
+@media (pointer: coarse) {
+  .icen-input-wrap, .icen-input-control, .icen-kb-input, .icen-kb-retrieval-query, .icen-kb-hittest-input, .icen-kb-filter-field, .icen-kb-filter-value { font-size: max(16px, var(--input-font-size, var(--icen-density-font-size-md))); }
+  .icen-input-wrap--sm { font-size: max(16px, var(--icen-density-font-size-sm)); }
+  .icen-input-wrap--lg { font-size: max(16px, var(--icen-density-font-size-lg)); }
+  .icen-input-clear, .icen-input-pw-toggle { min-inline-size: 44px; min-block-size: 44px; }
+  .icen-input-wrap:has(.icen-input-clear:not([hidden]), .icen-input-pw-toggle) { min-block-size: 46px; }
+}
 
 .icen-input-leading,
 .icen-input-trailing {
@@ -223,3 +268,10 @@
   inset-inline-end: var(--icen-density-space-sm);
   bottom: var(--icen-density-space-xs);
 }
+
+/* Standalone fields expose the same disabled/read-only/error feedback. */
+:is(.icen-input-control,.icen-kb-input,.icen-kb-retrieval-query,.icen-kb-hittest-input,.icen-kb-filter-field,.icen-kb-filter-value):disabled {
+  opacity: var(--icen-disabled-opacity);cursor: not-allowed;background: var(--icen-token-bg-soft);
+}
+:is(.icen-input-control,.icen-kb-input,.icen-kb-retrieval-query,.icen-kb-hittest-input,.icen-kb-filter-field,.icen-kb-filter-value):read-only { color: var(--icen-token-text-muted); }
+.icen-input-control[aria-invalid='true'] { border-color: var(--icen-token-error); }

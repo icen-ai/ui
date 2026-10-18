@@ -22,7 +22,18 @@ export const MENTIONS_AUTOCOMPLETE_DOCS:ComponentDoc[]=[
   {
     slug:'mentions',name:'提及输入',group:'表单',
     summary:'在文字中选择一个人，继续完成原来的表达。支持中文输入、异步查找与失败重试。',
-    desc:'行首或空白后的 @query 打开成员建议。方向键跳过不可选成员，Enter 插入名称，Escape 关闭当前建议；组合输入不被打断。新查询、关闭和卸载会取消旧结果，错误与无匹配独立呈现，候选可自定义渲染。',
+    desc:'提及输入：行首或空白后的 @query 打开成员建议，支持异步查找与失败重试。',
+    detail:{
+      features:[
+        '**触发**：行首或空白后的 `@query` 打开建议；IME 组合输入不被打断',
+        '**键盘**：方向键跳过不可选成员，Enter 插入名称，Escape 关闭当前建议',
+        '**数据**：`source` 可为异步；新查询、关闭和卸载会取消旧结果',
+        '**状态**：加载、错误与无匹配独立呈现；`renderItem` 自定义候选渲染',
+        '**记录**：`getMentions()` 按当前文本校验完整名称，删掉名称时提及同步移除',
+        '**事件**：原生 `input` + `icen:mention-select` `{ id, label, query }`',
+      ],
+      notes:['`close()` 取消查询并关闭面板、不改正文；`destroy()` 恢复原 ARIA，回收面板、镜像与监听。'],
+    },
     demo:`<div class="demo-col" style="width:100%">
 <label class="demo-label" for="mentions-text">参与讨论的成员</label>
 <div class="icen-mentions" id="demo-mentions"><textarea id="mentions-text" class="icen-input" rows="3" placeholder="输入 @ 选择成员，也可以用姓名或拼音查找"></textarea></div>
@@ -66,7 +77,18 @@ return ()=>{events.abort();basic.destroy();remote.destroy();};`,
   {
     slug:'autocomplete',name:'自动补全',group:'表单',
     summary:'输入几个字，找到需要的项目。建议跟随输入，关闭后不会被旧结果重新打扰。',
-    desc:'同步或异步建议源，支持安全高亮、自定义行、自由输入和键盘选择。加载、无匹配和查询失败分开呈现；AbortSignal 与代际检查阻止旧结果，列表与状态按钮各有独立语义，卸载后还原宿主字段。',
+    desc:'自动补全：输入联想同步或异步建议，支持自由输入、自定义行与失败原地重试。',
+    detail:{
+      features:[
+        '**数据**：`source` 同步或异步，返回 `string[]` 或 `{ value, label }[]`',
+        '**呈现**：安全高亮、`renderItem` 自定义行；加载、无匹配与查询失败分开呈现',
+        '**防护**：`AbortSignal` + 代际检查阻止旧结果；关闭 / 换词 / 失焦 / 销毁即中断',
+        '**自由输入**：`freeSolo` 允许保留建议之外的值，离开时保留内容',
+        '**语义**：`role=combobox` 控制真实 listbox，状态与重试按钮不混入 option',
+        '**键盘**：Enter 确认（失败态重试），Tab 进重试按钮，Escape 取消并恢复上次选择',
+      ],
+      notes:['`getValue()` 返回选中 value，input 显示 label；`destroy()` 卸载后还原宿主字段。'],
+    },
     demo:`<div class="demo-col" style="width:100%">
 <label class="demo-label" for="demo-autocomplete-input">查找项目</label>
 <div class="icen-input-wrap icen-control" style="width:100%"><input class="icen-input" id="demo-autocomplete-input" placeholder="输入本真、像素或海边" /></div>

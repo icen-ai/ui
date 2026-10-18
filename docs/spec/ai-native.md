@@ -144,8 +144,8 @@ interface AiMessageModel {
 </div>
 ```
 
-- `initAiComposer(root?)`：autosize（上限 ~8 行后内滚）；Enter 发送 / Shift+Enter 换行 / IME 组合态安全（复用 input.ts 模式）；发送派 `icen:ai-send {text}` 并清空。
-- **运行/停止态**：`setComposerRunning(el, bool)` 导出——运行中发送钮变停止钮（点击派 `icen:ai-stop`），此时输入不丢：回车转为入队（queue chip）并派 `icen:ai-queue {text}`；chip × 移除派 `icen:ai-dequeue {index}`。（queue / steer / stop 三动词分化，对齐 Cursor/Copilot 2026 模式）
+- `initAiComposer(root?)`：autosize（上限 ~8 行后内滚）；Enter 发送 / Shift+Enter 换行 / IME 组合态安全（复用 input.ts 模式）；发送派 `icen:ai-send {text, refs?, files?}` 并清空。
+- **运行/停止态**：`setComposerRunning(el, bool)` 导出——运行中发送钮变停止钮（点击派 `icen:ai-stop`），此时输入不丢：回车转为入队（queue chip）并派 `icen:ai-queue {text, refs?, files?}`；chip × 移除派 `icen:ai-dequeue {index}`。（queue / steer / stop 三动词分化，对齐 Cursor/Copilot 2026 模式）
 - 附件钮打开 file input，选中文件生成 chip，派 `icen:ai-attach {files}`。
 
 ### 4.4 ai-tool-call（ai-tool.css + ai-tool.ts）
@@ -299,9 +299,9 @@ warning），点击弹层展示完整清单（popover + renderAiTodo 只读）�
 
 | 事件 | detail | 来源 |
 |---|---|---|
-| `icen:ai-send` | `{text}` | composer 发送 |
+| `icen:ai-send` | `{text, refs?, files?}` | composer 发送快照 |
 | `icen:ai-stop` | `{}` | composer 停止 |
-| `icen:ai-queue` / `icen:ai-dequeue` | `{text}` / `{index}` | 排队消息 |
+| `icen:ai-queue` / `icen:ai-dequeue` | `{text, refs?, files?}` / `{index}` | 排队消息快照 |
 | `icen:ai-attach` | `{files}` | 附件（钮选 / 粘贴 / 拖放共用） |
 | `icen:ai-copy` / `icen:ai-retry` | `{el}` | 消息操作 |
 | `icen:ai-approve` / `icen:ai-reject` | `{id, kind}` | 工具审批 |
@@ -378,14 +378,14 @@ export function svgIcon(svg: string): SVGElement | null;  // DOMParser 消毒（
 - `setComposerModels(el, providers: AiProviderOption[], current?: {provider, model})`：
   `AiProviderOption = { id, label, icon?, models: { id, label, context? }[] }`。
   工具条出现模型钮；点击开 `.icen-ai-composer-popup`（portal body，`computePopoverLayout` side:top）——
-  按 provider 分组（图标+名）+ 模型行（label + 上下文窗口如 `1M`）+ 搜索过滤 + 当前勾选。
+  按 provider 分组（图标+名）+ 模型行（label + 上下文窗口如 `1M`）+ 搜索过滤 + 当前轻高亮与内描边。
   选择派 `icen:ai-model-change { provider, model, label, context }`；
   **切换时若 cacheRead 占比高则弹层内提示"换模型会使 prompt 缓存失效"**（Kimi Code 细节）。
   选中模型的 `context` 自动作为 `setComposerUsage` 的 total 默认值（闭环）。
 - `setComposerCommands(el, commands: { name, description?, argsHint? }[])`：
   输入开头为 `/` 时弹层过滤；↑↓ 导航、Enter/Tab 选中、Esc 关；选中派 `icen:ai-command { name, args }`
   并清空输入（命令被拦截执行、不进消息流——业界共识）。
-- `setComposerRefs(el, sources: { kind: 'file'|'folder'|'doc'|'agent', id, label, sub? }[])`：
+- `setComposerRefs(el, sources: { kind: 'skill'|'tool'|'file'|'folder'|'doc'|'agent' | string, id, label, sub? }[])`：
   任意位置输入 `@` 触发弹层（分组按 kind + 图标）；选中后文本插入 `@label ` 且 refs chip 行 +1，
   派 `icen:ai-ref { action: 'add', ref }`；chip × 移除（同时删文本里首个 `@label`）派 `{ action: 'remove' }`。
   kind 开放注册：`registerRefKind(kind, { label, icon?, order? })`（照 registerAiKind 的 Map + 兜底模式）；
@@ -393,8 +393,8 @@ export function svgIcon(svg: string): SVGElement | null;  // DOMParser 消毒（
 - `setComposerUsage(el, usage, opts)`：工具条右侧挂 `renderAiUsageRing`。
 - 历史：输入为空时按 `↑` 取回上一条已发送文本（会话内历史数组，每 composer 独立）。
 - 运行态（v1 已有 queue/stop）补充：运行中按 `↑` 把最后一条排队消息取回输入框重新编辑（Claude Code 模式）。
-- 弹层接管时键盘事件 preventDefault；IME 组合态安全（沿用 v1）。
-- 三弹层尺寸走 PanelSizing 契约：composer 根 `data-panel-*` 为用户覆盖（三弹层共用），
+- 弹层接管方向与确认键，目录/模型搜索保留正常 Tab；IME 组合态安全。
+- 四弹层尺寸走 PanelSizing 契约：composer 根 `data-panel-*` 为用户覆盖（四弹层共用），
   `bindComposer` opts.popoverSizing 整体覆盖，原内置魔数仅为默认。
 - 图标对齐修复：工具条按钮统一 28px 方形、svg 14px 居中、gap 走 density token。
 
@@ -562,7 +562,7 @@ export interface AiComposerBindOpts {
   client?: AiClient;          // 传入即托管对话：send → 用户消息渲染 + running + client.stream
                               //   → assistant 消息 + createAiStream 逐 chunk 追加 → done 收尾
                               //   （错误 → fail + setError；stop → session.cancel；排队消息在
-                              //    每轮完成后自动发送下一条）
+                              //    成功后自动续发，停止/失败则暂停队列）
   messages?: HTMLElement;     // .icen-ai-chat-scroll 或任意消息容器：renderAiMessage 的挂载点（client 模式必填）
   usage?: { from: 'context' | 'billing' | AiAuditor; total?: number };
                               // 环口径：'context'（默认，icen:ai-done 的 contextEstimate——环语义正确）
@@ -570,11 +570,13 @@ export interface AiComposerBindOpts {
                               //   | 传 auditor 实例则用其 summary()
   running?: boolean;          // 运行态自动管理（默认 true）：icen:ai-send → running；icen:ai-done → 解除
 }
-export interface AiComposerBinding { unbind(): void }
+export interface AiComposerBinding { retry(): boolean; unbind(): void }
 export function bindComposer(el: HTMLElement, opts?: AiComposerBindOpts): AiComposerBinding;
 ```
 
 - **client 模式**下 stop 钮绑定 `session.cancel()`；`icen:ai-done` 的 `cost` 自动进环的 `opts.cost` 累计；assistant 消息 meta 自动填 token 数与模型名。
+- 停止立即结束本轮 UI，保留部分输出并暂停排队；空输入框按 ↑ 可取回待发消息。停止/解绑后迟到的 chunk 与 done 不能覆写状态或继续发送队列。
+- 最近失败或停止的回答可通过 `binding.retry()` 或消息的继续生成/重试事件原位重试；保留消息节点与当前输入草稿，不重复添加用户消息。忙碌、已解绑或没有可重试回答时返回 false。更早消息和成功回答的重试仍由宿主处理。
 - 不传 client 时是纯状态绑定（send→running、done→解除、环更新），传输仍归消费方——**渐进采用**。
 - composer 同时新增：粘贴文件与拖放文件落附件（`icen:ai-attach` 同事件）；`MODEL_CTX` 在选中模型无 `context` 时显式清除（环回退无上限形态）。
 
@@ -743,3 +745,8 @@ parseAiToolArgs(raw)       // tool_call 参数容错解析（JSON 字符串/对�
   ChartSpec 时，IO 区直接渲染小图（`chartSpecOf` 探测，`.icen-ai-tool-io-chart` 容器）。
 - **kind**：ai-core 内置 `chart` kind（折线图标，info tint，summarize 取 title）；
   `inferKind`：工具名含 chart/plot/visualize → 'chart'。
+
+
+## 输入体验续修（2026-10-18）
+
+资源目录、技能/工具分组、可取消上传适配、独立请求快照和键盘/视觉契约见 [AI 输入体验](ai-input-experience.md)。旧接口继续兼容；新字段全部可选。纯文本没有额外 payload 字段；选中文件需要宿主 prepareMessage 上传适配，不会默认丢弃附件。

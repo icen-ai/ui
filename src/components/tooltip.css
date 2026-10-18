@@ -11,7 +11,7 @@
  *     裁切（z-index 对裁切无解），靠近容器/视口边缘也不会翻转。
  *   - JS 增强（推荐）：initTooltip() 后气泡 portal 到 body（.icen-tooltip，
  *     role=tooltip，aria-describedby 关联），computePopoverLayout 选侧/翻转/钳制，
- *     滚动/Escape/点击/移除即关。接管期间触发器带 data-icen-tooltip-live，
+ *     指针可停留阅读；滚动/Escape/点击/移除即关。接管或抑制回退期间带 data-icen-tooltip-live，
  *     下方 ::after 规则一律以 :not() 回避，绝不双渲染。
  *
  * RTL 豁免（guard 文件级白名单 scripts/guard/rtl.ts）：side 是物理侧边契约
@@ -162,6 +162,7 @@
 .icen-tooltip[data-icen-side='left'] { translate: 4px 0; }
 .icen-tooltip[data-icen-side='right'] { translate: -4px 0; }
 .icen-tooltip.is-open { opacity: 1; translate: 0 0; }
+.icen-tooltip.is-open { pointer-events: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   .icen-tooltip, .icen-tooltip[data-icen-side], .icen-tooltip.is-open { transition: opacity var(--icen-tx-fast); translate: none; }

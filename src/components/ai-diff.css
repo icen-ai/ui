@@ -11,7 +11,8 @@
  *       <div class="icen-ai-diff-head">
   *         <button type="button" class="icen-ai-diff-toggle" aria-expanded="false">
  *         <span class="icen-ai-diff-path">src/foo.ts</span>            <!-- renamed：旧路径 → 新路径 -->
- *         <span class="icen-ai-diff-stat"><b class="icen-ai-diff-add">+12</b> <b class="icen-ai-diff-del">−4</b></span>`n  *         </button>
+ *         <span class="icen-ai-diff-stat"><b class="icen-ai-diff-add">+12</b> <b class="icen-ai-diff-del">−4</b></span>
+ *         </button>
  *         <span class="icen-ai-diff-actions">
  *           <button type="button" data-icen-ai-diff-accept>接受</button>
  *           <button type="button" data-icen-ai-diff-reject>拒绝</button>

@@ -316,6 +316,8 @@ interface OpenState {
   wasHidden: string | boolean;
   prevVisibility: string;
   returnFocus: HTMLElement | null;
+  resizeObserver?: ResizeObserver;
+  layoutFrame?: number;
 }
 
 const openPanels = new Map<HTMLElement, OpenState>();
@@ -349,22 +351,58 @@ function relayout(state: OpenState): void {
     closePopover(state.panel);
     return;
   }
-  const layout = computePopoverLayout(
+  let layout = computePopoverLayout(
     anchor,
     { width: window.innerWidth, height: window.innerHeight },
     state.opts,
   );
   const { panel } = state;
+  const scrollPositions=[panel,...panel.querySelectorAll<HTMLElement>('*')]
+    .filter(node=>node.scrollTop!==0||node.scrollLeft!==0)
+    .map(node=>({node,top:node.scrollTop,left:node.scrollLeft}));
+  // Resolve width before reading real content height. A guessed 260px position
+  // with a real 400px panel places its lower portion over the anchor.
+  panel.style.width = `${layout.width}px`;
+  if (state.opts.contentHeightHint == null && (layout.side === 'top' || layout.side === 'bottom')) {
+    panel.style.maxHeight = `${Math.min(state.opts.maxHeight ?? DEFAULT_MAX_HEIGHT, Math.max(80,window.innerHeight - (state.opts.margin ?? 12)*2))}px`;
+    const measured = panel.offsetHeight; // untransformed: entrance scale must not change geometry
+    if (measured > 0) layout = computePopoverLayout(anchor,{width:window.innerWidth,height:window.innerHeight},{...state.opts,contentHeightHint:measured});
+  }
   panel.style.left = `${layout.left}px`;
-  panel.style.top = `${layout.top}px`;
   panel.style.width = `${layout.width}px`;
   panel.style.maxHeight = `${layout.maxHeight}px`;
+  let top=layout.top;
+  const actualHeight=panel.offsetHeight;
+  if(actualHeight>0 && (layout.side==='top'||layout.side==='bottom')){
+    const desired=layout.side==='top'?anchor.top-(state.opts.offset??8)-actualHeight:anchor.bottom+(state.opts.offset??8);
+    const margin=state.opts.margin??12;top=clamp(desired,margin,window.innerHeight-margin-actualHeight);
+  }
+  panel.style.top = `${top}px`;
+  for(const pos of scrollPositions){pos.node.scrollTop=pos.top;pos.node.scrollLeft=pos.left;}
   panel.dataset.icenSide = layout.side;
   panel.style.visibility = state.prevVisibility;
 }
 
-function onWindowChange(): void {
-  openPanels.forEach(relayout);
+function observeOpenPanel(state: OpenState): void {
+  if(typeof ResizeObserver==='undefined')return;
+  state.resizeObserver=new ResizeObserver(()=>{
+    if(state.layoutFrame!=null)return;
+    state.layoutFrame=window.requestAnimationFrame(()=>{
+      state.layoutFrame=undefined;
+      if(openPanels.get(state.panel)===state)relayout(state);
+    });
+  });
+  state.resizeObserver.observe(state.panel);
+  if(state.anchor instanceof Element)state.resizeObserver.observe(state.anchor);
+}
+
+function onWindowChange(event?: Event): void {
+  openPanels.forEach(state=>{
+    // An internal list scroll moves its content, not its own anchor. Measuring
+    // it again can clamp its scroll position while testing unconstrained height.
+    if(event?.type==='scroll' && event.target instanceof Node && state.panel.contains(event.target))return;
+    relayout(state);
+  });
 }
 
 function onOutsidePointerDown(e: Event): void {
@@ -405,6 +443,7 @@ export function openPopover(panel: HTMLElement, options: OpenPopoverOptions): vo
     panel.hidden = false;
     panel.style.visibility = 'hidden';
     relayout(pending.state);
+    observeOpenPanel(pending.state);
     if (openPanels.size === 1) {
       window.addEventListener('resize', onWindowChange);
       window.addEventListener('scroll', onWindowChange, true);
@@ -444,6 +483,7 @@ export function openPopover(panel: HTMLElement, options: OpenPopoverOptions): vo
   panel.hidden = false;
   panel.style.visibility = 'hidden';
   relayout(state);
+  observeOpenPanel(state);
   if(initialFocus && panel.contains(initialFocus))initialFocus.focus({preventScroll:true});
 
   if (openPanels.size === 1) {
@@ -479,6 +519,8 @@ export function closePopover(panel: HTMLElement, opts?: { immediate?: boolean })
   const state = openPanels.get(panel);
   if (!state) return;
   openPanels.delete(panel);
+  state.resizeObserver?.disconnect();
+  if(state.layoutFrame!=null){window.cancelAnimationFrame(state.layoutFrame);state.layoutFrame=undefined;}
   const ownsFocus=panel.contains(document.activeElement);
   if(ownsFocus && state.returnFocus?.isConnected)state.returnFocus.focus({preventScroll:true});
 

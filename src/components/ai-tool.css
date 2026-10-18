@@ -111,8 +111,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--icen-radius-sm);
+  background: color-mix(in srgb, var(--ai-item-tint) 8%, var(--icen-token-surface));
   color: var(--ai-item-tint);
   transition: color var(--icen-tx-fast);
 }

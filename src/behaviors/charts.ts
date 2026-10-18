@@ -65,7 +65,7 @@
  */
 
 import { emitIcen } from './events';
-import { parseSvg } from './svg-parse';
+import { createIcon } from './icons';
 import { t as icenT } from './i18n';
 
 /** 色调名：内置 5 语义名（经 --icen-token-* 取色）；`string & {}` 保自动补全同时放行 registerChartTone 注册的命名档 */
@@ -138,14 +138,27 @@ function maxOf(values: number[]): number {
   return max;
 }
 
-/** 轴标签抽样：数据点多于 max 时均匀抽取 max 个（含首尾），与点位的全宽坐标系对齐 */
-function sampleLabels(labels: string[], max = 7): string[] {
-  if (labels.length <= max) return labels;
-  const out: string[] = [];
-  for (let i = 0; i < max; i++) {
-    out.push(labels[Math.round((i * (labels.length - 1)) / (max - 1))] ?? '');
+/** Sample actual indices, not evenly spaced strings: an eight-point chart's
+ * rounded samples are not equally spaced. Geometry always stays LTR; labels
+ * isolate their own text direction, including inside RTL interfaces. */
+function pointLabelsRow(labels: string[], width: number, pad: number): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'icen-chart-labels icen-chart-labels--points';
+  const count = Math.min(labels.length, Math.max(2, Math.min(7, Math.floor(width / 64))));
+  const step = count > 1 ? (width - 2 * pad) / (count - 1) : width;
+  for (let tick = 0; tick < count; tick++) {
+    const index = count <= 1 ? 0 : Math.round(tick * (labels.length - 1) / (count - 1));
+    const x = labels.length <= 1 ? width / 2 : pad + index / (labels.length - 1) * (width - 2 * pad);
+    const span = document.createElement('span');
+    span.textContent = labels[index] ?? '';
+    span.title = span.textContent;
+    span.dir = 'auto';
+    span.dataset.icenChartIndex = String(index);
+    span.style.left = `${x / width * 100}%`;
+    span.style.width = `${Math.max(0, Math.min(step * 0.9, 2 * x, 2 * (width - x)))}px`;
+    row.appendChild(span);
   }
-  return out;
+  return row;
 }
 
 /** 数字夹取进 [lo, hi] */
@@ -237,11 +250,10 @@ function legendItem(label: string, valueText: string, tone?: ChartTone): HTMLEle
   return row;
 }
 
-/** 底部轴标签行（vbar / line 共用；padRatio = 点位图 pad/宽度 时按点位坐标系内缩对齐） */
-function labelsRow(labels: string[], padRatio = 0): HTMLElement {
+/** Equal-width category labels for bars. Point plots use pointLabelsRow. */
+function labelsRow(labels: string[]): HTMLElement {
   const row = document.createElement('div');
-  row.className = padRatio > 0 ? 'icen-chart-labels icen-chart-labels--points' : 'icen-chart-labels';
-  if (padRatio > 0) row.style.paddingInline = `${(padRatio * 100).toFixed(4)}%`;
+  row.className = 'icen-chart-labels';
   for (const label of labels) {
     const span = document.createElement('span');
     span.textContent = label;
@@ -269,7 +281,7 @@ function normalizeSeriesInput(opts: { values?: number[]; tone?: ChartTone; serie
 function toneOf(tone: ChartTone | number | undefined, seriesIndex: number): string | undefined {
   if (typeof tone === 'string') return toneVar(tone);
   if (typeof tone === 'number') return paletteVar(tone);
-  return seriesIndex > 0 ? paletteVar(((seriesIndex - 1) % 6) + 1) : undefined;
+  return seriesIndex > 0 ? paletteVar((seriesIndex % 6) + 1) : undefined;
 }
 const PALETTE_VARS = [
   'var(--icen-token-accent)',
@@ -314,16 +326,6 @@ function copyMarkData(target: Element, source: Element): void {
  * 隐藏全部图例；图表体渲染进内层 .icen-chart-body（渲染器契约是清空传入 el，
  * 头部不能与图表体同层）。 */
 
-const CHART_EYE_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg>';
-const CHART_EYE_OFF_SVG =
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c7 0 10 7 10 7a13.2 13.2 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 7 10 7a9.7 9.7 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
-
-function parseChartSvg(svg: string): Element | null {
-  /* svg-parse 单点（xmlns 归一 + 消毒） */
-  return parseSvg(svg);
-}
-
 /** chrome 选项（各渲染器 options 皆含）：title 进头部行；legend=false 初始隐藏图例 */
 export interface ChartChromeOptions {
   title?: string;
@@ -349,7 +351,7 @@ function withChrome(
   extras?: { note?: string | null; onZoomReset?: (() => void) | null },
 ): void {
   /* 已在 chrome 内（renderChart 的 .icen-chart-body）：直接作画，不重复包装头部 */
-  if (el.dataset.chartBody != null) {
+  if (el.dataset.icenChartBody != null) {
     el.textContent = '';
     paint(el);
     return;
@@ -357,7 +359,7 @@ function withChrome(
   el.textContent = '';
   const body = document.createElement('div');
   body.className = 'icen-chart-body';
-  body.dataset.chartBody = '';
+  body.dataset.icenChartBody = '';
   const note = extras?.note ?? null;
   const onZoomReset = extras?.onZoomReset ?? null;
   if (!opts.title && !hasLegend && note == null && !onZoomReset) {
@@ -397,13 +399,13 @@ function withChrome(
   const eye = document.createElement('button');
   eye.type = 'button';
   eye.className = 'icen-chart-legend-eye';
-  eye.dataset.chartLegendEye = '';
+  eye.dataset.icenChartLegendEye = '';
   const syncEye = (): void => {
     const nowHidden = el.getAttribute('data-icen-legend-hidden') === 'true';
     eye.setAttribute('aria-pressed', String(!nowHidden));
     eye.setAttribute('aria-label', nowHidden ? icenT('charts.showLegend') : icenT('charts.hideLegend'));
     eye.setAttribute('title', nowHidden ? icenT('charts.showLegend') : icenT('charts.hideLegend'));
-    const icon = parseChartSvg(nowHidden ? CHART_EYE_OFF_SVG : CHART_EYE_SVG);
+    const icon = createIcon(nowHidden ? 'eye-off' : 'eye');
     if (icon) eye.replaceChildren(icon);
   };
   eye.addEventListener('click', () => {
@@ -433,21 +435,28 @@ interface LegendKey {
  * 可切换图例：点击图例行 → 同 key 的全部标记（data-icen-chart-key）与图例行本身
  * 挂/摘 .is-off（纯视觉淡化，不重排）。标记侧由调用方在生成时附 data-icen-chart-key。
  */
+const hiddenLegendKeys = new WeakMap<Element, Set<string>>();
 function toggleLegend(items: LegendKey[], scope: ParentNode): HTMLElement {
   const legend = document.createElement('div');
   legend.className = 'icen-chart-legend icen-chart-legend--toggle';
+  const owner = scope instanceof Element ? scope.closest('[data-icen-chart-body]')?.parentElement ?? scope : null;
+  const hidden = owner ? hiddenLegendKeys.get(owner) ?? new Set<string>() : new Set<string>();
+  if (owner) hiddenLegendKeys.set(owner, hidden);
   for (const item of items) {
     const row = legendItem(item.label, '', item.tone as ChartTone | undefined);
     row.classList.add('icen-chart-legend-toggle-item');
     row.setAttribute('role', 'button');
     row.tabIndex = 0;
-    row.setAttribute('aria-pressed', 'true');
+    row.classList.toggle('is-off', hidden.has(item.key));
+    row.setAttribute('aria-pressed', String(!hidden.has(item.key)));
     row.dataset.icenChartKey = item.key;
     const dot = row.querySelector<HTMLElement>('.icen-chart-legend-dot');
-    const toneColor = toneOf(item.tone, item.si + 1);
+    const toneColor = toneOf(item.tone, item.si);
     if (dot && toneColor) dot.style.setProperty('--chart-tone', toneColor);
     const toggle = (): void => {
       const off = row.classList.toggle('is-off');
+      if (off) hidden.add(item.key);
+      else hidden.delete(item.key);
       row.setAttribute('aria-pressed', String(!off));
       scope.querySelectorAll(`[data-icen-chart-key="${CSS.escape(item.key)}"]`).forEach((m) => {
         m.classList.toggle('is-off', off);
@@ -467,6 +476,7 @@ function toggleLegend(items: LegendKey[], scope: ParentNode): HTMLElement {
   for (const item of items) {
     scope.querySelectorAll(`[data-icen-chart-series="${item.si}"]`).forEach((m) => {
       if (!m.hasAttribute('data-icen-chart-key')) m.setAttribute('data-icen-chart-key', item.key);
+      m.classList.toggle('is-off', hidden.has(item.key));
     });
   }
   return legend;
@@ -532,7 +542,7 @@ export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): HTMLElement
     wrap.appendChild(track);
   }
   body.append(wrap, labelsRow(labelsUsed));
-  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap));
+  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone ?? (si === 0 ? opts.tone : undefined), si })), wrap));
   });
   attachChartInteraction(el, 'vbar');
   return el;
@@ -762,12 +772,12 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement
   });
 
   if (defs.firstChild) svg.insertBefore(defs, svg.firstChild);
-  wrap.append(svg, labelsRow(sampleLabels(labelsUsed), pad / width));
+  wrap.append(svg, pointLabelsRow(labelsUsed, width, pad));
   body.appendChild(wrap);
-  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone, si })), wrap));
+  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone ?? (si === 0 ? opts.tone : undefined), si })), wrap));
   });
   /* renderChart 驱动时（el 即 chartBody）不重复挂观察——外层句柄的 update 管线负责 */
-  if (!el.dataset.chartBody) observeFluidWidth(el, () => renderLine(el, opts));
+  if (el.dataset.icenChartBody == null) observeFluidWidth(el, () => renderLine(el, opts));
   attachChartInteraction(el, 'line');
   return el;
 }
@@ -836,10 +846,10 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
     svg.appendChild(inv);
   }
 
-  wrap.append(svg, labelsRow(sampleLabels(labels), pad / width));
+  wrap.append(svg, pointLabelsRow(labels, width, pad));
   body.appendChild(wrap);
   });
-  if (!el.dataset.chartBody) observeFluidWidth(el, () => renderArea(el, opts));
+  if (el.dataset.icenChartBody == null) observeFluidWidth(el, () => renderArea(el, opts));
   attachChartInteraction(el, 'area');
   return el;
 }
@@ -937,7 +947,7 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): HTMLEleme
   // 数据多边形（各系列，多系列走可切换图例）
   const legendItems: LegendKey[] = [];
   opts.series.forEach((s, si) => {
-    const tone = toneVar(s.tone);
+    const tone = toneOf(s.tone, si) ?? toneVar(s.tone);
     const pts = Array.from({ length: n }, (_, i) => {
       const v = Math.max(0, Math.min(maxVal, s.values[i] ?? 0));
       const p = pointAt(i, (v / maxVal) * radius);
@@ -972,9 +982,10 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): HTMLEleme
   });
 
   /* 单系列无系列项可切：不追加空的 .icen-chart-legend 占位 div */
-  const legend = opts.series.length > 1 ? toggleLegend(legendItems, wrap) : null;
-  wrap.append(svg, ...(legend ? [legend] : []));
+  wrap.appendChild(svg);
   body.appendChild(wrap);
+  const legend = opts.series.length > 1 ? toggleLegend(legendItems, wrap) : null;
+  if (legend) wrap.appendChild(legend);
   });
   attachChartInteraction(el, 'radar');
   return el;
@@ -1435,7 +1446,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
   wrap.appendChild(svg);
   body.appendChild(wrap);
   });
-  if (!el.dataset.chartBody) observeFluidWidth(el, () => renderScatter(el, opts));
+  if (el.dataset.icenChartBody == null) observeFluidWidth(el, () => renderScatter(el, opts));
   attachChartInteraction(el, 'scatter');
   return el;
 }
@@ -2136,7 +2147,7 @@ function svgDimsOf(svg: SVGSVGElement): { w: number; h: number } {
 const fluidObservers = new WeakMap<HTMLElement, ResizeObserver>();
 function fluidWidth(host: HTMLElement): number {
   const w = Math.round(host.getBoundingClientRect().width);
-  return w > 240 ? w : 360; /* 隐匿/极窄容器回落逻辑宽 360 */
+  return w > 0 ? Math.max(29, w) : 360; /* Hidden hosts alone use the fallback. */
 }
 function observeFluidWidth(el: HTMLElement, rerender: () => void): void {
   if (typeof ResizeObserver === 'undefined') return;
@@ -2814,6 +2825,8 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
     },
     toDataURL: createChartToDataURL(root),
     destroy(): void {
+      releaseFluidWidth(root);
+      hiddenLegendKeys.delete(root);
       zoomDragCleanup?.();
       root.textContent = '';
       root.classList.remove('is-loading');
