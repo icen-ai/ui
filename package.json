@@ -58,6 +58,8 @@
     "dtcg": "bun scripts/dtcg.mjs",
     "design-tokens": "bun scripts/design-tokens.mjs",
     "guard": "bun scripts/guard/index.ts",
+    "contracts": "bun scripts/contracts.ts --check",
+    "contracts:update": "bun scripts/contracts.ts --write",
     "prepublishOnly": "bun run build",
     "pretest:e2e": "cd site && bun run build",
     "test": "bun test",

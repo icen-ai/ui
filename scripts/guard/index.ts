@@ -10,9 +10,10 @@ import { checkRtl } from './rtl';
 import { checkIconDiscipline } from './icon-discipline';
 import { checkClassSync } from './class-sync';
 import { checkTokenReferences } from './token-references';
+import { checkContractsSnapshot } from './contracts-snapshot';
 import type { GuardResult } from './shared';
 
-const checks = [checkCssDiscipline, checkTokenReferences, checkRegistry, checkEvents, checkBehaviorDiscipline, checkNamespace, checkKbHonesty, checkRtl, checkClassSync, checkIconDiscipline];
+const checks = [checkCssDiscipline, checkTokenReferences, checkRegistry, checkEvents, checkBehaviorDiscipline, checkNamespace, checkKbHonesty, checkRtl, checkClassSync, checkIconDiscipline, checkContractsSnapshot];
 
 console.log('── 设计纪律守卫 ──────────────────────────────────────');
 let failed = false;
