@@ -2,8 +2,7 @@
 import Docs from '../../layouts/Docs.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import PmInstall from '../../components/PmInstall.astro';
-import { COMPONENTS, cssFor, type ComponentDoc } from '../../lib/components';
-import tiersJson from '../../../../docs/contracts/tiers.json';
+import { COMPONENTS, cssFor, tierOf, type ComponentDoc } from '../../lib/components';
 import { inlineMd } from '../../lib/doc-text';
 import { SLUGS } from '../../../../scripts/slugs.mjs';
 import { iconHTML } from '../../../../src/behaviors/icons';
@@ -47,14 +46,8 @@ const isKit = SLUGS.includes(doc.slug);
 const usageLang = /^\s*(import|const|\/\/)/.test(doc.usage) ? 'js' : 'html';
 const pageLink = `[${doc.name} · ICEN UI](https://ui.icen.ai/components/${doc.slug}/)`;
 
-/* 稳定性分层徽标：module→tier 来自 docs/contracts/tiers.json（registry.tiers 同源）；
-   纯聚合页（ai-overview 等）不在 SLUGS，cssFor 落到不存在的 css 名——按文档分组回退 */
-const TIER_OF: Record<string, string> = {};
-for (const [tier, mods] of Object.entries(tiersJson as Record<string, string[]>)) {
-  for (const m of mods) TIER_OF[m] = tier;
-}
-const docTier = TIER_OF[cssFor(doc.slug).replace(/\.css$/, '')]
-  ?? (['AI 原生', '知识库', '图表'].includes(doc.group) ? 'beta' : 'core');
+/* 稳定性分层徽标：tierOf 单一实现（lib/components，事实源 docs/contracts/tiers.json） */
+const docTier = tierOf(doc.slug, doc.group);
 
 const copySvg = iconHTML('copy',{size:13,className:'icen-copy-icon-clipboard'});
 const checkSvg = iconHTML('check',{size:13,className:'icen-copy-icon-check'});

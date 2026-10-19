@@ -55,7 +55,9 @@ SSR / StrictMode 行为说明（见下「待办」）。
 
 ## 待办（后续批次）
 
-- [ ] React / Vue 兼容矩阵：版本支持、SSR / RSC、StrictMode 双挂载、事件清理。
-- [ ] 文档站 /components 索引页按层着色/分组（详情页徽标已上线）。
+- [x] ~~React / Vue 兼容矩阵~~ ✅ [docs/frameworks.md](../frameworks.md) + 契约测试 `tests/unit/react-wrapper.test.tsx` / `vue-wrapper.test.ts`（StrictMode 双挂载 / 卸载清理 / 事件桥解绑机器验证）；React 18/19 双版本 CI 线挂 [roadmap](../roadmap.md) 0.12。
+- [x] ~~文档站 /components 索引页按层着色~~ ✅ 卡角 Core/Beta 角标 + 页首图例（tierOf 单一实现进 `site/src/lib/components.ts`，详情页与索引页共用）。
+- [x] ~~AI/KB 独立验收矩阵~~ ✅ [docs/acceptance.md](../acceptance.md)（证据 + 缺口两栏，缺口挂 roadmap）。
+- [x] ~~主题系统兼容预算~~ ✅ [docs/theming.md](../theming.md)（token=公共 API、预设只增不改义、对比度硬门、设计工具导出一致性）。
 - [ ] 迁移页（`/vm/x-to-y`）：**1.0 起才建**——0.x 收敛期明确不提供（无用户，无迁移债）；
       届时直接从两个 tag 的 snapshot diff 生成骨架。

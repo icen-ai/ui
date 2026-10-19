@@ -41,7 +41,7 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 
 **主题。** 六套预设，明暗双模，现代、中式、苏式与像素四种原语，全部挂在 `<html>` 的 data 属性上。配色与原语独立：中式推荐「东韵」，苏式推荐「巨构」，也可自由组合其它主题。自建品牌只需在自家 CSS 写一块 token 面，组件代码一行不动。
 
-**React / Vue。** 官方薄封装 `@icen.ai/ui/react`、`@icen.ai/ui/vue`：只做生命周期接线和事件桥，底下是同一个命令式内核。详见 <https://ui.icen.ai/frameworks/>
+**React / Vue。** 官方薄封装 `@icen.ai/ui/react`、`@icen.ai/ui/vue`：只做生命周期接线和事件桥，底下是同一个命令式内核。兼容契约矩阵（版本 / SSR / RSC / StrictMode 双挂载 / 事件清理 / 边界诚实清单）见 [docs/frameworks.md](docs/frameworks.md)，行为由 `tests/unit/*-wrapper.test.*` 机器验证。详见 <https://ui.icen.ai/frameworks/>
 
 还内建：RTL 全面支持（逻辑属性 + 方向图标自动镜像，`<html dir="rtl">` 即生效）、i18n 文案注册表（683 个 key，中英双语，`setIcenLocale` 一句切换）、统一事件体系（`onIcen` 一个入口：类型化、选择器委托、策略层）、表单校验（原生约束即 schema，零新词汇）。
 
@@ -52,7 +52,8 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 - **800+ 个测试 + 10 项纪律守卫**挂在每个 PR 的 CI 上，本地 `bun run verify` 同口径。
 - **[SECURITY.md](https://github.com/icen-ai/ui/blob/main/SECURITY.md)**：支持版本矩阵与漏洞响应承诺；textContent-only 渲染、权限域 fail-closed、OIDC provenance 发布链，逐条可验证。
 - **[CONTRIBUTING.md](https://github.com/icen-ai/ui/blob/main/CONTRIBUTING.md)**：加组件的完整仪式与守卫速查表。
-- **[docs/versioning.md](https://github.com/icen-ai/ui/blob/main/docs/versioning.md)**：0.x 破坏性变更纪律——只在 minor 发生，CHANGELOG 逐条写明契约变化。
+- **[docs/versioning.md](https://github.com/icen-ai/ui/blob/main/docs/versioning.md)**：0.x 破坏性变更纪律——只在 minor 发生，CHANGELOG 逐条写明契约变化；收敛期无外部用户，不留兼容层、不写迁移指南（迁移设计 1.0 起才成为义务）。
+- **[docs/roadmap.md](https://github.com/icen-ai/ui/blob/main/docs/roadmap.md)**：0.11 → 0.13 → 1.0 收敛线与 1.0 外部验收门槛；**[docs/acceptance.md](https://github.com/icen-ai/ui/blob/main/docs/acceptance.md)**：AI/KB 族验收矩阵；**[docs/theming.md](https://github.com/icen-ai/ui/blob/main/docs/theming.md)**：主题与 token 兼容预算。
 - **发布链**：`git tag v<x.y.z>` → GitHub Actions 经 OIDC trusted publishing 发 npm，无长期 token，每次发布带 provenance 可审计。
 
 ## 文档站

@@ -1,11 +1,12 @@
 ---
 import Docs from '../../layouts/Docs.astro';
-import { COMPONENTS, GROUPS } from '../../lib/components';
+import { COMPONENTS, GROUPS, tierOf } from '../../lib/components';
 ---
 <Docs title="组件 · ICEN UI" description={`ICEN UI 组件总览：${GROUPS.join(' / ')}共 ${GROUPS.length} 个分组，每个组件一页文档。`}>
   <h1 class="page-title">组件</h1>
   <p class="page-desc">
     {COMPONENTS.length} 个无框架组件，{GROUPS.length} 个分组。全部消费同一套设计令牌——切换右上角的预设、明暗与风格，每张卡片即刻换装。
+    卡角 <span class="comp-tier comp-tier--core">Core</span> = 1.0 冻结轨道；<span class="comp-tier comp-tier--beta">Beta</span> = 图表 / AI / 知识库演进层，随 minor 快速迭代。
   </p>
 
   {GROUPS.map((g) => {
@@ -17,13 +18,17 @@ import { COMPONENTS, GROUPS } from '../../lib/components';
           <span class="cg-count icen-mono">{items.length}</span>
         </header>
         <div class="comp-grid">
-          {items.map((c) => (
-            <a class="comp-card" href={`/components/${c.slug}/`}>
-              <span class="comp-card-name">{c.name}</span>
-              <span class="comp-card-slug icen-mono">{c.slug}</span>
-              <span class="comp-card-desc">{c.desc}</span>
-            </a>
-          ))}
+          {items.map((c) => {
+            const tier = tierOf(c.slug, c.group);
+            return (
+              <a class="comp-card" href={`/components/${c.slug}/`}>
+                <span class:list={['comp-tier', `comp-tier--${tier}`]} title={tier === 'beta' ? '演进层：随 minor 快速迭代，0.x 期间不保兼容' : '稳定层：1.0 冻结轨道，破坏性变更须公告'}>{tier === 'beta' ? 'Beta' : 'Core'}</span>
+                <span class="comp-card-name">{c.name}</span>
+                <span class="comp-card-slug icen-mono">{c.slug}</span>
+                <span class="comp-card-desc">{c.desc}</span>
+              </a>
+            );
+          })}
         </div>
       </section>
     );
@@ -94,7 +99,30 @@ import { COMPONENTS, GROUPS } from '../../lib/components';
     letter-spacing: 0.5px;
     color: var(--icen-token-text);
   }
-  .comp-card-slug { font-size: 11px; color: var(--icen-token-text-faint); }
+  /* 稳定性分层角标（tierOf 同 docs/contracts/tiers.json；与详情页徽标同色系） */
+  .comp-tier {
+    position: absolute;
+    top: 10px;
+    inset-inline-end: 10px;
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 7px;
+    border-radius: var(--icen-radius-full);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: help;
+    border: 1px solid color-mix(in srgb, var(--icen-token-success) 40%, transparent);
+    color: var(--icen-token-success);
+    background: color-mix(in srgb, var(--icen-token-success) 7%, transparent);
+  }
+  .comp-tier--beta {
+    border-color: color-mix(in srgb, var(--icen-token-warning) 40%, transparent);
+    color: var(--icen-token-warning);
+    background: color-mix(in srgb, var(--icen-token-warning) 7%, transparent);
+  }
+  .comp-card-slug { font-size: 11px; color: var(--icen-token-text-faint); padding-inline-end: 44px; }
   .comp-card-desc {
     font-size: 12px;
     color: var(--icen-token-text-muted);

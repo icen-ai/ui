@@ -90,6 +90,21 @@ export function cssFor(slug: string): string {
   return cssOf(slug);
 }
 
+/* 稳定性分层：事实源 docs/contracts/tiers.json（构建期盖章 registry.tiers，守卫校验覆盖）。
+ * slug → 主 CSS 模块 → tier；纯聚合页（ai-overview 等）不在 SLUGS，按文档分组回退。 */
+import tiersJson from '../../../docs/contracts/tiers.json';
+const TIER_OF: Record<string, string> = {};
+for (const [tier, mods] of Object.entries(tiersJson as Record<string, string[]>)) {
+  for (const m of mods) TIER_OF[m] = tier;
+}
+const BETA_GROUPS = new Set(['AI 原生', '知识库', '图表']);
+export function tierOf(slug: string, group?: string): 'core' | 'beta' {
+  const byCss = TIER_OF[cssFor(slug).replace(/\.css$/, '')];
+  if (byCss === 'beta' || byCss === 'lab') return 'beta';
+  if (byCss === 'core') return 'core';
+  return group && BETA_GROUPS.has(group) ? 'beta' : 'core';
+}
+
 /* ── 演示图标：全部来自共享 20px 几何（src/behaviors/icons.ts），不另写私有路径 ── */
 const svgX = iconHTML('close', { size: 12 });
 const svgEye = `<svg data-icen-icon="show" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${iconPath('eye')}"/></svg>`;
