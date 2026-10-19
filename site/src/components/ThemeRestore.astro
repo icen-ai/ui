@@ -7,7 +7,7 @@
     var t = null;
     try { t = JSON.parse(localStorage.getItem('icen.ui.theme') || 'null'); } catch (_) {}
     var valid = t && typeof t === 'object' && typeof t.preset === 'string' && /^[a-z][a-z0-9-]{1,20}$/.test(t.preset) && t.preset !== 'dark' && typeof t.dark === 'boolean';
-    var preset = valid ? t.preset : 'modern';
+    var preset = valid ? t.preset : 'dongyun';
     var dark = valid ? t.dark : window.matchMedia('(prefers-color-scheme: dark)').matches;
     root.setAttribute('data-icen-preset', preset);
     var primitive = valid && ['modern','chinese','soviet','pixel'].includes(t.style) ? t.style : 'modern';
@@ -15,6 +15,11 @@
     if (dark) root.setAttribute('data-icen-theme','dark');
     else root.removeAttribute('data-icen-theme');
     if (valid && (t.style !== primitive || t.preset !== preset)) {
+      try { localStorage.setItem('icen.ui.theme',JSON.stringify({preset:preset,dark:dark,style:primitive})); } catch (_) {}
+    }
+    /* 首访落一条持久化偏好（站点默认 = 东韵 × 现代）：theme.ts 的 initTheme 在
+       无存储时会套库默认（modern）覆写 html 属性——先落盘即可全程一致 */
+    if (!valid) {
       try { localStorage.setItem('icen.ui.theme',JSON.stringify({preset:preset,dark:dark,style:primitive})); } catch (_) {}
     }
   })();

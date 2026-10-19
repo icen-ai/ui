@@ -59,7 +59,7 @@ const featureIcons = {
 };
 ---
 
-<Base title="ICEN DESIGN SYSTEM · 冰点全生态设计系统">
+<Base title="ICEN DESIGN SYSTEM · 冰点组件设计系统">
   <!-- ═══ Hero（背景全宽出血） ═══ -->
   <section class="hero">
     <div class="hero-bg" aria-hidden="true">
@@ -68,6 +68,7 @@ const featureIcons = {
       <span class="hero-orb hero-orb--c"></span>
       <span class="hero-grid"></span>
       <Fragment set:html={heroFlakeBgSvg} />
+      <canvas class="hero-snake" aria-hidden="true"></canvas>
       <!-- 原语艺术层：按 data-icen-style 显隐（苏式构成 / 中式题款 / 像素阶梯） -->
       <span class="hero-art hero-art--icen">ICEN</span>
       <span class="hero-art hero-art--ring"></span>
@@ -75,22 +76,22 @@ const featureIcons = {
       <span class="hero-art hero-art--seal">冰</span>
     </div>
     <div class="hero-inner">
-      <a class="hero-pill fade-up" href="/components/ai-overview/">
-        <span class="hero-pill-dot" aria-hidden="true"></span>
-        <span class="hero-pill-badge">v{pkg.version}</span>
-        <span>AI 原生组件族 · 图表通用层已发布</span>
-      </a>
       <p class="hero-eyebrow fade-up"><b>ICEN</b><i>DESIGN SYSTEM</i></p>
       <h1 class="hero-title">
         <span class="hero-stack">
-          <span class="reveal-line"><span class="hero-t1"><em class="hero-grad">冰点</em>全生态</span></span>
-          <span class="reveal-line"><span class="hero-t2">设计系统<i class="hero-t2i">Design System</i></span></span>
+        <span class="reveal-line"><span class="hero-t1" data-i18n-skip><em data-lang-zh>冰点</em><span data-lang-zh>组件</span><em data-lang-en>ICEN</em><span data-lang-en>UI</span></span></span>
+        <span class="reveal-line"><span class="hero-t2">设计系统<i class="hero-t2i">Design System</i></span></span>
         </span>
       </h1>
       <p class="hero-sub fade-up fade-up--2">
         组件、图表和 AI 界面，共用一套设计令牌。
         换肤不用改代码，UI 也能直接交给模型调用。
       </p>
+      <a class="hero-pill fade-up fade-up--3" href="/components/ai-overview/">
+        <span class="hero-pill-dot" aria-hidden="true"></span>
+        <span class="hero-pill-badge">v{pkg.version}</span>
+        <span>AI 原生组件族 · 图表通用层已发布</span>
+      </a>
       <!-- 数字带：一眼看清规模（滚动入场时计数） -->
       <div class="hero-stats fade-up fade-up--4" role="list">
         <div class="hero-stat" role="listitem"><b data-icen-count={SLUGS.length}>0</b><span>组件入口</span></div>
@@ -474,6 +475,163 @@ const featureIcons = {
       statNums.forEach((el) => io.observe(el));
     }
 
+    /* ── Hero 点阵贪吃蛇：背景趣味彩蛋 ──
+       蛇活在 .hero-grid 的 26px 点阵上（画布同 inset 同相位，蛇像素踩在点上），
+       自动寻路吃小雪花：尾段透明度递减显动感，吃完一枚在点阵可见椭圆区内随机
+       刷下一枚，永远闲逛。reduced-motion / 画布离屏 / 标签页后台时挂起；
+       画布随 ClientRouter 换页离场即自停，回到首页随 astro:page-load 重启。 */
+    const initHeroSnake = (): void => {
+      const snakeCanvas = document.querySelector<HTMLCanvasElement>('.hero-snake');
+      if (!snakeCanvas || snakeCanvas.dataset.snakeInit || reducedMotion) return;
+      snakeCanvas.dataset.snakeInit = '1';
+      const CELL = 26; // 与 .hero-grid 的 background-size 同步
+      const STEP_MS = 300;
+      const MAX_LEN = 9;
+      const ctx = snakeCanvas.getContext('2d');
+      if (ctx) {
+        let cols = 0, rows = 0, w = 0, h = 0;
+        const resize = (): void => {
+          const rect = snakeCanvas.getBoundingClientRect();
+          const dpr = Math.min(2, window.devicePixelRatio || 1);
+          w = rect.width; h = rect.height;
+          snakeCanvas.width = Math.max(1, Math.round(w * dpr));
+          snakeCanvas.height = Math.max(1, Math.round(h * dpr));
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          cols = Math.floor(w / CELL);
+          rows = Math.floor(h / CELL);
+        };
+        resize();
+        window.addEventListener('resize', resize, { passive: true });
+
+        /* 食物只刷在点阵 mask 的清晰椭圆区（同 .hero-grid 椭圆参数 ×0.75） */
+        const inEllipse = (cx: number, cy: number): boolean => {
+          const ex = (cx + 0.5) / cols - 0.5;
+          const ey = (cy + 0.5) / rows - 0.18;
+          return (ex / 0.465) ** 2 + (ey / 0.465) ** 2 <= 1;
+        };
+        const head0 = { x: Math.floor(cols / 2), y: Math.floor(rows * 0.18) };
+        const trail: Array<{ x: number; y: number }> = Array.from({ length: 5 }, (_, i) => ({ x: head0.x, y: head0.y + i }));
+        let food: { x: number; y: number } | null = null;
+        let targetLen = 5;
+        let axis: 'x' | 'y' = 'x';
+        const eatFx: Array<{ x: number; y: number; t: number }> = [];
+        let accent = '';
+        const refreshColors = (): void => {
+          accent = getComputedStyle(document.documentElement).getPropertyValue('--icen-token-accent').trim() || '#4cc2ff';
+        };
+        const spawnFood = (): void => {
+          for (let tries = 0; tries < 80; tries++) {
+            const x = 2 + Math.floor(Math.random() * Math.max(1, cols - 4));
+            const y = 2 + Math.floor(Math.random() * Math.max(1, rows - 4));
+            if (!inEllipse(x, y)) continue;
+            if (trail.some((c) => c.x === x && c.y === y)) continue;
+            if (Math.abs(x - trail[0].x) + Math.abs(y - trail[0].y) < 5) continue;
+            food = { x, y };
+            return;
+          }
+          food = null; // 极小网格的兜底，下一步重试
+        };
+        spawnFood();
+
+        /* 无障碍物，轴优先即最短路：尽量延续上一行走轴，减少无谓扭动 */
+        const step = (): void => {
+          refreshColors();
+          if (!food) { spawnFood(); return; }
+          const head = trail[0];
+          const dx = food.x - head.x;
+          const dy = food.y - head.y;
+          const useX = axis === 'x' ? dx !== 0 : dy === 0 && dx !== 0;
+          const next = useX
+            ? { x: head.x + Math.sign(dx), y: head.y }
+            : { x: head.x, y: head.y + Math.sign(dy) };
+          axis = useX ? 'x' : 'y';
+          trail.unshift(next);
+          if (next.x === food.x && next.y === food.y) {
+            eatFx.push({ x: food.x, y: food.y, t: performance.now() });
+            targetLen = Math.min(MAX_LEN, targetLen + 1);
+            food = null;
+            setTimeout(spawnFood, 500); // 吃完稍歇再刷下一枚
+          }
+          while (trail.length > targetLen + 1) trail.pop();
+        };
+
+        const cellPx = (c: number): number => c * CELL + CELL / 2; // radial-gradient 圆点即格心
+        const draw = (now: number): void => {
+          ctx.clearRect(0, 0, w, h);
+          const p = Math.min(1, (now - stepAt) / STEP_MS);
+          const len = trail.length - 1;
+          for (let k = 0; k < len; k++) {
+            const a = trail[k];
+            const b = trail[k + 1];
+            const x = b.x + (a.x - b.x) * p;
+            const y = b.y + (a.y - b.y) * p;
+            const fade = 1 - k / len;
+            ctx.globalAlpha = 0.24 + 0.62 * Math.pow(fade, 1.3);
+            ctx.fillStyle = accent;
+            const size = k === 0 ? 9 : 3.5 + 4.5 * fade;
+            const px = cellPx(x) - size / 2;
+            const py = cellPx(y) - size / 2;
+            if ('roundRect' in ctx) { ctx.beginPath(); ctx.roundRect(px, py, size, size, 2); ctx.fill(); }
+            else ctx.fillRect(px, py, size, size);
+          }
+          if (food) {
+            const fx = cellPx(food.x);
+            const fy = cellPx(food.y);
+            const ang = now / 2800;
+            ctx.globalAlpha = 0.62 + 0.38 * Math.sin(now / 460);
+            ctx.strokeStyle = accent;
+            ctx.lineWidth = 1.6;
+            ctx.lineCap = 'round';
+            for (let i = 0; i < 6; i++) {
+              const a = ang + (i * Math.PI) / 3;
+              ctx.beginPath();
+              ctx.moveTo(fx, fy);
+              ctx.lineTo(fx + Math.cos(a) * 6, fy + Math.sin(a) * 6);
+              ctx.stroke();
+            }
+          }
+          for (let i = eatFx.length - 1; i >= 0; i--) {
+            const q = (now - eatFx[i].t) / 340;
+            if (q >= 1) { eatFx.splice(i, 1); continue; }
+            ctx.globalAlpha = (1 - q) * 0.8;
+            ctx.strokeStyle = accent;
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.arc(cellPx(eatFx[i].x), cellPx(eatFx[i].y), 4 + q * 12, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+        };
+
+        let raf = 0;
+        let stepAt = 0;
+        let running = false;
+        const loop = (now: number): void => {
+          if (!snakeCanvas.isConnected) { running = false; return; } // 换页离场自停
+          if (!stepAt) stepAt = now;
+          while (now - stepAt >= STEP_MS) { step(); stepAt += STEP_MS; }
+          draw(now);
+          raf = requestAnimationFrame(loop);
+        };
+        const start = (): void => {
+          if (running || !snakeCanvas.isConnected || document.hidden) return;
+          running = true;
+          raf = requestAnimationFrame(loop);
+        };
+        const stop = (): void => {
+          running = false;
+          cancelAnimationFrame(raf);
+          stepAt = 0;
+        };
+        new IntersectionObserver((entries) => {
+          entries.some((en) => en.isIntersecting) ? start() : stop();
+        }).observe(snakeCanvas);
+        document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
+      }
+    };
+    initHeroSnake();
+    document.addEventListener('astro:page-load', initHeroSnake); // ClientRouter 回到首页重启彩蛋
+
 </script>
 </Base>
 
@@ -533,6 +691,9 @@ const featureIcons = {
   }
   .hero-inner { position: relative; z-index: 1; }
 
+  /* 点阵贪吃蛇画布：与 .hero-grid 同 inset/同 26px 相位，蛇像素踩在点阵上 */
+  .hero-snake { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; }
+
   .hero-pill {
     display: inline-flex;
     align-items: center;
@@ -585,18 +746,36 @@ const featureIcons = {
     font-family: var(--icen-font-heading);
     margin: 14px 0 20px;
   }
-  /* 混排构图：两行左对齐成组、整组居中；主行巨号，副行小字 + 拉丁斜体 */
-  .hero-stack { text-align: start; }
+  /* 主标双语变体：默认中文；切英文时由 [data-ice-language] 显隐（applySiteCopy 首帧前已置位） */
+  .hero-t1 [data-lang-en] { display: none; }
+  [data-ice-language='en-US'] .hero-t1 [data-lang-zh] { display: none; }
+  [data-ice-language='en-US'] .hero-t1 [data-lang-en] { display: inline; }
+  /* 副标拉丁注：中文下多余，英文下正文本身已成英文——统一隐藏 */
+  .hero-t2i { display: none; }
+  /* 混排构图：两行整体居中（居中排版下 t2 的字距用首行缩进补偿尾空） */
+  .hero-stack { text-align: center; }
   .hero-t1 {
     font-size: clamp(40px, 6.4vw, 74px);
     font-weight: 700;
     letter-spacing: 2px;
     line-height: 1.16;
+    /* 整行连续渐变：从深强调色扫到冷色，横贯双语全称 */
+    background: linear-gradient(105deg,
+      var(--icen-token-accent-deep, var(--icen-token-accent)) 0%,
+      var(--icen-token-accent) 46%,
+      var(--icen-token-accent-cold) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
+  /* em 回归正体（斜体在巨号下衬线脚会与后字相撞）；拉丁双词间补空隙 */
+  .hero-t1 em { font-style: normal; }
+  .hero-t1 span[data-lang-en] { margin-inline-start: 0.22em; }
   .hero-t2 {
     font-size: clamp(17px, 1.9vw, 24px);
     font-weight: 500;
     letter-spacing: 12px;
+    text-indent: 12px;
     line-height: 1.3;
     color: var(--icen-token-text);
     margin-top: 2px;
@@ -615,10 +794,10 @@ const featureIcons = {
     width: min(82vw, 90vh, 760px);
     height: min(82vw, 90vh, 760px);
     translate: -50% -50%;
-    opacity: 0.16;
-    filter: blur(9px);
+    opacity: 0.07;
+    filter: blur(18px);
   }
-  [data-icen-theme="dark"] .hero-flake-bg { opacity: 0.13; }
+  [data-icen-theme="dark"] .hero-flake-bg { opacity: 0.055; }
   @media (prefers-reduced-motion: no-preference) {
     .hero-flake-bg { animation: hero-spin 150s linear infinite; }
     @keyframes hero-spin { to { transform: rotate(360deg); } }
@@ -724,16 +903,6 @@ const featureIcons = {
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
-  }
-  .hero-grad {
-    font-style: normal;
-    background: linear-gradient(105deg,
-      var(--icen-token-accent-deep, var(--icen-token-accent)) 0%,
-      var(--icen-token-accent) 46%,
-      var(--icen-token-accent-cold) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
   }
   .hero-sub {
     color: var(--icen-token-text-muted);
