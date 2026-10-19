@@ -257,6 +257,9 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
     window.clearTimeout(closingState.timer);
     closingState.backdrop.removeEventListener('transitionend', closingState.onEnd);
     delete closingState.backdrop.dataset.icenState;
+    /* 换开另一块 backdrop 时，被中断退场的那块必须立即落定 hidden，
+       否则 finalize 被取消后它会以全屏遮罩形态滞留页面并吞掉下一次点击 */
+    if (closingState.backdrop !== backdrop) closingState.backdrop.hidden = true;
     closingState = null;
   }
   backdrop.hidden = false;
@@ -325,7 +328,9 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
       els[next]?.focus();
     }
   };
-  window.addEventListener('keydown', keyHandler);
+  /* 捕获阶段：palette 叠在 modal 之上时，Escape 必须先关最上层（palette），
+     若走冒泡则先注册的 modal 处理器会抢先关掉底层 */
+  window.addEventListener('keydown', keyHandler, true);
 
   emitIcen(document, 'icen:command-palette-open', {});
 }
@@ -347,7 +352,7 @@ export function closeCommandPalette(id: string, opts?: { immediate?: boolean }):
   if (openId !== id) return;
   openId = null;
   if (keyHandler) {
-    window.removeEventListener('keydown', keyHandler);
+    window.removeEventListener('keydown', keyHandler, true);
     keyHandler = null;
   }
   document.body.style.overflow = prevBodyOverflow;

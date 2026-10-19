@@ -52,7 +52,7 @@
 }
 .icen-chart-hbar-row {
   display: grid;
-  grid-template-columns: minmax(72px, 1fr) minmax(90px, 2fr) 52px;
+  grid-template-columns: minmax(72px, 1fr) minmax(90px, 2fr) minmax(52px, auto); /* 数值列可长：定宽 52px 遇 "1234567.89" 会换行撑高整行错位 */
   gap: var(--icen-density-space-xs);
   align-items: center;
   font-size: var(--icen-density-font-size-xs);
@@ -81,6 +81,7 @@
 .icen-chart-hbar-value {
   text-align: right;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap; /* 配合 minmax(52px, auto)：长数值单行右对齐，不换行 */
   color: var(--icen-token-text-faint);
 }
 

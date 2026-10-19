@@ -109,6 +109,8 @@ function setupClear(wrap: Element): void {
   const field = wrap.querySelector<HTMLInputElement>('input.icen-input, textarea.icen-textarea');
   if (!btn || !field) return;
   btn.addEventListener('click', () => {
+    /* 宿主只禁了字段没挂 .is-disabled 类时按钮仍可点：禁用/只读字段不允许被清空 */
+    if (field.disabled || field.readOnly) return;
     field.value = '';
     field.dispatchEvent(new Event('input', { bubbles: true }));
     field.focus();
@@ -358,6 +360,9 @@ function setupOtp(group: Element): void {
         syncFilled(target);
       }
       cells[Math.min(i + text.length, cells.length - 1)].focus();
+      /* 程序赋值不触发 input 事件：粘贴整码时 complete 只能在此补判，
+         否则「填满即自动提交」对粘贴用户永远不生效 */
+      fireComplete();
     });
   });
 

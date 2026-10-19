@@ -42,6 +42,9 @@
   --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-accent);
   --icen-ring-soft: 0 0 0 2px var(--icen-token-accent);
   --icen-control-focus-shadow: 0 0 0 2px var(--icen-token-accent);
+  /* shadow-inset 被本原语置 none，base.css 合成的 error 版会变成非法的「none, …」
+     列表 → 整条 box-shadow 失效：像素原语自持一份硬边错误光环 */
+  --icen-control-error-shadow: 0 0 0 2px var(--icen-token-error);
   --icen-ease-out: steps(1, end);
   --icen-ease-bounce: steps(1, end);
 }

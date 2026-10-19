@@ -47,9 +47,9 @@ function setupSingle(slider: Element, native: HTMLInputElement, bag: Array<() =>
   const sync = (): void => {
     const p = pct(native);
     if (fill) fill.style.width = `${p}%`;
-    /* - 8px = 16px thumb 的半宽（slider.css 默认 --slider-thumb-size 契约）：百分比定位的是
-       thumb 左缘，减半宽让 thumb 中心对齐轨道位置 */
-    if (thumb) thumb.style.left = `calc(${p}% - 8px)`;
+    /* slider.css 的 thumb 自带 translate(-50%,-50%) 居中：这里只写百分比位置，
+       再减半宽会双重补偿（thumb 中心恒偏左 8px，value=0 时半边出界） */
+    if (thumb) thumb.style.left = `${p}%`;
   };
   bind(native, 'input', () => {
     sync();
@@ -81,9 +81,9 @@ function setupDual(slider: Element, natives: HTMLInputElement[], bag: Array<() =
       range.style.left = `${pLo}%`;
       range.style.right = `${100 - pHi}%`;
     }
-    /* - 8px = 16px thumb 的半宽（slider.css 契约），双 thumb 同单值的居中对齐 */
-    if (thumbLo) thumbLo.style.left = `calc(${pLo}% - 8px)`;
-    if (thumbHi) thumbHi.style.left = `calc(${pHi}% - 8px)`;
+    /* thumb 自带 translate(-50%) 居中（见 setupSingle 注释）：只写百分比位置 */
+    if (thumbLo) thumbLo.style.left = `${pLo}%`;
+    if (thumbHi) thumbHi.style.left = `${pHi}%`;
     // 点击区域切分：lo 只响应自身位置以左，hi 只响应自身位置以右
     lo.style.clipPath = `inset(0 ${100 - pLo}% 0 0)`;
     hi.style.clipPath = `inset(0 0 0 ${pHi}%)`;

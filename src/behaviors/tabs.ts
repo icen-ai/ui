@@ -71,6 +71,15 @@ function syncInk(container: Element, name: string): void {
   if (!ink) return;
   ink.style.width = `${btn.offsetWidth}px`;
   ink.style.transform = `translateX(${btn.offsetLeft}px)`;
+  /* 折行场景：ink 默认钉在 tablist 底缘，活动 tab 落在第一行时会整行高地错位——
+     有纵向偏移时改为跟随活动 tab 的底边（bottom 失效，写 top） */
+  if (btn.offsetTop > 0) {
+    ink.style.top = `${btn.offsetTop + btn.offsetHeight}px`;
+    ink.style.bottom = 'auto';
+  } else {
+    ink.style.top = '';
+    ink.style.bottom = '';
+  }
 }
 
 function activate(container: Element, name: string, writeHash: boolean, emit = false): void {
@@ -127,6 +136,9 @@ function focusTab(container: Element, idx: number): void {
   const buttons = tabButtons(container);
   const target = buttons[idx];
   if (!target || isDisabled(target)) return;
+  /* roving tabindex 跟随箭头焦点（APG tabs 模式）：只改 tabIndex 不改选中，
+     否则 Tab 离开再回来会落回活动 tab 而不是用户箭头停驻处 */
+  buttons.forEach((b) => { b.tabIndex = b === target ? 0 : -1; });
   target.focus();
 }
 

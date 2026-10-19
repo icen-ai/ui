@@ -250,7 +250,8 @@
 }
 .icen-notification-link {
   font-size: var(--icen-density-font-size-sm);
-  color: var(--icen-token-accent);
+  /* accent-text 与全站 a 基线（base.css）同源：裸 accent 对浅色卡片 ~3.6:1 低于 AA */
+  color: var(--icen-token-accent-text);
   text-decoration: none;
   border-bottom: 1px dashed color-mix(in srgb, var(--icen-token-accent) 40%, transparent);
   transition: color var(--icen-tx-fast), border-color var(--icen-tx-fast);

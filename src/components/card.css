@@ -72,9 +72,6 @@
 .icen-card--interactive:focus-within {
   border-color: var(--icen-token-accent);
 }
-.icen-card--interactive:focus-within {
-  border-color: var(--icen-token-accent);
-}
 .icen-card.is-selected {
   box-shadow: var(--icen-ring);
 }

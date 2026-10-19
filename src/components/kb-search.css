@@ -186,8 +186,8 @@
   color: var(--icen-token-success);
 }
 .icen-kb-params-copy {
-  width: 22px;
-  height: 22px;
+  width: 24px; /* WCAG 2.5.8 下限（22 → 24） */
+  height: 24px;
 }
 .icen-kb-params-copy svg {
   width: 12px;
@@ -473,13 +473,15 @@
   gap: 3px;
 }
 .icen-kb-hit-explain-toggle {
-  padding: 0;
+  padding: 0 2px;
   font: inherit;
   font-size: 10.5px;
   color: var(--icen-token-text-faint);
   background: transparent;
   border: none;
   cursor: pointer;
+  min-inline-size: 24px; /* WCAG 2.5.8 下限 */
+  min-block-size: 24px;
 }
 .icen-kb-hit-explain-toggle:hover {
   color: var(--icen-token-text-muted);

@@ -149,10 +149,12 @@
   mask: var(--icen-token-icon-arrow-down) center / contain no-repeat; opacity: 1; color: var(--icen-token-accent); }
 
 /* ── 斑马纹 ── */
-.icen-table--zebra tbody tr:nth-child(odd) {
+/* :not 守卫：斑马纹与状态行同为行级背景，后写同特异性会盖掉选中/状态色
+   （ datatable.css 同款口径） */
+.icen-table--zebra tbody tr:nth-child(odd):not(.is-selected):not(.icen-row-success, .icen-row-warning, .icen-row-error) {
   background: color-mix(in srgb, var(--icen-token-bg-soft) 50%, transparent);
 }
-.icen-table--zebra tbody tr:hover {
+.icen-table--zebra tbody tr:hover:not(.is-selected):not(.icen-row-success, .icen-row-warning, .icen-row-error) {
   background: var(--icen-token-surface-strong);
 }
 
@@ -178,6 +180,15 @@
 .icen-table--sticky-col tbody td.icen-col-fixed {
   background: var(--icen-token-surface);
 }
+/* 粘滞列是不透明面：选中/斑马/状态的行级底色透不上来，需在此重铺，
+   否则整行只有粘滞列一格「没被选中」，读起来像半选 */
+.icen-table--sticky-col tbody tr.is-selected td.icen-col-fixed,
+.icen-table--sticky-col tbody tr.is-selected th:first-child {
+  background: var(--icen-token-accent-subtle);
+}
+.icen-table--sticky-col tbody tr.icen-row-success td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-success) 6%, transparent); }
+.icen-table--sticky-col tbody tr.icen-row-warning td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-warning) 6%, transparent); }
+.icen-table--sticky-col tbody tr.icen-row-error td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-error) 6%, transparent); }
 .icen-table--sticky-col tbody tr:hover td.icen-col-fixed {
   background: var(--icen-token-surface-strong);
 }

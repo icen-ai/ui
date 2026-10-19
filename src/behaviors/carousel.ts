@@ -110,7 +110,12 @@ function setup(carousel: Element): (() => void) | undefined {
 
   const render = (): void => {
     track.style.transform = `translateX(${-index * 100}%)`;
-    slides.forEach((s, i) => s.setAttribute('aria-hidden', String(i !== index)));
+    slides.forEach((s, i) => {
+      s.setAttribute('aria-hidden', String(i !== index));
+      /* 离屏 slide 挂 inert 断 Tab：aria-hidden 元素可聚焦是 axe 违规，
+         焦点落进不可见内容会「凭空消失」 */
+      s.toggleAttribute('inert', i !== index);
+    });
     dots.forEach((d, i) => {
       d.classList.toggle('is-active', i === index);
       if (i === index) d.setAttribute('aria-current', 'true');
@@ -169,10 +174,13 @@ function setup(carousel: Element): (() => void) | undefined {
     };
   }
 
-  /* 键盘 ←/→/Home/End（仅当焦点在 carousel 内）；RTL 镜像左右（视觉方向优先） */
+  /* 键盘 ←/→/Home/End（仅当焦点在轮播控件上）；RTL 镜像左右（视觉方向优先）。
+     焦点在 slide 内的输入框/可编辑元素时不劫持——那是文本光标移动，不是翻页 */
   const rtl = (): boolean => getComputedStyle(carousel).direction === 'rtl';
   const onKeyDown = (ev: Event): void => {
     const kev = ev as KeyboardEvent;
+    const t = kev.target;
+    if (t instanceof Element && t.closest('input, textarea, select, [contenteditable], [contenteditable] *')) return;
     switch (kev.key) {
       case 'ArrowLeft':  kev.preventDefault(); go(rtl() ? index + 1 : index - 1); break;
       case 'ArrowRight': kev.preventDefault(); go(rtl() ? index - 1 : index + 1); break;
@@ -204,6 +212,7 @@ function setup(carousel: Element): (() => void) | undefined {
       s.removeAttribute('aria-roledescription');
       s.removeAttribute('aria-label');
       s.removeAttribute('aria-hidden');
+      s.removeAttribute('inert');
     });
     el.__icenCarouselInit = false;
   };

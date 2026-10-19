@@ -101,6 +101,7 @@ export interface IcenLocale {
   'aiChat.roleTool': string;
   'aiChat.roleUser': string;
   'aiChat.thinking': string;
+  'aiChat.thinkingNow': string;
   /* ── aiComposer ── */
   'aiComposer.attachAgent': string;
   'aiComposer.library': string;
@@ -938,6 +939,7 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'aiChat.roleTool': '工',
   'aiChat.roleUser': '我',
   'aiChat.thinking': '思考 {p0}',
+  'aiChat.thinkingNow': '正在思考…',
   /* ── aiComposer ── */
   'aiComposer.attachAgent': '代理',
   'aiComposer.library': '添加上下文与命令',
@@ -1775,6 +1777,7 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'aiChat.roleTool': 'Tool',
   'aiChat.roleUser': 'Me',
   'aiChat.thinking': 'Thinking {p0}',
+  'aiChat.thinkingNow': 'Thinking…',
   /* ── aiComposer ── */
   'aiComposer.attachAgent': 'Agent',
   'aiComposer.library': 'Add context and commands',

@@ -44,7 +44,8 @@ function setup(container: Element): (() => void) | undefined {
     const open = item.classList.toggle('is-open');
     trigger.setAttribute('aria-expanded', String(open));
 
-    const index = Array.from(container.querySelectorAll('.icen-accordion-item')).indexOf(item);
+    /* :scope 直系子项：嵌套手风琴（面板内再放 .accordion）的孙级项不计入本容器的序号 */
+    const index = Array.from(container.querySelectorAll(':scope > .icen-accordion-item')).indexOf(item);
     emitIcen(container, 'icen:accordion-toggle', { item, index, open });
 
     if (single && open) {

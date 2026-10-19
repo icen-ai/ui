@@ -49,6 +49,12 @@
   touch-action: none;
   transition: background var(--icen-tx-fast);
 }
+.icen-split-pane-divider::before {
+  /* 不可见命中扩展（±9px → 24px 触达带宽）：分隔条视觉 6px，触屏按 WCAG 2.5.8 打不中 */
+  content: '';
+  position: absolute;
+  inset: -9px 0;
+}
 .icen-split-pane-divider::after {
   content: '';
   position: absolute;
@@ -97,6 +103,9 @@
 .icen-split-pane--vertical .icen-split-pane-divider::after {
   width: 28px;
   height: 2px;
+}
+.icen-split-pane--vertical .icen-split-pane-divider::before {
+  inset: 0 -9px; /* 横向变体的命中扩展方向镜像（上下 ±9px） */
 }
 
 /* ── 嵌套分栏不应再有外边框 ── */

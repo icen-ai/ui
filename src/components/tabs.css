@@ -155,8 +155,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 24px; /* WCAG 2.5.8 下限：16px 关闭钮过小（svg 视觉仍 10px） */
+  height: 24px;
   margin-inline-start: var(--icen-density-space-xs);
   margin-inline-end: -4px;
   padding: 0;
@@ -170,6 +170,10 @@
 .icen-page-tab-close:hover {
   color: var(--icen-token-error);
   background: var(--icen-token-error-muted);
+}
+.icen-page-tab-close:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring); /* 与 .icen-page-tab 同款系统环（缺省会落回浏览器默认蓝圈） */
 }
 .icen-page-tab-close svg { width: 10px; height: 10px; }
 

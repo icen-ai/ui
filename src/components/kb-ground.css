@@ -39,13 +39,20 @@
 }
 /* hover 点亮 accent：引用是证据域主角，但默认弱化、悬停才给注意力 */
 .icen-kb-citation:hover {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* 可读变体：裸 accent 叠 8% accent 底浅色仅 ~3.4:1，10px 字更需 AA */
   border-color: color-mix(in srgb, var(--icen-token-accent) 45%, transparent);
   background: color-mix(in srgb, var(--icen-token-accent) 8%, transparent);
 }
 .icen-kb-citation:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
+}
+/* 触屏抬触达面（角标是证据域主交互，16px 打不中） */
+@media (pointer: coarse) {
+  .icen-kb-citation {
+    min-width: 24px;
+    height: 24px;
+  }
 }
 /* 无效编号：灰显不可点（不信任模型生成编号的降级态） */
 .icen-kb-citation.is-dead {

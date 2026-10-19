@@ -113,7 +113,9 @@
 .icen-kb-passage-body mark,
 .icen-kb-hit mark {
   background: color-mix(in srgb, var(--icen-token-accent) 18%, transparent);
-  color: inherit;
+  /* 全量正文色：命中片段底色是 muted，inherit 只有 ~3.8-4.2:1（12.5px 低于 AA）；
+     高亮词本就该比环绕文本更醒目而非更淡 */
+  color: var(--icen-token-text);
   border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
   padding: 0 2px;
 }

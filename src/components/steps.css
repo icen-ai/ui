@@ -70,7 +70,7 @@
 }
 .icen-step--process .icen-step-dot {
   background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* 裸 accent 对 subtle 浅色 ~3.3:1（14px 数字低于 AA，可读变体 ~5.9:1） */
   border: 2px solid var(--icen-token-accent);
   box-shadow: var(--icen-ring-soft);
 }

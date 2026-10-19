@@ -159,15 +159,20 @@ function renderPermissionNotice(p: KbPermissionNotice): HTMLElement {
 function renderBody(text: string, citations: KbCitation[] | undefined): HTMLElement {
   const box = h('div', 'icen-kb-answer-body');
   for (const seg of parseInlineCitations(text)) {
-    if (typeof seg.n === 'number' && citations && seg.n >= 1 && seg.n <= citations.length) {
-      const sup = h('sup', 'icen-kb-citation', `[${seg.n}]`);
-      sup.dataset.icenCite = String(seg.n);
-      const c = citations[seg.n - 1];
-      if (c?.title) sup.title = c.title;
-      box.appendChild(sup);
-    } else {
-      box.appendChild(document.createTextNode(seg.text));
+    if (typeof seg.n === 'number' && citations) {
+      /* 优先按 KbCitation.index 对位（来源列表 onlyCited 剪枝后数组序 ≠ 展示编号，
+         位置序会把 [n] 指错来源）；无 index 再回退位置序；都对不上按纯文本保留 */
+      const c = citations.find((x) => x.index === seg.n)
+        ?? (seg.n >= 1 && seg.n <= citations.length ? citations[seg.n - 1] : undefined);
+      if (c) {
+        const sup = h('sup', 'icen-kb-citation', `[${seg.n}]`);
+        sup.dataset.icenCite = String(seg.n);
+        if (c.title) sup.title = c.title;
+        box.appendChild(sup);
+        continue;
+      }
     }
+    box.appendChild(document.createTextNode(seg.text));
   }
   return box;
 }

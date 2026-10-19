@@ -152,6 +152,12 @@
   --btn-border: var(--icen-token-error);
   --btn-border-hover: var(--icen-token-error);
 }
+/* 错误态焦点环走 error 色（base.css 的 --icen-ring-error 此前无消费者：
+   错误按钮键盘聚焦却亮蓝环，语义打架） */
+.icen-btn.is-error:focus-visible {
+  outline: none;
+  box-shadow: var(--icen-ring-error);
+}
 
 /* 加载态：居中 spinner 占位 + 文本保留（避免重排）。
    behavior 在挂 .is-loading 时把 [aria-busy=true] 也挂上。 */
@@ -176,8 +182,4 @@
   width: 1.1em;
   height: 1.1em;
   flex-shrink: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .icen-btn.is-loading::after { --btn-spin-duration: 1.2s; }
 }

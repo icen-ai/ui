@@ -245,7 +245,7 @@
 .icen-dt-filter-reset {
   border: 0;
   background: transparent;
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* 12px 链接字对白底需 AA（裸 accent 4.07:1 不达） */
   font: inherit;
   font-size: var(--icen-density-font-size-xs);
   cursor: pointer;
@@ -316,11 +316,11 @@
   color: var(--icen-token-text-faint);
   font-variant-numeric: tabular-nums;
 }
-.icen-dt-stat--sel { color: var(--icen-token-accent); display: inline-flex; align-items: center; gap: 6px; }
+.icen-dt-stat--sel { color: var(--icen-token-accent-text); display: inline-flex; align-items: center; gap: 6px; }
 .icen-dt-clear-sel {
   border: 0;
   background: transparent;
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* 同 filter-reset：小号链接字走可读变体 */
   font: inherit;
   font-size: var(--icen-density-font-size-xs);
   cursor: pointer;
@@ -368,7 +368,7 @@
   border-color: var(--icen-token-line-soft);
 }
 .icen-dt-page-btn.is-active {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* 裸 accent 对 accent-subtle 浅色仅 ~3.6:1（12px 字低于 AA） */
   border-color: var(--icen-token-accent);
   background: var(--icen-token-accent-subtle);
   font-weight: 600;
@@ -463,6 +463,14 @@
 }
 .icen-datatable--frozen .icen-dt-row.is-selected:hover .icen-dt-cell--frozen {
   background: color-mix(in srgb, var(--icen-token-accent-subtle) 82%, var(--icen-token-fill-1));
+}
+/* 斑马纹是行级底色，冻结格不透明面透不上来：偶数行冻结格重铺同款色，
+   否则条纹在冻结边界处断掉（选中/hover 已有对应规则） */
+.icen-datatable--striped .icen-dt-body .icen-dt-row:nth-child(even):not(.is-selected) .icen-dt-cell--frozen {
+  background: color-mix(in srgb, var(--icen-token-fill-1) 55%, transparent);
+}
+.icen-datatable--striped .icen-dt-body .icen-dt-row:nth-child(even):not(.is-selected):hover .icen-dt-cell--frozen {
+  background: var(--icen-token-fill-1);
 }
 
 /* ── 行状态类（rowClassName 产出；--danger/--warning/--success 同族语义行底色） ── */

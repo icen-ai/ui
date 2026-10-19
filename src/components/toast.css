@@ -64,7 +64,8 @@
   background: none;
   border: 0;
   cursor: pointer;
-  color: var(--icen-token-accent);
+  /* accent-text：裸 accent 对浅色 fill-1 面板 ~3.8:1，13px 动作字低于 AA */
+  color: var(--icen-token-accent-text);
   font: inherit;
   font-size: var(--icen-density-font-size-sm);
   font-weight: 500;

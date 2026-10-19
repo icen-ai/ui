@@ -110,6 +110,12 @@ function setupChat(chat: HTMLElement): (() => void) | undefined {
   el.__icenAiChatInit = true;
 
   const scrollEl = chat.querySelector<HTMLElement>('.icen-ai-chat-scroll');
+  if (scrollEl && !scrollEl.hasAttribute('aria-live')) {
+    /* 读屏播报流式输出：log 角色 + polite（逐分片 assertive 会不停打断）；
+       宿主已自设 aria-live 时不覆盖 */
+    scrollEl.setAttribute('role', 'log');
+    scrollEl.setAttribute('aria-live', 'polite');
+  }
   /* 浮动钮：优先用契约 DOM 里的 .icen-ai-chat-jump，缺失时按需补建（仅当有滚动容器才有意义） */
   let jump = chat.querySelector<HTMLButtonElement>('.icen-ai-chat-jump') ?? null;
 
@@ -182,6 +188,30 @@ function setupChat(chat: HTMLElement): (() => void) | undefined {
     }
   };
 
+  /* 用户「离开底部」的显式意图（滚轮上滚 / 触摸上滑 / 翻页键）：绕过程序滚动抑制窗。
+     流式期间每个分片都会重置抑制窗，只靠 onScroll 判定时窗口永不失效，
+     用户上滚会被下一个分片拽回底部——「上滚暂停跟随」在流中就是死的 */
+  const onUserLeaveIntent = (): void => {
+    if (!pinned) return;
+    pinned = false;
+    updateJump();
+  };
+  const onWheel = (e: WheelEvent): void => {
+    if (e.deltaY < 0) onUserLeaveIntent();
+  };
+  let lastTouchY = 0;
+  const onTouchStart = (e: TouchEvent): void => {
+    lastTouchY = e.touches[0]?.clientY ?? 0;
+  };
+  const onTouchMove = (e: TouchEvent): void => {
+    const y = e.touches[0]?.clientY ?? 0;
+    if (y > lastTouchY + 4) onUserLeaveIntent(); /* 手指下移 = 内容上滑看历史 */
+    lastTouchY = y;
+  };
+  const onScrollerKeydown = (e: KeyboardEvent): void => {
+    if (e.key === 'PageUp' || e.key === 'Home' || e.key === 'ArrowUp') onUserLeaveIntent();
+  };
+
   const onJumpClick = (): void => {
     pinned = true;
     unread = 0;
@@ -246,10 +276,18 @@ function setupChat(chat: HTMLElement): (() => void) | undefined {
     }
     lastMsgCount = scrollEl.querySelectorAll('.icen-ai-msg').length;
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
+    scrollEl.addEventListener('wheel', onWheel, { passive: true });
+    scrollEl.addEventListener('touchstart', onTouchStart, { passive: true });
+    scrollEl.addEventListener('touchmove', onTouchMove, { passive: true });
+    scrollEl.addEventListener('keydown', onScrollerKeydown);
     jump.addEventListener('click', onJumpClick);
     const jumpBtn = jump;
     disposers.push(() => {
       scrollEl.removeEventListener('scroll', onScroll);
+      scrollEl.removeEventListener('wheel', onWheel);
+      scrollEl.removeEventListener('touchstart', onTouchStart);
+      scrollEl.removeEventListener('touchmove', onTouchMove);
+      scrollEl.removeEventListener('keydown', onScrollerKeydown);
       jumpBtn.removeEventListener('click', onJumpClick);
     });
 
@@ -359,6 +397,10 @@ export function createAiStream(el: HTMLElement): AiStreamHandle {
   el.setAttribute('aria-busy', 'true');
   if (reasoning) {
     reasoning.classList.add('is-streaming');
+    /* 流式占位文案走 i18n（CSS content 版本会把「正在思考…」冻死在中文）；
+       结束时 fillReasoningTime 会覆写成「思考 Ns」 */
+    const timeEl = reasoning.querySelector<HTMLElement>('.icen-ai-reasoning-time');
+    if (timeEl) timeEl.textContent = t('aiChat.thinkingNow');
     /* §5.27 规则一：流式态默认展开；计时基准写折叠头 data-icen-reasoning-start（宿主可提前埋点） */
     setReasoningOpen(reasoning, true);
     const head = reasoning.querySelector<HTMLElement>('.icen-ai-reasoning-head');
@@ -486,7 +528,9 @@ const ROLE_AVATAR: Record<AiMessageModel['role'], string> = {
 
 /** 链接 href 白名单式守卫：放行常规 scheme，拦 javascript: / data:text/html */
 function safeHref(uri: string): string | undefined {
-  const s = uri.trim().toLowerCase();
+  /* WHATWG URL 解析会先剥掉 tab/LF/CR（及首尾 C0 控制）再识别 scheme，
+     守卫必须按同样的归一结果判断，否则 `java\tscript:` 这类写法可绕过 */
+  const s = uri.replace(/[\t\n\r\0-\x1f\x7f]/g, '').trim().toLowerCase();
   if (s.startsWith('javascript:') || s.startsWith('data:text/html')) return undefined;
   return uri;
 }
@@ -629,7 +673,9 @@ export function renderAiMessage(scrollEl: HTMLElement, model: AiMessageModel): A
       errEl.textContent = message;
     },
     stream(): AiStreamHandle {
-      const span = h('span', 'ai-msg-stream-text');
+      /* icen- 前缀并复用正文流式样式钩子：裸 .ai-msg-stream-text 无任何 CSS 命中，
+         库内自带绑定路径的流式回复一直没有光标 */
+      const span = h('span', 'icen-ai-msg-text ai-msg-stream-text');
       body.appendChild(span);
       return createAiStream(span);
     },

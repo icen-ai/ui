@@ -70,13 +70,15 @@ function depthOfSpan(span: KbSpan, byId: Map<string, KbSpan>, guard = 0): number
   return parent ? depthOfSpan(parent, byId, guard + 1) + 1 : 0;
 }
 
-/** 迷你命中行（复用 kb.css 的 .icen-kb-score 序数条；分数 null → 不渲染条 + '—'） */
-function buildHitRow(hit: KbRetrievalHit, rank: number): HTMLElement {
+/** 迷你命中行（复用 kb.css 的 .icen-kb-score 序数条；分数 null → 不渲染条 + '—'）。
+ *  分母按本 span 命中列表实测最大值归一：bm25/dot 等值域 >1 的分数种按默认 1 归一
+ *  会全部顶格 100%，序数条失去区分度（与 kb-rerank columnMax 同口径）。 */
+function buildHitRow(hit: KbRetrievalHit, rank: number, listMax: number): HTMLElement {
   const row = h('div', 'icen-kb-trace-hit');
   row.append(h('span', 'icen-kb-trace-hit-rank icen-kb-num', String(rank)));
   row.append(h('span', 'icen-kb-trace-hit-title', hit.title || hit.snippet || hit.chunkId));
   const score = h('span', 'icen-kb-score');
-  const pct = scorePercent(hit.score, hit.scoreKind);
+  const pct = scorePercent(hit.score, hit.scoreKind, listMax);
   if (pct != null) {
     const bar = h('span', 'icen-kb-score-bar');
     const fill = h('i'); /* 样式走 kb.css 的 .icen-kb-score-bar > i */
@@ -107,7 +109,12 @@ function buildSpanBody(span: KbSpan): HTMLElement | null {
   if (hasHits && span.hits) {
     const wrap = h('div', 'icen-kb-trace-hits');
     wrap.append(h('div', 'kb-trace-hits-label icen-kb-meta', t('kbTrace.hits', { p0: span.hits.length })));
-    span.hits.forEach((hit, i) => wrap.append(buildHitRow(hit, i + 1)));
+    let listMax = 1;
+    for (const hit of span.hits) {
+      const v = Math.abs(hit.score ?? 0);
+      if (Number.isFinite(v) && v > listMax) listMax = v;
+    }
+    span.hits.forEach((hit, i) => wrap.append(buildHitRow(hit, i + 1, listMax)));
     body.append(wrap);
   }
   if (span.error) body.append(h('div', 'icen-kb-trace-error', span.error));

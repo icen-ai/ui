@@ -232,6 +232,13 @@ export function initKbMetadata(root?: ParentNode): () => void {
         keyInput.setAttribute('aria-invalid', 'true');
         return;
       }
+      /* key 即数据模型主键（values 按 key 单值）：重复定义会造出两行同 key 行，
+         bind/remove 事件无法区分，删一行另一行还挂着 */
+      if (root2.querySelector(`.icen-kb-metadata-row[data-icen-key="${CSS.escape(key)}"]`)) {
+        keyInput.setAttribute('aria-invalid', 'true');
+        keyInput.select();
+        return;
+      }
       keyInput.removeAttribute('aria-invalid');
       const active = root2.querySelector<HTMLElement>('.kb-metadata-type-item.is-active');
       const type = (TYPES as string[]).includes(active?.dataset.icenValue ?? '')

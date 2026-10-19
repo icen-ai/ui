@@ -23,7 +23,9 @@
  *   - checkbox：三态循环 true→false→mixed→true（首次点击仍处于 mixed 的元素视为
  *     初始半选，mixed→false，此后并入循环）；
  *   - radio：组内互斥（aria-checked + .is-selected 同步；重复点击已选项 no-op）；
- *   - .icen-checkbox-row 整行可点（CSS cursor:pointer 契约），行内原生交互元素不劫持。
+ *     方向键 ←/→/↑/↓ / Home / End 在组内移动选中并跟焦（RTL 镜像，与 segmented 一致）；
+ *   - .icen-checkbox-row 整行可点（CSS cursor:pointer 契约），行内原生交互元素不劫持；
+ *     行本身为 <label> 时交由浏览器转发，不手动代切（避免一次点击翻转两态）。
  * 事件映射：switch → icen:switch-change { el, checked }；
  *   checkbox / radio（含 .icen-checkbox-row 回退路径）→ icen:check-change { el, checked: boolean | 'mixed' }。
  *
@@ -145,6 +147,16 @@ const SWITCH_LIKE = '.icen-switch[role="switch"], .icen-checkbox[role="checkbox"
 /** 首次观察到的 checkbox 记账：仍处 mixed 即视为「初始半选」，首击 mixed→false。 */
 const seenCheckboxes = new WeakSet<HTMLElement>();
 
+/** radio 组解析：同组（含嵌套边界判定）内全部 role="radio" 项；无组容器时仅自身。 */
+function radioPeers(el: HTMLElement): HTMLElement[] {
+  const group = el.closest('[data-icen-radio-group], .icen-radio-group, [role="radiogroup"], .icen-radio-card-grid');
+  return group
+    ? Array.from(group.querySelectorAll<HTMLElement>('[role="radio"]')).filter(
+        (it) => it.closest('[data-icen-radio-group], .icen-radio-group, [role="radiogroup"], .icen-radio-card-grid') === group,
+      )
+    : [el];
+}
+
 function toggleSwitch(el: HTMLElement): void {
   const checked = el.getAttribute('aria-checked') !== 'true';
   el.setAttribute('aria-checked', String(checked));
@@ -165,13 +177,7 @@ function toggleCheckbox(el: HTMLElement): void {
 
 function selectRadio(el: HTMLElement): void {
   if (el.getAttribute('aria-checked') === 'true') return;
-  const group = el.closest('[data-icen-radio-group], .icen-radio-group, [role="radiogroup"], .icen-radio-card-grid');
-  const peers = group
-    ? Array.from(group.querySelectorAll<HTMLElement>('[role="radio"]')).filter(
-        (it) => it.closest('[data-icen-radio-group], .icen-radio-group, [role="radiogroup"], .icen-radio-card-grid') === group,
-      )
-    : [el];
-  for (const it of peers) {
+  for (const it of radioPeers(el)) {
     const on = it === el;
     it.classList.toggle('is-selected', on);
     it.setAttribute('aria-checked', String(on));
@@ -193,6 +199,11 @@ function resolveSwitchTarget(t: EventTarget | null): HTMLElement | null {
   const row = t.closest<HTMLElement>('.icen-checkbox-row');
   if (row && !t.closest('button, a, input, select, textarea, [contenteditable]')) {
     const box = row.querySelector<HTMLElement>('.icen-checkbox[role="checkbox"]');
+    /* 行本身是 <label> 且勾选框为可标注元素（button/input）时，浏览器会把整行点击
+       转发给勾选框、走上面的直属路径；此处再手动切换等于一次点击翻转两态 */
+    if (row instanceof HTMLLabelElement && (box instanceof HTMLButtonElement || box instanceof HTMLInputElement)) {
+      return null;
+    }
     if (box && !isDisabled(box)) return box;
   }
   return null;
@@ -204,11 +215,36 @@ function onSwitchClick(ev: MouseEvent): void {
 }
 
 function onSwitchKeydown(ev: KeyboardEvent): void {
-  if (!isActivateKey(ev)) return;
   const t = ev.target;
   if (!(t instanceof Element)) return;
   const el = t.closest<HTMLElement>(SWITCH_LIKE);
   if (!el || isDisabled(el)) return;
+  /* radiogroup 键盘契约（与 segmented 对齐）：←/→/↑/↓ 移动并选中（RTL 按视觉
+     方向镜像），Home/End 跳首尾，跳过禁用项，焦点随移动 */
+  if (el.getAttribute('role') === 'radio') {
+    const key = ev.key;
+    const isRadioNav = key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'Home' || key === 'End';
+    const peers = radioPeers(el).filter((it) => !isDisabled(it));
+    const cur = peers.indexOf(el);
+    if (isRadioNav && peers.length > 1 && cur !== -1) {
+      let next: HTMLElement | undefined;
+      if (key === 'Home') next = peers[0];
+      else if (key === 'End') next = peers[peers.length - 1];
+      else {
+        const rtl = getComputedStyle(el).direction === 'rtl';
+        const forward = key === 'ArrowRight' || key === 'ArrowDown';
+        const delta = forward ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
+        next = peers[(cur + delta + peers.length) % peers.length];
+      }
+      if (next) {
+        ev.preventDefault();
+        if (next !== el) selectRadio(next);
+        next.focus({ preventScroll: true });
+      }
+      return;
+    }
+  }
+  if (!isActivateKey(ev)) return;
   ev.preventDefault();
   activateSwitchLike(el);
 }

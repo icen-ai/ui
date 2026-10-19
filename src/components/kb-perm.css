@@ -106,7 +106,7 @@
 .icen-kb-acl-none { padding: 4px 0; }
 .icen-kb-acl-remove {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 22px; height: 22px; padding: 0;
+  width: 24px; height: 24px; padding: 0; /* WCAG 2.5.8 下限（22 → 24；移除是删数据操作） */
   font: inherit; font-size: 13px; line-height: 1;
   color: var(--icen-token-text-faint);
   background: transparent; border: none; border-radius: var(--icen-radius-sm);
@@ -144,7 +144,9 @@
 }
 .icen-kb-whocan-check:hover:not(:disabled) { color: var(--icen-token-text); background: var(--icen-token-bg-soft); border-color: var(--icen-token-line); }
 .icen-kb-whocan-check:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: -2px; }
-.icen-kb-whocan-user:disabled, .icen-kb-whocan-check:disabled { opacity: var(--icen-disabled-opacity); cursor: not-allowed; }
+/* .icen-kb-whocan-user 是 icen-select 容器元素，:disabled 永不命中（容器禁用态由
+   select.css 的 [aria-disabled] 面处理）；只有真按钮 .icen-kb-whocan-check 走原生 disabled */
+.icen-kb-whocan-check:disabled { opacity: var(--icen-disabled-opacity); cursor: not-allowed; }
 .icen-kb-whocan-source { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--icen-token-text); }
 .icen-kb-whocan-reason .icen-kb-badge { flex: 0 0 auto; }
 /* deny 来源：红色 badge（克制——只落在徽标层），主体文本弱化 */
@@ -226,7 +228,7 @@
 /* 状态行文字钮（申请续期/重新申请）：链接级弱化，不用按钮盒子 */
 .icen-kb-access-act {
   font: inherit; font-size: 12px;
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* 12px 链接字对 canvas 需 AA（裸 accent 3.76:1 不达） */
   background: none; border: none; padding: 0;
   cursor: pointer; text-decoration: underline;
   text-underline-offset: 3px;
@@ -241,8 +243,10 @@
   border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-sm);
   padding: 7px 9px; resize: vertical; min-height: 56px;
 }
-.icen-kb-access-reason:focus-visible, .icen-kb-access-duration:focus-visible,
-.icen-kb-access-approve-role:focus-visible, .icen-kb-access-note:focus-visible {
+/* duration/approve-role 是 icen-select 容器元素（div 不可聚焦）：焦点环由内部
+   trigger 的 icen-focus-ring 提供，这里只保留真输入框的兜底描边 */
+.icen-kb-access-reason:focus-visible,
+.icen-kb-access-note:focus-visible {
   outline: 2px solid var(--icen-token-accent); outline-offset: 1px;
 }
 .icen-kb-access-roles { display: inline-flex; gap: 6px; flex-wrap: wrap; }
@@ -257,7 +261,7 @@
 }
 .icen-kb-access-role:hover { border-color: var(--icen-token-line); color: var(--icen-token-text); }
 .icen-kb-access-role.is-on {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* accent 叠 accent-subtle 浅色 ~3.5:1，12px 字低于 AA */
   border-color: color-mix(in srgb, var(--icen-token-accent) 50%, transparent);
   background: var(--icen-token-accent-subtle);
 }
@@ -303,6 +307,7 @@
   background: transparent;
   border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-sm);
   padding: 3px 10px; cursor: pointer;
+  min-block-size: 24px; /* WCAG 2.5.8 下限（紧凑视觉靠 padding 保留） */
   margin-inline-start: auto;
 }
 .icen-kb-audit-export:hover { color: var(--icen-token-text); border-color: var(--icen-token-line); background: var(--icen-token-bg-soft); }
@@ -327,6 +332,7 @@
   background: transparent;
   border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-sm);
   padding: 2px 10px; cursor: pointer;
+  min-block-size: 24px; /* WCAG 2.5.8 下限 */
 }
 .icen-kb-hygiene-act:hover { color: var(--icen-token-text); border-color: var(--icen-token-line); background: var(--icen-token-bg-soft); }
 .icen-kb-hygiene-act:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
@@ -343,7 +349,7 @@
   border-end-end-radius: var(--icen-radius-sm);
 }
 .icen-kb-visibility-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.icen-kb-visibility-bar .icen-kb-chip[aria-pressed='true'] { color: var(--icen-token-accent); border-color: var(--icen-token-accent); }
+.icen-kb-visibility-bar .icen-kb-chip[aria-pressed='true'] { color: var(--icen-token-accent-text); border-color: var(--icen-token-accent); }
 /* 过滤层徽标 .icen-kb-layer-chip 三态定义在 kb.css 基座（检索域 kit 也消费，勿在此重复） */
 .icen-kb-visibility-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .icen-kb-visibility-col { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--icen-token-line-soft); border-radius: var(--icen-radius-md); min-width: 0; }

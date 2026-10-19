@@ -190,7 +190,14 @@ export interface TableHandle<Row = Record<string, unknown>> {
 
 
 function defaultCompare(a: unknown, b: unknown): number {
-  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  if (typeof a === 'number' && typeof b === 'number') {
+    /* NaN 参与时 a-b 为 NaN，sort 视作 0 → 列「排了但没排」；统一把 NaN 排在有限数之后 */
+    if (Number.isNaN(a) || Number.isNaN(b)) {
+      if (Number.isNaN(a) && Number.isNaN(b)) return 0;
+      return Number.isNaN(a) ? 1 : -1;
+    }
+    return a - b;
+  }
   return String(a ?? '').localeCompare(String(b ?? ''), 'zh-CN', { numeric: true });
 }
 
@@ -1703,9 +1710,11 @@ export function createTable<Row = Record<string, unknown>>(
   /* ═══ 表体渲染（分页切片 / 虚拟窗口；分组模式在 flatRows 上做窗口化）═══ */
   let currentTotal = 0;
 
-  function visibleRange(total: number): [number, number] {
+  function visibleRange(total: number, avail: number): [number, number] {
     if (!virtual) {
-      if (opts.remote || opts.pagination === false) return [0, total];
+      /* remote：total 为服务端总数，本地只有当前页切片——窗口不得超过切片长度，
+         否则按 totalCount 循环取 rows[i] 直接越界（首渲即抛错） */
+      if (opts.remote || opts.pagination === false) return [0, Math.min(total, avail)];
       const start = (page - 1) * pageSize;
       return [start, Math.min(total, start + pageSize)];
     }
@@ -1723,6 +1732,11 @@ export function createTable<Row = Record<string, unknown>>(
     const entries = groupFn ? flatEntries() : null;
     /* 分组/分页/虚拟的切片单位 = flat 条目（组头行高同 data 行）；统计条数用语义上的数据行数 */
     const total = entries ? entries.length : opts.remote ? (opts.totalCount ?? data.length) : rows.length;
+    /* 本地分页页码越界（setPage 超尾页 / 数据被删后只 refresh）：夹回最后一页，避免空表体 */
+    if (!opts.remote && opts.pagination !== false) {
+      const pages = Math.max(1, Math.ceil(total / pageSize));
+      if (page > pages) page = pages;
+    }
     navTotal = entries ? entries.length : rows.length;
     currentTotal = total;
     /* 虚拟模式：清空 body 会塌掉 scrollHeight 导致 scrollTop 被浏览器夹回 0，
@@ -1756,7 +1770,7 @@ export function createTable<Row = Record<string, unknown>>(
       return;
     }
 
-    const [start, end] = visibleRange(total);
+    const [start, end] = visibleRange(total, rows.length);
     const frag = document.createDocumentFragment();
     const offsets = frozenOffsets();
     if (virtual && start > 0) {
@@ -1933,6 +1947,7 @@ export function createTable<Row = Record<string, unknown>>(
     if (destroyed) return;
     renderHead();
     renderBody();
+    syncFrozenWidths();
   }
 
   rekey();
@@ -1957,12 +1972,58 @@ export function createTable<Row = Record<string, unknown>>(
     renderAll();
   }
 
+  /** fr 宽（无 px 声明）冻结列的实测兜底：parsePx 对 fr 记 0，两个以上左/右冻结列
+      会全部叠在 left/right:0 互相压盖。渲染入文档后实测表头格宽重算偏移并回写
+      head/body/汇总行的冻结格；px 声明齐全（绝大多数用法）时零开销跳过。 */
+  function hasFluidFrozen(): boolean {
+    return cols().some((c) => frozenSide(c) != null
+      && !/^(\d+(?:\.\d+)?)px/.test(colWidths.get(c.key) ?? c.width ?? ''));
+  }
+  function syncFrozenWidths(): void {
+    if (!hasFluidFrozen()) return;
+    const visible = cols();
+    const headCells = Array.from(headRow.children) as HTMLElement[];
+    const lead = headCells.length - visible.length; /* 前导选择/展开列 */
+    const left = new Map<string, number>();
+    const right = new Map<string, number>();
+    let acc = headCells.slice(0, lead).reduce((s, c) => s + c.offsetWidth, 0);
+    for (let i = 0; i < visible.length; i++) {
+      const c = visible[i]!;
+      if (frozenSide(c) === 'left') left.set(c.key, acc);
+      acc += headCells[lead + i]?.offsetWidth ?? 0;
+    }
+    let accR = 0;
+    for (let i = visible.length - 1; i >= 0; i--) {
+      const c = visible[i]!;
+      if (frozenSide(c) === 'right') right.set(c.key, accR);
+      accR += headCells[lead + i]?.offsetWidth ?? 0;
+    }
+    const rows = [headRow, summaryEl, ...Array.from(body.querySelectorAll<HTMLElement>('.icen-dt-row'))];
+    for (const row of rows) {
+      const cells = Array.from(row.children) as HTMLElement[];
+      if (cells.length !== headCells.length) continue; /* 分组行/展开详情行结构不同，天然无冻结格 */
+      cells.forEach((cell, i) => {
+        const col = i >= lead ? visible[i - lead] : undefined;
+        if (!col) return;
+        const l = left.get(col.key);
+        if (l != null && cell.classList.contains('icen-dt-cell--frozen')) cell.style.left = `${l}px`;
+        const r = right.get(col.key);
+        if (r != null && cell.classList.contains('icen-dt-cell--frozen-right')) cell.style.right = `${r}px`;
+      });
+    }
+  }
+
   return {
     setPage,
     setPageSize,
     setData(next) {
       if (editing) cancelEdit(true);
       data = next;
+      /* 无 rowKey 时行 key = 数组下标：沿用旧 selected 等于让「下标相同的新行」凭空选中 */
+      if (typeof opts.rowKey !== 'function' && typeof opts.rowKey !== 'string' && selected.size > 0) {
+        selected.clear();
+        emitSelection();
+      }
       rekey();
       invalidate();
       page = 1;

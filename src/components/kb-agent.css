@@ -489,5 +489,3 @@
   left: 1px; /* guard:allow-physical RTL 镜像规则：箭头钉在视觉左端 */
   transform: translateY(-50%) rotate(45deg) scaleX(-1);
 }
-
-.icen-kb-checkpoint-menu-check { display: none; }

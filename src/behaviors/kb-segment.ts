@@ -282,7 +282,9 @@ export function createKbSegment(el: HTMLElement, opts?: KbSegmentOpts): KbSegmen
     delimInput.value = cfg.delimiter ?? '';
     maxInput.value = String(cfg.maxLength);
     overlapInput.value = String(cfg.overlap);
-    modeSeg.querySelectorAll<HTMLElement>('[data-icen-kb-segment-clean]').forEach((cb) => {
+    /* clean 复选组挂在 form 下（buildCleanGroup append 进 form），不在 modeSeg 里——
+       原先查错容器导致 setConfig({clean}) 永不同步 UI，一次 readForm 又把旧值抄回去 */
+    form.querySelectorAll<HTMLElement>('[data-icen-kb-segment-clean]').forEach((cb) => {
       cb.setAttribute('aria-checked', String(cfg.clean.includes(cb.dataset.icenKbSegmentClean as KbCleanOption)));
     });
     pcNotice.hidden = cfg.mode !== 'parent-child';

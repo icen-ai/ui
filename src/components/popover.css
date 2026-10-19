@@ -100,6 +100,13 @@
   outline: none;
   box-shadow: var(--icen-ring);
 }
+/* 触屏抬到 44px 触达面（同 modal/toast/notification 关闭钮口径；桌面保持 22px 紧凑视觉） */
+@media (pointer: coarse) {
+  .icen-popover-close {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
+}
 
 .icen-popover-body {
   font-size: var(--icen-density-font-size-sm);

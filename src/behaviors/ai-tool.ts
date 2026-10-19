@@ -251,8 +251,14 @@ function buildApproval(): { root: HTMLDivElement; reason: HTMLDivElement } {
 /* 注册表 tint → 内联局部变量（第三方 registerAiKind 的 tint 生效；内置 kind 由 CSS 修饰类兜底同值） */
 function applyTint(item: HTMLElement, model: AiToolCallModel): void {
   const tint = getAiKind(model.kind).tint;
-  if (tint) item.style.setProperty('--ai-item-tint', `var(--icen-token-${tint})`);
-  else item.style.removeProperty('--ai-item-tint');
+  if (tint) {
+    /* kind 表里的 'muted' 槽位在 tokens 里叫 text-muted（不存在 --icen-token-muted），
+       直拼会得到无效变量：mcp/note 卡片着色、运行指示点全部透明 */
+    const slot = tint === 'muted' ? 'text-muted' : tint;
+    item.style.setProperty('--ai-item-tint', `var(--icen-token-${slot})`);
+  } else {
+    item.style.removeProperty('--ai-item-tint');
+  }
 }
 
 function applyKindVisual(parts: HeadParts, model: AiToolCallModel): void {

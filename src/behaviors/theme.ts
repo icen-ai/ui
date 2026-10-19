@@ -97,6 +97,8 @@ export function getTheme(): ThemeState {
     if (!raw) return getDefaultTheme();
     const parsed: unknown = JSON.parse(raw);
     if (!isThemeState(parsed)) return getDefaultTheme();
+    /* 归一后回写存储（既有契约：非法原语值原地修复，见 theme.test）。代价是懒注册的
+       自建原语偏好会被覆盖——宿主请在 initTheme 前完成 registerPrimitive */
     const normalized = { preset: parsed.preset, dark: parsed.dark, style: normalizePrimitive(parsed.style) };
     if (normalized.style !== parsed.style || normalized.preset !== parsed.preset) {
       try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized)); } catch { /* Keep normalized appearance when storage is read-only. */ }
@@ -196,8 +198,24 @@ let storageListenerAttached = false;
  *  一旦用户显式 setTheme / toggleDark，跟随停止（持久化优先）。
  *  重复调用幂等（系统监听不会重复挂）。 */
 export function initTheme(): ThemeState {
-  const t = getTheme();
-  applyTheme(t);
+  let t = getTheme();
+  if (isBrowser()) {
+    const root = document.documentElement;
+    /* 无持久化偏好但 SSR 已渲染完整外观（preset + style 属性齐全）：以 DOM 现状为
+       初始态、跳过 apply——否则首帧从 SSR 主题跳到库默认主题，恰是防闪烁要解决的 */
+    if (!hasPersistedPreference() && root.hasAttribute('data-icen-preset') && root.hasAttribute('data-icen-style')) {
+      t = {
+        preset: root.getAttribute('data-icen-preset') ?? t.preset,
+        dark: root.getAttribute('data-icen-theme') === 'dark',
+        style: root.getAttribute('data-icen-style') ?? t.style,
+      };
+      lastApplied = { ...t };
+    } else {
+      applyTheme(t);
+    }
+  } else {
+    applyTheme(t);
+  }
 
   if (isBrowser() && !storageListenerAttached) {
     storageListenerAttached = true;

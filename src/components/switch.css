@@ -62,6 +62,8 @@
   height: var(--switch-thumb);
   border-radius: var(--icen-radius-full);
   background: var(--icen-token-on-accent);
+  /* OFF 态白丸对 control-hover 轨道仅 ~1.1:1（1.4.11 要求 3:1），一圈 outline 描边补足边界对比 */
+  border: 1.5px solid var(--icen-token-outline);
   box-shadow: 0 1px 2px color-mix(in srgb, var(--icen-token-text) 15%, transparent);
   transition: transform var(--icen-tx-bounce);
 }

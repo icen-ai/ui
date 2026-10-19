@@ -266,6 +266,16 @@ export function createKbRetrieval(el: HTMLElement, opts: KbRetrievalOpts = {}): 
   let params = normalizeRetrievalParams(opts.params);
   const thresholdMax = typeof opts.thresholdMax === 'number' && opts.thresholdMax > 0 ? opts.thresholdMax : 1;
   let hits: KbRetrievalHit[] = [];
+  /* 分数条分母：宿主未给 thresholdMax 时按本列表实测最大值归一（bm25/dot 等值域 >1 的
+     分数种按 1 归一会全部顶格 100%，序数条失去区分度；与 kb-rerank 的 columnMax 同口径） */
+  const scoreListMax = (): number => {
+    let m = thresholdMax;
+    for (const hit of hits) {
+      const v = Math.abs(hit.score ?? 0);
+      if (Number.isFinite(v) && v > m) m = v;
+    }
+    return m > 0 ? m : 1;
+  };
   let busy = false;
   let destroyed = false;
   /** 阈值滑杆的原始值（0 = 不启用；getParams 时投影为 params.threshold） */
@@ -483,7 +493,7 @@ export function createKbRetrieval(el: HTMLElement, opts: KbRetrievalOpts = {}): 
     }
     let alive = 0;
     for (const hit of hits) {
-      const pct = scorePercent(hit.score, hit.scoreKind, thresholdMax);
+      const pct = scorePercent(hit.score, hit.scoreKind, scoreListMax());
       if (pct != null && pct >= t * 100 - 1e-9) alive++;
     }
     /* 阈值与存活同一行内联：关系一目了然 */
@@ -505,7 +515,7 @@ export function createKbRetrieval(el: HTMLElement, opts: KbRetrievalOpts = {}): 
 
   function renderScoreSide(hit: KbRetrievalHit, side: HTMLElement): void {
     const score = h('span', 'icen-kb-score');
-    const pct = scorePercent(hit.score, hit.scoreKind, thresholdMax);
+    const pct = scorePercent(hit.score, hit.scoreKind, scoreListMax());
     if (pct != null) {
       const barEl = h('span', 'icen-kb-score-bar');
       const fill = h('i');

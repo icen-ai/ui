@@ -169,8 +169,8 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  inline-size: 16px;
-  block-size: 20px;
+  inline-size: 24px; /* 与 .icen-select-chip-x 同口径（WCAG 2.5.8 下限） */
+  block-size: 24px;
   margin-inline-start: var(--icen-density-space-xs);
   padding: 0;
   border: 0;

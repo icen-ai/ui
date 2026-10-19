@@ -75,8 +75,8 @@
 /* 尺寸变体 */
 .icen-pagination--sm .icen-page-btn,
 .icen-pagination--sm .icen-page-ellipsis {
-  min-width: 22px;
-  height: 22px;
+  min-width: 24px; /* WCAG 2.5.8 下限（22 → 24） */
+  height: 24px;
   font-size: var(--icen-density-font-size-xs);
 }
 

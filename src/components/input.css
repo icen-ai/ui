@@ -98,7 +98,7 @@
   font: inherit;
 }
 .icen-input::placeholder {
-  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+  color: var(--icen-token-text-faint); /* 全量 faint：60% 混透浅色仅 ~2.4:1 低于 AA（faint 全量 ≥4.9:1） */
 }
 .icen-input:read-only {
   color: var(--icen-token-text-muted);
@@ -161,7 +161,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 22px; height: 22px;
+  width: 24px; height: 24px; /* WCAG 2.5.8 下限（22 → 24） */
   padding: 0;
   border: none;
   background: transparent;
@@ -232,7 +232,7 @@
   min-height: calc(3 * 1.5em + 24px);
 }
 .icen-textarea::placeholder {
-  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+  color: var(--icen-token-text-faint); /* 全量 faint：60% 混透浅色仅 ~2.4:1 低于 AA（faint 全量 ≥4.9:1） */
 }
 
 /* 字符计数（behavior 可挂到 .icen-input-wrap 或 .icen-textarea-wrap 内行内末端） */

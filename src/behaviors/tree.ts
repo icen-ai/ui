@@ -90,7 +90,10 @@ function setup(tree: Element): (() => void) | undefined {
     if (!node || node.closest('.icen-tree') !== tree) return;
     if (node.classList.contains('is-disabled')) return;
 
-    const allNodes = Array.from(tree.querySelectorAll<HTMLElement>('.icen-tree-node:not(.is-disabled)'));
+    /* 折叠子树（ul[hidden]）内的节点不可聚焦：命中会得到 display:none 元素，
+       .focus() 无效 → 方向键经过每个隐藏节点都像失灵一次 */
+    const allNodes = Array.from(tree.querySelectorAll<HTMLElement>('.icen-tree-node:not(.is-disabled)'))
+      .filter((n) => !n.closest('ul[hidden]'));
     const idx = allNodes.indexOf(node as HTMLElement);
     if (idx === -1) return;
 

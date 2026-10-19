@@ -265,7 +265,7 @@ html {
   --icen-z-raised: 10;
   --icen-z-sticky: 50;
   --icen-z-chrome: 200;
-  --icen-z-toast: 400;
+  --icen-z-toast: 560; /* 反馈层必须压过 dialog(500)：模态里触发的 toast 不能被遮罩压住；仍低于 popover/tooltip（瞬态浮层） */
   --icen-z-banner: 450;
   --icen-z-dialog: 500;
   --icen-z-popover: 620;
@@ -287,6 +287,10 @@ html {
 }
 @keyframes icen-spin {
   to { transform: rotate(360deg); }
+}
+@keyframes icen-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 @keyframes icen-skeleton-pulse {
   0%, 100% { opacity: 1; }

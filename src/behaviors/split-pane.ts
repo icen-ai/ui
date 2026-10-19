@@ -93,6 +93,9 @@ function setup(container: HTMLElement): (() => void) | undefined {
   // ── 指针拖拽（拖动过程只写不派发；结束时派发一次终值） ──
   let dragging = false;
   const onDown = (ev: PointerEvent): void => {
+    /* 只吃主键/主指：右键拖拽会劫持上下文菜单，多指第二触点会让 --split 跳变 */
+    if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+    if (!ev.isPrimary) return;
     dragging = true;
     divider.classList.add('is-dragging');
     divider.setPointerCapture(ev.pointerId);

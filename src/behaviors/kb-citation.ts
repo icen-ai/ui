@@ -87,9 +87,13 @@ export function kbDomainOf(url: string | undefined): string {
   }
 }
 
-/* ── 来源注册表（模块级：一处登记，角标/hover 卡/来源列表共享） ── */
+/* ── 来源注册表（模块级兜底 + 按渲染根登记：一处登记，角标/hover 卡/来源列表共享）── */
 
 let registrySources: KbCitation[] = [];
+
+/* 各渲染根（renderCitationText 的 el）自带的来源表：多答案同页时模块级注册表
+   只剩「最后渲染者」，hover 卡会拿错答案的来源；优先沿 DOM 向上找最近的登记根 */
+const rootPools = new WeakMap<HTMLElement, KbCitation[]>();
 
 /** 覆盖来源注册表（renderCitationText 传 sources 时自动调用；宿主也可手动喂数据） */
 export function setKbCitationSources(sources: KbCitation[]): void {
@@ -149,7 +153,10 @@ function citationMark(n: number, pool: KbCitation[] | undefined): HTMLElement {
 export function renderCitationText(el: HTMLElement, text: string, sources?: KbCitation[]): HTMLElement {
   if (typeof document === 'undefined') return el;
   const pool = sources && sources.length ? sources.map(normalizeCitation) : undefined;
-  if (pool) setKbCitationSources(pool);
+  if (pool) {
+    setKbCitationSources(pool);
+    rootPools.set(el, pool);
+  }
   el.textContent = '';
   for (const seg of parseInlineCitations(text ?? '')) {
     if (typeof seg.n === 'number') el.appendChild(citationMark(seg.n, pool));
@@ -268,12 +275,21 @@ export function initKbCitation(root?: ParentNode, opts?: KbCitationInitOptions):
   initedScopes.add(key);
   const target = scope as ParentNode & EventTarget;
 
-  const poolOf = (): KbCitation[] =>
-    opts?.sources && opts.sources.length ? opts.sources : registrySources;
+  /** 角标就近取来源表：init 显式 sources > 沿 DOM 向上最近的渲染根登记 > 模块级注册表 */
+  const poolFor = (mark: HTMLElement): KbCitation[] => {
+    if (opts?.sources && opts.sources.length) return opts.sources;
+    let cur: HTMLElement | null = mark;
+    while (cur) {
+      const pool = rootPools.get(cur);
+      if (pool && pool.length) return pool;
+      cur = cur.parentElement;
+    }
+    return registrySources;
+  };
 
-  /** hover 卡数据：注册表命中，或 getCard 增强；两者皆无 → 不浮卡 */
-  const cardDataFor = (n: number): KbCitation | null => {
-    const found = lookupCitation(poolOf(), n) ?? null;
+  /** hover 卡数据：来源表命中，或 getCard 增强；两者皆无 → 不浮卡 */
+  const cardDataFor = (mark: HTMLElement, n: number): KbCitation | null => {
+    const found = lookupCitation(poolFor(mark), n) ?? null;
     if (opts?.getCard) return opts.getCard(found ?? syntheticCitation(n)) ?? found;
     return found;
   };
@@ -286,7 +302,7 @@ export function initKbCitation(root?: ParentNode, opts?: KbCitationInitOptions):
   const showCard = (mark: HTMLElement): void => {
     const n = citeNum(mark);
     if (n < 1) return;
-    const data = cardDataFor(n);
+    const data = cardDataFor(mark, n);
     if (!data) return;
     const panel = buildCitationCard(data, new Date());
     hover.panel = panel;
@@ -310,7 +326,7 @@ export function initKbCitation(root?: ParentNode, opts?: KbCitationInitOptions):
     if (n < 1) return;
     closeHoverCard();
     const citation =
-      cardDataFor(n) ?? lookupCitation(poolOf(), n) ?? syntheticCitation(n);
+      cardDataFor(mark, n) ?? lookupCitation(poolFor(mark), n) ?? syntheticCitation(n);
     emitIcen(mark, 'icen:kb-citation-open', { citation });
   };
 

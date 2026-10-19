@@ -418,7 +418,10 @@ function withChrome(
   });
   syncEye();
 
-  head.append(title, eye);
+  /* 图例眼只对「确有图例」的图型出现：单系列降采样/缩放场景下没有可显隐的图例行，
+     摆出一个只会翻转 aria-pressed 的按钮是死控件 */
+  if (hasLegend) head.append(title, eye);
+  else head.append(title);
   el.append(head, body);
   paint(body);
 }
@@ -542,7 +545,7 @@ export function renderVBar(el: HTMLElement, opts: ChartVBarOptions): HTMLElement
     wrap.appendChild(track);
   }
   body.append(wrap, labelsRow(labelsUsed));
-  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone ?? (si === 0 ? opts.tone : undefined), si })), wrap));
+  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: `${si}:${s.name}`, label: s.name, tone: s.tone ?? (si === 0 ? opts.tone : undefined), si })), wrap));
   });
   attachChartInteraction(el, 'vbar');
   return el;
@@ -639,7 +642,8 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): HTMLEl
   }));
   let offset = 0;
   opts.segments.forEach((seg, segIndex) => {
-    const dash = (seg.value / total) * circumference;
+    /* 负值段钳 0：负 dash 长度是非法 stroke-dasharray，浏览器会当未设置 → 画成整环盖住其他段 */
+    const dash = Math.max(0, (seg.value / total) * circumference);
     const arc = svgEl('circle', {
       cx: '60', cy: '60', r: String(radius),
       fill: 'none',
@@ -698,7 +702,8 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement
   const defs = svgEl('defs', {});
 
   for (let i = 0; i < 4; i++) {
-    const y = pad + (i * (height - pad * 2)) / 3;
+    /* +0.5 对齐物理像素：1px 线落在整数位会被两格抗锯齿渲染成 2px 灰线 */
+    const y = Math.round(pad + (i * (height - pad * 2)) / 3) + 0.5;
     svg.appendChild(svgEl('line', {
       x1: String(pad), x2: String(width - pad), y1: String(y), y2: String(y),
       stroke: 'var(--icen-token-line-soft)', 'stroke-width': '1',
@@ -774,7 +779,7 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement
   if (defs.firstChild) svg.insertBefore(defs, svg.firstChild);
   wrap.append(svg, pointLabelsRow(labelsUsed, width, pad));
   body.appendChild(wrap);
-  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: s.name, label: s.name, tone: s.tone ?? (si === 0 ? opts.tone : undefined), si })), wrap));
+  if (seriesList.length > 1) body.appendChild(toggleLegend(seriesList.map((s, si) => ({ key: `${si}:${s.name}`, label: s.name, tone: s.tone ?? (si === 0 ? opts.tone : undefined), si })), wrap));
   });
   /* renderChart 驱动时（el 即 chartBody）不重复挂观察——外层句柄的 update 管线负责 */
   if (el.dataset.icenChartBody == null) observeFluidWidth(el, () => renderLine(el, opts));
@@ -800,7 +805,8 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
 
   const points = values.map((value, i) => ({
     x: values.length <= 1 ? width / 2 : pad + (i / (values.length - 1)) * (width - pad * 2),
-    y: height - pad - (value / max) * (height - pad * 2),
+    /* 负值钳到基线（与折线图同口径）：容器 overflow:visible，反向射出会压住下方内容 */
+    y: height - pad - (Math.max(0, value) / max) * (height - pad * 2),
     value,
     label: labels[i] ?? '',
   }));
@@ -822,7 +828,8 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
   svg.appendChild(defs);
 
   for (let i = 0; i < 4; i++) {
-    const y = pad + (i * (height - pad * 2)) / 3;
+    /* +0.5 对齐物理像素：1px 线落在整数位会被两格抗锯齿渲染成 2px 灰线 */
+    const y = Math.round(pad + (i * (height - pad * 2)) / 3) + 0.5;
     svg.appendChild(svgEl('line', {
       x1: String(pad), x2: String(width - pad), y1: String(y), y2: String(y),
       stroke: 'var(--icen-token-line-soft)', 'stroke-width': '1',
@@ -978,7 +985,7 @@ export function renderRadar(el: HTMLElement, opts: ChartRadarOptions): HTMLEleme
       setMarkData(dot, { index: i, seriesIndex: si, seriesName: s.name || undefined, label: axes[i] ?? '', value: s.values[i] ?? 0 });
       svg.appendChild(dot);
     }
-    legendItems.push({ key: s.name || icenT('charts.seriesName', { p0: si + 1 }), label: s.name || icenT('charts.seriesName', { p0: si + 1 }), tone: s.tone, si });
+    legendItems.push({ key: `${si}:${s.name || icenT('charts.seriesName', { p0: si + 1 })}`, label: s.name || icenT('charts.seriesName', { p0: si + 1 }), tone: s.tone, si });
   });
 
   /* 单系列无系列项可切：不追加空的 .icen-chart-legend 占位 div */
@@ -1003,6 +1010,14 @@ function niceCeil(v: number): number {
   else if (frac <= 5) nice = 5;
   else nice = 10;
   return nice * base;
+}
+
+/** 轴刻度小数位：按值域÷刻度数的步长推导。固定 1 位会把 <0.15 的窄值域四舍五入成
+ *  一串重复的 "0"（如 0.001~0.003 的比率散点），改为随步长收紧精度。 */
+function tickPrecision(min: number, max: number, steps: number): number {
+  const span = Math.abs(max - min);
+  if (!Number.isFinite(span) || span <= 0) return 0;
+  return Math.max(0, Math.ceil(-Math.log10(span / steps)));
 }
 
 /* ═══════════ 贡献图 / 迷你趋势 / 进度环 ═══════════ */
@@ -1154,7 +1169,8 @@ export function renderSparkline(el: HTMLElement, opts: ChartSeriesOptions): HTML
 
   const points = values.map((value, i) => ({
     x: values.length <= 1 ? width / 2 : pad + (i / (values.length - 1)) * (width - pad * 2),
-    y: height - pad - (value / max) * (height - pad * 2),
+    /* 负值钳到基线（与折线图同口径）：viewBox 仅 28 高，反向射出更刺眼 */
+    y: height - pad - (Math.max(0, value) / max) * (height - pad * 2),
     value,
   }));
   const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
@@ -1311,6 +1327,8 @@ export function renderCalendar(el: HTMLElement, opts: ChartCalendarOptions): HTM
 
   const max = maxOf(entries.map((e) => e.value));
 
+  /* 逐格按自身日期落位：输入未按日期序（接口新→旧很常见）时按数组序摆放会错行错列 */
+  entries.sort((a, b) => a.date.localeCompare(b.date));
   const pad = padFirstWeek(grid, entries[0]!.date, weekStart);
   let lastMonth = -1;
   entries.forEach((entry, i) => {
@@ -1394,7 +1412,8 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
   const xAt = (x: number): number => pad + ((x - xMin) / (xMax - xMin)) * (width - pad * 2);
   const yAt = (y: number): number => height - pad - ((y - yMin) / (yMax - yMin)) * (height - pad * 2);
   for (let i = 0; i <= 3; i++) {
-    const y = pad + (i * (height - pad * 2)) / 3;
+    /* +0.5 对齐物理像素：1px 线落在整数位会两格抗锯齿发虚 */
+    const y = Math.round(pad + (i * (height - pad * 2)) / 3) + 0.5;
     svg.appendChild(svgEl('line', {
       x1: String(pad), x2: String(width - pad), y1: String(y), y2: String(y),
       stroke: 'var(--icen-token-line-soft)', 'stroke-width': '1',
@@ -1403,11 +1422,11 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
     const txt = svgEl('text', {
       x: String(pad - 4), y: String(y + 3), 'text-anchor': 'end', 'font-size': '8', fill: 'var(--icen-token-text-faint)',
     });
-    txt.textContent = fmt(opts, Math.round(tv * 10) / 10);
+    txt.textContent = fmt(opts, +tv.toFixed(tickPrecision(yMin, yMax, 3)));
     svg.appendChild(txt);
   }
   for (let i = 0; i <= 4; i++) {
-    const x = pad + (i * (width - pad * 2)) / 4;
+    const x = Math.round(pad + (i * (width - pad * 2)) / 4) + 0.5;
     svg.appendChild(svgEl('line', {
       x1: String(x), x2: String(x), y1: String(pad), y2: String(height - pad),
       stroke: 'var(--icen-token-line-soft)', 'stroke-width': '1', 'stroke-dasharray': '2 3',
@@ -1416,7 +1435,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
     const txt = svgEl('text', {
       x: String(x), y: String(height - pad + 12), 'text-anchor': 'middle', 'font-size': '8', fill: 'var(--icen-token-text-faint)',
     });
-    txt.textContent = fmt(opts, Math.round(tv * 10) / 10);
+    txt.textContent = fmt(opts, +tv.toFixed(tickPrecision(xMin, xMax, 4)));
     svg.appendChild(txt);
   }
   if (opts.yLabel) {
@@ -1916,6 +1935,8 @@ function renderChartSkeleton(body: HTMLElement): void {
 /* ── 标记线 / 标记点（line/area SVG + vbar DOM 两套几何）── */
 
 const CHART_MARK_ACCENT = 'var(--icen-token-accent)';
+/* 标记文字用可读变体：裸 accent 在浅色主题对白卡只有 ~4.07:1，8px 小字低于 AA */
+const CHART_MARK_ACCENT_TEXT = 'var(--icen-token-accent-text)';
 
 function markToneVar(tone: ChartMarkTone | undefined): string {
   switch (tone) {
@@ -2039,7 +2060,7 @@ function paintSvgChartMarks(
         class: 'icen-chart-mark-label',
         x: String(clampNum(x, 12, W - 12)),
         y: String(clampNum(y - 10, 8, CHART_LINE_H - 4)),
-        'text-anchor': 'middle', 'font-size': '8', fill: CHART_MARK_ACCENT,
+        'text-anchor': 'middle', 'font-size': '8', fill: CHART_MARK_ACCENT_TEXT,
       });
       label.textContent = mark.text ?? mark.label;
       g.appendChild(label);
@@ -2735,6 +2756,14 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
       const graphic = root.querySelector('[role="img"]');
       if (graphic && !graphic.getAttribute('aria-label')) {
         graphic.setAttribute('aria-label', spec.title ? `${spec.title}（${type}）` : type);
+      } else if (!graphic) {
+        /* vbar/hbar 是纯 DOM 渲染，没有 [role="img"] 锚点：落到图形容器上补 role + label，
+           否则柱状/排行图对读屏器完全静默 */
+        const dom = root.querySelector('.icen-chart-vbar, .icen-chart-hbar');
+        if (dom) {
+          dom.setAttribute('role', 'img');
+          dom.setAttribute('aria-label', spec.title ? `${spec.title}（${type}）` : type);
+        }
       }
     }
     if (loading) return;

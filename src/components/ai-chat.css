@@ -52,7 +52,7 @@
  * 状态机 7 态 .is-* 中的 streaming/done 在本文件消费；running 脉冲点等条目态见 ai-tool.css（.icen-ai-item 基元）。
  * data-icen-density：summary 档隐藏 meta、默认折叠 reasoning（纯 CSS）；
  *               tool/system 类次要消息在 summary 档压淡。verbose 与 normal 目前同视觉（透明度两档生效）。
- * 流式光标复用 tokens 的 blink keyframes（.icen-animate-blink 同款）；reasoning shimmer 时长走
+ * 流式光标复用 base.css 的 icen-blink keyframes；reasoning shimmer 时长走
  * --ai-shimmer-duration 局部变量（默认值 1.6s）。
  */
 
@@ -179,13 +179,15 @@
   word-break: break-word;
 }
 
-/* 流式光标（▍闪烁，复用 tokens 的 blink keyframes，同 .icen-animate-blink） */
+/* 流式光标（▍闪烁，共享 base.css 的 icen-blink keyframes）；
+   .icen-ai-msg-text 命中库内自带绑定的 stream() 节点（createAiStream 挂 .is-streaming） */
 .icen-ai-msg-body.is-streaming::after,
+.icen-ai-msg-text.is-streaming::after,
 .icen-ai-reasoning-body.is-streaming::after {
   content: '▍';
   margin-inline-start: 1px;
   color: var(--icen-token-accent);
-  animation: blink 1s step-end infinite;
+  animation: icen-blink 1s step-end infinite;
 }
 
 /* 消息操作：hover / focus-within 才出现（键盘可达等价） */
@@ -393,14 +395,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 流式中：耗时位换成 shimmer「正在思考…」（时长走局部变量） */
+/* 流式中：耗时位显示 shimmer「正在思考…」——文案由 createAiStream 写入（i18n），
+   此处只做视觉（shimmer 渐变 + 透明填充），不再用 CSS content 冻死中文 */
 .icen-ai-reasoning.is-streaming .icen-ai-reasoning-time {
-  display: none;
-}
-.icen-ai-reasoning.is-streaming .icen-ai-reasoning-head::after {
-  content: '正在思考…';
-  margin-inline-start: auto;
-  font-size: var(--icen-density-font-size-2xs);
+  font-variant-numeric: normal;
   background: linear-gradient(
     90deg,
     var(--icen-token-text-faint) 25%,
@@ -990,12 +988,20 @@
   }
 }
 
-/* 触屏无 hover：消息操作常显（否则不可达） */
+/* 触屏无 hover：消息操作常显（否则不可达）；动作钮抬到 44px 触达面
+   （copy/retry、分支切换、线程操作原为 20-22px，低于 WCAG 2.5.8 下限） */
 @media (pointer: coarse) {
   .icen-ai-msg-actions {
     opacity: 1;
     visibility: visible;
     transform: none;
+  }
+  .icen-ai-msg-actions [data-icen-ai-msg-action],
+  .icen-ai-branch-prev,
+  .icen-ai-branch-next,
+  .icen-ai-thread-action {
+    min-inline-size: 44px;
+    min-block-size: 44px;
   }
 }
 

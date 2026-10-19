@@ -105,8 +105,14 @@
   font: inherit;
   font-size: var(--icen-density-font-size-md);
 }
+/* 搜索栏不是 .icen-control（吃不到全局 focus-within 环）：输入框是开面板即聚焦的
+   主控件，焦点可见性自持——包裹层给 focus-within 软环 */
+.icen-command-palette-search:focus-within {
+  box-shadow: var(--icen-ring-soft);
+  border-radius: var(--icen-radius-sm);
+}
 .icen-command-palette-input::placeholder {
-  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+  color: var(--icen-token-text-faint);
 }
 .icen-command-palette-esc {
   font-family: var(--icen-font-mono);

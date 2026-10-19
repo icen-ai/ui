@@ -113,7 +113,16 @@
 }
 
 /* ── 面包屑分隔符变体 ── */
-.icen-breadcrumb--slash .icen-breadcrumb-sep::after { content: '/'; }
+/* 字符型变体必须显式撤掉基础规则的 chevron mask/背景/定宽，
+   否则字被遮在实底剪影里永不显示（--arrow 全量重写所以无此问题） */
+.icen-breadcrumb--slash .icen-breadcrumb-sep::after {
+  content: '/';
+  background: none;
+  mask: none;
+  inline-size: auto;
+  block-size: auto;
+  vertical-align: baseline;
+}
 .icen-breadcrumb--arrow .icen-breadcrumb-sep::after { content: '';
   display: inline-block;
   inline-size: 16px;
@@ -122,7 +131,15 @@
   vertical-align: middle;
   background: currentColor;
   mask: var(--icen-token-icon-arrow-right) center / contain no-repeat; }
-.icen-breadcrumb--dot .icen-breadcrumb-sep::after { content: '·'; font-size: 1.2em; }
+.icen-breadcrumb--dot .icen-breadcrumb-sep::after {
+  content: '·';
+  font-size: 1.2em;
+  background: none;
+  mask: none;
+  inline-size: auto;
+  block-size: auto;
+  vertical-align: baseline;
+}
 
 /* ── 面包屑尺寸变体 ── */
 .icen-breadcrumb--sm {

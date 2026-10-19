@@ -460,6 +460,13 @@ export function initGestures(): () => void {
     downPos = { x: e.clientX, y: e.clientY };
     suppressTrailingClick = false;
   };
+  const onUpPos = (e: PointerEvent): void => {
+    /* 原地松开 = 正常轻按：清掉落点。不清的话，之后键盘激活（clientX/Y 恒为 0）
+       拿旧落点算距离必超阈值，icen:click 会被永久吞掉；拖拽/划词位移松开则保留落点压制尾随 click */
+    if (downPos && Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) <= CLICK_DRAG_TOLERANCE) {
+      downPos = null;
+    }
+  };
   /** 拖拽/划词判定：true = 这次松开不构成单击 */
   const isDragRelease = (e: MouseEvent): boolean =>
     downPos != null && Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y) > CLICK_DRAG_TOLERANCE;
@@ -467,7 +474,11 @@ export function initGestures(): () => void {
     const host = gestureHost(e, 'click');
     if (!host) return;
     if (suppressTrailingClick) { suppressTrailingClick = false; return; }
-    if (isDragRelease(e)) return;
+    if (isDragRelease(e)) {
+      /* 一次性压制：吞掉这次尾随 click 后即清落点，避免陈旧落点连坐后续键盘/合成点击 */
+      downPos = null;
+      return;
+    }
     if (host.matches('[data-icen-gestures~="dblclick"]')) {
       if (clickTimer) clearTimeout(clickTimer);
       pending = { host, e };
@@ -581,6 +592,7 @@ export function initGestures(): () => void {
   };
 
   document.addEventListener('pointerdown', onDownPos);
+  document.addEventListener('pointerup', onUpPos);
   document.addEventListener('click', onClick);
   document.addEventListener('dblclick', onDblClick);
   document.addEventListener('contextmenu', onContextMenu);
@@ -596,6 +608,7 @@ export function initGestures(): () => void {
 
   gesturesTeardown = (): void => {
     document.removeEventListener('pointerdown', onDownPos);
+    document.removeEventListener('pointerup', onUpPos);
     document.removeEventListener('click', onClick);
     document.removeEventListener('dblclick', onDblClick);
     document.removeEventListener('contextmenu', onContextMenu);

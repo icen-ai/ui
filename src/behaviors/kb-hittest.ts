@@ -163,7 +163,8 @@ export function createKbHitTest(el: HTMLElement, opts: KbHitTestOpts = {}): KbHi
     return stub;
   }
   const marked = el as MarkedHitTestEl;
-  if (marked.__icenKbHitTest) return marked.__icenKbHitTest;
+  /* 同元素重建先拆旧实例再重渲：直接复用旧句柄会用旧 cases/旧 onRun 静默拒绝新配置 */
+  marked.__icenKbHitTest?.destroy();
 
   const ctrl = new AbortController();
   const listen = (target: EventTarget, type: string, fn: EventListener): void => {

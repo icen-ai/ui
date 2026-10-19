@@ -69,7 +69,7 @@
   justify-self: start;
 }
 .icen-kb-span.is-retrieval .icen-kb-span-kind {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* 10.5px 微字对 canvas 需 AA（裸 accent 3.76:1 不达） */
   border-color: color-mix(in srgb, var(--icen-token-accent) 45%, transparent);
 }
 
@@ -269,7 +269,7 @@
 .icen-kb-review-chip:hover { border-color: var(--icen-token-line); color: var(--icen-token-text); }
 .icen-kb-review-chip:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
 .icen-kb-review-chip.is-on {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* accent 叠 accent-subtle 浅色 ~3.5:1，chip 字 12px 低于 AA */
   border-color: color-mix(in srgb, var(--icen-token-accent) 50%, transparent);
   background: var(--icen-token-accent-subtle);
 }
@@ -386,6 +386,7 @@
   padding: 2px 8px;
   cursor: pointer;
   white-space: nowrap;
+  min-block-size: 24px; /* WCAG 2.5.8 下限 */
 }
 .icen-kb-gap-action:hover { color: var(--icen-token-text); border-color: var(--icen-token-line); }
 .icen-kb-gap-action:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
@@ -440,7 +441,7 @@
 .icen-kb-eval-filter:hover { color: var(--icen-token-text); border-color: var(--icen-token-line); }
 .icen-kb-eval-filter:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
 .icen-kb-eval-filter.is-on {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text); /* 同 review-chip：小字走可读变体 */
   border-color: color-mix(in srgb, var(--icen-token-accent) 50%, transparent);
   background: var(--icen-token-accent-subtle);
 }

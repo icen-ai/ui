@@ -815,8 +815,16 @@ function ensureNovalidate(form: HTMLFormElement): void {
   form.setAttribute('novalidate', '');
 }
 
+/* 委托路径自建的 form → handle 登记：销毁只回收自己建的句柄，
+   不误杀宿主 createFormValidator 直建的（误杀后 novalidate 仍挂着、监听已摘，
+   宿主表单会无校验裸提交） */
+const delegatedHandles = new WeakMap<HTMLFormElement, FormValidator>();
+
 function ensureFormHandle(form: HTMLFormElement): void {
-  if (!liveValidators.has(form)) createFormValidator(form);
+  if (!liveValidators.has(form)) {
+    const handle = createFormValidator(form);
+    delegatedHandles.set(form, handle);
+  }
 }
 
 function scopedValidateForms(scope: ParentNode): HTMLFormElement[] {
@@ -863,9 +871,10 @@ export function initFormValidate(root?: ParentNode): () => void {
 
   return () => {
     scope.removeEventListener('submit', onSubmitCapture, true);
-    /* 摘除委托并销毁 scope 内由 ensure 路径建立的 handle（同 initTabs 销毁口径） */
+    /* 摘除委托并销毁 scope 内由 ensure 路径建立、且仍是同一个的 handle（同 initTabs 销毁口径） */
     for (const form of scopedValidateForms(scope)) {
-      liveValidators.get(form)?.destroy();
+      const own = delegatedHandles.get(form);
+      if (own && liveValidators.get(form) === own) own.destroy();
     }
     formValidateInited = false;
   };

@@ -51,7 +51,7 @@
  *     同页面共存时后加载者覆盖同款属性，视觉不冲突。
  *   - keyframes ai-status-pulse 为组件局部定义（等同 pill.css 的 pill-pulse），
  *     时长走 var(--pill-pulse-duration, 1.5s)：pill.css 在场时与其同步，否则自洽。
- *   - blink keyframes 来自 tokens/colors.css（.icen-animate-blink 同款，共享复用）。
+ *   - icen-blink keyframes 来自 base.css（共享复用）。
  *   - base.css：--icen-z-chrome / --icen-tx-* / --icen-ring。只消费 --icen-token-* / --icen-density-* / --icen-radius-*。
  */
 

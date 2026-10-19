@@ -100,6 +100,12 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
   const stub: KbSandboxHandle = { load: () => undefined, call: () => Promise.reject(new Error('icen-kb-sandbox: SSR')), destroy: () => undefined };
   if (typeof document === 'undefined' || !el) return stub; /* SSR：no-op 句柄 */
 
+  /* 同元素重建先拆旧实例：window message 监听挂在模块级 signal 上，
+     不拆旧会随挂载次数泄漏（SPA 路由反复挂载即累积） */
+  const host = el as HTMLElement & { __icenKbSandbox?: KbSandboxHandle };
+  host.__icenKbSandbox?.destroy();
+  host.__icenKbSandbox = stub; /* 就位前先占坑，handle 组装完成后覆写 */
+
   const timeoutMs = typeof opts.timeoutMs === 'number' && opts.timeoutMs > 0 ? opts.timeoutMs : DEFAULT_TIMEOUT_MS;
   const allowedOrigins = Array.isArray(opts.allowedOrigins) ? opts.allowedOrigins.filter((o) => typeof o === 'string') : null;
 
@@ -272,5 +278,7 @@ export function createKbSandbox(el: HTMLElement, opts: KbSandboxOptions = {}): K
     el.textContent = '';
   };
 
-  return { load, call, destroy };
+  const handle: KbSandboxHandle = { load, call, destroy };
+  host.__icenKbSandbox = handle;
+  return handle;
 }

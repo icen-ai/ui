@@ -34,7 +34,7 @@
 .icen-theme-switcher-trigger:hover,
 .icen-theme-switcher-option:hover { background: var(--icen-token-surface-hover); border-color: var(--icen-token-line); }
 .icen-theme-switcher-trigger:focus-visible,
-.icen-theme-switcher-option:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 3px; }
+.icen-theme-switcher-option:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 2px; /* 与全局 a:focus-visible / material 系 2px 口径对齐 */ }
 .icen-theme-switcher-trigger[aria-expanded="true"] { border-color: var(--icen-token-accent); }
 .icen-theme-switcher-sample { display: inline-flex; flex: 0 0 auto; inline-size: 40px; block-size: 20px; overflow: hidden; border: 1px solid var(--icen-token-line); border-radius: var(--icen-radius-sm); }
 .icen-theme-switcher-sample i { display: block; flex: 1; }

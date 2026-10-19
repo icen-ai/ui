@@ -101,6 +101,14 @@
   outline: none;
   box-shadow: var(--icen-ring);
 }
+/* 触屏抬触达面（镜像 pill.css 的 .icen-pill-close 口径；桌面保持 16px 紧凑视觉） */
+@media (pointer: coarse) {
+  .icen-tag-close {
+    min-inline-size: 28px;
+    min-block-size: 28px;
+    opacity: 1;
+  }
+}
 .icen-tag-close svg { width: 10px; height: 10px; }
 .icen-tag--sm .icen-tag-close { width: 14px; height: 14px; margin-inline-end: -2px; }
 .icen-tag--lg .icen-tag-close { width: 18px; height: 18px; margin-inline-end: -6px; }

@@ -253,6 +253,9 @@ function bindGlobalListeners(): void {
   document.addEventListener('keydown', onGlobalKeyDown);
 }
 
+/** 活跃实例登记：最后一个销毁时连带摘除全局委托（对齐 select.ts 的 activeSetups）。 */
+const activeSetups = new Set<() => void>();
+
 function bindOpenListeners(): void {
   window.addEventListener('scroll', onWindowChange, true);
   window.addEventListener('resize', onWindowChange);
@@ -954,9 +957,17 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
     root.remove();
     el.textContent = '';
     if (instances.get(el) === destroy) instances.delete(el);
+    /* 最后一个实例销毁时摘除全局委托（同 select.ts 口径），SPA 反复挂载不再累积 */
+    activeSetups.delete(destroy);
+    if (!activeSetups.size && globalBound) {
+      document.removeEventListener('pointerdown', onGlobalPointerDown);
+      document.removeEventListener('keydown', onGlobalKeyDown);
+      globalBound = false;
+    }
   }
 
   instances.set(el, destroy);
+  activeSetups.add(destroy);
 
   return {
     getValue: () => selectedNodesInOrder().map((n) => n.value),

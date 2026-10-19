@@ -195,13 +195,13 @@
   50% { opacity: 0.4; transform: scale(0.7); }
 }
 
-/* 流式中：▍光标闪烁（复用 colors.css 的 blink keyframes，animate-blink 同款） */
+/* 流式中：▍光标闪烁（共享 base.css 的 icen-blink keyframes） */
 :is(.icen-ai-item, .icen-ai-tool, .icen-ai-subagent).is-streaming .icen-ai-item-status {
   width: 3px;
   height: 12px;
   border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
   background: var(--ai-item-tint);
-  animation: blink var(--ai-item-blink-duration) step-end infinite;
+  animation: icen-blink var(--ai-item-blink-duration) step-end infinite;
 }
 
 /* 待人确认：warning 点 + 外环 */

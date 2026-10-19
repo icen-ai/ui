@@ -54,6 +54,7 @@
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
   user-select: none;
+  pointer-events: none; /* 禁用编辑器不吃 hover 抬边 */
 }
 
 /* 提及 token：文本流中的 inline pill（原子单元，光标不可进入，整体删除） */

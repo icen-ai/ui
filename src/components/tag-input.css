@@ -40,6 +40,10 @@
 .icen-tag-input-count { flex: 0 0 auto; padding-inline: var(--icen-density-space-xs); color: var(--icen-token-text-muted); font-size: var(--icen-density-font-size-xs); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
 .icen-tag-input-feedback { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
 .icen-tag-input-feedback.is-visible { position: static; display: block; inline-size: auto; block-size: auto; margin-block-start: var(--icen-density-space-xs); overflow: visible; clip-path: none; color: var(--icen-token-text-muted); font-size: var(--icen-density-font-size-sm); }
+/* 行为侧错误（重复 tag / 超上限）可见时必挂 aria-invalid：错误文案走 error 色、
+   边框同步，否则错误与中性提示同灰、字段看不出异常（form.css 同款口径） */
+.icen-tag-input:has(.icen-tag-input-field[aria-invalid='true']) .icen-tag-input-feedback.is-visible { color: var(--icen-token-error); }
+.icen-tag-input:has(.icen-tag-input-field[aria-invalid='true']) { border-color: var(--icen-token-error); }
 @media (hover: hover) and (pointer: fine) {
   .icen-tag-input:not(.is-unavailable):hover { border-color: var(--icen-hover-border); }
   .icen-tag-chip-x { opacity: 0; }

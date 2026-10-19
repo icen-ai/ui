@@ -68,7 +68,7 @@
 }
 .icen-form-input::placeholder,
 .icen-form-textarea::placeholder {
-  color: color-mix(in srgb, var(--icen-token-text-faint) 60%, transparent);
+  color: var(--icen-token-text-faint); /* 全量 faint：60% 混透浅色仅 ~2.4:1 低于 AA（faint 全量 ≥4.9:1） */
 }
 .icen-form-input:hover,
 .icen-form-textarea:hover {
@@ -86,6 +86,8 @@
   opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
   background: var(--icen-token-bg-soft);
+  /* 禁用态不吃 hover 抬边（上面 :hover 只看伪类，指针仍会触发） */
+  pointer-events: none;
 }
 
 /* 校验态：:user-invalid（交互后才判 invalid，现代引擎）为主通道；

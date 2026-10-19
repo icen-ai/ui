@@ -421,6 +421,12 @@
   font-size: 11px;
   color: var(--icen-token-text);
 }
+/* 裸 input 清掉了边框/背景/outline：必须自给焦点可见性，否则键盘焦点零反馈 */
+.icen-kb-chunk-keyword-input:focus-visible {
+  outline: 2px solid var(--icen-token-accent);
+  outline-offset: 1px;
+  border-radius: var(--icen-radius-xs);
+}
 .icen-kb-chunk-keyword-input::placeholder {
   color: var(--icen-token-text-faint);
 }
@@ -691,6 +697,7 @@
 .icen-kb-connector-actions .icen-kb-btn {
   padding: 2px 8px;
   font-size: 11.5px;
+  min-block-size: 24px; /* WCAG 2.5.8 下限 */
 }
 
 /* ══════════════ kb-metadata · 元数据管理（§5.9） ══════════════ */
@@ -759,6 +766,7 @@
 .icen-kb-metadata-ops .icen-kb-btn {
   padding: 1px 8px;
   font-size: 11.5px;
+  min-block-size: 24px; /* WCAG 2.5.8 下限 */
 }
 .icen-kb-metadata-empty {
   padding: 18px 8px !important; /* guard:allow-important 状态/守卫覆盖需压制变体优先级 */
