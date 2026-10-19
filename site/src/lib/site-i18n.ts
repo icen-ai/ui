@@ -5,11 +5,66 @@ import {
   type IcenLocale,
 } from '../../../src/behaviors/i18n';
 import { refreshSelect } from '../../../src/behaviors/select';
+import { copyEn } from './site-i18n-en';
 
 export type SiteLanguage = 'zh-CN' | 'en-US';
 
-/** Page copy lives beside the site, while interactive library components use the same locale registry. */
+/** Page copy lives beside the site, while interactive library components use the same locale registry.
+ *  全量词典（site-i18n-en.ts）垫底，手写条目在后展开——同键时手写优先。 */
 const copy: Record<string, string> = {
+  ...copyEn,
+  /* JS 运行时才渲染的文案（不在服务端 HTML，词典普查抓不到）+ 词典误译纠正——苏式是苏联构成主义，不是苏州 */
+  '苏式': 'Soviet',
+  '无匹配项': 'No matches',
+  '冰点组件设计系统': 'ICEN UI',
+  /* kb 管线与标签短词（曾被子串误判为已收录） */
+  '检索': 'Retrieve', '重排': 'Rerank', '生成': 'Generate', '来源': 'Sources', '手动': 'Manual',
+  /* kb 沙箱日志模板（组装点 siteT 即时取译） */
+  '← app.ready（沙箱就绪）': '← app.ready (sandbox ready)',
+  '→ call echo {text:"来自宿主的调用"}': '→ call echo {text:"from host"}',
+  '← 回包': '← reply',
+  '← 调用失败：': '← call failed: ',
+  '来自宿主的调用': 'a call from the host',
+  /* 演示文件名英化（混排句里保留中文文件名会残留 CJK） */
+  '将「设计规范.md」移到回收站，不会影响已分享的副本。': 'Moving design-spec.md to trash will not affect any shared copies.',
+  '「设计规范.md」已移到回收站': 'design-spec.md moved to trash',
+  '已恢复「设计规范.md」': 'design-spec.md restored',
+  /* 终扫补漏：问答演示数据与提示词版本标签 */
+  '用户要': 'User asks', '已渲': 'Rendered',
+  '提示词 v3': 'Prompt v3', '提示词 v4': 'Prompt v4',
+  'Output 提示词 v3': 'Output Prompt v3', 'Output 提示词 v4': 'Output Prompt v4',
+  '报销上限为 5000 元，超标需提前审批。': 'The expense cap is ¥5,000; anything above needs prior approval.',
+  '国内差旅单笔报销上限 5000 元，超标需部门主管在 OA 事前审批并附说明。': 'Domestic travel reimbursement is capped at ¥5,000 per claim. Above that, your department head must pre-approve it in OA with a note.',
+  '单笔 5000 元；超标需事前审批': '¥5,000 per claim; prior approval above the cap',
+  '供应商准入要几个工作日？': 'How many business days does supplier onboarding take?',
+  '5 个工作日。': 'Five business days.',
+  '自材料齐全起 5 个工作日完成准入。': 'Onboarding completes within 5 business days once the documents are complete.',
+  '5 个工作日': '5 business days',
+  '社保断缴影响公积金贷款吗？': 'Does a break in social insurance affect my housing fund loan?',
+  '断缴满 3 个月影响贷款额度，需补缴后恢复。': 'A break of 3+ months lowers your loan limit; back payments restore it.',
+  '断缴会导致公积金贷款受阻，建议尽快处理以免影响买房。': 'A lapse can stall your housing fund loan — sort it out before it bites into your home purchase.',
+  '连续缴存 6 个月方可申请；断缴重新计算缴存月': 'Apply after 6 consecutive months of payments; a break resets the clock',
+  '年会当天请假怎么走流程？': "What's the leave process for the annual party day?",
+  '找行政登记即可。': 'Just register with Admin.',
+  '在 OA 提交「年会请假」流程并抄送直属主管，当天免审批。': 'File the "Annual party leave" workflow in OA and CC your manager — no approval needed that day.',
+  'OA 流程 + 抄送主管': 'OA workflow + CC your manager',
+  '让内容清楚，\n让操作轻盈。': 'Make the content clear,\nand the touch light.',
+  '浅色模式': 'Light mode',
+  '已保存到本次预览。': 'Saved to this preview session.',
+  '留白有意，\n落笔有度。': 'Purposeful whitespace,\ndeliberate strokes.',
+  '书页的呼吸，器物的温润，印记的分寸。让东方的从容，成为日常的使用感受。': 'The rhythm of book pages, the warmth of hand-finished objects, the poise of a seal stamp. Eastern composure as an everyday feel.',
+  '疏密之间，自见风骨。': 'Character lives between dense and sparse.',
+  '以结构，\n承托每一次行动。': 'Structure that\ncarries every action.',
+  '坚实的体块，明确的轴线，果断的字形。把纪念性建筑的力量，收进清楚好用的界面。': 'Solid masses, clear axes, decisive letterforms. The strength of monumental architecture, packed into a plainly usable interface.',
+  '秩序，拥有自己的力量。': 'Order has a strength of its own.',
+  '每一格，\n都有自己的位置。': 'Every cell\nknows its place.',
+  '整齐的网格、清晰的点阵与利落的按压。用最少的像素，表达完整的秩序。': 'Tidy grids, crisp dot matrices, snappy presses. Complete order from the fewest pixels.',
+  '小小方寸，自有秩序。': 'Small squares, full of order.',
+  '现代 / 实时预览': 'Modern / live preview',
+  '中式 / 实时预览': 'Chinese / live preview',
+  '苏式 / 实时预览': 'Soviet / live preview',
+  '像素 / 实时预览': 'Pixel / live preview',
+  '留下一点想法': 'Jot something down',
   '组件': 'Components', '色彩': 'Color', '原语': 'Primitives', '框架': 'Frameworks', '定制': 'Customize',
   'AI 原生': 'AI', '知识库': 'Knowledge', '数据图表': 'Charts', '首页 · 介绍': 'Home · Introduction',
   '组件总览': 'All components', '原语 · 交互基元': 'Primitives · Interaction patterns', '主题': 'Themes',
@@ -138,6 +193,10 @@ const translateText = (value: string): string => {
   if (!trimmed) return value;
   const translated = copy[trimmed];
   if (translated) return value.replace(trimmed, translated);
+  // 前缀回退：运行时组装的「标题 数值」节点（如分组表头「金额 64809.85」）——
+  // 整串无词条时，把开头连续中文段（含全角标点）按词表替换，保留数值尾部
+  const prefix = trimmed.match(/^[\u4e00-\u9fff\uff00-\uffef·]+(?=\s)/);
+  if (prefix && copy[prefix[0]]) return value.replace(prefix[0], copy[prefix[0]]);
   // Retain component counts while localizing the surrounding overview sentence.
   const match = trimmed.match(/^(\d+) 个无框架组件，(\d+) 个分组。全部消费同一套设计令牌——切换右上角的预设、明暗与风格，每张卡片即刻换装。$/);
   if (match) return `${match[1]} framework-agnostic components across ${match[2]} groups, all powered by the same design tokens. Change the preset, color mode, or style above to restyle every component.`;
@@ -201,10 +260,36 @@ function syncLanguageControl(language: SiteLanguage): void {
   refreshSelect(control);
 }
 
+/** JS 重渲染的中文（主题面板选项、工作台控件、toast 等运行时文案）自动补翻：
+    body 文本变动去抖后重扫。translateText 确定性幂等——译文落定后不再改动节点，
+    观察器两轮内自然收敛，不会自激。 */
+let autoRetranslateBound = false;
+function bindAutoRetranslate(): void {
+  if (autoRetranslateBound || typeof MutationObserver === 'undefined') return;
+  autoRetranslateBound = true;
+  let timer = 0;
+  let applying = false;
+  new MutationObserver(() => {
+    if (applying) return;
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      applying = true;
+      try { applySiteCopy(detectSiteLanguage()); } finally { applying = false; }
+    }, 150);
+  }).observe(document.body, { childList: true, characterData: true, subtree: true });
+}
+
+/** 页面脚本组装运行时文案时的即时取译：英文态返回译文（词表查不到则原样），中文态原样返回。
+ *  适用于嵌入动态内容（JSON 回包等）无法等 DOM 落定再翻的组装点。 */
+export function siteT(text: string): string {
+  return detectSiteLanguage() === 'en-US' ? translateText(text) : text;
+}
+
 export function initSiteI18n(): void {
   const language = detectSiteLanguage();
   applySiteCopy(language);
   syncLanguageControl(language);
+  bindAutoRetranslate();
 }
 
 export function setSiteLanguage(language: SiteLanguage): void {

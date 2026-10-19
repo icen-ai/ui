@@ -396,6 +396,7 @@ const refTotal = refNo;
     import { createKbCanvas } from '../../../src/behaviors/kb-canvas.ts';
     import { renderKbCheckpoints, initKbCheckpoint } from '../../../src/behaviors/kb-checkpoint.ts';
     import { createKbSandbox } from '../../../src/behaviors/kb-sandbox.ts';
+    import { siteT } from '../lib/site-i18n';
     import { parseUnifiedDiff, initAiDiff } from '../../../src/behaviors/ai-diff.ts';
     import { renderAiFeedback, initAiFeedback } from '../../../src/behaviors/ai-feedback.ts';
     import { renderAiMessage } from '../../../src/behaviors/ai-chat.ts';
@@ -1026,7 +1027,8 @@ const refTotal = refNo;
     const sandboxLog = $('ag-sandbox-log')!;
     const sandboxLines: string[] = [];
     function sandboxLogLine(text: string): void {
-      sandboxLines.push(text);
+      /* 行级即时取译：日志合并为单节点且嵌动态 JSON，等落定再翻匹配不上——写入时翻 */
+      sandboxLines.push(siteT(text));
       if (sandboxLines.length > 6) sandboxLines.shift();
       sandboxLog.textContent = sandboxLines.join('\n');
     }
@@ -1038,9 +1040,9 @@ const refTotal = refNo;
           setTimeout(() => {
             sandboxLogLine('→ call echo {text:"来自宿主的调用"}');
             sandbox
-              .call('echo', { text: '来自宿主的调用' })
-              .then((r) => sandboxLogLine(`← 回包 ${JSON.stringify(r)}`))
-              .catch((err: Error) => sandboxLogLine(`← 调用失败：${err.message}`));
+              .call('echo', { text: siteT('来自宿主的调用') })
+              .then((r) => sandboxLogLine(`${siteT('← 回包 ')}${JSON.stringify(r)}`))
+              .catch((err: Error) => sandboxLogLine(`${siteT('← 调用失败：')}${err.message}`));
           }, 260);
         } else if (msg.channel === 'out') {
           /* 出站请求已在上方手动记录，避免双写 */

@@ -114,9 +114,11 @@ import '../../../src/components/material-soviet.css';
       import { initSelect, refreshSelect } from '../../../src/behaviors/select';
       import { createDesign, mountDesign, setDesign, prepareDesignChange } from '../../../src/behaviors/design';
       import { openPopover, closePopover } from '../../../src/behaviors/popover';
+      import { initSiteI18n } from '../lib/site-i18n';
       initModal();
       initSwitch();
       initSelect();
+      initSiteI18n(); /* 独立页同样接全站 i18n：词表换装 + JS 重渲染自动补翻 */
       const root = document.documentElement;
       const setStudioSelect = (id: string, value: string): void => {
         const input = document.getElementById(id) as HTMLInputElement | null;
