@@ -1,6 +1,8 @@
 /* 苏式 material adapter. DOM contract: html[data-icen-style="soviet"] with
  * existing ICEN components or [data-icen-material="content|chrome|floating"].
  * Structural emphasis belongs to frame/header/action, not long-form text.
+ * 分层登记（guard: tier-direction 白名单）：横切材料适配引用 Beta 类名
+ * .icen-ai-composer-popup，理由同 material.css 头注释。
  */
 :root[data-icen-style="soviet"] {
   --icen-press: translateY(1px);

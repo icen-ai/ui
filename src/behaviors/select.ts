@@ -30,6 +30,11 @@
  *   或切选（多选）；Esc / 外点关闭；↑↓ 移动 .is-focused（跳过 disabled / hidden）；
  *   Enter/Space 选中；搜索框输入实时过滤选项。同一容器重复 init 幂等。
  *
+ * 事件：选中变化（含 .icen-select-clear 清空）派 icen:select-change，
+ *   detail { value, values, label }——单选 values 为单元素数组；多选 value 取首个、
+ *   label 为选中项文本 ', ' 连接；清空后 { value:'', values:[], label:'' }。
+ *   hidden input 同步值（多选逗号连接）并派原生 change（双通道，表单框架用）。
+ *
  * 浮层：面板首次打开时 portal 到 document.body（跳出祖先 overflow 裁切与
  *   stacking context），由 behavior 按 trigger rect 用 computePopoverLayout 计算
  *   定位（prefer 下方、空间不足翻上），inline 写入 left/top/min-width/width/max-height

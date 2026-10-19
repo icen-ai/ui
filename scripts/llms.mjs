@@ -48,7 +48,8 @@ const llms = [
     + '（7 态状态机 / 多模态内容模型 / provider 定价审计）+ 图表通用层（ChartSpec 纯 JSON，模型可直接调用）'
     + '+ 工具体系（UI 能力注册为模型工具，OpenAI/MCP/manifest 三出口）。',
   '',
-  '用法：先 `bun add @icen.ai/ui`，`@import "@icen.ai/ui/tokens.css"` 再引组件；'
+  '用法：先 `bun add @icen.ai/ui`；CSS 二选一——全量一行 `@import "@icen.ai/ui/ui.css"`（已含 tokens），'
+    + '或按需 `@import "@icen.ai/ui/tokens.css"` + 单引组件 CSS；'
     + 'npm 包内 `AGENTS.md` 有消费方速查，`registry.json` 是 slug 机器清单。',
   '',
   '## 规格与手册',

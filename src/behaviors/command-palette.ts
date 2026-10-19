@@ -310,9 +310,8 @@ export function openCommandPalette(id: string, opts?: CommandPaletteOpenOptions)
       // isDisabledItem 兜底拦截（getVisibleItems 已排除 disabled / aria-disabled）
       if (active && !isDisabledItem(active)) {
         e.preventDefault();
-        /* 编程条目在自身 click 监听里派 menu-select + onSelect（active.click() 会触发），
-           在此补派会双发；DOM 条目没有该监听，在此派 */
-        if (!programmaticCommands.has(active)) emitMenuSelect(panel, active);
+        /* 选中统一收敛到 click 路径：active.click() 冒泡到 document 委托派
+           menu-select（DOM 条目）或触发编程条目自身监听——此处不再补派（曾因此双派） */
         active.click();
       }
       return;

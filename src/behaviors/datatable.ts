@@ -551,13 +551,16 @@ export function createTable<Row = Record<string, unknown>>(
   body.className = 'icen-dt-body';
   body.setAttribute('role', 'rowgroup');
 
-  /* 汇总行：挂在 canvas 内（随横向滚动对齐列），sticky bottom 钉在视口底 */
-  const summaryEl = document.createElement('div');
-  summaryEl.className = 'icen-dt-row icen-dt-row--summary';
-  summaryEl.setAttribute('role', 'row');
-  summaryEl.hidden = true;
+  /* 汇总行：挂在 canvas 内（随横向滚动对齐列），sticky bottom 钉在视口底。
+     未配置 summaryRow 时不创建——常驻 hidden 空壳会虚增 DOM 行计数与可及性树 */
+  const summaryEl: HTMLElement | null = opts.summaryRow ? document.createElement('div') : null;
+  if (summaryEl) {
+    summaryEl.className = 'icen-dt-row icen-dt-row--summary';
+    summaryEl.setAttribute('role', 'row');
+    summaryEl.hidden = true;
+  }
 
-  canvas.append(head, body, summaryEl);
+  canvas.append(head, body, ...(summaryEl ? [summaryEl] : []));
   scroll.appendChild(canvas);
   root.appendChild(scroll);
 
@@ -1503,6 +1506,7 @@ export function createTable<Row = Record<string, unknown>>(
 
   /* ═══ 汇总行：表尾 sticky 一行，按当前管线（搜索/筛选后、分页前）数据聚合 ═══ */
   function renderSummary(): void {
+    if (!summaryEl) return; /* 未配置 summaryRow：元素不创建 */
     summaryEl.textContent = '';
     summaryEl.hidden = true;
     const cfg = opts.summaryRow;
@@ -1844,7 +1848,13 @@ export function createTable<Row = Record<string, unknown>>(
     const sizeSel = document.createElement('select');
     sizeSel.className = 'icen-dt-page-size';
     sizeSel.setAttribute('aria-label', t('datatable.pageSizeAria'));
-    for (const s of pageSizes) {
+    /* 当前 pageSize 不在候选列表时并入（排序去重）：自定义 pageSize（如 5）或
+       setPageSize 到列表外值时，下拉选中值恒等于实际页大小——
+       否则分页按 5 条/页工作，下拉却回显「10 条/页」 */
+    const sizeOptions = pageSizes.includes(pageSize)
+      ? pageSizes
+      : [...pageSizes, pageSize].sort((a, b) => a - b);
+    for (const s of sizeOptions) {
       const o = document.createElement('option');
       o.value = String(s);
       o.textContent = t('pagination.pageSize', { p0: s });
@@ -1998,7 +2008,7 @@ export function createTable<Row = Record<string, unknown>>(
       if (frozenSide(c) === 'right') right.set(c.key, accR);
       accR += headCells[lead + i]?.offsetWidth ?? 0;
     }
-    const rows = [headRow, summaryEl, ...Array.from(body.querySelectorAll<HTMLElement>('.icen-dt-row'))];
+    const rows = [headRow, ...(summaryEl ? [summaryEl] : []), ...Array.from(body.querySelectorAll<HTMLElement>('.icen-dt-row'))];
     for (const row of rows) {
       const cells = Array.from(row.children) as HTMLElement[];
       if (cells.length !== headCells.length) continue; /* 分组行/展开详情行结构不同，天然无冻结格 */

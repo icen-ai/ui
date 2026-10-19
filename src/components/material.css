@@ -4,6 +4,10 @@
  * operations. HTML primitives need no JS. Existing components consume the same
  * recipes automatically. Force opaque via html[data-icen-transparency="reduced"].
  * This file ships with tokens.css as well as ui.css; kit consumers need no extras.
+ *
+ * 分层登记（guard: tier-direction 文件级白名单）：材料适配是横切层——选中态/磨砂
+ * 配方覆盖 .icen-ai-composer-popup* 与 .icen-kb-checkpoint-menu-item 等 Beta 类名；
+ * Beta 类名变更对本文件仅静默降级，不破坏 Core 用户，故允许 Core 引用 Beta。
  */
 /* The base layer also defines interaction defaults. Keep the primitive's
  * interaction recipe in the components layer so separately imported base.css

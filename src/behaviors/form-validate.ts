@@ -26,6 +26,10 @@
  *   之后出错字段 input 即时复验（160ms 防抖，strategy.debounceMs 可调），未触碰字段 blur 时校验；
  *   strategy.on: 'submit' = 只提交时校验（无 live 复验）；'blur' = 字段 blur 即校验；
  *   'input' = 输入即校验（防抖）。IME 组合态（compositionstart/end）期间不触发校验。
+ * 指针按下期布局守卫：form 内 pointerdown → 字段 blur 复验若立刻落 DOM（summary 插入/移除/重写、
+ *   字段错误元素创建/摘除/hidden 翻转）会把提交按钮在 mousedown 与 mouseup 之间顶位移，
+ *   click 落空。按下期间只写不位移的内容（wrap 类/aria/既有可见错误元素文本），结构变更
+ *   推迟到 pointerup/pointercancel 后下一帧（click 派发之后）统一补齐；校验事件不推迟。
  *
  * API：
  *   initFormValidate(root?)                document 委托 + 幂等 + 返回销毁函数（SSR 下 no-op）
@@ -40,16 +44,17 @@
  *   整表通过     → icen:form-valid   { names }（通过字段名数组）
  *   整表未过     → icen:form-invalid { errors, first }（first = 第一个错误字段名，无则 null）
  *
- * AI 工具（import 本模块即自动注册）：show_form——向用户渲染一个结构化表单收集输入，
- *   present: 'mount'，run 返回 Promise：用户提交（过校验）→ resolve 表单值对象；
+ * AI 工具 show_form：向用户渲染一个结构化表单收集输入，present: 'mount'，
+ *   run 返回 Promise：用户提交（过校验）→ resolve 表单值对象；
  *   用户点「取消」→ resolve { cancelled: true }。渲染契约（.icen-ai-form*）见
- *   form-validate.css 头注释。
+ *   form-validate.css 头注释。分层纪律（docs/contracts/stability-tiers.md）：Core 模块
+ *   不得运行时依赖 Beta——本模块只导出 runShowForm / SHOW_FORM_SCHEMA，
+ *   注册动作在 ai-tools.ts（Beta → Core 方向）完成，import 本模块不再有注册副作用。
  *
  * SSR 安全；渲染只写 textContent（绝不 innerHTML）；事件统一走 emitIcen。
  */
 
 import { emitIcen } from './events';
-import { registerAiTool } from './ai-tools';
 import { t } from './i18n';
 
 /* ════════════ 类型 ════════════ */
@@ -647,6 +652,17 @@ export function createFormValidator(form: HTMLFormElement, opts: FormValidateOpt
     debounceTimers: new Map(),
   };
 
+  /* 指针按下期的布局位移守卫（实锤场景：mousedown 在提交钮 → 输入框 blur 触发防抖复验 →
+     summary 或字段错误元素的插入/摘除/重写把按钮顶位移约一行高，mouseup 落空、click 丢失）。
+     纪律：按下期间只写不造成位移的内容（wrap 类 / aria / 既有可见错误元素的文本），
+     结构性变更（summary 插入/移除/重写、错误元素创建/摘除/hidden 翻转、aria-describedby
+     接线）入队，pointerup/pointercancel 后下一帧（click 已派发完）统一补齐。
+     校验事件（icen:form-field-validate 等）照常即时派发——事件契约不变。 */
+  let pointerDown = false;
+  const pendingPresent = new Map<FieldElement, { outcome: FieldOutcome; showValid: boolean }>();
+  let pendingSummary: Record<string, string> | null = null;
+  let flushScheduled = false;
+
   const showValidFor = (field: FieldElement): boolean =>
     field.hasAttribute('data-icen-validate-show-valid') ||
     form.hasAttribute('data-icen-validate-show-valid');
@@ -674,10 +690,10 @@ export function createFormValidator(form: HTMLFormElement, opts: FormValidateOpt
     const outcome: FieldOutcome = result === true ? { ok: true } : { ok: false, message: result };
     if (outcome.ok) state.errors.delete(name);
     else state.errors.set(name, outcome.message ?? '');
-    presentField(field, outcome, showValidFor(field));
+    presentFieldGuarded(field, outcome, showValidFor(field));
     /* 错误汇总随单字段复验联动刷新（存在才刷；创建/摘除归 validate() 管） */
     if (form.querySelector(':scope > .icen-form-validate-summary')) {
-      renderSummary(form, errors());
+      renderSummaryGuarded(errors());
     }
     emitIcen(
       field,
@@ -699,6 +715,71 @@ export function createFormValidator(form: HTMLFormElement, opts: FormValidateOpt
         void checkField(field);
       }, delay),
     );
+  }
+
+  /** 按下期间的非位移呈现：类/aria 即刻同步；结构变更入队，归 flush 的完整 presentField 补齐。 */
+  function presentFieldPressed(field: FieldElement, outcome: FieldOutcome, showValid: boolean): void {
+    pendingPresent.set(field, { outcome, showValid });
+    const wrap = fieldWrap(field);
+    setValidating(field, false);
+    if (!wrap) {
+      /* 无包装器：控件 aria 仍同步 */
+      if (!outcome.ok) field.setAttribute('aria-invalid', 'true');
+      else field.removeAttribute('aria-invalid');
+      return;
+    }
+    if (!outcome.ok) {
+      wrap.classList.add('is-error');
+      wrap.setAttribute('data-icen-invalid', 'true');
+      wrap.classList.remove('is-valid');
+      wrap.removeAttribute('data-icen-valid');
+      field.setAttribute('aria-invalid', 'true');
+      /* 已有可见错误元素：原位改文本不位移；元素缺失 / hidden 翻转 / describedby 接线归 flush */
+      const errEl = findErrorEl(wrap);
+      if (errEl && !errEl.hidden) errEl.textContent = outcome.message ?? '';
+      return;
+    }
+    wrap.classList.remove('is-error');
+    wrap.removeAttribute('data-icen-invalid');
+    field.removeAttribute('aria-invalid');
+    /* 错误元素摘除 / hidden 翻转归 flush；is-valid 类先行同步 */
+    if (showValid) {
+      wrap.classList.add('is-valid');
+      wrap.setAttribute('data-icen-valid', 'true');
+    } else {
+      wrap.classList.remove('is-valid');
+      wrap.removeAttribute('data-icen-valid');
+    }
+  }
+
+  function presentFieldGuarded(field: FieldElement, outcome: FieldOutcome, showValid: boolean): void {
+    if (pointerDown) presentFieldPressed(field, outcome, showValid);
+    else presentField(field, outcome, showValid);
+  }
+
+  function renderSummaryGuarded(errorsObj: Record<string, string>): void {
+    if (pointerDown) pendingSummary = errorsObj;
+    else renderSummary(form, errorsObj);
+  }
+
+  /** pointerup 后下一帧（click 派发之后）统一落盘推迟的结构变更。 */
+  function flushDeferredPresentation(): void {
+    flushScheduled = false;
+    if (destroyed) return;
+    const items = Array.from(pendingPresent.entries());
+    pendingPresent.clear();
+    const summary = pendingSummary;
+    pendingSummary = null;
+    for (const [field, it] of items) presentField(field, it.outcome, it.showValid);
+    if (summary) renderSummary(form, summary);
+  }
+
+  function scheduleFlush(): void {
+    if (flushScheduled) return;
+    flushScheduled = true;
+    /* rAF 回调在 click 派发后、下一次绘制前运行；无 rAF 的环境退化为宏任务 */
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(flushDeferredPresentation);
+    else setTimeout(flushDeferredPresentation, 0);
   }
 
   function resolveEventField(target: EventTarget | null): FieldElement | null {
@@ -755,12 +836,12 @@ export function createFormValidator(form: HTMLFormElement, opts: FormValidateOpt
     }
     const errorsSnapshot = errors();
     if (firstInvalid) {
-      renderSummary(form, errorsSnapshot);
+      renderSummaryGuarded(errorsSnapshot);
       emitIcen(form, 'icen:form-invalid', { errors: errorsSnapshot, first: firstInvalid.name });
       if (opts.scrollToError !== false) focusField(firstInvalid);
       return false;
     }
-    renderSummary(form, {});
+    renderSummaryGuarded({});
     emitIcen(form, 'icen:form-valid', { names });
     return true;
   }
@@ -776,13 +857,34 @@ export function createFormValidator(form: HTMLFormElement, opts: FormValidateOpt
     state.seq.clear();
     for (const timer of state.debounceTimers.values()) clearTimeout(timer);
     state.debounceTimers.clear();
+    /* 推迟队列一并清掉：已调度的 flush 遇到空队列自然 no-op */
+    pendingPresent.clear();
+    pendingSummary = null;
     for (const field of collectFormFields(form)) clearFieldPresentation(field);
     form.querySelector(':scope > .icen-form-validate-summary')?.remove();
   }
 
+  /* 按下只守主键/触摸（右键不触发 blur 复验链）；happy-dom 等环境派 plain Event（无 button）按主键处理 */
+  const onFormPointerDown = (e: Event): void => {
+    const btn = (e as PointerEvent).button;
+    if (typeof btn === 'number' && btn !== 0) return;
+    pointerDown = true;
+  };
+  /* pointerup/pointercancel 在 document 捕获阶段收（抬手落点可能在 form 外）；
+     window blur 兜底：按下期间切窗导致 pointerup 丢失时不至于永久挂起 */
+  const onPressEnd = (): void => {
+    if (!pointerDown) return;
+    pointerDown = false;
+    if (pendingPresent.size > 0 || pendingSummary !== null) scheduleFlush();
+  };
+
   form.addEventListener('submit', onSubmit);
   form.addEventListener('focusout', onFocusOut);
   form.addEventListener('input', onInput);
+  form.addEventListener('pointerdown', onFormPointerDown, true);
+  document.addEventListener('pointerup', onPressEnd, true);
+  document.addEventListener('pointercancel', onPressEnd, true);
+  window.addEventListener('blur', onPressEnd);
 
   let destroyed = false;
   const handle: FormValidator = {
@@ -801,6 +903,10 @@ export function createFormValidator(form: HTMLFormElement, opts: FormValidateOpt
       form.removeEventListener('submit', onSubmit);
       form.removeEventListener('focusout', onFocusOut);
       form.removeEventListener('input', onInput);
+      form.removeEventListener('pointerdown', onFormPointerDown, true);
+      document.removeEventListener('pointerup', onPressEnd, true);
+      document.removeEventListener('pointercancel', onPressEnd, true);
+      window.removeEventListener('blur', onPressEnd);
       reset();
       liveValidators.delete(form);
     },
@@ -903,7 +1009,8 @@ export interface ShowFormSpec {
 
 export type ShowFormResult = Record<string, unknown> | { cancelled: true };
 
-const SHOW_FORM_SCHEMA: Record<string, unknown> = {
+/** show_form 的 inputSchema（注册在 ai-tools.ts，见文件尾内置工具段）。 */
+export const SHOW_FORM_SCHEMA: Record<string, unknown> = {
   type: 'object',
   properties: {
     title: { type: 'string', description: t('formValidate.tool.title') },
@@ -1064,8 +1171,9 @@ function collectFormValues(form: HTMLFormElement): Record<string, unknown> {
  * show_form 渲染：表单进 mount，返回一个 Promise——用户提交（过校验）resolve 表单值对象；
  * 点「取消」resolve { cancelled: true }。表单自带 data-icen-validate + 错误汇总，
  * 取消/提交后渲染体自动摘除（挂载卡本体归 AI 工具挂载区管理）。
+ * 由 ai-tools.ts 注册为内置工具 show_form 的 run（本模块不做注册，见文件头分层纪律）。
  */
-function runShowForm(input: unknown, mount: HTMLElement): Promise<ShowFormResult> {
+export function runShowForm(input: unknown, mount: HTMLElement): Promise<ShowFormResult> {
   return new Promise<ShowFormResult>((resolve) => {
     if (typeof document === 'undefined') {
       resolve({ cancelled: true });
@@ -1126,10 +1234,4 @@ function runShowForm(input: unknown, mount: HTMLElement): Promise<ShowFormResult
   });
 }
 
-registerAiTool({
-  name: 'show_form',
-  description: t('formValidate.tool.description'),
-  inputSchema: SHOW_FORM_SCHEMA,
-  present: 'mount',
-  run: (input, mount) => runShowForm(input, mount),
-});
+/* show_form 的注册在 ai-tools.ts（内置工具段）——分层纪律：Core 不 import Beta。 */

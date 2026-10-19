@@ -49,6 +49,7 @@ import { aiContentUrl, formatDuration, h, svgIcon, type AiContent, type AiConten
 import { emitIcen, type IcenEventMap } from './events';
 import { t } from './i18n';
 import { iconHTML } from './icons';
+import { safeUrl } from './url-safety';
 
 /* Message actions share the same optical geometry as the input and tools. */
 const ICON_COPY = iconHTML('copy');
@@ -526,16 +527,15 @@ const ROLE_AVATAR: Record<AiMessageModel['role'], string> = {
   tool: t('aiChat.roleTool'),
 };
 
-/** 链接 href 白名单式守卫：放行常规 scheme，拦 javascript: / data:text/html */
-function safeHref(uri: string): string | undefined {
-  /* WHATWG URL 解析会先剥掉 tab/LF/CR（及首尾 C0 控制）再识别 scheme，
-     守卫必须按同样的归一结果判断，否则 `java\tscript:` 这类写法可绕过 */
-  const s = uri.replace(/[\t\n\r\0-\x1f\x7f]/g, '').trim().toLowerCase();
-  if (s.startsWith('javascript:') || s.startsWith('data:text/html')) return undefined;
-  return uri;
+/** 媒体 src 归一 + 协议守卫：aiContentUrl 只归一（url 直取 / data+mimeType 拼 data URI），
+ *  落 img/audio/video src 前一律过 safeUrl——媒体加载虽不执行 javascript:，
+ *  但守卫统一收口后「不可信 URL 落 DOM 必过守卫」这条纪律没有例外槽位。 */
+function safeContentUrl(part: AiContentPart): string | undefined {
+  const src = aiContentUrl(part);
+  return src ? safeUrl(src) : undefined;
 }
 
-/** 单个内容部件 → DOM 节点（文本一律 textContent；媒体 src 走 aiContentUrl 归一）。
+/** 单个内容部件 → DOM 节点（文本一律 textContent；媒体 src 走 aiContentUrl 归一 + safeUrl 守卫）。
  *  导出供 ai-tool 的 IO 区复用（MCP 多模态回执；类名 .ai-msg-* 语义即「消息部件」，全局生效）。
  *  前置条件：浏览器环境——本函数无 SSR 守卫，SSR 由调用方守卫覆盖（renderAiMessage /
  *  renderAiToolCall 头部守卫后才会触达此处）。 */
@@ -547,7 +547,7 @@ export function renderAiContentPart(part: AiContentPart): HTMLElement | undefine
     return span;
   }
   if (part.type === 'image') {
-    const src = aiContentUrl(part);
+    const src = safeContentUrl(part);
     if (!src) return undefined;
     const img = document.createElement('img');
     img.className = 'icen-ai-msg-media icen-ai-msg-media--image';
@@ -557,7 +557,7 @@ export function renderAiContentPart(part: AiContentPart): HTMLElement | undefine
     return img;
   }
   if (part.type === 'audio') {
-    const src = aiContentUrl(part);
+    const src = safeContentUrl(part);
     if (!src) return undefined;
     const audio = document.createElement('audio');
     audio.className = 'icen-ai-msg-media icen-ai-msg-media--audio';
@@ -566,7 +566,7 @@ export function renderAiContentPart(part: AiContentPart): HTMLElement | undefine
     return audio;
   }
   if (part.type === 'video') {
-    const src = aiContentUrl(part);
+    const src = safeContentUrl(part);
     if (!src) return undefined;
     const video = document.createElement('video');
     video.className = 'icen-ai-msg-media icen-ai-msg-media--video';
@@ -579,7 +579,7 @@ export function renderAiContentPart(part: AiContentPart): HTMLElement | undefine
     const chip = h('span', 'icen-ai-msg-file');
     chip.appendChild(h('span', 'ai-msg-file-name', part.filename ?? t('aiChat.file')));
     /* url 槽可能是 http(s)/data 地址（可下载）或 Files API file_id（不可链） */
-    const href = part.url ? safeHref(part.url) : undefined;
+    const href = part.url ? safeUrl(part.url) : undefined;
     if (href && /^(https?:|data:)/i.test(href)) {
       const a = document.createElement('a');
       a.className = 'icen-ai-msg-file-link';
@@ -593,7 +593,7 @@ export function renderAiContentPart(part: AiContentPart): HTMLElement | undefine
   /* resource-link */
   const a = document.createElement('a');
   a.className = 'icen-ai-msg-link';
-  const href = safeHref(part.uri);
+  const href = safeUrl(part.uri);
   if (href) a.href = href;
   a.textContent = part.name ?? part.uri;
   a.title = part.uri;

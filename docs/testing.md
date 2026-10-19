@@ -14,7 +14,7 @@ bun run verify   # = tsc + guard + test + build，全绿才算数
 | --- | --- | --- |
 | 1 类型 | `bunx tsc --noEmit` | 行为 TS / React / Vue 封装签名自洽 |
 | 2 纪律 | `bun run guard` | 11 项守卫：CSS 纪律（hex/z-index/keyframes/滚动条/!important/头注释）/ token 引用闭合 / registry 一致性 + **稳定性分层覆盖（tiers.json 显式归类）** / 事件字面量（含 IcenEventMap 登记）/ SSR 守卫与 innerHTML 红线 / 命名空间 / 权限域诚实呈现 / RTL 逻辑属性 / 类名同步（JS↔CSS 同形态）/ 操作图标 / **契约快照漂移（公共面 vs snapshot.json：移除=破坏性红牌，新增=留痕黄牌）** |
-| 3 单测 | `bun test` | happy-dom 里的契约与行为（见下「分工心智」；含 React/Vue 封装契约 `tests/unit/*-wrapper.test.*`：StrictMode 双挂载/卸载清理/事件桥解绑） |
+| 3 单测 | `bun test` | happy-dom 里的契约与行为（见下「分工心智」；含 React/Vue 封装契约 `tests/unit/*-wrapper.test.*`：StrictMode 双挂载/卸载清理/事件桥解绑；Core 族一致性套件 `tests/conformance/`：init 幂等 / destroy 可重入 / 事件登记+协议形态 / 键盘焦点 / XSS 文本纪律，表驱动 harness 与 kb-conformance 同形态） |
 | 4 产物 | `bun run build` | tsup + css 构建出 dist（registry.json 含 tiers 盖章），文档站构建冒烟在 CI |
 
 ## 浏览器验收舱：e2e 两层（真实 chromium）

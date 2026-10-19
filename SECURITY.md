@@ -1,6 +1,6 @@
 # 安全政策
 
-最后更新：2026-10-18。
+最后更新：2026-10-19。
 
 本文面向两类读者：想**报告漏洞**的人，和需要在评审/采购环节快速建立**工程信任**的人。我们只写可以验证的事实，不做空头承诺。
 
@@ -48,8 +48,9 @@ Private vulnerability report 只对维护者可见，适合先保密、协商修
 4. **权限域 fail-closed 语义**：知识库权限域的求值 `evaluateAcl(entries, identity)` 是纯函数——先显式 deny → allow 并集 → **默认拒绝**；当前时间经 `now` 参数注入（守卫钉死，禁直读 `Date.now()`，求值可复现可测试）。检索期隔离唯一安全基线是 query-time pre-filter，「不知道」与「不能说」不可区分等纪律由 `tests/kb-conformance.test.ts` 逐条自动化证明，泄露文案模式由守卫扫描。
 5. **OIDC provenance 发布链**：发包只经 GitHub Actions 的 OIDC trusted publishing（打 `v*` tag 触发），**不存在任何长期 npm token**；npm 包设置已设为「Require 2FA and disallow tokens」——除这条 CI 外没有任何凭据能发包。每次发布带 npm provenance 声明，可独立审计。
 6. **零运行时依赖**：`dependencies` 为空（react/react-dom/vue 均为 optional peer，不装不影响核心库）。供应链攻击面 = 你自己的锁文件 + 这一个包，没有传递依赖树可被破坏。
-7. **10 项纪律守卫**：CSS 纪律 / registry 一致性 / 事件双向核对 / 行为模块纪律（SSR + innerHTML 禁令）/ 命名空间碰撞面（对 Bootstrap 5 全量核心 + Tailwind 常见层 59 类基线恒零碰撞）/ 权限域诚实呈现扫描——任一违规 CI 即红，无法合入。
+7. **12 项纪律守卫**：CSS 纪律 / registry 一致性 / 事件双向核对 / 行为模块纪律（SSR + innerHTML 禁令）/ 命名空间碰撞面（对 Bootstrap 5 全量核心 + Tailwind 常见层 59 类基线恒零碰撞）/ 权限域诚实呈现扫描 / 分层依赖方向（Core 不运行时依赖 Beta）——任一违规 CI 即红，无法合入。
 8. **cascade layers 隔离**：全部产物 CSS 包在 `@layer icen.*` 内，消费方自己的无层样式永远赢库样式——库的样式不会意外覆盖你应用的安全相关样式（如 `display: none` 的敏感区）。
+9. **URL 协议守卫**：不可信输入（模型输出 / 知识库元数据 / 宿主透传）落成 `href` / `src` 前一律过 `safeUrl`（`src/behaviors/url-safety.ts`，ai-chat / kb-explain / notification 同源共用）——按 WHATWG 归一（剥控制字符与首尾空白、小写化）后拒绝 `javascript:` / `vbscript:` / `data:text/html`。对抗语料（大小写变体、内嵌 tab/LF/CR、C0 控制字符前缀、percent 双重编码、HTML 实体、全角变体等 51 条）逐条注明意图并固化在 `tests/unit/url-safety.test.ts`，配合 23 条槽位端对端断言（链接不落 `href`、部件不渲染、兜底不缺席）——绕过尝试的回归由 `bun test` 强制执行。
 
 ## 已知边界（诚实清单）
 

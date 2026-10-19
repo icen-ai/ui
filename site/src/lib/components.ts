@@ -729,6 +729,7 @@ search.refresh(); // 程序修改 value 后同步按钮；disabled / readonly �
         '**富选项**：`icen-select-option` 内可写任意 HTML（色卡 / 图标 / 多行）',
         '**面板尺寸**：全库统一 PanelSizing 契约——`data-icen-panel-width` 固定宽 / `-min` / `-max` 夹取 / `-max-height` 高度上限（默认 240）',
         '**数据**：选中值同步隐藏 input（`name` 直接进表单）；子节点与文案变更自动同步，手动改类后调 `refreshSelect`',
+        '**事件**：选中变化派 `icen:select-change`——detail `{ value, values, label }`：单选 `value` 为选中值、`values` 为单元素数组；多选 `values` 为全部选中值、`value` 取首个；清空（`.icen-select-clear` 或全部取消）后为 `{ value: \'\', values: [], label: \'\' }`。隐藏 input 同步值并派原生 `change`（双通道，表单框架用）',
       ],
       notes: ['触发器与输入框同视觉，表单里混排不跳脱；多选的移除按钮原生可聚焦，键盘可直接操作。'],
     },
@@ -809,6 +810,16 @@ const destroy = initSelect(root);
 // 手动修改 is-selected 类后，可明确请求一次静默同步：
 refreshSelect(root);
 // 页面或组件卸载时：destroy();
+
+// 事件：icen:select-change（bubbles + composed，detail 全型登记 IcenEventMap）
+//   detail { value, values, label }：
+//     单选   value = 选中值，values = [value]，label = 选项可见文本
+//     多选   values = 全部选中值，value = 首个选中值，label = 选中项文本 ', ' 连接
+//     清空   （.icen-select-clear 或逐项取消）→ { value: '', values: [], label: '' }
+//   隐藏 input（data-icen-select-value）同步值（多选逗号连接）并派原生 change —— 双通道：
+//   icen 事件给行为层，原生 change 给表单框架。
+import { onIcen } from '@icen.ai/ui';
+onIcen('icen:select-change', (e) => console.log(e.detail.value, e.detail.values, e.detail.label));
 
 <!-- 基础单选 -->
 <div class="icen-select" data-icen-select>…</div>

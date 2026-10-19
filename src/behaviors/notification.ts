@@ -2,6 +2,7 @@ import { createFeedbackClock, runFeedbackAction, cancelFeedbackAction, setFeedba
 import { createIcon, type IconName } from './icons';
 import { t } from './i18n';
 import { parseSvg } from './svg-parse';
+import { safeUrl } from './url-safety';
 const clocks=new WeakMap<NotificationRecord,FeedbackClock>();
 /*
  * @icen.ai/ui — Behavior: notification（通知栈 v2，与 components/notification.css 配套）
@@ -445,7 +446,8 @@ function buildIcon(record: NotificationRecord): HTMLElement {
   wrap.className = 'icen-notification-icon';
   wrap.setAttribute('aria-hidden', 'true');
   const { icon, avatar } = record.opts;
-  if (avatar) {
+  /* 头像 URL 是不可信输入落 src 的槽位：协议守卫拒绝则不渲头像，落到下方 kind 图标兜底 */
+  if (avatar && safeUrl(avatar)) {
     const img = document.createElement('img');
     img.className = 'icen-notification-avatar';
     img.src = avatar;
@@ -532,12 +534,14 @@ function buildActions(record: NotificationRecord): HTMLElement | null {
 
 function buildLink(record: NotificationRecord): HTMLElement | null {
   const { link, linkLabel } = record.opts;
-  if (!link) return null;
+  /* 详情链接是不可信输入落 href 的槽位：协议守卫拒绝则整条不渲（不留无 href 的死链） */
+  const href = link ? safeUrl(link) : undefined;
+  if (!href) return null;
   const wrap = document.createElement('div');
   wrap.className = 'icen-notification-link-wrap';
   const a = document.createElement('a');
   a.className = 'icen-notification-link';
-  a.href = link;
+  a.href = href;
   a.textContent = linkLabel ?? t('notification.viewDetails');
   a.addEventListener('click', (ev) => ev.stopPropagation());
   wrap.appendChild(a);

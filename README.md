@@ -8,12 +8,24 @@ icen.ai 的设计系统。组件、图表和 AI 界面，共用一套设计令�
 ## 快速开始
 
 ```css
-@import '@icen.ai/ui/tokens.css';   /* 设计令牌：预设 + 明暗 + 原语 */
-@import '@icen.ai/ui/ui.css';       /* 全部组件；也可只引 ./components/btn.css */
+/* 全量：一行（ui.css 已含 tokens + base + 全部组件，无需再引 tokens.css） */
+@import '@icen.ai/ui/ui.css';
+
+/* 或按需：tokens 底座 + 单引组件 CSS
+@import '@icen.ai/ui/tokens.css';
+@import '@icen.ai/ui/components/btn.css'; */
+```
+
+无构建工具的纯静态页面走 `<link>`（路径按实际部署调整）：
+
+```html
+<link rel="stylesheet" href="./node_modules/@icen.ai/ui/ui.css" />
+<!-- ES module 直引同理：需经静态服务器访问；file:// 直开会被浏览器 CORS 拦截 -->
 ```
 
 ```html
 <html data-icen-preset="piano" data-icen-theme="dark">
+<!-- 明暗是二态契约：暗色 = 写 data-icen-theme="dark"；亮色 = 移除该属性（没有 "light" 值） -->
 ```
 
 ```ts
@@ -39,7 +51,7 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 
 **知识库。** 32 个组件覆盖 RAG 全链路：摄取、检索、问数、治理、权限。引用可溯源，过程可观测，答案可验证；权限域对授权侧诚实、对受限侧沉默。
 
-**主题。** 六套预设，明暗双模，现代、中式、苏式与像素四种原语，全部挂在 `<html>` 的 data 属性上。配色与原语独立：中式推荐「东韵」，苏式推荐「巨构」，也可自由组合其它主题。自建品牌只需在自家 CSS 写一块 token 面，组件代码一行不动。
+**主题。** 六套预设，明暗双模，现代、中式、苏式与像素四种原语，全部挂在 `<html>` 的 data 属性上。明暗是二态契约：暗色写 `data-icen-theme="dark"`，亮色移除该属性（没有 `"light"` 值）。配色与原语独立：中式推荐「东韵」，苏式推荐「巨构」，也可自由组合其它主题。自建品牌只需在自家 CSS 写一块 token 面，组件代码一行不动。
 
 **React / Vue。** 官方薄封装 `@icen.ai/ui/react`、`@icen.ai/ui/vue`：只做生命周期接线和事件桥，底下是同一个命令式内核。兼容契约矩阵（版本 / SSR / RSC / StrictMode 双挂载 / 事件清理 / 边界诚实清单）见 [docs/frameworks.md](docs/frameworks.md)，行为由 `tests/unit/*-wrapper.test.*` 机器验证。详见 <https://ui.icen.ai/frameworks/>
 
@@ -53,7 +65,7 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 - **[SECURITY.md](https://github.com/icen-ai/ui/blob/main/SECURITY.md)**：支持版本矩阵与漏洞响应承诺；textContent-only 渲染、权限域 fail-closed、OIDC provenance 发布链，逐条可验证。
 - **[CONTRIBUTING.md](https://github.com/icen-ai/ui/blob/main/CONTRIBUTING.md)**：加组件的完整仪式与守卫速查表。
 - **[docs/versioning.md](https://github.com/icen-ai/ui/blob/main/docs/versioning.md)**：0.x 破坏性变更纪律——只在 minor 发生，CHANGELOG 逐条写明契约变化；收敛期无外部用户，不留兼容层、不写迁移指南（迁移设计 1.0 起才成为义务）。
-- **[docs/roadmap.md](https://github.com/icen-ai/ui/blob/main/docs/roadmap.md)**：0.11 → 0.13 → 1.0 收敛线与 1.0 外部验收门槛；**[docs/acceptance.md](https://github.com/icen-ai/ui/blob/main/docs/acceptance.md)**：AI/KB 族验收矩阵；**[docs/theming.md](https://github.com/icen-ai/ui/blob/main/docs/theming.md)**：主题与 token 兼容预算。
+- **[docs/roadmap.md](https://github.com/icen-ai/ui/blob/main/docs/roadmap.md)**：0.11 → 0.13 → 1.0 收敛线与 1.0 外部验收门槛；**[docs/acceptance.md](https://github.com/icen-ai/ui/blob/main/docs/acceptance.md)**：AI/KB 族验收矩阵；**[docs/dogfood.md](https://github.com/icen-ai/ui/blob/main/docs/dogfood.md)**：陌生人 dogfood 验收记录（零上下文代理实测的卡点与处置）；**[docs/theming.md](https://github.com/icen-ai/ui/blob/main/docs/theming.md)**：主题与 token 兼容预算。
 - **发布链**：`git tag v<x.y.z>` → GitHub Actions 经 OIDC trusted publishing 发 npm，无长期 token，每次发布带 provenance 可审计。
 
 ## 文档站
@@ -93,7 +105,7 @@ scripts/          # 构建与导出脚本
 
 ## 消费方接入
 
-- **包引入（推荐）**：`bun add @icen.ai/ui`，按 `./tokens.css` / `./ui.css` / `./kit/<slug>` 引入。
+- **包引入（推荐）**：`bun add @icen.ai/ui`。CSS 二选一：全量一行 `./ui.css`（已含 tokens + base + 全部组件）；或按需 `./tokens.css` 底座 + `./components/<name>.css` 单引。行为走 `./kit/<slug>` 一行入口。
 - **vendor 复制**：锁定版本或离线构建场景，把 `dist/` 复制进自家仓库（accounts 走这条路，`bun run sync:ui`）。
 - **给 AI 代理**：包内 `AGENTS.md` + `dist/**/*.d.mts`；站点 <https://ui.icen.ai/llms.txt>（索引）与 `/llms-full.txt`（全文 + 类型面）；场景配方 skill `icen-ui`（skill.icen.ai）。
 

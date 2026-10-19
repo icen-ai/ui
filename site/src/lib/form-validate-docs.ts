@@ -23,7 +23,7 @@ export const FORM_VALIDATE_DOCS: ComponentDoc = {
     ],
     notes: [
       '异步校验挂 `.is-validating` + `aria-busy`，竞态守卫最新为准；`data-icen-validate-summary` 顶部错误清单并聚焦首错；IME 组合态挂起。',
-      'import 本模块自动注册 AI 工具 `show_form`：渲染结构化表单收集输入，提交 resolve 值对象，取消 resolve `{ cancelled: true }`。',
+      '内置 AI 工具 `show_form`（随 `behaviors/ai-tools` 注册，与 `render_chart` 同款内置）：渲染结构化表单收集输入，提交 resolve 值对象，取消 resolve `{ cancelled: true }`；渲染体由本模块的 `runShowForm` 承担。',
     ],
   },
   demo: `<form class="icen-form" id="demo-fv-form" data-icen-validate data-icen-validate-summary data-icen-validate-show-valid style="max-width:460px">

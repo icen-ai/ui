@@ -12,7 +12,7 @@ opts 更新路径 / handleRef 生命周期 / 事件桥解绑）与 `tests/unit/v
 
 | 维度 | React 封装 | Vue 封装 | 证据 |
 | --- | --- | --- | --- |
-| 版本范围 | `react >= 18`（peer，可选依赖；开发与 CI 验证线 = 19.x） | `vue >= 3.3`（peer，可选依赖） | `package.json` peerDependencies |
+| 版本范围 | `react >= 18`（peer，可选依赖） | `vue >= 3.3`（peer，可选依赖） | `package.json` peerDependencies；CI `wrapper-compat-react` / `wrapper-compat-vue` 版本矩阵（react 18+19 双线、vue 3.3+3.5 双线，契约测试逐线实跑），本地实测 18.3.1 / 19.3.1 / 3.3.13 / 3.5.44 全绿 |
 | 形态 | 工厂 `createIcenComponent` + `useIcenInit` / `useIcenEvent` 原语 | `createVueRenderer` + `useIcenInit` / `useIcenEvent`；`defineComponent + h()`，无 SFC | `src/react/index.tsx` / `src/vue/index.ts` |
 | SSR | 安全：全部接线在 `useEffect`（服务端不执行）；服务端渲染结果 = 空容器 div | 安全：全部接线在 `onMounted` | 源码头注释；`tests/ssr-guard.test.ts` 全量静态扫描 |
 | RSC | 模块顶部 `'use client'`（构建脚本保证产物保留） | N/A（Vue 无 RSC 概念） | `src/react/index.tsx:12` + `scripts/react-use-client.mjs` |
@@ -34,5 +34,4 @@ opts 更新路径 / handleRef 生命周期 / 事件桥解绑）与 `tests/unit/v
 
 ## 已知缺口（挂 roadmap，工程项）
 
-- [ ] CI 上 React 18 / 19 双版本验证线（当前只在 19.x 上跑契约测试）。
 - [ ] RSC 实舱（Next.js App Server Component 直接 import 的负路径测试——预期报错信息友好）。

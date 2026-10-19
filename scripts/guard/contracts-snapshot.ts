@@ -8,7 +8,7 @@ import { checkDrift } from '../contracts';
 
 export async function checkContractsSnapshot(): Promise<GuardResult> {
   return {
-    title: '契约快照（类名 / data 属性 / CSS 变量 / 事件 / JS 导出 vs snapshot.json）',
+    title: '契约快照（类名 / data 属性 / CSS 变量 / 事件 / JS 导出 / 类型签名 vs snapshot.json）',
     violations: await checkDrift(),
   };
 }

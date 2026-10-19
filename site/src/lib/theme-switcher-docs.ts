@@ -15,6 +15,7 @@ export const THEME_SWITCHER_DOC: ComponentDoc = {
       '**接入**：`createThemeSwitcher` 挂载，或 SSR HTML + `initThemeSwitcher` 幂等接管',
       '**声明式**：空挂载点 `data-icen-theme-switcher` + data 属性，初始化自动生成控件',
       '**状态**：所有入口共享 `theme.ts`——`setTheme` 改一处，每个控件与全站立即同步',
+      '**明暗二态**：暗色 = `<html>` 写 `data-icen-theme="dark"`；亮色 = **移除该属性**（没有 `"light"` 值，手写 `"light"` 会被 `initTheme` 摘除）；`setTheme({ dark: false })` 即移除',
     ],
     notes: [
       '自定义主题先提供该主题的 token CSS，再 `registerThemePreset` 登记；无色样数据时用当前语义色。',
@@ -70,6 +71,8 @@ initThemeSwitcher();
 // 所有入口共享 theme.ts。代码修改也立即反映到每个控件。
 import { setTheme, getCurrentTheme, registerThemePreset } from '@icen.ai/ui/behaviors/theme';
 setTheme({ preset: 'monet', style: 'pixel', dark: true });
+// 明暗二态契约：dark: true → <html data-icen-theme="dark">；dark: false → 移除该属性
+// （没有 "light" 值——静态手写 data-icen-theme="light" 会被 initTheme 摘除）
 getCurrentTheme(); // 当前实际生效状态（包括存储不可写时）
 
 // 自定义主题：先提供该主题的 token CSS，再登记。

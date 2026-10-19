@@ -24,3 +24,32 @@ jobs:
       - run: bun run build
       # 文档站构建冒烟（设计资产改坏会在这里炸）
       - run: cd site && bun install && bun run build
+
+  # 封装 peer 版本矩阵：react>=18 / vue>=3.3 的 peer 声明在此兑现，
+  # 契约测试在每条版本线上实跑（CI 工作区是临时的，改 package.json/bun.lock 无所谓）
+  wrapper-compat-react:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        react: ['18', '19']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      # 覆盖安装矩阵线；@types 必须同线（react 18 配 @types/react@18），避免类型错位
+      - run: bun add -d react@${{ matrix.react }} react-dom@${{ matrix.react }} @types/react@${{ matrix.react }} @types/react-dom@${{ matrix.react }}
+      - run: bun test tests/unit/react-wrapper.test.tsx
+
+  wrapper-compat-vue:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vue: ['3.3', '3.5']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun add -d vue@${{ matrix.vue }}
+      - run: bun test tests/unit/vue-wrapper.test.ts

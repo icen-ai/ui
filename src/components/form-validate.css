@@ -1,6 +1,10 @@
 /*
  * form-validate.css — 表单校验呈现层（与 behaviors/form-validate.ts 配套）
  *
+ * 分层登记（guard: tier-direction 文件级白名单）：show_form 渲染体（.icen-ai-form*）
+ * 归本模块所有（runShowForm 在 form-validate.ts，注册在 ai-tools.ts），
+ * 类名沿用 ai 族命名是历史契约，不算 Core→Beta 依赖。
+ *
  * DOM 契约（行为层写入；本文件只负责呈现，不驱动逻辑）：
  *   <form data-icen-validate [data-icen-validate-summary] [data-icen-validate-show-valid]>
  *     字段 = form 内有 name 的 input / textarea / select；initFormValidate() 自动挂 novalidate。

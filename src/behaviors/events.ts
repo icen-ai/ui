@@ -38,12 +38,12 @@
  * SSR 下全部 no-op；initGestures 幂等，返回销毁函数（摘除 document 级委托，可重新 init）。
  */
 
-import type { ChartEventDetail } from './charts';
-import type { AiUsage } from './ai-core';
-import type { AiDoneEventDetail } from './ai-provider';
-import type { AiComposerRefSource } from './ai-composer';
+import type { ChartEventDetail } from './charts'; /* guard:allow-beta-type IcenEventMap 中央登记需要 detail 类型；纯类型引用，运行期擦除 */
+import type { AiUsage } from './ai-core'; /* guard:allow-beta-type 同上：icen:ai-usage detail */
+import type { AiDoneEventDetail } from './ai-provider'; /* guard:allow-beta-type 同上：icen:ai-done detail */
+import type { AiComposerRefSource } from './ai-composer'; /* guard:allow-beta-type 同上：icen:ai-attach detail */
 import type { MentionEntity, MentionValue } from './mentions';
-import type {
+import type { /* guard:allow-beta-type 同上：icen:kb-* 全族 detail（纯类型，运行期擦除） */
   KbAccessRequest, KbAclDecision, KbAclEntry, KbAuditChannel, KbCitation, KbChainStep, KbCheckpointScope,
   KbFilterNode, KbHygieneIssue, KbIdentity, KbRetrievalQuery, KbRole, KbSegmentConfig, KbSandboxMessage,
 } from './kb-core';

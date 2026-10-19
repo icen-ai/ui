@@ -41,8 +41,13 @@ const behaviorCount = readdirSync(new URL('../../../src/behaviors', import.meta.
 const chartTypeCount = 14;
 const aiCount = SLUGS.filter((s) => s.startsWith('ai-')).length;
 
-const importCss = `import '@icen.ai/ui/tokens.css';
-import '@icen.ai/ui/ui.css';`;
+const importCss = `/* 全量：一行（ui.css 已含 tokens + base + 全部组件，无需再引 tokens.css） */
+import '@icen.ai/ui/ui.css';
+
+/* 或按需：tokens 底座 + 单引组件
+import '@icen.ai/ui/tokens.css';
+import '@icen.ai/ui/components/btn.css'; */`;
+const importLink = `<link rel="stylesheet" href="./node_modules/@icen.ai/ui/ui.css" />`;
 const htmlPreset = `<html class=" " data-icen-theme="dark" data-icen-preset="piano"> … </html>`;
 
 const searchSvg = `${iconHTML('search',{size:13})}`;
@@ -296,10 +301,14 @@ const featureIcons = {
     <div class="qs-step">
       <h3 class="qs-step-title"><span class="qs-num">2</span>引入样式</h3>
       <CodeBlock code={importCss} lang="js" />
+      <p class="doc-note">无构建工具的纯静态页面用 <code>&lt;link&gt;</code> 直引（路径按实际部署调整）：</p>
+      <CodeBlock code={importLink} lang="html" />
+      <p class="doc-note">ES module 直引需经静态服务器访问；<code>file://</code> 直开会被浏览器 CORS 拦截。</p>
     </div>
     <div class="qs-step">
       <h3 class="qs-step-title"><span class="qs-num">3</span>选择预设与明暗</h3>
       <CodeBlock code={htmlPreset} lang="html" />
+      <p class="doc-note">明暗是二态契约：暗色 = 写 <code>data-icen-theme="dark"</code>；亮色 = 移除该属性（没有 <code>"light"</code> 值）。</p>
     </div>
   </section>
 

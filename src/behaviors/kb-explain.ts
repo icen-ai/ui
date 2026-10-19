@@ -28,6 +28,7 @@
  *   - 四组要素 chips 与指标口径行「有才渲」；全空时折叠体给 .icen-kb-empty 空态（无死路）
  */
 
+import { safeUrl } from './url-safety';
 import { h, type KbExplainFact } from './kb-core';
 import { emitIcen } from './events';
 import { t } from './i18n';
@@ -121,10 +122,13 @@ export function renderKbExplain(
       const row = h('div', 'icen-kb-explain-metric');
       row.appendChild(h('span', 'icen-kb-explain-metric-name', m.name));
       if (m.ref) {
-        /* 链接协议守卫：拒绝 javascript:/data:/vbscript: 注入，相对路径原样放行（对齐 ai-chat safeHref 纪律） */
-        if (!/^\s*(javascript|data|vbscript)\s*:/i.test(m.ref)) {
+        /* 链接协议守卫归 url-safety 的 safeUrl（与 ai-chat 同源）：拒绝 javascript: /
+           vbscript: / data:text/html（含内嵌控制字符混淆——旧正则曾被 java\tscript: 绕过），
+           相对路径与非 HTML data: 原样放行；语义钉扎在 tests/unit/url-safety.test.ts */
+        const href = safeUrl(m.ref);
+        if (href) {
           const a = h('a', 'icen-kb-explain-metric-ref', t('kbExplain.viewDefinition'));
-          a.href = m.ref;
+          a.href = href;
           a.rel = 'noopener';
           row.appendChild(a);
         }

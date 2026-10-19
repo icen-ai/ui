@@ -55,8 +55,8 @@ function setup(tree: Element): (() => void) | undefined {
     if (target.closest('.icen-tree-toggle')) {
       if (!childUl) return;
       const toggle = node.querySelector('.icen-tree-toggle');
-      const collapsed = childUl.hasAttribute('hidden');
-      if (collapsed) {
+      const wasCollapsed = childUl.hasAttribute('hidden');
+      if (wasCollapsed) {
         childUl.removeAttribute('hidden');
         toggle?.classList.remove('is-collapsed');
         toggle?.setAttribute('aria-expanded', 'true');
@@ -65,7 +65,7 @@ function setup(tree: Element): (() => void) | undefined {
         toggle?.classList.add('is-collapsed');
         toggle?.setAttribute('aria-expanded', 'false');
       }
-      emitIcen(tree, 'icen:tree-toggle', { node: li, open: !collapsed });
+      emitIcen(tree, 'icen:tree-toggle', { node: li, open: wasCollapsed });
       return;
     }
 

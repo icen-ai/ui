@@ -11,10 +11,10 @@
 ## 形态约束（先读，避免生成跑不通的代码）
 
 - 零依赖纯 ESM + TypeScript；组件 = CSS + 行为 JS，**不绑定框架**（React/Vue 在 effect/mounted 里调行为函数即可）。
-- 先引 tokens 再引组件：`@import '@icen.ai/ui/tokens.css';`（组件 CSS 全部消费 `--icen-token-*` 变量）。
+- CSS 两种引法二选一：**全量**一行 `@import '@icen.ai/ui/ui.css';`（ui.css 已含 tokens + base + 全部组件，自洽单文件，**无需再引 tokens.css**）；**按需**先引底座 `@import '@icen.ai/ui/tokens.css';` 再单引组件 `@import '@icen.ai/ui/components/btn.css';`（组件 CSS 全部消费 `--icen-token-*` 变量，tokens.css 是按需场景的必备底座）。
 - **Astro 陷阱**：kit 入口的 css import 在页面 `<script>`（client bundle）里会被摇掉——Astro 项目必须在布局 frontmatter 引组件 CSS；Vite SPA / webpack 无此问题。
 - 行为函数全部**幂等**且 **SSR 安全**（`window` 未定义静默返回）；渲染只写 `textContent`，绝不 innerHTML。
-- 自定义事件统一 `icen:` 前缀（图表 `icen:chart-*`，AI 族 `icen:ai-*`）。明暗 = html `data-icen-theme="dark"`；密度 = 容器 `data-icen-density`。
+- 自定义事件统一 `icen:` 前缀（图表 `icen:chart-*`，AI 族 `icen:ai-*`）。**明暗二态契约**：暗色 = html 写 `data-icen-theme="dark"`；亮色 = **移除该属性**——没有 `"light"` 值，写 `data-icen-theme="light"` 会被 `initTheme` 摘除。密度 = 容器 `data-icen-density`。
 
 ## 命名空间契约（类名防冲突——与任何第三方 CSS 共存零冲突）
 
@@ -37,8 +37,19 @@ bunx @icen.ai/ui add btn toast    # 按 slug 打印引入行
 ```
 
 ```css
+/* 打包器 · 全量：一行（ui.css = tokens + base + 全部组件，自洽单文件） */
+@import '@icen.ai/ui/ui.css';
+
+/* 打包器 · 按需：tokens 底座 + 单引组件 */
 @import '@icen.ai/ui/tokens.css';
-@import '@icen.ai/ui/ui.css';     /* 全量；或单引 @icen.ai/ui/components/btn.css */
+@import '@icen.ai/ui/components/btn.css';
+```
+
+```html
+<!-- 纯静态（无构建工具）：<link> 相对路径直引 -->
+<link rel="stylesheet" href="./node_modules/@icen.ai/ui/ui.css" />
+<!-- ES module 直引需经静态服务器（如 bunx serve / python -m http.server）；
+     file:// 直开会被浏览器 CORS 拦截，JS 模块与 @import 都会失败 -->
 ```
 
 - **kit 一行入口**（CSS + behavior 一起）：`import '@icen.ai/ui/kit/btn';`
@@ -152,7 +163,7 @@ validateToolArgs(schema, args);         // 参数校验：不支持的关键字�
 Promise（落定后写结果）；`timeoutMs` 超时 → `{ ok:false, error:{ code:'timeout' } }`；
 `requiresApproval` → 挂载卡先呈审批区（批准派 `icen:ai-tool-approve` 才执行，拒绝派
 `icen:ai-tool-reject` 置 `.is-cancelled`）；`idempotent` → 同名同输入在途调用复用同一条
-记录。内置 `render_chart` 与 `render_datatable`。挂载区条目可折叠/移除，超限 LRU 自动回收。
+记录。内置 `render_chart` / `render_datatable` / `show_form`（渲染归 form-validate，注册收编在 ai-tools——分层纪律：Core 不 import Beta）。挂载区条目可折叠/移除，超限 LRU 自动回收。
 
 ## i18n 本地化（behaviors/i18n）
 
@@ -246,15 +257,15 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
                   #   dist/tokens/dtcg.json + tokens-studio.json + figma.variables.json）
 ```
 
-测试基座 = bun test + happy-dom（`tests/setup.ts` preload 注册 DOM 全局；`tests/helpers/dom.ts` 提供 mount/nextTick/fire；kb 族诚实呈现一致性套件 `tests/kb-conformance.test.ts` + 求值语义 `tests/unit/kb-acl.test.ts`，映射表见 spec §9.9）。验证 = `bunx tsc --noEmit` + `bun run guard` + `bun test` 全绿 + `bun run build` 通过 + `site/` 文档站目视（`cd site && bun install && bun run build`）。
+测试基座 = bun test + happy-dom（`tests/setup.ts` preload 注册 DOM 全局；`tests/helpers/dom.ts` 提供 mount/nextTick/fire；kb 族诚实呈现一致性套件 `tests/kb-conformance.test.ts` + 求值语义 `tests/unit/kb-acl.test.ts`，映射表见 spec §9.9；Core 族行为一致性套件 `tests/conformance/`——表驱动 harness 断言 init 幂等 / destroy 可重入 / 事件登记+协议形态 / 键盘焦点 / XSS 文本纪律）。验证 = `bunx tsc --noEmit` + `bun run guard` + `bun test` 全绿 + `bun run build` 通过 + `site/` 文档站目视（`cd site && bun install && bun run build`）。
 
 ## 规模
 
 - **76 个组件 CSS**（charts 基座 + 11 个细分图表 CSS + copy/tag/badge/scroll-area/notification/back-top/command-palette/date-picker/toolbar/split-pane + 4 个 AI 族合并文件：ai-chat/ai-tool/ai-diff/ai-panel + kb.css 基座 + 7 个 kb 域文件（ground/ingest/search/data/ops/agent/perm）+ form-validate.css 校验层 + mentions/autocomplete.css + theme-switcher.css 外观切换）。**稳定性分层**：core 52 / beta 24（图表+AI+KB），事实源 `docs/contracts/tiers.json`，构建期盖章 `registry.json` 的 `tiers` 字段，守卫强制每个模块显式归类。
 - **87 个 behaviors TS**（ai-threads/ai-feedback/ai-branch + kb-core 契约层 + 31 个 kb-*——含权限域 kb-acl/kb-who-can/kb-access/kb-audit/kb-visibility；form-validate 校验层 + mentions/autocomplete + i18n 文案注册表；theme-switcher 外观切换、icons 共享图形、focus 原生焦点契约、feedback 计时与异步动作、suggestions 可取消查询等基础模块）
 - **122 个组件 slug**（kit 一行入口 / CLI / 文档站侧栏共用 SLUGS 清单）
-- **测试与守卫**：`bun run verify` = tsc + guard + test + build；828+ 测试（bun test + happy-dom，tests/unit 纯契约 + tests/dom 委托行为 + tests/kb-conformance 权限诚实呈现 + tests/{unit,dom}/i18n 本地化契约与零 CJK 渲染验收 + React/Vue 封装契约 tests/unit/*-wrapper.test.*）；11 项纪律守卫（CSS/token 引用/registry+分层覆盖/事件/行为/命名空间/权限域/RTL 逻辑属性/类名同步/操作图标/契约快照），CI 全挂
-- **公共契约快照**：`docs/contracts/snapshot.json`（类名 1833 / data 属性 220 / 变量 268 / 事件 160 / 导出 341）。扩面跑 `bun run contracts:update` 随 PR 提交；**移除/改名 = Core 破坏性变更**（守卫红牌 + CHANGELOG 公告；0.x 不写迁移指南，见 docs/versioning.md）。
+- **测试与守卫**：`bun run verify` = tsc + guard + test + build；1030+ 测试（bun test + happy-dom，tests/unit 纯契约 + tests/dom 委托行为 + tests/conformance Core 行为一致性套件 + tests/kb-conformance 权限诚实呈现 + tests/{unit,dom}/i18n 本地化契约与零 CJK 渲染验收 + React/Vue 封装契约 tests/unit/*-wrapper.test.*）；12 项纪律守卫（CSS/token 引用/registry+分层覆盖/事件/行为/命名空间/权限域/RTL 逻辑属性/类名同步/操作图标/契约快照/分层依赖方向），CI 全挂
+- **公共契约快照**：`docs/contracts/snapshot.json`（类名 1833 / data 属性 220 / 变量 268 / 事件 160 / 导出 343 / 类型签名 648）。扩面跑 `bun run contracts:update` 随 PR 提交；**移除/改名/签名变化 = Core 破坏性变更**（守卫红牌 + CHANGELOG 公告；0.x 不写迁移指南，见 docs/versioning.md）。
 - **8 个 token 文件**：colors.css、style-profiles.css（公共兜底）、typography.css、design.css（现代与共享配方）、pixel.css（像素）、chinese.css（中式）、soviet.css（苏式）、icon-masks.css（共享 SVG 路径生成的静态图形）。
 
 ## 发布（OIDC Trusted Publishing，已配好）
@@ -335,7 +346,7 @@ bun run build     # tsup（src/behaviors/*.ts + src/react/index.tsx + src/vue/in
 - **ai-composer**（业界集大成）：底部工具条 = 模型切换（多 provider 分组 + 搜索 + 缓存失效提示，选中模型 context 自动喂给环的 total；无 context 显式清除不留陈旧值）+ 上下文环挂载点 + 附件 + 发送/停止；`/` 命令弹层（拦截执行不进消息流）；`@` 引用弹层（chip 分离渲染，textarea 不嵌 chip）；空输入 `↑` 取回历史，运行中 `↑` 取回排队消息。附件三入口：钮选 / textarea 粘贴文件 / box 拖放（`.is-dragover` 高亮）。API：setComposerModels / setComposerCommands / setComposerRefs / setComposerUsage / bindComposer。
 - **绑定层 `bindComposer`**（spec §11，「零接线全链路」）：事件驱动把 composer ↔ 消息区（renderAiMessage）↔ client（stream + 停止 + 排队自动续发 + 错误 → setError/fail）↔ 用量环（`usage.from: 'context'` 默认正确口径 | `'billing'` | AiAuditor）接成闭环；运行态自动管理（send→running / icen:ai-done→解除）；不传 client 为纯状态绑定（渐进采用）；重复绑定 WeakSet 防护，unbind 解绑。
 - **ai-provider 适配层**（`src/behaviors/ai-provider.ts`，无 UI 不占 slug）：注册表内置 openai/claude/deepseek/glm/kimi 五家（`registerAiProvider`/`getAiProvider` 注册与读取第三方/自建网关；baseURL 可自定义，models 携带定价表——`estimateCost` 未命中返回 undefined 不猜价），`createAiClient` 填 key 即用（chat + stream 双族线协议，多模态 parts 传输：openai 族 image_url/input_audio/file_id、anthropic 族 image/audio/document(pdf) + `cacheControl` 断点 + role 'tool' 的 tool_result 回灌；video 两族诚实报 unsupported），usage 走 normalizeUsage 归一（含各家缓存字段），`createAiAuditor` 环形审计（条目含 cost 定价估算 + ttftMs 首 token 延迟；`summary()` 喂环 / `totals()` 喂审计面板 / `byModel()` 分组），每次请求派 `icen:ai-usage` 与 `icen:ai-done` 事件。浏览器直连：claude 官方支持（自动带直连头），openai 官方禁止，其余三家建议代理（browserDirect 字段诚实标注）。
-- **AI 工具体系（`src/behaviors/ai-tools.ts`，不绑定 slug）**：UI 能力注册为模型可调用的 AiToolDef（内置 render_chart（inputSchema=ChartSpec）与 render_datatable（columns+rows → createTable 可搜索/分页/可导出））；createAiToolArea 挂载区三层控制（不 import=无 / 白名单+max LRU 淘汰最旧挂载 / 运行时 setTools·setMax·clear）；`AiToolDef.present: 'mount'|'data'`（data=不占挂载位，记录与事件照常，run 返回值即结果）；执行契约 `run(input, mount, ctx)`：`ctx:{signal,progress(line)}`、允许 Promise 结果、`timeoutMs`（超时→`{ok:false,error:{code:'timeout'}}`，只作用 Promise 型 run）、`requiresApproval`（审批区→icen:ai-tool-approve 才执行 / -reject 置 .is-cancelled）、`idempotent`（同名同输入在途复用同一记录）；`validateToolArgs` 诚实校验（不支持的关键字进 unvalidated 清单，不猜不静默），area.call 的 `validate` 默认开；注册面 `registerAiTool`·`unregisterAiTool`（联动摘除各区域已挂载卡）·`getAiTool`·`listAiTools`；模型侧导出四族共享归一管线 aiToolsToOpenAI/aiToolsToAnthropic/aiToolsToMcp/aiToolsToAiSdk（不 execute，宿主侧挂载）+ aiToolsManifest + parseAiToolArgs；失败统一信封 `record.icen-result={ok:false,error:{code}}`，事件 error 字段保持 string 契约；工具回执内嵌图（**仅 output**；input 是机器参数保持 JSON）→ renderAiToolCall IO 区直接 renderChart；待办业界模式：TodoWrite 折叠卡（todo kind summarize x/y）+ `setComposerTodo` 输入区实时 chip（全完成/有失败图标反馈，点击弹层看清单）；事件 icen:ai-tool-call/-result/-evict/-approve/-reject。规格 §13。
+- **AI 工具体系（`src/behaviors/ai-tools.ts`，不绑定 slug）**：UI 能力注册为模型可调用的 AiToolDef（内置 render_chart（inputSchema=ChartSpec）、render_datatable（columns+rows → createTable 可搜索/分页/可导出）与 show_form（渲染归 form-validate.ts 的 runShowForm，注册收编于此——Core 不 import Beta 的分层纪律））；createAiToolArea 挂载区三层控制（不 import=无 / 白名单+max LRU 淘汰最旧挂载 / 运行时 setTools·setMax·clear）；`AiToolDef.present: 'mount'|'data'`（data=不占挂载位，记录与事件照常，run 返回值即结果）；执行契约 `run(input, mount, ctx)`：`ctx:{signal,progress(line)}`、允许 Promise 结果、`timeoutMs`（超时→`{ok:false,error:{code:'timeout'}}`，只作用 Promise 型 run）、`requiresApproval`（审批区→icen:ai-tool-approve 才执行 / -reject 置 .is-cancelled）、`idempotent`（同名同输入在途复用同一记录）；`validateToolArgs` 诚实校验（不支持的关键字进 unvalidated 清单，不猜不静默），area.call 的 `validate` 默认开；注册面 `registerAiTool`·`unregisterAiTool`（联动摘除各区域已挂载卡）·`getAiTool`·`listAiTools`；模型侧导出四族共享归一管线 aiToolsToOpenAI/aiToolsToAnthropic/aiToolsToMcp/aiToolsToAiSdk（不 execute，宿主侧挂载）+ aiToolsManifest + parseAiToolArgs；失败统一信封 `record.icen-result={ok:false,error:{code}}`，事件 error 字段保持 string 契约；工具回执内嵌图（**仅 output**；input 是机器参数保持 JSON）→ renderAiToolCall IO 区直接 renderChart；待办业界模式：TodoWrite 折叠卡（todo kind summarize x/y）+ `setComposerTodo` 输入区实时 chip（全完成/有失败图标反馈，点击弹层看清单）；事件 icen:ai-tool-call/-result/-evict/-approve/-reject。规格 §13。
 - **ai-core 不绑定任何 slug**：demo/消费方要用 `normalizeToolCall` 等时，在该页 behaviors 数组里显式加 `'ai-core'`（boot 的 glob 会加载并注入 `aiCoreMod` 参数）。
 - **宽度自稳定契约**：所有 AI 输出容器根（`.icen-ai-chat/.icen-ai-reasoning/.icen-ai-composer/.icen-ai-item/.icen-ai-tool/.icen-ai-subagent/.icen-ai-diff/.icen-ai-files/.icen-ai-todo/.icen-ai-usage`）声明 `align-self: stretch`——在 flex/grid 居中宿主（shrink-wrap 上下文，如文档站 `.demo-stage`）里不随内容多少改变宽度，流式内容只允许纵向生长。**禁用 `width: 100%`** 做这件事（在 shrink-wrap 父级下会塌成 min-content）。消费方给组件包一层自己的布局 wrapper 时，wrapper 的宽度由消费方负责（demo 里直接 `style="width:100%"`）。
 

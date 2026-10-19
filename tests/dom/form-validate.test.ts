@@ -416,6 +416,106 @@ describe('reset / destroy / errors', () => {
   });
 });
 
+describe('指针按下期布局守卫（blur 复验位移吃掉提交点击的回归）', () => {
+  test('按下期间 summary/错误元素结构不变、事件照常；pointerup 后下一帧补齐；click 落钮提交链路到达', async () => {
+    mount(FORM_HTML);
+    const handle = createFormValidator(form(), { strategy: { debounceMs: 5 }, scrollToError: false });
+
+    /* 首次提交：username 违反 minlength=3，summary + 字段错误元素就位 */
+    fillAllValid();
+    input('username').value = 'ab';
+    fireSubmit(form());
+    await nextTick();
+    expect(typeof handle.errors().username).toBe('string');
+    expect(form().querySelectorAll('a.icen-form-validate-summary-item')).toHaveLength(1);
+    const errElId = fieldWrap('username').querySelector('p.icen-field-error')?.id;
+    expect(errElId).toBeTruthy();
+
+    /* 首次提交的事件落定后再挂监听，只观察按下期复验的事件 */
+    const fieldEvents: Array<{ name: string; valid: boolean; message?: string }> = [];
+    const valids: string[][] = [];
+    onIcen('icen:form-field-validate', (e) => fieldEvents.push(e.detail));
+    onIcen('icen:form-valid', (e) => valids.push(e.detail.names));
+
+    /* 用户修好 username，聚焦未离开就直接按下提交钮：
+       input 防抖复验（5ms）落定在按下期间（mousedown → blur → 复验） */
+    const btn = form().querySelector('button[type="submit"]') as HTMLButtonElement;
+    let clicks = 0;
+    btn.addEventListener('click', () => clicks++);
+    input('username').value = 'icen';
+    fire(input('username'), 'input');
+    fire(btn, 'pointerdown');
+    await nextTick(30);
+
+    /* 事件契约不推迟：字段复验事件即时到达 */
+    expect(fieldEvents).toEqual([{ name: 'username', valid: true }]);
+    expect(handle.errors()).toEqual({});
+    /* 按下期间零结构位移：summary 原样（仍在、仍 1 条），错误元素未摘除 */
+    expect(form().querySelectorAll('a.icen-form-validate-summary-item')).toHaveLength(1);
+    expect(fieldWrap('username').querySelector('p.icen-field-error')?.id).toBe(errElId);
+    /* 非位移呈现照常：wrap 类/aria 已同步复位 */
+    expect(fieldWrap('username').classList.contains('is-error')).toBe(false);
+    expect(input('username').hasAttribute('aria-invalid')).toBe(false);
+
+    /* pointerup → 下一帧统一补齐结构变更：错误元素摘除 + summary 移除 */
+    fire(btn, 'pointerup');
+    await nextTick(30);
+    expect(fieldWrap('username').querySelector('p.icen-field-error')).toBeNull();
+    expect(form().querySelector('.icen-form-validate-summary')).toBeNull();
+
+    /* click 落在按钮上 → submit → 全量校验通过 → form-valid 到达 */
+    btn.click();
+    expect(clicks).toBe(1);
+    await nextTick();
+    expect(valids).toEqual([['username', 'email', 'password', 'confirm']]);
+    handle.destroy();
+  });
+
+  test('strategy.on=blur：按下期间 blur 校验同样推迟结构变更；pointercancel 也触发补齐', async () => {
+    mount(FORM_HTML);
+    const handle = createFormValidator(form(), { strategy: { on: 'blur' }, scrollToError: false });
+    const btn = form().querySelector('button[type="submit"]')!;
+
+    fire(btn, 'pointerdown');
+    fire(input('username'), 'focusout'); /* blur 即校验 → required 失败 */
+    await nextTick();
+
+    /* 按下期间：错误元素未创建（结构变更推迟）；类/aria 即刻同步 */
+    expect(fieldWrap('username').querySelector('p.icen-field-error')).toBeNull();
+    expect(fieldWrap('username').classList.contains('is-error')).toBe(true);
+    expect(input('username').getAttribute('aria-invalid')).toBe('true');
+    expect(handle.errors().username).toBe('此项为必填项');
+    /* blur 复验路径本就不创建 summary（创建/摘除归 validate() 管） */
+    expect(form().querySelector('.icen-form-validate-summary')).toBeNull();
+
+    /* pointercancel → 下一帧补齐：错误元素创建 + aria-describedby 接线 */
+    fire(btn, 'pointercancel');
+    await nextTick(30);
+    const errEl = fieldWrap('username').querySelector('p.icen-field-error');
+    expect(errEl?.textContent).toBe('此项为必填项');
+    expect(input('username').getAttribute('aria-describedby')).toBe(errEl?.id);
+    handle.destroy();
+  });
+
+  test('无指针按下时复验立即落 DOM（既有行为不变）', async () => {
+    mount(FORM_HTML);
+    const handle = createFormValidator(form(), { scrollToError: false });
+    fillAllValid();
+    input('email').value = 'bad-email';
+    fireSubmit(form());
+    await nextTick();
+    expect(form().querySelectorAll('a.icen-form-validate-summary-item')).toHaveLength(1);
+
+    /* 改好后 blur 复验：无指针按下，错误元素摘除 + summary 移除立即生效（不走推迟队列） */
+    input('email').value = 'ok@icen.ai';
+    fire(input('email'), 'focusout');
+    await nextTick();
+    expect(fieldWrap('email').querySelector('p.icen-field-error')).toBeNull();
+    expect(form().querySelector('.icen-form-validate-summary')).toBeNull();
+    handle.destroy();
+  });
+});
+
 describe('show_form（AI 工具）', () => {
   test('已自动注册；run 渲染表单进 mount，提交（过校验）resolve 值对象，渲染体摘除', async () => {
     const def = getAiTool('show_form');

@@ -46,6 +46,7 @@ import { createIcon } from './icons';
 import { renderChart, type ChartSpec } from './charts';
 import { createTable, type TableColumn } from './datatable';
 import { emitIcen, type IcenEventMap } from './events';
+import { runShowForm, SHOW_FORM_SCHEMA } from './form-validate';
 import { t } from './i18n';
 
 /* ══════════════ 工具注册表 ══════════════ */
@@ -497,6 +498,17 @@ registerAiTool({
     createTable(mount, { columns, data: rows, searchable: true, pagination: true, exportable: true });
     return { title, rows: rows.length };
   },
+});
+
+/* ══════════════ 内置工具：show_form（渲染在 form-validate.ts，注册收编于此——
+   分层纪律：Core 不 import Beta，Beta 可以 import Core） ══════════════ */
+
+registerAiTool({
+  name: 'show_form',
+  description: t('formValidate.tool.description'),
+  inputSchema: SHOW_FORM_SCHEMA,
+  present: 'mount',
+  run: (input, mount) => runShowForm(input, mount),
 });
 
 /* ══════════════ 挂载区（AI 工具的渲染区域 + 挂载控制）══════════════ */

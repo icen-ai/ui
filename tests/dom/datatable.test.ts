@@ -126,6 +126,45 @@ describe('搜索 / 筛选 / 排序 / 选择 / 分页（句柄 + 事件双通道�
     expect(rowsRendered()).toHaveLength(20);
     t.destroy();
   });
+
+  test('自定义 pageSize 不在默认 pageSizes 候选时并入下拉（排序去重）并回显选中值', () => {
+    const el = host();
+    const data = Array.from({ length: 25 }, (_, i) => ({ id: String(i), name: `n${i}`, price: i, status: 'on' }));
+    const t = createTable(el, { columns: COLUMNS, data, pageSize: 5 });
+    const sel = (): HTMLSelectElement => el.querySelector<HTMLSelectElement>('.icen-dt-page-size')!;
+    expect(rowsRendered()).toHaveLength(5); /* 分页本就一直按 5 条/页工作 */
+    expect(Array.from(sel().options).map((o) => o.value)).toEqual(['5', '10', '20', '50']);
+    expect(sel().value).toBe('5'); /* 回显恒等于实际页大小（修复前显示 10） */
+
+    /* setPageSize 到列表外值同样并入回显 */
+    t.setPageSize(15);
+    expect(sel().value).toBe('15');
+    expect(rowsRendered()).toHaveLength(15);
+    t.destroy();
+  });
+
+  test('未配置 summaryRow 不渲染 summary 行（DOM 无空壳）；配置后照常渲染', () => {
+    const el = host();
+    const t = createTable(el, { columns: COLUMNS, data: ROWS });
+    expect(el.querySelector('.icen-dt-row--summary')).toBeNull();
+    t.destroy();
+
+    const el2 = host();
+    const t2 = createTable(el2, {
+      columns: [
+        { key: 'name', title: '名称' },
+        { key: 'price', title: '价格', aggregate: 'sum' as const },
+      ],
+      data: ROWS,
+      summaryRow: true,
+      pagination: false,
+    });
+    const summary = el2.querySelector<HTMLElement>('.icen-dt-row--summary');
+    expect(summary).not.toBeNull();
+    expect(summary!.hidden).toBe(false);
+    expect(summary!.textContent).toContain('28'); /* 5+3+8+12 */
+    t2.destroy();
+  });
 });
 
 describe('虚拟滚动冒烟', () => {

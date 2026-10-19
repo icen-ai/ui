@@ -1,6 +1,8 @@
 /* 中式 material adapter. DOM contract: html[data-icen-style="chinese"] with
  * existing ICEN components or [data-icen-material="content|chrome|floating"].
  * No additional wrappers, decorative pseudo-elements or JavaScript required.
+ * 分层登记（guard: tier-direction 白名单）：横切材料适配引用 Beta 类名
+ * .icen-ai-composer-popup，理由同 material.css 头注释。
  */
 :root[data-icen-style="chinese"] {
   --icen-press: scale(.995);

@@ -46,6 +46,17 @@ README 目前把组件 / 图表 / AI / 知识库 / 主题 / React/Vue 平铺在�
 **React / Vue 封装**：作为 Core 的从属面随 Core 承诺，但需单列版本矩阵与
 SSR / StrictMode 行为说明（见下「待办」）。
 
+## 边界规则（不可误解版）
+
+| 问题 | 规则 |
+| --- | --- |
+| Beta 组件能否用于生产 | **有条件能**：功能完整、测试与守卫同 Core 同门，但允许随 minor 破坏；押生产请锁 minor 版本并盯 CHANGELOG 的 beta 段 |
+| Beta 破坏是否随 minor 发生 | **是**，但必须逐条公告（CHANGELOG 单列 beta 段落 + 迁移说明）；patch 永不破坏 |
+| Beta 是否有弃用周期 | **至少一个 minor 的公告期**：先标 deprecated 并写明替代，下一个 minor 才允许移除 |
+| Beta 晋升 Core 的标准 | 五条同时满足：① 契约快照连续两个 minor 零移除零改名；② 行为 conformance 套件覆盖（init 幂等 / destroy 清理 / 事件时机 / 焦点键盘 / SSR）；③ 文档页完整；④ 至少一个真实消费场景；⑤ 无障碍核查（键盘全流程 + 对比度 + axe） |
+| Core 依赖 Beta 时怎么办 | **禁止运行时依赖**，守卫 `scripts/guard/tier-direction.ts` 机械执行（违规 = CI 红）；类型级引用须 `guard:allow-beta-type` 逐条登记，CSS 横切适配须 `guard:allow-beta-ref` 或文件级白名单——全部留痕可评审 |
+| 聚合入口（`kb` / `charts` / ai 族 kit）的稳定性 | 与其族同为 **Beta**，单独定级：umbrella slug 不提供 Core 级承诺，消费 umbrella = 接受该族全量 beta 纪律 |
+
 ## 落地路径（不拆包版，已实施 1–4）
 
 1. ~~`registry.json` 每个组件加 `tier` 字段~~ ✅ `docs/contracts/tiers.json` 为事实源，build-css 盖章 `registry.tiers`（module→tier），守卫校验覆盖与取值；
