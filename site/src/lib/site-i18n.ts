@@ -4,6 +4,7 @@ import {
   setIcenLocale,
   type IcenLocale,
 } from '../../../src/behaviors/i18n';
+import { refreshSelect } from '../../../src/behaviors/select';
 
 export type SiteLanguage = 'zh-CN' | 'en-US';
 
@@ -190,11 +191,20 @@ function applySiteCopy(language: SiteLanguage): void {
   document.dispatchEvent(new CustomEvent('icen:site-locale-change', { detail: { language } }));
 }
 
+/** 顶导语言切换器走 icen-select 契约：改 .is-selected 类后 refreshSelect 同步文案与 aria（不发用户事件）。 */
+function syncLanguageControl(language: SiteLanguage): void {
+  const control = document.querySelector<HTMLElement>('[data-site-language]');
+  if (!control) return;
+  control.querySelectorAll('.icen-select-option').forEach((option) => {
+    option.classList.toggle('is-selected', option.getAttribute('data-icen-value') === language);
+  });
+  refreshSelect(control);
+}
+
 export function initSiteI18n(): void {
   const language = detectSiteLanguage();
   applySiteCopy(language);
-  const selector = document.querySelector<HTMLSelectElement>('[data-site-language]');
-  if (selector) selector.value = language;
+  syncLanguageControl(language);
 }
 
 export function setSiteLanguage(language: SiteLanguage): void {

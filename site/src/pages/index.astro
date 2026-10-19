@@ -49,8 +49,8 @@ const searchSvg = `${iconHTML('search',{size:13})}`;
 /* hero 眉标的小雪晶：与品牌 logo 同几何，纯 accent 描边无底方 */
 const flakeArm = '<path d="M12 12V3.4"/><path d="M12 8.2 10 6.2"/><path d="M12 8.2 14 6.2"/><path d="M12 5.8 11 4.7"/><path d="M12 5.8 13 4.7"/>';
 const flakeArms = [0, 60, 120, 180, 240, 300].map((a) => '<g transform="rotate(' + a + ' 12 12)">' + flakeArm + '</g>').join('');
-/* hero 主标的风车雪花：与品牌 logo 同几何，accent 描边，缓慢恒转 */
-const heroFlakeSvg = `<svg class="hero-flake" viewBox="0 0 24 24" fill="none" stroke="var(--icen-token-accent)" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">${flakeArms}<circle cx="12" cy="12" r="1.5" fill="var(--icen-token-accent)" stroke="none"/></svg>`;
+/* hero 背景巨雪花：与品牌 logo 同几何，放大居中垫在整块内容之后，细臂半透明磨砂，缓慢恒转 */
+const heroFlakeBgSvg = `<svg class="hero-flake-bg" viewBox="0 0 24 24" fill="none" stroke="var(--icen-token-accent)" stroke-linecap="round" aria-hidden="true"><g stroke-width="0.45">${flakeArms}</g><circle cx="12" cy="12" r="0.9" fill="var(--icen-token-accent)" stroke="none"/></svg>`;
 const featureIcons = {
   ai: `${iconHTML('sparkle',{size:16})}`,
   chart: `${iconHTML('chart-line',{size:16})}`,
@@ -67,6 +67,7 @@ const featureIcons = {
       <span class="hero-orb hero-orb--b"></span>
       <span class="hero-orb hero-orb--c"></span>
       <span class="hero-grid"></span>
+      <Fragment set:html={heroFlakeBgSvg} />
       <!-- 原语艺术层：按 data-icen-style 显隐（苏式构成 / 中式题款 / 像素阶梯） -->
       <span class="hero-art hero-art--icen">ICEN</span>
       <span class="hero-art hero-art--ring"></span>
@@ -81,7 +82,6 @@ const featureIcons = {
       </a>
       <p class="hero-eyebrow fade-up"><b>ICEN</b><i>DESIGN SYSTEM</i></p>
       <h1 class="hero-title">
-        <Fragment set:html={heroFlakeSvg} />
         <span class="hero-stack">
           <span class="reveal-line"><span class="hero-t1"><em class="hero-grad">冰点</em>全生态</span></span>
           <span class="reveal-line"><span class="hero-t2">设计系统<i class="hero-t2i">Design System</i></span></span>
@@ -607,12 +607,22 @@ const featureIcons = {
     margin-inline-start: 12px;
     color: var(--icen-token-accent-text);
   }
-  /* 风车雪花：主标左侧的品牌动核，缓慢恒转；像素原语改机械步进 */
-  .hero-flake { width: 54px; height: 54px; flex: none; }
+  /* 背景巨雪花：品牌雪花的巨影，放大居中垫在整块 hero 后，半透明磨砂缓慢恒转；
+     居中用独立 translate 属性，不与 hero-spin 的 transform 旋转互相顶掉 */
+  .hero-flake-bg {
+    position: absolute;
+    left: 50%; top: 38%;
+    width: min(82vw, 90vh, 760px);
+    height: min(82vw, 90vh, 760px);
+    translate: -50% -50%;
+    opacity: 0.16;
+    filter: blur(9px);
+  }
+  [data-icen-theme="dark"] .hero-flake-bg { opacity: 0.13; }
   @media (prefers-reduced-motion: no-preference) {
-    .hero-flake { animation: hero-spin 18s linear infinite; }
+    .hero-flake-bg { animation: hero-spin 150s linear infinite; }
     @keyframes hero-spin { to { transform: rotate(360deg); } }
-    [data-icen-style="pixel"] .hero-flake { animation: hero-spin 6s steps(12) infinite; }
+    [data-icen-style="pixel"] .hero-flake-bg { animation: hero-spin 48s steps(12) infinite; }
   }
   /* 品牌眉标：拉丁字距全开，先于主标入场；fit-content 居中供各原语加装饰 */
   .hero-eyebrow {
@@ -693,10 +703,10 @@ const featureIcons = {
   }
   [data-icen-style="chinese"] .hero-stat span::before { width: 2px; height: 12px; }
 
-  /* 像素：雪花改步进机械转（见上 @media 内） */
+  /* 像素：背景巨雪花改步进机械转（见上 @media 内）并加粗臂线抗磨砂 */
   [data-icen-style="pixel"] .hero-eyebrow::before { content: '['; color: var(--icen-token-accent); }
   [data-icen-style="pixel"] .hero-eyebrow::after { content: ']'; color: var(--icen-token-accent); }
-  [data-icen-style="pixel"] .hero-flake { stroke-width: 2; }
+  [data-icen-style="pixel"] .hero-flake-bg g { stroke-width: 0.6; }
   .reveal-line { display: block; overflow: hidden; padding: 0.06em 0.1em; }
   .reveal-line > span { display: inline-block; }
   @media (prefers-reduced-motion: no-preference) {
@@ -1042,7 +1052,6 @@ const featureIcons = {
   @media (max-width: 720px) {
     .hero { padding: 64px 0 40px; }
     .hero-art--vert, .hero-art--seal, .hero-art--ring { display: none; }
-    .hero-flake { width: 40px; height: 40px; }
     [data-icen-style="chinese"] .hero-t1 { letter-spacing: 4px; }
     .hero-t2 { letter-spacing: 6px; }
     .hero-stat { border-left: 0; padding: 4px 16px; }

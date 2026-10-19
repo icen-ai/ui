@@ -191,31 +191,24 @@ a:hover { text-decoration: none; }
 }
 .nav-icon-btn:hover { color: var(--icen-token-text); border-color: var(--icen-token-line-soft); background: var(--icen-token-bg-soft); text-decoration: none; }
 
-.site-language-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 34px;
+/* 语言切换（icen-select 契约）：顶导是安静幽灵按钮，与左侧搜索钮同一节奏，
+   悬停才显形描边；面板 portal 在 body，样式全由组件 CSS 负责。
+   组件默认 inline-size:100%（表单填充），在 flex 控件区会撑满整行——收成内容宽 */
+.site-language-select { flex: none; inline-size: fit-content; }
+.site-language-select .icen-select-trigger {
+  inline-size: auto;
+  gap: 6px;
   padding-inline: 8px;
   color: var(--icen-token-text-muted);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md);
-  background: var(--icen-token-bg);
-}
-.site-language-label:focus-within { border-color: var(--icen-token-accent); color: var(--icen-token-text); }
-.site-language-icon { font-size: 13px; line-height: 1; }
-.site-language-label select {
-  max-width: 82px;
-  border: 0;
-  outline: 0;
-  padding: 0;
-  color: inherit;
   background: transparent;
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
+  border-color: transparent;
+  box-shadow: none;
 }
-.site-language-label select:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 3px; border-radius: 2px; }
+.site-language-select .icen-select-trigger:hover:not(:disabled) {
+  color: var(--icen-token-text);
+  border-color: var(--icen-token-line-soft);
+  background: var(--icen-token-bg-soft);
+}
 
 /* select 文档演示里的三圆点色卡凹槽（底色 / 主色 / 冷色——内容数据，非 UI 样式） */
 .opt-dots { display: inline-flex; flex: none; }
@@ -661,8 +654,30 @@ a:hover { text-decoration: none; }
 .chart-cap { margin: 0 0 8px; font-size: 12px; color: var(--icen-token-text-muted); }
 
 /* ═══════════ 响应式 ═══════════ */
-@media (max-width: 960px) {
-  #style-select { display: none; }
+/* 中带（~640-1200px，小笔电/平板）：单行装不下全量导航（品牌 141 + 8 链接 650 + 控件 ~270 ≈ 1160px）——
+   导航整簇折到第二行，品牌与控件留首行；墨条按 offset 计算，不受换行影响。
+   头高随折行变化：文档侧栏 sticky 偏移与锚点滚动余量在此同步抬高 */
+@media (max-width: 1200px) {
+  .site-nav-inner {
+    height: auto;
+    min-height: 52px;
+    flex-wrap: wrap;
+    padding-block: 6px;
+    row-gap: 2px;
+  }
+  .nav-links {
+    order: 3;
+    flex: 1 0 100%;
+    padding-block: 0;
+  }
+  .docs-side { top: 76px; max-height: calc(100vh - 76px); }
+  html { scroll-padding-block-start: 100px; }
+  .docs-main :is(button,input,textarea,select,[tabindex]) { scroll-margin-block-start: 100px; }
+}
+@media (max-width: 720px) {
+  /* 第二行链接约 650px，逼近 640 隐藏线时收紧内距，防第二行自身溢出 */
+  .nav-links a { padding-inline: 6px; }
+  .nav-links-sep { margin-inline: 4px; }
 }
 @media (max-width: 859px) {
   .docs-shell { flex-direction: column; }
@@ -704,8 +719,6 @@ a:hover { text-decoration: none; }
 .switcher-demo-example > .doc-note { margin: 0; }
 .switcher-demo-section { margin-block-start: 36px; }
 @media (max-width: 600px) {
-  #preset-select .icen-theme-switcher-trigger { inline-size: 36px; padding: 0; }
-  #preset-select .icen-theme-switcher-name, #preset-select .icen-theme-switcher-chevron { display: none; }
   .nav-controls { gap: 4px; }
 }
 
@@ -749,8 +762,6 @@ html { scroll-padding-block-start: 76px; }
 .doc-details > summary .icen-symbol { transition: transform var(--icen-tx-fast); }
 .doc-details[open] > summary .icen-symbol { transform: rotate(180deg); }
 .doc-details > p { margin-block: 14px 0; color: var(--icen-token-text-muted); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
-#appearance-mobile { display: none; }
-@media (max-width: 960px) { #appearance-mobile { display: block; } #preset-select { display: none; } }
 @media (prefers-reduced-motion: reduce) { .doc-details > summary .icen-symbol { transition: none; } }
 
 .docs-nav-toggle { display: none; }
