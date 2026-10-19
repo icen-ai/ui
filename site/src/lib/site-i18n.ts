@@ -22,6 +22,11 @@ const copy: Record<string, string> = {
   /* kb 沙箱日志模板（组装点 siteT 即时取译） */
   '← app.ready（沙箱就绪）': '← app.ready (sandbox ready)',
   '→ call echo {text:"来自宿主的调用"}': '→ call echo {text:"from host"}',
+  /* 稳定性分层徽标（[slug].astro，数据源 docs/contracts/tiers.json） */
+  'Core · 稳定': 'Core · Stable',
+  'Beta · 演进中': 'Beta · Evolving',
+  '稳定层：1.0 冻结轨道，破坏性变更须公告': 'Stable tier: on the 1.0 freeze track; breaking changes must be announced',
+  '演进层：随 minor 快速迭代，0.x 期间不保兼容': 'Evolving tier: iterates with minors; no compatibility promise during 0.x',
   '← 回包': '← reply',
   '← 调用失败：': '← call failed: ',
   '来自宿主的调用': 'a call from the host',

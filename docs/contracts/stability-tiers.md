@@ -1,7 +1,16 @@
-# 稳定性分层（草案 / PROPOSAL）
+# 稳定性分层
 
-> **状态：提案，未生效。** 归类与层级承诺由维护者定夺；采纳前本文件不构成任何
-> 兼容承诺。快照（snapshot.json）已经全量落地，分层采纳后只需在其上按层过滤。
+> **状态：已采纳（2026-10-19）。** 事实源 [`tiers.json`](./tiers.json)，
+> 守卫强制每个 CSS 模块显式归类（未标 = 拦），构建期盖章进
+> `registry.json` 的 `tiers` 字段，文档站组件页徽标同源。
+>
+> **采纳时的两条决策记录：**
+> 1. **单包内分层，不拆包**（`@icen.ai/ui-charts` 等留到 1.0 后再评估）：
+>    单一维护者下拆包先付发布协调成本，而 kb→charts、ai→code-block 的交叉
+>    依赖还在加深；分层承诺用单包机制兑现。
+> 2. **0.x 收敛期无外部用户——破坏不留兼容层、不写迁移指南**（见
+>    [../versioning.md](../versioning.md) 0.x 纪律）：改名 / 删除直接做，
+>    公共面上的历史包袱趁没有用户清零；**迁移设计从 1.0 起才成为义务**。
 
 ## 问题
 
@@ -37,22 +46,16 @@ README 目前把组件 / 图表 / AI / 知识库 / 主题 / React/Vue 平铺在�
 **React / Vue 封装**：作为 Core 的从属面随 Core 承诺，但需单列版本矩阵与
 SSR / StrictMode 行为说明（见下「待办」）。
 
-## 落地路径（不拆包版）
+## 落地路径（不拆包版，已实施 1–4）
 
-拆包（`@icen.ai/ui-charts` 等）**留到 1.0 后再评估**：单一维护者下拆包先付
-发布协调成本，而 kb 依赖 charts、ai 依赖 code-block 的交叉依赖还在加深；
-分层承诺可以先用单包内的机制兑现——
+1. ~~`registry.json` 每个组件加 `tier` 字段~~ ✅ `docs/contracts/tiers.json` 为事实源，build-css 盖章 `registry.tiers`（module→tier），守卫校验覆盖与取值；
+2. ~~文档站组件页顶栏显示稳定性徽标~~ ✅ `[slug].astro` 徽标（Core · 稳定 / Beta · 演进中，含悬停说明与 i18n）；
+3. ~~CHANGELOG 按层分节~~ ✅ 纪律写入 `docs/versioning.md`（Core 破坏置顶逐条公告，beta 段落单列）；
+4. ~~1.0 判定改为「Core 层面连续两个 minor 快照零移除」~~ ✅ versioning.md checklist 第一条已机器化（tag 间 snapshot diff + tiers.json 过滤）。
 
-1. `registry.json` 每个组件加 `tier: "core" | "beta"` 字段（构建脚本透传）；
-2. 文档站组件页顶栏显示稳定性徽标 + 引入版本（数据源 registry）；
-3. CHANGELOG 按层分节：Core 的破坏置顶逐条公告，beta 段落单列；
-4. 1.0 判定改为「**Core 层面**连续两个 minor 快照零移除」（只 diff
-   snapshot.json 中 Core 前缀的条目）。
+## 待办（后续批次）
 
-## 待办（采纳后）
-
-- [ ] registry.json 加 tier 字段 + 构建透传 + 守卫校验（tier 未标 = 拦）。
-- [ ] 组件页徽标与「引入版本 / 迁移去向」元信息。
 - [ ] React / Vue 兼容矩阵：版本支持、SSR / RSC、StrictMode 双挂载、事件清理。
-- [ ] 每版迁移页（`/vm/0.10-to-0.11`）：变更、原因、迁移示例、影响契约
-      （可直接从两个 tag 的 snapshot diff 生成骨架）。
+- [ ] 文档站 /components 索引页按层着色/分组（详情页徽标已上线）。
+- [ ] 迁移页（`/vm/x-to-y`）：**1.0 起才建**——0.x 收敛期明确不提供（无用户，无迁移债）；
+      届时直接从两个 tag 的 snapshot diff 生成骨架。

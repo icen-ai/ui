@@ -23,6 +23,30 @@ export async function checkRegistry(): Promise<GuardResult> {
   const behaviorFiles = new Set(await listFiles(join(SRC, 'behaviors'), '.ts'));
   const compFiles = new Set(await listFiles(join(SRC, 'components'), '.css'));
 
+  /* 稳定性分层覆盖（docs/contracts/tiers.json ↔ src/components/*.css）：
+     tier 未标 = 拦（新组件必须显式归类，不许默认躺进 core 的稳定承诺） */
+  const tiersRaw = JSON.parse(
+    await readFile(join(SRC, '..', 'docs', 'contracts', 'tiers.json'), 'utf8'),
+  ) as Record<string, string[]>;
+  const validTiers = new Set(['core', 'beta', 'lab']);
+  for (const [tier, mods] of Object.entries(tiersRaw)) {
+    if (!validTiers.has(tier)) violations.push(`tiers.json: 未知层级 "${tier}"（合法值 core / beta / lab）`);
+    for (const m of mods) {
+      if (!compFiles.has(`${m}.css`)) violations.push(`tiers.json: ${tier} 里的 ${m} 在 src/components/ 无对应 css`);
+    }
+  }
+  const tierOf = new Map<string, string>();
+  for (const [tier, mods] of Object.entries(tiersRaw)) {
+    for (const m of mods) {
+      if (tierOf.has(m)) violations.push(`tiers.json: ${m} 同时归属 ${tierOf.get(m)} 与 ${tier}`);
+      tierOf.set(m, tier);
+    }
+  }
+  for (const f of compFiles) {
+    const m = f.replace(/\.css$/, '');
+    if (!tierOf.has(m)) violations.push(`分层缺口: src/components/${f} 未在 docs/contracts/tiers.json 标注 tier`);
+  }
+
   for (const slug of SLUGS) {
     /* 主 CSS（MERGED_CSS 经 cssOf 归一）与 EXTRA_CSS 附加 CSS 必须存在（对齐 assertSrc） */
     const css = cssOf(slug);

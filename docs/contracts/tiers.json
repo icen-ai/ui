@@ -1,0 +1,20 @@
+{
+  "core": [
+    "autocomplete", "back-top", "badge", "breadcrumb", "btn", "card", "cascader",
+    "code-block", "command-palette", "content", "copy", "datatable", "date-picker",
+    "empty", "feedback", "form", "form-validate", "icon", "input", "layout",
+    "material", "material-chinese", "material-soviet", "media", "mentions", "menu",
+    "modal", "nav", "notification", "pagination", "panel", "pill", "popover",
+    "scroll-area", "segmented", "select", "sidebar", "slider", "split-pane", "stat",
+    "steps", "switch", "table", "tabs", "tag", "tag-input", "theme-switcher",
+    "toast", "toolbar", "tooltip", "tree-select", "upload"
+  ],
+  "beta": [
+    "ai-chat", "ai-diff", "ai-panel", "ai-tool",
+    "charts", "chart-area", "chart-bar", "chart-gauge", "chart-graph",
+    "chart-heatmap", "chart-line", "chart-pie", "chart-radar", "chart-scatter",
+    "chart-sparkline", "chart-stack",
+    "kb", "kb-agent", "kb-data", "kb-ground", "kb-ingest", "kb-ops", "kb-perm", "kb-search"
+  ],
+  "lab": []
+}

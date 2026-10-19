@@ -1,5 +1,11 @@
 # 更新日志
 
+<!-- 记录纪律（docs/versioning.md）：破坏性变更只进 minor，且以契约快照
+     （docs/contracts/snapshot.json，bun run contracts 守卫拦截未留痕增删）
+     为准逐条写明；按层分节——Core 的破坏置顶逐条公告，Beta（图表/AI/KB）
+     段落单列。0.x 收敛期无外部用户：不留兼容层、不写迁移指南；
+     迁移设计从 1.0 起才成为义务。 -->
+
 ## 0.10.0（开发中，未发布）
 
 首个版本。当前形态一览：

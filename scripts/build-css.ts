@@ -131,6 +131,19 @@ for (const slug of SLUGS) {
 // 4. registry.json（cli / 文档站消费）
 const pkg = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf8'));
 const behaviorFiles = (await readdir(join(SRC, 'behaviors'))).filter(f => f.endsWith('.ts')).sort();
+// 稳定性分层（docs/contracts/stability-tiers.md）：tier 事实源在 docs/contracts/tiers.json，
+// 守卫（guard/registry.ts）同源校验覆盖；此处转为 module→tier 映射进 registry 供消费方使用
+const tiersRaw = JSON.parse(await readFile(join(ROOT, 'docs', 'contracts', 'tiers.json'), 'utf8')) as Record<string, string[]>;
+const tiers: Record<string, string> = {};
+for (const [tier, mods] of Object.entries(tiersRaw)) {
+  for (const m of mods) {
+    if (tiers[m]) throw new Error(`build-css: tiers.json 中 ${m} 同时归属 ${tiers[m]} 与 ${tier}`);
+    tiers[m] = tier;
+  }
+}
+for (const c of components) {
+  if (!tiers[c]) throw new Error(`build-css: 组件 src/components/${c}.css 未在 docs/contracts/tiers.json 标注 tier（core / beta / lab）`);
+}
 await writeFile(join(DIST, 'registry.json'), JSON.stringify({
   name: pkg.name,
   version: pkg.version,
@@ -138,6 +151,7 @@ await writeFile(join(DIST, 'registry.json'), JSON.stringify({
   tokensExtras: TOKEN_EXTRAS,
   base: 'base.css',
   components,
+  tiers,
   behaviors: behaviorFiles.map(f => f.replace(/\.ts$/, '')),
   slugs: slugsRegistry,
 }, null, 2) + '\n');

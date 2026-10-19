@@ -3,6 +3,7 @@ import Docs from '../../layouts/Docs.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import PmInstall from '../../components/PmInstall.astro';
 import { COMPONENTS, cssFor, type ComponentDoc } from '../../lib/components';
+import tiersJson from '../../../../docs/contracts/tiers.json';
 import { inlineMd } from '../../lib/doc-text';
 import { SLUGS } from '../../../../scripts/slugs.mjs';
 import { iconHTML } from '../../../../src/behaviors/icons';
@@ -46,6 +47,15 @@ const isKit = SLUGS.includes(doc.slug);
 const usageLang = /^\s*(import|const|\/\/)/.test(doc.usage) ? 'js' : 'html';
 const pageLink = `[${doc.name} · ICEN UI](https://ui.icen.ai/components/${doc.slug}/)`;
 
+/* 稳定性分层徽标：module→tier 来自 docs/contracts/tiers.json（registry.tiers 同源）；
+   纯聚合页（ai-overview 等）不在 SLUGS，cssFor 落到不存在的 css 名——按文档分组回退 */
+const TIER_OF: Record<string, string> = {};
+for (const [tier, mods] of Object.entries(tiersJson as Record<string, string[]>)) {
+  for (const m of mods) TIER_OF[m] = tier;
+}
+const docTier = TIER_OF[cssFor(doc.slug).replace(/\.css$/, '')]
+  ?? (['AI 原生', '知识库', '图表'].includes(doc.group) ? 'beta' : 'core');
+
 const copySvg = iconHTML('copy',{size:13,className:'icen-copy-icon-clipboard'});
 const checkSvg = iconHTML('check',{size:13,className:'icen-copy-icon-check'});
 const leftSvg = iconHTML('chevron-left',{size:14});
@@ -61,7 +71,12 @@ const bootData = JSON.stringify({
 <Docs title={`${doc.name} · 组件 · ICEN UI`} description={doc.desc}>
   <div class="doc-head">
     <div class="doc-head-main">
-      <nav class="doc-crumb">组件 / {doc.group} / <span class="icen-mono">{doc.slug}</span></nav>
+      <div class="doc-crumb-row">
+        <nav class="doc-crumb">组件 / {doc.group} / <span class="icen-mono">{doc.slug}</span></nav>
+        <span class:list={['doc-tier', `doc-tier--${docTier}`]} title={docTier === 'beta' ? '演进层：随 minor 快速迭代，0.x 期间不保兼容' : '稳定层：1.0 冻结轨道，破坏性变更须公告'}>
+          {docTier === 'beta' ? 'Beta · 演进中' : 'Core · 稳定'}
+        </span>
+      </div>
       <h1 class="doc-title">{doc.name}</h1>
       <p class="doc-desc"><bdi>{lead}</bdi></p>
     </div>
@@ -232,6 +247,28 @@ const bootData = JSON.stringify({
     background: color-mix(in srgb, var(--icen-token-warning) 6%, transparent);
     border-radius: 0 var(--icen-radius-sm) var(--icen-radius-sm) 0;
     line-height: 1.7;
+  }
+
+  /* 稳定性分层徽标（数据源 docs/contracts/tiers.json，registry.tiers 同源盖章） */
+  .doc-crumb-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .doc-tier {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: var(--icen-radius-full);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: help;
+    border: 1px solid color-mix(in srgb, var(--icen-token-success) 45%, transparent);
+    color: var(--icen-token-success);
+    background: color-mix(in srgb, var(--icen-token-success) 8%, transparent);
+  }
+  .doc-tier--beta {
+    border-color: color-mix(in srgb, var(--icen-token-warning) 45%, transparent);
+    color: var(--icen-token-warning);
+    background: color-mix(in srgb, var(--icen-token-warning) 8%, transparent);
   }
 
   .doc-pager {

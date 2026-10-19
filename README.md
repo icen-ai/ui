@@ -29,6 +29,8 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 
 ## 里面有什么
 
+**稳定性分层。** Core（52 个基础模块：表单 / 浮层 / 导航 / 数据展示 / 反馈 / 主题 / i18n）走 1.0 冻结轨道；图表 / AI / 知识库三族标 **Beta**，随 minor 快速演进。分层事实源 [`docs/contracts/tiers.json`](docs/contracts/tiers.json)，构建期盖章进 `registry.json`，守卫强制每个模块显式归类，文档站组件页徽标同源。0.x 收敛期没有外部用户：破坏性变更不留兼容层、不写迁移指南（见 [docs/versioning.md](docs/versioning.md)）；迁移设计从 1.0 起才成为义务。
+
 **组件。** 129 个无框架组件——表单、浮层、导航、数据展示、反馈。纯 CSS 契约加按需行为 JS：类名统一 `.icen-*`，钩子统一 `data-icen-*`，变量统一 `--icen-*`，产物全部进 cascade layers，与任何第三方 CSS 共存零冲突。
 
 **图表。** 一份 JSON，十三种图。悬停、点击、右键、图例开关全部内建，不依赖任何图表库。缩放、降采样、标记线、流式追加、PNG 导出都写在规格里。
