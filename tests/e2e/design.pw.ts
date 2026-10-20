@@ -99,7 +99,7 @@ test('light and dark scenes have no serious accessibility violations', async ({ 
 });
 
 test('small touch layout, keyboard navigation, reduced motion and RTL remain usable', async ({ browser }) => {
-  const context = await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context = await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   const page = await context.newPage();
   await page.goto('http://127.0.0.1:4173/modern/');
   await page.getByRole('button',{name:'布局密度',exact:true}).click();

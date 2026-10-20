@@ -10,6 +10,9 @@
     "registry.json": 60000,
     "cli.mjs": 10000,
     "components/*.css": 55000,
-    "behaviors/*.mjs": 310000
+    "components/*.mjs": 3000,
+    "components/*.d.mts": 3000,
+    "behaviors/*.mjs": 310000,
+    "behaviors/*.d.mts": 130000
   }
 }

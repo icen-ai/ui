@@ -15,7 +15,7 @@
 bun run contracts                            # 漂移检查（移除/签名变化=破坏，新增=留痕）
 bun run contracts:update                     # 确认有意变更后重新生成快照
 bun run contracts:diff <refA> [refB|-]       # tag 间 diff，每条差异带分层归类
-bun run contracts:diff v0.11.0 v0.12.0 --gate core   # 1.0 判定第一条：Core 面零破坏
+bun run contracts:diff v0.11.0 v0.13.0 --gate core   # 1.0 判定第一条：两个 minor 间 Core 面零破坏
 ```
 
 快照只记录「存在面」与「签名面」，不预判语义——同名改行为、默认值变化归 CHANGELOG 纪律与评审。

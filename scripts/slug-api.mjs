@@ -1,9 +1,11 @@
 // slug → 公共接口（exports / events）索引：事实源 = slugs.mjs 登记表 + 行为源码扫描。
-// 被三处消费：build-css.ts（registry.json 的 api 面）、文档站（组件页「接口」区块）、contracts 分层 diff。
+// 消费方两处：build-css.ts（registry.json 的 api 面）与文档站（组件页「接口」区块）。
+// 注意 contracts.ts 的 tier 归类用自己的扫描器（口径含 type/interface），与这里刻意不同。
 // 纯 node 标准库，无构建依赖——site（vite）与 scripts（bun）都可直引。
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stripComments } from './guard/shared';
 import { SLUGS, SLUG_INIT, SLUG_EXPORTS, SLUG_BEHAVIOR } from './slugs.mjs';
 
 /* 仓库根定位：脚本直跑时 import.meta.url 可靠；被 Astro/vite 打包后模块 URL 失真，
@@ -38,11 +40,17 @@ function moduleExports(mod) {
   return [...names].sort();
 }
 
-/** 模块源码里带引号的 icen:* 事件字面量（emitIcen 派发面；登记完整性由事件守卫把关）。 */
+/** 模块「派发」面：剥注释后、含 emitIcen 的行里的 icen:* 字面量。
+    监听侧（onIcen / addEventListener）与注释里的消费不属于本组件的派发契约，不扫。 */
 function moduleEvents(mod) {
   const src = behaviorSrc(mod);
   if (!src) return [];
-  return [...new Set([...src.matchAll(/['"`](icen:[a-z0-9-]+)['"`]/g)].map((m) => m[1]))].sort();
+  const events = new Set();
+  for (const line of stripComments(src.split(/\r?\n/))) {
+    if (!line.includes('emitIcen')) continue;
+    for (const m of line.matchAll(/['"`](icen:[a-z0-9-]+)['"`]/g)) events.add(m[1]);
+  }
+  return [...events].sort();
 }
 
 /** slug 的 behavior 模块名（SLUG_BEHAVIOR 映射优先，缺省与 slug 同名；无模块返回 null）。 */

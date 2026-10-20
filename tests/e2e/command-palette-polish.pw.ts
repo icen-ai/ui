@@ -85,7 +85,7 @@ test('open palette is readable in both primitives and modes; mobile stays inside
 });
 
 test('mobile touch targets and viewport fit', async ({browser}) => {
-  const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
+  const context = await browser.newContext({locale:'zh-CN',viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
   try {
     const page = await context.newPage();
     await page.goto('/components/command-palette/');

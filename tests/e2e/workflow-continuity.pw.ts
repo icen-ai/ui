@@ -82,7 +82,7 @@ test('opened checkpoint choices stay readable and named in both primitives and m
 });
 
 test('checkpoint menus fit touch RTL, share panel sizing, skip restricted scopes and return focus',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
   try{const page=await context.newPage();await page.goto('/components/kb-checkpoint/');await page.locator('html').evaluate(el=>el.dir='rtl');
     const host=page.locator('#kb-checkpoint-demo');await host.evaluate(el=>el.setAttribute('data-icen-panel-width','300'));
     const trigger=host.locator('.icen-kb-checkpoint').first();await trigger.focus();await trigger.press('ArrowDown');

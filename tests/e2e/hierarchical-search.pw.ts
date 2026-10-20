@@ -57,7 +57,7 @@ test('open hierarchy panels have no serious accessibility errors, and page navig
 });
 
 test('search clear uses a full touch target and reduced motion never blocks filtering',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try {
     const page=await context.newPage();await page.goto('/components/cascader/');
     await page.locator('.demo-stage .icen-cascader-trigger').tap();const panel=page.locator('.icen-cascader-panel:visible'),search=panel.locator('input');

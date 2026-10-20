@@ -108,7 +108,7 @@ test('viewport edges flip and clamp; multiline wraps; motion honors reduced-moti
 });
 
 test('mobile RTL tooltips stay inside the viewport and page swaps dispose the bubble', async ({browser}) => {
-  const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
+  const context = await browser.newContext({locale:'zh-CN',viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
   try {
     const page = await context.newPage();
     await page.goto('/components/tooltip/');

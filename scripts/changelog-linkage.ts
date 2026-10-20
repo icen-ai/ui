@@ -21,6 +21,16 @@ try {
 }
 
 const changed = git(['diff', '--name-only', `${baseSha}...HEAD`]).split('\n').filter(Boolean);
+if (!changed.includes('CHANGELOG.md')) {
+  /* 弃用公告与破坏公告同规：新增 @deprecated 标记也必须在 CHANGELOG 留痕 */
+  const addedDeprecations = git(['diff', `${baseSha}...HEAD`, '--', 'src'])
+    .split('\n')
+    .filter((l) => l.startsWith('+') && !l.startsWith('+++') && l.includes('@deprecated'));
+  if (addedDeprecations.length) {
+    console.error(`✗ 本 PR 新增 ${addedDeprecations.length} 处 @deprecated 标记，但 CHANGELOG.md 未改动——弃用须逐条公告`);
+    process.exit(1);
+  }
+}
 const snapTouched = changed.includes('docs/contracts/snapshot.json');
 if (!snapTouched) {
   console.log('✓ 契约快照未变更，无需联动检查');

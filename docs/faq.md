@@ -21,4 +21,4 @@ kit 入口的 css import 在页面 `<script>`（client bundle）里会被摇树�
 文档站组件页顶部徽标；机器读 `registry.json` 的 `tiers` 字段。政策见 [versioning.md](./versioning.md)。
 
 **升级后类名/事件名变了？**
-0.x 纪律：破坏性变更只进 minor 且 CHANGELOG 逐条写明。对照 `bun run contracts:diff <旧tag> <新tag>` 的机器 diff 逐条核对。
+0.x 纪律：破坏性变更只进 minor 且 CHANGELOG 逐条写明。对照 `bun run contracts:diff <旧tag> <新tag>` 的机器 diff 逐条核对（契约快照自 v0.11.0 起有基线；更早版本无快照，diff 会明确报错——查 CHANGELOG 即可）。

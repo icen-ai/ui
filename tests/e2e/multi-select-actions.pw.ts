@@ -51,7 +51,7 @@ test('multiselect chips have stable slots, real keyboard actions and no nested c
 });
 
 test('tree chip actions remain operable on touch and the control expands without overlap',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true});
   const page=await context.newPage();await page.goto('/components/tree-select/');
   const root=page.locator('.icen-tree-select');await root.locator('.icen-tree-select-trigger').click();
   await page.getByRole('treeitem',{name:'人力资源',exact:true}).click();

@@ -56,7 +56,7 @@ test('header close button works in both primitives and modes with clean a11y', a
 });
 
 test('mobile RTL popover clamps inside the viewport and page swaps dispose cleanly', async ({browser}) => {
-  const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
+  const context = await browser.newContext({locale:'zh-CN',viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
   try {
     const page = await context.newPage();
     await page.goto('/components/popover/');

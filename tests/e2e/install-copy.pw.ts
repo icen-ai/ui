@@ -61,7 +61,7 @@ test('ordinary code-block copy geometry is centered and generic icon buttons rem
 });
 
 test('touch RTL installation keeps commands readable and its 44px copy at the logical end', async ({browser}) => {
-  const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
+  const context = await browser.newContext({locale:'zh-CN',viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
   try {
     const page = await context.newPage(); await page.goto('/components/copy/'); await page.locator('html').evaluate(el => el.dir = 'rtl');
     const panel = page.locator('.pm-panel:visible'), button = panel.locator('.pm-copy'), pre = panel.locator('pre');

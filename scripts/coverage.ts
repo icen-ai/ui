@@ -17,13 +17,18 @@ let lf = 0, lh = 0, fnf = 0, fnh = 0;
 let inSrc = false;
 for (const line of lcov.split('\n')) {
   if (line.startsWith('SF:')) {
+    // 只认仓库根的 src/（相对路径），绝不把 site/src、scripts/ 混进口径
     const p = line.slice(3).trim();
-    inSrc = p.startsWith('src\\') || p.startsWith('src/') || p.includes('\\src\\') || p.includes('/src/');
+    inSrc = p.startsWith('src\\') || p.startsWith('src/');
   } else if (inSrc && line.startsWith('DA:')) {
     lf++;
     if (Number(line.split(',')[1]) > 0) lh++;
   } else if (inSrc && line.startsWith('FNF:')) fnf += Number(line.slice(4));
   else if (inSrc && line.startsWith('FNH:')) fnh += Number(line.slice(4));
+}
+if (lf === 0) {
+  console.error('✗ lcov 中没有 src/** 的行记录——覆盖率门 fail-closed（检查 bun 版本或 lcov 路径格式）');
+  process.exit(1);
 }
 const pct = (hit: number, found: number) => (found === 0 ? 100 : (hit / found) * 100);
 const lines = pct(lh, lf);

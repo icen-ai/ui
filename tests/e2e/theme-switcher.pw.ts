@@ -28,6 +28,8 @@ test('homepage, header and component instances share all three axes through navi
   await page.goBack();
   /* popstate 恢复 = 网络取页 + ClientRouter 换页，并行套件下静态伺服可能排队——给足等待 */
   await expect(page.locator('#appearance-select .icen-theme-switcher-name')).toHaveText('梵高',{timeout:15000});
+  /* popstate 恢复三轴都要断言：配色名之外，原语轴也必须在换页后复原 */
+  await expect(page.locator('html')).toHaveAttribute('data-icen-style','pixel',{timeout:15000});
   await expect(settings.locator('[data-icen-value="dark"]')).toHaveAttribute('aria-pressed','true',{timeout:15000});
   await page.reload();
   await expect(settings.locator('[data-icen-value="vangogh"]')).toHaveAttribute('aria-pressed','true');

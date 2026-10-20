@@ -59,7 +59,7 @@ test('copy feedback is readable in every palette and quiet actions reveal on key
 });
 
 test('touch RTL copy remains discoverable, respects reduced motion and keeps generous hit areas', async ({browser}) => {
-  const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true, reducedMotion: 'reduce'});
+  const context = await browser.newContext({locale:'zh-CN',viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true, reducedMotion: 'reduce'});
   try {
     const page = await context.newPage(); await clipboard(page); await page.goto('/components/copy/');
     await page.locator('html').evaluate(el => {el.dir = 'rtl'; el.dataset.icenStyle = 'pixel'; el.dataset.icenTheme = 'dark';});

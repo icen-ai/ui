@@ -60,7 +60,7 @@ test('opened library, slash and reference panels stay accessible in both primiti
 });
 
 test('touch RTL, long names, forced colors and constrained panels preserve operability',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
   try{const page=await context.newPage();await page.goto('/components/ai-composer/');await page.locator('html').evaluate(el=>el.dir='rtl');const root=page.locator('#ai-composer-demo');
     await root.evaluate(el=>el.setAttribute('data-icen-panel-width','340'));const trigger=root.getByRole('button',{name:'添加上下文与命令'});await trigger.click();
     const panel=page.getByRole('dialog',{name:'添加上下文与命令'});const rect=(await panel.boundingBox())!;expect(rect.width).toBeCloseTo(340,0);expect(rect.x).toBeGreaterThanOrEqual(8);expect(rect.x+rect.width).toBeLessThanOrEqual(382);

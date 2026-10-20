@@ -19,7 +19,7 @@ Beta 用于生产：可以，但锁 minor 版本并盯 CHANGELOG。Beta 晋升 C
 当前没有外部用户——可以自由破坏而不欠迁移债，规则据此设定：
 
 1. **破坏性变更只进 minor**；patch 只修 bug。
-2. **CHANGELOG 逐条公告**破坏条目（以快照 diff 为准；CI 检查 snapshot 与 CHANGELOG 联动）。
+2. **CHANGELOG 逐条公告**破坏条目（以快照 diff 为准；CI 检查 snapshot 与 CHANGELOG 联动）。Core 破坏置顶、Beta（图表/AI/KB）单列段落——押生产锁 minor 的 Beta 用户要能一眼分拣。
 3. **不留兼容层、不写迁移指南**：改名/删除直接做。迁移设计从 1.0 起才成为义务。
 4. 快照扩面：`bun run contracts:update` 随 PR 提交。
 
@@ -27,8 +27,9 @@ Beta 用于生产：可以，但锁 minor 版本并盯 CHANGELOG。Beta 晋升 C
 
 ## 弃用政策
 
-弃用标记：`@deprecated 用 X 替代（<次版本> 移除）`（TS JSDoc 与 CSS 头注释同构）。
+弃用标记：`@deprecated 用 X 替代（0.12 移除）`（TS JSDoc 与 CSS 头注释同构；全角括号、major.minor 数字，可带 v）。
 守卫强制：标记必须带移除版本；移除版本须晚于当前版本至少一个 minor（公告期）；到期必须真的删。
+新增 `@deprecated` 必须同 PR 在 CHANGELOG 留痕（CI 联动检查）。
 删除发生时快照守卫按破坏性变更接管公告纪律。
 
 ## 主题预算
@@ -37,8 +38,11 @@ token 是公共 API，改名不报错、只在消费方页面悄悄变样——�
 
 1. `--icen-*` 变量进快照留痕；移除/改名 = Core 破坏性变更。
 2. 预设只增不改义（已有六预设的语义 token 不得重定义；测试锁死键集与对比度矩阵）。
+   **静默重定义（不改名只换含义/值）视同改名**：须 CHANGELOG 公告并附对比度影响说明——快照不覆盖变量值，这条靠评审执行。
 3. 原语只做覆盖、不造孤儿 token（token 引用闭合守卫）。
-4. 主题改动必过 verify 全门 + 视觉基线；对比度硬门由 `theme-colors` / `code-contrast` 测试执行。
+4. 主题改动必过 verify 全门 + 视觉基线；对比度硬门由 `theme-colors` / `code-contrast` 测试执行——
+   **诚实边界**：矩阵覆盖 themes.json 扁平键对与 accentStrong×onAccent；color-mix 派生面（fill-1/fill-2/accent-subtle）
+   与「组件边界 ≥3:1」（WCAG 1.4.11）目前无机器门，由 axe e2e 与评审兜底。
 5. 设计工具导出（DTCG / Tokens Studio / Figma）与 CSS 同源；`color-mix()` 等不可表示值明示跳过，不猜不近似。
 
 ## 1.0 判定（机器可查）
@@ -62,5 +66,5 @@ Beta 层不在 1.0 冻结范围内；1.0 同日上线迁移页体系（`/vm/x-to
 
 ## 发布机制
 
-发版 = 改 `package.json` version → push main → `git tag v<x.y.z> && git push origin v<x.y.z>`。
-CI（`.github/workflows/publish.yml`）校验 tag 与版本一致 → 跑全部门 → OIDC trusted publishing 发 npm（provenance，无长期 token）→ 自动建 GitHub Release（notes 取自本文件对应小节）。
+发版 = 改 `package.json` version → 把 CHANGELOG 顶部 `[Unreleased]` 小节改名为 `## [x.y.z] — 日期` → push main → `git tag v<x.y.z> && git push origin v<x.y.z>`。
+CI（`.github/workflows/publish.yml`）校验 tag 与版本一致、CHANGELOG 含该版本小节 → 跑全部门 → OIDC trusted publishing 发 npm（provenance，无长期 token）→ 自动建 GitHub Release（notes 取自 CHANGELOG 对应小节）。

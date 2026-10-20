@@ -44,7 +44,7 @@ for (const preset of ['modern','dongyun','jugou','piano','monet','vangogh']) tes
 });
 
 test('touch RTL removal keeps the draft, uses generous stable slots and never scrolls the document sideways', async ({browser}) => {
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try {const page=await context.newPage(); await page.goto('/components/tag-input/'); await page.locator('html').evaluate(el => {el.dir='rtl';el.dataset.icenStyle='pixel';el.dataset.icenTheme='dark';});
     const root=page.locator('#tags-topics'), field=page.locator('#tags-topics-field'); await field.fill('尚未提交的草稿');
     const action=root.locator('.icen-tag-chip-x').first(); const box=(await action.boundingBox())!;expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);await expect(action).toHaveCSS('opacity','1');

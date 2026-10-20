@@ -31,7 +31,7 @@ test('code actions keep exact source, expose retry and synchronize interrupted f
 });
 
 test('touch code actions retain generous targets and keyboard regions in RTL reduced motion',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try{const page=await context.newPage();await page.goto('/components/code-block/');await page.locator('html').evaluate(el=>{el.dir='rtl';el.dataset.icenStyle='pixel';el.dataset.icenTheme='dark';});
     const figure=page.locator('.demo-stage .icen-code-block').first();
     for(const button of await figure.locator('button').all()){const size=(await button.boundingBox())!;expect(size.height).toBeGreaterThanOrEqual(44);expect(size.width).toBeGreaterThanOrEqual(44);}

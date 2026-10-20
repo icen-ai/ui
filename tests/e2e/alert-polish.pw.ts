@@ -38,7 +38,7 @@ test('alert icons are shared 20px geometry and axe stays clean across modes', as
 });
 
 test('touch alerts keep a visible 44px close and the layout never overflows', async ({browser}) => {
-  const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
+  const context = await browser.newContext({locale:'zh-CN',viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
   try {
     const page = await context.newPage();
     await page.goto('/components/alert/');

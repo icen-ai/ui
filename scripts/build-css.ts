@@ -116,16 +116,17 @@ for (const slug of SLUGS) {
   for (const e of extra) lines.push(`import './${e}';`);
   if (behaviorMod && explicitExports) {
     lines.push(`export { ${explicitExports.join(', ')} } from '../behaviors/${behaviorMod}.mjs';`);
-  } else if (ownBehavior) {
-    lines.push(`export * from '../behaviors/${slug}.mjs';`);
+  } else if (behaviorMod || ownBehavior) {
+    // 映射到共享模块但无显式清单（如 ai-tool-call）：export * 保真——kit 面与 registry 声明一致
+    lines.push(`export * from '../behaviors/${behaviorMod ?? slug}.mjs';`);
   }
   await writeFile(join(DIST, 'components', `${slug}.mjs`), lines.join('\n') + '\n');
   // kit 的类型面：与运行时同形态的 .d.mts（无类型的子路径引入是包面漏洞）。
   // .d.mts 内不引 CSS（副作用样式导入不属于类型契约；消费方打包器处理运行时 .mjs 即可）。
   const dts = behaviorMod && explicitExports
     ? `export { ${explicitExports.join(', ')} } from '../behaviors/${behaviorMod}.mjs';\n`
-    : ownBehavior
-      ? `export * from '../behaviors/${slug}.mjs';\n`
+    : (behaviorMod || ownBehavior)
+      ? `export * from '../behaviors/${behaviorMod ?? slug}.mjs';\n`
       : 'export {};\n';
   await writeFile(join(DIST, 'components', `${slug}.d.mts`), `// kit: ${slug} 类型面（构建产物，勿手改）\n${dts}`);
   const api = slugApi(slug);

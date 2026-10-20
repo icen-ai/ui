@@ -69,7 +69,7 @@ test('native and custom checkboxes keep real checked and mixed states with squar
 });
 
 test('touch RTL and forced colors retain an unmistakable selected surface without added symbols', async ({browser}) => {
-  const context = await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce',forcedColors:'active'});
+  const context = await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce',forcedColors:'active'});
   try {const page=await context.newPage(); await page.goto('/components/theme-switcher/'); await page.locator('html').evaluate(el => {el.dir='rtl';el.dataset.icenStyle='pixel';});
     const trigger=page.locator('#appearance-select button').first(); await trigger.tap(); const panel=page.locator('.icen-theme-switcher-panel[role=dialog]:visible');
     const selected=panel.locator('[aria-pressed=true]').first(); await expect(selected).toHaveCSS('outline-style','double'); await noCheck(panel);

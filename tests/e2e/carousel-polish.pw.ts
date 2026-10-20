@@ -55,7 +55,7 @@ test('keyboard mirrors RTL and the index slot and live status track navigation',
 });
 
 test('touch arrows meet 44px, reduced-motion drops sliding, and page swaps dispose cleanly', async ({browser}) => {
-  const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true, reducedMotion: 'reduce'});
+  const context = await browser.newContext({locale:'zh-CN',viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true, reducedMotion: 'reduce'});
   try {
     const page = await context.newPage();
     await page.goto('/components/carousel/');

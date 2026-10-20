@@ -69,7 +69,7 @@ test('mentions render object-unit chips in both modes with whole-token deletion 
 });
 
 test('touch RTL suggestions preserve focus through retry and selection, with readable states and reduced motion',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try{
     const page=await context.newPage();
     for(const kind of ['autocomplete','mentions']){

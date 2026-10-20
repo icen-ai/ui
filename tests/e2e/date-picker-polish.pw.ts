@@ -51,7 +51,7 @@ test('measured calendar flips at the viewport edge and its portal and listeners 
 });
 
 test('touch RTL calendar has usable targets, reduced motion and no serious accessibility violations',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try{
     const page=await context.newPage();await page.goto('/components/date-picker/');await page.locator('html').evaluate((el)=>el.dir='rtl');await page.locator('#date-publish').tap();const panel=page.locator('.icen-date-picker-panel');
     const button=panel.locator('[data-icen-date="2026-10-17"]'),box=(await button.boundingBox())!;expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);

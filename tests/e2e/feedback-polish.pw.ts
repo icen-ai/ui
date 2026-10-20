@@ -20,7 +20,7 @@ test('group disclosure keeps actions aligned and keyboard focus stable across pr
 });
 
 test('group disclosure is usable on a touch RTL viewport with reduced motion and no serious accessibility issues',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try{
     const page=await context.newPage();await page.goto('/components/notification/');await page.locator('html').evaluate((el)=>el.dir='rtl');
     await page.locator('#notif-group').tap();const button=page.locator('.icen-notification-group-toggle');const box=(await button.boundingBox())!;expect(box.height).toBeGreaterThanOrEqual(44);
@@ -96,7 +96,7 @@ test('feedback status uses shared SVG geometry and progress changes from busy to
 });
 
 test('retry UI remains accessible on touch/RTL and in reduced motion',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try {
     const page=await context.newPage();await page.goto('/components/notification/');await page.locator('html').evaluate((el)=>el.dir='rtl');
     await page.locator('#notif-async').tap();const row=page.locator('.icen-notification'),action=row.getByRole('button',{name:'立即同步'});

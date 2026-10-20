@@ -51,7 +51,7 @@ test('all appearance icon shapes are real SVG and mode remains reachable without
 });
 
 test('clear actions remain discoverable to keyboard and touch; compact viewport keeps columns inside the screen',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true});
   const page=await context.newPage();
   await page.goto('/components/cascader/');
   await page.locator('.icen-cascader-trigger').click();

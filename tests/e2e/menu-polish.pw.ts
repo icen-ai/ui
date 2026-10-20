@@ -77,7 +77,7 @@ test('dropdown and context menu expose usable SVG actions with no serious access
 });
 
 test('touch menu actions meet 44px and reduced motion removes exit delay',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try {
     const page=await context.newPage();await page.goto('/components/dropdown/');const trigger=page.locator('.demo-stage [data-icen-dropdown-trigger]');await trigger.tap();
     const menu=page.getByRole('menu');for(const item of await menu.getByRole('menuitem').all())expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(44);

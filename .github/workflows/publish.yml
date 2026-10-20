@@ -20,11 +20,14 @@ jobs:
           node-version: '24'   # npm CLI >= 11.5.1（trusted publishing 要求）
           registry-url: 'https://registry.npmjs.org'
 
-      # tag 必须与 package.json 版本一致——防打错 tag 发错包
+      # 校验 tag 与版本一致——防打错 tag 发错包。
+      # 注意：github 上下文只经 env 间接层进入 bash，绝不直接插值（tag 名可含 $() 等注入字符）
       - name: 校验 tag 与版本一致
+        env:
+          REF: ${{ github.ref_name }}
         run: |
           V=$(node -p "require('./package.json').version")
-          [ "${{ github.ref_name }}" = "v$V" ] || { echo "tag ${{ github.ref_name }} ≠ package.json v$V"; exit 1; }
+          [ "$REF" = "v$V" ] || { echo "tag $REF ≠ package.json v$V"; exit 1; }
 
       # 发版前过全门——tag 可以打在任何状态上，红状态不得进 registry
       - run: bun install
@@ -35,13 +38,21 @@ jobs:
       - run: bun run size
       - run: bun run check:pkg
 
-      - run: npm publish --access public
+      # CHANGELOG 必须已有本版本小节（把 [Unreleased] 改名为 [x.y.z]）——否则 Release notes 会静默退化
+      - name: 校验 CHANGELOG 版本小节
+        env:
+          REF: ${{ github.ref_name }}
+        run: bun scripts/release-notes.mjs "${REF#v}" --strict > /dev/null
+
+      # 产物已在上方构建并过门；--ignore-scripts 避免 prepublishOnly 再构建一遍
+      - run: npm publish --access public --ignore-scripts
         # 不要设 NODE_AUTH_TOKEN！有值（哪怕是空串）会遮蔽 OIDC
 
       # 发布成功后建 GitHub Release（notes 取自 CHANGELOG 对应小节）
       - name: 建 GitHub Release
-        run: |
-          bun scripts/release-notes.mjs > "$RUNNER_TEMP/notes.md"
-          gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --notes-file "$RUNNER_TEMP/notes.md"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF: ${{ github.ref_name }}
+        run: |
+          bun scripts/release-notes.mjs "${REF#v}" > "$RUNNER_TEMP/notes.md"
+          gh release create "$REF" --title "$REF" --notes-file "$RUNNER_TEMP/notes.md"

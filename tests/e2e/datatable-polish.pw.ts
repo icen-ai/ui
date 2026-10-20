@@ -27,7 +27,7 @@ test('datatable demo renders status pills, quiet row actions and shared icon geo
 });
 
 test('datatable demo stays accessible and touch actions keep 44px without page overflow', async ({browser}) => {
-  const context = await browser.newContext({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
+  const context = await browser.newContext({locale:'zh-CN',viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true});
   try {
     const page = await context.newPage();
     await page.goto('/components/datatable/');

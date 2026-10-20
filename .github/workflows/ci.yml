@@ -16,7 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # changelog-linkage 需要 merge-base
+          # 仅 PR 需要历史（changelog-linkage 的 merge-base）；push main 浅克隆
+          fetch-depth: ${{ github.event_name == 'pull_request' && 0 || 1 }}
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bunx tsc --noEmit

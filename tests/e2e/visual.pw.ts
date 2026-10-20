@@ -21,7 +21,7 @@ const THEME_VARIANT_PAGES = [
 ];
 
 async function shoot(browser: Browser, name: string, path: string, init?: (() => void) | string) {
-  const context = await browser.newContext();
+  const context = await browser.newContext({locale:'zh-CN'});
   if (init) await context.addInitScript(init);
   const page = await context.newPage();
   await page.goto(path, { waitUntil: 'networkidle' });

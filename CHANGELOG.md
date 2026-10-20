@@ -39,7 +39,7 @@
 - 陌生人 dogfood 首轮验收：26/26 通过；3 处修库（form-validate 复验位移吃点击、datatable pageSize 回显、空 summaryRow）+ 5 处修文档，清单见 [docs/dogfood.md](docs/dogfood.md)
 - 文档站：全站中英双语（4034 条词典）、hero 品牌化
 
-## [0.10.0] — 2026-10-18
+## [0.10.0] — 2026-10-19
 
 0.x 收敛线的起点：主题×原语矩阵、对象化提及输入、契约治理基座引入前的最后形态。
 

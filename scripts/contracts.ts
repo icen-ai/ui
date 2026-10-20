@@ -29,6 +29,9 @@ interface Snapshot {
   surfaces: Record<Surface, string[]>;
   /** 类型面：导出名 → 规范化签名字符串（TS 编译器 API 生成，确定性排序） */
   types: Record<string, string>;
+  /** 分层盖章：`<face>:<entry>` → core/beta/lab（生成快照时按当时 tiers.json 盘点；
+      tag 间 diff 优先读盖章，历史独有条目不再退化为 unknown） */
+  tiers?: Record<string, string>;
 }
 
 export const SNAPSHOT_PATH = join(SRC, '..', 'docs', 'contracts', 'snapshot.json');
@@ -236,11 +239,16 @@ export async function writeSnapshot(): Promise<string> {
   const surfaces = await extractSurfaces();
   const types = await extractTypes();
   const pkg = JSON.parse(await readFile(join(SRC, '..', 'package.json'), 'utf8'));
+  /* 分层盖章：现在就把每条目的 tier 盘下来，tag 间 diff 不再靠未来（移动中的）src 反推 */
+  const tiers: Record<string, string> = {};
+  for (const s of SURFACES) for (const e of surfaces[s]) tiers[`${s}:${e}`] = await tierOfEntry(s, e);
+  for (const k of Object.keys(types)) tiers[`types:${k}`] = await tierOfEntry('types', k);
   const snap: Snapshot = {
     version: pkg.version,
-    note: '公共契约面快照：bun run contracts:update 重新生成，随变更同 PR 提交；移除/改名/签名变化=破坏性变更须按 docs/versioning.md 公告。',
+    note: '公共契约面快照：bun run contracts:update 重新生成，随变更同 PR 提交；移除/改名/签名变化=破坏性变更须按 docs/versioning.md 公告。tiers 为分层盖章（tag 间 diff 直接读，不再反推）。',
     surfaces,
     types,
+    tiers,
   };
   await writeFile(SNAPSHOT_PATH, `${JSON.stringify(snap, null, 2)}\n`, 'utf8');
   return surfaceCounts(surfaces, types);
@@ -356,7 +364,12 @@ async function tierContext() {
 }
 
 function familyOf(name: string): Tier | null {
-  return /(^|[-:])(ai|kb|chart)-/.test(name) || /^--icen-chart/.test(name) ? 'beta' : null;
+  return /(^|[-:])(ai|kb|chart)-/.test(name) ? 'beta' : null;
+}
+
+/** 导出名族前缀（PascalCase 与已知 Beta 专名）：现有 src 映射不中时的回退信号。 */
+function exportFamily(name: string): Tier | null {
+  return /(Ai|Kb|Chart|Graph)/.test(name) || /^(lttb|chart)/.test(name) ? 'beta' : null;
 }
 
 async function tierOfEntry(face: string, entry: string): Promise<Tier> {
@@ -368,30 +381,33 @@ async function tierOfEntry(face: string, entry: string): Promise<Tier> {
       return ofModule(ctx.classModule.get(entry)) ?? familyOf(entry) ?? 'unknown';
     case 'jsExports':
     case 'types':
-      return ofModule(ctx.exportModule.get(entry)) ?? (/^(render|init|create|normalize|parse|estimate|bind|set|get)?(Ai|Kb|Chart)/.test(entry) ? 'beta' : 'unknown');
+      return ofModule(ctx.exportModule.get(entry)) ?? exportFamily(entry) ?? 'unknown';
     case 'events':
     case 'dataAttributes':
       return familyOf(entry) ?? 'core';
     default:
-      return 'core'; // cssVariables：token 面全属 Core
+      return 'core'; // cssVariables：token 面全属 Core（beta 组件不定义自有变量，仅引用）
   }
 }
 
 interface DiffRow { face: string; kind: 'removed' | 'changed' | 'added'; entry: string; tier: Tier }
 
-/** 两份快照的全面对比（六个面），每条差异带分层归类。 */
+/** 两份快照的全面对比（六个面），每条差异带分层归类：优先读快照盖章，历史快照无盖章才现算。 */
 export async function diffSnapshots(oldSnap: Snapshot, newSnap: Snapshot): Promise<DiffRow[]> {
   const rows: DiffRow[] = [];
+  const stamped = (face: string, entry: string): Tier | undefined =>
+    (oldSnap.tiers?.[`${face}:${entry}`] ?? newSnap.tiers?.[`${face}:${entry}`]) as Tier | undefined;
+  const tier = async (face: string, entry: string): Promise<Tier> => stamped(face, entry) ?? tierOfEntry(face, entry);
   for (const s of SURFACES) {
     const { added, removed } = diff(oldSnap.surfaces[s] ?? [], newSnap.surfaces[s] ?? []);
-    for (const e of removed) rows.push({ face: s, kind: 'removed', entry: e, tier: await tierOfEntry(s, e) });
-    for (const e of added) rows.push({ face: s, kind: 'added', entry: e, tier: await tierOfEntry(s, e) });
+    for (const e of removed) rows.push({ face: s, kind: 'removed', entry: e, tier: await tier(s, e) });
+    for (const e of added) rows.push({ face: s, kind: 'added', entry: e, tier: await tier(s, e) });
   }
   const oldT = oldSnap.types ?? {};
   const newT = newSnap.types ?? {};
-  for (const k of Object.keys(oldT).filter((k) => !(k in newT))) rows.push({ face: 'types', kind: 'removed', entry: k, tier: await tierOfEntry('types', k) });
-  for (const k of Object.keys(newT).filter((k) => !(k in oldT))) rows.push({ face: 'types', kind: 'added', entry: k, tier: await tierOfEntry('types', k) });
-  for (const k of Object.keys(newT).filter((k) => k in oldT && oldT[k] !== newT[k])) rows.push({ face: 'types', kind: 'changed', entry: k, tier: await tierOfEntry('types', k) });
+  for (const k of Object.keys(oldT).filter((k) => !(k in newT))) rows.push({ face: 'types', kind: 'removed', entry: k, tier: await tier('types', k) });
+  for (const k of Object.keys(newT).filter((k) => !(k in oldT))) rows.push({ face: 'types', kind: 'added', entry: k, tier: await tier('types', k) });
+  for (const k of Object.keys(newT).filter((k) => k in oldT && oldT[k] !== newT[k])) rows.push({ face: 'types', kind: 'changed', entry: k, tier: await tier('types', k) });
   return rows;
 }
 
@@ -403,14 +419,27 @@ if (invokedAsCli) {
   const diffIdx = argv.indexOf('--diff');
   if (diffIdx !== -1) {
     const refA = argv[diffIdx + 1];
-    const refB = argv[diffIdx + 2] && !argv[diffIdx + 2].startsWith('--') ? argv[diffIdx + 2] : '-';
-    const gateIdx = argv.indexOf('--gate');
-    const gate = gateIdx !== -1 ? argv[gateIdx + 1] : null;
-    if (!refA) {
+    if (!refA || refA.startsWith('--')) {
       console.error('用法：bun scripts/contracts.ts --diff <refA> [refB|-] [--gate core]');
       process.exit(2);
     }
-    const rows = await diffSnapshots(await snapshotAt(refA), await snapshotAt(refB));
+    const refB = argv[diffIdx + 2] && !argv[diffIdx + 2].startsWith('--') ? argv[diffIdx + 2] : '-';
+    const gateIdx = argv.indexOf('--gate');
+    let gate: string | null = null;
+    if (gateIdx !== -1) {
+      gate = argv[gateIdx + 1] ?? null;
+      if (!gate || gate.startsWith('--')) {
+        console.error('✗ --gate 需要取值（如 --gate core）——门禁不会静默关闭，请补全参数');
+        process.exit(2);
+      }
+    }
+    let rows: DiffRow[];
+    try {
+      rows = await diffSnapshots(await snapshotAt(refA), await snapshotAt(refB));
+    } catch (error) {
+      console.error(`✗ ${(error as Error).message}`);
+      process.exit(2);
+    }
     const breaking = rows.filter((r) => r.kind !== 'added');
     const added = rows.filter((r) => r.kind === 'added');
     console.log(`── 契约 diff ${refA} → ${refB === '-' ? '工作树' : refB} ──`);

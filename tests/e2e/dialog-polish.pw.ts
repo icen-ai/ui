@@ -42,7 +42,7 @@ test('save action works and leaving a live modal restores scroll lock and remove
 });
 
 test('mobile large sheet stays in the viewport, close is 44px and reduced motion is immediate',async({browser})=>{
-  const context=await browser.newContext({viewport:{width:390,height:700},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
+  const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:700},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try {
     const page=await context.newPage();await page.goto('/components/modal/');
     await page.locator('.icen-modal--sheet-right').evaluate((el)=>el.classList.add('icen-modal--lg'));

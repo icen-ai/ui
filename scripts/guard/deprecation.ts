@@ -7,7 +7,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ROOT, SRC, type GuardResult } from './shared';
 
-const MARK = /@deprecated\b[^\n]*?（(\d+)\.(\d+)(?:\.\d+)?\s*移除）/;
+const MARK = /@deprecated\b[^\n]*?（v?(\d+)\.(\d+)(?:\.\d+)?\s*移除）/;
 const MARK_ANY = /@deprecated\b/g;
 
 async function collect(dir: string, exts: string[]): Promise<string[]> {
@@ -34,12 +34,11 @@ export async function checkDeprecation(): Promise<GuardResult> {
       for (const m of line.matchAll(MARK_ANY)) {
         const withVersion = line.match(MARK);
         if (!withVersion) {
-          violations.push(`${rel}:${i + 1} — @deprecated 必须带移除版本：「@deprecated 用 X 替代（<次版本> 移除）」`);
+          violations.push(`${rel}:${i + 1} — @deprecated 必须带移除版本：写法「@deprecated 用 X 替代（0.12 移除）」——全角括号、major.minor 数字（可带 v）、明确「移除」`);
           continue;
         }
-        const [, maj, min] = withVersion[0].match(/（(\d+)\.(\d+)/) ?? [];
-        const rmMajor = Number(maj);
-        const rmMinor = Number(min);
+        const rmMajor = Number(withVersion[1]);
+        const rmMinor = Number(withVersion[2]);
         if (rmMajor < curMajor || (rmMajor === curMajor && rmMinor <= curMinor)) {
           violations.push(
             `${rel}:${i + 1} — 弃用公告期不足或已到期（当前 ${curMajor}.${curMinor}，标 ${rmMajor}.${rmMinor} 移除）：弃用须至少提前一个 minor；到期即删除`,

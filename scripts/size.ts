@@ -14,10 +14,16 @@ let failed = false;
 const rows = [];
 
 for (const [pattern, limit] of Object.entries(budget.budgets)) {
-  const files = pattern.includes('*')
+  /* 通配键必须形如 <dir>/*<ext>（恰好一层）；其余形态一律报错，绝不静默跳过 */
+  const globMatch = pattern.includes('*') ? /^([\w-]+)\/(\*[\w.-]+)$/.exec(pattern) : null;
+  if (pattern.includes('*') && !globMatch) {
+    console.error(`✗ 非法预算键「${pattern}」：通配只支持 <dir>/*<ext>（如 components/*.css）`);
+    process.exit(1);
+  }
+  const files = globMatch
     ? (() => {
-        const [dir, mask] = pattern.split('/');
-        const ext = mask.replace('*', '');
+        const [, dir, mask] = globMatch;
+        const ext = mask.slice(1); // '*<ext>'
         return readdirSync(join(DIST, dir))
           .filter((f) => f.endsWith(ext))
           .map((f) => `${dir}/${f}`);

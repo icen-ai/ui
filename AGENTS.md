@@ -98,13 +98,15 @@ bindComposer(el, { client, messages: chatEl });  // 一行接通 输入台→流
 | 事件契约 | `src/behaviors/events.ts` 的 `IcenEventMap` |
 | 体积预算 / 覆盖率地板 | `docs/contracts/size-budget.json` / `coverage-floor.json`（棘轮文件，diff 即评审点） |
 
-## 铁律五条（其余细则由守卫报错现场告知）
+## 铁律七条（其余细则由守卫报错现场告知）
 
 1. **行为模块**：幂等 init + 返回销毁函数 + SSR 守卫 + 文本只写 `textContent`。
 2. **公共面先登记后使用**：slug 进 `slugs.mjs`、事件进 `IcenEventMap`、组件进 `tiers.json`、契约变化跑 `contracts:update`——缺哪步都有守卫拦。
 3. **分层方向**：Core 不运行时依赖 Beta。
 4. **CSS 不出层**：产物全部在 `@layer icen.*` 内；组件只消费 `--icen-token-*`，不写死颜色/圆角/z-index/时长。
 5. **安全红线**：禁 `innerHTML =`（清空除外）；不可信 URL 过 `safeUrl`。
+6. **浮层与宽度**：新浮层走 `behaviors/popover.ts` 的 PanelSizing，禁写死宽高；AI 输出容器根用 `align-self: stretch`，禁 `width: 100%`（shrink-wrap 宿主下会塌成最小宽）。
+7. **a11y 三条**：可聚焦元素必须有 `:focus-visible` 环；状态变化同步 `aria-*`；modal/dialog 必须有 focus trap + ESC 关闭 + 焦点还原。
 
 ## 构建与验证
 
@@ -116,7 +118,7 @@ CI 在其上加三道慢门（并行 job）：覆盖率棘轮（`bun run test:co
 
 ## 发布
 
-改 `package.json` version → push main → `git tag v<x.y.z> && git push origin v<x.y.z>` → CI 全门 → OIDC 发 npm（provenance，无长期 token，npm 侧已设 2FA-only）→ 自动建 GitHub Release。政策全文 [docs/versioning.md](https://github.com/icen-ai/ui/blob/main/docs/versioning.md)（不随包发布，仓库内阅读）。
+改 `package.json` version + 把 CHANGELOG `[Unreleased]` 改名为 `[x.y.z]` → push main → `git tag v<x.y.z> && git push origin v<x.y.z>` → CI 全门（含 CHANGELOG 小节校验）→ OIDC 发 npm（provenance，无长期 token，npm 侧已设 2FA-only）→ 自动建 GitHub Release（notes 取自 CHANGELOG）。政策全文 [docs/versioning.md](https://github.com/icen-ai/ui/blob/main/docs/versioning.md)（不随包发布，仓库内阅读）。
 
 ## 文档站约定（site/）
 

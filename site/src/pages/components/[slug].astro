@@ -125,10 +125,19 @@ const bootData = JSON.stringify({
     <>
       <h2 class="doc-h2">接口</h2>
       <dl class="doc-api">
+        {api.init && (
+          <div class="doc-api-row">
+            <dt>初始化</dt>
+            <dd><code>{api.init}()</code><span class="doc-api-note">（kit 一行入口可直接命名导入）</span></dd>
+          </div>
+        )}
         {api.exports.length > 0 && (
           <div class="doc-api-row">
             <dt>导出</dt>
-            <dd>{api.exports.map((e) => <code>{e}</code>)}</dd>
+            <dd>
+              {api.exports.map((e) => <code>{e}</code>)}
+              {api.sharedModule && <span class="doc-api-note">共享行为模块，清单含族内导出</span>}
+            </dd>
           </div>
         )}
         {api.events.length > 0 && (
