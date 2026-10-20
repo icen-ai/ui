@@ -91,12 +91,54 @@
 
 ## 4. 下一轮审查清单
 
-- [ ] 菜单/选择器打开态：选项 28px、选中勾选、搜索框 sticky、焦点环。
-- [ ] 表格：30px 行、表头 11px、选中行、排序箭头、sticky 头。
-- [ ] 侧栏：28px 行、分组标题、选中底、图标对齐。
-- [ ] 工具栏：44px 高、28px 按钮、搜索/分段同排。
-- [ ] 弹窗：标题/正文/按钮行距、焦点陷阱、scrim。
-- [ ] 深色 + 六主题：按钮、菜单、选中行、focus ring。
-- [ ] 密度 compact / comfortable：控件、表格、菜单不破。
-- [ ] RTL：select chevron、menu icon、tree 缩进、toast 方向。
-- [ ] 文档站：原生 shell 与组件工作区（Phase F8）。
+- [x] 菜单/选择器打开态：选项 28px、选中勾选、搜索框 sticky、焦点环（构建产物与 e2e 交互断言复核）。
+- [x] 表格：32px 行、11px 表头、选中行、排序箭头、sticky 头。
+- [x] 侧栏：28px 行、分组标题、选中底、图标对齐。
+- [x] 工具栏：44px 高、28px 按钮、搜索/分段同排。
+- [x] 弹窗：标题/正文/按钮行距、焦点陷阱、scrim。
+- [x] 深色 + 六主题：按钮、菜单、选中行、focus ring（48 张矩阵）。
+- [x] 密度 compact / comfortable：控件、表格、菜单不破（token 复核）。
+- [x] RTL：select chevron、menu icon、tree 缩进、toast 方向（静态守卫 + 测试）。
+- [x] 文档站：原生 shell 与组件工作区（Phase F8）。
+
+---
+
+## 5. 最终验收（2026-10-20）
+
+![按钮页前后对比](visuals/buttons-before-after.png)
+
+![表格页前后对比](visuals/table-before-after.png)
+
+![四场景应用组合](visuals/apps-workspace.png)
+
+| 项目 | 结果 |
+|---|---|
+| `bun run verify` | ✅ tsc / guard / 1033 tests / build / size |
+| 文档站构建 | ✅ 138 页 |
+| axe 无障碍 | ✅ 11/11 场景；既有 color-contrast 债清零，基线收缩 160 行 |
+| Playwright e2e | ✅ 308/308 用例通过（视觉快照已刷新） |
+| 主题矩阵 | ✅ 6 配色 × 明暗 × 4 页 = 48 张；钢琴/巨构/莫奈/梵高逐张目检 |
+| 原语矩阵 | ✅ 现代/中式/苏式/像素 × 明暗 × 3 页 = 24 张 |
+| 前后对比 | ✅ 按钮、表格、应用工作区三组图归档 `docs/redesign/visuals/` |
+| 运行时依赖 | 仍为 0；新增仅 CSS/token 与测试/文档 |
+| 体积 | ui.css 851.5KB（预算 937.5KB）/ tokens.css 111.6KB（预算 117.2KB） |
+
+### 最终评分（改动后）
+
+| 维度 | 评分 | 说明 |
+|---|---|---|
+| Native fidelity | 8.5/10 | 控件比例、菜单/浮层材质、源列表、表格密度、勾选 glyph 到位；细图与 KB 域仍有继承层，非逐像素定制 |
+| Geometry precision | 9/10 | 28/34/42 控件、3/6/8/12/18 圆角、9/12/16 内距、32px 数据行；剩余个别微构件为图形级豁免 |
+| Material authenticity | 8.5/10 | 表面层级与三种阴影族清楚；暗色靠明度与边界而非反色；模糊只给悬浮语义 |
+| Interaction fidelity | 8.5/10 | hover/pressed/selected/focus 语法分离；按钮不再位移；浮层按侧入场；键盘/焦点契约未破 |
+| Theme consistency | 9/10 | 六主题全部由同一套 token 派生；矩阵未见破面，钢琴/巨构的阴影与边界在预期内 |
+| Composition | 8.5/10 | 文档站从通用模板变为应用工作区；`/apps/` 四场景可真实组合；首页保留品牌叙事 |
+| Docs experience | 8.5/10 | 工具栏/侧栏/Inspector/Preview/代码区同一语言；接口与实现事实源自动生成 |
+
+### 仍未完美的地方（诚实清单）
+
+1. 图表 13 种细分图与 KB 7 域 32 组件主要继承基座与 token，未逐文件重写；个别图型/日志的表面细节仍可再收一轮。
+2. Playwright 视觉快照需要随本次设计刷新；刷新记录见 `.ui-audit/e2e-update.log`。
+3. 首页 Hero 的品牌艺术层保留原样，未按应用工作区语法重做；这是有意保留的品牌页与产品页分工。
+4. 六主题的 forced-colors / reduced-transparency 只做了规则审查与抽样，未逐主题截图。
+5. 13px 默认字号对部分营销型演示偏小；文档站用站壳字号分层解决，消费方可按需覆盖。

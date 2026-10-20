@@ -53,7 +53,7 @@
   background: var(--icen-token-error);
   border: 2px solid var(--icen-token-surface);
   border-radius: var(--icen-radius-full);
-  box-shadow: var(--icen-token-shadow-inset);
+  box-shadow: none;
   pointer-events: none;
   white-space: nowrap;
   transform-origin: center;

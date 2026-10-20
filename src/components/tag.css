@@ -24,13 +24,13 @@
   gap: 4px;
   padding: 0 var(--icen-density-space-sm);
   height: 24px;
-  background: var(--icen-token-fill-1);
+  background: var(--icen-token-fill-hover);
   color: var(--icen-token-text-muted);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-sm);
+  border: 1px solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius-sm);
   font: inherit;
-  font-size: var(--icen-density-font-size-sm);
-  letter-spacing: 0.01em;
+  font-size: var(--icen-font-size-caption);
+  letter-spacing: .01em;
   white-space: nowrap;
   vertical-align: middle;
   transition:
@@ -39,7 +39,7 @@
     color var(--icen-tx-fast);
 }
 .icen-tag:hover {
-  background: var(--icen-token-fill-2);
+  background: var(--icen-token-surface-pressed);
   color: var(--icen-token-text);
 }
 
@@ -115,16 +115,16 @@
 
 /* ── 选中态（用于筛选条件等）── */
 .icen-tag.is-selected {
-  background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent-deep, var(--icen-token-accent));
-  border-color: color-mix(in srgb, var(--icen-token-accent) 40%, transparent);
+  background: var(--icen-token-fill-selected);
+  color: var(--icen-token-text);
+  border-color: color-mix(in srgb, var(--icen-token-accent) 30%, transparent);
 }
-.icen-tag.is-selected .icen-tag-icon { color: var(--icen-token-accent); }
+.icen-tag.is-selected .icen-tag-icon { color: var(--icen-token-accent-strong); }
 
 /* ── 语义色变体（与 pill 对齐，但底色更淡，作分类着色用）── */
 .icen-tag--accent {
-  background: color-mix(in srgb, var(--icen-token-accent) 10%, transparent);
-  color: var(--icen-token-accent-deep, var(--icen-token-accent));
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-accent-text);
   border-color: color-mix(in srgb, var(--icen-token-accent) 30%, transparent);
 }
 .icen-tag--success {

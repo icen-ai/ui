@@ -27,12 +27,12 @@
   align-items: center;
   justify-content: center;
   gap: var(--icen-density-space-xs);
-  height: var(--icen-density-input-height-sm);
-  padding: 0 var(--icen-density-space-sm);
+  height: var(--icen-control-height-sm);
+  padding: 0 var(--icen-control-padding-inline-sm);
   background: var(--icen-token-control);
   color: var(--icen-token-text-muted);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-sm);
+  border: 1px solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius-sm);
   font: inherit;
   font-size: var(--icen-density-font-size-sm);
   cursor: pointer;
@@ -44,7 +44,7 @@
 }
 .icen-copy-btn:hover {
   color: var(--icen-token-text);
-  border-color: var(--icen-hover-border);
+  border-color: var(--icen-token-control-border-hover);
 }
 .icen-copy-btn:focus-visible {
   outline: none;
@@ -60,11 +60,11 @@
 /* ghost 变体：透明底，纯描边 / hover 才显底 */
 .icen-copy-btn--ghost {
   background: transparent;
-  border-color: var(--icen-token-line-soft);
+  border-color: var(--icen-token-separator-soft);
 }
 .icen-copy-btn--ghost:hover {
-  background: var(--icen-token-fill-1);
-  border-color: var(--icen-token-accent);
+  background: var(--icen-token-fill-hover);
+  border-color: var(--icen-token-control-border-hover);
 }
 
 /* ── 成功闪烁态（behavior 1.4s 后移除）── */
@@ -76,8 +76,8 @@
 
 /* ── 图标变体：方形按钮，仅放 svg ── */
 .icen-copy-btn--icon {
-  inline-size: var(--icen-density-input-height-sm);
-  block-size: var(--icen-density-input-height-sm);
+  inline-size: var(--icen-control-height-sm);
+  block-size: var(--icen-control-height-sm);
   padding: 0;
 }
 .icen-copy-btn--icon svg {

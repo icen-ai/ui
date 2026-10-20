@@ -324,6 +324,11 @@ export function createTreeSelect(el: HTMLElement, opts: TreeSelectOptions): Tree
   const valueEl = document.createElement('span');
   valueEl.className = 'icen-tree-select-value';
   trigger.appendChild(valueEl);
+  const triggerChevron = createIcon('chevron-down', { size: 12, className: 'icen-tree-select-chevron' });
+  if (triggerChevron) {
+    triggerChevron.setAttribute('aria-hidden', 'true');
+    trigger.appendChild(triggerChevron);
+  }
 
   let clearBtn: HTMLButtonElement | null = null;
   if (opts.clearable) {

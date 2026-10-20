@@ -104,19 +104,17 @@
 .icen-media-card {
   position: relative;
   overflow: hidden;
-  border-radius: var(--icen-radius-lg);
-  background: var(--icen-token-bg-soft);
+  border-radius: var(--icen-control-radius-lg);
+  background: var(--icen-token-surface-raised);
   transition:
     transform var(--icen-tx-slow),
     box-shadow var(--icen-tx-slow);
 }
-/* hover 抬升仅可悬停设备生效（触屏关闭，AGENTS 动效守卫） */
+/* hover 只给接触影，不做位移（媒体内容本身已经在动） */
 @media (hover: hover) and (pointer: fine) {
   .icen-media-card:hover {
-    transform: translateY(-6px);
-    box-shadow:
-      var(--icen-token-shadow-overlay),
-      0 0 20px var(--icen-token-accent-glow);
+    transform: none;
+    box-shadow: var(--icen-token-shadow-card);
   }
 }
 .icen-media-card-cover {
@@ -143,15 +141,15 @@
   pointer-events: none;
   /* 下圆角自带：backdrop-filter 在部分 Chromium 不被祖先 overflow+radius 裁切（直角戳出圆角），
      不赌浏览器行为，overlay 底部两角与卡同弧度 */
-  border-end-start-radius: var(--icen-radius-lg);
-  border-end-end-radius: var(--icen-radius-lg);
+  border-end-start-radius: var(--icen-control-radius-lg);
+  border-end-end-radius: var(--icen-control-radius-lg);
 }
 .icen-media-card:hover .icen-media-card-overlay {
   transform: translateY(0);
   transition-delay: var(--media-overlay-delay, 80ms);
 }
 .icen-media-card-overlay-title {
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   font-weight: 600;
   margin: 0;
 }
@@ -279,7 +277,7 @@
 .icen-carousel {
   position: relative;
   overflow: hidden;
-  border-radius: var(--icen-radius-lg);
+  border-radius: var(--icen-control-radius-lg);
   background: var(--icen-token-control);
 }
 .icen-carousel-track {
@@ -294,17 +292,17 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--icen-radius-full);
-  background: color-mix(in srgb, var(--icen-token-card) 78%, transparent);
-  border: 1px solid var(--icen-token-outline-soft);
+  background: color-mix(in srgb, var(--icen-token-surface) 88%, transparent);
+  border: 1px solid var(--icen-token-material-edge);
   color: var(--icen-token-text);
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
   box-shadow: var(--icen-token-shadow-card);
   cursor: pointer;
   z-index: 2;
@@ -314,14 +312,14 @@
     opacity var(--icen-tx-fast);
 }
 .icen-carousel-arrow:hover {
-  background: var(--icen-token-card-strong);
+  background: var(--icen-token-surface);
 }
 .icen-carousel-arrow:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring), var(--icen-token-shadow-card);
 }
 .icen-carousel-arrow:active {
-  transform: translateY(-50%) scale(0.95);
+  transform: translateY(-50%) scale(0.96);
 }
 .icen-carousel-arrow:disabled,
 .icen-carousel-arrow[aria-disabled='true'] {

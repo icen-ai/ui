@@ -305,6 +305,13 @@
   padding-bottom: 4px;
   flex-wrap: wrap;
 }
+/* sm 档的 chips 需要压到 24px 拇指高度内：24px chip + 2px×2 内距 = 28px 控件高。 */
+.icen-select[data-icen-select-multiple]:has(> .icen-select-trigger--sm) .icen-select-trigger {
+  padding-block: 2px;
+}
+.icen-select[data-icen-select-multiple]:has(> .icen-select-trigger--sm) > .icen-select-chips {
+  padding-block: 2px;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .icen-select-panel { animation: none; }

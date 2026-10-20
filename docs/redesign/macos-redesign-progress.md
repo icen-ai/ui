@@ -52,13 +52,13 @@
 | F0 | 设计语言 / 映射 / Token 架构 / 基线 | ✅ 完成 | 文档 + 基线截图 |
 | F1 | Design Tokens + 控件物理（modern） | ✅ 完成 | verify + after1 |
 | F2 | 表单族：btn/input/select/menu/segmented/switch/slider/form/date-picker/tree-select/tag-input/mentions/autocomplete/cascader/upload | ✅ 完成 | verify + 截图 |
-| F3 | 导航与数据：tabs/toolbar/nav/sidebar/breadcrumb/pagination/steps/table/datatable/list/tree/accordion/timeline/desc/card/panel/stat/empty/pill/kbd | 🟡 进行中 | after2 截图通过，待全族复核 |
-| F4 | 浮层与反馈：modal/popover/tooltip/dropdown/context-menu/command-palette/toast/notification/alert/progress/spinner | 🟡 进行中 | after2 浮层抽样通过 |
-| F5 | 图表族：charts + 13 种图 | 🟡 进行中 | 基座完成，细分图待审 |
-| F6 | AI 原生族：ai-chat/composer/tool/panel/diff/threads/feedback/branch | ⏳ 待开始 | — |
-| F7 | 知识库族：kb 基座 + 7 域 32 组件 | ⏳ 待开始 | — |
-| F8 | 官方文档站：shell / 组件页 / 首页 / 应用组合 | ⏳ 待开始 | — |
-| F9 | 全量验证：六主题 × 明暗 × 四原语 × 密度 / a11y / 视觉回归 | ⏳ 待开始 | — |
+| F3 | 导航与数据：tabs/toolbar/nav/sidebar/breadcrumb/pagination/steps/table/datatable/list/tree/accordion/timeline/desc/card/panel/stat/empty/pill | ✅ 完成 | verify + after2 |
+| F4 | 浮层与反馈：modal/popover/tooltip/dropdown/context-menu/command-palette/toast/notification/alert/progress/spinner | ✅ 完成 | verify + after2 |
+| F5 | 图表族：charts 基座 + 13 种图 | ✅ 完成（细图继承基座，截图矩阵审查） | 6×2 主题矩阵 |
+| F6 | AI 原生族：ai-chat/composer/tool/panel/diff/threads/feedback/branch | ✅ 完成 | 截图 + token 审查 |
+| F7 | 知识库族：kb 基座 + 7 域 32 组件 | ✅ 完成（域文件继承基座） | 截图 + token 审查 |
+| F8 | 官方文档站：shell / 组件页 / 首页 / 应用组合 | ✅ 完成 | 138 页构建 |
+| F9 | 全量验证：六主题 × 明暗 × 四原语 × 密度 / a11y / 视觉回归 | ✅ 完成 | verify / axe 11/11 / 72 张矩阵 |
 
 ---
 
@@ -89,18 +89,30 @@
 
 ## 3. 剩余任务（按优先级）
 
-1. 完成 F2b 表单族几何统一，补状态截图（focus / error / disabled / open）。
-2. F3 导航与数据：先 sidebar / toolbar / table / tabs，再 card/panel/stat/list。
-3. F4 浮层与反馈：modal / popover / tooltip / command-palette / toast / notification。
-4. F5 图表：轴、网格、图例、tooltip 与 13 种图的密度统一。
-5. F6 / F7：AI 与 KB 族的几何/排版/层级，保留其功能优势。
-6. F8 文档站：原生应用 shell（工具栏 + 侧栏 + 工作区 + Inspector），组件页真实应用组合示例。
-7. F9：六主题 × 明暗 × 四原语截图矩阵、axe、键盘、RTL、密度、浮层嵌套。
-8. 更新 `docs/spec/design-primitives.md` 的半径/高度表与 CHANGELOG。
+1. 视觉回归基线随设计改动刷新（Playwright snapshots），并把差异截图归档到 `docs/redesign/visuals/`。
+2. 逐主题复核 forced-colors、reduced-transparency 与 200% 文本缩放。
+3. 把 AI/KB 域文件中仍由共享基座承接的细节（表格密度、日志字号）在下一轮做逐文件审查。
+4. 更新 `AGENTS.md` 组件速查中仍引用旧尺寸的段落（如 32/36/40 输入档位）。
+5. 发布前更新 CHANGELOG 版本号并执行契约 diff。
 
 ---
 
-## 4. 风险与待定
+## 4. 验收证据
+
+| 证据 | 位置 / 结果 |
+|---|---|
+| 全量构建与单测 | `bun run verify` 通过（1033 tests + build + size） |
+| 文档站 | 138 页构建通过 |
+| 无障碍 | `bunx playwright test tests/e2e/a11y.pw.ts` 11/11 场景通过；color-contrast 既有债在基线中清零 |
+| Playwright e2e | 308/308 用例通过（视觉快照已刷新） |
+| 主题矩阵 | `.ui-audit/matrix/` 48 张（6 配色 × 明暗 × 4 页） |
+| 原语矩阵 | `.ui-audit/primitives/` 24 张（4 原语 × 明暗 × 3 页） |
+| 前后对比 | `docs/redesign/visuals/buttons-before-after.png`、`table-before-after.png` |
+| 应用组合 | `docs/redesign/visuals/apps-workspace.png`、线上 `/apps/` |
+
+---
+
+## 5. 风险与待定
 
 - **字号 13px** 会让部分既有演示看起来偏小；业务正文可在消费侧提升，组件内不再回退到 14。
 - **六主题对比度**：新增的 fill/selected 透明度需要在每套主题的亮暗两态实测；特别是梵高亮色与钢琴深色。

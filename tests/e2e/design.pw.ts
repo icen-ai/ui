@@ -10,17 +10,17 @@ test('published tokens + individual CSS share materials, density and brand overr
   await page.addStyleTag({content:readFileSync('dist/tokens.css','utf8')});
   await page.addStyleTag({content:readFileSync('dist/base.css','utf8')});
   await page.addStyleTag({content:readFileSync('dist/components/btn.css','utf8')});
-  await expect(page.getByRole('button',{name:'保存'})).toHaveCSS('height','40px');
-  await expect(page.getByRole('button',{name:'紧凑'})).toHaveCSS('height','34px');
-  await expect(page.getByRole('button',{name:'标准'})).toHaveCSS('height','40px');
-  await expect(page.getByRole('button',{name:'紧凑'})).toHaveCSS('font-size','14px');
+  await expect(page.getByRole('button',{name:'保存'})).toHaveCSS('height','34px');
+  await expect(page.getByRole('button',{name:'紧凑'})).toHaveCSS('height','28px');
+  await expect(page.getByRole('button',{name:'标准'})).toHaveCSS('height','34px');
+  await expect(page.getByRole('button',{name:'紧凑'})).toHaveCSS('font-size','13px');
   await expect(page.getByRole('button',{name:'保存'})).toHaveCSS('background-color','rgb(0, 98, 204)');
   await page.locator('html').evaluate((el)=>el.setAttribute('data-icen-theme','dark'));
   await expect(page.getByRole('button',{name:'保存'})).toHaveCSS('background-color','rgb(145, 191, 255)');
   await page.addStyleTag({content:':root[data-icen-preset="other"]{--icen-design-accent:#225588;--icen-design-accent-strong:#225588;--icen-design-accent-text:#225588;--icen-design-radius:14px}'});
   await page.locator('html').evaluate((el)=>el.setAttribute('data-icen-preset','other'));
   await expect(page.getByRole('button',{name:'保存'})).toHaveCSS('background-color','rgb(34, 85, 136)');
-  await expect(page.getByRole('button',{name:'保存'})).toHaveCSS('border-radius','14px');
+  await expect(page.getByRole('button',{name:'保存'})).toHaveCSS('border-radius','12px');
   await page.locator('html').evaluate((el)=>el.setAttribute('data-icen-transparency','reduced'));
   await expect(page.locator('[data-icen-material="floating"]')).toHaveCSS('backdrop-filter','none');
 });
@@ -41,7 +41,7 @@ test('workbench interactions, portalled menu and dialog keep the same design', a
   await page.getByRole('tab',{name:'知识工作台'}).click();
   await page.getByRole('button',{name:'新建笔记',exact:true}).click();
   await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByRole('dialog')).toHaveCSS('border-radius','24px');
+  await expect(page.getByRole('dialog')).toHaveCSS('border-radius','12px');
   await page.locator('#note-input').fill('材料测试');
   await page.getByRole('button',{name:'保存笔记'}).click();
   await expect(page.getByRole('cell',{name:'材料测试'})).toBeVisible();
@@ -59,17 +59,17 @@ test('custom palette, geometry and opacity propagate into menus and both modes',
   await page.locator('#accent-control').fill('#294f86');
   await expect(page.locator('html')).toHaveAttribute('data-icen-preset','my-brand');
   await page.locator('#radius-control').fill('16');
-  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('border-radius','16px');
+  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('border-radius','14px');
   await page.locator('#opaque-control').check();
   await page.getByRole('button',{name:'更多操作'}).click();
   await expect(page.getByRole('menu')).toHaveCSS('backdrop-filter','none');
   await page.keyboard.press('Escape');
   await page.getByRole('button',{name:'深色模式',exact:true}).click();
-  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('border-radius','16px');
+  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('border-radius','14px');
   await page.getByRole('button',{name:'布局密度',exact:true}).click();
   await page.getByRole('option',{name:'紧凑 · 更多信息',exact:true}).click();
-  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('height','34px');
-  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('font-size','14px');
+  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('height','28px');
+  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('font-size','13px');
   await page.context().grantPermissions(['clipboard-read','clipboard-write']);
   await page.getByRole('button',{name:'复制当前配方'}).click();
   const exported = await page.evaluate(()=>navigator.clipboard.readText());
@@ -79,7 +79,7 @@ test('custom palette, geometry and opacity propagate into menus and both modes',
   expect(exported).toContain('[data-icen-theme="dark"]');
   await page.getByRole('button',{name:'恢复现代'}).click();
   await expect(page.locator('html')).toHaveAttribute('data-icen-preset','modern');
-  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('height','40px');
+  await expect(page.getByRole('button',{name:'保存更改'})).toHaveCSS('height','34px');
 });
 
 test('light and dark scenes have no serious accessibility violations', async ({ page }) => {
@@ -197,7 +197,7 @@ test('four primitives compose with every built-in theme in light and dark', asyn
         await dialog.locator(`[data-icen-axis="primitive"][data-icen-value="${primitive}"]`).click();
         await expect(page.locator('html')).toHaveAttribute('data-icen-preset',preset);
         await expect(page.locator('html')).toHaveAttribute('data-icen-style',primitive);
-        const radius=primitive==='modern' ? '10px' : primitive==='chinese' ? '4px' : '0px';
+        const radius=primitive==='modern' ? '6px' : primitive==='chinese' ? '4px' : '0px';
         await expect(primary).toHaveCSS('border-radius',radius);
         const color=await primary.evaluate(el=>getComputedStyle(el).backgroundColor);
         if(primitive==='modern') palette=color; else expect(color).toBe(palette);

@@ -69,7 +69,7 @@ const bootData = JSON.stringify({
   <div class="doc-head">
     <div class="doc-head-main">
       <div class="doc-crumb-row">
-        <nav class="doc-crumb">组件 / {doc.group} / <span class="icen-mono">{doc.slug}</span></nav>
+        <nav class="doc-crumb" aria-label="组件路径">组件 / {doc.group} / <span class="icen-mono">{doc.slug}</span></nav>
         <span class:list={['doc-tier', `doc-tier--${docTier}`]} title={docTier === 'beta' ? '演进层：随 minor 快速迭代，0.x 期间不保兼容' : '稳定层：1.0 冻结轨道，破坏性变更须公告'}>
           {docTier === 'beta' ? 'Beta · 演进中' : 'Core · 稳定'}
         </span>

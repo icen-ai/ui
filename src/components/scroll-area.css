@@ -45,7 +45,8 @@
 }
 .icen-scroll-area--sm::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--icen-token-text-faint) 28%, transparent);
-  border-radius: 3px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 3px;
   border: 0;
 }
 
@@ -69,10 +70,10 @@
 
 /* ── 内嵌变体：带视觉边界 ── */
 .icen-scroll-area--inset {
-  background: var(--icen-token-bg-soft);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
+  background: var(--icen-token-control);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
+  box-shadow: var(--icen-token-shadow-field);
   padding: var(--icen-density-space-sm);
 }
 .icen-scroll-area--inset:focus-visible {

@@ -41,7 +41,7 @@ test('range, month buttons, clear, disabled state and native tab order behave as
 
 test('measured calendar flips at the viewport edge and its portal and listeners are released on navigation',async({page})=>{
   const errors:string[]=[];page.on('pageerror',(error)=>errors.push(error.message));await page.goto('/components/date-picker/');
-  await page.locator('#date-publish').evaluate((el)=>{el.style.position='fixed';el.style.bottom='12px';el.style.right='12px';el.style.width='170px';});
+  await page.locator('#date-publish').evaluate((el)=>{el.style.position='fixed';el.style.bottom='12px';el.style.left='50%';el.style.width='170px';el.style.zIndex='9999';});
   await page.locator('#date-publish').click();const panel=page.locator('.icen-date-picker-panel');await expect(panel).toHaveAttribute('data-icen-side','top');
   const box=(await panel.boundingBox())!;expect(box.x).toBeGreaterThanOrEqual(11);expect(box.x+box.width).toBeLessThanOrEqual(1440-11);expect(box.y).toBeGreaterThanOrEqual(11);expect(box.y+box.height).toBeLessThanOrEqual(900-11);
   await page.keyboard.press('Escape');await page.locator('#date-review').click();await page.keyboard.press('Escape');

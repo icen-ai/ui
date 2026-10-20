@@ -22,8 +22,8 @@
   min-height: 200px;
   overflow: hidden;
   background: var(--icen-token-surface);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
 }
 
 .icen-split-pane-first {
@@ -43,7 +43,7 @@
 .icen-split-pane-divider {
   flex: 0 0 6px;
   position: relative;
-  background: var(--icen-token-line-soft);
+  background: var(--icen-token-separator-soft);
   cursor: col-resize;
   user-select: none;
   touch-action: none;
@@ -75,11 +75,11 @@
 }
 .icen-split-pane-divider:hover,
 .icen-split-pane-divider.is-dragging {
-  background: color-mix(in srgb, var(--icen-token-accent) 14%, var(--icen-token-line-soft));
+  background: color-mix(in srgb, var(--icen-token-accent) 14%, var(--icen-token-separator-soft));
 }
 .icen-split-pane-divider:focus-visible {
   outline: none;
-  background: color-mix(in srgb, var(--icen-token-accent) 18%, var(--icen-token-line-soft));
+  background: color-mix(in srgb, var(--icen-token-accent) 18%, var(--icen-token-separator-soft));
 }
 
 /* ── 纵向布局（上下分栏） ── */

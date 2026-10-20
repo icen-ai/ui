@@ -54,21 +54,21 @@
   box-sizing: border-box;
   padding: var(--icen-density-space-md);
   overflow: auto;
-  border: 1px solid var(--icen-token-line-soft);
+  border: 1px solid var(--icen-token-material-edge);
   border-radius: var(--icen-radius-lg);
   background: var(--icen-token-surface);
   color: var(--icen-token-text);
-  box-shadow: var(--icen-token-shadow-overlay);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
   font: var(--icen-density-font-size-sm)/1.5 var(--icen-font-body);
 }
 .icen-theme-switcher-panel[hidden] { display: none; }
-.icen-theme-switcher-section + .icen-theme-switcher-section { margin-block-start: var(--icen-density-space-md); padding-block-start: var(--icen-density-space-md); border-block-start: 1px solid var(--icen-token-line-soft); }
-.icen-theme-switcher-heading { margin: 0 0 var(--icen-density-space-sm); font-size: var(--icen-density-font-size-sm); font-weight: 500; color: var(--icen-token-text-muted); }
+.icen-theme-switcher-section + .icen-theme-switcher-section { margin-block-start: var(--icen-density-space-md); padding-block-start: var(--icen-density-space-md); border-block-start: 1px solid var(--icen-token-separator-soft); }
+.icen-theme-switcher-heading { margin: 0 0 var(--icen-density-space-sm); font-size: var(--icen-font-size-caption); font-weight: 600; letter-spacing: var(--icen-letter-spacing-caption); color: var(--icen-token-text-muted); }
 .icen-theme-switcher-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--icen-density-space-sm); }
-.icen-theme-switcher-option { position: relative; min-block-size: var(--icen-density-input-height-md); padding: var(--icen-density-space-sm); }
+.icen-theme-switcher-option { position: relative; min-block-size: var(--icen-control-height-sm); padding: var(--icen-density-space-sm); }
 .icen-theme-switcher-options--theme .icen-theme-switcher-option { flex-direction: column; align-items: stretch; gap: var(--icen-density-space-sm); text-align: start; }
 .icen-theme-switcher-options--theme .icen-theme-switcher-sample { inline-size: 100%; block-size: 28px; }
-.icen-theme-switcher-option[aria-pressed="true"] { border-color: var(--icen-token-accent); background: var(--icen-token-accent-subtle); }
+.icen-theme-switcher-option[aria-pressed="true"] { border-color: color-mix(in srgb, var(--icen-token-accent) 32%, var(--icen-token-separator)); background: var(--icen-token-fill-selected); color: var(--icen-token-text); }
 .icen-theme-switcher[data-icen-layout="inline"] { display: block; inline-size: 100%; container: icen-appearance / inline-size; }
 .icen-theme-switcher[data-icen-layout="inline"] > .icen-theme-switcher-panel { position: static; inline-size: 100%; box-shadow: none; background: var(--icen-token-surface); }
 /* Six built-ins form complete rows. Query the host, so sidebars and embedded

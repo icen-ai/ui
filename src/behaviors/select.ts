@@ -142,8 +142,15 @@ function setup(container: Element): () => void {
   // 闭包内不保留 narrowing，转为非空常量
   const trigger = triggerEl;
   const panel = panelEl;
-  /* 触发器保留作者提供的 chevron：弹出式选择器需要稳定的方向暗示，
-   * 不能只靠「表面像控件」让用户猜。CSS 负责旋转与清除钮互斥。 */
+  /* 触发器保留/补齐 chevron：弹出式选择器需要稳定的方向暗示。
+   * 作者可提供自定义 SVG；未提供时行为层用共享图标补齐，CSS 负责旋转与清除钮互斥。 */
+  if (!trigger.querySelector('.icen-select-chevron')) {
+    const chevron = createIcon('chevron-down', { size: 12, className: 'icen-select-chevron' });
+    if (chevron) {
+      chevron.setAttribute('aria-hidden', 'true');
+      trigger.append(chevron);
+    }
+  }
 
   const isMultiple = container.hasAttribute('data-icen-select-multiple');
   const isSearchable = container.hasAttribute('data-icen-select-search');

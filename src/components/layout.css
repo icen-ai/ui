@@ -31,22 +31,22 @@
 .icen-stack--justify-evenly { justify-content: space-evenly; }
 
 /* ── Divider：分隔线 ── */
-.icen-divider { background: var(--icen-token-outline-soft); height: 1px; width: 100%; }
+.icen-divider { background: var(--icen-token-separator-soft); height: 1px; width: 100%; }
 .icen-divider--vertical { width: 1px; height: 100%; align-self: stretch; }
 
-/* ── Surface：卡片容器（默认 inset 阴影 + density-space-lg padding） ── */
+/* ── Surface：卡片容器（默认 hairline 表面，无内阴影） ── */
 .icen-surface {
-  border-radius: var(--icen-radius-lg);
-  background: var(--icen-token-card);
-  border: 1px solid var(--icen-token-outline-soft);
-  box-shadow: var(--icen-token-shadow-inset);
+  border-radius: var(--icen-control-radius-lg);
+  background: var(--icen-token-surface);
+  border: 1px solid var(--icen-token-separator-soft);
+  box-shadow: none;
   padding: var(--icen-density-space-lg);
 }
 .icen-surface--elevated { box-shadow: var(--icen-token-shadow-card); }
 .icen-surface--overlay {
-  background: var(--icen-token-card-strong);
-  border-color: var(--icen-token-outline);
-  box-shadow: var(--icen-token-shadow-overlay);
+  background: var(--icen-token-surface);
+  border-color: var(--icen-token-material-edge);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-overlay);
 }
 .icen-surface--p-none { padding: 0; }
 .icen-surface--p-sm { padding: var(--icen-density-space-md); }
@@ -63,7 +63,7 @@
 .icen-text--2xl { font-size: var(--icen-density-font-size-2xl); }
 .icen-text--muted { color: var(--icen-token-text-muted); }
 .icen-text--faint { color: var(--icen-token-text-faint); }
-.icen-text--accent { color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent))); }
+.icen-text--accent { color: var(--icen-token-accent-text); }
 .icen-text--success { color: var(--icen-token-success); }
 .icen-text--warning { color: var(--icen-token-warning); }
 .icen-text--error { color: var(--icen-token-error); }

@@ -165,6 +165,11 @@
   --icen-density-input-height-sm: max(28px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 8px));
   --icen-density-input-height-md: calc(var(--icen-design-control-height) + var(--icen-design-density-offset));
   --icen-density-input-height-lg: calc(var(--icen-design-control-height) + var(--icen-design-density-offset) + 8px);
+  /* 控件高度别名必须在密度边界重新声明：只写在 :root 会在根上解析成固定值，
+   * 之后嵌套 [data-icen-density] 覆盖密度时不再联动。 */
+  --icen-control-height-sm: var(--icen-density-input-height-sm);
+  --icen-control-height-md: var(--icen-density-input-height-md);
+  --icen-control-height-lg: var(--icen-density-input-height-lg);
   --icen-density-font-size-2xs: max(12px, calc(var(--icen-design-font-size) - 2px));
   --icen-density-font-size-xs: max(12px, calc(var(--icen-design-font-size) - 2px));
   --icen-density-font-size-sm: max(12px, calc(var(--icen-design-font-size) - 1px));

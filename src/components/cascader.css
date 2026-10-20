@@ -216,6 +216,21 @@
   font-weight: 500;
   background: var(--icen-token-accent-subtle);
 }
+.icen-cascader-item.is-selected {
+  background: var(--icen-token-fill-selected);
+  color: var(--icen-token-text);
+  font-weight: var(--icen-font-weight-control);
+}
+.icen-cascader-item.is-selected::after {
+  content: '';
+  inline-size: 12px;
+  block-size: 12px;
+  flex: none;
+  margin-inline-start: auto;
+  background: currentColor;
+  mask: var(--icen-token-icon-check) center / contain no-repeat;
+  -webkit-mask: var(--icen-token-icon-check) center / contain no-repeat;
+}
 .icen-cascader-item.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;

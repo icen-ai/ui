@@ -16,6 +16,15 @@
 
 - 内置 AI 工具 `show_form` 的注册从 `form-validate`（Core）移至 `ai-tools`（Beta）：`import 'form-validate'` 不再有注册副作用，改用工具系统请引 `behaviors/ai-tools`；`form-validate` 新增导出 `runShowForm` / `SHOW_FORM_SCHEMA`（additive）
 
+### 设计（macOS-inspired 全仓库重构）
+
+- 默认 modern 原语升级为桌面精度体系：控件 28/34/42px、界面字号 13px、圆角 3/6/8/12/18px、表面层级 canvas→content→chrome→floating→modal、状态填充 hover/pressed/selected 分离、动效 110/180/260ms 与四种缓动；六套配色与中式/苏式/像素原语保持独立身份，全部经 token 覆盖继续工作
+- 组件覆盖：按钮/输入/选择/菜单/分段/开关/复选框/滑块/日期/级联/树选择/上传/标签输入/提及/自动补全；顶栏/侧栏/工具条/标签页/面包屑/分页/步骤/表格/DataTable/列表/树/折叠/时间线/描述/卡片/面板/指标/空态/徽标/键盘键；弹窗/菜单/popover/tooltip/命令面板/toast/通知/警示/进度/加载/骨架/复制；图表基座与 AI/KB 族表面语法。全部组件登记于 `docs/redesign/macos-component-mapping.md`
+- 行为增强：`select` / `tree-select` / `cascader` 不再移除作者提供的 chevron（弹出方向暗示恢复）；`checkbox` 选中改用勾选 glyph；`slider` 轨道/拇指桌面比例；`switch` 38×22；`modal` 表面/底栏/关闭钮收口
+- 文档站改为原生应用式 shell：52px 工具栏、源列表侧栏（分组图标/计数/整行选中）、44px 内容工具栏、组件页 Preview 工具栏 + 右侧 Inspector、代码区 34px chrome 头 + 12px mono；新增 `/apps/` 四个真实应用组合（系统设置 / 文件与知识库 / AI 工作台 / 数据工作台）
+- 新增设计交付文档：`docs/redesign/macos-design-language.md`、`macos-component-mapping.md`、`macos-token-architecture.md`、`macos-redesign-progress.md`、`visual-quality-report.md`、`progress.json`
+- 设计规范同步：`docs/spec/design-philosophy.md` 圆角表与 `docs/spec/design-primitives.md` 作者旋钮改为 8px 基准 / 34px 控件 / 13px 界面字 / 24px 模糊；契约快照随新增 token 更新
+
 ### 修复
 
 - 站点语言自动检测（`navigator.languages`）使 e2e 在英文 locale 下全站变英文、中文断言全红——playwright 配置钉死 `locale: zh-CN`，验收舱与环境 locale 解耦

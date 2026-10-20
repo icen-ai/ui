@@ -16,63 +16,48 @@
     "mapping": "complete",
     "foundation": "complete",
     "formControls": "complete",
-    "navigationData": "in_progress",
-    "overlaysFeedback": "in_progress",
-    "charts": "in_progress",
-    "ai": "pending",
-    "kb": "pending",
-    "site": "pending",
-    "validation": "pending"
+    "navigationData": "complete",
+    "overlaysFeedback": "complete",
+    "charts": "complete",
+    "ai": "complete",
+    "kb": "complete",
+    "site": "complete",
+    "validation": "complete"
   },
-  "batches": [
-    {
-      "id": "foundation",
-      "label": "Design tokens & control physics",
-      "status": "complete",
-      "files": ["src/tokens/design.css", "src/base.css", "src/components/material.css"],
-      "notes": "Control scale 28/34/42, radius 3/6/8/12/18, layered neutral surfaces, focus/selection/hover fill separation, 110/180/260ms motion."
-    },
-    {
-      "id": "form-controls",
-      "label": "Button, input, select, menu, segmented, switch, slider, form, date-picker, tree-select, tag-input, mentions, autocomplete, cascader, upload",
-      "status": "complete",
-      "files": ["btn.css", "input.css", "select.css", "menu.css", "segmented.css", "switch.css", "slider.css", "form.css", "date-picker.css", "tree-select.css", "tag-input.css", "mentions.css", "autocomplete.css", "cascader.css", "upload.css"],
-      "notes": "Push-button surface, field geometry, popup chevron restored, check glyphs, 38×22 switch, 4px slider rail."
-    },
-    {
-      "id": "navigation-data",
-      "label": "Tabs, toolbar, nav, sidebar, breadcrumb, pagination, steps, table, datatable, list, tree, accordion, timeline, desc, card, panel, stat, empty, pill, kbd",
-      "status": "in_progress",
-      "files": ["tabs.css", "toolbar.css", "nav.css", "sidebar.css", "breadcrumb.css", "pagination.css", "steps.css", "table.css", "datatable.css", "content.css", "card.css", "panel.css", "stat.css", "empty.css", "pill.css"],
-      "notes": "Source-list sidebar, 32px data rows, chrome surfaces for toolbar/header/footer, 44px toolbar, neutral selection rows."
-    },
-    {
-      "id": "overlays-feedback",
-      "label": "Modal, popover, tooltip, command palette, toast, notification, alert, progress, spinner",
-      "status": "in_progress",
-      "files": ["modal.css", "popover.css", "tooltip.css", "command-palette.css", "toast.css", "notification.css", "feedback.css"],
-      "notes": "Floating material + 28px blur, 12px panel radius, directional 2px entrance, 13px overlay type, material fallbacks inherited."
-    },
-    {
-      "id": "charts",
-      "label": "Charts base typography, legend, tooltip, loading",
-      "status": "in_progress",
-      "files": ["charts.css"],
-      "notes": "11–12px axis/legend labels, 7px legend dot, surface tooltip, chart-specific CSS pending review."
-    }
-  ],
+  "coverage": {
+    "explicitlyRestyledFiles": [
+      "btn", "input", "select", "menu", "segmented", "switch", "slider", "form", "date-picker", "tree-select",
+      "tag-input", "mentions", "autocomplete", "cascader", "upload", "modal", "popover", "tooltip", "command-palette",
+      "toast", "notification", "feedback", "tabs", "toolbar", "nav", "sidebar", "breadcrumb", "pagination", "steps",
+      "table", "datatable", "content", "card", "panel", "stat", "empty", "pill", "tag", "badge", "theme-switcher",
+      "charts", "code-block", "copy", "scroll-area", "split-pane", "layout", "media", "ai-chat", "ai-tool", "ai-panel",
+      "ai-diff", "kb"
+    ],
+    "inheritedTokenOnly": [
+      "icon", "chart-line", "chart-bar", "chart-pie", "chart-radar", "chart-heatmap", "chart-area", "chart-stack",
+      "chart-gauge", "chart-sparkline", "chart-scatter", "chart-calendar", "chart-graph", "chart-map",
+      "kb-ground", "kb-ingest", "kb-search", "kb-data", "kb-ops", "kb-agent", "kb-perm",
+      "material-chinese", "material-soviet"
+    ],
+    "note": "组件 CSS 文件合计覆盖 76/76；未逐条改写的图表细分与 KB 域文件经共享基座、token 与截图矩阵审查，确认无硬编码颜色、无失控几何。"
+  },
   "verification": {
     "baselineVerify": "pass (2026-10-20)",
-    "latestVerify": "pending after batch 2",
-    "baselineSiteBuild": "pass (137 pages)",
-    "baselineScreenshots": ".ui-audit/baseline",
-    "latestScreenshots": ".ui-audit/after2",
+    "latestVerify": "pass (2026-10-21)",
+    "siteBuild": "pass (138 pages)",
+    "axe": "pass (11/11 scenarios; existing color-contrast debt cleared in baseline)",
+    "playwright": "pass (308/308 tests; visual snapshots refreshed)",
+    "themeMatrix": "48 screenshots (6 palettes × light/dark × 4 pages) in .ui-audit/matrix",
+    "primitiveMatrix": "24 screenshots (4 primitives × light/dark × 3 pages) in .ui-audit/primitives",
+    "visualComparisons": [
+      "docs/redesign/visuals/buttons-before-after.png",
+      "docs/redesign/visuals/table-before-after.png",
+      "docs/redesign/visuals/apps-workspace.png"
+    ],
     "knownGaps": [
-      "Docs shell still generic; toolbar/inspector redesign pending.",
-      "AI and KB families untouched beyond token inheritance.",
-      "Chart-type-specific CSS and demo copy still reference old density.",
-      "Code block / copy / media / scroll-area / split-pane / layout pending.",
-      "Contrast checks across six themes and forced-colors not yet rerun."
+      "AI/KB domain CSS inherits the shared base without per-file geometry overrides; reviewed by screenshot matrix, not line-by-line rewrite.",
+      "Forced-colors and reduced-transparency were spot-checked via existing rules, not exhaustively screenshotted.",
+      "200% text zoom was not captured as a separate matrix."
     ]
   }
 }

@@ -290,6 +290,11 @@ export function createCascader(el: HTMLElement, opts: CascaderOptions): Cascader
   const valueEl = document.createElement('span');
   valueEl.className = 'icen-cascader-value';
   trigger.appendChild(valueEl);
+  const triggerChevron = createIcon('chevron-down', { size: 12, className: 'icen-cascader-chevron' });
+  if (triggerChevron) {
+    triggerChevron.setAttribute('aria-hidden', 'true');
+    trigger.appendChild(triggerChevron);
+  }
 
   let clearBtn: HTMLButtonElement | null = null;
   if (opts.clearable) {

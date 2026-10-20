@@ -106,7 +106,7 @@ async function assertA11y(page: Page, label: string) {
     );
     writeFileSync(BASELINE_FILE, JSON.stringify(baseline, null, 2) + '\n');
     console.log(`[a11y:${label}] 已写入基线（${hard.length} 条规则），须人工评审后提交 a11y-baseline.json`);
-    expect.unreachable(`${label}: a11y 基线已更新，确认差异后请重新运行`);
+    throw new Error(`${label}: a11y 基线已更新，确认差异后请重新运行`);
   }
 
   const known = baseline[label] ?? {};
