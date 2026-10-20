@@ -27,20 +27,20 @@
 
 .icen-slider {
   position: relative;
-  height: 20px;
+  height: 24px;
   width: 100%;
-  --slider-thumb-size: 16px;
-  --slider-track-height: 6px;
-}
-.icen-slider--sm {
-  height: 16px;
-  --slider-thumb-size: 12px;
+  --slider-thumb-size: 18px;
   --slider-track-height: 4px;
 }
+.icen-slider--sm {
+  height: 18px;
+  --slider-thumb-size: 14px;
+  --slider-track-height: 3px;
+}
 .icen-slider--lg {
-  height: 24px;
-  --slider-thumb-size: 20px;
-  --slider-track-height: 8px;
+  height: 28px;
+  --slider-thumb-size: 22px;
+  --slider-track-height: 5px;
 }
 .icen-slider.is-disabled,
 .icen-slider[aria-disabled='true'],
@@ -65,7 +65,8 @@
   transform: translateY(-50%);
   height: var(--slider-track-height);
   border-radius: var(--icen-radius-full);
-  background: color-mix(in srgb, var(--icen-token-line-soft) 50%, transparent);
+  background: var(--icen-token-fill-3);
+  box-shadow: inset 0 0 0 .5px color-mix(in srgb, var(--icen-token-text) 8%, transparent);
 }
 .icen-slider--vertical .icen-slider-track {
   left: 50%; right: auto; /* guard:allow-physical 垂直变体轨道水平居中（translateX(-50%) 配套） */
@@ -82,7 +83,7 @@
   transform: translateY(-50%);
   height: var(--slider-track-height);
   border-radius: var(--icen-radius-full);
-  background: var(--icen-token-accent);
+  background: var(--icen-token-accent-strong);
   transition: width var(--icen-tx-normal);
 }
 .icen-slider--vertical .icen-slider-fill {
@@ -101,7 +102,7 @@
   transform: translateY(-50%);
   height: var(--slider-track-height);
   border-radius: var(--icen-radius-full);
-  background: var(--icen-token-accent);
+  background: var(--icen-token-accent-strong);
   transition:
     left var(--icen-tx-normal), /* guard:allow-physical 与 behavior 内联写入的物理 left 配套 */
     right var(--icen-tx-normal); /* guard:allow-physical 与 behavior 内联写入的物理 right 配套 */
@@ -124,9 +125,11 @@
   width: var(--slider-thumb-size);
   height: var(--slider-thumb-size);
   border-radius: var(--icen-radius-full);
-  background: var(--icen-token-card);
-  border: 2px solid var(--icen-token-accent);
-  box-shadow: var(--icen-token-shadow-card);
+  background: var(--icen-token-surface);
+  border: .5px solid color-mix(in srgb, var(--icen-token-text) 24%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) 26%, transparent),
+    0 3px 8px -3px color-mix(in srgb, var(--icen-design-shadow-color) 22%, transparent);
   pointer-events: none;
   transition:
     transform var(--icen-tx-fast),
@@ -139,15 +142,16 @@
   transform: translate(-50%, 50%);
 }
 .icen-slider:hover .icen-slider-thumb {
-  border-color: var(--icen-token-accent-deep, var(--icen-token-accent));
+  border-color: color-mix(in srgb, var(--icen-token-text) 34%, transparent);
 }
 /* 原生 input 透明，焦点环镜像到可见 thumb 上（消费 --icen-ring-soft） */
 .icen-slider:focus-within .icen-slider-thumb {
-  transform: translate(-50%, -50%) scale(1.15);
-  box-shadow: var(--icen-ring-soft), var(--icen-token-shadow-card);
+  transform: translate(-50%, -50%) scale(1.08);
+  border-color: var(--icen-token-accent-strong);
+  box-shadow: var(--icen-ring-soft), 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) 26%, transparent);
 }
 .icen-slider--vertical:focus-within .icen-slider-thumb {
-  transform: translate(-50%, 50%) scale(1.15);
+  transform: translate(-50%, 50%) scale(1.08);
 }
 
 .icen-slider-native {
@@ -288,12 +292,12 @@
   border-right-color: var(--icen-token-text); /* guard:allow-physical 垂直变体左指箭头（物理几何） */
 }
 
-/* ── 滑块拖拽态（active 时放大） ── */
+/* ── 滑块拖拽态（active 时轻微放大） ── */
 .icen-slider:active .icen-slider-thumb {
-  transform: translate(-50%, -50%) scale(1.25);
+  transform: translate(-50%, -50%) scale(1.12);
 }
 .icen-slider--vertical:active .icen-slider-thumb {
-  transform: translate(-50%, 50%) scale(1.25);
+  transform: translate(-50%, 50%) scale(1.12);
 }
 
 /* ── 填充段带渐变（高级视觉） ── */

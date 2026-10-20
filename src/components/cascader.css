@@ -59,25 +59,26 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
+  gap: var(--icen-control-gap-sm);
   inline-size: 100%;
-  height: var(--icen-density-input-height-md);
-  padding: 0 var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-md);
+  height: var(--icen-control-height-md);
+  padding: 0 var(--icen-field-padding-inline);
+  font-family: var(--icen-font-body);
+  font-size: var(--icen-font-size-control);
   text-align: start;
   background: var(--icen-token-control);
   color: var(--icen-token-text);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius);
+  box-shadow: var(--icen-token-shadow-field);
   cursor: pointer;
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
-  padding-inline-end: var(--icen-density-space-sm);
+  padding-inline-end: calc(var(--icen-field-padding-inline) + 18px);
 }
 .icen-cascader-trigger:hover:not(:disabled) {
-  border-color: var(--icen-hover-border);
+  border-color: var(--icen-token-control-border-hover);
 }
 .icen-cascader-trigger:focus-visible {
   outline: none;
@@ -105,15 +106,16 @@
 
 .icen-cascader-chevron {
   position: absolute;
-  inset-inline-end: var(--icen-density-space-sm);
+  inset-inline-end: var(--icen-field-padding-inline);
   inset-block-start: 50%;
   translate: 0 -50%;
-  inline-size: 16px;
-  block-size: 16px;
+  inline-size: 12px;
+  block-size: 12px;
   flex: none;
   color: var(--icen-token-text-muted);
+  opacity: .82;
   pointer-events: none;
-  transition: transform var(--icen-tx-fast);
+  transition: transform var(--icen-tx-fast), opacity var(--icen-tx-fast);
 }
 .icen-cascader.is-open .icen-cascader-chevron { transform: rotate(180deg); }
 
@@ -138,10 +140,10 @@
 }
 .icen-cascader-clear:hover {
   color: var(--icen-token-text);
-  background: var(--icen-token-fill-1);
+  background: var(--icen-token-fill-hover);
 }
 /* 有清除钮时 trigger 行内末端侧让位（clear 18px + chevron 14px + 间距） */
-.icen-cascader:has(.icen-cascader-clear:not([hidden])) .icen-cascader-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + var(--icen-density-input-height-sm) + var(--icen-density-space-xs)); }
+.icen-cascader:has(.icen-cascader-clear:not([hidden])) .icen-cascader-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + var(--icen-control-height-sm) + var(--icen-density-space-xs)); }
 
 /* 面板由 behavior portal 到 body：left/top/width/max-height 由 JS 按 trigger rect inline 写入；
    data-icen-side="top|bottom" 标记翻侧方向。 */
@@ -150,11 +152,11 @@
   z-index: var(--icen-z-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--icen-density-space-sm);
-  background: var(--icen-token-card-strong);
-  border: 1px solid var(--icen-token-outline);
+  padding: var(--icen-density-space-xs);
+  background: var(--icen-token-surface);
+  border: 1px solid var(--icen-token-material-edge);
   border-radius: var(--icen-radius-lg);
-  box-shadow: var(--icen-token-shadow-overlay);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
   transform-origin: top center;
   animation: icen-pop-in var(--icen-tx-fast);
 }
@@ -163,11 +165,11 @@
 /* ── 搜索框（opts.searchable 时 behavior 渲染）── */
 .icen-cascader-search {
   padding: var(--icen-density-space-xs);
-  border-bottom: 1px solid var(--icen-token-outline-soft);
-  margin-bottom: 4px;
+  border-bottom: 1px solid var(--icen-token-separator-soft);
+  margin-bottom: var(--icen-density-space-xs);
   position: sticky;
   top: 0;
-  background: var(--icen-token-card-strong);
+  background: var(--icen-token-surface);
   z-index: 1;
 }
 .icen-cascader-search-input { min-inline-size: 0; }
@@ -194,19 +196,20 @@
 .icen-cascader-item {
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
-  padding: 6px var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-sm);
-  border-radius: var(--icen-radius-sm);
+  gap: var(--icen-control-gap-sm);
+  min-block-size: var(--icen-control-height-sm);
+  padding: 4px var(--icen-density-space-sm);
+  font-size: var(--icen-font-size-control);
+  border-radius: var(--icen-radius-xs);
   color: var(--icen-token-text);
   cursor: pointer;
   transition:
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.icen-cascader-item:hover:not(.is-disabled) { background: var(--icen-token-fill-1); }
+.icen-cascader-item:hover:not(.is-disabled) { background: var(--icen-token-fill-hover); }
 .icen-cascader-item.is-focused {
-  background: var(--icen-token-fill-2);
+  background: var(--icen-token-fill-selected);
 }
 .icen-cascader-item.is-active {
   color: var(--icen-token-accent-text);
@@ -253,8 +256,8 @@
   cursor: pointer;
   transition: background-color var(--icen-tx-fast);
 }
-.icen-cascader-result:hover:not(.is-disabled) { background: var(--icen-token-fill-1); }
-.icen-cascader-result.is-focused { background: var(--icen-token-fill-2); }
+.icen-cascader-result:hover:not(.is-disabled) { background: var(--icen-token-fill-hover); }
+.icen-cascader-result.is-focused { background: var(--icen-token-fill-selected); }
 .icen-cascader-result.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -296,13 +299,16 @@
 }
 @media (pointer: coarse) {
   .icen-cascader-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: var(--icen-density-space-sm); }
-  .icen-cascader:has(.icen-cascader-clear:not([hidden])) .icen-cascader-trigger { padding-inline-end: calc(var(--icen-density-input-height-sm) + var(--icen-density-space-sm) + var(--icen-density-space-xs)); }
+  .icen-cascader:has(.icen-cascader-clear:not([hidden])) .icen-cascader-trigger { padding-inline-end: calc(var(--icen-control-height-sm) + var(--icen-density-space-sm) + var(--icen-density-space-xs)); }
 }
 
-.icen-cascader--sm .icen-cascader-trigger { block-size: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
-.icen-cascader--lg .icen-cascader-trigger { block-size: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }
+.icen-cascader--sm .icen-cascader-trigger { block-size: var(--icen-control-height-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-cascader--lg .icen-cascader-trigger { block-size: var(--icen-control-height-lg); font-size: var(--icen-density-font-size-lg); }
 
-.icen-cascader-panel:has(> .icen-cascader-search) { scroll-padding-block-start: calc(var(--icen-density-input-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }
+.icen-cascader-panel:has(> .icen-cascader-search) { scroll-padding-block-start: calc(var(--icen-control-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }
 
 /* Popup affordance is carried by the control surface, not a direction glyph. */
-.icen-cascader-chevron { display: none; }
+/* Clear affordance replaces the popup glyph in the trailing slot. */
+.icen-cascader:has(.icen-cascader-clear:not([hidden])) .icen-cascader-chevron { display: none; }
+
+

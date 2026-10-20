@@ -45,22 +45,22 @@
 .icen-date-picker-trigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
+  gap: var(--icen-control-gap-sm);
   width: 100%;
-  height: var(--icen-density-input-height-md);
-  padding: 0 var(--icen-density-space-sm);
+  height: var(--icen-control-height-md);
+  padding: 0 var(--icen-field-padding-inline);
   background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius);
+  box-shadow: var(--icen-token-shadow-field);
   color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
-.icen-date-picker-trigger:hover { border-color: var(--icen-hover-border); }
+.icen-date-picker-trigger:hover { border-color: var(--icen-token-control-border-hover); }
 .icen-date-picker-trigger.is-open {
   border-color: var(--icen-control-focus-border);
   box-shadow: var(--icen-control-focus-shadow);
@@ -84,8 +84,8 @@
 .icen-date-picker-icon svg { width: 14px; height: 14px; }
 
 /* 尺寸 */
-.icen-date-picker-trigger.icen-date-picker-trigger--sm { height: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
-.icen-date-picker-trigger.icen-date-picker-trigger--lg { height: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }
+.icen-date-picker-trigger.icen-date-picker-trigger--sm { height: var(--icen-control-height-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-date-picker-trigger.icen-date-picker-trigger--lg { height: var(--icen-control-height-lg); font-size: var(--icen-density-font-size-lg); }
 
 /* ── 面板 ── */
 .icen-date-picker-panel {
@@ -93,11 +93,11 @@
   z-index: var(--icen-z-popover);
   width: 280px;
   padding: var(--icen-density-space-sm);
-  background: var(--icen-token-card-strong);
-  border: 1px solid var(--icen-token-outline);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-overlay);
-  font-size: var(--icen-density-font-size-sm);
+  background: var(--icen-token-surface);
+  border: 1px solid var(--icen-token-material-edge);
+  border-radius: var(--icen-radius-lg);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
+  font-size: var(--icen-font-size-control);
   animation: icen-pop-in var(--icen-tx-fast);
 }
 
@@ -146,9 +146,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 24px;
+  height: 22px;
   font-size: var(--icen-density-font-size-xs);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   font-weight: 500;
 }
 
@@ -164,7 +164,7 @@
   height: 30px;
   padding: 0;
   border: 0;
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-radius-xs);
   background: transparent;
   color: var(--icen-token-text);
   font: inherit;
@@ -174,10 +174,10 @@
   -webkit-tap-highlight-color: transparent;
   transition: background-color var(--icen-tx-fast), color var(--icen-tx-fast);
 }
-.icen-date-picker-cell:hover { background: var(--icen-token-fill-1); }
+.icen-date-picker-cell:hover { background: var(--icen-token-fill-hover); }
 .icen-date-picker-cell.is-today {
-  border: 1px solid var(--icen-token-accent);
-  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
+  border: 0;
+  color: var(--icen-token-accent-text);
   font-weight: 600;
 }
 .icen-date-picker-cell.is-selected {
@@ -185,7 +185,7 @@
   color: var(--icen-token-on-accent);
   font-weight: 600;
 }
-.icen-date-picker-cell.is-selected.is-today { border-color: var(--icen-token-on-accent); }
+.icen-date-picker-cell.is-selected.is-today { color: var(--icen-token-on-accent); }
 .icen-date-picker-cell.is-outside {
   color: var(--icen-token-text-muted);
   opacity: 1;
@@ -242,9 +242,9 @@
 .icen-date-picker-grid { display: flex; flex-direction: column; gap: 2px; }
 .icen-date-picker-week { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 2px; }
 .icen-date-picker-week > span { min-inline-size: 0; }
-.icen-date-picker-cell { inline-size: 100%; block-size: 34px; }
-.icen-date-picker-nav { inline-size: 30px; block-size: 30px; flex: 0 0 30px; }
-.icen-date-picker-nav > svg { inline-size: 16px; block-size: 16px; }
+.icen-date-picker-cell { inline-size: 100%; block-size: 30px; }
+.icen-date-picker-nav { inline-size: 28px; block-size: 28px; flex: 0 0 28px; border-radius: var(--icen-radius-xs); }
+.icen-date-picker-nav > svg { inline-size: 15px; block-size: 15px; }
 .icen-date-picker-icon { inline-size: 20px; block-size: 20px; align-items: center; justify-content: center; }
 .icen-date-picker-icon > svg { inline-size: 16px; block-size: 16px; }
 .icen-date-picker-nav:disabled, .icen-date-picker-today:disabled, .icen-date-picker-clear:disabled { opacity: .4; cursor: default; }

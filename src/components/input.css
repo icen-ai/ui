@@ -29,16 +29,16 @@
 .icen-kb-filter-value {
   box-sizing: border-box;
   min-inline-size: 0;
-  block-size: var(--input-height, var(--icen-density-input-height-md));
-  padding: 0 var(--input-padding-inline, var(--icen-density-space-sm));
+  block-size: var(--input-height, var(--icen-control-height-md));
+  padding: 0 var(--input-padding-inline, var(--icen-field-padding-inline));
   font-family: var(--icen-font-body);
-  font-size: var(--input-font-size, var(--icen-density-font-size-md));
-  line-height: 1.5;
+  font-size: var(--input-font-size, var(--icen-font-size-control));
+  line-height: 1.4;
   color: var(--icen-token-text);
   background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius);
+  box-shadow: var(--icen-token-shadow-field);
   transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
 .icen-input-wrap {
@@ -49,7 +49,7 @@
   inline-size: 100%;
 }
 :is(.icen-input-wrap,.icen-input-control,.icen-kb-input,.icen-kb-retrieval-query,.icen-kb-hittest-input,.icen-kb-filter-field,.icen-kb-filter-value):hover {
-  border-color: var(--icen-hover-border);
+  border-color: var(--icen-token-control-border-hover);
 }
 :is(.icen-input-wrap,.icen-input-control,.icen-kb-input,.icen-kb-retrieval-query,.icen-kb-hittest-input,.icen-kb-filter-field,.icen-kb-filter-value):focus-within {
   outline: none;
@@ -76,13 +76,13 @@
 /* 尺寸变体 */
 .icen-input-wrap--sm, .icen-input-control--sm,
 .icen-kb-input, .icen-kb-retrieval-query, .icen-kb-hittest-input, .icen-kb-filter-field, .icen-kb-filter-value {
-  --input-height: var(--icen-density-input-height-sm);
-  --input-padding-inline: max(8px, calc(var(--icen-density-space-sm) * 1.25));
+  --input-height: var(--icen-control-height-sm);
+  --input-padding-inline: var(--icen-field-padding-inline-sm);
   --input-font-size: var(--icen-density-font-size-sm);
 }
 .icen-input-wrap--lg, .icen-input-control--lg {
-  --input-height: var(--icen-density-input-height-lg);
-  --input-padding-inline: var(--icen-density-space-md);
+  --input-height: var(--icen-control-height-lg);
+  --input-padding-inline: var(--icen-control-padding-inline-lg);
   --input-font-size: var(--icen-density-font-size-lg);
 }
 
@@ -190,14 +190,14 @@
   display: flex;
   width: 100%;
   background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius);
+  box-shadow: var(--icen-token-shadow-field);
   transition: border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
 }
 .icen-textarea-wrap:hover {
-  border-color: var(--icen-hover-border);
+  border-color: var(--icen-token-control-border-hover);
 }
 .icen-textarea-wrap:focus-within {
   box-shadow: var(--icen-control-focus-shadow);
@@ -220,16 +220,16 @@
 
 .icen-textarea {
   width: 100%;
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  padding: var(--icen-density-space-sm) var(--icen-field-padding-inline);
   background: transparent;
   border: none;
   outline: none;
   resize: vertical;
   color: var(--icen-token-text);
   font: inherit;
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   line-height: 1.5;
-  min-height: calc(3 * 1.5em + 24px);
+  min-height: calc(3 * 1.5em + 22px);
 }
 .icen-textarea::placeholder {
   color: var(--icen-token-text-faint); /* 全量 faint：60% 混透浅色仅 ~2.4:1 低于 AA（faint 全量 ≥4.9:1） */

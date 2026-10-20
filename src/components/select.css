@@ -44,7 +44,7 @@
  */
 
 .icen-select {
-  --select-height: var(--icen-density-input-height-md);
+  --select-height: var(--icen-control-height-md);
   position: relative;
   inline-size: 100%;
 }
@@ -53,25 +53,28 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
+  gap: var(--icen-control-gap-sm);
   inline-size: 100%;
   height: var(--select-height);
-  padding: 0 var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-md);
+  padding: 0 var(--icen-field-padding-inline);
+  font-family: var(--icen-font-body);
+  font-size: var(--icen-font-size-control);
+  line-height: 1.4;
   text-align: start;
   background: var(--icen-token-control);
   color: var(--icen-token-text);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius);
+  box-shadow: var(--icen-token-shadow-field);
   cursor: pointer;
   transition:
+    background-color var(--icen-tx-fast),
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
-  padding-inline-end: var(--icen-density-space-sm);
+  padding-inline-end: calc(var(--icen-field-padding-inline) + 18px);
 }
 .icen-select-trigger:hover:not(:disabled) {
-  border-color: var(--icen-hover-border);
+  border-color: var(--icen-token-control-border-hover);
 }
 .icen-select-trigger:focus-visible {
   outline: none;
@@ -87,8 +90,8 @@
 }
 
 /* 尺寸变体（与 input-wrap 对齐） */
-.icen-select-trigger--sm { height: var(--icen-density-input-height-sm); padding: 0 10px; font-size: var(--icen-density-font-size-sm); }
-.icen-select-trigger--lg { height: var(--icen-density-input-height-lg); padding: 0 var(--icen-density-space-md); font-size: var(--icen-density-font-size-lg); }
+.icen-select-trigger--sm { height: var(--icen-control-height-sm); padding-inline: var(--icen-field-padding-inline-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-select-trigger--lg { height: var(--icen-control-height-lg); padding-inline: var(--icen-control-padding-inline-lg); font-size: var(--icen-density-font-size-lg); }
 
 .icen-select-leading {
   display: inline-flex;
@@ -111,15 +114,16 @@
 
 .icen-select-chevron {
   position: absolute;
-  inset-inline-end: var(--icen-density-space-sm);
+  inset-inline-end: var(--icen-field-padding-inline);
   inset-block-start: 50%;
   translate: 0 -50%;
-  inline-size: 16px;
-  block-size: 16px;
+  inline-size: 12px;
+  block-size: 12px;
   flex: none;
   color: var(--icen-token-text-muted);
+  opacity: .82;
   pointer-events: none;
-  transition: transform var(--icen-tx-fast);
+  transition: transform var(--icen-tx-fast), opacity var(--icen-tx-fast);
 }
 .icen-select.is-open .icen-select-chevron { transform: rotate(180deg); }
 
@@ -130,11 +134,11 @@
   z-index: var(--icen-z-popover);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: var(--icen-density-space-sm);
-  background: var(--icen-token-card-strong);
-  border: 1px solid var(--icen-token-outline);
+  padding: var(--icen-density-space-xs);
+  background: var(--icen-token-surface);
+  border: 1px solid var(--icen-token-material-edge);
   border-radius: var(--icen-radius-lg);
-  box-shadow: var(--icen-token-shadow-overlay);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
   transform-origin: top center;
   animation: icen-pop-in var(--icen-tx-fast);
 }
@@ -145,32 +149,43 @@
 .icen-select-option {
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
+  gap: var(--icen-control-gap-sm);
   width: 100%;
-  padding: 6px var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-sm);
+  min-block-size: var(--icen-control-height-sm);
+  padding: 4px var(--icen-density-space-sm);
+  font-size: var(--icen-font-size-control);
   text-align: start;
   border: none;
   background: transparent;
   color: var(--icen-token-text);
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-radius-xs);
   cursor: pointer;
   transition:
     background-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
-.icen-select-option:hover:not(.is-disabled) { background: var(--icen-token-fill-1); }
+.icen-select-option:hover:not(.is-disabled) { background: var(--icen-token-fill-hover); }
 .icen-select-option.is-focused {
-  background: var(--icen-token-fill-2);
+  background: var(--icen-token-fill-selected);
   color: var(--icen-token-text);
 }
+/* A checked popup item carries a trailing glyph, the desktop convention; color
+ * and weight remain redundant signals rather than the only distinction. */
 .icen-select-option.is-selected {
-  color: var(--icen-token-accent-text);
-  font-weight: 500;
-  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-text);
+  font-weight: var(--icen-font-weight-control);
+  background: var(--icen-token-fill-selected);
 }
-/* 键盘焦点落在选中项上时（开面板默认聚焦选中项）：背景被 is-selected 占用，
-   补一圈内嵌描边让焦点位置可辨，否则首开时看不出焦点在哪一行 */
+.icen-select-option.is-selected::after {
+  content: '';
+  inline-size: 12px;
+  block-size: 12px;
+  flex: none;
+  margin-inline-start: auto;
+  background: currentColor;
+  mask: var(--icen-token-icon-check) center / contain no-repeat;
+  -webkit-mask: var(--icen-token-icon-check) center / contain no-repeat;
+}
 .icen-select-option.is-selected.is-focused,
 .icen-select-option.is-selected:focus-visible {
   outline: 2px solid var(--icen-token-accent);
@@ -187,11 +202,11 @@
   margin-top: 4px;
 }
 .icen-select-group-label {
-  padding: 6px var(--icen-density-space-sm) 2px;
-  font-size: var(--icen-density-font-size-xs);
-  color: var(--icen-token-text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  padding: 8px var(--icen-density-space-sm) 3px;
+  font-size: var(--icen-font-size-caption);
+  font-weight: 600;
+  color: var(--icen-token-text-muted);
+  letter-spacing: var(--icen-letter-spacing-caption);
 }
 
 /* 空状态（behavior 渲染 no-match） */
@@ -205,11 +220,11 @@
 /* ── 搜索框（data-icen-select-search 时 behavior 自动注入） ── */
 .icen-select-search {
   padding: var(--icen-density-space-xs);
-  border-bottom: 1px solid var(--icen-token-outline-soft);
-  margin-bottom: 4px;
+  border-bottom: 1px solid var(--icen-token-separator-soft);
+  margin-bottom: var(--icen-density-space-xs);
   position: sticky;
   top: 0;
-  background: var(--icen-token-card-strong);
+  background: var(--icen-token-surface);
   z-index: 1;
 }
 .icen-select-search-input { min-inline-size: 0; }
@@ -350,5 +365,6 @@
 
 .icen-select-panel:has(> .icen-select-search) { scroll-padding-block-start: calc(var(--icen-density-input-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }
 
-/* Popup affordance is carried by the control surface, not a direction glyph. */
-.icen-select-chevron { display: none; }
+/* Clear affordance replaces the popup glyph in the trailing slot; the two are
+ * never shown together, so the trigger keeps one stable optical end. */
+.icen-select:has(.icen-select-clear:not([hidden])) .icen-select-chevron { display: none; }

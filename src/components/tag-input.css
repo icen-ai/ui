@@ -6,27 +6,27 @@
  * is-max is a capacity state, is-unavailable follows actual disabled state.
  */
 .icen-tag-input {
-  --tag-action-size: calc(var(--icen-density-input-height-md) - var(--icen-density-space-xs) * 2 - 2px);
+  --tag-action-size: calc(var(--icen-control-height-md) - 10px);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--icen-density-space-xs);
   padding: var(--icen-density-space-xs);
-  min-block-size: var(--icen-density-input-height-md);
+  min-block-size: var(--icen-control-height-md);
   background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius);
+  box-shadow: var(--icen-token-shadow-field);
   transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
 .icen-tag-input:focus-within { border-color: var(--icen-control-focus-border); box-shadow: var(--icen-control-focus-shadow); }
-.icen-tag-input--sm { --tag-action-size: calc(var(--icen-density-input-height-sm) - var(--icen-density-space-xs) * 2 - 2px); min-block-size: var(--icen-density-input-height-sm); }
-.icen-tag-input--lg { --tag-action-size: calc(var(--icen-density-input-height-lg) - var(--icen-density-space-xs) * 2 - 2px); min-block-size: var(--icen-density-input-height-lg); }
+.icen-tag-input--sm { --tag-action-size: calc(var(--icen-control-height-sm) - 8px); min-block-size: var(--icen-control-height-sm); }
+.icen-tag-input--lg { --tag-action-size: calc(var(--icen-control-height-lg) - 12px); min-block-size: var(--icen-control-height-lg); }
 .icen-tag-input:is(.is-disabled,.is-unavailable,[aria-disabled='true'],[data-icen-disabled]) { background: var(--icen-token-bg-soft); cursor: not-allowed; }
 .icen-tag-input.is-unavailable > .icen-tag-chip { background: var(--icen-token-fill-2); color: var(--icen-token-text-muted); }
 .icen-tag-input.is-unavailable .icen-tag-chip-x { visibility: hidden; }
 .icen-tag-input.is-unavailable :is(.icen-tag-input-field,.icen-tag-chip-x) { cursor: not-allowed; }
-.icen-tag-chip { display: inline-flex; align-items: center; gap: var(--icen-density-space-xs); padding-inline-start: var(--icen-density-space-sm); border-radius: var(--icen-radius-full); background: var(--icen-token-accent-subtle); color: var(--icen-token-accent-text,var(--icen-token-text)); font-size: var(--icen-density-font-size-sm); font-weight: 500; line-height: 1.4; max-inline-size: 100%; min-inline-size: 0; animation: icen-pop-in var(--icen-tx-fast); }
+.icen-tag-chip { display: inline-flex; align-items: center; gap: var(--icen-control-gap-sm); padding-inline-start: var(--icen-density-space-sm); border-radius: var(--icen-radius-full); background: var(--icen-token-accent-subtle); color: var(--icen-token-text); font-size: var(--icen-density-font-size-sm); font-weight: var(--icen-font-weight-control); line-height: 1.4; max-inline-size: 100%; min-inline-size: 0; animation: icen-pop-in var(--icen-tx-fast); }
 .icen-tag-chip-label { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .icen-tag-chip--readonly, .is-readonly > .icen-tag-chip { background: var(--icen-token-fill-2); color: var(--icen-token-text-muted); padding-inline: var(--icen-density-space-sm); min-block-size: var(--tag-action-size); }
 .icen-tag-chip-x { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; inline-size: var(--tag-action-size); block-size: var(--tag-action-size); padding: 0; border: 0; border-radius: var(--icen-radius-full); color: inherit; background: transparent; cursor: pointer; transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast), opacity var(--icen-tx-fast); }

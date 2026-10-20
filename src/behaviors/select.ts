@@ -142,8 +142,8 @@ function setup(container: Element): () => void {
   // 闭包内不保留 narrowing，转为非空常量
   const trigger = triggerEl;
   const panel = panelEl;
-  const arrow = trigger.querySelector('.icen-select-chevron');
-  arrow?.remove();
+  /* 触发器保留作者提供的 chevron：弹出式选择器需要稳定的方向暗示，
+   * 不能只靠「表面像控件」让用户猜。CSS 负责旋转与清除钮互斥。 */
 
   const isMultiple = container.hasAttribute('data-icen-select-multiple');
   const isSearchable = container.hasAttribute('data-icen-select-search');

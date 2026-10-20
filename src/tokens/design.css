@@ -1,61 +1,150 @@
-/* 现代 primitive: geometry, type, rhythm and lighting. Color palettes live in themes.json. */
+/* 现代 primitive: geometry, type, rhythm and lighting. Color palettes live in themes.json.
+ *
+ * The default primitive describes a precise desktop application surface: compact
+ * controls, restrained type, layered neutral surfaces and short, purposeful
+ * feedback. All values are semantic inputs; components never hardcode them.
+ * Other primitives (chinese / soviet / pixel) override this file's seeds and keep
+ * their own identity, so every rule here remains palette- and primitive-safe.
+ */
 :root {
-  --icen-design-radius: 10px;
+  /* ── Control geometry ── */
+  --icen-design-radius: 8px;
   --icen-design-space: 4px;
-  --icen-design-control-height: 40px;
-  --icen-design-font-size: 14px;
-  --icen-design-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --icen-design-glass-blur: 20px;
+  --icen-design-control-height: 34px;
+  --icen-design-font-size: 13px;
+  --icen-design-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text',
+    'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --icen-design-glass-blur: 24px;
   --icen-design-motion: 1;
+
+  /* Semantic aliases consumed by component CSS. The height scale follows the
+   * active density; the aliases exist so components read intent, not arithmetic. */
+  --icen-control-height-sm: var(--icen-density-input-height-sm);
+  --icen-control-height-md: var(--icen-density-input-height-md);
+  --icen-control-height-lg: var(--icen-density-input-height-lg);
+  --icen-control-radius-sm: var(--icen-radius-xs);
+  --icen-control-radius: var(--icen-radius-sm);
+  --icen-control-radius-lg: var(--icen-radius-md);
+  --icen-control-padding-inline-sm: 9px;
+  --icen-control-padding-inline: 12px;
+  --icen-control-padding-inline-lg: 16px;
+  --icen-field-padding-inline: 9px;
+  --icen-field-padding-inline-sm: 8px;
+  --icen-control-gap: 6px;
+  --icen-control-gap-sm: 4px;
+  --icen-control-icon: 15px;
+  --icen-control-border-width: 1px;
+
+  /* Type roles. Sizes stay on the density scale; these aliases name the role. */
+  --icen-font-size-title: var(--icen-density-font-size-lg);
+  --icen-font-size-section: var(--icen-density-font-size-md);
+  --icen-font-size-control: var(--icen-density-font-size-md);
+  --icen-font-size-caption: var(--icen-density-font-size-xs);
+  --icen-font-weight-control: 500;
+  --icen-font-weight-title: 600;
+  --icen-font-weight-label: 500;
+  --icen-letter-spacing-control: -.006em;
+  --icen-letter-spacing-caption: .01em;
+
+  /* Motion: one-shot state changes are short; spatial entrances use the enter
+   * curve. No bouncy physics for ordinary controls. */
+  --icen-duration-fast: calc(110ms * var(--icen-design-motion));
+  --icen-duration-normal: calc(180ms * var(--icen-design-motion));
+  --icen-duration-slow: calc(260ms * var(--icen-design-motion));
+  --icen-ease-out: cubic-bezier(.22, .8, .24, 1);
+  --icen-ease-in: cubic-bezier(.5, 0, .8, .2);
+  --icen-ease-in-out: cubic-bezier(.45, 0, .25, 1);
+  --icen-ease-enter: cubic-bezier(.16, 1, .3, 1);
+  --icen-ease-exit: cubic-bezier(.4, 0, 1, 1);
+  --icen-ease-bounce: var(--icen-ease-out);
+  --icen-hover-border: var(--icen-token-line);
+  --icen-hover-border-strong: var(--icen-token-line-strong);
+  --icen-press: scale(.985);
+  --icen-press-soft: none;
+  --icen-disabled-opacity: .45;
+  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px color-mix(in srgb, var(--icen-token-accent) 62%, transparent);
+  --icen-ring-soft: 0 0 0 3px color-mix(in srgb, var(--icen-token-accent) 18%, transparent);
+  --icen-control-focus-border: color-mix(in srgb, var(--icen-token-accent) 62%, var(--icen-token-line));
+  --icen-control-focus-shadow: inset 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) 8%, transparent), 0 0 0 3px color-mix(in srgb, var(--icen-token-accent) 18%, transparent);
+
+  /* Material motion: chrome and floating surfaces share a blur radius family. */
+  --icen-material-blur-chrome: 18px;
+  --icen-material-blur-floating: 28px;
+  --icen-material-saturate: 1.4;
 }
 
-/* Materials and geometry belong to the primitive, across every palette. */
+/* Materials and geometry belong to the primitive, across every palette.
+ * Recompute the whole derived surface at each palette/theme boundary so an
+ * inherited resolved value can never freeze across a theme switch. */
 :root, [data-icen-preset], [data-icen-theme="dark"] {
+  /* Surface hierarchy: canvas → content → chrome → floating → modal. Chrome and
+   * toolbar sit between canvas and content; selected rows are a tinted content
+   * surface, not a second card. */
+  --icen-token-surface-chrome: color-mix(in srgb, var(--icen-design-canvas) 46%, var(--icen-design-surface));
+  --icen-token-surface-toolbar: color-mix(in srgb, var(--icen-design-canvas) 38%, var(--icen-design-surface));
+  --icen-token-surface-sidebar: color-mix(in srgb, var(--icen-design-canvas) 66%, var(--icen-design-surface));
+  --icen-token-surface-content: var(--icen-design-surface);
+  --icen-token-surface-raised: var(--icen-design-raised);
+  --icen-token-surface-pressed: color-mix(in srgb, var(--icen-design-ink) 8%, var(--icen-design-surface));
+  --icen-token-surface-selected: var(--icen-token-accent-subtle);
+
+  /* Interaction fills. Hover is a hint, pressed a physical push, selected a
+   * persistent state; none of them is used as a substitute for another. */
+  --icen-token-fill-hover: color-mix(in srgb, var(--icen-design-ink) 5%, transparent);
+  --icen-token-fill-pressed: color-mix(in srgb, var(--icen-design-ink) 9%, transparent);
+  --icen-token-fill-selected: color-mix(in srgb, var(--icen-design-accent) 13%, transparent);
+  --icen-token-separator-soft: var(--icen-token-line-soft);
+  --icen-token-separator: var(--icen-token-line);
+  --icen-token-separator-strong: var(--icen-token-line-strong);
+  --icen-token-focus-indicator: color-mix(in srgb, var(--icen-token-accent) 62%, transparent);
+  --icen-token-control-border: color-mix(in srgb, var(--icen-design-ink) 19%, transparent);
+  --icen-token-control-border-hover: color-mix(in srgb, var(--icen-design-ink) 28%, transparent);
   --icen-token-surface-glass: color-mix(in srgb, var(--icen-token-surface) var(--icen-design-glass-opacity), transparent);
+  --icen-token-surface-glass-chrome: color-mix(in srgb, var(--icen-token-surface-toolbar) 88%, transparent);
+
   /* Contact, near-field and ambient shadows share a light source. Negative
    * spread keeps the shadow under the object instead of fogging its outline. */
-  --icen-token-shadow-card: 0 1px 2px -1px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent), 0 4px 10px -5px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .7), transparent), 0 12px 24px -12px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .5), transparent);
-  --icen-token-shadow-elevated: 0 1px 3px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .75), transparent), 0 8px 20px -8px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent), 0 24px 48px -16px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent);
-  --icen-token-shadow-overlay: 0 2px 6px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent), 0 16px 36px -12px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * 1.2), transparent), 0 40px 88px -24px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * 1.2), transparent);
+  --icen-token-shadow-card:
+    0 1px 1px -1px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .5), transparent),
+    0 3px 8px -4px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .55), transparent),
+    0 10px 24px -16px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .45), transparent);
+  --icen-token-shadow-elevated:
+    0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .55), transparent),
+    0 8px 20px -8px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .8), transparent),
+    0 26px 52px -22px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent);
+  --icen-token-shadow-overlay:
+    0 2px 6px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .7), transparent),
+    0 16px 36px -12px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * 1.1), transparent),
+    0 44px 88px -28px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * 1.15), transparent);
+  --icen-token-shadow-control:
+    inset 0 1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 55%, transparent),
+    0 1px 1.5px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .38), transparent);
+  --icen-token-shadow-field: inset 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .3), transparent);
   --icen-token-top-highlight: color-mix(in srgb, var(--icen-design-light) var(--icen-design-highlight-strength), transparent);
   --icen-token-shadow-inset: inset 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .35), transparent), inset 0 -1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 45%, transparent);
   --icen-token-shadow-popover: var(--icen-token-shadow-elevated);
   --icen-token-material-edge: color-mix(in srgb, var(--icen-token-text) var(--icen-design-edge-strength), transparent);
   --icen-token-material-light: inset 0 1px 0 var(--icen-token-top-highlight), inset 0 -1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 18%, transparent);
-  --icen-token-scrim: color-mix(in srgb, var(--icen-design-shadow-color) 32%, transparent);
+  --icen-token-scrim: color-mix(in srgb, var(--icen-design-shadow-color) 38%, transparent);
 }
 
 :root {
   --icen-design-light: #ffffff;
-  --icen-radius-xs: max(0px, calc(var(--icen-design-radius) - 6px));
+  --icen-radius-xs: max(0px, calc(var(--icen-design-radius) - 5px));
   --icen-radius-sm: max(0px, calc(var(--icen-design-radius) - 2px));
   --icen-radius-md: var(--icen-design-radius);
-  --icen-radius-lg: calc(var(--icen-design-radius) + 6px);
-  --icen-radius-xl: calc(var(--icen-design-radius) + 14px);
+  --icen-radius-lg: calc(var(--icen-design-radius) + 4px);
+  --icen-radius-xl: calc(var(--icen-design-radius) + 10px);
   --icen-radius-full: 999px;
   --icen-font-body: var(--icen-design-font);
   --icen-font-heading: var(--icen-design-font);
   --icen-font-cjk: var(--icen-design-font);
-  --icen-font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --icen-font-mono: ui-monospace, 'SF Mono', SFMono-Regular, 'Cascadia Mono', 'Segoe UI Mono', Consolas, monospace;
   --icen-font-mono-paper: var(--icen-font-mono);
-  --icen-line-height-body: 1.55;
+  --icen-line-height-body: 1.5;
   --icen-line-height-heading: 1.25;
   --icen-letter-spacing-body: 0;
-  --icen-letter-spacing-heading: -.02em;
-  --icen-duration-fast: calc(120ms * var(--icen-design-motion));
-  --icen-duration-normal: calc(180ms * var(--icen-design-motion));
-  --icen-duration-slow: calc(260ms * var(--icen-design-motion));
-  --icen-ease-out: cubic-bezier(.16, 1, .3, 1);
-  --icen-ease-bounce: var(--icen-ease-out);
-  --icen-hover-border: var(--icen-token-line);
-  --icen-hover-border-strong: var(--icen-token-line-strong);
-  --icen-press: scale(.985);
-  --icen-press-soft: scale(.99);
-  --icen-disabled-opacity: .48;
-  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-accent);
-  --icen-ring-soft: 0 0 0 3px var(--icen-token-accent-subtle);
-  --icen-control-focus-border: var(--icen-token-accent);
-  --icen-control-focus-shadow: var(--icen-token-shadow-inset), var(--icen-ring-soft);
+  --icen-letter-spacing-heading: -.015em;
 }
 
 /* Density changes rhythm and row height, never shrinks reading text. Re-declare

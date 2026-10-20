@@ -22,7 +22,7 @@
  * 原生回退 :invalid:not(:placeholder-shown) 启发式。
  */
 
-.icen-form { display: flex; flex-direction: column; gap: var(--icen-density-space-md); }
+.icen-form { display: flex; flex-direction: column; gap: var(--icen-density-space-lg); }
 
 .icen-form-field {
   display: flex;
@@ -36,8 +36,9 @@
 .icen-form-label {
   font-size: var(--icen-density-font-size-sm);
   color: var(--icen-token-text-muted);
-  letter-spacing: 0.02em;
-  font-weight: 500;
+  letter-spacing: 0;
+  font-weight: var(--icen-font-weight-label);
+  line-height: 1.35;
 }
 .icen-form-label .icen-req { color: var(--icen-token-error); margin-inline-start: 2px; }
 
@@ -45,14 +46,14 @@
 .icen-form-input,
 .icen-form-textarea {
   inline-size: 100%;
-  padding: 0 var(--icen-density-space-md);
-  height: var(--icen-density-input-height-md);
+  padding: 0 var(--icen-field-padding-inline);
+  height: var(--icen-control-height-md);
   background: var(--icen-token-control);
   color: var(--icen-token-text);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius);
   font-family: var(--icen-font-body);
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   outline: none;
   transition:
     border-color var(--icen-tx-fast),
@@ -61,8 +62,8 @@
 }
 .icen-form-textarea {
   height: auto;
-  min-height: calc(4 * 1.5em + 24px);
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  min-height: calc(4 * 1.5em + 22px);
+  padding: var(--icen-density-space-sm) var(--icen-field-padding-inline);
   line-height: 1.5;
   resize: vertical;
 }
@@ -72,7 +73,7 @@
 }
 .icen-form-input:hover,
 .icen-form-textarea:hover {
-  border-color: var(--icen-hover-border);
+  border-color: var(--icen-token-control-border-hover);
 }
 .icen-form-input:focus-visible,
 .icen-form-textarea:focus-visible {
@@ -114,8 +115,8 @@
 }
 
 /* 尺寸变体 */
-.icen-form-input--sm, .icen-form-textarea--sm { height: var(--icen-density-input-height-sm); font-size: var(--icen-density-font-size-sm); }
-.icen-form-input--lg, .icen-form-textarea--lg { height: var(--icen-density-input-height-lg); font-size: var(--icen-density-font-size-lg); }
+.icen-form-input--sm, .icen-form-textarea--sm { height: var(--icen-control-height-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-form-input--lg, .icen-form-textarea--lg { height: var(--icen-control-height-lg); font-size: var(--icen-density-font-size-lg); }
 
 .icen-form-hint {
   font-size: var(--icen-density-font-size-xs);

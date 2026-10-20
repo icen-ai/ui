@@ -10,37 +10,42 @@
  *   </button>
  *
  * 变体：
- *   .icen-btn          默认（surface 底 + outline-soft 描边）
- *   .icen-btn-primary  实心 accent
- *   .icen-btn-danger   透明底 + error 描边（hover 实心）
- *   .icen-btn-ghost    全透明，hover 浮起 fill-2
+ *   .icen-btn          默认（control 面 + 中性描边）
+ *   .icen-btn-primary  实心 accent（承文本用 accent-strong）
+ *   .icen-btn-danger   透明底 + error 描边（hover 淡红面）
+ *   .icen-btn-ghost    全透明，hover 浮起中性填充
  *   .icen-btn-link     link 文本按钮（无背景、underline on hover）
  *
  * 尺寸：默认 / .icen-btn-sm / .icen-btn-lg / .icen-btn-icon（正方形）
  * 状态：.is-loading 加 spinner + aria-busy；.is-error error 边；disabled/aria-disabled/data-icen-disabled
+ *
+ * 几何走 control token；表面物理（顶部高光、接触影）由原语适配层补。
+ * 按下以「面变深 + 内影」表达，不改变按钮占位或位置。
  */
 
 .icen-btn {
-  --btn-bg: var(--icen-token-surface);
-  --btn-fg: var(--icen-token-text);
-  --btn-border: var(--icen-token-line-soft);
+  --btn-bg: var(--icen-token-control);
   --btn-bg-hover: var(--icen-token-surface-hover);
-  --btn-border-hover: var(--icen-token-accent);
+  --btn-bg-active: var(--icen-token-surface-pressed);
+  --btn-fg: var(--icen-token-text);
+  --btn-border: var(--icen-token-control-border);
+  --btn-border-hover: var(--icen-token-control-border-hover);
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 var(--icen-density-space-md);
-  height: var(--icen-density-input-height-md);
+  gap: var(--icen-control-gap);
+  block-size: var(--icen-control-height-md);
+  padding: 0 var(--icen-control-padding-inline);
   background: var(--btn-bg);
   color: var(--btn-fg);
-  border: 1px solid var(--btn-border);
-  border-radius: var(--icen-radius-md);
+  border: var(--icen-control-border-width) solid var(--btn-border);
+  border-radius: var(--icen-control-radius);
   font-family: var(--icen-font-body);
-  font-size: var(--icen-density-font-size-md);
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  font-size: var(--icen-font-size-control);
+  font-weight: var(--icen-font-weight-control);
+  line-height: 1;
+  letter-spacing: var(--icen-letter-spacing-control);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
@@ -53,11 +58,14 @@
     box-shadow var(--icen-tx-fast),
     transform var(--icen-tx-fast);
 }
-.icen-btn:hover {
+.icen-btn:hover:not(:disabled):not([aria-disabled='true']):not([data-icen-disabled]) {
   background: var(--btn-bg-hover);
   border-color: var(--btn-border-hover);
 }
-.icen-btn:active { transform: var(--icen-press-soft); }
+.icen-btn:active:not(:disabled):not([aria-disabled='true']):not([data-icen-disabled]):not(.is-loading) {
+  background: var(--btn-bg-active);
+  transform: var(--icen-press-soft);
+}
 .icen-btn:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
@@ -75,85 +83,76 @@
 /* ── 变体 ── */
 .icen-btn-primary {
   --btn-bg: var(--icen-token-accent-strong);
+  --btn-bg-hover: color-mix(in srgb, var(--icen-token-accent-strong) 92%, var(--icen-token-text));
+  --btn-bg-active: color-mix(in srgb, var(--icen-token-accent-strong) 84%, var(--icen-token-text));
   --btn-fg: var(--icen-token-on-accent);
   --btn-border: var(--icen-token-accent-strong);
-  --btn-bg-hover: color-mix(in srgb, var(--icen-token-accent-strong) 88%, black);
-  --btn-border-hover: color-mix(in srgb, var(--icen-token-accent-strong) 88%, black);
-}
-/* hover 阴影抬升仅可悬停设备生效（触屏关闭，AGENTS 动效守卫） */
-@media (hover: hover) and (pointer: fine) {
-  .icen-btn-primary:hover {
-    box-shadow: var(--icen-token-shadow-elevated);
-  }
+  --btn-border-hover: color-mix(in srgb, var(--icen-token-accent-strong) 92%, var(--icen-token-text));
 }
 
 .icen-btn-danger {
-  --btn-fg: var(--icen-token-error);
-  --btn-border: color-mix(in srgb, var(--icen-token-error) 35%, transparent);
   --btn-bg: transparent;
-  --btn-bg-hover: var(--icen-token-error);
+  --btn-bg-hover: var(--icen-token-error-muted);
+  --btn-bg-active: color-mix(in srgb, var(--icen-token-error) 18%, transparent);
+  --btn-fg: var(--icen-token-error);
+  --btn-border: color-mix(in srgb, var(--icen-token-error) 38%, transparent);
   --btn-border-hover: var(--icen-token-error);
 }
-.icen-btn-danger:hover { color: var(--icen-token-on-accent); }
 
 .icen-btn-ghost {
   --btn-bg: transparent;
+  --btn-bg-hover: var(--icen-token-fill-hover);
+  --btn-bg-active: var(--icen-token-fill-pressed);
   --btn-border: transparent;
-  --btn-bg-hover: var(--icen-token-fill-2);
   --btn-border-hover: transparent;
 }
 
 .icen-btn-link {
   --btn-bg: transparent;
-  --btn-border: transparent;
-  --btn-fg: var(--icen-token-accent);
   --btn-bg-hover: transparent;
+  --btn-bg-active: transparent;
+  --btn-fg: var(--icen-token-accent-text);
+  --btn-border: transparent;
   --btn-border-hover: transparent;
-  height: auto;
+  block-size: auto;
   padding: 0;
   border: 0;
   border-radius: 0;
   text-decoration: none;
 }
-.icen-btn-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  background: transparent;
-}
+.icen-btn-link:hover { text-decoration: underline; text-underline-offset: 3px; background: transparent; }
+.icen-btn-link:active { transform: none; }
 
 /* ── 尺寸 ── */
 .icen-btn-sm {
-  height: var(--icen-density-input-height-sm);
-  padding: 0 var(--icen-density-space-sm);
+  block-size: var(--icen-control-height-sm);
+  padding: 0 var(--icen-control-padding-inline-sm);
   font-size: var(--icen-density-font-size-sm);
-  gap: 4px;
+  gap: var(--icen-control-gap-sm);
+  border-radius: var(--icen-control-radius-sm);
 }
 .icen-btn-lg {
-  height: var(--icen-density-input-height-lg);
-  padding: 0 var(--icen-density-space-lg);
+  block-size: var(--icen-control-height-lg);
+  padding: 0 var(--icen-control-padding-inline-lg);
   font-size: var(--icen-density-font-size-lg);
   gap: 8px;
+  border-radius: var(--icen-control-radius-lg);
 }
 .icen-btn-icon {
-  width: var(--icen-density-input-height-md);
+  inline-size: var(--icen-control-height-md);
   padding: 0;
   gap: 0;
 }
-.icen-btn-icon.icen-btn-sm { width: var(--icen-density-input-height-sm); }
-.icen-btn-icon.icen-btn-lg { width: var(--icen-density-input-height-lg); }
+.icen-btn-icon.icen-btn-sm { inline-size: var(--icen-control-height-sm); }
+.icen-btn-icon.icen-btn-lg { inline-size: var(--icen-control-height-lg); }
 
-.icen-btn-block {
-  display: flex;
-  width: 100%;
-}
+.icen-btn-block { display: flex; inline-size: 100%; }
 
 /* ── 状态 ── */
 .icen-btn.is-error {
   --btn-border: var(--icen-token-error);
   --btn-border-hover: var(--icen-token-error);
 }
-/* 错误态焦点环走 error 色（base.css 的 --icen-ring-error 此前无消费者：
-   错误按钮键盘聚焦却亮蓝环，语义打架） */
 .icen-btn.is-error:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring-error);
@@ -165,21 +164,23 @@
 .icen-btn.is-loading::after {
   content: '';
   position: absolute;
-  top: 50%; left: 50%; /* guard:allow-physical 圆心居中：left 50% + 负边距 任意方向下均为中心 */
-  width: 14px; height: 14px;
-  margin: -7px 0 0 -7px; /* guard:allow-physical 居中负边距与 left 50% 配套（物理坐标对），RTL 下同样居中 */
-  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  inline-size: 14px;
+  block-size: 14px;
+  margin: -7px 0 0 -7px; /* guard:allow-physical 居中负边距与 inset 50% 配套（物理坐标对），RTL 下同样居中 */
+  border: 1.5px solid color-mix(in srgb, currentColor 30%, transparent);
   border-top-color: currentColor;
   border-radius: 50%;
   animation: icen-spin var(--btn-spin-duration, var(--icen-duration-slow)) linear infinite;
-  opacity: 1; /* 覆盖 .icen-pressable::after 渐变（若与 .icen-pressable 同用） */
+  opacity: 1;
   background: none;
   pointer-events: none;
 }
 
 /* 图标按钮内部 svg 默认尺寸对齐字号 */
 .icen-btn-icon-start, .icen-btn-icon-end {
-  width: 1.1em;
-  height: 1.1em;
+  inline-size: 1.1em;
+  block-size: 1.1em;
   flex-shrink: 0;
 }

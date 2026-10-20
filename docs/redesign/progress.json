@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "updated": "2026-10-20",
+  "branch": "pref/design",
+  "objective": "macOS-inspired precision layer for the default modern primitive, preserving 6 palettes × 4 primitives × light/dark, and redesigning the docs site as a native application shell.",
+  "registry": {
+    "slugs": 122,
+    "componentCssFiles": 76,
+    "documentationEntries": 129,
+    "documentationOnlyEntries": 7,
+    "behaviors": 90,
+    "tiers": { "core": 52, "beta": 24, "lab": 0 }
+  },
+  "phases": {
+    "audit": "complete",
+    "mapping": "complete",
+    "foundation": "in_progress",
+    "formControls": "in_progress",
+    "navigationData": "pending",
+    "overlaysFeedback": "pending",
+    "charts": "pending",
+    "ai": "pending",
+    "kb": "pending",
+    "site": "pending",
+    "validation": "pending"
+  },
+  "batches": [
+    {
+      "id": "foundation",
+      "label": "Design tokens & control physics",
+      "status": "in_progress",
+      "files": ["src/tokens/design.css", "src/base.css", "src/components/material.css"],
+      "notes": "Control scale 28/34/42, radius 3/6/8/12/18, layered neutral surfaces, focus/selection/hover fill separation, 110/180/260ms motion."
+    },
+    {
+      "id": "form-controls",
+      "label": "Button, input, select, menu, segmented, switch, slider, form",
+      "status": "in_progress",
+      "files": ["btn.css", "input.css", "select.css", "menu.css", "segmented.css", "switch.css", "slider.css", "form.css", "date-picker.css", "tree-select.css"],
+      "notes": "Push-button surface, field geometry, popup chevron restored, check glyphs, 38×22 switch, 4px slider rail."
+    }
+  ],
+  "verification": {
+    "baselineVerify": "pass (2026-10-20)",
+    "baselineSiteBuild": "pass (137 pages)",
+    "baselineScreenshots": ".ui-audit/baseline",
+    "latestScreenshots": ".ui-audit/after1",
+    "knownGaps": [
+      "Docs shell still generic; inspect/toolbar redesign pending.",
+      "AI and KB families untouched beyond token inheritance.",
+      "Charts typography/rail refinement pending.",
+      "Remaining form-family components (upload, tag-input, mentions, autocomplete, cascader) pending geometry pass."
+    ]
+  }
+}
