@@ -19,12 +19,12 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--icen-density-space-sm);
-  height: 56px;
+  height: 52px;
   padding: 0 var(--icen-density-space-md);
-  background: var(--icen-token-surface-glass);
-  backdrop-filter: blur(12px) saturate(1.1);
-  -webkit-backdrop-filter: blur(12px) saturate(1.1);
-  border-bottom: 1px solid var(--icen-token-outline-soft);
+  background: var(--icen-token-surface-glass-chrome);
+  backdrop-filter: blur(var(--icen-material-blur-chrome)) saturate(var(--icen-material-saturate));
+  -webkit-backdrop-filter: blur(var(--icen-material-blur-chrome)) saturate(var(--icen-material-saturate));
+  border-bottom: 1px solid var(--icen-token-separator-soft);
   transition:
     background-color var(--icen-tx-slow),
     border-color var(--icen-tx-slow),
@@ -34,7 +34,7 @@
 }
 .icen-nav:has(.icen-nav-bottom) {
   height: auto;
-  min-height: 56px;
+  min-height: 52px;
 }
 .icen-nav--sticky {
   position: sticky;
@@ -50,16 +50,16 @@
 
 /* scroll-reactive：未滚动更透、底边线透明；滚动后底色更实 + blur 加倍 */
 .icen-nav[data-icen-scroll-reactive]:not(.is-scrolled) {
-  background: color-mix(in srgb, var(--icen-token-surface-glass) 70%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--icen-token-surface-glass-chrome) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom-color: transparent;
+  box-shadow: none;
 }
 .icen-nav.is-scrolled {
-  background: color-mix(in srgb, var(--icen-token-surface-glass) 92%, transparent);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  box-shadow: var(--icen-token-shadow-elevated);
+  background: color-mix(in srgb, var(--icen-token-surface-glass-chrome) 94%, transparent);
+  border-bottom-color: var(--icen-token-separator-soft);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--icen-token-text) 4%, transparent);
 }
 
 /* hide-on-scroll 模式：向下滚隐藏，向上滚恢复。仅 sticky/fixed 生效。 */
@@ -89,10 +89,12 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
-  border-radius: var(--icen-radius-full);
-  padding: 6px var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-md);
+  gap: var(--icen-control-gap-sm);
+  min-block-size: 28px;
+  border-radius: var(--icen-control-radius);
+  padding: 3px 8px;
+  font-size: var(--icen-font-size-control);
+  font-weight: var(--icen-font-weight-control);
   color: var(--icen-token-text-muted);
   background: none;
   border: 0;
@@ -103,13 +105,13 @@
     color var(--icen-tx-fast);
 }
 .icen-nav-btn > svg {
-  width: 14px;
-  height: 14px;
+  width: var(--icen-control-icon);
+  height: var(--icen-control-icon);
   flex-shrink: 0;
 }
 .icen-nav-btn:not(.is-active):hover {
   color: var(--icen-token-text);
-  background: var(--icen-token-control-hover);
+  background: var(--icen-token-fill-hover);
 }
 .icen-nav-btn:focus-visible {
   outline: none;
@@ -117,10 +119,10 @@
 }
 .icen-nav-btn.is-active,
 .icen-nav-btn[aria-current='page'] {
-  background: var(--icen-token-accent-strong);
-  color: var(--icen-token-on-accent);
-  font-weight: 500;
-  box-shadow: var(--icen-token-shadow-elevated);
+  background: var(--icen-token-fill-selected);
+  color: var(--icen-token-text);
+  font-weight: 600;
+  box-shadow: none;
 }
 .icen-nav-btn.is-disabled,
 .icen-nav-btn:disabled,
@@ -128,24 +130,25 @@
   opacity: var(--icen-disabled-opacity);
   pointer-events: none;
 }
-.icen-nav-btn--icon { padding: 6px 10px; }
+.icen-nav-btn--icon { padding: 3px 7px; }
 .icen-nav-btn--icon > svg { width: 16px; height: 16px; }
 
 .icen-nav-divider {
   width: 1px;
-  height: 20px;
+  height: 18px;
   margin: 0 2px;
-  background: var(--icen-token-outline-soft);
+  background: var(--icen-token-separator);
 }
 
 /* 品牌徽标位 */
 .icen-nav-brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
+  gap: var(--icen-control-gap-sm);
   font-family: var(--icen-font-heading);
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-title);
   font-weight: 600;
+  letter-spacing: -.01em;
   color: var(--icen-token-text);
   text-decoration: none;
 }
@@ -171,19 +174,19 @@
 .icen-nav-search {
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
-  padding: 0 var(--icen-density-space-sm);
-  height: 32px;
+  gap: var(--icen-control-gap-sm);
+  padding: 0 var(--icen-field-padding-inline);
+  height: var(--icen-control-height-sm);
   min-width: 180px;
   background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-full);
-  color: var(--icen-token-text-faint);
+  border: 1px solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius);
+  color: var(--icen-token-text-muted);
   font-size: var(--icen-density-font-size-sm);
   cursor: pointer;
-  transition: border-color var(--icen-tx-fast);
+  transition: border-color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.icen-nav-search:hover { border-color: var(--icen-token-accent); }
+.icen-nav-search:hover { border-color: var(--icen-token-control-border-hover); background: var(--icen-token-surface); }
 .icen-nav-search svg { width: 14px; height: 14px; flex-shrink: 0; }
 .icen-nav-search-kbd {
   margin-inline-start: auto;
@@ -225,23 +228,24 @@
 .icen-nav-link {
   display: inline-flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
-  padding: 6px var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-md);
+  gap: var(--icen-control-gap-sm);
+  padding: 3px 8px;
+  font-size: var(--icen-font-size-control);
   color: var(--icen-token-text-muted);
   text-decoration: none;
-  border-radius: var(--icen-radius-full);
+  border-radius: var(--icen-control-radius);
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
 .icen-nav-link:hover {
   color: var(--icen-token-text);
-  background: var(--icen-token-control-hover);
+  background: var(--icen-token-fill-hover);
   text-decoration: none;
 }
 .icen-nav-link.is-active,
 .icen-nav-link[aria-current='page'] {
-  color: var(--icen-token-accent);
-  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-selected);
+  font-weight: var(--icen-font-weight-control);
 }
 
 /* 导航用户区（头像 + 下拉触发器） */

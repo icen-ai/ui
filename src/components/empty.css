@@ -36,23 +36,23 @@
 
 /* ── 图标 ── */
 .icen-empty-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--icen-radius-lg);
-  background: var(--icen-token-card);
-  border: 1px solid var(--icen-token-outline-soft);
-  box-shadow: var(--icen-token-shadow-inset);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--icen-control-radius-lg);
+  background: var(--icen-token-fill-hover);
+  border: 1px solid transparent;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--icen-token-text-faint);
-  margin-bottom: var(--icen-density-space-md);
+  color: var(--icen-token-text-muted);
+  margin-bottom: var(--icen-density-space-sm);
 }
-.icen-empty--lg .icen-empty-icon { width: 64px; height: 64px; }
-.icen-empty--sm .icen-empty-icon { width: 36px; height: 36px; margin-bottom: var(--icen-density-space-sm); }
-.icen-empty-icon svg { width: 24px; height: 24px; }
-.icen-empty--lg .icen-empty-icon svg { width: 32px; height: 32px; }
-.icen-empty--sm .icen-empty-icon svg { width: 18px; height: 18px; }
+.icen-empty--lg .icen-empty-icon { width: 52px; height: 52px; }
+.icen-empty--sm .icen-empty-icon { width: 32px; height: 32px; margin-bottom: var(--icen-density-space-xs); }
+.icen-empty-icon svg { width: 20px; height: 20px; }
+.icen-empty--lg .icen-empty-icon svg { width: 26px; height: 26px; }
+.icen-empty--sm .icen-empty-icon svg { width: 16px; height: 16px; }
 
 /* ── 类型预设 ── */
 .icen-empty--error .icen-empty-icon {
@@ -77,8 +77,8 @@
 
 /* ── 标题与描述 ── */
 .icen-empty-title {
-  font-size: var(--icen-density-font-size-md);
-  font-weight: 500;
+  font-size: var(--icen-font-size-title);
+  font-weight: var(--icen-font-weight-title);
   color: var(--icen-token-text);
   margin: 0;
   line-height: 1.4;
@@ -88,7 +88,7 @@
   font-size: var(--icen-density-font-size-sm);
   color: var(--icen-token-text-muted);
   margin: 4px 0 0;
-  max-width: 280px;
+  max-width: 300px;
   line-height: 1.5;
 }
 

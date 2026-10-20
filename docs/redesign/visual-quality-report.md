@@ -56,6 +56,26 @@
 
 ---
 
+## 2b. 第二批修正（after2）
+
+| 问题 | 修改 | 结果 |
+|---|---|---|
+| 侧栏像链接列表 | 28px 行、13px、整行 accent 12% 选中底、11px 分组标题、16px 图标 | 源列表语义；选中不再有左缘指示条 |
+| 表格行高 44px | 32px 行、30px 表头、11px 表头字、chrome 表头、1px 分隔 | 桌面数据密度；选中行用 accent 13% 底 |
+| DataTable 行高 44px | 32px 行（compact 28）、工具栏 44px、搜索 30px、分页 28px | 与 table 同语法 |
+| 工具栏松散 | 44px chrome 容器、6/8 内距、28px 按钮、18px 分隔 | 与顶栏同一窗口语法 |
+| 顶栏 56px 玻璃 | 52px、glass-chrome、18px 模糊、滚动只加 hairline | 更安静；不再用重阴影表达滚动 |
+| Tabs 等宽 mono 大写 | 13px 正文字体、500 字重、6px 内距、选中文字色 + accent 下划线 | 桌面标签页语义 |
+| 卡片默认内阴影 | 不投影、8px 角、hairline；elevated 才给 contact 影 | 页面内静态件不再“浮” |
+| 面板大阴影 | 34px 标题行、13px 正文、chrome footer、无默认影 | Inspector/设置分组语法 |
+| 指标卡 700 字重 28px | 22px/600、11px 标签 | Activity Monitor 读数感 |
+| 命令面板 40px 搜索 | 48px 搜索、18px 图标、32px 结果、scrim 模糊 | Spotlight 搜索优先 |
+| 浮层 16px 内距 | 10/12px 内距、12px 角、28px 模糊、2px 方向位移 | 浮层密度统一 |
+| Toast/通知 3px 左边 + 实色卡 | 2px 语义边、20px 模糊、浮层影、13px 正文 | 轻量悬浮，不抢页面 |
+| 图表字号 10px | 11–12px 轴/图例、7px 图例点、surface tooltip | 小字号可读性提升 |
+
+---
+
 ## 3. 逐主题风险
 
 | 主题 | 风险 | 检查点 |

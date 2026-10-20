@@ -12,14 +12,15 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px var(--icen-density-space-sm);
+  min-block-size: 19px;
+  padding: 1px 7px;
   border-radius: var(--icen-radius-full);
   font-size: var(--icen-density-font-size-xs);
-  letter-spacing: 0.02em;
+  letter-spacing: .01em;
   font-weight: 500;
-  background: var(--icen-token-surface-strong);
+  background: var(--icen-token-fill-hover);
   color: var(--icen-token-text-muted);
-  border: 1px solid var(--icen-token-line-soft);
+  border: 1px solid var(--icen-token-separator-soft);
   white-space: nowrap;
   vertical-align: middle;
 }
@@ -40,9 +41,9 @@
   background: color-mix(in srgb, var(--icen-token-error) 9%, transparent);
 }
 .icen-pill--accent {
-  color: var(--icen-token-accent-deep, var(--icen-token-accent));
-  border-color: color-mix(in srgb, var(--icen-token-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--icen-token-accent) 9%, transparent);
+  color: var(--icen-token-accent-text);
+  border-color: color-mix(in srgb, var(--icen-token-accent) 30%, transparent);
+  background: var(--icen-token-accent-subtle);
 }
 .icen-pill--info {
   color: var(--icen-token-info);

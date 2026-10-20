@@ -37,24 +37,24 @@
 
 .icen-step-line {
   position: absolute;
-  top: 16px;
-  inset-inline-start: calc(50% + 20px);
-  inline-size: calc(100% - 40px);
+  top: 12px;
+  inset-inline-start: calc(50% + 16px);
+  inline-size: calc(100% - 32px);
   height: 1px;
-  background: var(--icen-token-outline-soft);
+  background: var(--icen-token-separator);
   transition: background-color var(--icen-tx-normal);
 }
 .icen-step:last-child .icen-step-line { display: none; }
-.icen-step--finish .icen-step-line { background: color-mix(in srgb, var(--icen-token-accent) 40%, transparent); }
+.icen-step--finish .icen-step-line { background: color-mix(in srgb, var(--icen-token-accent) 40%, var(--icen-token-separator)); }
 
 .icen-step-dot {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--icen-radius-full);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--icen-density-font-size-sm);
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   position: relative;
@@ -69,33 +69,33 @@
   color: var(--icen-token-on-accent);
 }
 .icen-step--process .icen-step-dot {
-  background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent-text); /* 裸 accent 对 subtle 浅色 ~3.3:1（14px 数字低于 AA，可读变体 ~5.9:1） */
-  border: 2px solid var(--icen-token-accent);
+  background: var(--icen-token-surface);
+  color: var(--icen-token-accent-text);
+  border: 1.5px solid var(--icen-token-accent-strong);
   box-shadow: var(--icen-ring-soft);
 }
 .icen-step--wait .icen-step-dot {
-  background: var(--icen-token-control);
-  color: var(--icen-token-text-faint);
-  border: 1px solid var(--icen-token-outline-soft);
+  background: var(--icen-token-surface-chrome);
+  color: var(--icen-token-text-muted);
+  border: 1px solid var(--icen-token-control-border);
 }
 .icen-step--error .icen-step-dot {
   background: var(--icen-token-error-muted);
   color: var(--icen-token-error);
-  border: 2px solid var(--icen-token-error);
+  border: 1.5px solid var(--icen-token-error);
 }
 
 .icen-step-title {
-  font-size: var(--icen-density-font-size-md);
-  font-weight: 500;
+  font-size: var(--icen-font-size-control);
+  font-weight: var(--icen-font-weight-control);
   margin-top: var(--icen-density-space-xs);
   color: var(--icen-token-text);
 }
-.icen-step--wait .icen-step-title { color: var(--icen-token-text-muted); }
+.icen-step--wait .icen-step-title { color: var(--icen-token-text-muted); font-weight: 400; }
 .icen-step--error .icen-step-title { color: var(--icen-token-error); }
 .icen-step-desc {
   font-size: var(--icen-density-font-size-xs);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   margin-top: 2px;
   max-width: 160px;
   margin-inline: auto;
@@ -103,10 +103,10 @@
 }
 
 /* 尺寸变体 */
-.icen-steps--sm .icen-step-dot { width: 24px; height: 24px; font-size: var(--icen-density-font-size-xs); }
-.icen-steps--sm .icen-step-line { top: 12px; }
-.icen-steps--lg .icen-step-dot { width: 40px; height: 40px; font-size: var(--icen-density-font-size-md); }
-.icen-steps--lg .icen-step-line { top: 20px; }
+.icen-steps--sm .icen-step-dot { width: 20px; height: 20px; font-size: var(--icen-density-font-size-2xs); }
+.icen-steps--sm .icen-step-line { top: 10px; }
+.icen-steps--lg .icen-step-dot { width: 28px; height: 28px; font-size: var(--icen-density-font-size-sm); }
+.icen-steps--lg .icen-step-line { top: 14px; }
 
 /* ── 垂直变体 ── */
 .icen-steps--vertical {
@@ -121,9 +121,9 @@
   padding: 0;
 }
 .icen-steps--vertical .icen-step-line {
-  top: 36px;
+  top: 28px;
   bottom: calc(-1 * var(--icen-density-space-md));
-  inset-inline-start: 16px;
+  inset-inline-start: 12px;
   width: 1px;
   height: auto;
 }

@@ -32,38 +32,37 @@
 .icen-table-wrap {
   overflow-x: auto;
   overscroll-behavior: contain;
-  border-radius: var(--icen-radius-lg);
+  border-radius: var(--icen-control-radius-lg);
 }
 .icen-table-wrap--bordered {
-  border: 1px solid var(--icen-token-line-soft);
+  border: 1px solid var(--icen-token-separator-soft);
 }
 
 .icen-table {
   inline-size: 100%;
   border-collapse: collapse;
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   font-variant-numeric: tabular-nums;
 }
 .icen-table th,
 .icen-table td {
-  padding: var(--icen-density-space-sm) calc(var(--icen-density-space-md) + 2px);
+  padding: 6px 10px;
   text-align: start;
 }
 .icen-table th {
   font-weight: 600;
-  font-size: var(--icen-density-font-size-xs);
-  letter-spacing: 0.05em;
-  color: var(--icen-token-text-faint);
-  border-bottom: 1px solid var(--icen-token-line);
+  font-size: var(--icen-font-size-caption);
+  letter-spacing: var(--icen-letter-spacing-caption);
+  color: var(--icen-token-text-muted);
+  border-bottom: 1px solid var(--icen-token-separator);
   white-space: nowrap;
-  text-transform: uppercase;
-  background: var(--icen-token-bg-soft);
+  background: var(--icen-token-surface-chrome);
   position: sticky;
   top: 0;
   z-index: var(--icen-z-raised);
 }
 .icen-table td {
-  border-bottom: 1px solid var(--icen-token-line-soft);
+  border-bottom: 1px solid var(--icen-token-separator-soft);
   vertical-align: middle;
   color: var(--icen-token-text);
 }
@@ -72,29 +71,29 @@
   transition: background-color var(--icen-tx-fast);
 }
 .icen-table tbody tr:hover {
-  background: var(--icen-token-surface-strong);
+  background: var(--icen-token-fill-hover);
 }
 .icen-table tbody tr.icen-row-link {
   cursor: pointer;
 }
 .icen-table tbody tr.is-selected {
-  background: var(--icen-token-accent-subtle);
+  background: var(--icen-token-fill-selected);
 }
 .icen-table tfoot td {
-  border-top: 1px solid var(--icen-token-line);
+  border-top: 1px solid var(--icen-token-separator);
   border-bottom: 0;
   font-weight: 500;
-  background: var(--icen-token-bg-soft);
+  background: var(--icen-token-surface-chrome);
 }
 
 /* 紧凑变体 */
 .icen-table--compact th,
 .icen-table--compact td {
-  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  padding: 4px 8px;
 }
 .icen-table--dense th,
 .icen-table--dense td {
-  padding: 4px var(--icen-density-space-xs);
+  padding: 2px 6px;
   font-size: var(--icen-density-font-size-sm);
 }
 
@@ -152,17 +151,17 @@
 /* :not 守卫：斑马纹与状态行同为行级背景，后写同特异性会盖掉选中/状态色
    （ datatable.css 同款口径） */
 .icen-table--zebra tbody tr:nth-child(odd):not(.is-selected):not(.icen-row-success, .icen-row-warning, .icen-row-error) {
-  background: color-mix(in srgb, var(--icen-token-bg-soft) 50%, transparent);
+  background: color-mix(in srgb, var(--icen-token-fill-hover) 55%, transparent);
 }
 .icen-table--zebra tbody tr:hover:not(.is-selected):not(.icen-row-success, .icen-row-warning, .icen-row-error) {
-  background: var(--icen-token-surface-strong);
+  background: var(--icen-token-fill-hover);
 }
 
 /* ── 表格标题（caption） ── */
 .icen-table-caption {
   text-align: start;
-  padding: var(--icen-density-space-sm) calc(var(--icen-density-space-md) + 2px);
-  font-size: var(--icen-density-font-size-md);
+  padding: 8px 10px;
+  font-size: var(--icen-font-size-control);
   font-weight: 600;
   color: var(--icen-token-text);
   caption-side: top;
@@ -174,8 +173,8 @@
   position: sticky;
   inset-inline-start: 0;
   z-index: calc(var(--icen-z-raised) + 1);
-  background: var(--icen-token-bg-soft);
-  box-shadow: 2px 0 4px color-mix(in srgb, var(--icen-token-text) 5%, transparent);
+  background: var(--icen-token-surface-chrome);
+  box-shadow: 1px 0 0 var(--icen-token-separator-soft);
 }
 .icen-table--sticky-col tbody td.icen-col-fixed {
   background: var(--icen-token-surface);
@@ -184,20 +183,20 @@
    否则整行只有粘滞列一格「没被选中」，读起来像半选 */
 .icen-table--sticky-col tbody tr.is-selected td.icen-col-fixed,
 .icen-table--sticky-col tbody tr.is-selected th:first-child {
-  background: var(--icen-token-accent-subtle);
+  background: color-mix(in srgb, var(--icen-token-accent) 13%, var(--icen-token-surface));
 }
-.icen-table--sticky-col tbody tr.icen-row-success td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-success) 6%, transparent); }
-.icen-table--sticky-col tbody tr.icen-row-warning td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-warning) 6%, transparent); }
-.icen-table--sticky-col tbody tr.icen-row-error td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-error) 6%, transparent); }
+.icen-table--sticky-col tbody tr.icen-row-success td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-success) 6%, var(--icen-token-surface)); }
+.icen-table--sticky-col tbody tr.icen-row-warning td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-warning) 6%, var(--icen-token-surface)); }
+.icen-table--sticky-col tbody tr.icen-row-error td.icen-col-fixed { background: color-mix(in srgb, var(--icen-token-error) 6%, var(--icen-token-surface)); }
 .icen-table--sticky-col tbody tr:hover td.icen-col-fixed {
-  background: var(--icen-token-surface-strong);
+  background: color-mix(in srgb, var(--icen-token-fill-hover) 65%, var(--icen-token-surface));
 }
 
 /* ── 展开行 ── */
 .icen-table .icen-row-expand > td {
-  padding: 0 var(--icen-density-space-md);
-  background: var(--icen-token-bg-soft);
-  border-bottom: 1px solid var(--icen-token-line-soft);
+  padding: 0 10px;
+  background: var(--icen-token-surface-chrome);
+  border-bottom: 1px solid var(--icen-token-separator-soft);
   font-size: var(--icen-density-font-size-sm);
   color: var(--icen-token-text-muted);
 }
@@ -222,9 +221,9 @@
 .icen-table tbody tr.icen-row-warning { background: color-mix(in srgb, var(--icen-token-warning) 6%, transparent); }
 .icen-table tbody tr.icen-row-error   { background: color-mix(in srgb, var(--icen-token-error) 6%, transparent); }
 
-/* ── 粘滞表头阴影提示 ── */
+/* ── 粘滞表头提示：底部 1px 分隔已足够，不再叠阴影 ── */
 .icen-table thead th {
-  box-shadow: 0 1px 0 var(--icen-token-line);
+  box-shadow: none;
 }
 
 /* ── 表头分组（rowspan/colspan 样式） ── */

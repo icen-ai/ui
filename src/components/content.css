@@ -18,13 +18,13 @@
   font-family: var(--icen-font-mono);
   font-weight: 500;
   border-radius: var(--icen-radius-xs);
-  border: 1px solid var(--icen-token-outline);
+  border: 1px solid var(--icen-token-control-border);
   background: var(--icen-token-control);
   color: var(--icen-token-text-muted);
-  box-shadow: var(--icen-token-shadow-inset);
-  height: 20px;
-  min-width: 20px;
-  padding: 0 var(--icen-density-space-xs);
+  box-shadow: 0 1px 0 var(--icen-token-control-border);
+  height: 19px;
+  min-width: 19px;
+  padding: 0 5px;
   font-size: var(--icen-density-font-size-xs);
 }
 .icen-kbd--sm {
@@ -48,10 +48,10 @@
   padding: 2px var(--icen-density-space-xs);
   border-radius: var(--icen-radius-xs);
   background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
+  border: 1px solid var(--icen-token-separator-soft);
   font-size: 0.9em;
   font-family: var(--icen-font-mono);
-  color: var(--icen-token-accent-text, var(--icen-token-accent));
+  color: var(--icen-token-accent-text);
   word-break: break-word;
 }
 
@@ -66,13 +66,14 @@
   padding: 0;
 }
 .icen-list-item {
-  padding: var(--icen-density-space-sm);
-  border-radius: var(--icen-radius-sm);
+  min-block-size: var(--icen-control-height-sm);
+  padding: 4px var(--icen-density-space-sm);
+  border-radius: var(--icen-radius-xs);
   transition: background-color var(--icen-tx-fast);
 }
-.icen-list-item:hover { background: var(--icen-token-control-hover); }
-.icen-list .icen-list-item + .icen-list-item { border-top: 1px solid var(--icen-token-outline-soft); }
-.icen-list--compact .icen-list-item { padding: var(--icen-density-space-xs) var(--icen-density-space-sm); }
+.icen-list-item:hover { background: var(--icen-token-fill-hover); }
+.icen-list .icen-list-item + .icen-list-item { border-top: 1px solid var(--icen-token-separator-soft); }
+.icen-list--compact .icen-list-item { padding: 2px var(--icen-density-space-sm); }
 
 /* ══════════════ accordion · 手风琴（behaviors/accordion 配套） ══════════════
  * DOM：
@@ -86,7 +87,7 @@
  * data-icen-single：展开一项自动收起其余（behavior 实现）。
  */
 .icen-accordion-item {
-  border-bottom: 1px solid var(--icen-token-outline-soft);
+  border-bottom: 1px solid var(--icen-token-separator-soft);
 }
 .icen-accordion-item:last-child { border-bottom: 0; }
 .icen-accordion-trigger {
@@ -95,19 +96,20 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--icen-density-space-sm);
-  padding: var(--icen-density-space-sm);
-  font-size: var(--icen-density-font-size-md);
-  font-weight: 500;
+  min-block-size: 32px;
+  padding: 5px var(--icen-density-space-sm);
+  font-size: var(--icen-font-size-control);
+  font-weight: var(--icen-font-weight-control);
   color: var(--icen-token-text);
   text-align: start;
   background: none;
   border: 0;
   cursor: pointer;
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-radius-xs);
   transition: background-color var(--icen-tx-fast);
 }
 .icen-accordion-trigger:hover {
-  background: var(--icen-token-control-hover);
+  background: var(--icen-token-fill-hover);
 }
 .icen-accordion-trigger:focus-visible {
   outline: none;
@@ -146,21 +148,21 @@
   transition: padding-block-end var(--icen-tx-normal);
   font-size: var(--icen-density-font-size-sm);
   color: var(--icen-token-text-muted);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 .icen-accordion-item.is-open .icen-accordion-panel-inner { padding-block-end: var(--icen-density-space-sm); }
 
 /* 卡片式手风琴：整组包在带边框的卡片里 */
 .icen-accordion--cards {
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
   overflow: hidden;
 }
 .icen-accordion--cards .icen-accordion-item {
   border-bottom: 0;
 }
 .icen-accordion--cards .icen-accordion-item + .icen-accordion-item {
-  border-top: 1px solid var(--icen-token-outline-soft);
+  border-top: 1px solid var(--icen-token-separator-soft);
 }
 
 /* ══════════════ timeline · 时间线 ══════════════
@@ -185,7 +187,7 @@
   top: 32px;
   bottom: 0;
   width: 1px;
-  background: var(--icen-token-outline-soft);
+  background: var(--icen-token-separator);
 }
 .icen-timeline-dot {
   width: 28px;
@@ -195,8 +197,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
+  background: var(--icen-token-surface);
+  border: 1px solid var(--icen-token-control-border);
   color: var(--icen-token-text-muted);
   z-index: 1;
 }
@@ -214,20 +216,21 @@
   gap: var(--icen-density-space-sm);
 }
 .icen-timeline-title {
-  font-size: var(--icen-density-font-size-md);
-  font-weight: 500;
+  font-size: var(--icen-font-size-control);
+  font-weight: var(--icen-font-weight-control);
   color: var(--icen-token-text);
 }
 .icen-timeline-time {
   font-size: var(--icen-density-font-size-xs);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   margin-inline-start: auto;
   font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
 }
 .icen-timeline-desc {
   font-size: var(--icen-density-font-size-sm);
   color: var(--icen-token-text-muted);
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   line-height: 1.5;
 }
 
@@ -237,8 +240,8 @@
  */
 .icen-desc { display: flex; flex-direction: column; gap: var(--icen-density-space-sm); }
 .icen-desc-title {
-  font-size: var(--icen-density-font-size-md);
-  font-weight: 500;
+  font-size: var(--icen-font-size-title);
+  font-weight: var(--icen-font-weight-title);
   color: var(--icen-token-text);
   margin: 0;
 }
@@ -249,15 +252,15 @@
   margin: 0;
 }
 .icen-desc--bordered .icen-desc-grid {
-  background: var(--icen-token-outline-soft);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-separator-soft);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
   overflow: hidden;
 }
 .icen-desc-item { grid-column: span var(--desc-span, 1); }
 .icen-desc--bordered .icen-desc-item {
-  background: var(--icen-token-card);
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
+  background: var(--icen-token-surface);
+  padding: 6px 10px;
 }
 .icen-desc:not(.icen-desc--bordered) .icen-desc-item {
   display: flex;
@@ -266,10 +269,10 @@
 }
 .icen-desc-item dt {
   font-size: var(--icen-density-font-size-xs);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
 .icen-desc-item dd {
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   color: var(--icen-token-text);
   margin: 0;
   line-height: 1.5;
@@ -299,27 +302,28 @@
 .icen-tree-node {
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
+  gap: var(--icen-control-gap-sm);
   /* 深度缩进沿 inline-start（RTL 下树向左侧生长） */
-  padding-block: var(--icen-density-space-xs);
+  min-block-size: var(--icen-control-height-sm);
+  padding-block: 3px;
   padding-inline: calc(4px + var(--depth, 0) * 14px) var(--icen-density-space-sm);
-  border-radius: var(--icen-radius-sm);
-  font-size: var(--icen-density-font-size-md);
+  border-radius: var(--icen-radius-xs);
+  font-size: var(--icen-font-size-control);
   color: var(--icen-token-text);
   cursor: pointer;
   transition: background-color var(--icen-tx-fast);
 }
-.icen-tree-node:hover { background: var(--icen-token-control-hover); }
+.icen-tree-node:hover { background: var(--icen-token-fill-hover); }
 .icen-tree-node:focus-visible,
 .icen-tree-node:focus-within {
   outline: none;
-  box-shadow: var(--icen-ring);
+  box-shadow: var(--icen-ring-inset);
 }
 .icen-tree-node.is-selected,
 .icen-tree-node[aria-selected='true'] {
-  background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
-  font-weight: 500;
+  background: var(--icen-token-fill-selected);
+  color: var(--icen-token-text);
+  font-weight: var(--icen-font-weight-control);
 }
 .icen-tree-node.is-disabled,
 .icen-tree-node[aria-disabled='true'] {
@@ -364,11 +368,11 @@
 }
 .icen-tree-icon {
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   color: var(--icen-token-text-muted);
 }
-.icen-tree-node.is-selected .icen-tree-icon { color: var(--icen-token-accent); }
+.icen-tree-node.is-selected .icen-tree-icon { color: var(--icen-token-accent-strong); }
 .icen-tree-badge {
   display: inline-flex;
   align-items: center;
@@ -409,7 +413,7 @@
   gap: 1px;
 }
 .icen-list-item-title {
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   color: var(--icen-token-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -417,7 +421,7 @@
 }
 .icen-list-item-meta {
   font-size: var(--icen-density-font-size-xs);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
 .icen-list-item-trailing {
   flex-shrink: 0;
@@ -429,9 +433,9 @@
   cursor: pointer;
 }
 .icen-list-item.is-selected {
-  background: var(--icen-token-accent-subtle);
+  background: var(--icen-token-fill-selected);
 }
-.icen-list-item.is-selected .icen-list-item-title { color: var(--icen-token-accent); font-weight: 500; }
+.icen-list-item.is-selected .icen-list-item-title { color: var(--icen-token-text); font-weight: var(--icen-font-weight-control); }
 
 /* 列表项 flex 布局（leading + content + trailing） */
 .icen-list-item--flex {
@@ -476,8 +480,9 @@
 .icen-timeline-extra {
   margin-top: var(--icen-density-space-xs);
   padding: var(--icen-density-space-sm);
-  background: var(--icen-token-bg-soft);
-  border-radius: var(--icen-radius-sm);
+  background: var(--icen-token-surface-chrome);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-radius-xs);
   font-size: var(--icen-density-font-size-sm);
 }
 
@@ -532,7 +537,7 @@
   position: relative;
   margin-inline-start: 7px;
   padding-inline-start: 0;
-  border-inline-start: 1px solid var(--icen-token-outline-soft);
+  border-inline-start: 1px solid var(--icen-token-separator-soft);
 }
 .icen-tree--lined .icen-tree-node {
   position: relative;

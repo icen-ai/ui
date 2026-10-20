@@ -50,12 +50,11 @@
 | 批次 | 范围 | 状态 | 验证 |
 |---|---|---|---|
 | F0 | 设计语言 / 映射 / Token 架构 / 基线 | ✅ 完成 | 文档 + 基线截图 |
-| F1 | Design Tokens + 控件物理（modern） | 🟡 进行中 | 截图 after1 |
-| F2 | 表单族：btn/input/select/menu/segmented/switch/slider/form/date-picker/tree-select | 🟡 进行中 | 首轮截图通过，待全族 |
-| F2b | 表单族剩余：upload/tag-input/mentions/autocomplete/cascader | ⏳ 待开始 | — |
-| F3 | 导航与数据：tabs/toolbar/nav/sidebar/table/tree/list/card/panel/stat | ⏳ 待开始 | — |
-| F4 | 浮层与反馈：modal/popover/tooltip/dropdown/context-menu/command-palette/toast/notification/feedback | ⏳ 待开始 | — |
-| F5 | 图表族：charts + 13 种图 | ⏳ 待开始 | — |
+| F1 | Design Tokens + 控件物理（modern） | ✅ 完成 | verify + after1 |
+| F2 | 表单族：btn/input/select/menu/segmented/switch/slider/form/date-picker/tree-select/tag-input/mentions/autocomplete/cascader/upload | ✅ 完成 | verify + 截图 |
+| F3 | 导航与数据：tabs/toolbar/nav/sidebar/breadcrumb/pagination/steps/table/datatable/list/tree/accordion/timeline/desc/card/panel/stat/empty/pill/kbd | 🟡 进行中 | after2 截图通过，待全族复核 |
+| F4 | 浮层与反馈：modal/popover/tooltip/dropdown/context-menu/command-palette/toast/notification/alert/progress/spinner | 🟡 进行中 | after2 浮层抽样通过 |
+| F5 | 图表族：charts + 13 种图 | 🟡 进行中 | 基座完成，细分图待审 |
 | F6 | AI 原生族：ai-chat/composer/tool/panel/diff/threads/feedback/branch | ⏳ 待开始 | — |
 | F7 | 知识库族：kb 基座 + 7 域 32 组件 | ⏳ 待开始 | — |
 | F8 | 官方文档站：shell / 组件页 / 首页 / 应用组合 | ⏳ 待开始 | — |
@@ -76,6 +75,13 @@
 | select chevron | 恢复显示 | 弹出式控件必须有方向暗示；清除钮出现时互斥 |
 | checkbox | 勾选 mask | 方块不是“已选”的通用语言；勾选是 |
 | 菜单材质 | 28px 模糊 + 94% 表面 | 悬浮语义才用材质；普通表格/正文不玻璃化 |
+| 侧栏选中 | 整行 accent 12% 圆角底，无左缘指示条 | 源列表语义；指示条是 Web 标签页语言 |
+| 数据行高 | 32px（compact 28） | 桌面管理密度；44px 属移动端 |
+| 表头 | 11px/600 + chrome 底 + 1px 分隔 | 表头是结构标签，不是第二层卡片 |
+| 工具栏 | 44px chrome + 28px 按钮 | 与窗口工具栏同一高度语法 |
+| 浮层 | 12px 角 + 28px 模糊 + 2px 方向位移 | 与菜单同族；方向来自锚点 |
+| 命令面板 | 48px 搜索、32px 结果、scrim 模糊 | Spotlight 的搜索优先，不是对话框 |
+| Toast/通知 | 2px 语义边 + 20px 模糊 + 浮层影 | 悬浮但保持可读；语义边替代整块染色 |
 | 动效 | 110/180/260ms + 四种缓动 | 状态变化短、入场有方向、退场更快 |
 | 其他原语 | 保持独立 token/适配层 | 只共享结构语义，不共享现代表面物理 |
 

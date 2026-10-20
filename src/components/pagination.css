@@ -25,22 +25,23 @@
   min-width: 28px;
   height: 28px;
   padding: 0 var(--icen-density-space-xs);
-  border-radius: var(--icen-radius-sm);
-  font-size: var(--icen-density-font-size-sm);
+  border-radius: var(--icen-radius-xs);
+  font-size: var(--icen-font-size-control);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--icen-token-text-muted);
   background: none;
-  border: 0;
+  border: 1px solid transparent;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--icen-tx-fast),
+    border-color var(--icen-tx-fast),
     color var(--icen-tx-fast);
 }
 .icen-page-btn:not(.is-active):hover {
-  background: var(--icen-token-control-hover);
+  background: var(--icen-token-fill-hover);
   color: var(--icen-token-text);
 }
 .icen-page-btn:focus-visible {
@@ -49,10 +50,11 @@
 }
 .icen-page-btn.is-active,
 .icen-page-btn[aria-current='page'] {
-  background: var(--icen-token-accent-strong);
-  color: var(--icen-token-on-accent);
-  font-weight: 500;
-  box-shadow: var(--icen-token-shadow-elevated);
+  background: var(--icen-token-fill-selected);
+  border-color: color-mix(in srgb, var(--icen-token-accent) 24%, transparent);
+  color: var(--icen-token-text);
+  font-weight: 600;
+  box-shadow: none;
 }
 .icen-page-btn.is-disabled,
 .icen-page-btn:disabled,
@@ -101,14 +103,14 @@
   padding: 0 var(--icen-density-space-xs);
   text-align: center;
   background: var(--icen-token-control);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-sm);
+  border: 1px solid var(--icen-token-control-border);
+  border-radius: var(--icen-radius-xs);
   color: var(--icen-token-text);
   font: inherit;
   font-size: var(--icen-density-font-size-sm);
   transition: border-color var(--icen-tx-fast), box-shadow var(--icen-tx-fast);
 }
-.icen-pagination-jump-input:hover { border-color: var(--icen-hover-border); }
+.icen-pagination-jump-input:hover { border-color: var(--icen-token-control-border-hover); }
 .icen-pagination-jump-input:focus-visible {
   outline: none;
   border-color: var(--icen-control-focus-border);

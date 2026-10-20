@@ -67,17 +67,19 @@
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: var(--icen-density-space-sm);
-  background: var(--icen-token-card-strong);
+  gap: var(--icen-control-gap);
+  background: color-mix(in srgb, var(--icen-token-surface) 96%, transparent);
+  backdrop-filter: blur(var(--icen-material-blur-chrome)) saturate(var(--icen-material-saturate));
+  -webkit-backdrop-filter: blur(var(--icen-material-blur-chrome)) saturate(var(--icen-material-saturate));
   color: var(--icen-token-text);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-inline-start: 3px solid var(--icen-token-info);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-overlay);
+  border: 1px solid var(--icen-token-material-edge);
+  border-inline-start: 2px solid var(--icen-token-info);
+  border-radius: var(--icen-radius-lg);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
   padding-block: var(--icen-density-space-md);
-  padding-inline: var(--icen-density-space-sm) var(--icen-density-space-md);
+  padding-inline: 9px 10px;
   overflow: hidden; /* 倒计时进度条贴底 */
-  animation: icen-notif-in var(--icen-tx-normal);
+  animation: icen-notif-in var(--icen-tx-normal) var(--icen-ease-enter);
 }
 .icen-notification.icen-notification--success { border-inline-start-color: var(--icen-token-success); }
 .icen-notification.icen-notification--warning { border-inline-start-color: var(--icen-token-warning); }
@@ -86,12 +88,12 @@
 
 /* ── 优先级：高优先级强调（起始缘加粗 + 更强阴影）── */
 .icen-notification.is-priority {
-  border-inline-start-width: 4px;
-  box-shadow: var(--icen-token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 24%, transparent);
+  border-inline-start-width: 3px;
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated), 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 24%, transparent);
 }
-.icen-notification.is-priority.icen-notification--success { box-shadow: var(--icen-token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--icen-token-success) 28%, transparent); }
-.icen-notification.is-priority.icen-notification--warning { box-shadow: var(--icen-token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--icen-token-warning) 28%, transparent); }
-.icen-notification.is-priority.icen-notification--error   { box-shadow: var(--icen-token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--icen-token-error) 28%, transparent); }
+.icen-notification.is-priority.icen-notification--success { box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated), 0 0 0 1px color-mix(in srgb, var(--icen-token-success) 28%, transparent); }
+.icen-notification.is-priority.icen-notification--warning { box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated), 0 0 0 1px color-mix(in srgb, var(--icen-token-warning) 28%, transparent); }
+.icen-notification.is-priority.icen-notification--error   { box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated), 0 0 0 1px color-mix(in srgb, var(--icen-token-error) 28%, transparent); }
 
 /* ── 未读：标题起始缘侧 4px 强调点（inline-block 点，margin-inline-end 与文本同向推开） + 加粗 ── */
 .icen-notification.is-unread .icen-notification-title::before {
@@ -121,8 +123,8 @@
 /* 整条 hover 抬升仅可悬停设备生效（触屏关闭，AGENTS 动效守卫） */
 @media (hover: hover) and (pointer: fine) {
   .icen-notification.is-clickable:hover {
-    transform: translateY(-1px);
-    border-color: var(--icen-token-accent);
+    transform: none;
+    border-color: var(--icen-token-control-border-hover);
   }
 }
 
@@ -132,13 +134,13 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   margin-top: 1px;
   border-radius: var(--icen-radius-full);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
-.icen-notification-icon svg { width: 16px; height: 16px; }
+.icen-notification-icon svg { width: 15px; height: 15px; }
 .icen-notification--success .icen-notification-icon { color: var(--icen-token-success); }
 .icen-notification--warning .icen-notification-icon { color: var(--icen-token-warning); }
 .icen-notification--error   .icen-notification-icon { color: var(--icen-token-error); }
@@ -172,7 +174,7 @@
 }
 .icen-notification-title {
   margin: 0;
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   font-weight: 600;
   line-height: 1.4;
   overflow: hidden;
@@ -357,7 +359,7 @@
 
 /* ── 暂停态（hover 时） ── */
 .icen-notification.is-paused {
-  box-shadow: var(--icen-token-shadow-overlay), 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 14%, transparent);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated), 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 14%, transparent);
 }
 
 /* ── 退场动画 ── */
@@ -448,3 +450,4 @@
 @media (pointer: coarse) { .icen-notification-group-toggle { min-block-size: 44px; } }
 @media (prefers-reduced-motion: reduce) { .icen-notification-group-toggle, .icen-notification-group-toggle > svg { transition: none; } .icen-notification.is-group-revealing { animation: none; } }
 :root[data-icen-style="pixel"] .icen-notification.is-group-revealing { animation-timing-function: steps(2,end); }
+

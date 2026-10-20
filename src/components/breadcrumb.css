@@ -22,7 +22,7 @@
 .icen-breadcrumb {
   display: flex;
   align-items: center;
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
 }
 .icen-breadcrumb ol {
   display: flex;
@@ -53,7 +53,7 @@
   transition: color var(--icen-tx-fast);
 }
 .icen-breadcrumb-link:hover {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-text);
   text-decoration: none;
 }
 .icen-breadcrumb-link:focus-visible {
@@ -75,8 +75,8 @@
 }
 .icen-breadcrumb-sep::after { content: '';
   display: inline-block;
-  inline-size: 16px;
-  block-size: 16px;
+  inline-size: 12px;
+  block-size: 12px;
   flex: none;
   vertical-align: middle;
   background: currentColor;
@@ -125,8 +125,8 @@
 }
 .icen-breadcrumb--arrow .icen-breadcrumb-sep::after { content: '';
   display: inline-block;
-  inline-size: 16px;
-  block-size: 16px;
+  inline-size: 12px;
+  block-size: 12px;
   flex: none;
   vertical-align: middle;
   background: currentColor;
@@ -158,3 +158,4 @@
 /* ── RTL：分隔符方向镜像（› / → 指向行进方向，RTL 下行进朝左）── */
 :is([dir='rtl']) .icen-breadcrumb-sep::after { transform: scaleX(-1); }
 :is([dir='rtl']) .icen-breadcrumb--arrow .icen-breadcrumb-sep::after { transform: scaleX(-1); }
+

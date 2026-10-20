@@ -46,11 +46,10 @@
   margin-top: var(--icen-density-space-sm);
 }
 .icen-sidebar-section-label {
-  font-size: var(--icen-density-font-size-xs);
+  font-size: var(--icen-font-size-caption);
   font-weight: 600;
-  color: var(--icen-token-text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--icen-token-text-muted);
+  letter-spacing: var(--icen-letter-spacing-caption);
 }
 
 .icen-sidebar-group { margin-bottom: var(--icen-density-space-xs); }
@@ -60,13 +59,13 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--icen-density-space-xs);
-  padding: var(--icen-density-space-sm) var(--icen-density-space-sm);
-  border-radius: var(--icen-radius-sm);
+  min-block-size: 26px;
+  padding: 3px var(--icen-density-space-sm);
+  border-radius: var(--icen-radius-xs);
   font-family: inherit;
-  font-size: var(--icen-density-font-size-xs);
+  font-size: var(--icen-font-size-caption);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--icen-letter-spacing-caption);
   color: var(--icen-token-text-muted);
   background: none;
   border: 0;
@@ -76,7 +75,7 @@
     color var(--icen-tx-fast);
 }
 .icen-sidebar-group-title:hover {
-  background: var(--icen-token-control-hover);
+  background: var(--icen-token-fill-hover);
   color: var(--icen-token-text);
 }
 .icen-sidebar-group-title:focus-visible {
@@ -120,10 +119,11 @@
   inline-size: 100%;
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
-  padding: var(--icen-density-space-sm) var(--icen-density-space-sm);
-  border-radius: var(--icen-radius-md);
-  font-size: var(--icen-density-font-size-md);
+  gap: 7px;
+  min-block-size: var(--icen-control-height-sm);
+  padding: 3px var(--icen-density-space-sm);
+  border-radius: var(--icen-radius-xs);
+  font-size: var(--icen-font-size-control);
   color: var(--icen-token-text);
   text-align: start;
   text-decoration: none;
@@ -135,19 +135,19 @@
     color var(--icen-tx-fast);
 }
 .icen-sidebar-item:hover {
-  background: var(--icen-token-control-hover);
+  background: var(--icen-token-fill-hover);
   text-decoration: none;
   color: var(--icen-token-text);
 }
 .icen-sidebar-item:focus-visible {
   outline: none;
-  box-shadow: var(--icen-ring);
+  box-shadow: var(--icen-ring-inset);
 }
 .icen-sidebar-item.is-active,
 .icen-sidebar-item[aria-current='page'] {
-  background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
-  font-weight: 500;
+  background: var(--icen-token-fill-selected);
+  color: var(--icen-token-text);
+  font-weight: var(--icen-font-weight-control);
 }
 .icen-sidebar-item.is-disabled,
 .icen-sidebar-item[aria-disabled='true'],
@@ -156,12 +156,12 @@
   pointer-events: none;
 }
 .icen-sidebar-item-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
   color: var(--icen-token-text-muted);
 }
-.icen-sidebar-item.is-active .icen-sidebar-item-icon { color: var(--icen-token-accent); }
+.icen-sidebar-item.is-active .icen-sidebar-item-icon { color: var(--icen-token-accent-strong); }
 .icen-sidebar-item-label {
   flex: 1;
   overflow: hidden;
@@ -177,10 +177,15 @@
   padding: 0 5px;
   font-size: var(--icen-density-font-size-xs);
   font-weight: 600;
-  color: var(--icen-token-on-accent);
-  background: var(--icen-token-accent-strong);
+  color: var(--icen-token-text-muted);
+  background: var(--icen-token-fill-2);
   border-radius: var(--icen-radius-full);
   font-variant-numeric: tabular-nums;
+}
+.icen-sidebar-item.is-active .icen-sidebar-item-badge,
+.icen-sidebar-item[aria-current='page'] .icen-sidebar-item-badge {
+  color: var(--icen-token-on-accent);
+  background: var(--icen-token-accent-strong);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -240,22 +245,10 @@
   margin-top: auto;
 }
 
-/* 激活态起始缘侧指示条（RTL 镜像到右缘） */
-.icen-sidebar-item.is-active,
-.icen-sidebar-item[aria-current='page'] {
-  position: relative;
-}
+/* 选中项使用整行圆角底色，不再叠加起始缘指示条（源列表语义）。 */
 .icen-sidebar-item.is-active::before,
 .icen-sidebar-item[aria-current='page']::before {
-  content: '';
-  position: absolute;
-  inset-inline-start: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 60%;
-  border-radius: var(--icen-radius-full);
-  background: var(--icen-token-accent);
+  content: none;
 }
 
 /* 折叠/轨道模式（icon-only mini sidebar） */

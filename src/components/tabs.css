@@ -18,7 +18,7 @@
   display: flex;
   gap: 2px;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--icen-token-line-soft);
+  border-bottom: 1px solid var(--icen-token-separator-soft);
   margin-bottom: var(--icen-density-space-lg);
 }
 
@@ -26,20 +26,24 @@
   background: none;
   border: 0;
   cursor: pointer;
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
-  font-family: var(--icen-font-mono);
-  font-size: var(--icen-density-font-size-md);
-  letter-spacing: 0.05em;
+  padding: 6px var(--icen-density-space-sm);
+  font-family: var(--icen-font-body);
+  font-size: var(--icen-font-size-control);
+  font-weight: var(--icen-font-weight-control);
+  letter-spacing: 0;
   color: var(--icen-token-text-muted);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
+  border-radius: var(--icen-radius-xs) var(--icen-radius-xs) 0 0;
   white-space: nowrap;
   transition:
     color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast),
     border-color var(--icen-tx-fast);
 }
 .icen-page-tab:hover {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-text);
+  background: var(--icen-token-fill-hover);
 }
 .icen-page-tab:focus-visible {
   outline: none;
@@ -48,14 +52,15 @@
 }
 .icen-page-tab.is-active,
 .icen-page-tab[aria-selected='true'] {
-  color: var(--icen-token-accent-text, var(--icen-token-accent-deep, var(--icen-token-accent)));
+  color: var(--icen-token-text);
   border-bottom-color: var(--icen-token-accent);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .icen-tabs a {
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
-  font-size: var(--icen-density-font-size-md);
+  padding: 6px var(--icen-density-space-sm);
+  font-size: var(--icen-font-size-control);
+  font-weight: var(--icen-font-weight-control);
   color: var(--icen-token-text-muted);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
@@ -66,7 +71,7 @@
     border-color var(--icen-tx-fast);
 }
 .icen-tabs a:hover {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-text);
   text-decoration: none;
 }
 .icen-tabs a:focus-visible {
@@ -88,16 +93,18 @@
 }
 .icen-tabs--cards .icen-page-tab {
   padding: var(--icen-density-space-xs) var(--icen-density-space-md);
-  border: 1px solid var(--icen-token-outline-soft);
+  border: 1px solid var(--icen-token-control-border);
   border-radius: var(--icen-radius-full);
   margin-bottom: 0;
+  color: var(--icen-token-text-muted);
+  background: var(--icen-token-control);
 }
 .icen-tabs--cards .icen-page-tab.is-active,
 .icen-tabs--cards .icen-page-tab[aria-selected='true'] {
-  background: var(--icen-token-accent-strong);
-  color: var(--icen-token-on-accent);
-  border-color: var(--icen-token-accent-strong);
-  font-weight: 500;
+  background: var(--icen-token-accent-subtle);
+  color: var(--icen-token-text);
+  border-color: color-mix(in srgb, var(--icen-token-accent) 28%, var(--icen-token-line-soft));
+  font-weight: 600;
 }
 
 /* 等宽变体：tab 平均占满容器 */
@@ -111,11 +118,11 @@
 
 /* 尺寸变体 */
 .icen-tabs--sm .icen-page-tab {
-  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  padding: 4px var(--icen-density-space-sm);
   font-size: var(--icen-density-font-size-sm);
 }
 .icen-tabs--lg .icen-page-tab {
-  padding: var(--icen-density-space-md) calc(var(--icen-density-space-md) + 4px);
+  padding: 8px calc(var(--icen-density-space-md) + 2px);
   font-size: var(--icen-density-font-size-lg);
 }
 
@@ -182,31 +189,35 @@
   display: inline-flex;
   border-bottom: none;
   gap: 2px;
-  padding: 2px;
-  background: var(--icen-token-panel);
-  border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-inset);
+  padding: 3px;
+  background: var(--icen-token-surface-raised);
+  border: 1px solid var(--icen-token-control-border);
+  border-radius: var(--icen-control-radius-lg);
+  box-shadow: var(--icen-token-shadow-field);
 }
 .icen-tabs--segment .icen-page-tab {
   border-bottom: none;
   margin-bottom: 0;
-  padding: var(--icen-density-space-xs) var(--icen-density-space-md);
-  border-radius: var(--icen-radius-sm);
+  min-block-size: calc(var(--icen-control-height-sm) - 8px);
+  padding: 0 var(--icen-control-padding-inline-sm);
+  border-radius: max(0px, calc(var(--icen-control-radius-lg) - 3px));
 }
 .icen-tabs--segment .icen-page-tab.is-active,
 .icen-tabs--segment .icen-page-tab[aria-selected='true'] {
-  background: var(--icen-token-accent-strong);
-  color: var(--icen-token-on-accent);
-  border-bottom-color: transparent;
-  font-weight: 500;
+  background: var(--icen-token-surface);
+  color: var(--icen-token-text);
+  border: 1px solid color-mix(in srgb, var(--icen-token-line) 72%, transparent);
+  margin: -1px;
+  border-bottom-color: color-mix(in srgb, var(--icen-token-line) 72%, transparent);
+  font-weight: var(--icen-font-weight-control);
+  box-shadow: var(--icen-token-shadow-control);
 }
 
 /* 垂直 tab（侧栏式）：轨道与指示条在 inline-end 侧，RTL 自动镜像到左缘 */
 .icen-tabs--vertical {
   flex-direction: column;
   border-bottom: none;
-  border-inline-end: 1px solid var(--icen-token-line-soft);
+  border-inline-end: 1px solid var(--icen-token-separator-soft);
   margin-bottom: 0;
   min-inline-size: 160px;
 }
@@ -215,11 +226,17 @@
   border-inline-end: 2px solid transparent;
   margin-bottom: 0;
   margin-inline-end: -1px;
+  border-start-start-radius: var(--icen-radius-xs);
+  border-end-start-radius: var(--icen-radius-xs);
+  min-block-size: var(--icen-control-height-sm);
+  text-align: start;
+  justify-content: flex-start;
 }
 .icen-tabs--vertical .icen-page-tab.is-active,
 .icen-tabs--vertical .icen-page-tab[aria-selected='true'] {
   border-inline-end-color: var(--icen-token-accent);
   border-bottom-color: transparent;
+  background: var(--icen-token-fill-selected);
 }
 
 @media (prefers-reduced-motion: reduce) {

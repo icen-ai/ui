@@ -29,9 +29,9 @@
 
 .icen-panel {
   background: var(--icen-token-surface);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-lg);
-  box-shadow: var(--icen-token-shadow-elevated);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
+  box-shadow: none;
   margin-bottom: var(--icen-density-space-lg);
   overflow: hidden;
 }
@@ -42,12 +42,12 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--icen-density-space-sm);
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
-  border-bottom: 1px solid var(--icen-token-line-soft);
-  font-size: var(--icen-density-font-size-xs);
-  letter-spacing: 0.08em;
-  color: var(--icen-token-text-muted);
-  text-transform: uppercase;
+  min-block-size: 34px;
+  padding: 6px var(--icen-density-space-md);
+  border-bottom: 1px solid var(--icen-token-separator-soft);
+  font-size: var(--icen-font-size-caption);
+  letter-spacing: var(--icen-letter-spacing-caption);
+  color: var(--icen-token-text);
   font-weight: 600;
 }
 .icen-panel-title-text {
@@ -66,8 +66,7 @@
   font-size: var(--icen-density-font-size-xs);
   font-weight: 400;
   letter-spacing: 0;
-  text-transform: none;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -129,9 +128,9 @@
 
 /* ── body / foot ── */
 .icen-panel-body {
-  padding: var(--icen-density-space-md);
-  font-size: var(--icen-density-font-size-md);
-  line-height: 1.6;
+  padding: var(--icen-density-space-md) var(--icen-density-space-md) var(--icen-density-space-lg);
+  font-size: var(--icen-font-size-control);
+  line-height: 1.55;
 }
 .icen-panel--flush .icen-panel-body { padding: 0; }
 
@@ -141,21 +140,21 @@
   justify-content: flex-end;
   gap: var(--icen-density-space-sm);
   padding: var(--icen-density-space-sm) var(--icen-density-space-md);
-  border-top: 1px solid var(--icen-token-line-soft);
-  background: color-mix(in srgb, var(--icen-token-bg-soft) 50%, transparent);
+  border-top: 1px solid var(--icen-token-separator-soft);
+  background: var(--icen-token-surface-chrome);
 }
 
 /* ── 强调变体 ── */
-.icen-panel--accent { border-color: color-mix(in srgb, var(--icen-token-accent) 30%, transparent); }
+.icen-panel--accent { border-color: color-mix(in srgb, var(--icen-token-accent) 30%, var(--icen-token-separator)); }
 .icen-panel--accent .icen-panel-title {
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
   background: var(--icen-token-accent-subtle);
 }
 
 /* ── 平面变体（无阴影，嵌套时用） ── */
 .icen-panel--flat {
-  box-shadow: none;
-  background: var(--icen-token-bg-soft);
+  background: var(--icen-token-surface-chrome);
+  border-color: transparent;
 }
 
 /* ── 可折叠模式：标题栏可点（纯 CSS 方案用 details/summary） ── */

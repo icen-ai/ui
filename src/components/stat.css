@@ -45,10 +45,10 @@
   flex-direction: column;
   gap: var(--icen-density-space-xs);
   background: var(--icen-token-surface);
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-lg);
-  padding: var(--icen-density-space-md);
-  box-shadow: var(--icen-token-shadow-elevated);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
+  padding: var(--icen-density-space-sm) var(--icen-density-space-md) var(--icen-density-space-md);
+  box-shadow: none;
   transition:
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast),
@@ -60,8 +60,8 @@
 /* hover 抬升仅可悬停设备生效（触屏关闭，AGENTS 动效守卫） */
 @media (hover: hover) and (pointer: fine) {
   .icen-stat-card--interactive:hover {
-    transform: translateY(-1px);
-    border-color: color-mix(in srgb, var(--icen-token-accent) 26%, var(--icen-token-outline-soft));
+    transform: none;
+    border-color: var(--icen-token-control-border-hover);
     box-shadow: var(--icen-token-shadow-card);
   }
 }
@@ -73,10 +73,10 @@
   gap: var(--icen-density-space-sm);
 }
 .icen-stat-label {
-  color: var(--icen-token-text-faint);
-  font-size: var(--icen-density-font-size-xs);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  color: var(--icen-token-text-muted);
+  font-size: var(--icen-font-size-caption);
+  font-weight: 600;
+  letter-spacing: var(--icen-letter-spacing-caption);
 }
 .icen-stat-icon {
   display: inline-flex;
@@ -84,9 +84,9 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-radius-xs);
   background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
 }
 .icen-stat-icon.icen-icon--success { background: color-mix(in srgb, var(--icen-token-success) 14%, transparent); color: var(--icen-token-success); }
 .icen-stat-icon.icen-icon--warning { background: color-mix(in srgb, var(--icen-token-warning) 14%, transparent); color: var(--icen-token-warning); }
@@ -102,14 +102,15 @@
 }
 
 .icen-stat-num {
-  font-size: var(--icen-density-font-size-2xl);
-  font-weight: 700;
+  font-size: var(--icen-density-font-size-xl);
+  font-weight: 600;
   line-height: 1.2;
+  letter-spacing: -.015em;
   font-variant-numeric: tabular-nums lining-nums;
   color: var(--icen-token-text);
   word-break: break-all;
 }
-.icen-stat-num--accent  { color: var(--icen-token-accent); }
+.icen-stat-num--accent  { color: var(--icen-token-accent-text); }
 .icen-stat-num--warning { color: var(--icen-token-warning); }
 .icen-stat-num--error   { color: var(--icen-token-error); }
 .icen-stat-num--info    { color: var(--icen-token-info); }

@@ -32,18 +32,20 @@
   overflow: hidden;
   display: inline-flex;
   align-items: center;
-  gap: var(--icen-density-space-sm);
-  background: var(--icen-token-surface);
+  gap: var(--icen-control-gap);
+  background: color-mix(in srgb, var(--icen-token-surface) 96%, transparent);
+  backdrop-filter: blur(var(--icen-material-blur-chrome)) saturate(var(--icen-material-saturate));
+  -webkit-backdrop-filter: blur(var(--icen-material-blur-chrome)) saturate(var(--icen-material-saturate));
   color: var(--icen-token-text);
-  border: 1px solid var(--icen-token-line-soft);
-  border-inline-start: 3px solid var(--icen-token-line-strong);
-  border-radius: var(--icen-radius-sm);
-  box-shadow: var(--icen-token-shadow-overlay);
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
-  font-size: var(--icen-density-font-size-md);
+  border: 1px solid var(--icen-token-material-edge);
+  border-inline-start: 2px solid var(--icen-token-separator-strong);
+  border-radius: var(--icen-radius-lg);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
+  padding: 8px 10px;
+  font-size: var(--icen-font-size-control);
   line-height: 1.4;
-  max-inline-size: 380px;
-  animation: icen-toast-in var(--icen-tx-slow);
+  max-inline-size: 400px;
+  animation: icen-toast-in var(--icen-tx-normal) var(--icen-ease-enter);
 }
 
 /* 语义色：起始缘 3px 强调 */
@@ -60,21 +62,21 @@
 
 .icen-toast-action {
   flex-shrink: 0;
-  padding: 0;
-  background: none;
+  min-block-size: 24px;
+  padding-inline: 8px;
+  background: var(--icen-token-fill-hover);
   border: 0;
+  border-radius: var(--icen-radius-xs);
   cursor: pointer;
-  /* accent-text：裸 accent 对浅色 fill-1 面板 ~3.8:1，13px 动作字低于 AA */
-  color: var(--icen-token-accent-text);
+  color: var(--icen-token-text);
   font: inherit;
   font-size: var(--icen-density-font-size-sm);
   font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
   -webkit-tap-highlight-color: transparent;
-  transition: color var(--icen-tx-fast);
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.icen-toast-action:hover { color: var(--icen-token-accent-deep, var(--icen-token-accent)); }
+.icen-toast-action:hover { color: var(--icen-token-text); background: var(--icen-token-fill-2); }
 .icen-toast-action:focus-visible {
   outline: none;
   border-radius: var(--icen-radius-xs);
@@ -89,9 +91,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
-.icen-toast-icon svg { width: 16px; height: 16px; }
+.icen-toast-icon svg { width: 15px; height: 15px; }
 .icen-toast--success .icen-toast-icon { color: var(--icen-token-success); }
 .icen-toast--error   .icen-toast-icon { color: var(--icen-token-error); }
 .icen-toast--warning .icen-toast-icon { color: var(--icen-token-warning); }
@@ -103,19 +105,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 0;
   border-radius: var(--icen-radius-xs);
   background: transparent;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
 .icen-toast-close:hover {
   color: var(--icen-token-text);
-  background: var(--icen-token-fill-1);
+  background: var(--icen-token-fill-hover);
 }
 .icen-toast-close svg { width: 12px; height: 12px; }
 
@@ -125,8 +127,8 @@
   min-width: 0;
 }
 .icen-toast-title {
-  font-size: var(--icen-density-font-size-md);
-  font-weight: 500;
+  font-size: var(--icen-font-size-control);
+  font-weight: 600;
   color: var(--icen-token-text);
   line-height: 1.4;
 }
@@ -203,8 +205,8 @@
 }
 
 @keyframes icen-toast-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px) scale(.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (max-width: 480px) {
@@ -217,13 +219,14 @@
 }
 
 /* Quiet close shares the same fixed action slot as other interface controls. */
-.icen-toast-close.icen-icon-action { inline-size: var(--icen-density-input-height-sm); block-size: var(--icen-density-input-height-sm); }
+.icen-toast-close.icen-icon-action { inline-size: 28px; block-size: 28px; }
 .icen-toast-close.icen-icon-action > svg { inline-size: 14px; block-size: 14px; }
 .icen-toast-close:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
 @media (pointer: coarse) { .icen-toast-close.icen-icon-action { min-inline-size: 44px; min-block-size: 44px; } }
 
 .icen-toast-content { min-inline-size: 0; }
-.icen-toast { max-inline-size: min(380px, calc(100vw - 2 * var(--icen-density-space-md))); }
-.icen-toast-action { min-block-size: var(--icen-density-input-height-sm); padding-inline: var(--icen-density-space-sm); border-radius: var(--icen-radius-sm); text-decoration: none; background: var(--icen-token-fill-1); }
+.icen-toast { max-inline-size: min(400px, calc(100vw - 2 * var(--icen-density-space-md))); }
+.icen-toast-action { min-block-size: 24px; background: var(--icen-token-fill-hover); }
 .icen-toast-action:hover { background: var(--icen-token-fill-2); }
 @media (pointer: coarse) { .icen-toast-action { min-inline-size: 44px; min-block-size: 44px; } }
+

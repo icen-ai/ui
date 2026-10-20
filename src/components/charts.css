@@ -26,32 +26,32 @@
   gap: var(--icen-density-space-sm);
 }
 .icen-chart-empty {
-  height: 150px;
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--icen-density-font-size-xs);
-  color: var(--icen-token-text-faint);
+  font-size: var(--icen-font-size-caption);
+  color: var(--icen-token-text-muted);
 }
 
 /* ── 图例 / 轴标签（donut / stack / vbar / line 共用） ── */
 .icen-chart-legend {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
   flex: 1;
 }
 .icen-chart-legend-item {
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-xs);
-  font-size: var(--icen-density-font-size-xs);
+  gap: 6px;
+  font-size: var(--icen-font-size-caption);
   min-width: 0;
 }
 .icen-chart-legend-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   flex-shrink: 0;
   border-radius: var(--icen-radius-full);
   background: var(--chart-tone, var(--icen-token-accent));
@@ -67,7 +67,7 @@
 .icen-chart-legend-value {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
 }
 
 .icen-chart-labels {
@@ -80,7 +80,7 @@
   min-width: 0;
   text-align: center;
   font-size: var(--icen-density-font-size-2xs);
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -112,7 +112,7 @@
 
 /* 标题（spec.title 有值时渲染） */
 .icen-chart-title {
-  font-size: var(--icen-density-font-size-sm);
+  font-size: var(--icen-font-size-control);
   font-weight: 600;
   color: var(--icen-token-text);
 }
@@ -123,23 +123,23 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--icen-density-space-sm);
-  min-height: 24px;
+  min-height: 26px;
 }
 .icen-chart-legend-eye {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 0;
   border-radius: var(--icen-radius-xs);
   background: transparent;
-  color: var(--icen-token-text-faint);
+  color: var(--icen-token-text-muted);
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.icen-chart-legend-eye:hover { color: var(--icen-token-text); background: var(--icen-token-fill-1); }
+.icen-chart-legend-eye:hover { color: var(--icen-token-text); background: var(--icen-token-fill-hover); }
 .icen-chart-legend-eye:focus-visible { outline: none; box-shadow: var(--icen-ring); }
 .icen-chart-legend-eye svg { width: 13px; height: 13px; }
 @media (pointer: coarse) {
@@ -159,12 +159,12 @@
   position: fixed;
   z-index: var(--icen-z-tooltip);
   max-width: 280px;
-  padding: 3px 8px;
-  border-radius: var(--icen-radius-sm);
-  background: var(--icen-token-card-strong);
-  border: 1px solid var(--icen-token-line);
-  box-shadow: var(--icen-token-shadow-elevated);
-  font-size: var(--icen-density-font-size-xs);
+  padding: 4px 8px;
+  border-radius: var(--icen-radius-xs);
+  background: var(--icen-token-surface);
+  border: 1px solid var(--icen-token-material-edge);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
+  font-size: var(--icen-font-size-caption);
   font-variant-numeric: tabular-nums;
   color: var(--icen-token-text);
   pointer-events: none;

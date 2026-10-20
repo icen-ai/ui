@@ -26,8 +26,8 @@
   z-index: var(--icen-z-tooltip);
   width: max-content;
   max-width: min(260px, calc(100vw - 32px));
-  padding: 4px var(--icen-density-space-xs);
-  font-size: var(--icen-density-font-size-xs);
+  padding: 4px 7px;
+  font-size: var(--icen-font-size-caption);
   font-weight: 400;
   line-height: 1.4;
   white-space: nowrap;
@@ -35,9 +35,9 @@
   overflow: hidden;
   background: color-mix(in srgb, var(--icen-token-text) 92%, var(--icen-token-bg));
   color: var(--icen-token-bg);
-  border: 1px solid var(--icen-token-line);
+  border: 1px solid color-mix(in srgb, var(--icen-token-bg) 12%, transparent);
   box-shadow: var(--icen-token-shadow-elevated);
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-radius-xs);
   opacity: 0;
   pointer-events: none;
   transition:
@@ -135,8 +135,8 @@
   z-index: var(--icen-z-tooltip);
   box-sizing: border-box;
   max-inline-size: min(260px, calc(100vw - 32px));
-  padding: 4px var(--icen-density-space-xs);
-  font-size: var(--icen-density-font-size-xs);
+  padding: 4px 7px;
+  font-size: var(--icen-font-size-caption);
   font-weight: 400;
   line-height: 1.4;
   white-space: nowrap;
@@ -144,9 +144,9 @@
   text-overflow: ellipsis;
   background: color-mix(in srgb, var(--icen-token-text) 92%, var(--icen-token-bg));
   color: var(--icen-token-bg);
-  border: 1px solid var(--icen-token-line);
+  border: 1px solid color-mix(in srgb, var(--icen-token-bg) 12%, transparent);
   box-shadow: var(--icen-token-shadow-elevated);
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-radius-xs);
   pointer-events: none;
   opacity: 0;
   translate: 0 4px;
@@ -170,3 +170,4 @@
 @media (forced-colors: active) {
   .icen-tooltip { background: Canvas; color: CanvasText; border-color: CanvasText; box-shadow: none; }
 }
+
