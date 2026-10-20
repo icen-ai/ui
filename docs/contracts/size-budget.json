@@ -1,0 +1,15 @@
+{
+  "note": "构建产物体积预算（字节），scripts/size.ts 在 verify 与 CI 强制执行。超支 = 红；确需扩面时随本 PR 提高预算——diff 可见即评审点。基线采自 v0.10 收敛批次产物 + 约 12% 余量。",
+  "budgets": {
+    "ui.css": 960000,
+    "tokens.css": 120000,
+    "base.css": 28000,
+    "index.mjs": 1400000,
+    "react.mjs": 380000,
+    "vue.mjs": 370000,
+    "registry.json": 60000,
+    "cli.mjs": 10000,
+    "components/*.css": 55000,
+    "behaviors/*.mjs": 310000
+  }
+}

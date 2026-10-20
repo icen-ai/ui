@@ -7,6 +7,7 @@ import { readdir, readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SLUGS, SLUG_INIT, SLUG_EXPORTS, SLUG_BEHAVIOR, EXTRA_CSS, cssOf } from './slugs.mjs';
+import { slugApi } from './slug-api.mjs';
 import { generateIconMasks } from './icon-masks';
 import { generateThemeColors } from './theme-colors.mjs';
 
@@ -100,7 +101,7 @@ async function assertSrc(rel: string, what: string) {
     throw new Error(`build-css: ${what} 不存在 → src/${rel}（检查 scripts/slugs.mjs 的映射，勿产出坏 kit 入口）`);
   }
 }
-const slugsRegistry: Record<string, { css: string; extraCss?: string[]; behavior?: string; init?: string; exports?: string[] }> = {};
+const slugsRegistry: Record<string, { css: string; extraCss?: string[]; behavior?: string; init?: string; exports?: string[]; events?: string[] }> = {};
 for (const slug of SLUGS) {
   const css = cssOf(slug);
   const extra = EXTRA_CSS[slug] ?? [];
@@ -119,19 +120,29 @@ for (const slug of SLUGS) {
     lines.push(`export * from '../behaviors/${slug}.mjs';`);
   }
   await writeFile(join(DIST, 'components', `${slug}.mjs`), lines.join('\n') + '\n');
+  // kit 的类型面：与运行时同形态的 .d.mts（无类型的子路径引入是包面漏洞）。
+  // .d.mts 内不引 CSS（副作用样式导入不属于类型契约；消费方打包器处理运行时 .mjs 即可）。
+  const dts = behaviorMod && explicitExports
+    ? `export { ${explicitExports.join(', ')} } from '../behaviors/${behaviorMod}.mjs';\n`
+    : ownBehavior
+      ? `export * from '../behaviors/${slug}.mjs';\n`
+      : 'export {};\n';
+  await writeFile(join(DIST, 'components', `${slug}.d.mts`), `// kit: ${slug} 类型面（构建产物，勿手改）\n${dts}`);
+  const api = slugApi(slug);
   slugsRegistry[slug] = {
     css,
     ...(extra.length ? { extraCss: extra } : {}),
     ...(behaviorMod ? { behavior: behaviorMod } : ownBehavior ? { behavior: slug } : {}),
     ...(init ? { init } : {}),
-    ...(SLUG_EXPORTS[slug] ? { exports: SLUG_EXPORTS[slug] } : {}),
+    ...(api.exports.length ? { exports: api.exports } : {}),
+    ...(api.events.length ? { events: api.events } : {}),
   };
 }
 
 // 4. registry.json（cli / 文档站消费）
 const pkg = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf8'));
 const behaviorFiles = (await readdir(join(SRC, 'behaviors'))).filter(f => f.endsWith('.ts')).sort();
-// 稳定性分层（docs/contracts/stability-tiers.md）：tier 事实源在 docs/contracts/tiers.json，
+// 稳定性分层（docs/versioning.md）：tier 事实源在 docs/contracts/tiers.json，
 // 守卫（guard/registry.ts）同源校验覆盖；此处转为 module→tier 映射进 registry 供消费方使用
 const tiersRaw = JSON.parse(await readFile(join(ROOT, 'docs', 'contracts', 'tiers.json'), 'utf8')) as Record<string, string[]>;
 const tiers: Record<string, string> = {};

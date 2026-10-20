@@ -10,19 +10,40 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  # 快闸门：类型 + 纪律守卫 + 测试（含覆盖率棘轮）。本地 bun run verify 的前半。
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # changelog-linkage 需要 merge-base
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bunx tsc --noEmit
+      - run: bun run guard
+      - run: bun run test:coverage   # bun test + lcov 覆盖率地板（docs/contracts/coverage-floor.json）
+      # 契约快照含破坏性条目 ⇒ CHANGELOG 必须同 PR 改动
+      - if: github.event_name == 'pull_request'
+        run: bun scripts/changelog-linkage.ts origin/${{ github.base_ref }}
+
+  # 产物门：构建 + 体积预算 + 包面检查（publint/attw 较慢，与 core 并行省墙钟）
+  pack:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install
-      - run: bunx tsc --noEmit
-      # 设计纪律守卫（hex/z-index/keyframes/滚动条/!important/事件字面量/SSR 守卫）
-      - run: bun run guard
-      # 测试基座（happy-dom + bun test）
-      - run: bun test
       - run: bun run build
-      # 文档站构建冒烟（设计资产改坏会在这里炸）
+      - run: bun run size
+      - run: bun run check:pkg
+
+  # 文档站构建冒烟（设计资产改坏会在这里炸）
+  site-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
       - run: cd site && bun install && bun run build
 
   # 封装 peer 版本矩阵：react>=18 / vue>=3.3 的 peer 声明在此兑现，

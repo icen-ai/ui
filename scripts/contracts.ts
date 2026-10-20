@@ -16,7 +16,7 @@
  * 注：快照记录「存在面」与「签名面」，不预判语义；语义变化的公告仍归 CHANGELOG 纪律。
  */
 import { readFile, writeFile, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import ts from 'typescript';
 import { SRC, stripComments } from './guard/shared';
 
@@ -295,19 +295,150 @@ export async function checkDrift(): Promise<string[]> {
   return violations;
 }
 
-/* ── CLI 入口（bun scripts/contracts.ts [--write|--check]）──
+/* ── tag 间 diff 模式（1.0 判定第一条与未来迁移页骨架共用同一工具）──
+   bun scripts/contracts.ts --diff <refA> [refB] [--gate core]
+   refB 缺省 = 工作树 snapshot.json；--gate core 时 Core 面有破坏性条目即 exit(1)。 */
+
+import { execFileSync } from 'node:child_process';
+
+type Tier = 'core' | 'beta' | 'lab' | 'unknown';
+
+/** 从 git 引用读快照（ref 为 '-' 时读工作树快照文件）。 */
+export async function snapshotAt(ref: string): Promise<Snapshot> {
+  let snap: Snapshot;
+  try {
+    const text = ref === '-'
+      ? await readFile(SNAPSHOT_PATH, 'utf8')
+      : execFileSync('git', ['show', `${ref}:docs/contracts/snapshot.json`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    snap = JSON.parse(text) as Snapshot;
+  } catch {
+    throw new Error(`ref ${ref} 处读不到 docs/contracts/snapshot.json（快照机制在 v0.10.0 tag 之后引入，首个可作 diff 基线的发布 tag 是 v0.11.0）`);
+  }
+  if (!snap.surfaces || !snap.types) throw new Error(`ref ${ref} 的 snapshot.json 形态不符（缺 surfaces/types 面）`);
+  return snap;
+}
+
+/* 分层归类：条目 → tier。映射面从当前 src 一次性构建（类名→CSS 模块、导出→行为模块），
+   历史独有条目走族前缀推断（ai-/kb-/chart- → beta），仍不中 = unknown（gate 时按 core 从严）。 */
+let tierCtx: {
+  tiers: Record<string, string>;
+  classModule: Map<string, string>;
+  exportModule: Map<string, string>;
+} | null = null;
+
+async function tierContext() {
+  if (tierCtx) return tierCtx;
+  const tiersRaw = JSON.parse(await readFile(join(SRC, '..', 'docs', 'contracts', 'tiers.json'), 'utf8')) as Record<string, string[]>;
+  const tiers: Record<string, string> = {};
+  for (const [tier, mods] of Object.entries(tiersRaw)) for (const m of mods) tiers[m] = tier;
+
+  const classModule = new Map<string, string>();
+  const putAll = (mod: string, text: string) => {
+    for (const m of text.matchAll(/\.icen-[a-zA-Z0-9_-]+/g)) if (!classModule.has(m[0].slice(1))) classModule.set(m[0].slice(1), mod);
+  };
+  for (const f of await collect(join(SRC, 'components'), ['.css'])) {
+    putAll(basename(f).replace(/\.css$/, ''), (await codeLines(f)).join('\n'));
+  }
+  for (const f of await collect(join(SRC, 'tokens'), ['.css'])) putAll('tokens', (await codeLines(f)).join('\n'));
+  putAll('base', (await codeLines(join(SRC, 'base.css'))).join('\n'));
+
+  const exportModule = new Map<string, string>();
+  for (const f of await collect(join(SRC, 'behaviors'), ['.ts'])) {
+    const mod = basename(f).replace(/\.ts$/, '');
+    for (const line of await codeLines(f)) {
+      for (const m of line.matchAll(/export\s+(?:async\s+)?(?:function|const|class|let|type|interface|enum)\s+(\w+)/g)) {
+        if (!exportModule.has(m[1])) exportModule.set(m[1], mod);
+      }
+    }
+  }
+  tierCtx = { tiers, classModule, exportModule };
+  return tierCtx;
+}
+
+function familyOf(name: string): Tier | null {
+  return /(^|[-:])(ai|kb|chart)-/.test(name) || /^--icen-chart/.test(name) ? 'beta' : null;
+}
+
+async function tierOfEntry(face: string, entry: string): Promise<Tier> {
+  const ctx = await tierContext();
+  const ofModule = (mod: string | undefined): Tier | null =>
+    mod == null ? null : mod === 'tokens' || mod === 'base' ? 'core' : ((ctx.tiers[mod] as Tier | undefined) ?? familyOf(mod) ?? 'core');
+  switch (face) {
+    case 'classes':
+      return ofModule(ctx.classModule.get(entry)) ?? familyOf(entry) ?? 'unknown';
+    case 'jsExports':
+    case 'types':
+      return ofModule(ctx.exportModule.get(entry)) ?? (/^(render|init|create|normalize|parse|estimate|bind|set|get)?(Ai|Kb|Chart)/.test(entry) ? 'beta' : 'unknown');
+    case 'events':
+    case 'dataAttributes':
+      return familyOf(entry) ?? 'core';
+    default:
+      return 'core'; // cssVariables：token 面全属 Core
+  }
+}
+
+interface DiffRow { face: string; kind: 'removed' | 'changed' | 'added'; entry: string; tier: Tier }
+
+/** 两份快照的全面对比（六个面），每条差异带分层归类。 */
+export async function diffSnapshots(oldSnap: Snapshot, newSnap: Snapshot): Promise<DiffRow[]> {
+  const rows: DiffRow[] = [];
+  for (const s of SURFACES) {
+    const { added, removed } = diff(oldSnap.surfaces[s] ?? [], newSnap.surfaces[s] ?? []);
+    for (const e of removed) rows.push({ face: s, kind: 'removed', entry: e, tier: await tierOfEntry(s, e) });
+    for (const e of added) rows.push({ face: s, kind: 'added', entry: e, tier: await tierOfEntry(s, e) });
+  }
+  const oldT = oldSnap.types ?? {};
+  const newT = newSnap.types ?? {};
+  for (const k of Object.keys(oldT).filter((k) => !(k in newT))) rows.push({ face: 'types', kind: 'removed', entry: k, tier: await tierOfEntry('types', k) });
+  for (const k of Object.keys(newT).filter((k) => !(k in oldT))) rows.push({ face: 'types', kind: 'added', entry: k, tier: await tierOfEntry('types', k) });
+  for (const k of Object.keys(newT).filter((k) => k in oldT && oldT[k] !== newT[k])) rows.push({ face: 'types', kind: 'changed', entry: k, tier: await tierOfEntry('types', k) });
+  return rows;
+}
+
+/* ── CLI 入口（bun scripts/contracts.ts [--write|--check|--diff]）──
    以 argv[0] 脚本路径判定直接执行（guard 经模块导入复用，不触发 CLI） */
 const invokedAsCli = (process.argv[1] ?? '').replace(/\\/g, '/').endsWith('scripts/contracts.ts');
 if (invokedAsCli) {
-  const mode = process.argv.includes('--write') ? 'write' : 'check';
-  if (mode === 'write') {
-    console.log(`✓ 契约快照已写入 docs/contracts/snapshot.json（${await writeSnapshot()}）`);
-  } else {
-    const violations = await checkDrift();
-    if (violations.length) {
-      for (const v of violations) console.error(`✗ ${v}`);
-      process.exit(1);
+  const argv = process.argv.slice(2);
+  const diffIdx = argv.indexOf('--diff');
+  if (diffIdx !== -1) {
+    const refA = argv[diffIdx + 1];
+    const refB = argv[diffIdx + 2] && !argv[diffIdx + 2].startsWith('--') ? argv[diffIdx + 2] : '-';
+    const gateIdx = argv.indexOf('--gate');
+    const gate = gateIdx !== -1 ? argv[gateIdx + 1] : null;
+    if (!refA) {
+      console.error('用法：bun scripts/contracts.ts --diff <refA> [refB|-] [--gate core]');
+      process.exit(2);
     }
-    console.log(`✓ 契约快照无漂移（${surfaceCounts(await extractSurfaces(), await extractTypes())}）`);
+    const rows = await diffSnapshots(await snapshotAt(refA), await snapshotAt(refB));
+    const breaking = rows.filter((r) => r.kind !== 'added');
+    const added = rows.filter((r) => r.kind === 'added');
+    console.log(`── 契约 diff ${refA} → ${refB === '-' ? '工作树' : refB} ──`);
+    if (!rows.length) console.log('✓ 零漂移');
+    for (const r of [...breaking, ...added]) {
+      const mark = r.kind === 'added' ? '+' : r.kind === 'removed' ? '-' : '~';
+      console.log(`${mark} [${r.tier}] ${r.face}: ${r.entry}`);
+    }
+    console.log(`── 合计：破坏性 ${breaking.length}（core ${breaking.filter((r) => r.tier !== 'beta' && r.tier !== 'lab').length} / beta ${breaking.filter((r) => r.tier === 'beta').length}），新增 ${added.length} ──`);
+    if (gate === 'core') {
+      const coreBreaking = breaking.filter((r) => r.tier !== 'beta' && r.tier !== 'lab'); // unknown 从严按 core
+      if (coreBreaking.length) {
+        console.error(`✗ Core 面存在 ${coreBreaking.length} 项破坏性变化——1.0 判定不满足`);
+        process.exit(1);
+      }
+      console.log('✓ Core 面零破坏（1.0 判定第一条满足）');
+    }
+  } else {
+    const mode = argv.includes('--write') ? 'write' : 'check';
+    if (mode === 'write') {
+      console.log(`✓ 契约快照已写入 docs/contracts/snapshot.json（${await writeSnapshot()}）`);
+    } else {
+      const violations = await checkDrift();
+      if (violations.length) {
+        for (const v of violations) console.error(`✗ ${v}`);
+        process.exit(1);
+      }
+      console.log(`✓ 契约快照无漂移（${surfaceCounts(await extractSurfaces(), await extractTypes())}）`);
+    }
   }
 }

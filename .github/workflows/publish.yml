@@ -1,13 +1,13 @@
 name: publish
 
 on:
-  # 只挂 tag push：release published 与 tag 同发会起两次 run 抢 publish
+  # 只挂 tag push（唯一触发源）；GitHub Release 在本工作流末尾创建，不另挂 release 事件
   push:
     tags: ['v*']          # 推 tag 即发版
 
 permissions:
   id-token: write         # OIDC，必需
-  contents: read
+  contents: write         # 末尾建 GitHub Release
 
 jobs:
   publish:
@@ -19,6 +19,29 @@ jobs:
         with:
           node-version: '24'   # npm CLI >= 11.5.1（trusted publishing 要求）
           registry-url: 'https://registry.npmjs.org'
-      - run: bun install && bun run build
+
+      # tag 必须与 package.json 版本一致——防打错 tag 发错包
+      - name: 校验 tag 与版本一致
+        run: |
+          V=$(node -p "require('./package.json').version")
+          [ "${{ github.ref_name }}" = "v$V" ] || { echo "tag ${{ github.ref_name }} ≠ package.json v$V"; exit 1; }
+
+      # 发版前过全门——tag 可以打在任何状态上，红状态不得进 registry
+      - run: bun install
+      - run: bunx tsc --noEmit
+      - run: bun run guard
+      - run: bun test
+      - run: bun run build
+      - run: bun run size
+      - run: bun run check:pkg
+
       - run: npm publish --access public
         # 不要设 NODE_AUTH_TOKEN！有值（哪怕是空串）会遮蔽 OIDC
+
+      # 发布成功后建 GitHub Release（notes 取自 CHANGELOG 对应小节）
+      - name: 建 GitHub Release
+        run: |
+          bun scripts/release-notes.mjs > "$RUNNER_TEMP/notes.md"
+          gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --notes-file "$RUNNER_TEMP/notes.md"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

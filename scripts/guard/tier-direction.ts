@@ -1,4 +1,4 @@
-// 分层依赖方向守卫：Core 不得被 Beta 拖着变（docs/contracts/stability-tiers.md「边界规则」）。
+// 分层依赖方向守卫：Core 不得被 Beta 拖着变（docs/versioning.md「边界规则」）。
 //
 // 规则（事实源 docs/contracts/tiers.json + 行为模块家族前缀）：
 //   1. Core 行为模块禁止**运行时** import Beta 模块（值导入 / 动态 import，无豁免）。

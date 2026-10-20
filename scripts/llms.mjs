@@ -27,6 +27,9 @@ const consumer = agents.includes('# 第一段')
   ? agents.slice(agents.indexOf('# 第一段'), agents.indexOf('# 第二段')).trim()
   : '';
 const spec = read('docs/spec/ai-native.md');
+// 预设数从事实源读，不写死（themes.json = 预设数组）
+let presetCount = '';
+try { presetCount = String(JSON.parse(read('src/tokens/themes.json')).length); } catch { /* 缺文件时留空 */ }
 
 /* 复杂模块的类型面原文（dist 的 .d.mts，构建期自动内嵌 —— 零漂移的「深层 AGENTS 文档」） */
 const DEEP_MODULES = [
@@ -44,7 +47,7 @@ for (const c of REGISTRY) {
 const llms = [
   '# ICEN UI（@icen.ai/ui）',
   '',
-  '> 零依赖设计系统：tokens（8 预设 × 4 原语 × 明暗）+ 无框架组件 CSS + 行为 JS + AI 原生组件族'
+  `> 零依赖设计系统：tokens（${presetCount || '多'} 预设 × 4 原语 × 明暗）+ 无框架组件 CSS + 行为 JS + AI 原生组件族`
     + '（7 态状态机 / 多模态内容模型 / provider 定价审计）+ 图表通用层（ChartSpec 纯 JSON，模型可直接调用）'
     + '+ 工具体系（UI 能力注册为模型工具，OpenAI/MCP/manifest 三出口）。',
   '',

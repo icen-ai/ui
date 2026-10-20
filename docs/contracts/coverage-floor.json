@@ -1,0 +1,5 @@
+{
+  "note": "src/** 覆盖率地板（lcov 口径：DA 行命中率 / FNF 函数命中率），scripts/coverage.ts 在 CI 强制执行。只许升不许降——下调的 diff 即评审点。弱覆盖模块清单与补齐计划见 docs/testing.md。基线采自 2026-10-20 收敛批次。",
+  "lines": 77,
+  "functions": 79
+}
