@@ -5,7 +5,7 @@ const require=createRequire(import.meta.url);
 test('dialogs share SVG actions and native focus cycling across primitives, modes and sizes',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/modal/');
-    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     for(const id of ['demo-modal-sm','demo-modal-md','demo-modal-lg']) {
       const trigger=page.locator(`[data-icen-modal-open="${id}"]`);await trigger.press('Enter');
       const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();

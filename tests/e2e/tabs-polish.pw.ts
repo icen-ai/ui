@@ -29,11 +29,11 @@ test('tabs: ink bar slides between tabs, keyboard roves and hash syncs', async (
   await expect(tabs.nth(1)).toHaveClass(/is-active/);
   await expect(page.locator('[data-icen-tab-panel="checks"]')).toBeVisible();
 
-  // Home/End + roving tabindex（tabindex=0 跟激活项走，焦点与激活分离是 manual 模式的本义）
+  // Home/End + roving tabindex（tabindex=0 跟焦点走；激活与焦点分离是 manual 模式的本义）
   await page.keyboard.press('Home');
   await expect(tabs.first()).toBeFocused();
-  expect(await tabs.nth(1).getAttribute('tabindex')).toBe('0'); // 激活项（checks）
-  expect(await tabs.first().getAttribute('tabindex')).toBe('-1'); // 焦点项未激活不入 Tab 序
+  expect(await tabs.first().getAttribute('tabindex')).toBe('0'); // 焦点项入 Tab 序
+  expect(await tabs.nth(1).getAttribute('tabindex')).toBe('-1'); // 激活但未聚焦则让位
 });
 
 test('tabs ink has no double underline and the page stays clean in dark + RTL', async ({page}) => {

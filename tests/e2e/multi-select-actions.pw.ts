@@ -23,7 +23,7 @@ test('mobile documents show the component first and keep navigation and all appe
   await page.locator('.docs-side').getByRole('link',{name:'级联选择',exact:true}).click();
   await expect(page).toHaveURL(/\/cascader\//);
   await expect(page.locator('.docs-nav-disclosure')).toHaveJSProperty('open',false);
-  await page.locator('#appearance-mobile .icen-theme-switcher-trigger').click();
+  await page.locator('#appearance-select .icen-theme-switcher-trigger').click();
   const dialog=page.locator('[role="dialog"]:visible');
   await dialog.locator('[data-icen-value="pixel"]').click();
   await expect(page.locator('html')).toHaveAttribute('data-icen-style','pixel');

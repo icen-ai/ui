@@ -4,7 +4,7 @@ const require = createRequire(import.meta.url);
 
 test('tag editing keeps nodes and keyboard focus, explains rejected drafts and submits native values', async ({page}) => {
   for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
-    await page.goto('/components/tag-input/'); await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.goto('/components/tag-input/'); await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     const root=page.locator('#tags-topics'), field=page.locator('#tags-topics-field');
     await root.locator('.icen-tag-chip').first().evaluate(el => (window as any).firstTag=el);
     await field.fill('动效'); await field.press('Enter'); await expect(root.locator('.icen-tag-chip')).toHaveCount(3);
@@ -34,7 +34,7 @@ test('paste, IME, required forms and read-only transitions preserve real native 
 for (const preset of ['modern','dongyun','jugou','piano','monet','vangogh']) test(`tag sizes and error feedback stay readable in ${preset}`, async ({page}) => {
   await page.goto('/components/tag-input/'); await page.addScriptTag({path:require.resolve('axe-core')});
   for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
-    await page.locator('html').evaluate((el,{preset,primitive,dark}) => {el.dataset.icenPreset=preset;el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{preset,primitive,dark});
+    await page.locator('html').evaluate((el,{preset,primitive,dark}) => {el.dataset.icenPreset=preset;el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{preset,primitive,dark});
     const field=page.locator('#tags-topics-field'); await field.fill('界面设计'); await field.press('Enter'); await page.waitForTimeout(400);
     const issues=await page.locator('.demo-stage').evaluate(async root => {const result=await (window as any).axe.run(root,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});return result.violations.filter((v:any) => ['serious','critical'].includes(v.impact)).map((v:any) => ({id:v.id,targets:v.nodes.map((n:any) => n.target)}));});
     expect(issues).toEqual([]);

@@ -38,7 +38,7 @@ test('header close button works in both primitives and modes with clean a11y', a
   await page.goto('/components/popover/');
   await page.addScriptTag({path: require.resolve('axe-core')});
   for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
-    await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     const trigger = page.getByRole('button', {name: '筛选', exact: true});
     await trigger.click();
     const panel = page.locator('#popover-demo-panel');

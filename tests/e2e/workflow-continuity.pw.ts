@@ -44,7 +44,7 @@ test('AI failure is visible and retryable; navigation cancels the demo stream cl
 
 test('permission form retains selection, role and duration before submission in both primitives and modes',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]){
-    await page.goto('/components/kb-access/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light'},{primitive,dark});
+    await page.goto('/components/kb-access/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme')},{primitive,dark});
     const root=page.locator('#kb-access-demo');const open=root.locator('[data-icen-access-request]');await open.click();
     const field=root.locator('.icen-kb-access-reason');await expect(field).toBeFocused();
     await field.fill('为现代核对排版和材料');await field.evaluate(el=>(window as any).reasonNode=el);
@@ -68,7 +68,7 @@ test('opened checkpoint choices stay readable and named in both primitives and m
   await page.goto('/components/kb-checkpoint/');await page.addScriptTag({path:require.resolve('axe-core')});
   const trigger=page.locator('#kb-checkpoint-demo .icen-kb-checkpoint').first();
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
-    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light'},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme')},{primitive,dark});
     await trigger.press('ArrowDown');const menu=page.locator('.icen-kb-checkpoint-menu');
     const issues=await menu.evaluate(async el=>{
       await Promise.all(el.getAnimations({subtree:true}).filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})));

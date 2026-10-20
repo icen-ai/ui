@@ -20,6 +20,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173',
     viewport: { width: 1440, height: 900 },
+    // 站点按 navigator.languages 自动切中英（默认中文文档站）——钉死 zh-CN 保证断言确定性，
+    // 与浏览器语言环境解耦（CI/本地默认 locale 都是 en-US，不钉会全站变英文导致中文断言全红）
+    locale: 'zh-CN',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },

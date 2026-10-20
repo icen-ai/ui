@@ -5,7 +5,7 @@ const require=createRequire(import.meta.url);
 test('dropdown has real focus, fixed icon/selection slots and keyboard checkbox actions in every primitive/mode',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/dropdown/');
-    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     const trigger=page.locator('.demo-stage [data-icen-dropdown-trigger]');await trigger.press('ArrowDown');
     const menu=page.getByRole('menu'),first=menu.getByRole('menuitem',{name:'重命名',exact:true});await expect(first).toBeFocused();
     await expect(menu).toHaveAttribute('aria-labelledby',await trigger.getAttribute('id') as string);

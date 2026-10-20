@@ -204,7 +204,8 @@
   border: 1px solid var(--icen-token-outline-soft);
   border-radius: var(--icen-radius-sm);
   background: var(--icen-token-fill-1);
-  color: var(--icen-token-text-muted);
+  /* 操作钮是功能性文字，不吃 muted 弱化（fill-1 上 4.27:1 过不了 AA） */
+  color: var(--icen-token-text);
   font: inherit;
   font-size: var(--icen-density-font-size-xs);
   font-weight: 500;
@@ -431,7 +432,8 @@
   border: 1px solid var(--icen-token-outline-soft);
   border-radius: var(--icen-radius-sm);
   background: var(--icen-token-fill-1);
-  color: var(--icen-token-text-muted);
+  /* 功能性文字不吃 muted 弱化（fill-1 上 4.27:1 过不了 AA；hover 态本来就是正文色） */
+  color: var(--icen-token-text);
   font: inherit;
   font-size: var(--icen-density-font-size-xs);
   text-align: start;

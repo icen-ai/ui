@@ -5,7 +5,7 @@ const require=createRequire(import.meta.url);
 
 test('group disclosure keeps actions aligned and keyboard focus stable across primitives and modes',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]){
-    await page.goto('/components/notification/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.goto('/components/notification/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     await page.locator('#notif-group').click();const latest=page.locator('#docs-review-2'),first=page.locator('#docs-review-0'),button=latest.locator('.icen-notification-group-toggle');
     await expect(first).toBeHidden();await expect(button).toHaveAttribute('aria-expanded','false');await expect(button).toHaveText('3 条同组通知，3 条未读');
     await expect(button.locator('svg')).toHaveAttribute('viewBox','0 0 20 20');await button.focus();await button.press('Enter');
@@ -51,7 +51,7 @@ test('saved notification survives unmount, unrelated activity, page navigation a
 test('async toast has a stable SVG busy slot, inline retry and one successful continuation across primitives/modes',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/toast/');
-    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     await page.locator('#toast-demo-async').click();const row=page.locator('.icen-toast').filter({hasText:'已移到回收站'}),action=row.getByRole('button',{name:'撤销',exact:true});
     const before=(await action.boundingBox())!;await action.click();await expect(action).toHaveAttribute('aria-busy','true');
     await expect(action.locator('.icen-feedback-action-spinner svg')).toBeVisible();

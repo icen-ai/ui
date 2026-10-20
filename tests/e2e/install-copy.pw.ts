@@ -15,7 +15,7 @@ test('installation copy shares a centered row with every package command at both
   for (const width of [1440, 390]) {
     await page.setViewportSize({width, height: 900});
     for (const primitive of ['modern', 'pixel']) for (const dark of [false, true]) {
-      await page.locator('html').evaluate((el, {primitive, dark}) => {el.dataset.icenStyle = primitive; el.dataset.icenTheme = dark ? 'dark' : 'light';}, {primitive, dark});
+      await page.locator('html').evaluate((el, {primitive, dark}) => {el.dataset.icenStyle = primitive; dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');}, {primitive, dark});
       for (const manager of ['bun', 'pnpm', 'npm', 'yarn']) {
         await page.locator('.pm-tab').getByText(manager, {exact: true}).click();
         const panel = page.locator('.pm-panel:visible'); await expect(panel).toHaveCount(1);

@@ -262,7 +262,8 @@
   min-width: 0;
   font-size: 12px;
   line-height: 1.6;
-  color: var(--icen-token-text-muted);
+  /* 错误原因正文是实质内容，不用 muted 弱化（浅红底上 muted 过不了对比度门） */
+  color: var(--icen-token-text);
 }
 
 /* ══════════════ kb-chunks · chunk 编辑器（§5.6） ══════════════ */

@@ -51,7 +51,6 @@ export function useIcenInit(
   useEffect(() => {
     const cleanup = initRef.current();
     return typeof cleanup === 'function' ? cleanup : undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 
@@ -145,7 +144,6 @@ export function createIcenComponent<Opts, Handle>(
         handleBox.current.h = null;
         if (props.handleRef) props.handleRef.current = null;
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     /* opts 变 → update（缺省 destroy + 重建，同一容器） */
@@ -162,7 +160,6 @@ export function createIcenComponent<Opts, Handle>(
         handleBox.current.h = h;
         if (props.handleRef) props.handleRef.current = h;
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [optsKey]);
 
     const cls = cfg.defaultClass
@@ -268,7 +265,6 @@ export function AiComposer(props: AiComposerProps): ReactElement {
     });
     const offSend = onIcen('icen:ai-send', (e) => onSendRef.current?.(e.detail.text), { within: el });
     return () => { offSend(); binding.unbind(); destroyInit(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* models 变化 → 重配模型弹层（composer init 不受影响） */
@@ -278,7 +274,6 @@ export function AiComposer(props: AiComposerProps): ReactElement {
     if (!el) return;
     if (props.models) setComposerModels(el, props.models.providers, props.models.current);
     else setComposerModels(el, []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelsKey]);
 
   const cls = props.className ? `icen-ai-composer ${props.className}` : 'icen-ai-composer';

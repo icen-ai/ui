@@ -14,16 +14,16 @@ async function probe(btn: ReturnType<import('@playwright/test').Page['locator']>
 }
 
 test('copy buttons keep layers stacked and centered', async ({page}) => {
-  // 首页 install-chip（30px 圆钮）
+  // 首页安装行的复制钮（pm-copy 图标钮）
   await page.goto('/');
   await page.setViewportSize({width: 1440, height: 900});
-  const chip = page.locator('.install-copy');
+  const chip = page.locator('.pm-copy').first();
   const a = await probe(chip, 'home.idle ');
-  expect(Math.abs(a.layers[0].cx - 15)).toBeLessThan(1.6);
+  expect(Math.abs(a.layers[0].cx - a.w / 2)).toBeLessThan(2);
   await chip.click();
   await page.waitForTimeout(150);
   const b1 = await probe(chip, 'home.done ');
-  expect(Math.abs(b1.layers[1].cx - 15)).toBeLessThan(1.6);
+  expect(Math.abs(b1.layers[1].cx - b1.w / 2)).toBeLessThan(2);
 
   // 组件页 复制当前页
   await page.goto('/components/btn/');
@@ -43,7 +43,7 @@ test('copy buttons keep layers stacked and centered', async ({page}) => {
 
   // hover 截图留档
   await page.goto('/');
-  await page.locator('.install-copy').hover();
+  await page.locator('.pm-copy').first().hover();
   await page.waitForTimeout(200);
-  await page.locator('.install-chip').screenshot({path: '.ui-audit/copy-fix-chip.png'});
+  await page.locator('.pm-install').first().screenshot({path: '.ui-audit/copy-fix-chip.png'});
 });

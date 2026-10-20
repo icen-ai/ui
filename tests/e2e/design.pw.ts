@@ -138,16 +138,17 @@ test('rendered material study in both modes and curated primitive pairings', asy
 
 test('top primitive switch offers all four primitives, preserves theme and survives navigation', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('html')).toHaveAttribute('data-icen-preset','modern');
+  /* 站点默认预设 = 东韵（ThemeRestore 缺省值；库默认仍是现代，两处口径不同是故意的） */
+  await expect(page.locator('html')).toHaveAttribute('data-icen-preset','dongyun');
   await expect(page.locator('html')).toHaveAttribute('data-icen-style','modern');
-  await page.locator('#style-select .icen-theme-switcher-trigger').click();
-  await expect(page.locator('[role="dialog"]:visible .icen-theme-switcher-option-name')).toHaveText(['现代','中式','苏式','像素']);
+  await page.locator('#appearance-select .icen-theme-switcher-trigger').click();
+  await expect(page.locator('[role="dialog"]:visible [data-icen-axis="primitive"] .icen-theme-switcher-option-name')).toHaveText(['现代','中式','苏式','像素']);
   await page.locator('[role="dialog"]:visible [data-icen-value="pixel"]').click();
   await expect(page.locator('html')).toHaveAttribute('data-icen-style','pixel');
-  await expect(page.locator('html')).toHaveAttribute('data-icen-preset','modern');
+  await expect(page.locator('html')).toHaveAttribute('data-icen-preset','dongyun'); // 站点默认预设（东韵）不被原语切换触碰
   await page.evaluate(()=>document.fonts.ready);
   expect(await page.evaluate(()=>document.fonts.check('12px "Icen Pixel"'))).toBe(true);
-  await page.locator('#preset-select .icen-theme-switcher-trigger').click();
+  /* kind=all 面板选中后不自动关闭，直接在同一面板里切配色 */
   await page.locator('[role="dialog"]:visible [data-icen-value="piano"]').click();
   await expect(page.locator('html')).toHaveAttribute('data-icen-style','pixel');
   await expect(page.locator('html')).toHaveAttribute('data-icen-preset','piano');
@@ -160,8 +161,12 @@ test('top primitive switch offers all four primitives, preserves theme and survi
   await expect(page).toHaveURL(/\/tokens\//);
   await expect(page.locator('html')).toHaveAttribute('data-icen-style','pixel');
   await expect(page.locator('html')).toHaveAttribute('data-icen-preset','piano');
-  await page.locator('#style-select .icen-theme-switcher-trigger').click();
-  await page.locator('[role="dialog"]:visible [data-icen-value="modern"]').click();
+  /* 客户端换页不保证面板开合态，未开才点触发器 */
+  const dlg = page.locator('[role="dialog"]:visible:not([data-icen-state="closing"])');
+  if (!(await dlg.count())) await page.locator('#appearance-select .icen-theme-switcher-trigger').click();
+  /* 收尾把原语切回现代（原语轴的 modern），配色钢琴保持不动 */
+  await page.locator('[role="dialog"]:visible [data-icen-axis="primitive"][data-icen-value="modern"]').click();
+  await expect(page.locator('html')).toHaveAttribute('data-icen-style','modern');
   await expect(page.locator('html')).toHaveAttribute('data-icen-preset','piano');
 });
 
@@ -178,15 +183,18 @@ test('four primitives compose with every built-in theme in light and dark', asyn
   test.setTimeout(90_000);
   await page.goto('/components/btn/');
   const primary=page.locator('main .icen-btn-primary').first();
+  /* kind=all 面板选中后不自动关闭——只在未开时点开，避免 toggle 语义把开变关 */
+  const dialog = page.locator('[role="dialog"]:visible:not([data-icen-state="closing"])');
+  const openPanel = async () => { if (!(await dialog.count())) await page.locator('#appearance-select .icen-theme-switcher-trigger').click(); await expect(dialog).toBeVisible(); };
   for(const preset of ['modern','dongyun','jugou','piano','monet','vangogh']) {
-    await page.locator('#preset-select .icen-theme-switcher-trigger').click();
-    await page.locator(`[role="dialog"]:visible:not([data-icen-state="closing"]) [data-icen-value="${preset}"]`).click();
+    await openPanel();
+    await dialog.locator(`[data-icen-axis="theme"][data-icen-value="${preset}"]`).click();
     for(const dark of [false,true]) {
       if(await page.locator('html').getAttribute('data-icen-theme')!== (dark?'dark':null)) await page.locator('#dark-toggle button').click();
       let palette='';
       for(const primitive of ['modern','chinese','soviet','pixel']) {
-        await page.locator('#style-select .icen-theme-switcher-trigger').click();
-        await page.locator(`[role="dialog"]:visible:not([data-icen-state="closing"]) [data-icen-value="${primitive}"]`).click();
+        await openPanel();
+        await dialog.locator(`[data-icen-axis="primitive"][data-icen-value="${primitive}"]`).click();
         await expect(page.locator('html')).toHaveAttribute('data-icen-preset',preset);
         await expect(page.locator('html')).toHaveAttribute('data-icen-style',primitive);
         const radius=primitive==='modern' ? '10px' : primitive==='chinese' ? '4px' : '0px';

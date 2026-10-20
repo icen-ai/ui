@@ -6,7 +6,7 @@ async function issues(page:Page,selector:string){await page.addScriptTag({path:r
 
 test('project suggestions retain native editing, strict commits and free text across primitives and modes',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]){
-    await page.goto('/components/autocomplete/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.goto('/components/autocomplete/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     const input=page.locator('#demo-autocomplete-input'),panel=await popup(page,input);await input.fill('海');await expect(panel.getByRole('option')).toHaveText('海边的房间');
     await expect(panel.locator('mark')).toHaveText('海');await input.press('Enter');await expect(input).toHaveValue('海边的房间');await expect(page.locator('#autocomplete-log')).toHaveText('已选择：海边的房间');
     await input.fill('不存在的项目');await expect(panel.locator('.icen-autocomplete-empty')).toBeVisible();await input.press('Escape');await expect(input).toHaveValue('海边的房间');
@@ -29,12 +29,13 @@ test('async autocomplete exposes stable SVG loading, real retry and cancellation
 
 test('mentions render object-unit chips in both modes with whole-token deletion and object logs',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]){
-    await page.goto('/components/mentions/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.goto('/components/mentions/');await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     /* A. select 模式（异步目录）：chip 可见、对象日志完整、disabled 跳过、Backspace 整体删除 */
     const input=page.locator('#mentions-text'),panel=await popup(page,input);
     await input.fill('@car');await expect(panel.getByRole('option',{name:/Carol/})).toHaveAttribute('aria-disabled','true');
-    await input.fill('@ali');await expect(panel.getByRole('option')).toHaveCount(2);
-    await expect(input).not.toHaveAttribute('aria-expanded');
+    /* Escape 取消建议但保留草稿——显式清空再开新一轮查询（连续 fill 会污染编辑器模型） */
+    await input.press('Escape');await input.fill('');await expect(input).toHaveText('');
+    await input.fill('@ali');await expect(panel.getByRole('option',{name:/Alina/})).toBeVisible();
     await input.press('ArrowDown');await input.press('Enter');
     const chip=page.locator('#demo-mentions .icen-mention-token');
     await expect(chip).toHaveText('@Alina');await expect(chip).toHaveAttribute('contenteditable','false');

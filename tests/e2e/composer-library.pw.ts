@@ -46,7 +46,7 @@ test('file removal, queue snapshots and keyboard recovery agree with emitted dat
 test('opened library, slash and reference panels stay accessible in both primitives and modes',async({page})=>{
   await page.goto('/components/ai-composer/');await page.addScriptTag({path:require.resolve('axe-core')});const root=page.locator('#ai-composer-demo'),field=root.locator('textarea');
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]){
-    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light'},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme')},{primitive,dark});
     for(const mode of ['library','command','ref']){
       if(mode==='library')await root.getByRole('button',{name:'添加上下文与命令'}).click();else await field.fill(mode==='command'?'/':'@');
       const panel=page.locator('.icen-ai-composer-popup');await expect(panel).toBeVisible();
@@ -79,7 +79,7 @@ test('touch RTL, long names, forced colors and constrained panels preserve opera
 test('six palettes keep selected context readable in light and dark',async({page})=>{
   await page.goto('/components/ai-composer/');await page.addScriptTag({path:require.resolve('axe-core')});const trigger=page.locator('#ai-composer-demo [data-icen-ai-library]');await trigger.click();const panel=page.getByRole('dialog',{name:'添加上下文与命令'});await panel.getByRole('option',{name:/界面设计/}).click();
   for(const preset of ['modern','dongyun','jugou','piano','monet','vangogh'])for(const dark of [false,true]){
-    await page.locator('html').evaluate((el,{preset,dark})=>{el.dataset.icenPreset=preset;el.dataset.icenTheme=dark?'dark':'light'},{preset,dark});
+    await page.locator('html').evaluate((el,{preset,dark})=>{el.dataset.icenPreset=preset;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme')},{preset,dark});
     const issues=await panel.evaluate(async el=>{await Promise.all(el.getAnimations({subtree:true}).filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})));const r=await (window as any).axe.run(el,{runOnly:{type:'rule',values:['color-contrast']}});return r.violations.map((v:any)=>({id:v.id,targets:v.nodes.map((n:any)=>n.target)}))});expect(issues,`${preset}/${dark?'dark':'light'}`).toEqual([]);
   }
 });

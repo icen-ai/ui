@@ -18,8 +18,9 @@
   justify-content: center;
   overflow: hidden;
   border-radius: var(--icen-radius-full);
+  /* 首字母是文字：承文本须用 accent-text 档（accent 亮档只做图形，契约见 design.css） */
   background: var(--icen-token-accent-subtle);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
   font-weight: 600;
   width: 36px;
   height: 36px;

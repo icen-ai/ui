@@ -6,7 +6,7 @@ for(const preset of ['modern','dongyun','jugou','piano','monet','vangogh'])test(
   await page.goto('/components/code-block/');
   await page.addScriptTag({path:require.resolve('axe-core')});
   for(const dark of [false,true]){
-    await page.locator('html').evaluate((el,{preset,dark})=>{el.dataset.icenPreset=preset;el.dataset.icenTheme=dark?'dark':'light';},{preset,dark});
+    await page.locator('html').evaluate((el,{preset,dark})=>{el.dataset.icenPreset=preset;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{preset,dark});
     // Measure the settled palette rather than a mixed frame of its transition.
     await page.waitForTimeout(400);
     const findings=await page.evaluate(async()=>{const result=await (window as any).axe.run(Array.from(document.querySelectorAll('.icen-code-block')),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});return result.violations.filter((v:any)=>['serious','critical'].includes(v.impact)).map((v:any)=>({id:v.id,targets:v.nodes.map((n:any)=>n.target)}));});

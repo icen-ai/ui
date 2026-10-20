@@ -155,7 +155,7 @@
 }
 .icen-ai-msg--user .icen-ai-msg-avatar {
   background: color-mix(in srgb, var(--icen-token-accent) 14%, transparent);
-  color: var(--icen-token-accent);
+  color: var(--icen-token-accent-text);
 }
 .icen-ai-msg--assistant .icen-ai-msg-avatar {
   background: color-mix(in srgb, var(--icen-token-success) 12%, transparent);

@@ -26,7 +26,7 @@ test('alert icons are shared 20px geometry and axe stays clean across modes', as
   await page.goto('/components/alert/');
   await page.addScriptTag({path: require.resolve('axe-core')});
   for (const dark of [false, true]) {
-    await page.locator('html').evaluate((el, dark) => { el.dataset.icenTheme = dark ? 'dark' : 'light'; }, dark);
+    await page.locator('html').evaluate((el, dark) => { dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme'); }, dark);
     await expect(page.locator('.icen-alert-icon svg').first()).toHaveAttribute('viewBox', '0 0 20 20');
     await expect(page.locator('.icen-alert-close svg').first()).toHaveAttribute('viewBox', '0 0 20 20');
     const issues = await page.locator('.demo-stage').evaluate(async root => {

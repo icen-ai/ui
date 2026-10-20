@@ -47,7 +47,7 @@
  * AI 工具 show_form：向用户渲染一个结构化表单收集输入，present: 'mount'，
  *   run 返回 Promise：用户提交（过校验）→ resolve 表单值对象；
  *   用户点「取消」→ resolve { cancelled: true }。渲染契约（.icen-ai-form*）见
- *   form-validate.css 头注释。分层纪律（docs/contracts/stability-tiers.md）：Core 模块
+ *   form-validate.css 头注释。分层纪律（docs/versioning.md）：Core 模块
  *   不得运行时依赖 Beta——本模块只导出 runShowForm / SHOW_FORM_SCHEMA，
  *   注册动作在 ai-tools.ts（Beta → Core 方向）完成，import 本模块不再有注册副作用。
  *

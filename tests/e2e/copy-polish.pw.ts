@@ -12,7 +12,7 @@ test('copy retains stable slots and keyboard feedback across both primitives and
   await clipboard(page);
   for (const primitive of ['modern', 'pixel']) for (const dark of [false, true]) {
     await page.goto('/components/copy/');
-    await page.locator('html').evaluate((el, {primitive, dark}) => {el.dataset.icenStyle = primitive; el.dataset.icenTheme = dark ? 'dark' : 'light';}, {primitive, dark});
+    await page.locator('html').evaluate((el, {primitive, dark}) => {el.dataset.icenStyle = primitive; dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');}, {primitive, dark});
     const button = page.locator('.demo-stage .icen-copy-btn').first();
     const before = (await button.boundingBox())!;
     await button.focus(); await page.keyboard.press('Enter');
@@ -49,7 +49,7 @@ test('copy feedback is readable in every palette and quiet actions reveal on key
   await page.mouse.move(0, 0); await expect(icon).toHaveCSS('opacity', '0'); await icon.focus(); await expect(icon).toHaveCSS('opacity', '1');
   await expect(icon.locator('svg').first()).toHaveAttribute('viewBox', '0 0 20 20');
   for (const preset of ['modern', 'dongyun', 'jugou', 'piano', 'monet', 'vangogh']) for (const dark of [false, true]) {
-    await page.locator('html').evaluate((el, {preset, dark}) => {el.dataset.icenPreset = preset; el.dataset.icenTheme = dark ? 'dark' : 'light';}, {preset, dark});
+    await page.locator('html').evaluate((el, {preset, dark}) => {el.dataset.icenPreset = preset; dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');}, {preset, dark});
     await button.click(); await page.waitForTimeout(400);
     const issues = await page.locator('.demo-stage').evaluate(async root => {
       const result = await (window as any).axe.run(root, {runOnly: {type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa']}});

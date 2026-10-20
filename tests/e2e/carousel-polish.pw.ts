@@ -6,7 +6,7 @@ test('dots stay readable over colored media in both primitives and modes', async
   await page.goto('/components/carousel/');
   await page.addScriptTag({path: require.resolve('axe-core')});
   for (const primitive of ['modern','pixel']) for (const dark of [false,true]) {
-    await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark}) => {el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     const dots = page.locator('.icen-carousel-dot');
     await expect(dots).toHaveCount(3);
     // 非激活：亮玻璃 + 分离环；激活：实心 pill 拉长——不依赖主题 accent（在 accent 色幻灯上也可辨）

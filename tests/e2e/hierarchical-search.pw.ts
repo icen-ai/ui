@@ -6,7 +6,7 @@ const require=createRequire(import.meta.url);
 test('cascader search keeps its caret, announces result paths, and clears from keyboard in both primitives and modes',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/cascader/');
-    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     const trigger=page.locator('#demo-cascader .icen-cascader-trigger');await trigger.click();
     const panel=page.locator('.icen-cascader-panel:visible'),search=panel.getByRole('combobox');
     await search.press('ArrowRight');await expect(search).toBeFocused();await expect(panel.locator('.icen-cascader-col')).toHaveCount(1);
@@ -22,7 +22,7 @@ test('cascader search keeps its caret, announces result paths, and clears from k
 test('tree selection preserves focus after redraw, mirrors branch keys in RTL and exits in native tab order',async({page})=>{
   for(const primitive of ['modern','pixel'])for(const dark of [false,true]) {
     await page.goto('/components/tree-select/');
-    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;el.dataset.icenTheme=dark?'dark':'light';el.dir='rtl';},{primitive,dark});
+    await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');el.dir='rtl';},{primitive,dark});
     const trigger=page.locator('#demo-tree-select .icen-tree-select-trigger');await trigger.click();
     const panel=page.locator('.icen-tree-select-panel:visible'),search=panel.locator('input[type="search"]');
     await search.press('ArrowDown');const parent=panel.locator('[role="treeitem"][data-icen-value="ceo"]');await expect(parent).toBeFocused();

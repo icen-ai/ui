@@ -6,17 +6,20 @@ test('homepage, header and component instances share all three axes through navi
   const errors:string[]=[]; page.on('pageerror',(e)=>errors.push(e.message));
   await page.goto('/');
   await page.locator('.presets-sec [data-icen-value="monet"]').click();
-  await expect(page.locator('#preset-select .icen-theme-switcher-name')).toHaveText('莫奈');
-  await page.locator('#preset-select button').first().click();
+  await expect(page.locator('#appearance-select .icen-theme-switcher-name')).toHaveText('莫奈');
+  await page.locator('#appearance-select button').first().click();
   await page.locator('[role="dialog"]:visible [data-icen-value="piano"]').click();
   await expect(page.locator('.presets-sec [data-icen-value="piano"]')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('.presets-sec [data-icen-value="monet"]')).toHaveAttribute('aria-pressed','false');
   await page.goto('/components/theme-switcher/');
   const settings=page.locator('.demo-stage [data-icen-layout="inline"]');
   await settings.locator('[data-icen-value="vangogh"]').click();
-  await expect(page.locator('#preset-select .icen-theme-switcher-name')).toHaveText('梵高');
+  await expect(page.locator('#appearance-select .icen-theme-switcher-name')).toHaveText('梵高');
   await settings.locator('[data-icen-value="pixel"]').click();
-  await expect(page.locator('#style-select .icen-theme-switcher-name')).toHaveText('像素');
+  /* 顶导外观控件是 kind=all：触发器名字位显示当前配色预设，原语切换不改变它——
+     断言落在 html 属性与面板选中态上 */
+  await expect(page.locator('#appearance-select .icen-theme-switcher-name')).toHaveText('梵高');
+  await expect(page.locator('html')).toHaveAttribute('data-icen-style','pixel');
   await settings.locator('[data-icen-value="dark"]').click();
   await expect(page.locator('#dark-toggle button')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('html')).toHaveAttribute('data-icen-theme','dark');
@@ -24,7 +27,7 @@ test('homepage, header and component instances share all three axes through navi
   await expect(page.locator('html')).toHaveAttribute('data-icen-preset','vangogh');
   await page.goBack();
   /* popstate 恢复 = 网络取页 + ClientRouter 换页，并行套件下静态伺服可能排队——给足等待 */
-  await expect(page.locator('#style-select .icen-theme-switcher-name')).toHaveText('像素',{timeout:15000});
+  await expect(page.locator('#appearance-select .icen-theme-switcher-name')).toHaveText('梵高',{timeout:15000});
   await expect(settings.locator('[data-icen-value="dark"]')).toHaveAttribute('aria-pressed','true',{timeout:15000});
   await page.reload();
   await expect(settings.locator('[data-icen-value="vangogh"]')).toHaveAttribute('aria-pressed','true');
@@ -53,7 +56,7 @@ test('changes synchronize across tabs', async ({context})=>{
   const first=await context.newPage(),second=await context.newPage();
   await first.goto('/components/theme-switcher/'); await second.goto('/components/theme-switcher/');
   await first.locator('.demo-stage [data-icen-layout="inline"] [data-icen-value="vangogh"]').click();
-  await expect(second.locator('#preset-select .icen-theme-switcher-name')).toHaveText('梵高');
+  await expect(second.locator('#appearance-select .icen-theme-switcher-name')).toHaveText('梵高');
   await second.locator('#dark-toggle button').click();
   await expect(first.locator('#dark-toggle button')).toHaveAttribute('aria-pressed','true');
 });
@@ -74,7 +77,7 @@ test('light/dark, pixel and mobile RTL are accessible and do not overflow', asyn
   await page.setViewportSize({width:390,height:844});
   await page.locator('html').evaluate((root)=>root.dir='rtl');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  await page.locator('#appearance-mobile button').first().click();
+  await page.locator('#appearance-select button').first().click();
   const bounds=await page.locator('[role="dialog"]:visible').boundingBox();
   expect(bounds!.x).toBeGreaterThanOrEqual(0); expect(bounds!.x+bounds!.width).toBeLessThanOrEqual(390);
   await page.keyboard.press('Escape');

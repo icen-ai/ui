@@ -174,7 +174,7 @@ test('kb: 展开外观面板后扫描', async ({ page }) => {
   await page.locator('.icen-kb-chain-label').first().waitFor({ timeout: 15_000 });
   await page.waitForTimeout(3000); // 首屏模拟流落定，避免整页扫描时序抖动
   await installAxe(page);
-  await page.locator('#preset-select .icen-theme-switcher-trigger').click();
+  await page.locator('#appearance-select .icen-theme-switcher-trigger').click();
   const panel = page.locator('[role="dialog"]:visible'); // 面板 portal 到 body（浮层态）
   await expect(panel).toBeVisible();
   await assertA11y(page, 'kb-select-panel');

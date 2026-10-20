@@ -4,7 +4,7 @@ import themes from '../../src/tokens/themes.json';
 import {renderThemeColors} from '../../scripts/theme-colors.mjs';
 import {designContrast} from '../../src/behaviors/design';
 
-test('eight curated themes have readable text and actions on all three surfaces',()=>{
+test('six curated themes have readable text and actions on all three surfaces',()=>{
   expect(themes.map(t=>t.id)).toEqual(['modern','dongyun','jugou','piano','monet','vangogh']);
   for(const theme of themes) for(const mode of ['light','dark'] as const) {
     const p=theme[mode];
