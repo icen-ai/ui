@@ -523,6 +523,40 @@ a:hover { text-decoration: none; }
   margin: 40px 0 14px;
 }
 
+/* 组件页「接口」区块（由源码自动生成）：导出/事件/类型三行 */
+.doc-api {
+  margin: 0;
+  border: 1px solid var(--icen-token-line-soft);
+  border-radius: var(--icen-radius-md);
+  background: var(--icen-token-surface);
+}
+.doc-api-row {
+  display: flex;
+  gap: 16px;
+  padding: 10px 16px;
+  align-items: baseline;
+}
+.doc-api-row + .doc-api-row { border-top: 1px solid var(--icen-token-line-soft); }
+.doc-api-row dt {
+  flex: 0 0 44px;
+  font-weight: 600;
+  color: var(--icen-token-text-muted);
+  font-size: 13px;
+}
+.doc-api-row dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+}
+.doc-api-row code {
+  font-family: var(--site-font-mono);
+  font-size: 12.5px;
+  color: var(--icen-token-accent-text);
+}
+.doc-api-note { font-size: 12px; color: var(--icen-token-text-muted); }
+
 /* 预览卡：上部 demo 舞台 + 下部折叠代码（View Code 渐隐） */
 .demo-panel {
   border: 1px solid var(--icen-token-line-soft);
@@ -640,7 +674,7 @@ a:hover { text-decoration: none; }
 .demo-box {
   background: var(--icen-token-accent-subtle); border: 1px solid var(--icen-token-outline-soft);
   border-radius: var(--icen-radius-sm); padding: 8px 12px;
-  font-size: 12px; color: var(--icen-token-text-muted);
+  font-size: 12px; color: var(--icen-token-text);
 }
 .demo-label { font-size: 11px; color: var(--icen-token-text-faint); margin: 0; }
 .demo-fill { background: color-mix(in srgb, var(--icen-token-accent) 30%, transparent); border-radius: var(--icen-radius-sm); }

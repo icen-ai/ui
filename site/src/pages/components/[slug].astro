@@ -5,6 +5,7 @@ import PmInstall from '../../components/PmInstall.astro';
 import { COMPONENTS, cssFor, tierOf, type ComponentDoc } from '../../lib/components';
 import { inlineMd } from '../../lib/doc-text';
 import { SLUGS } from '../../../../scripts/slugs.mjs';
+import { slugApi } from '../../../../scripts/slug-api.mjs';
 import { iconHTML } from '../../../../src/behaviors/icons';
 
 export function getStaticPaths() {
@@ -48,6 +49,9 @@ const pageLink = `[${doc.name} · ICEN UI](https://ui.icen.ai/components/${doc.s
 
 /* 稳定性分层徽标：tierOf 单一实现（lib/components，事实源 docs/contracts/tiers.json） */
 const docTier = tierOf(doc.slug, doc.group);
+
+/* 接口区块：由 slugs.mjs 登记表 + 行为源码扫描自动生成（构建期），永不漂移 */
+const api = isKit ? slugApi(doc.slug) : null;
 
 const copySvg = iconHTML('copy',{size:13,className:'icen-copy-icon-clipboard'});
 const checkSvg = iconHTML('check',{size:13,className:'icen-copy-icon-check'});
@@ -115,6 +119,37 @@ const bootData = JSON.stringify({
       <summary>行为与接口说明 <Fragment set:html={iconHTML('chevron-down')} /></summary>
       <p>{doc.desc}</p>
     </details>
+  )}
+
+  {api && (api.exports.length > 0 || api.events.length > 0) && (
+    <>
+      <h2 class="doc-h2">接口</h2>
+      <dl class="doc-api">
+        {api.exports.length > 0 && (
+          <div class="doc-api-row">
+            <dt>导出</dt>
+            <dd>{api.exports.map((e) => <code>{e}</code>)}</dd>
+          </div>
+        )}
+        {api.events.length > 0 && (
+          <div class="doc-api-row">
+            <dt>事件</dt>
+            <dd>
+              {api.events.map((e) => <code>{e}</code>)}
+              <span class="doc-api-note">
+                detail 契约见 <code>IcenEventMap</code>{api.sharedModule ? '；共享行为模块，清单含族内事件' : ''}
+              </span>
+            </dd>
+          </div>
+        )}
+        {api.behavior && (
+          <div class="doc-api-row">
+            <dt>类型</dt>
+            <dd><code>dist/behaviors/{api.behavior}.d.mts</code><span class="doc-api-note">（随 npm 包发布，含全部 JSDoc 约束）</span></dd>
+          </div>
+        )}
+      </dl>
+    </>
   )}
 
   <h2 class="doc-h2">安装</h2>
