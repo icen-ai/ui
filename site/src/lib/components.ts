@@ -634,7 +634,7 @@ initSplitPane();
     desc: '单行与多行输入的外壳族：前后缀、清除钮、密码切换、计数与掩码。',
     detail: {
       features: [
-        '**尺寸**：`icen-input-wrap--sm` / 默认 / `--lg`（32 / 36 / 40px）',
+        '**尺寸**：`icen-input-wrap--sm` / 默认 / `--lg`（28 / 34 / 42px）',
         '**前后缀**：`icen-input-leading` / `icen-input-trailing` 放图标或文字',
         '**内嵌动作**：`icen-input-clear` 清除钮、`icen-input-pw-toggle` 密码可见切换',
         '**计数与掩码**：`maxlength` 自动计数；`data-icen-mask` 按 `#` 数字 / `A` 字母 / `*` 任意格式化',
@@ -646,13 +646,13 @@ initSplitPane();
     },
     demo: `<div class="demo-col">
   <div class="icen-input-wrap icen-control icen-input-wrap--sm">
-    <input class="icen-input" placeholder="小号（32px）" />
+    <input class="icen-input" placeholder="小号（28px）" />
   </div>
   <div class="icen-input-wrap icen-control">
-    <input class="icen-input" placeholder="默认（36px）" />
+    <input class="icen-input" placeholder="默认（34px）" />
   </div>
   <div class="icen-input-wrap icen-control icen-input-wrap--lg">
-    <input class="icen-input" placeholder="大号（40px）" />
+    <input class="icen-input" placeholder="大号（42px）" />
   </div>
 </div>
 <div class="demo-col" style="margin-top:16px">
@@ -1675,7 +1675,7 @@ COMPONENTS.push(
       features: [
         '**变体**：默认 / `icen-card--elevated` 浮起 / `--outlined` 描边 / `--glass` 玻璃',
         '**结构**：`icen-card-head`（`icen-card-title` + `icen-card-desc`）+ `icen-card-body` + `icen-card-foot`',
-        '**交互**：`icen-card--interactive` 悬停浮起；`is-selected` accent 双圈选中',
+        '**交互**：`icen-card--interactive` 悬停加边界与底色；`is-selected` accent 边 + 接触影选中',
       ],
     },
     demo: `<div class="demo-row">
@@ -1683,7 +1683,7 @@ COMPONENTS.push(
     <div class="icen-card-head">
       <div>
         <h3 class="icen-card-title">默认卡片</h3>
-        <p class="icen-card-desc">bg card + 内阴影</p>
+        <p class="icen-card-desc">surface 底 + hairline 边</p>
       </div>
     </div>
     <div class="icen-card-body">纸面质感的基础容器，适合承载一组相关信息。</div>
@@ -1693,7 +1693,7 @@ COMPONENTS.push(
     </div>
   </div>
   <div class="icen-card icen-card--elevated" style="width:230px">
-    <div class="icen-card-head"><div><h3 class="icen-card-title">浮起卡片</h3><p class="icen-card-desc">shadow-card 硬投影</p></div></div>
+    <div class="icen-card-head"><div><h3 class="icen-card-title">浮起卡片</h3><p class="icen-card-desc">shadow-card 接触影</p></div></div>
     <div class="icen-card-body">比默认更靠前一级，用于强调。</div>
   </div>
   <div class="icen-card icen-card--outlined" style="width:230px">
@@ -1707,12 +1707,12 @@ COMPONENTS.push(
     </div>
   </div>
   <div class="icen-card icen-card--interactive" style="width:230px">
-    <div class="icen-card-head"><div><h3 class="icen-card-title">可交互卡片</h3><p class="icen-card-desc">hover 浮起（.lift 同款）</p></div></div>
-    <div class="icen-card-body">鼠标悬停试试：上移 1px + 投影 + 描边变色。</div>
+    <div class="icen-card-head"><div><h3 class="icen-card-title">可交互卡片</h3><p class="icen-card-desc">hover 边界 + 底色</p></div></div>
+    <div class="icen-card-body">鼠标悬停试试：不位移，只加深边界与表面。</div>
   </div>
   <div class="icen-card is-selected" style="width:230px">
-    <div class="icen-card-head"><div><h3 class="icen-card-title">选中态</h3><p class="icen-card-desc">.is-selected 双圈高亮</p></div></div>
-    <div class="icen-card-body">accent 2px 内圈 + 底色 4px 外圈。</div>
+    <div class="icen-card-head"><div><h3 class="icen-card-title">选中态</h3><p class="icen-card-desc">.is-selected 持久选中</p></div></div>
+    <div class="icen-card-body">accent 边 + 接触影，不改变布局尺寸。</div>
   </div>
 </div>`,
     usage: `<div class="icen-card">

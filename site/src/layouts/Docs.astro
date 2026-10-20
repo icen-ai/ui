@@ -35,6 +35,18 @@ const path = Astro.url.pathname;
 const currentPage = COMPONENTS.find((component)=>path === `/components/${component.slug}/`)?.name ?? title.split(' · ')[0];
 const isActive = (href: string): boolean =>
   href === '/' ? path === '/' : path.startsWith(href);
+const hasInspector = Astro.slots.has('inspector');
+const GROUP_ICONS: Record<string, string> = {
+  基础: 'layers',
+  'AI 原生': 'sparkle',
+  知识库: 'document',
+  表单: 'settings',
+  数据展示: 'columns',
+  图表: 'chart-line',
+  浮层: 'box',
+  反馈: 'bell',
+  导航: 'home',
+};
 ---
 <!doctype html>
 <html lang="zh-CN" data-icen-preset="modern" data-icen-style="modern">
@@ -66,7 +78,7 @@ const isActive = (href: string): boolean =>
   </head>
   <body>
     <SiteHeader />
-    <div class="docs-shell">
+    <div class:list={['docs-shell', { 'has-inspector': hasInspector }]}>
       <aside class="docs-side">
         <details class="docs-nav-disclosure" open>
           <summary class="docs-nav-toggle">
@@ -76,11 +88,14 @@ const isActive = (href: string): boolean =>
         <nav class="docs-nav" aria-label="文档导航">
           <details class="docs-group" data-icen-group="开始">
             <summary class="docs-group-name">
+              <span class="docs-group-icon" set:html={iconHTML('home', { size: 14 })}></span>
               <span class="docs-group-title">开始</span>
-              <span class="docs-group-count">3</span>
+              <span class="docs-group-count">7</span>
             </summary>
             <div class="docs-group-links">
               <a class:list={['docs-link', { active: path === '/' }]} href="/">介绍</a>
+              <a class:list={['docs-link', { active: path === '/components/' }]} href="/components/">全部组件</a>
+              <a class:list={['docs-link', { active: isActive('/apps/') }]} href="/apps/">应用组合</a>
               <a class:list={['docs-link', { active: isActive('/primitives/') }]} href="/primitives/">原语</a>
               <a class:list={['docs-link', { active: isActive('/frameworks/') }]} href="/frameworks/">框架接入</a>
               <a class:list={['docs-link', { active: isActive('/customize/') }]} href="/customize/">定制</a>
@@ -92,6 +107,7 @@ const isActive = (href: string): boolean =>
             return (
               <details class="docs-group" data-icen-group={g}>
                 <summary class="docs-group-name">
+                  <span class="docs-group-icon" set:html={iconHTML(GROUP_ICONS[g] ?? 'box', { size: 14 })}></span>
                   <span class="docs-group-title">{g}</span>
                   <span class="docs-group-count">{items.length}</span>
                 </summary>
@@ -157,8 +173,24 @@ const isActive = (href: string): boolean =>
         })();
       </script>
       <main class="docs-main">
+        <div class="docs-toolbar">
+          <div class="docs-toolbar-path">
+            <a class="docs-toolbar-app" href="/">ICEN UI</a>
+            <span class="docs-toolbar-sep" aria-hidden="true"></span>
+            <span class="docs-toolbar-page">{currentPage}</span>
+          </div>
+          <div class="docs-toolbar-actions">
+            <span class="docs-toolbar-badge">Docs</span>
+            <span class="docs-toolbar-hint"><kbd>⌘</kbd><kbd>K</kbd></span>
+          </div>
+        </div>
         <slot />
       </main>
+      {hasInspector && (
+        <aside class="docs-inspector" aria-label="页面信息">
+          <slot name="inspector" />
+        </aside>
+      )}
     </div>
     <SiteFooter />
   </body>

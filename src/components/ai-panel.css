@@ -207,13 +207,13 @@
   height: 4px;
   border-radius: var(--icen-radius-full);
   overflow: hidden;
-  background: color-mix(in srgb, var(--icen-token-line-soft) 40%, transparent);
+  background: var(--icen-token-fill-2);
 }
 .icen-ai-todo-bar > i {
   display: block;
   height: 100%;
   border-radius: var(--icen-radius-full);
-  background: var(--icen-token-accent);
+  background: var(--icen-token-accent-strong);
   transition: width var(--icen-tx-slow);
 }
 .icen-ai-todo.is-complete .icen-ai-todo-bar > i {
@@ -235,7 +235,7 @@
   transition: background-color var(--icen-tx-fast);
 }
 .icen-ai-todo-item[role='button']:hover {
-  background: var(--icen-token-fill-1);
+  background: var(--icen-token-fill-hover);
 }
 .icen-ai-todo-item:focus-visible {
   outline: none;
@@ -435,7 +435,7 @@
   display: flex;
   flex-direction: column;
   background: var(--icen-token-surface);
-  border-inline-start: 1px solid var(--icen-token-line-soft);
+  border-inline-start: 1px solid var(--icen-token-separator);
   box-shadow: var(--icen-token-shadow-overlay);
   transform: translateX(100%); /* guard:allow-physical 隐藏位沿物理右缘滑出（LTR 抽屉侧），RTL 镜像规则翻为 translateX(-100%) */
   transition: transform var(--ai-context-duration, var(--icen-duration-normal)) var(--icen-ease-out);
@@ -456,9 +456,9 @@
   z-index: auto;
   transform: none;
   transition: none;
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md);
-  box-shadow: var(--icen-token-shadow-elevated);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
+  box-shadow: none;
   overflow-y: visible;
 }
 
@@ -470,8 +470,10 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--icen-density-space-sm);
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
-  background: var(--icen-token-surface);
+  min-block-size: 42px;
+  padding: 8px 12px;
+  background: var(--icen-token-surface-chrome);
+  border-bottom: 1px solid var(--icen-token-separator-soft);
   border-bottom: 1px solid var(--icen-token-line-soft);
   font-size: var(--icen-density-font-size-sm);
   font-weight: 600;

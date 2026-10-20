@@ -1,0 +1,370 @@
+---
+import Docs from '../layouts/Docs.astro';
+import { iconHTML } from '../../../src/behaviors/icons';
+
+const scenes = [
+  { id: 'settings', name: '系统设置', ref: 'System Settings' },
+  { id: 'files', name: '文件与知识库', ref: 'Finder + Inspector' },
+  { id: 'ai', name: 'AI 工作台', ref: 'Notes + Spotlight' },
+  { id: 'analytics', name: '数据工作台', ref: 'Activity Monitor' },
+];
+const navItems: Array<[string, string, string]> = [
+  ['settings', 'settings', '外观与行为'],
+  ['files', 'folder', '文件与知识库'],
+  ['ai', 'sparkle', 'AI 工作台'],
+  ['analytics', 'chart-line', '数据工作台'],
+];
+---
+<Docs title="应用组合 · ICEN UI" description="用同一套 ICEN UI 组件搭建的四个桌面应用场景：设置、文件、AI 与数据工作台。">
+  <header class="apps-head">
+    <p class="doc-crumb">组件 / 应用组合</p>
+    <h1 class="doc-title">应用组合</h1>
+    <p class="doc-desc">四个真实场景，全部由 Registry 中的组件与 token 构成：没有截图、没有独立样式表。切换主题、原语或密度，它们一起换装。</p>
+    <nav class="apps-jump" aria-label="场景">
+      {scenes.map((s) => <a href={`#${s.id}`}>{s.name}</a>)}
+    </nav>
+  </header>
+
+  <section class="app-scene" id="settings">
+    <div class="app-scene-head">
+      <div>
+        <h2 class="app-scene-title">系统设置</h2>
+        <p class="app-scene-desc">Sidebar + 表单分组 + 开关/滑块/选择器 + chrome footer。展示高密度设置页如何保持安静。</p>
+      </div>
+      <span class="app-scene-ref">Reference · System Settings</span>
+    </div>
+    <div class="app-window">
+      <aside class="app-side">
+        <div class="app-side-group">
+          <span class="app-side-label">设置</span>
+          {navItems.map(([id, icon, label], i) => (
+            <a class:list={['icen-sidebar-item', { 'is-active': i === 0 }]} href={`#${id}`}>
+              <span class="icen-sidebar-item-icon" set:html={iconHTML(icon, { size: 15 })}></span>
+              <span class="icen-sidebar-item-label">{label}</span>
+            </a>
+          ))}
+        </div>
+      </aside>
+      <div class="app-body">
+        <div class="app-toolbar">
+          <span class="app-toolbar-title">外观</span>
+          <span class="app-toolbar-meta">即时生效</span>
+        </div>
+        <div class="app-content app-content--form">
+          <div class="icen-form">
+            <fieldset class="icen-form-field">
+              <legend class="icen-form-label">外观模式</legend>
+              <div class="icen-segmented" role="radiogroup" aria-label="外观模式">
+                <button class="icen-segmented-item" role="radio" aria-checked="false" type="button">浅色</button>
+                <button class="icen-segmented-item is-active" role="radio" aria-checked="true" type="button">自动</button>
+                <button class="icen-segmented-item" role="radio" aria-checked="false" type="button">深色</button>
+              </div>
+            </fieldset>
+            <fieldset class="icen-form-field">
+              <label class="icen-form-label" for="app-density">界面密度</label>
+              <div class="icen-select" data-icen-select>
+                <button class="icen-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="icen-select-value">紧凑</span>
+                  <svg class="icen-select-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" width="12" height="12"><path d="M5.5 7.75 10 12.25l4.5-4.5"/></svg>
+                </button>
+                <div class="icen-select-panel" hidden></div>
+              </div>
+              <span class="icen-form-hint">管理台建议紧凑；阅读型页面使用常规。</span>
+            </fieldset>
+            <div class="icen-switch-row">
+              <div class="icen-switch-row-label">
+                <span class="icen-switch-row-title">降低透明度</span>
+                <span class="icen-switch-row-desc">以不透明表面替代所有浮层材质</span>
+              </div>
+              <button class="icen-switch" role="switch" aria-checked="false" aria-label="降低透明度"><span class="icen-switch-thumb"></span></button>
+            </div>
+            <div class="icen-switch-row">
+              <div class="icen-switch-row-label">
+                <span class="icen-switch-row-title">显示滚动指示器</span>
+                <span class="icen-switch-row-desc">仅在滚动时出现</span>
+              </div>
+              <button class="icen-switch" role="switch" aria-checked="true" aria-label="显示滚动指示器"><span class="icen-switch-thumb"></span></button>
+            </div>
+            <fieldset class="icen-form-field">
+              <label class="icen-form-label" for="app-motion">动效</label>
+              <div class="icen-slider" data-icen-min="0" data-icen-max="100" data-icen-step="1">
+                <div class="icen-slider-track"></div>
+                <div class="icen-slider-fill" style="width:62%"></div>
+                <div class="icen-slider-thumb" style="left:62%"></div>
+                <input id="app-motion" class="icen-slider-native" type="range" min="0" max="100" value="62" aria-label="动效强度" />
+              </div>
+              <span class="icen-form-hint">默认与系统「减少动态效果」联动。</span>
+            </fieldset>
+          </div>
+        </div>
+        <div class="app-foot">
+          <span class="app-foot-note">设置保存在本机</span>
+          <button class="icen-btn icen-btn-sm" type="button">恢复默认</button>
+          <button class="icen-btn icen-btn-sm icen-btn-primary" type="button">完成</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="app-scene" id="files">
+    <div class="app-scene-head">
+      <div>
+        <h2 class="app-scene-title">文件与知识库</h2>
+        <p class="app-scene-desc">源列表 + 工具条 + 表格 + 右侧 Inspector。知识库族与表格共享同一行高与选中语法。</p>
+      </div>
+      <span class="app-scene-ref">Reference · Finder + Inspector</span>
+    </div>
+    <div class="app-window app-window--three">
+      <aside class="app-side">
+        <div class="app-side-group">
+          <span class="app-side-label">位置</span>
+          <a class="icen-sidebar-item is-active" href="#files"><span class="icen-sidebar-item-icon" set:html={iconHTML('folder', { size: 15 })}></span><span class="icen-sidebar-item-label">产品手册</span><span class="icen-sidebar-item-badge">32</span></a>
+          <a class="icen-sidebar-item" href="#files"><span class="icen-sidebar-item-icon" set:html={iconHTML('document', { size: 15 })}></span><span class="icen-sidebar-item-label">接口文档</span></a>
+          <a class="icen-sidebar-item" href="#files"><span class="icen-sidebar-item-icon" set:html={iconHTML('server', { size: 15 })}></span><span class="icen-sidebar-item-label">数据源</span></a>
+        </div>
+      </aside>
+      <div class="app-body">
+        <div class="app-toolbar">
+          <span class="app-toolbar-title">产品手册</span>
+          <span class="app-toolbar-meta">32 个来源 · 已同步</span>
+          <div class="app-toolbar-actions">
+            <button class="icen-btn icen-btn-sm" type="button" aria-label="筛选"><span set:html={iconHTML('filter', { size: 13 })} /></button>
+            <button class="icen-btn icen-btn-sm icen-btn-primary" type="button">导入</button>
+          </div>
+        </div>
+        <div class="app-content">
+          <table class="icen-table">
+            <thead><tr><th>名称</th><th>类型</th><th>状态</th><th class="icen-num">分段</th><th class="icen-ops">操作</th></tr></thead>
+            <tbody>
+              <tr class="is-selected"><td>检索架构</td><td>Markdown</td><td><span class="icen-pill icen-pill--success">已索引</span></td><td class="icen-num">18</td><td class="icen-ops"><button class="icen-btn icen-btn-sm icen-btn-ghost" type="button">打开</button></td></tr>
+              <tr><td>权限模型</td><td>Markdown</td><td><span class="icen-pill">已索引</span></td><td class="icen-num">12</td><td class="icen-ops"><button class="icen-btn icen-btn-sm icen-btn-ghost" type="button">打开</button></td></tr>
+              <tr><td>评测基线</td><td>CSV</td><td><span class="icen-pill icen-pill--warning">待更新</span></td><td class="icen-num">7</td><td class="icen-ops"><button class="icen-btn icen-btn-sm icen-btn-ghost" type="button">打开</button></td></tr>
+              <tr><td>产品术语表</td><td>JSON</td><td><span class="icen-pill">已索引</span></td><td class="icen-num">64</td><td class="icen-ops"><button class="icen-btn icen-btn-sm icen-btn-ghost" type="button">打开</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="app-foot">
+          <span class="app-foot-note">已选择 1 项</span>
+          <div class="icen-pagination" aria-label="分页">
+            <button class="icen-page-btn" aria-label="上一页" aria-disabled="true">‹</button>
+            <button class="icen-page-btn is-active" aria-current="page">1</button>
+            <button class="icen-page-btn">2</button>
+            <button class="icen-page-btn" aria-label="下一页">›</button>
+          </div>
+        </div>
+      </div>
+      <aside class="app-inspector">
+        <span class="app-inspector-label">检查器</span>
+        <h3 class="app-inspector-title">检索架构</h3>
+        <dl class="app-inspector-list">
+          <div><dt>来源</dt><dd>产品手册</dd></div>
+          <div><dt>更新时间</dt><dd>今天 14:32</dd></div>
+          <div><dt>分段</dt><dd>18</dd></div>
+          <div><dt>权限</dt><dd>团队可见</dd></div>
+        </dl>
+        <div class="app-inspector-block">
+          <span class="app-inspector-label">证据预览</span>
+          <p class="app-quote">检索期隔离以 query-time pre-filter 为唯一基线；对受限侧不暴露标题与计数。</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="app-scene" id="ai">
+    <div class="app-scene-head">
+      <div>
+        <h2 class="app-scene-title">AI 工作台</h2>
+        <p class="app-scene-desc">会话列表 + 消息流 + 工具调用 + 输入台。过程折叠，证据与答案分层。</p>
+      </div>
+      <span class="app-scene-ref">Reference · Notes + Spotlight</span>
+    </div>
+    <div class="app-window">
+      <aside class="app-side">
+        <div class="app-side-group">
+          <span class="app-side-label">会话</span>
+          <a class="icen-sidebar-item is-active" href="#ai"><span class="icen-sidebar-item-label">检索架构评审</span></a>
+          <a class="icen-sidebar-item" href="#ai"><span class="icen-sidebar-item-label">权限文案梳理</span></a>
+          <a class="icen-sidebar-item" href="#ai"><span class="icen-sidebar-item-label">文档站重构</span></a>
+        </div>
+      </aside>
+      <div class="app-body">
+        <div class="app-toolbar">
+          <span class="app-toolbar-title">检索架构评审</span>
+          <span class="app-toolbar-meta">3 条消息</span>
+        </div>
+        <div class="app-content app-content--chat">
+          <div class="icen-ai-msg icen-ai-msg--user">
+            <span class="icen-ai-msg-avatar">U</span>
+            <div class="icen-ai-msg-body">把知识库权限的“不知道”和“不能说”分开呈现，应该怎么落到组件上？</div>
+          </div>
+          <div class="icen-ai-msg icen-ai-msg--assistant">
+            <span class="icen-ai-msg-avatar">AI</span>
+            <div class="icen-ai-msg-body">两条通道：授权侧给完整证据与计数；受限侧只保留“存在但不可见”的入口。组件用 <code class="icen-code-inline">.is-restricted</code> 表达边界，不伪造空态。</div>
+            <div class="icen-ai-msg-meta">刚刚 · 128 tokens</div>
+          </div>
+          <div class="icen-ai-tool">
+            <button class="icen-ai-tool-head" type="button" aria-expanded="false">
+              <span class="icen-ai-item-icon" set:html={iconHTML('search', { size: 14 })}></span>
+              <span class="icen-ai-item-title">kb-retrieval</span>
+              <span class="icen-ai-item-meta">42 ms</span>
+              <span class="icen-ai-item-status"></span>
+            </button>
+          </div>
+        </div>
+        <div class="app-composer">
+          <div class="icen-ai-composer">
+            <div class="icen-ai-composer-box">
+              <textarea class="icen-ai-composer-input" rows="1" placeholder="继续追问，或输入 @ 引用来源…"></textarea>
+              <div class="icen-ai-composer-toolbar">
+                <button class="icen-ai-composer-btn" type="button" aria-label="附件"><span set:html={iconHTML('paperclip', { size: 15 })} /></button>
+                <span class="icen-ai-composer-spacer"></span>
+                <button class="icen-ai-composer-send" type="button" aria-label="发送"><span set:html={iconHTML('arrow-up', { size: 15 })} /></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="app-scene" id="analytics">
+    <div class="app-scene-head">
+      <div>
+        <h2 class="app-scene-title">数据工作台</h2>
+        <p class="app-scene-desc">指标、分段、表格与进度。数值统一 tabular-nums，密度可在 compact 与常规间切换。</p>
+      </div>
+      <span class="app-scene-ref">Reference · Activity Monitor</span>
+    </div>
+    <div class="app-window app-window--single">
+      <div class="app-body">
+        <div class="app-toolbar">
+          <span class="app-toolbar-title">检索质量</span>
+          <div class="icen-toolbar icen-toolbar--borderless icen-toolbar--sm" style="margin-inline-start:auto">
+            <div class="icen-segmented" role="radiogroup" aria-label="时间范围">
+              <button class="icen-segmented-item" role="radio" aria-checked="false">24h</button>
+              <button class="icen-segmented-item is-active" role="radio" aria-checked="true">7d</button>
+              <button class="icen-segmented-item" role="radio" aria-checked="false">30d</button>
+            </div>
+          </div>
+        </div>
+        <div class="app-content">
+          <div class="icen-stat-grid icen-stat-grid--4">
+            <div class="icen-stat-card"><div class="icen-stat-head"><span class="icen-stat-label">命中率</span></div><div class="icen-stat-body"><div class="icen-stat-num">94.2%</div><div class="icen-stat-delta icen-up">+2.4%</div></div></div>
+            <div class="icen-stat-card"><div class="icen-stat-head"><span class="icen-stat-label">平均延迟</span></div><div class="icen-stat-body"><div class="icen-stat-num">128ms</div><div class="icen-stat-delta icen-down">-18ms</div></div></div>
+            <div class="icen-stat-card"><div class="icen-stat-head"><span class="icen-stat-label">无答案率</span></div><div class="icen-stat-body"><div class="icen-stat-num">3.1%</div><div class="icen-stat-delta icen-flat">持平</div></div></div>
+            <div class="icen-stat-card"><div class="icen-stat-head"><span class="icen-stat-label">评估样本</span></div><div class="icen-stat-body"><div class="icen-stat-num">1,284</div><div class="icen-stat-delta">本周</div></div></div>
+          </div>
+          <div class="app-chart">
+            <div class="app-chart-head"><span>每日命中率</span><span class="app-toolbar-meta">7 天 · 已抽样</span></div>
+            <div class="app-chart-bars">
+              {[62, 74, 68, 82, 78, 88, 94].map((v, i) => (
+                <div class="app-chart-col"><i style={`height:${v}%`}></i><span>周{['一','二','三','四','五','六','日'][i]}</span></div>
+              ))}
+            </div>
+          </div>
+          <table class="icen-table">
+            <thead><tr><th>查询</th><th>命中</th><th class="icen-num">延迟</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>权限基线</td><td>12</td><td class="icen-num">96ms</td><td><span class="icen-pill icen-pill--success">通过</span></td></tr>
+              <tr><td>来源冲突</td><td>4</td><td class="icen-num">132ms</td><td><span class="icen-pill icen-pill--warning">待复核</span></td></tr>
+              <tr><td>无答案</td><td>0</td><td class="icen-num">88ms</td><td><span class="icen-pill">已记录</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</Docs>
+
+<style is:global>
+  .apps-head { margin-bottom: 36px; }
+  .apps-jump { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .apps-jump a {
+    font-size: 11.5px;
+    color: var(--icen-token-text-muted);
+    padding: 3px 8px;
+    border: 1px solid var(--icen-token-control-border);
+    border-radius: var(--icen-radius-full);
+    text-decoration: none;
+  }
+  .apps-jump a:hover { color: var(--icen-token-text); background: var(--icen-token-fill-hover); }
+
+  .app-scene { margin-bottom: 48px; }
+  .app-scene-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+  .app-scene-title { font-size: 15px; font-weight: 600; margin: 0 0 3px; color: var(--icen-token-text); }
+  .app-scene-desc { font-size: 12px; line-height: 1.55; color: var(--icen-token-text-muted); margin: 0; max-width: 560px; }
+  .app-scene-ref { flex: none; font-family: var(--icen-font-mono); font-size: 10px; color: var(--icen-token-text-muted); border: 1px solid var(--icen-token-separator-soft); border-radius: var(--icen-radius-full); padding: 3px 7px; }
+
+  /* 应用窗口：chrome + 内容面，不画交通灯、不冒充真实窗口 */
+  .app-window {
+    display: grid;
+    grid-template-columns: 188px minmax(0, 1fr);
+    border: 1px solid var(--icen-token-separator);
+    border-radius: var(--icen-radius-lg);
+    background: var(--icen-token-surface);
+    box-shadow: var(--icen-token-shadow-card);
+    overflow: hidden;
+    min-block-size: 320px;
+  }
+  .app-window--three { grid-template-columns: 176px minmax(0, 1fr) 208px; }
+  .app-window--single { grid-template-columns: minmax(0, 1fr); }
+  .app-side {
+    background: var(--icen-token-surface-sidebar);
+    border-inline-end: 1px solid var(--icen-token-separator-soft);
+    padding: 10px 8px;
+  }
+  .app-side-group { display: flex; flex-direction: column; gap: 1px; }
+  .app-side-label { font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--icen-token-text-muted); padding: 4px 8px 6px; }
+  .app-body { display: flex; flex-direction: column; min-inline-size: 0; }
+  .app-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: 42px;
+    padding: 0 12px;
+    background: var(--icen-token-surface-toolbar);
+    border-bottom: 1px solid var(--icen-token-separator-soft);
+  }
+  .app-toolbar-title { font-size: 13px; font-weight: 600; color: var(--icen-token-text); }
+  .app-toolbar-meta { font-size: 11px; color: var(--icen-token-text-muted); font-variant-numeric: tabular-nums; }
+  .app-toolbar-actions { display: flex; align-items: center; gap: 6px; margin-inline-start: auto; }
+  .app-content { flex: 1; min-block-size: 0; padding: 14px; }
+  .app-content--form { max-width: 460px; }
+  .app-content--chat { display: flex; flex-direction: column; gap: 8px; }
+  .app-content .icen-table { margin: -4px 0; }
+  .app-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 46px;
+    padding: 6px 12px;
+    background: var(--icen-token-surface-chrome);
+    border-top: 1px solid var(--icen-token-separator-soft);
+    justify-content: flex-end;
+  }
+  .app-foot-note { margin-inline-end: auto; font-size: 11px; color: var(--icen-token-text-muted); }
+  .app-inspector {
+    background: var(--icen-token-surface-sidebar);
+    border-inline-start: 1px solid var(--icen-token-separator-soft);
+    padding: 14px 12px;
+    font-size: 12px;
+  }
+  .app-inspector-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--icen-token-text-muted); margin-bottom: 8px; }
+  .app-inspector-title { font-size: 14px; font-weight: 600; margin: 0 0 8px; color: var(--icen-token-text); }
+  .app-inspector-list { margin: 0 0 16px; }
+  .app-inspector-list > div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--icen-token-separator-soft); }
+  .app-inspector-list dt { font-size: 11px; color: var(--icen-token-text-muted); }
+  .app-inspector-list dd { margin: 0; font-size: 11.5px; color: var(--icen-token-text); }
+  .app-quote { margin: 0; padding-inline-start: 10px; border-inline-start: 2px solid var(--icen-token-accent); font-size: 11.5px; line-height: 1.6; color: var(--icen-token-text-muted); }
+  .app-composer { padding: 0 12px 12px; }
+  .app-chart { border: 1px solid var(--icen-token-separator-soft); border-radius: var(--icen-control-radius-lg); padding: 12px; margin: 14px 0; }
+  .app-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 600; margin-bottom: 12px; }
+  .app-chart-bars { display: flex; align-items: flex-end; gap: 10px; height: 96px; }
+  .app-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; height: 100%; }
+  .app-chart-col i { display: block; inline-size: 100%; max-inline-size: 26px; border-radius: 3px 3px 1px 1px; background: var(--icen-token-accent-strong); opacity: .82; }
+  .app-chart-col span { font-size: 10px; color: var(--icen-token-text-muted); }
+  @media (max-width: 860px) {
+    .app-window, .app-window--three { grid-template-columns: 1fr; }
+    .app-side, .app-inspector { display: none; }
+  }
+</style>

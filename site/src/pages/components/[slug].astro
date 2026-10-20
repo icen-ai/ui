@@ -98,6 +98,17 @@ const bootData = JSON.stringify({
   </div>
 
   <section class="demo-panel">
+    <div class="demo-toolbar">
+      <div class="demo-toolbar-title">
+        <span class="demo-toolbar-dot" aria-hidden="true"></span>
+        <span>Preview</span>
+      </div>
+      <div class="demo-toolbar-meta">
+        <span>{doc.group}</span>
+        <span class="demo-toolbar-sep" aria-hidden="true"></span>
+        <code>{doc.slug}</code>
+      </div>
+    </div>
     <div class="demo-stage" data-demo-layout={doc.demoLayout} set:html={doc.demo} />
     <CodeBlock code={doc.demo} lang="html" collapsible />
   </section>
@@ -192,6 +203,43 @@ const bootData = JSON.stringify({
       </a>
     ) : <span />}
   </nav>
+
+  <Fragment slot="inspector">
+    <section class="doc-meta-block">
+      <h2 class="doc-meta-title">组件信息</h2>
+      <dl class="doc-meta-list">
+        <div><dt>层级</dt><dd><span class:list={['doc-meta-tier', `doc-meta-tier--${docTier}`]}>{docTier === 'beta' ? 'Beta' : 'Core'}</span></dd></div>
+        <div><dt>分组</dt><dd>{doc.group}</dd></div>
+        <div><dt>CSS</dt><dd><code>{cssFor(doc.slug)}</code></dd></div>
+        <div><dt>行为</dt><dd>{doc.behaviors?.length ? doc.behaviors.join(', ') : '—'}</dd></div>
+        <div><dt>初始化</dt><dd>{api?.init ? <code>{api.init}()</code> : '—'}</dd></div>
+        <div><dt>事件</dt><dd>{api?.events.length ?? 0}</dd></div>
+      </dl>
+    </section>
+    {isKit && (
+      <section class="doc-meta-block">
+        <h2 class="doc-meta-title">一行引入</h2>
+        <pre class="doc-meta-code"><code>{kitCode}</code></pre>
+      </section>
+    )}
+    <section class="doc-meta-block">
+      <h2 class="doc-meta-title">设计口径</h2>
+      <ul class="doc-meta-facts">
+        <li><span>控件高度</span><b>28 / 34 / 42</b></li>
+        <li><span>控件圆角</span><b>6px</b></li>
+        <li><span>界面字号</span><b>13px</b></li>
+        <li><span>动效</span><b>110 / 180 / 260ms</b></li>
+      </ul>
+      <p class="doc-meta-note">所有数值来自 <code>--icen-control-*</code> 与 density token；切换主题、原语或密度时不改组件结构。</p>
+    </section>
+    <section class="doc-meta-block">
+      <h2 class="doc-meta-title">相关</h2>
+      <div class="doc-meta-links">
+        <a href="/primitives/">设计原语</a>
+        <a href="/components/">全部组件</a>
+      </div>
+    </section>
+  </Fragment>
 
   <script type="application/json" id="doc-boot-data" set:html={bootData} />
   <script>

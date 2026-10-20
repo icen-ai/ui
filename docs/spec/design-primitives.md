@@ -113,11 +113,11 @@ setDesign(brand.name);
 | ink / muted | #202124 / #616671；#f2f4f7 / #aeb5c2 | 正文与辅助字 |
 | accent / on-accent | #0062cc / #fff；#89b9ff / #10223c | 动作与按钮文字 |
 | success / warning / error / info | 明暗各有独立值，见源码 | 语义色 |
-| radius | 10px | 六档轮廓的共同起点 |
+| radius | 8px | 六档轮廓的共同起点 |
 | space | 4px | 布局节奏单位 |
-| control-height | 40px | 标准操作高度 |
-| font-size / font | 14px / 系统无衬线 | 界面阅读基准 |
-| glass-opacity / glass-blur | 82% / 20px；88% / 20px | 操作层材料 |
+| control-height | 34px | 标准操作高度（density compact 28 / comfortable 38） |
+| font-size / font | 13px / 系统无衬线 | 界面阅读基准；中文下限 12px |
+| glass-opacity / glass-blur | 84% / 24px；90% / 24px | 操作层材料 |
 | shadow-color / shadow-strength | 中性灰 11%；黑 28% | 接触影与环境影 |
 | light / highlight-strength | 白 70%；白 9% | 表面边缘光 |
 | edge-strength | 12% / 14% | 材料边界 |

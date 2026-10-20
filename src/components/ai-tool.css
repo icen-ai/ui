@@ -101,7 +101,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--icen-density-space-sm);
+  gap: var(--icen-control-gap);
   min-width: 0;
   align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap（width:100% 会塌成 min-content，禁用） */
 }
@@ -111,16 +111,16 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  inline-size: 28px;
-  block-size: 28px;
-  border-radius: var(--icen-radius-sm);
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: var(--icen-radius-xs);
   background: color-mix(in srgb, var(--ai-item-tint) 8%, var(--icen-token-surface));
   color: var(--ai-item-tint);
   transition: color var(--icen-tx-fast);
 }
 .icen-ai-item-icon > svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .icen-ai-item-main {
@@ -131,7 +131,7 @@
   gap: 1px;
 }
 .icen-ai-item-title {
-  font-size: var(--icen-density-font-size-md);
+  font-size: var(--icen-font-size-control);
   line-height: 1.4;
   color: var(--icen-token-text);
   overflow: hidden;
@@ -242,8 +242,8 @@
 .icen-ai-tool {
   --ai-item-tint: var(--icen-token-accent);
   align-self: stretch;  /* 宽度自稳定：宿主 flex/grid 居中时不 shrink-wrap */
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-md);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
   background: var(--icen-token-surface);
 }
 
@@ -275,9 +275,9 @@
 .icen-ai-subagent-head {
   display: flex;
   align-items: center;
-  gap: var(--icen-density-space-sm);
+  gap: var(--icen-control-gap-sm);
   width: 100%;
-  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
+  padding: 4px var(--icen-density-space-sm);
   border: none;
   border-radius: inherit; /* hover 底色不戳破卡片圆角 */
   background: transparent;
@@ -290,7 +290,7 @@
 }
 .icen-ai-tool-head:hover,
 .icen-ai-subagent-head:hover {
-  background: var(--icen-token-fill-1);
+  background: var(--icen-token-fill-hover);
 }
 .icen-ai-tool-head:focus-visible,
 .icen-ai-subagent-head:focus-visible {
@@ -302,9 +302,9 @@
 .icen-ai-tool-body {
   display: flex;
   flex-direction: column;
-  gap: var(--icen-density-space-sm);
+  gap: var(--icen-control-gap-sm);
   padding: var(--icen-density-space-sm);
-  border-top: 1px solid var(--icen-token-line-soft);
+  border-top: 1px solid var(--icen-token-separator-soft);
   animation: icen-pop-in var(--icen-tx-fast);
 }
 .icen-ai-tool-body[hidden],

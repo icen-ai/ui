@@ -45,8 +45,8 @@
 /* ══════════════ 容器 ══════════════ */
 
 .icen-code-block {
-  border: 1px solid var(--icen-token-line-soft);
-  border-radius: var(--icen-radius-lg);
+  border: 1px solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-control-radius-lg);
   background: var(--cb-background, var(--icen-token-surface));
   overflow: hidden;
 }
@@ -55,12 +55,12 @@
   margin: 0;
   border: 0;
   border-radius: 0;
-  padding: var(--icen-density-space-sm) 0;
+  padding: 10px 0;
   background: transparent !important; /* guard:allow-important shiki 主题自带内联背景，容器统一接管 */
   color: var(--icen-token-text);
   font-family: var(--icen-font-mono);
-  font-size: var(--icen-density-font-size-md);
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.6;
   overflow-x: auto;
   transition: max-height var(--icen-duration-slow) var(--icen-ease-out);
   direction: ltr;
@@ -82,9 +82,11 @@
   display: flex;
   align-items: center;
   gap: var(--icen-density-space-md);
-  padding: var(--icen-density-space-sm) var(--icen-density-space-md);
-  border-bottom: 1px solid var(--icen-token-line-soft);
-  font-size: var(--icen-density-font-size-sm);
+  min-block-size: 34px;
+  padding: 0 var(--icen-density-space-md);
+  background: var(--icen-token-surface-chrome);
+  border-bottom: 1px solid var(--icen-token-separator-soft);
+  font-size: 11.5px;
   line-height: 1.4;
   color: var(--icen-token-text-muted);
 }
