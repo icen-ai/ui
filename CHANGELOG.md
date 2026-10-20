@@ -1,29 +1,65 @@
 # 更新日志
 
-<!-- 记录纪律（docs/versioning.md）：破坏性变更只进 minor，且以契约快照
-     （docs/contracts/snapshot.json，bun run contracts 守卫拦截未留痕增删）
-     为准逐条写明；按层分节——Core 的破坏置顶逐条公告，Beta（图表/AI/KB）
-     段落单列。0.x 收敛期无外部用户：不留兼容层、不写迁移指南；
-     迁移设计从 1.0 起才成为义务。 -->
+格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)；
+0.x 纪律（破坏只进 minor、逐条公告、收敛期不留兼容层）见 [docs/versioning.md](docs/versioning.md)。
+契约面变化以 [docs/contracts/snapshot.json](docs/contracts/snapshot.json) 的机器 diff 为准
+（`bun run contracts:diff <tagA> <tagB>`，CI 强制破坏性条目必须在本文件留痕）。
 
-## 0.10.0（开发中，未发布）
+## [Unreleased] — 目标 0.11.0（含破坏性变更）
 
-首个版本。当前形态一览：
+### 安全性
 
-- **设计令牌**：6 套色彩主题（现代 / 东韵 / 巨构 / 钢琴 / 莫奈 / 梵高）× 4 套设计原语（现代 / 中式 / 苏式 / 像素）× 明暗双模，全部挂在 `<html>` 的 data 属性上；配色目录单一事实源 `src/tokens/themes.json`
-- **组件**：122 个无框架组件 slug（CSS 契约 + 按需行为 JS）；类名统一 `icen-` 前缀、钩子统一 `data-icen-*`、变量统一 `--icen-*`，产物全部进 cascade layers
-- **AI 原生族**：会话 / 推理 / 工具调用 / 审批 / 输入台 / 用量与审计，7 态状态机 + 多模态内容模型 + provider 适配层 + UI-as-tool 工具体系
-- **知识库族**：32 个组件覆盖 RAG 全链路（证据 / 摄取 / 检索 / 问数 / 治理 / 工作台 / 权限），权限域 fail-closed 语义由测试强制执行
-- **图表**：ChartSpec 纯 JSON 通用层，13 种图，交互与 tooltip 内建
-- **工程基座**：bun test + 12 项纪律守卫 + Playwright 浏览器验收；i18n 双语注册表；RTL 逻辑属性；设计工具导出（DTCG / Tokens Studio / Figma Variables）
-- **发布链**：git tag → GitHub Actions OIDC trusted publishing → npm（带 provenance，无长期 token）
+- **修复两个真实 XSS 绕过**（kb-explain 链接守卫：内嵌控制字符 `java\tscript:` 与 C0 控制符前缀），新增 `safeUrl` 协议守卫唯一事实源 + 74 条对抗语料与槽位断言；补齐裸奔槽位（notification 的 link/avatar、ai-chat 媒体 src）
+- 全组件精修：7 项 P0 与 27 项逻辑缺陷修复（XSS、焦点、对比度、触达面）
 
-### 分层与契约加固（1.0 门禁批次）
+### 破坏性变更（Core）
 
-- **Core/Beta 边界钉死**：`docs/contracts/stability-tiers.md` 新增「边界规则」表（Beta 生产可用性 / 破坏随 minor / 弃用 ≥1 个 minor 公告期 / 晋升 Core 五条标准 / 聚合入口定级）；新增守卫 `tier-direction`——**Core 模块运行时 import Beta = CI 红**（类型级引用须 `guard:allow-beta-type` 登记、CSS 横切适配须 `guard:allow-beta-ref` 或文件级白名单）
-- **解耦（契约面变化）**：内置 AI 工具 `show_form` 的注册从 `form-validate.ts`（Core）移至 `ai-tools.ts`（Beta → Core 方向）；`import 'form-validate'` 不再有注册副作用，改用工具系统请引 `behaviors/ai-tools`；`form-validate` 新增导出 `runShowForm` / `SHOW_FORM_SCHEMA`（additive）
-- **类型契约进快照**：公共契约快照新增第六面 `types`（648 条类型签名：函数/接口字段/类型别名/类成员，TS 编译器 API 从 `src/index.ts` 导出面抽取）；签名变化与移除 = breaking、新增 = additive，`bun run contracts` 分类报告，类型破坏不再能静默通过 CI
-- **行为 conformance 套件**：`tests/conformance/`（125 用例 / 710 断言）把 Core 组件行为语义固化为可执行契约——26 个组件的 init 幂等 / destroy 清理 / 事件登记与时机 / 键盘焦点 / XSS 文本纪律；期间修复两个真实 bug：**command-palette Enter 选中 DOM 条目双派 `icen:menu-select`**（收敛到 click 路径单派）、**tree 点击 toggle 的 `icen:tree-toggle` detail.open 与键盘路径语义相反**（统一为切换后状态）
-- **安全回归语料**：新增 `src/behaviors/url-safety.ts`（`safeUrl` 协议守卫唯一事实源）+ `tests/unit/url-safety.test.ts`（51 条对抗语料 + 23 条槽位端到端断言）；**修复 kb-explain 链接守卫的两个真实 XSS 绕过**（内嵌控制字符 `java\tscript:`、C0 控制符前缀）；补齐裸奔槽位：notification 的 link/avatar、ai-chat 的媒体 src
-- **封装版本矩阵 CI**：`wrapper-compat-react`（React 18/19）与 `wrapper-compat-vue`（Vue 3.3/3.5）两条 matrix 线进 `ci.yml`，四条线本地实测全绿——`react>=18` / `vue>=3.3` 的 peer 声明从此有机器背书（`docs/frameworks.md` 同步）
-- **陌生人验收（dogfood）**：零上下文代理只凭 npm 产物 + llms-full.txt + 文档站完成真实页面（登录表单/数据表/筛选/弹窗/主题切换，Playwright 实测 26/26 通过），8 个卡点全部处置（`docs/dogfood.md` 有清单）——修库三处：**form-validate 复验位移吃掉提交点击**（指针按下期间推迟结构变更，抬手后补齐）、**datatable 自定义 pageSize 不回显分页下拉**（并入候选）、**未配 summaryRow 渲染空壳行**（不再渲染）；修文档五处：CSS 引入两形态口径（ui.css 全量单文件 / tokens.css 按需底座 + 纯静态 `<link>` 与 file:// 提示）、明暗二态契约（亮=移除属性，无 `"light"` 值）、select 事件 `icen:select-change` detail 形状进文档
+- 内置 AI 工具 `show_form` 的注册从 `form-validate`（Core）移至 `ai-tools`（Beta）：`import 'form-validate'` 不再有注册副作用，改用工具系统请引 `behaviors/ai-tools`；`form-validate` 新增导出 `runShowForm` / `SHOW_FORM_SCHEMA`（additive）
+
+### 修复
+
+- 站点语言自动检测（`navigator.languages`）使 e2e 在英文 locale 下全站变英文、中文断言全红——playwright 配置钉死 `locale: zh-CN`，验收舱与环境 locale 解耦
+- SiteHeader 语言切换器可访问名不含可见文本（axe `label-content-name-mismatch`）——改 `aria-labelledby` 复合命名
+- 六处展开态 axe 对比度违规修复：avatar 首字母与用户消息头像改用承文本档 `accent-text`（accent 亮档只做图形）、kb-pipeline 错误正文与站点 demo 色块由 muted 提为正文色、notification 操作钮去 muted 化
+- e2e 测试代码漂移清偿：顶导外观控件统一为 `#appearance-select`（预设/原语二选一并入三轴面板）、明暗二态契约在测试侧对齐（禁写 `"light"` 值）、tabs roving tabindex 断言对齐 APG 焦点跟随契约、首页复制钮 `.install-copy` → `.pm-copy`、mentions 异步目录等待条件加固
+- 文档站组件页新增「接口」区块（导出 / 事件 / 类型指针），由 slugs 登记表与行为源码构建期自动生成，不手填不漂移
+
+### 新增（工程基座）
+
+- 稳定性分层落地：Core（1.0 冻结轨道）/ Beta（图表、AI、KB 三族），事实源 `docs/contracts/tiers.json`，构建期盖章 `registry.json`，文档站组件页徽标同源；新守卫 `tier-direction`——Core 运行时 import Beta 即 CI 红
+- 公共契约快照新增 `types` 面（TS 编译器 API 抽取导出面规范化签名）；新增 `bun run contracts:diff <refA> [refB] [--gate core]`——tag 间契约 diff + 分层过滤（1.0 判定与未来迁移页骨架共用）
+- 行为 conformance 套件 `tests/conformance/`（26 个 Core 组件的 init 幂等 / destroy 清理 / 事件契约 / 键盘焦点 / XSS 文本纪律，125 用例）；抓出并修复两个真实 bug（command-palette Enter 双派事件、tree toggle 事件语义相反）
+- 封装兼容矩阵 CI：React 18/19 × Vue 3.3/3.5 四条版本线实跑封装契约测试
+- 弃用纪律机器化：`@deprecated 用 X 替代（<次版本> 移除）` 约定 + 守卫（无移除版本 / 公告期不足一个 minor / 到期未删 = CI 红）
+- 体积预算（`docs/contracts/size-budget.json`）与覆盖率棘轮（`docs/contracts/coverage-floor.json`，lcov 口径）进 CI
+- 包面检查 `bun run check:pkg`（publint + attw）；kit 子路径补齐类型面（`dist/components/<slug>.d.mts`）；修复声明文件 specifier 指向 `.js` 导致 node16 类型解析失败的缺陷
+- 发布链：publish.yml 发版前跑全部门（tsc + guard + test + build + size + check:pkg）+ 校验 tag 与版本一致 + 发布成功自动建 GitHub Release
+- CI 联动检查：契约快照含破坏性条目时 CHANGELOG 必须同 PR 改动
+- dependabot（bun × 2 + github-actions）、PR 模板、issue 入口配置、CODE_OF_CONDUCT、LICENSE、.editorconfig
+- 陌生人 dogfood 首轮验收：26/26 通过；3 处修库（form-validate 复验位移吃点击、datatable pageSize 回显、空 summaryRow）+ 5 处修文档，清单见 [docs/dogfood.md](docs/dogfood.md)
+- 文档站：全站中英双语（4034 条词典）、hero 品牌化
+
+## [0.10.0] — 2026-10-18
+
+0.x 收敛线的起点：主题×原语矩阵、对象化提及输入、契约治理基座引入前的最后形态。
+
+- 设计令牌：6 套色彩主题 × 4 套设计原语 × 明暗双模，全部挂在 `<html>` data 属性；配色单一事实源 `src/tokens/themes.json`
+- 组件：122 个可安装 slug（CSS 契约 + 按需行为 JS）；类名 `icen-` / 钩子 `data-icen-*` / 变量 `--icen-*`；产物全部进 cascade layers
+- AI 原生族：7 态状态机 + 多模态内容模型 + provider 适配层 + UI-as-tool 工具体系
+- 知识库族：32 个组件覆盖 RAG 全链路，权限域 fail-closed 语义由测试强制
+- 图表：ChartSpec 纯 JSON 通用层，13 种图，交互与 tooltip 内建
+- 发布链：git tag → GitHub Actions OIDC trusted publishing → npm（provenance，无长期 token）
+
+## 历史版本（0.1.0 – 0.9.0）
+
+早期快速迭代期未逐条记录 changelog（npm 与 tag 可考）。要点：
+
+- **0.9.0**（2026-10-03）：kb 族权限域（kb-perm）五件套 + `/kb` 八标签工作台
+- **0.8.x**（2026-10-02）：AI 原生组件族与知识库族主体落地
+- **0.5.0**（2026-07-29）：全量组件工程级强化
+- **0.4.0**（2026-07-29）：图表细分类型 + 表格强化
+- **0.3.0**（2026-07-29）：datatable（搜索/排序/筛选/分页/虚拟滚动）+ kit 一行入口与 CLI
+- **0.2.x**（2026-07-28）：组件体系大扩编（31 组件 + 19 behaviors，复刻 opengal 体系）
+- **0.1.x**（2026-07-28）：首个 npm 发布（tokens + 基础组件）
+
+（0.6 / 0.7 未发布；0.1.0 无对应 git tag。）

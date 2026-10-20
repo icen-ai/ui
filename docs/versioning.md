@@ -1,48 +1,66 @@
-# 版本纪律与发布政策
+# 版本与稳定性政策
 
-本文回答三个问题：**0.x 期间破坏性变更怎么管**、**什么时候发 1.0**、**每个版本线支持多久**。写在这里就是为了让你可以在评审与采购环节直接引用。
+唯一的政策文件。分层、0.x 纪律、弃用、主题预算、1.0 门槛、支持周期，全部在这里。
+机器执行面：守卫（`bun run guard`）、契约快照（`docs/contracts/`）、CI 联动检查——本文不重复规则明细，只写规则背后的承诺。
 
-## 稳定性分层（先读这个）
+## 稳定性分层
 
-全库不是一条稳定曲线。组件按 [docs/contracts/stability-tiers.md](./contracts/stability-tiers.md) 分两层，事实源 `docs/contracts/tiers.json`，守卫强制每个 CSS 模块显式归类：
+全库不是一条稳定曲线。事实源 [`contracts/tiers.json`](contracts/tiers.json)，守卫强制每个 CSS 模块显式归类，构建期盖章进 `registry.json`，文档站徽标同源。
 
-- **Core（52 模块）**：基础组件 + 主题 + i18n + 事件体系。1.0 冻结轨道。
-- **Beta（24 模块）**：图表 / AI / 知识库三族。随 minor 快速演进，公告但不受 Core 纪律约束。
+- **Core**：基础组件 + 主题 + i18n + 事件体系。1.0 冻结轨道。
+- **Beta**：图表 / AI / 知识库三族。随 minor 快速演进。
+- 聚合入口（`kb` / `charts` umbrella）与其族同为 Beta。
+- **方向纪律**：Core 禁止运行时依赖 Beta（守卫 `tier-direction` 机械执行；类型级引用须 `guard:allow-beta-type` 登记）。
 
-文档站每个组件页的徽标（Core · 稳定 / Beta · 演进中）即此分层。
+Beta 用于生产：可以，但锁 minor 版本并盯 CHANGELOG。Beta 晋升 Core 的五条标准：契约快照连续两个 minor 零破坏（机器判）· conformance 套件覆盖 · 文档页完整 · 至少一个真实消费场景 · 无障碍核查。
 
-## 0.x 纪律（当前阶段：收敛期，无外部用户）
+## 0.x 纪律（收敛期）
 
-0.x 不代表随意，但**当前没有外部用户**——这是收敛期最大的资产：可以自由破坏而不欠任何人迁移债。规则据此设定：
+当前没有外部用户——可以自由破坏而不欠迁移债，规则据此设定：
 
-1. **破坏性变更只在 minor 发生**：patch 只修 bug，永不改公共契约。
-2. **CHANGELOG 逐条写明**改了什么（契约面变化以 [contracts 快照](./contracts/snapshot.json) diff 为准，`bun run contracts` 守卫拦截未留痕的增删）。
-3. **不留兼容层、不写迁移指南**：改名 / 删除直接做，不提供旧写法过渡、不维护弃用垫片。收敛优先——公共面上的历史包袱趁没有用户清零。
-4. **迁移设计从 1.0 起才成为义务**：1.0 后破坏只进 major，且每次必须配迁移页（`/vm/x-to-y`，从 tag 间快照 diff 生成骨架）。在那之前不预支这个成本。
+1. **破坏性变更只进 minor**；patch 只修 bug。
+2. **CHANGELOG 逐条公告**破坏条目（以快照 diff 为准；CI 检查 snapshot 与 CHANGELOG 联动）。
+3. **不留兼容层、不写迁移指南**：改名/删除直接做。迁移设计从 1.0 起才成为义务。
+4. 快照扩面：`bun run contracts:update` 随 PR 提交。
 
-对应关系一句话：**0.x 的 minor = 可能痛的升级（我们明说，但不扶你过去）；1.0 的 major = 我们扶你过去。**
+一句话：0.x 的 minor = 可能痛的升级（明说，但不扶你过去）；1.0 的 major = 我们扶你过去。
 
-## 1.0 冻结标准（checklist）
+## 弃用政策
 
-1.0 不是「感觉成熟了」就发，而是下面三条**同时**满足才发：
+弃用标记：`@deprecated 用 X 替代（<次版本> 移除）`（TS JSDoc 与 CSS 头注释同构）。
+守卫强制：标记必须带移除版本；移除版本须晚于当前版本至少一个 minor（公告期）；到期必须真的删。
+删除发生时快照守卫按破坏性变更接管公告纪律。
 
-- [ ] **Core 面稳定满 2 个 minor（机器可查）**：连续两个 minor 的 tag 处 `docs/contracts/snapshot.json` 中 Core 层条目（按 tiers.json 过滤）零移除、零改名；`bun run contracts` 全程无未留痕漂移。
-- [ ] **测试与守卫全绿常态化**：`bun run verify` 四道门（tsc + guard + test + build）连续两个 minor 周期无跳过、无 ALLOWLIST 新增欠账（每条豁免都带理由且经过评审）。
-- [ ] **文档与 llms.txt 同步**：文档站、`AGENTS.md`、`llms-full.txt` 与实现逐条对齐。
+## 主题预算
 
-Beta 层（图表 / AI / KB）**不在 1.0 冻结范围内**：它们可以在 1.0 后继续随 minor 演进（含公告过的破坏），直到各自满足上述标准再单独冻结。
+token 是公共 API，改名不报错、只在消费方页面悄悄变样——纪律：
 
-1.0 发布同时冻结语义化版本纪律：此后**Core** 破坏性变更只在 major，minor 只加功能，patch 只修 bug。
+1. `--icen-*` 变量进快照留痕；移除/改名 = Core 破坏性变更。
+2. 预设只增不改义（已有六预设的语义 token 不得重定义；测试锁死键集与对比度矩阵）。
+3. 原语只做覆盖、不造孤儿 token（token 引用闭合守卫）。
+4. 主题改动必过 verify 全门 + 视觉基线；对比度硬门由 `theme-colors` / `code-contrast` 测试执行。
+5. 设计工具导出（DTCG / Tokens Studio / Figma）与 CSS 同源；`color-mix()` 等不可表示值明示跳过，不猜不近似。
+
+## 1.0 判定（机器可查）
+
+三条同时满足才发 1.0：
+
+1. **Core 面稳定两个 minor**：`bun run contracts:diff v<前两个minor的tag> <当前> --gate core` 通过。
+2. **全门常态化全绿**：verify 与 CI 各门连续两个 minor 无跳过、守卫豁免零新增欠账。
+3. **文档与实现同步**：文档站 / AGENTS.md / llms-full.txt 与实现逐条对齐。
+
+首个可作 diff 基线的 tag 是 v0.11.0（快照机制在 v0.10.0 tag 之后引入）。
+Beta 层不在 1.0 冻结范围内；1.0 同日上线迁移页体系（`/vm/x-to-y`，由 contracts:diff 生成骨架）。
 
 ## 版本支持矩阵
 
-| 版本线 | 支持级别 | 截止时间 |
-| --- | --- | --- |
-| 最新 0.x minor | 全部修复（安全 + bug + 功能） | — |
-| 上一个 0.x minor | 仅安全修复 | 发新 minor 后 **3 个月**（0.x 期间的折中窗口；1.0 后改为 6 个月） |
-| 更早版本线 | 停止支持 | — |
+| 版本线 | 支持级别 |
+| --- | --- |
+| 最新 minor | 全部修复（安全 + bug + 功能） |
+| 更早版本线（0.x） | 停止支持——0.x 收敛期不留回填机制，升级即跟上 |
+| 1.0 起 | 最新 major 全量修；上一 major 仅安全修复，窗口 6 个月 |
 
-## 发布机制（与政策配套的工程事实）
+## 发布机制
 
-- 发版 = 改 `package.json` version → push main → `git tag v<x.y.z> && git push origin v<x.y.z>` → CI（`.github/workflows/publish.yml`）自动构建发 npm，带 provenance。
-- npm 包设置为「Require 2FA and disallow tokens」：除这条 CI 外没有任何凭据能发包，发布链本身不可被 token 泄露攻破。
+发版 = 改 `package.json` version → push main → `git tag v<x.y.z> && git push origin v<x.y.z>`。
+CI（`.github/workflows/publish.yml`）校验 tag 与版本一致 → 跑全部门 → OIDC trusted publishing 发 npm（provenance，无长期 token）→ 自动建 GitHub Release（notes 取自本文件对应小节）。
