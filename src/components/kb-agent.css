@@ -43,7 +43,7 @@
   position: relative;
   margin: 0;
   border: none;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 2px; /* guard:allow-radius 分隔条的图形圆角 */
   background: var(--icen-token-line-soft);
   cursor: col-resize;
   touch-action: none; /* 拖拽需接管触摸滚动（指针事件 preventDefault 的对偶） */
@@ -57,7 +57,7 @@
   transform: translate(-50%, -50%);
   width: 2px;
   height: 18px;
-  border-radius: 1px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
+  border-radius: 1px; /* guard:allow-radius 拖动握柄的图形圆角 */
   background: var(--icen-token-line);
   transition: background-color var(--icen-tx-fast);
 }
@@ -219,7 +219,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   padding: 0 10px;
   border: 1px solid var(--icen-token-line-soft);
   border-radius: var(--icen-radius-sm);
@@ -251,7 +251,7 @@
   height: 14px;
 }
 .icen-kb-checkpoint-time {
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
 }
 .icen-kb-checkpoint-label {
   max-width: 180px;
@@ -277,7 +277,7 @@
   animation: icen-pop-in var(--icen-tx-fast);
 }
 .icen-kb-checkpoint-menu-title {
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.3px;
   color: var(--icen-token-text-faint);
   padding: 4px 8px 6px;
@@ -287,7 +287,7 @@
   align-items: flex-start;
   gap: 8px;
   inline-size: 100%;
-  min-block-size: 28px;
+  min-block-size: var(--icen-density-item-height);
   padding: 6px 8px;
   border: none;
   background: none;
@@ -325,7 +325,7 @@
   display: inline-flex;
   justify-content: center;
   color: var(--icen-token-accent);
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
 }
 .icen-kb-checkpoint-menu-main {
@@ -335,7 +335,7 @@
   min-width: 0;
 }
 .icen-kb-checkpoint-menu-note {
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-faint);
 }
 
@@ -413,7 +413,7 @@
   justify-content: center;
   gap: 6px;
   flex: 0 0 auto;
-  min-block-size: 28px;
+  min-block-size: var(--icen-density-item-height);
   padding: 0 10px;
   border-radius: var(--icen-radius-full);
   font-size: var(--icen-font-size-caption);
@@ -520,7 +520,7 @@
 [data-icen-density='compact'] .icen-kb-canvas-doc { padding: 8px 10px; }
 [data-icen-density='compact'] .icen-kb-canvas-versions { padding-block: 4px; }
 [data-icen-density='compact'] .icen-kb-checkpoints { gap: 6px; }
-[data-icen-density='compact'] .icen-kb-checkpoint { min-height: 24px; }
+[data-icen-density='compact'] .icen-kb-checkpoint { min-height: var(--icen-density-item-height); }
 [data-icen-density='compact'] .icen-kb-checkpoint-menu-item { min-block-size: 24px; padding-block: 4px; }
 [data-icen-density='compact'] .icen-kb-chain-step { min-block-size: 24px; }
 [data-icen-density='compact'] .icen-kb-sandbox-stage { min-height: 280px; }

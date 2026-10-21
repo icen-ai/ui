@@ -79,7 +79,7 @@
   padding-block: var(--icen-density-space-md);
   padding-inline: 9px 10px;
   overflow: hidden; /* 倒计时进度条贴底 */
-  animation: icen-notif-in var(--icen-tx-normal) var(--icen-ease-enter);
+  animation: icen-notif-in var(--icen-duration-normal) var(--icen-ease-enter);
 }
 .icen-notification.icen-notification--success { border-inline-start-color: var(--icen-token-success); }
 .icen-notification.icen-notification--warning { border-inline-start-color: var(--icen-token-warning); }
@@ -287,7 +287,7 @@
   height: 100%;
   background: var(--icen-token-accent);
   border-radius: var(--icen-radius-full);
-  transition: width var(--icen-tx-normal) var(--icen-ease-out);
+  transition: width var(--icen-duration-normal) var(--icen-ease-out);
 }
 .icen-notification.icen-notification--success .icen-notification-progress-bar { background: var(--icen-token-success); }
 .icen-notification.icen-notification--warning .icen-notification-progress-bar { background: var(--icen-token-warning); }

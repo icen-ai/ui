@@ -124,7 +124,7 @@ interface DelegatedHandlers {
  * 造一个 document 级委托 init：幂等（已启动时重复调用返回 no-op）、SSR 安全、
  * 返回销毁函数（摘除委托并复位幂等标记，销毁后可重新 init）。
  */
-function createDelegatedInit(handlers: DelegatedHandlers): () => void {
+function createDelegatedInit(handlers: DelegatedHandlers): () => () => void {
   let inited = false;
   return () => {
     if (inited || typeof document === 'undefined') return () => {};

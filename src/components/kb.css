@@ -20,7 +20,7 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   padding: 2px 8px;
   border-radius: var(--icen-radius-xs);
   transition: background-color var(--icen-tx-fast);
@@ -28,30 +28,30 @@
 .icen-kb-row:hover { background: var(--icen-token-fill-hover); }
 .icen-kb-row-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .icen-kb-row-title {
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   color: var(--icen-token-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.icen-kb-row-sub { font-size: 12px; color: var(--icen-token-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icen-kb-row-sub { font-size: var(--icen-density-font-size-xs); color: var(--icen-token-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .icen-kb-row-side { display: inline-flex; align-items: center; gap: 8px; }
 
 /* 密度：compact 档（管理台/密集列表） */
-[data-icen-density='compact'] .icen-kb-row { min-height: 24px; gap: 8px; }
+[data-icen-density='compact'] .icen-kb-row { min-height: var(--icen-density-item-height); gap: 8px; }
 
 /* 数字与元信息 */
 .icen-kb-num {
   font-family: var(--icen-font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.01em;
   color: var(--icen-token-text-muted);
   white-space: nowrap;
 }
 .icen-kb-meta {
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.2px;
   color: var(--icen-token-text-faint);
   white-space: nowrap;
@@ -91,14 +91,14 @@
   min-inline-size: 40px;
 }
 .icen-kb-score-bar > i { display: block; height: 100%; border-radius: 2px; background: var(--icen-token-accent-strong); opacity: 0.85; /* guard:allow-radius 微构件（指示条等图形级，不属容器圆角面） */ }
-.icen-kb-score-value { font-family: var(--icen-font-mono); font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--icen-token-text-muted); min-inline-size: 34px; text-align: right; /* guard:allow-physical 分数数字右对齐惯例（数字是 LTR 文种，RTL 不镜像） */ }
+.icen-kb-score-value { font-family: var(--icen-font-mono); font-variant-numeric: tabular-nums; font-size: var(--icen-density-font-size-xs); color: var(--icen-token-text-muted); min-inline-size: 34px; text-align: right; /* guard:allow-physical 分数数字右对齐惯例（数字是 LTR 文种，RTL 不镜像） */ }
 
 /* 证据引用体（原文摘录、citedText、chunk 预览；证据线沿 inline-start，RTL 镜像） */
 .icen-kb-quote {
   position: relative;
   padding-block: 2px;
   padding-inline-start: 12px;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.75;
   color: var(--icen-token-text-muted);
 }
@@ -135,7 +135,7 @@
   gap: 4px;
   min-height: 22px;
   padding: 0 7px;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   letter-spacing: .02em;
   color: var(--icen-token-text-muted);
@@ -166,7 +166,7 @@
   min-height: 22px;
   padding: 0 7px;
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.01em;
   color: var(--icen-token-text-muted);
   background: var(--icen-token-bg-soft);
@@ -184,13 +184,13 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   padding: 2px 8px;
   border: none;
   background: none;
   border-radius: var(--icen-radius-sm);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   color: var(--icen-token-text-muted);
   cursor: pointer;
   text-align: start;
@@ -203,7 +203,7 @@
   display: inline-block;
   width: 1em;
   color: var(--icen-token-text-faint);
-  font-size: 10px;
+  font-size: var(--icen-density-font-size-xs);
   transition: transform var(--icen-tx-fast);
   flex: 0 0 auto;
 }
@@ -213,7 +213,7 @@
 /* 键位提示（标注队列快捷键等） */
 .icen-kb-key {
   font-family: var(--icen-font-mono);
-  font-size: 10px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   color: var(--icen-token-text-faint);
   border: 1px solid var(--icen-token-line-soft);
@@ -231,7 +231,7 @@
   gap: 8px;
   padding: 28px 16px;
   color: var(--icen-token-text-faint);
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.6;
   text-align: center;
 }
@@ -241,7 +241,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.5;
   color: var(--icen-token-text-faint);
   padding: 6px 8px;
@@ -254,7 +254,7 @@
    三态：pre ✓ 安全基线 / post ⚠ 缺陷层 / none ✕ fail-open 危险——spec §9.0-1/§9.7） */
 .icen-kb-layer-chip {
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   min-height: 22px;
   cursor: pointer;
 }

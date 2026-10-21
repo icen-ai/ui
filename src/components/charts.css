@@ -305,7 +305,7 @@ svg .icen-chart-mark-label {
   cursor: pointer;
 }
 .icen-chart-map-dot {
-  transition: transform var(--icen-tx-fast) var(--icen-ease-out), fill-opacity var(--icen-tx-fast);
+  transition: transform var(--icen-duration-fast) var(--icen-ease-out), fill-opacity var(--icen-tx-fast);
   transform-box: fill-box;
   transform-origin: center;
 }

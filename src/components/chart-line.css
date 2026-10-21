@@ -44,7 +44,7 @@
 .icen-chart-line svg circle[data-icen-chart-mark]:not([data-icen-chart-hit]) {
   transform-box: fill-box;
   transform-origin: center;
-  transition: transform var(--icen-tx-fast) var(--icen-ease-out), opacity var(--icen-tx-fast);
+  transition: transform var(--icen-duration-fast) var(--icen-ease-out), opacity var(--icen-tx-fast);
 }
 .icen-chart-line svg circle[data-icen-chart-mark]:not([data-icen-chart-hit]):has(+ .is-hover) {
   transform: scale(1.45);

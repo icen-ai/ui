@@ -448,7 +448,7 @@
 
 /* 渐入动画 */
 .icen-carousel-slide {
-  animation: carousel-slide-fade var(--icen-tx-normal) var(--icen-ease-out);
+  animation: carousel-slide-fade var(--icen-duration-normal) var(--icen-ease-out);
 }
 @keyframes carousel-slide-fade {
   from { opacity: 0.6; }

@@ -641,12 +641,12 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): HTMLEl
     fill: 'none', stroke: 'var(--icen-token-line-soft)', 'stroke-width': '14',
   }));
   let offset = 0;
-  /* 段间留 2.5 用户单位的白隙：多段环图靠缝隙分界，不靠描边色差（同色相邻段可辨） */
+  /* 分隔缝最多占本段弧长的十分之一，保留小值的可见弧面与命中区域。 */
   const gap = opts.segments.length > 1 ? 2.5 : 0;
   opts.segments.forEach((seg, segIndex) => {
     /* 负值段钳 0：负 dash 长度是非法 stroke-dasharray，浏览器会当未设置 → 画成整环盖住其他段 */
     const arcLength = Math.max(0, (seg.value / total) * circumference);
-    const dash = Math.max(0, arcLength - gap);
+    const dash = arcLength - Math.min(gap, arcLength * .1);
     const arc = svgEl('circle', {
       cx: '60', cy: '60', r: String(radius),
       fill: 'none',

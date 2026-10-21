@@ -29,7 +29,7 @@
   background: var(--icen-token-surface);
   border: 1px solid var(--icen-token-separator-soft);
   box-shadow: none;
-  border-radius: var(--icen-control-radius-lg);
+  border-radius: var(--icen-radius-lg);
   overflow: hidden;
 }
 
@@ -103,7 +103,7 @@
   inline-size: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--icen-tx-slow) var(--icen-ease-out);
+  transition: transform var(--icen-duration-slow) var(--icen-ease-out);
 }
 .icen-card-tag {
   position: absolute;

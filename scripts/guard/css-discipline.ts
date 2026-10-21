@@ -201,6 +201,11 @@ export async function checkCssDiscipline(): Promise<GuardResult> {
         }
       }
 
+      /* 复合动效 token 已携带缓动；再次追加会使整条声明失效。 */
+      if (/var\(--icen-tx-(?:fast|normal|slow)\)\s+var\(--icen-ease-/.test(line)) {
+        violations.push(`${rel}:${lineNo}: 复合 tx token 不可重复追加缓动；需要单独缓动时使用 --icen-duration-*`);
+      }
+
       /* 规则 7：圆角纪律（AGENTS.md「圆角几何契约」）
          - 999px 裸写禁（胶囊跑道形一律 var(--icen-radius-full)）
          - 撞档裸值 6/8/10/12/16px 禁（= xs/sm/md/lg/xl 档，必须消费 token，风格 profile 才能正交归零）

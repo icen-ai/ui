@@ -204,7 +204,7 @@
 /* 展开行的内容容器（使用方可加 padding/动画） */
 .icen-row-expand-content {
   padding: var(--icen-density-space-sm) 0;
-  animation: row-expand-in var(--icen-tx-fast) var(--icen-ease-out);
+  animation: row-expand-in var(--icen-duration-fast) var(--icen-ease-out);
 }
 @keyframes row-expand-in {
   from { opacity: 0; transform: translateY(-4px); }

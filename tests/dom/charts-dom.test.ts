@@ -37,6 +37,20 @@ function marks(): HTMLElement[] {
 }
 
 describe('renderChart 渲染与选型', () => {
+  test('donut preserves positive sub-percent segments and their click data across updates', () => {
+    const el = host();
+    const handle = renderChart(el, { type: 'donut', segments: [{ label: '小值', value: .5 }, { label: '其余', value: 99.5 }] });
+    const first = () => el.querySelector<SVGCircleElement>('circle[data-icen-chart-mark]')!;
+    const clicks: ChartEventDetail[] = [];
+    el.addEventListener('icen:chart-click', e => clicks.push((e as CustomEvent<ChartEventDetail>).detail));
+    expect(Number(first().getAttribute('stroke-dasharray')!.split(' ')[0])).toBeGreaterThan(0);
+    first().dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(clicks[0]).toMatchObject({ label: '小值', value: .5 });
+    handle.update({ type: 'donut', segments: [{ label: '微值', value: .001 }, { label: '其余', value: 99.999 }] });
+    expect(Number(first().getAttribute('stroke-dasharray')!.split(' ')[0])).toBeGreaterThan(0);
+    handle.destroy();
+  });
+
   test('vbar 渲染标记（data-icen-chart-mark + index/value 数据位）；多系列出头部行与图例眼睛', () => {
     const el = host();
     const h = renderChart(el, {

@@ -37,11 +37,11 @@ ICEN UI 不是 Apple 控件复刻，也不是把玻璃、圆角、阴影堆到�
 
 | Token | 值 | 用途 |
 |---|---|---|
-| `--icen-radius-xs` | 3px | 复选框、菜单项、日期格、微表面 |
-| `--icen-radius-sm` | 6px | 按钮、输入、选择器（`--icen-control-radius`） |
-| `--icen-radius-md` | 8px | 卡片、面板、内嵌容器 |
-| `--icen-radius-lg` | 12px | 菜单、浮层、弹窗、工具条容器 |
-| `--icen-radius-xl` | 18px | 页面级展示容器 |
+| `--icen-radius-xs` | 5px | 复选框、菜单项、日期格、微表面 |
+| `--icen-radius-sm` | 8px | 按钮、输入、选择器（`--icen-control-radius`） |
+| `--icen-radius-md` | 10px | 大控件、内嵌容器 |
+| `--icen-radius-lg` | 14px | 卡片、面板、菜单、浮层 |
+| `--icen-radius-xl` | 20px | 弹窗与页面级展示容器 |
 | `--icen-radius-full` | 999px | 只给胶囊语义件（开关、滑块、徽章） |
 
 - 控件与容器**不同半径**：按钮 6px、菜单 12px、弹窗 12px、卡片 8px；大容器不套小控件半径。

@@ -18,16 +18,22 @@
 
 ### 设计（macOS-inspired 全仓库重构）
 
-- 默认 modern 原语升级为桌面精度体系：控件 28/34/42px、界面字号 13px、圆角 3/6/8/12/18px、表面层级 canvas→content→chrome→floating→modal、状态填充 hover/pressed/selected 分离、动效 110/180/260ms 与四种缓动；六套配色与中式/苏式/像素原语保持独立身份，全部经 token 覆盖继续工作
+- 默认 modern 原语升级为桌面精度体系：控件 28/34/42px、界面字号 13px、圆角 5/8/10/14/20px、表面层级 canvas→content→chrome→floating→modal、状态填充 hover/pressed/selected 分离、动效 110/180/260ms 与四种缓动；六套配色与中式/苏式/像素原语保持独立身份，全部经 token 覆盖继续工作
 - 组件覆盖：按钮/输入/选择/菜单/分段/开关/复选框/滑块/日期/级联/树选择/上传/标签输入/提及/自动补全；顶栏/侧栏/工具条/标签页/面包屑/分页/步骤/表格/DataTable/列表/树/折叠/时间线/描述/卡片/面板/指标/空态/徽标/键盘键；弹窗/菜单/popover/tooltip/命令面板/toast/通知/警示/进度/加载/骨架/复制；图表基座与 AI/KB 族表面语法。全部组件登记于 `docs/redesign/macos-component-mapping.md`
 - 行为增强：`select` / `tree-select` / `cascader` 不再移除作者提供的 chevron（弹出方向暗示恢复）；`checkbox` 选中改用勾选 glyph；`slider` 轨道/拇指桌面比例；`switch` 38×22；`modal` 表面/底栏/关闭钮收口
 - 文档站改为原生应用式 shell：52px 工具栏、源列表侧栏（分组图标/计数/整行选中）、44px 内容工具栏、组件页 Preview 工具栏 + 右侧 Inspector、代码区 34px chrome 头 + 12px mono；新增 `/apps/` 四个真实应用组合（系统设置 / 文件与知识库 / AI 工作台 / 数据工作台）
 - 新增设计交付文档：`docs/redesign/macos-design-language.md`、`macos-component-mapping.md`、`macos-token-architecture.md`、`macos-redesign-progress.md`、`visual-quality-report.md`、`progress.json`
-- 设计规范同步：`docs/spec/design-philosophy.md` 圆角表与 `docs/spec/design-primitives.md` 作者旋钮改为 8px 基准 / 34px 控件 / 13px 界面字 / 24px 模糊；契约快照随新增 token 更新
-- 收尾补齐（原「继承基座」项全部落为逐文件精修）：13 种图表统一网格/基线/轴标/数据点/图例墨色，折线与面积图数据点可悬停放大，面积图补齐可交互数据点与命中圆，环图多段留 2.5 单位白隙，柱图轨道内置网格、堆叠段留面色缝，热力格 3px 圆角 + 色环 hover，日历月份/星期标签 10px，雷达蛛网改实线发丝，散点补坐标轴类，图谱边与节点 hover/drag 分层；KB 7 域逐文件统一 28px 控件、13/12/11 字阶、`--icen-ring` 焦点、`fill-hover/pressed` 成对、整行选中替代左侧竖条，并补 compact 密度档
+- 设计规范同步：`docs/spec/design-philosophy.md` 圆角表与 `docs/spec/design-primitives.md` 作者旋钮改为 10px 基准 / 34px 控件 / 13px 界面字 / modern 实面材料；契约快照随新增 token 更新
+- 收尾补齐（原「继承基座」项全部落为逐文件精修）：13 种图表统一网格/基线/轴标/数据点/图例墨色，折线与面积图数据点可悬停放大，面积图补齐可交互数据点与命中圆，环图间隙按弧长封顶，保留极小非零值，柱图轨道内置网格、堆叠段留面色缝，热力格 3px 圆角 + 色环 hover，日历月份/星期标签 10px，雷达蛛网改实线发丝，散点补坐标轴类，图谱边与节点 hover/drag 分层；KB 7 域逐文件统一可缩放的密度控件、中文下限 12px 字阶、`--icen-ring` 焦点、`fill-hover/pressed` 成对、整行选中替代左侧竖条，并补 compact 密度档
 - 无障碍矩阵：高对比模式补全开关/勾选/单选/分段/表格选中行/选择器选中项/侧栏当前项/图表与 KB 状态件，全局补 `:focus-visible` 系统焦点兜底（强制颜色会丢弃 box-shadow）；`prefers-reduced-transparency` 下浮层回落实面；200% 缩放（720px CSS 视口）全站无横向溢出
 
 ### 修复
+
+- modern 操作面使用不透明表面，控件／卡片／弹窗采用 8/14/20px 的语义轮廓；补齐嵌套密度字号与 `--icen-density-item-height`
+- 修复重复缓动导致浏览器忽略动效、环图微小正值消失、加载按钮指示器透明；CSS 守卫防止重复缓动回归
+- 修正 controls 初始化函数的返回类型为销毁函数（运行时行为不变），支持框架生命周期正确清理
+- 应用组合页接通设置持久化、资料筛选/分页/本机导入、AI 本机流式发送/停止、真实图表切换；修正权限样例；文档换页销毁演示行为监听
+- 新增可重跑的全 Registry 截图清单与六配色、四原语、密度矩阵脚本 `scripts/design-review.mjs`
 
 - 站点语言自动检测（`navigator.languages`）使 e2e 在英文 locale 下全站变英文、中文断言全红——playwright 配置钉死 `locale: zh-CN`，验收舱与环境 locale 解耦
 - SiteHeader 语言切换器可访问名不含可见文本（axe `label-content-name-mismatch`）——改 `aria-labelledby` 复合命名

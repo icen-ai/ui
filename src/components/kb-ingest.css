@@ -19,7 +19,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-block-size: 28px;
+  min-block-size: var(--icen-density-item-height);
   padding-block: 3px;
   padding-inline: var(--icen-control-padding-inline);
   border: 1px solid var(--icen-token-line-soft);
@@ -196,7 +196,7 @@
   align-items: center;
   gap: 6px;
   flex: 0 0 auto;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.3px;
   color: var(--icen-token-text-faint);
 }
@@ -209,7 +209,7 @@
   flex: 1 1 auto;
   min-width: 0;
   color: var(--icen-token-text);
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -249,7 +249,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   padding: 2px;
   border-radius: var(--icen-radius-sm);
 }
@@ -268,12 +268,12 @@
   flex: 0 0 auto;
 }
 .icen-kb-pipeline-step-label {
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   color: var(--icen-token-text);
   white-space: nowrap;
 }
 .icen-kb-step-detail {
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-faint);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -316,7 +316,7 @@
 .icen-kb-pipeline-error-stage {
   flex: 0 0 auto;
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 600;
   letter-spacing: 0.3px;
   color: var(--icen-token-error);
@@ -324,7 +324,7 @@
 .icen-kb-pipeline-error-msg {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.6;
   /* 错误原因正文是实质内容，不用 muted 弱化（浅红底上 muted 过不了对比度门） */
   color: var(--icen-token-text);
@@ -389,9 +389,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-block-size: 28px;
+  min-block-size: var(--icen-density-item-height);
   margin-top: 2px;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-faint);
   cursor: pointer;
   user-select: none;
@@ -454,7 +454,7 @@
   margin: 0 -6px;
   border: 1px solid transparent;
   border-radius: var(--icen-radius-sm);
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.7;
   color: var(--icen-token-text);
   white-space: pre-wrap;
@@ -486,7 +486,7 @@
   padding-inline-start: 3px;
   border-radius: var(--icen-radius-xs);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   color: var(--icen-token-text-faint);
   cursor: pointer;
@@ -510,7 +510,7 @@
   padding: 2px 4px;
   width: 96px;
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text);
 }
 /* 裸 input 清掉了边框/背景/outline：必须自给焦点可见性，否则键盘焦点零反馈 */
@@ -566,7 +566,7 @@
   min-width: 0;
 }
 .icen-kb-field > .icen-kb-field-label {
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 500;
   letter-spacing: 0.01em;
   color: var(--icen-token-text-muted);
@@ -576,7 +576,7 @@
 }
 .icen-kb-segment-overlap-error {
   margin-top: -4px;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-error);
 }
 .icen-kb-segment-clean {
@@ -589,7 +589,7 @@
   align-items: center;
   gap: 6px;
   min-block-size: 24px;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-muted);
   cursor: pointer;
   user-select: none;
@@ -618,7 +618,7 @@
   flex-wrap: wrap;
 }
 .icen-kb-segment-stat {
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text);
 }
 .icen-kb-segment-blocks {
@@ -646,7 +646,7 @@
 .icen-kb-segment-block-text {
   max-height: 200px;
   overflow: hidden;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.7;
   color: var(--icen-token-text-muted);
   white-space: pre-wrap;
@@ -721,7 +721,7 @@
   gap: 1px;
 }
 .icen-kb-connector-name {
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
   line-height: 1.35;
   color: var(--icen-token-text);
@@ -730,7 +730,7 @@
   white-space: nowrap;
 }
 .icen-kb-connector-sub {
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
   color: var(--icen-token-text-faint);
   overflow: hidden;
@@ -741,7 +741,7 @@
 .icen-kb-connector-schedule {
   flex: 0 0 auto;
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
@@ -765,14 +765,14 @@
 }
 .icen-kb-connector-signal-label {
   flex: 0 0 auto;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-faint);
 }
 .icen-kb-connector-signal-value {
   flex: 1 1 auto;
   min-inline-size: 0;
   margin-inline-start: auto;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text);
   text-align: end;
   overflow: hidden;
@@ -819,10 +819,10 @@
   font-variant-numeric: tabular-nums;
 }
 .icen-kb-metadata-th {
-  height: 28px;
+  height: var(--icen-density-item-height);
   padding: 5px 8px;
   border-bottom: 1px solid var(--icen-token-line-soft);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 500;
   letter-spacing: 0.3px;
   color: var(--icen-token-text-faint);
@@ -835,7 +835,7 @@
 .icen-kb-metadata-row > td {
   padding: 5px 8px;
   border-bottom: 1px solid var(--icen-token-line-soft);
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   vertical-align: middle;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -849,11 +849,11 @@
 }
 .icen-kb-metadata-key {
   font-family: var(--icen-font-mono);
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text);
 }
 .icen-kb-metadata-key-label {
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-faint);
 }
 .icen-kb-metadata-builtin-flag {
@@ -862,7 +862,7 @@
   min-block-size: 22px;
   margin-inline-start: 6px;
   padding: 0 7px;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   color: var(--icen-token-text-faint);
   border: 1px solid var(--icen-token-line-soft);
@@ -924,10 +924,10 @@
   font-variant-numeric: tabular-nums;
 }
 .icen-kb-qa-th {
-  height: 28px;
+  height: var(--icen-density-item-height);
   padding: 5px 8px;
   border-bottom: 1px solid var(--icen-token-line-soft);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 500;
   letter-spacing: 0.3px;
   color: var(--icen-token-text-faint);
@@ -940,7 +940,7 @@
 .icen-kb-qa-row > td {
   padding: 5px 8px;
   border-bottom: 1px solid var(--icen-token-line-soft);
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   vertical-align: top;
 }
 .icen-kb-qa-row:last-child > td {
@@ -986,7 +986,7 @@
 
 /* ══════════════ 密度 / 动效守卫 ══════════════ */
 
-[data-icen-density='compact'] .icen-kb-pipeline-step { min-height: 24px; }
+[data-icen-density='compact'] .icen-kb-pipeline-step { min-height: var(--icen-density-item-height); }
 [data-icen-density='compact'] .icen-kb-pipeline-step:not(:last-child)::before { top: 13px; bottom: -4px; }
 [data-icen-density='compact'] .icen-kb-chunk { padding: 6px 8px; gap: 8px; }
 [data-icen-density='compact'] .icen-kb-segment-preview { padding: 8px; }

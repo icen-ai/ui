@@ -30,7 +30,7 @@
 .icen-panel {
   background: var(--icen-token-surface);
   border: 1px solid var(--icen-token-separator-soft);
-  border-radius: var(--icen-control-radius-lg);
+  border-radius: var(--icen-radius-lg);
   box-shadow: none;
   margin-bottom: var(--icen-density-space-lg);
   overflow: hidden;
@@ -42,7 +42,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--icen-density-space-sm);
-  min-block-size: 34px;
+  min-block-size: var(--icen-control-height-md);
   padding: 6px var(--icen-density-space-md);
   border-bottom: 1px solid var(--icen-token-separator-soft);
   font-size: var(--icen-font-size-caption);
@@ -119,7 +119,7 @@
   border-bottom-color: transparent;
 }
 .icen-panel--collapsible .icen-panel-body {
-  animation: panel-expand var(--icen-tx-normal) var(--icen-ease-out);
+  animation: panel-expand var(--icen-duration-normal) var(--icen-ease-out);
 }
 @keyframes panel-expand {
   from { opacity: 0; transform: translateY(-8px); }

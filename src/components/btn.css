@@ -168,7 +168,9 @@
   inset-inline-start: 50%;
   inline-size: 14px;
   block-size: 14px;
-  margin: -7px 0 0 -7px; /* guard:allow-physical 居中负边距与 inset 50% 配套（物理坐标对），RTL 下同样居中 */
+  margin-block-start: -7px;
+  margin-inline-start: -7px;
+  color: var(--btn-fg);
   border: 1.5px solid color-mix(in srgb, currentColor 30%, transparent);
   border-top-color: currentColor;
   border-radius: 50%;

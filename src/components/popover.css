@@ -32,12 +32,12 @@
   border: 1px solid var(--icen-token-material-edge);
   box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
   border-radius: var(--icen-radius-lg);
-  animation: icen-popover-in var(--icen-tx-fast) var(--icen-ease-enter);
+  animation: icen-popover-in var(--icen-duration-fast) var(--icen-ease-enter);
   transform-origin: top center;
   /* 退场走过渡（可中断回弹）；与菜单同收敛配方 */
   transition:
-    opacity var(--icen-tx-fast) var(--icen-ease-out),
-    transform var(--icen-tx-fast) var(--icen-ease-out);
+    opacity var(--icen-duration-fast) var(--icen-ease-out),
+    transform var(--icen-duration-fast) var(--icen-ease-out);
 }
 .icen-popover[data-icen-state='closing'] {
   animation: none; /* 打断可能仍在跑的进场 */

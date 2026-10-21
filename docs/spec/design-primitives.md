@@ -22,7 +22,7 @@
 
 1. **作者种子** `--icen-design-*`：品牌色、表面、文字、几何、节奏、字体、材料参数。
 2. **语义映射**：推导已有 `--icen-token-* / --icen-radius-* / --icen-density-*`，让现有组件受益。
-3. **材料角色**：content / chrome / floating，共享边缘、模糊和阴影配方。
+3. **材料角色**：content / chrome / floating，共享边缘、实面和阴影配方。
 4. **组件适配**：按钮、输入、分段选择、菜单、弹窗等，处理仅靠变量无法表达的细节。
 
 现代主题为中性瓷白＋冷蓝，独立校准，不继承其它主题的配色。
@@ -40,12 +40,12 @@
 | 角色 | 背景 | 光与影 | 用途 |
 | --- | --- | --- | --- |
 | content | 不透明 | 轻边界，不投影 | 阅读与编辑 |
-| chrome | 条件启用透光 | 顶部微光 | 导航与操作 |
-| floating | 条件启用透光 | 接触影＋环境影＋顶部微光 | 临时面板 |
+| chrome | 不透明 | 顶部微光 | 导航与操作 |
+| floating | 不透明 | 接触影＋环境影＋顶部微光 | 临时面板 |
 
 布局、定位和内边距归业务页面。材料不携带固定宽高，不强行让所有内容成为卡片。`data-icen-material` 的通用外轮廓使用 lg 圆角；需要贴边的站栏可由布局覆盖。
 
-透明度只在支持 backdrop-filter 的浏览器中启用，否则自动使用不透明表面。`prefers-reduced-transparency: reduce` 与 `<html data-icen-transparency="reduced">` 都强制不透明。透明表面的实际对比度依赖背后内容，仍需实屏验证。
+modern 的内容、操作与临时面板始终使用不透明表面，不启用背景模糊。`glass-*` 参数保留供自有材料和既有品牌配方兼容使用；不会让 modern 的标准操作面变成玻璃。`prefers-reduced-transparency: reduce` 与 `<html data-icen-transparency="reduced">` 继续提供跨原语的实面降级。
 
 ## 修改与新增品牌
 
@@ -113,11 +113,11 @@ setDesign(brand.name);
 | ink / muted | #202124 / #616671；#f2f4f7 / #aeb5c2 | 正文与辅助字 |
 | accent / on-accent | #0062cc / #fff；#89b9ff / #10223c | 动作与按钮文字 |
 | success / warning / error / info | 明暗各有独立值，见源码 | 语义色 |
-| radius | 8px | 六档轮廓的共同起点 |
+| radius | 10px | 六档轮廓的共同起点 |
 | space | 4px | 布局节奏单位 |
 | control-height | 34px | 标准操作高度（density compact 28 / comfortable 38） |
 | font-size / font | 13px / 系统无衬线 | 界面阅读基准；中文下限 12px |
-| glass-opacity / glass-blur | 84% / 24px；90% / 24px | 操作层材料 |
+| glass-opacity / glass-blur | 84% / 24px；90% / 24px | 自有材料的兼容参数，modern 标准组件不消费模糊 |
 | shadow-color / shadow-strength | 中性灰 11%；黑 28% | 接触影与环境影 |
 | light / highlight-strength | 白 70%；白 9% | 表面边缘光 |
 | edge-strength | 12% / 14% | 材料边界 |
@@ -128,8 +128,8 @@ CSS 作者可以直接覆盖全部种子；类型 API 暴露常用旋钮，并�
 ## 现代的具体判断
 
 - **文字**：界面系统无衬线；代码单独等宽；数据才使用 tabular-nums。取消全局 Numeric Math 混排。正文阅读可在业务排版中提高到 16px。
-- **几何**：xs/sm/md/lg/xl 从共同控件半径推导；贴合内外轮廓同心，独立控件保留自身半径。分段选择内角扣掉外壳 padding 与边框。
-- **密度**：normal / compact / comfortable 改变间距和控件高度，不缩小文字；嵌套密度可恢复 normal。触摸环境控件至少 44px。
+- **几何**：xs/sm/md/lg/xl 为 5/8/10/14/20px，从共同基准推导。控件 8px、卡片与面板 14px、弹窗 20px；贴合内外轮廓同心，独立控件保留自身半径。分段选择内角扣掉外壳 padding 与边框。
+- **密度**：normal / compact / comfortable 改变间距和控件高度，不缩小文字；嵌套密度可恢复 normal。触摸环境控件至少 44px。KB 行内操作使用 `--icen-density-item-height`（normal 28 / compact 24 / comfortable 32px），嵌套密度重新计算字号角色。
 - **反馈**：hover 以中性变化为主，主要动作用品牌色；键盘焦点始终明确。按压轻缩放，减少位置漂移。
 - **选择**：分段选择使用中性表面和接触影，不把每次选择都变成品牌强调。
 - **光照**：暗色保留遮挡阴影，降低高光并重新设置边缘，避免照搬亮色投影。
@@ -149,7 +149,7 @@ CSS 作者可以直接覆盖全部种子；类型 API 暴露常用旋钮，并�
 
 运行时使用 `setPrimitive("pixel")`；自建原语先 `registerPrimitive("brand-shape")`，再用 `[data-icen-style="brand-shape"]` 覆盖几何、字体、光影参数。主题仍单独由 setTheme({preset:...}) 选择。
 
-Apple 研究参考：[Materials](https://developer.apple.com/design/human-interface-guidelines/materials)、[Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/)。现代实现以内容／操作分层、同心几何、文字可读性为准则；Web 材料不是系统 Liquid Glass 的光学模拟。
+现代实现以内容／操作分层、同心几何、文字可读性为准则；使用稳定实面、细边与接触影建立空间。
 
 ## 中式与苏式原语
 

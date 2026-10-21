@@ -49,7 +49,7 @@
 }
 .icen-chart-radar svg circle[data-icen-chart-mark] {
   stroke-width: 1.75;
-  transition: transform var(--icen-tx-fast) var(--icen-ease-out);
+  transition: transform var(--icen-duration-fast) var(--icen-ease-out);
   transform-box: fill-box;
   transform-origin: center;
 }

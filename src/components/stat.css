@@ -206,7 +206,7 @@
   stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 0, 100;
-  transition: stroke-dasharray var(--icen-tx-slow) var(--icen-ease-out);
+  transition: stroke-dasharray var(--icen-duration-slow) var(--icen-ease-out);
 }
 .icen-stat-card .icen-stat-ring-fill { stroke: var(--icen-token-accent); }
 

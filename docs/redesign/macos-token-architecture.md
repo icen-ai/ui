@@ -28,7 +28,7 @@
 | Token | 默认值 | 说明 |
 |---|---|---|
 | `--icen-control-height-sm/md/lg` | 28 / 34 / 42 | density 高度的语义别名，组件读意图而非算差值 |
-| `--icen-control-radius-sm/…/lg` | 3 / 6 / 8 | 复选框、按钮/输入、大控件 |
+| `--icen-control-radius-sm/…/lg` | 8 / 8 / 10 | 小控件、按钮/输入、大控件 |
 | `--icen-control-padding-inline-sm/…/lg` | 9 / 12 / 16 | 按钮密度 |
 | `--icen-field-padding-inline(-sm)` | 9 / 8 | 输入、选择器、日期触发器的文本内距 |
 | `--icen-control-gap(-sm)` | 6 / 4 | 图标与文字、行内槽位 |

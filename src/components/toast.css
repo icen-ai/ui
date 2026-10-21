@@ -45,7 +45,7 @@
   font-size: var(--icen-font-size-control);
   line-height: 1.4;
   max-inline-size: 400px;
-  animation: icen-toast-in var(--icen-tx-normal) var(--icen-ease-enter);
+  animation: icen-toast-in var(--icen-duration-normal) var(--icen-ease-enter);
 }
 
 /* 语义色：起始缘 3px 强调 */

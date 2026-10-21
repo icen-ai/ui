@@ -20,7 +20,7 @@
   height: 100%;
   min-width: 3px;
   background: var(--chart-tone, var(--icen-token-accent));
-  transition: width var(--icen-tx-slow) var(--icen-ease-out), filter var(--icen-tx-fast);
+  transition: width var(--icen-duration-slow) var(--icen-ease-out), filter var(--icen-tx-fast);
 }
 /* 段缝：2px 面色内阴影（不改宽度，不改百分比契约；同色相邻段也能分界） */
 .icen-chart-stack-seg + .icen-chart-stack-seg {

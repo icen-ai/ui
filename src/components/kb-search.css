@@ -20,7 +20,7 @@
   -webkit-appearance: none;
   appearance: none;
   width: 96px;
-  height: 28px;
+  height: var(--icen-density-item-height);
   margin: 0;
   border-radius: var(--icen-radius-full);
   background: transparent;
@@ -145,7 +145,7 @@
   gap: 6px;
 }
 .icen-kb-toggle-label {
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-muted);
 }
 
@@ -154,10 +154,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
+  height: var(--icen-density-item-height);
   padding: 0 12px;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
   letter-spacing: var(--icen-letter-spacing-control);
   color: var(--icen-token-on-accent);
@@ -202,7 +202,7 @@
   height: 24px;
   padding: 0;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   color: var(--icen-token-text-muted);
   background: transparent;
@@ -258,7 +258,7 @@
 
 /* scoreKind 微型 chip（retrieval hit / rerank 列头共用） */
 .icen-kb-chip--kind {
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.01em;
   padding: 0 6px;
   color: var(--icen-token-text-faint);
@@ -290,7 +290,7 @@
   align-items: center;
   gap: 2px;
   box-sizing: border-box;
-  height: 28px;
+  height: var(--icen-density-item-height);
   padding: 1px;
   background: var(--icen-token-bg-soft);
   border: 1px solid var(--icen-token-line-soft);
@@ -300,7 +300,7 @@
   height: 24px;
   padding: 0 10px;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 500;
   line-height: 1;
   color: var(--icen-token-text-muted);
@@ -331,7 +331,7 @@
 .icen-kb-step {
   display: inline-flex;
   align-items: center;
-  height: 28px;
+  height: var(--icen-density-item-height);
   overflow: hidden;
   background: var(--icen-token-bg);
   border: 1px solid var(--icen-token-line-soft);
@@ -345,7 +345,7 @@
   width: 26px;
   height: 100%;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 500;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -379,10 +379,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
+  height: var(--icen-density-item-height);
 }
 .icen-kb-alpha-end {
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
   color: var(--icen-token-text-faint);
   cursor: help;
@@ -397,7 +397,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
+  height: var(--icen-density-item-height);
 }
 .icen-kb-threshold-count {
   min-width: 150px;
@@ -460,7 +460,7 @@
   width: 28px;
   padding-top: 1px;
   text-align: right; /* guard:allow-physical rank 是数字（LTR 文种），物理右对齐惯例，RTL 不镜像 */
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.5;
   color: var(--icen-token-text-faint);
 }
@@ -471,7 +471,7 @@
   min-inline-size: 0;
 }
 .icen-kb-hit-title {
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: var(--icen-letter-spacing-control);
@@ -485,7 +485,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.7;
   color: var(--icen-token-text-muted);
 }
@@ -562,7 +562,7 @@
   justify-content: center;
   padding: 0 4px;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   color: var(--icen-token-text-faint);
   background: transparent;
@@ -583,7 +583,7 @@
 }
 .icen-kb-hit-explain {
   max-inline-size: 320px;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.65;
   text-align: end;
   white-space: normal;
@@ -619,14 +619,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   margin-bottom: 8px;
 }
 .icen-kb-filter-op-toggle {
-  height: 28px;
+  height: var(--icen-density-item-height);
   padding: 0 12px;
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: .3px;
   color: var(--icen-token-text-muted);
   background: var(--icen-token-bg);
@@ -654,7 +654,7 @@
 .icen-kb-filter-head .icen-kb-filter-act {
   padding: 0 8px;
   width: auto;
-  height: 28px;
+  height: var(--icen-density-item-height);
 }
 
 .icen-kb-filter-body {
@@ -672,7 +672,7 @@
   flex-wrap: wrap; /* 窄栏兜底：值输入挤不下时独占次行全宽，日期串不截字 */
   align-items: center;
   gap: 6px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
 }
 /* rule → 组竖线的横向连接线（竖线沿 inline-start，RTL 镜像） */
 .icen-kb-filter-rule::before {
@@ -721,7 +721,7 @@
   height: 24px;
   padding: 0 8px;
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-faint);
   background: transparent;
   border: 1px solid transparent;
@@ -749,13 +749,13 @@
   margin-inline-start: auto;
   width: auto;
   padding: 0 8px;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
 }
 .icen-kb-filter-dsl-text {
   display: block;
   max-block-size: 110px;
   overflow: auto;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.65;
   color: var(--icen-token-text-muted);
   /* DSL 镜像（Mongo/OData）：mono + 不换行不断词，横向滚动兜底 */
@@ -778,7 +778,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
 }
 .icen-kb-rerank-switch-label {
   margin-inline-start: auto;
@@ -798,9 +798,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   padding: 0 8px;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 500;
   letter-spacing: .3px;
   color: var(--icen-token-text-muted);
@@ -821,7 +821,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   padding: 2px 8px;
   border-radius: var(--icen-radius-sm);
   transition: background-color var(--icen-tx-fast);
@@ -833,7 +833,7 @@
   flex: 0 0 auto;
   width: 18px;
   text-align: right; /* guard:allow-physical rank 是数字（LTR 文种），物理右对齐惯例，RTL 不镜像 */
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.5;
   color: var(--icen-token-text-faint);
 }
@@ -841,7 +841,7 @@
   flex: 1 1 auto;
   min-inline-size: 0;
   overflow: hidden;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.4;
   color: var(--icen-token-text);
   white-space: nowrap;
@@ -849,7 +849,7 @@
 }
 .icen-kb-rerank-missing {
   flex: 1 1 auto;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   color: var(--icen-token-text-muted);
 }
 /* delta 箭头：上升绿 / 下降红 / 持平或单侧缺失 — */
@@ -859,7 +859,7 @@
   justify-content: center;
   font-family: var(--icen-font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: .01em;
   color: var(--icen-token-text-faint);
 }
@@ -904,7 +904,7 @@
   gap: 6px;
 }
 .icen-kb-hittest-stat-label {
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: .3px;
   color: var(--icen-token-text-faint);
 }
@@ -931,7 +931,7 @@
   grid-template-columns: 24px minmax(0, 1fr) auto 28px 24px;
   gap: 8px;
   align-items: center;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   padding: 2px 8px;
   border-radius: var(--icen-radius-sm);
   transition: background-color var(--icen-tx-fast);
@@ -956,7 +956,7 @@
 }
 .icen-kb-hittest-q {
   overflow: hidden;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.5;
   color: var(--icen-token-text);
   white-space: nowrap;
@@ -1001,10 +1001,10 @@
   flex: 1 1 auto;
 }
 .icen-kb-hittest-add-btn {
-  height: 28px;
+  height: var(--icen-density-item-height);
   padding: 0 12px;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 500;
   color: var(--icen-token-text-muted);
   background: var(--icen-token-bg);
@@ -1037,10 +1037,10 @@
   gap: 8px;
 }
 [data-icen-density='compact'] .icen-kb-hittest-row {
-  min-height: 24px;
+  min-height: var(--icen-density-item-height);
 }
 [data-icen-density='compact'] .icen-kb-rerank-col {
-  min-height: 24px;
+  min-height: var(--icen-density-item-height);
 }
 [data-icen-density='compact'] .icen-kb-hittest-stats {
   gap: 12px;

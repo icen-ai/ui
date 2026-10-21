@@ -25,7 +25,7 @@
 /* 环宽 13（轨道与弧一致）；hover 段加宽 2px 但不压邻段（底座已留 2.5 缝隙） */
 .icen-chart-donut svg circle {
   stroke-width: 13;
-  transition: stroke-width var(--icen-tx-fast) var(--icen-ease-out), opacity var(--icen-tx-fast);
+  transition: stroke-width var(--icen-duration-fast) var(--icen-ease-out), opacity var(--icen-tx-fast);
 }
 .icen-chart-donut svg circle[data-icen-chart-mark].is-hover {
   stroke-width: 15;

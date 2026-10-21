@@ -89,7 +89,7 @@ describe('RTL 冒烟：document.dir=rtl 下行为不抛错、结构完整', () =
 describe('RTL 静态断言：逻辑属性落在 CSS 源里', () => {
   test('btn.css 等关键文件含 margin/padding/border 逻辑属性族', async () => {
     const checks: Array<[string, RegExp]> = [
-      ['components/btn.css', /margin:\s*-7px\s+0\s+0\s+-7px/], /* 居中负边距（物理豁免形态）存在 */
+      ['components/btn.css', /margin-inline-start:\s*-7px/], /* 加载指示器使用逻辑方向居中 */
       ['components/tabs.css', /border-inline-end/],
       ['components/sidebar.css', /padding-inline(?:-|:)/],
       ['components/menu.css', /margin-inline-start/],

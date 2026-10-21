@@ -31,7 +31,7 @@
   color: var(--icen-token-text-faint);
   font-family: var(--icen-font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   vertical-align: 2px; /* 上标视感，与正文基线对齐 */
   cursor: pointer;
@@ -106,7 +106,7 @@
 .icen-kb-citation-card-icon > svg { width: 14px; height: 14px; }
 .icen-kb-citation-card-title {
   min-width: 0;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
   line-height: 1.35;
   color: var(--icen-token-text);
@@ -116,7 +116,7 @@
 }
 .icen-kb-citation-card-domain {
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.3px;
   color: var(--icen-token-text-faint);
   white-space: nowrap;
@@ -185,7 +185,7 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  min-height: 28px;
+  min-height: var(--icen-density-item-height);
   padding-block: 3px;
   padding-inline: 8px;
   border: 1px solid transparent;
@@ -239,7 +239,7 @@
   gap: 1px;
 }
 .icen-kb-source-title {
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.4;
   color: var(--icen-token-text);
   white-space: nowrap;
@@ -247,7 +247,7 @@
   text-overflow: ellipsis;
 }
 .icen-kb-source-sub {
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
   color: var(--icen-token-text-faint);
   white-space: nowrap;
@@ -274,14 +274,14 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  min-block-size: 28px;
+  min-block-size: var(--icen-density-item-height);
   padding-block: 0;
   padding-inline: 12px;
   border: 1px solid var(--icen-token-line-soft);
   border-radius: var(--icen-radius-full);
   background: transparent;
   color: var(--icen-token-text-muted);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1;
   letter-spacing: 0.3px;
   white-space: nowrap;
@@ -349,7 +349,7 @@
   gap: 2px;
 }
 .icen-kb-passage-title {
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
   line-height: 1.35;
   color: var(--icen-token-text);
@@ -359,7 +359,7 @@
 }
 .icen-kb-passage-loc {
   font-family: var(--icen-font-mono);
-  font-size: 11px;
+  font-size: var(--icen-density-font-size-xs);
   letter-spacing: 0.3px;
   color: var(--icen-token-text-faint);
   white-space: nowrap;
@@ -377,7 +377,7 @@
   border-radius: var(--icen-radius-sm);
   background: transparent;
   color: var(--icen-token-text-faint);
-  font-size: 14px;
+  font-size: var(--icen-density-font-size-lg);
   line-height: 1;
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
@@ -394,7 +394,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 12px;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.7;
   color: var(--icen-token-text);
 }
@@ -406,7 +406,7 @@
   position: relative;
   padding-block: 2px;
   padding-inline-start: 12px;
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.7;
   color: var(--icen-token-text-faint);
   white-space: pre-wrap;
@@ -430,14 +430,14 @@
   align-items: center;
   justify-content: center;
   align-self: flex-start;
-  min-block-size: 28px;
+  min-block-size: var(--icen-density-item-height);
   padding-block: 2px;
   padding-inline: 8px;
   border: none;
   border-radius: var(--icen-radius-sm);
   background: transparent;
   color: var(--icen-token-text-muted);
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
   cursor: pointer;
   transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
@@ -450,7 +450,7 @@
 .icen-kb-passage-masked {
   filter: blur(4px);
   user-select: none;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.7;
   color: var(--icen-token-text-muted);
   white-space: pre-wrap;
@@ -462,7 +462,7 @@
   justify-content: center;
   gap: 6px;
   align-self: flex-start;
-  min-block-size: 28px;
+  min-block-size: var(--icen-density-item-height);
   margin-top: 4px;
   padding-block: 3px;
   padding-inline: 12px;
@@ -470,7 +470,7 @@
   border-radius: var(--icen-radius-sm);
   background: var(--icen-token-accent-subtle);
   color: var(--icen-token-accent-text);
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   font-weight: 500;
   line-height: 1.35;
   cursor: pointer;
@@ -510,7 +510,7 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   font-weight: 600;
   line-height: 1.4;
   color: var(--icen-token-text);
@@ -567,7 +567,7 @@
   gap: 8px;
   min-inline-size: 0;
 }
-.icen-kb-conflict-ver-date { font-size: 11px; color: var(--icen-token-text); }
+.icen-kb-conflict-ver-date { font-size: var(--icen-density-font-size-xs); color: var(--icen-token-text); }
 .icen-kb-conflict-ver-badges {
   display: inline-flex;
   align-items: center;
@@ -576,7 +576,7 @@
 }
 .icen-kb-conflict-ver-badges .icen-kb-dot { width: 6px; height: 6px; }
 .icen-kb-conflict-ver-title {
-  font-size: 13px;
+  font-size: var(--icen-density-font-size-md);
   line-height: 1.4;
   color: var(--icen-token-text);
   white-space: nowrap;
@@ -584,7 +584,7 @@
   text-overflow: ellipsis;
 }
 .icen-kb-conflict-ver-sub {
-  font-size: 12px;
+  font-size: var(--icen-density-font-size-xs);
   line-height: 1.4;
   /* 卡片底色是 raised（比页面暗一档），muted 在 11–12px 下会擦到 AA 边界；
      用正文色保证可读，层级交给 13/12 字号与标题字重。 */

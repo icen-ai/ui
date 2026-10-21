@@ -197,7 +197,7 @@
   background: var(--icen-token-accent);
   transform-origin: left;
   transform: scaleX(0);
-  transition: transform var(--icen-tx-slow) var(--icen-ease-out);
+  transition: transform var(--icen-duration-slow) var(--icen-ease-out);
 }
 .icen-steps--progress .icen-step--finish .icen-step-line::after { transform: scaleX(1); }
 
