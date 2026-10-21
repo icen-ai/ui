@@ -5,7 +5,7 @@
 契约面变化以 [docs/contracts/snapshot.json](docs/contracts/snapshot.json) 的机器 diff 为准
 （`bun run contracts:diff <tagA> <tagB>`，CI 强制破坏性条目必须在本文件留痕）。
 
-## [Unreleased] — 目标 0.11.0（含破坏性变更）
+## [0.11.0] — 2026-10-21
 
 ### 安全性
 

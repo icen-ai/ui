@@ -1,5 +1,5 @@
 {
-  "version": "0.10.0",
+  "version": "0.11.0",
   "note": "公共契约面快照：bun run contracts:update 重新生成，随变更同 PR 提交；移除/改名/签名变化=破坏性变更须按 docs/versioning.md 公告。tiers 为分层盖章（tag 间 diff 直接读，不再反推）。",
   "surfaces": {
     "classes": [
