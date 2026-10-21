@@ -34,9 +34,10 @@ test('touch code actions retain generous targets and keyboard regions in RTL red
   const context=await browser.newContext({locale:'zh-CN',viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
   try{const page=await context.newPage();await page.goto('/components/code-block/');await page.locator('html').evaluate(el=>{el.dir='rtl';el.dataset.icenStyle='pixel';el.dataset.icenTheme='dark';});
     const figure=page.locator('.demo-stage .icen-code-block').first();
-    for(const button of await figure.locator('button').all()){const size=(await button.boundingBox())!;expect(size.height).toBeGreaterThanOrEqual(44);expect(size.width).toBeGreaterThanOrEqual(44);}
+    await expect(figure.locator('button')).toHaveCount(3);
+    const targets = await figure.locator('button').evaluateAll(buttons => buttons.map(button => { const { width, height } = button.getBoundingClientRect(); return { width, height }; }));
+    for(const size of targets){expect(size.height).toBeGreaterThanOrEqual(44);expect(size.width).toBeGreaterThanOrEqual(44);}
     await figure.locator('pre').focus();await expect(figure.locator('pre')).toBeFocused();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-    await figure.screenshot({path:'.ui-audit/code-block-mobile-pixel.png',animations:'disabled'});
     await page.emulateMedia({forcedColors:'active'});
     const systemInk=await page.evaluate(()=>{const probe=document.createElement('span');probe.style.color='CanvasText';document.body.append(probe);const ink=getComputedStyle(probe).color;probe.remove();return ink;});
     await expect(figure.locator('pre span').first()).toHaveCSS('color',systemInk);

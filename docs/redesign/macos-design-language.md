@@ -44,7 +44,7 @@ ICEN UI 不是 Apple 控件复刻，也不是把玻璃、圆角、阴影堆到�
 | `--icen-radius-xl` | 20px | 弹窗与页面级展示容器 |
 | `--icen-radius-full` | 999px | 只给胶囊语义件（开关、滑块、徽章） |
 
-- 控件与容器**不同半径**：按钮 6px、菜单 12px、弹窗 12px、卡片 8px；大容器不套小控件半径。
+- 控件与容器**不同半径**：按钮 8px、菜单 14px、弹窗 20px、卡片 14px；大容器不套小控件半径。
 - 嵌套同心：`R_inner = R_outer − gap`，结果 < 0 取 0。
 - 不把 10px/16px 等「中间值」散落到组件里；所有圆角来自 token。**[实测]**
 
@@ -97,7 +97,7 @@ ICEN UI 不是 Apple 控件复刻，也不是把玻璃、圆角、阴影堆到�
 | Canvas | 应用工作区底 | `--icen-token-canvas` |
 | Content | 阅读、表格、表单 | `--icen-token-surface` |
 | Chrome | 工具栏、侧栏、导航 | `--icen-token-surface-chrome/toolbar/sidebar`（canvas 与 surface 的混合） |
-| Floating | 菜单、popover、tooltip | `--icen-token-surface` + 条件模糊 + elevated shadow |
+| Floating | 菜单、popover、tooltip | `--icen-token-surface` + elevated shadow |
 | Modal | 对话框、命令面板 | 不透明表面 + overlay shadow + scrim |
 | Selected | 选中行/项 | `--icen-token-fill-selected`（accent 13%） |
 
@@ -110,8 +110,8 @@ ICEN UI 不是 Apple 控件复刻，也不是把玻璃、圆角、阴影堆到�
 
 ## 4. 材质
 
-- 透明/模糊只给真正悬浮或 chrome 语义：菜单、popover、命令面板、顶栏、侧栏、toast。
-- 模糊半径：chrome 18px，floating 28px，饱和度 1.4；默认表面保持不透明。
+- modern 的菜单、popover、命令面板、顶栏、侧栏、toast 均为稳定实面，以边缘、明度与接触影建立层次，不启用玻璃模糊。
+- 模糊参数仅为既有品牌与自有材料保留兼容，modern 标准组件不使用。
 - 所有透明表面必须有：`backdrop-filter` 不支持时的 opaque fallback、`prefers-reduced-transparency`、`data-icen-transparency="reduced"`。
 - 顶部高光只表达「受光边缘」，不制造塑料感；暗色下高光强度接近 0。
 - 阴影三层同光源：contact（1px）、near-field（8–20px）、ambient（24–52px），负 spread 收紧轮廓。

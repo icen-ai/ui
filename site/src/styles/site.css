@@ -59,15 +59,15 @@ a:hover { text-decoration: none; }
   position: sticky;
   top: 0;
   z-index: var(--icen-z-sticky);
-  background: color-mix(in srgb, var(--icen-token-surface-toolbar) 86%, transparent);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  backdrop-filter: blur(18px) saturate(1.4);
+  background: var(--icen-token-surface-toolbar);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   border-bottom: 1px solid var(--icen-token-separator-soft);
   transition: border-color 0.25s var(--icen-ease-out), background 0.25s var(--icen-ease-out);
 }
 .site-nav.is-scrolled {
   border-bottom-color: var(--icen-token-separator);
-  background: color-mix(in srgb, var(--icen-token-surface-toolbar) 94%, transparent);
+  background: var(--icen-token-surface-toolbar);
 }
 .site-nav-inner {
   max-width: 1280px;
@@ -418,7 +418,7 @@ a:hover { text-decoration: none; }
   cursor: pointer;
   user-select: none;
   list-style: none;
-  border-radius: var(--icen-radius-xs);
+  border-radius: var(--icen-radius-sm);
   transition: background-color var(--icen-duration-fast) var(--icen-ease-out), color var(--icen-duration-fast) var(--icen-ease-out);
 }
 .docs-group[data-icen-group] > summary.docs-group-name::-webkit-details-marker { display: none; }
@@ -472,7 +472,7 @@ a:hover { text-decoration: none; }
   font-size: 12.5px;
   color: var(--icen-token-text-muted);
   padding: 4px 8px;
-  border-radius: var(--icen-radius-xs);
+  border-radius: var(--icen-radius-sm);
   border-left: 0;
   transition: color var(--icen-duration-fast) var(--icen-ease-out), background var(--icen-duration-fast) var(--icen-ease-out);
 }
@@ -498,9 +498,9 @@ a:hover { text-decoration: none; }
   height: 44px;
   margin: 0 -36px 22px;
   padding: 0 36px;
-  background: color-mix(in srgb, var(--icen-token-surface-toolbar) 86%, transparent);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  background: var(--icen-token-surface-toolbar);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-bottom: 1px solid var(--icen-token-separator-soft);
 }
 .docs-toolbar-path { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; }
@@ -537,8 +537,8 @@ a:hover { text-decoration: none; }
   max-height: calc(100vh - 52px);
   overflow-y: auto;
   padding: 58px 16px 48px;
-  border-inline-start: 1px solid var(--icen-token-separator-soft);
-  background: var(--icen-token-surface-sidebar);
+  border-inline-start: 0;
+  background: transparent;
   font-size: 12px;
   scrollbar-width: thin;
 }
@@ -600,7 +600,7 @@ a:hover { text-decoration: none; }
 .doc-api {
   margin: 0;
   border: 1px solid var(--icen-token-separator-soft);
-  border-radius: var(--icen-control-radius-lg);
+  border-radius: var(--icen-radius-lg);
   background: var(--icen-token-surface);
   overflow: hidden;
 }
@@ -635,7 +635,7 @@ a:hover { text-decoration: none; }
 /* 预览卡：应用工作区（工具栏 + 舞台 + 代码），不是白卡片 */
 .demo-panel {
   border: 1px solid var(--icen-token-separator-soft);
-  border-radius: var(--icen-control-radius-lg);
+  border-radius: var(--icen-radius-lg);
   background: var(--icen-token-surface);
   overflow: hidden;
   margin: 0 0 8px;

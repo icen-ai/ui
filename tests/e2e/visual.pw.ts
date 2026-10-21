@@ -12,12 +12,14 @@ const PAGES = [
   { name: 'icen-modal', path: '/components/modal/' },
   { name: 'kb', path: '/kb/' },
   { name: 'frameworks', path: '/frameworks/' },
+  { name: 'apps', path: '/apps/' },
 ];
 
 // 主题变体只打两张：首页 + 组件页代表（btn 覆盖密度/语义色最全的按钮矩阵）
 const THEME_VARIANT_PAGES = [
   { name: 'home', path: '/' },
   { name: 'icen-btn', path: '/components/btn/' },
+  { name: 'apps', path: '/apps/' },
 ];
 
 async function shoot(browser: Browser, name: string, path: string, init?: (() => void) | string) {
@@ -52,6 +54,44 @@ for (const p of PAGES) {
     await shoot(browser, p.name, p.path, p.name === 'charts' ? FREEZE_DATE : undefined);
   });
 }
+
+test('touch: /apps/', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'zh-CN', viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  try {
+    const page = await context.newPage();
+    await page.goto('/apps/', { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page).toHaveScreenshot('apps-touch.png', { fullPage: true, animations: 'disabled' });
+  } finally { await context.close(); }
+});
+
+for (const dark of [false, true]) {
+  test(`modal open: ${dark ? 'dark' : 'light'}`, async ({ browser }) => {
+    const context = await browser.newContext({ locale: 'zh-CN' });
+    try {
+      await context.addInitScript(dark => localStorage.setItem('icen.ui.theme', JSON.stringify({ preset: 'modern', style: 'modern', dark })), dark);
+      const page = await context.newPage();
+      await page.goto('/components/modal/', { waitUntil: 'networkidle' });
+      await page.locator('[data-icen-modal-open="demo-modal-md"]').click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page).toHaveScreenshot(`modal-open-${dark ? 'dark' : 'light'}.png`, { animations: 'disabled' });
+    } finally { await context.close(); }
+  });
+}
+
+test('touch code paper: pixel RTL dark', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'zh-CN', viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
+  try {
+    await context.addInitScript(() => {
+      localStorage.setItem('icen.ui.theme', JSON.stringify({ preset: 'modern', style: 'pixel', dark: true }));
+      document.addEventListener('DOMContentLoaded', () => { document.documentElement.dir = 'rtl'; });
+    });
+    const page = await context.newPage(); await page.goto('/components/code-block/', { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator('.demo-stage .icen-code-block').first()).toHaveScreenshot('code-paper-touch-pixel-rtl.png', { animations: 'disabled' });
+  } finally { await context.close(); }
+});
 
 for (const p of THEME_VARIANT_PAGES) {
   test(`dark: ${p.path}`, async ({ browser }) => {

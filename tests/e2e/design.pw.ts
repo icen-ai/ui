@@ -41,7 +41,7 @@ test('workbench interactions, portalled menu and dialog keep the same design', a
   await page.getByRole('tab',{name:'知识工作台'}).click();
   await page.getByRole('button',{name:'新建笔记',exact:true}).click();
   await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByRole('dialog')).toHaveCSS('border-radius','12px');
+  await expect(page.getByRole('dialog')).toHaveCSS('border-radius','20px');
   await page.locator('#note-input').fill('材料测试');
   await page.getByRole('button',{name:'保存笔记'}).click();
   await expect(page.getByRole('cell',{name:'材料测试'})).toBeVisible();
@@ -197,7 +197,7 @@ test('four primitives compose with every built-in theme in light and dark', asyn
         await dialog.locator(`[data-icen-axis="primitive"][data-icen-value="${primitive}"]`).click();
         await expect(page.locator('html')).toHaveAttribute('data-icen-preset',preset);
         await expect(page.locator('html')).toHaveAttribute('data-icen-style',primitive);
-        const radius=primitive==='modern' ? '6px' : primitive==='chinese' ? '4px' : '0px';
+        const radius=primitive==='modern' ? '8px' : primitive==='chinese' ? '4px' : '0px';
         await expect(primary).toHaveCSS('border-radius',radius);
         const color=await primary.evaluate(el=>getComputedStyle(el).backgroundColor);
         if(primitive==='modern') palette=color; else expect(color).toBe(palette);

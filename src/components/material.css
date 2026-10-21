@@ -185,6 +185,9 @@
 :root:where(:not([data-icen-style]),[data-icen-style="modern"]) [data-icen-material="chrome"] {
   background: var(--icen-token-surface-toolbar);
 }
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-nav.is-scrolled {
+  background: var(--icen-token-surface-toolbar);
+}
 :root:where(:not([data-icen-style]),[data-icen-style="modern"]) :is(.icen-card-tag,.icen-media-card-overlay,.icen-carousel-dot,.icen-carousel-index,.icen-spinner-overlay) {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;

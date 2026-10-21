@@ -53,6 +53,7 @@ test('async toast has a stable SVG busy slot, inline retry and one successful co
     await page.goto('/components/toast/');
     await page.locator('html').evaluate((el,{primitive,dark})=>{el.dataset.icenStyle=primitive;dark ? el.dataset.icenTheme='dark' : el.removeAttribute('data-icen-theme');},{primitive,dark});
     await page.locator('#toast-demo-async').click();const row=page.locator('.icen-toast').filter({hasText:'已移到回收站'}),action=row.getByRole('button',{name:'撤销',exact:true});
+    await expect.poll(() => row.evaluate(el => el.getAnimations().filter(animation => animation.playState === 'running').length)).toBe(0);
     const before=(await action.boundingBox())!;await action.click();await expect(action).toHaveAttribute('aria-busy','true');
     await expect(action.locator('.icen-feedback-action-spinner svg')).toBeVisible();
     const busy=(await action.boundingBox())!;expect(busy.width).toBeCloseTo(before.width,1);expect(busy.height).toBeCloseTo(before.height,1);

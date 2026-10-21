@@ -225,10 +225,10 @@ const bootData = JSON.stringify({
     <section class="doc-meta-block">
       <h2 class="doc-meta-title">设计口径</h2>
       <ul class="doc-meta-facts">
-        <li><span>控件高度</span><b>28 / 34 / 42</b></li>
-        <li><span>控件圆角</span><b>6px</b></li>
-        <li><span>界面字号</span><b>13px</b></li>
-        <li><span>动效</span><b>110 / 180 / 260ms</b></li>
+        <li><span>控件高度</span><b data-doc-token="--icen-control-height-sm,--icen-control-height-md,--icen-control-height-lg">28px / 34px / 42px</b></li>
+        <li><span>控件圆角</span><b data-doc-token="--icen-control-radius">8px</b></li>
+        <li><span>界面字号</span><b data-doc-token="--icen-density-font-size-md">13px</b></li>
+        <li><span>动效</span><b data-doc-token="--icen-duration-fast,--icen-duration-normal,--icen-duration-slow">110ms / 180ms / 260ms</b></li>
       </ul>
       <p class="doc-meta-note">所有数值来自 <code>--icen-control-*</code> 与 density token；切换主题、原语或密度时不改组件结构。</p>
     </section>
@@ -247,10 +247,12 @@ const bootData = JSON.stringify({
     import { initTooltip } from '../../../../src/behaviors/tooltip.ts';
     let bootGeneration = 0;
     let disposeDemo: (() => void) | undefined;
+    const behaviorCleanups: Array<() => void> = [];
     function cleanupDemo(): void {
       bootGeneration++;
       disposeDemo?.();
       disposeDemo = undefined;
+      behaviorCleanups.splice(0).reverse().forEach(dispose => dispose());
     }
     document.addEventListener('astro:before-swap', cleanupDemo);
 
@@ -261,6 +263,27 @@ const bootData = JSON.stringify({
       initTooltip();
       void boot();
     });
+
+    function syncDesignFacts(): void {
+      const probe = document.querySelector('.demo-stage');
+      if (!probe) return;
+      const styles = getComputedStyle(probe);
+      document.querySelectorAll<HTMLElement>('[data-doc-token]').forEach(el => {
+        // Resolve calc()/max() custom values through a real length property.
+        const values = el.dataset.docToken!.split(',').map(token => {
+          const span = document.createElement('span');
+          span.style.cssText = `position:absolute;visibility:hidden;width:var(${token})`;
+          span.style.transitionDuration = `var(${token})`;
+          probe.append(span);
+          const computed = getComputedStyle(span);
+          const value = token.includes('duration') ? `${Math.round(parseFloat(computed.transitionDuration) * 1000)}ms` : computed.width;
+          span.remove();
+          return value;
+        });
+        el.textContent = values.join(' / ');
+      });
+    }
+    document.addEventListener('icen:theme-change', syncDesignFacts);
 
     type BootData = {
       behaviors?: string[];
@@ -299,7 +322,10 @@ const bootData = JSON.stringify({
         const names = Array.isArray(initName) ? initName : initName ? [initName] : [];
         for (const n of names) {
           const fn = loaded[b]?.[n];
-          if (typeof fn === 'function') (fn as () => void)();
+          if (typeof fn === 'function') {
+            const dispose = (fn as () => unknown)();
+            if (typeof dispose === 'function') behaviorCleanups.push(dispose as () => void);
+          }
         }
       }
       // 额外接线脚本（charts 渲染数据、context-menu 注册、演示回显等），
@@ -320,6 +346,7 @@ const bootData = JSON.stringify({
         }
       }
       document.querySelector('.demo-stage')?.setAttribute('data-icen-demo-ready','');
+      syncDesignFacts();
     }
   </script>
 </Docs>

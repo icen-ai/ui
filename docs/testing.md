@@ -22,6 +22,7 @@
 - 视觉基线在 `tests/e2e/__screenshots__/`，随 git 提交。**基线对 OS/字体敏感（Windows 生成）**——Linux CI 红了就在同构环境 `bun run test:e2e:update` 重打提交，不许放宽 `maxDiffPixelRatio` 迁就。
 - axe 门禁语义是**债只许减不许增**：基线 `tests/e2e/a11y-baseline.json` 内打印修法不 fail，基线外新增即 fail；更新基线走 `A11Y_UPDATE_BASELINE=1 bunx playwright test tests/e2e/a11y.pw.ts`（须人工评审提交）。
 - 巡检脚本（非门禁）：`scripts/visual-smoke.mjs`（demo 健康）、`scripts/audit-interact.mjs`（高风险组件真实交互）、`scripts/audit-visual.mjs`（双站像素对拍）、`scripts/audit-ui.mjs`（构建后基础巡检，报告落 `.ui-audit/`）。
+- 设计清单：先 `cd site` 构建文档站，再在仓库根运行 `bun scripts/serve-static.mjs site/dist 4173`，另一个终端运行 `node scripts/design-review.mjs`。脚本检查所有可安装 slug 都有文档页，生成 129 个组件页首屏、48 张配色、24 张原语、9 张密度和 4 张应用截图，并写入带版本与错误信息的 `.ui-audit/design-review/manifest.json`。不要在巡检过程中重建站点，否则静态文件切换会制造 404。`DESIGN_REVIEW_URL` / `DESIGN_REVIEW_OUTPUT` 可覆盖地址与输出目录。首屏清单不代表全部交互状态或跨浏览器覆盖；展开弹窗与手机应用页由 `visual.pw.ts` 的提交基线补充。
 
 ## CI 全景
 
