@@ -31,12 +31,12 @@
 - **表单族**：按钮（物理按压面、顶部高光、按下不位移）、输入（1px field 影、9px 内距）、选择器（恢复 chevron、28px 选项、选中勾选）、菜单（12px 角、28px 行）、分段（白面浮起 + hairline）、开关（38×22）、复选框（勾选 mask）、滑块（4px 轨 + 白 thumb）、日期/级联/树选择/标签输入/提及/自动补全/上传。
 - **导航与数据**：源列表侧栏（28px 行、整行选中底）、52px 工具栏化顶栏、44px 工具条、13px 标签页、32px 表格行（compact 28）、DataTable 同语法、卡片/面板/指标/空态/徽标/键盘键/列表/树/折叠/时间线/描述。
 - **浮层与反馈**：弹窗（12px 角、chrome footer、焦点契约不变）、菜单/Popover/Tooltip/命令面板（方向入场、scrim、28px 结果行）、Toast/通知（2px 语义边 + 20px 模糊）、警示/进度/加载/骨架/复制。
-- **图表**：统一 11–12px 轴/图例、7px 图例点、surface tooltip；13 种细分图继承基座，经主题矩阵审查。
+- **图表**：13 种图逐个精修——网格与基线分色、轴标 10–11px、数据点白芯色环 + hover 放大、环图多段 2.5 单位白隙、柱图轨道内置网格、堆叠段面色缝、热力格 3px 圆角 + 色环 hover、日历月份/星期标签、雷达实线蛛网、散点双轴、图谱边/节点 hover 与拖拽分层；面积图补齐可交互数据点与命中圆。
+- **知识库族**：kb 基座 28px 行 / 13px 标题 / 12px 次要信息 / 11px 徽标；7 域逐文件精修（28px 控件、统一 focus ring、fill-hover/pressed、整行选中替代左侧竖条、compact 密度档、forced-colors 状态件），权限呈现纪律未改。
 - **AI 原生族**：消息 13px/1.6、输入台 8px 角 + field 影、工具卡 28px 头、差异审阅 2px 状态边、上下文抽屉 chrome 头。
-- **知识库族**：kb 基座 28px 行 / 13px 标题 / 12px 次要信息 / 11px 徽标；7 域 32 组件继承共享基座，权限呈现纪律未改。
-- **其他**：media/carousel、layout/scroll-area/split-pane、copy、theme-switcher、code-block 全部按新层级收口。
+- **其他**：media/carousel、layout/scroll-area/split-pane、copy、theme-switcher、code-block、back-top、icon、form-validate 全部按新层级收口。
 
-覆盖核对：**76/76 CSS 文件已审查**；`docs/redesign/progress.json` 区分「逐文件改写」与「共享基座 + token 继承」两类，并如实登记。
+覆盖核对：**76/76 CSS 文件已逐文件审查并落地**；`docs/redesign/progress.json` 的 `inheritedTokenOnly` 已清空，不再有「共享基座未改」项。
 
 ### 3. 文档站（`site/`）
 
@@ -59,12 +59,14 @@
 
 | 项目 | 结果 |
 |---|---|
-| `bun run verify` | ✅ tsc / guard / 1033 单测 / build / size（ui.css 851.5KB ≤ 937.5KB，tokens.css 111.6KB ≤ 117.2KB） |
+| `bun run verify` | ✅ tsc / guard / 1033 单测 / build / size（ui.css 901.7KB ≤ 937.5KB，tokens.css 113.0KB ≤ 117.2KB） |
 | 文档站构建 | ✅ 138 页 |
 | axe 无障碍 | ✅ 11/11 场景；color-contrast 既有债清零，`a11y-baseline.json` 收缩 160 行 |
-| Playwright e2e | ✅ 308/308 用例通过（`.ui-audit/e2e-final2.log`） |
+| Playwright e2e | ✅ 308/308 用例通过（视觉快照已刷新） |
 | 主题矩阵 | 48 张：6 配色 × 明暗 × 4 页（`.ui-audit/matrix/`） |
 | 原语矩阵 | 24 张：现代/中式/苏式/像素 × 明暗 × 3 页（`.ui-audit/primitives/`） |
+| a11y 矩阵 | 42 张：14 页 × forced-colors / reduced-transparency / 200% zoom（`.ui-audit/a11y-matrix/`）；720px 视口 0 横向溢出 |
+| 图表 / KB 细看 | 26 张（13 图 × 明暗）+ 14 张（KB 工作台 + 6 代表页 × 明暗） |
 | 视觉快照 | `tests/e2e/__screenshots__/visual.pw.ts/` 已随新设计刷新 |
 | 前后对比 | `docs/redesign/visuals/buttons-before-after.png`、`table-before-after.png`、`apps-workspace.png` |
 
@@ -86,10 +88,10 @@
 
 ## 四、诚实的剩余项
 
-1. **图表细分与 KB 域**：13 种图表细图和 KB 7 域 32 组件主要通过共享基座/token 继承，未逐文件重写；主题矩阵与截图审查未发现硬编码色或破面，但仍有进一步精修空间。
+1. **图表读数**：vbar/hbar 不显示数值纵轴刻度（类目图按设计省略，读数走 tooltip/图例）；scatter 保留双轴。若业务需要柱图直接读数，可加 `spec.marks` 或后续加轴。
 2. **首页 Hero**：保留品牌艺术层与叙事，没有按应用工作区语法重做；这是品牌页与产品文档页的有意分工。
-3. **forced-colors / reduced-transparency**：规则和抽样审查通过，未逐主题截图固化。
-4. **20% 文本缩放 / 高对比模式**：未做专门的 200% 缩放矩阵；CSS 使用逻辑属性与 clamp，但需下一轮实机复核。
+3. **KB 窄面板**：28px 行动钮加宽后，极窄表格的值列会被挤压；已用横向滚动兜底，建议真实业务宽度再复核。
+4. **体积余量**：ui.css 900.8KB，距 937.5KB 预算约 37KB；后续新增组件需优先复用现有规则。
 5. **`AGENTS.md` 部分历史口径**：消费方速查未引用旧尺寸；深层 spec 已同步，但个别历史设计说明仍以「现代」描述为主，未逐句改写。
 6. **品牌字体**：仍是系统字体栈（SF Pro Text / Segoe UI / PingFang），未打包 Apple 专有字体；这是许可与跨平台一致性的有意选择。
 
@@ -124,6 +126,10 @@ bunx playwright test tests/e2e/a11y.pw.ts
 | `2f1840a` | 桌面精度底座 + 表单控件首批 + 设计文档 |
 | `8973690` | 导航/数据/浮层族的桌面密度与层级 |
 | `305bc5a` | 原生应用式文档站 + 应用组合样例 |
-| 本报告 / 收尾 | 视觉快照刷新、a11y 基线收缩、最终测试修复、报告 |
+| `b413be7` | 收尾：密度联动、popup 补齐、a11y 基线与视觉快照 |
+| `90b861d` | 13 种图表逐文件精修与几何收口 |
+| `34fc860` | KB 基座 + 7 域逐文件精修 |
+| `296a8ce` | 高对比焦点兜底、landmark 唯一名与 200% 缩放修正 |
+| 本报告 / 收尾 | 进度、质量报告、CHANGELOG 与最终验证 |
 
 分支保持 `pref/design`，未合并 main、未打 tag、未发布 npm。

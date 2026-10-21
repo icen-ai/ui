@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-10-20",
+  "updated": "2026-10-21",
   "branch": "pref/design",
   "objective": "macOS-inspired precision layer for the default modern primitive, preserving 6 palettes × 4 primitives × light/dark, and redesigning the docs site as a native application shell.",
   "registry": {
@@ -30,16 +30,14 @@
       "tag-input", "mentions", "autocomplete", "cascader", "upload", "modal", "popover", "tooltip", "command-palette",
       "toast", "notification", "feedback", "tabs", "toolbar", "nav", "sidebar", "breadcrumb", "pagination", "steps",
       "table", "datatable", "content", "card", "panel", "stat", "empty", "pill", "tag", "badge", "theme-switcher",
-      "charts", "code-block", "copy", "scroll-area", "split-pane", "layout", "media", "ai-chat", "ai-tool", "ai-panel",
-      "ai-diff", "kb"
-    ],
-    "inheritedTokenOnly": [
-      "icon", "chart-line", "chart-bar", "chart-pie", "chart-radar", "chart-heatmap", "chart-area", "chart-stack",
+      "charts", "chart-line", "chart-bar", "chart-pie", "chart-radar", "chart-heatmap", "chart-area", "chart-stack",
       "chart-gauge", "chart-sparkline", "chart-scatter", "chart-calendar", "chart-graph", "chart-map",
-      "kb-ground", "kb-ingest", "kb-search", "kb-data", "kb-ops", "kb-agent", "kb-perm",
-      "material-chinese", "material-soviet"
+      "code-block", "copy", "scroll-area", "split-pane", "layout", "media", "ai-chat", "ai-tool", "ai-panel",
+      "ai-diff", "icon", "back-top", "form-validate", "material", "material-chinese", "material-soviet",
+      "kb", "kb-ground", "kb-ingest", "kb-search", "kb-data", "kb-ops", "kb-agent", "kb-perm"
     ],
-    "note": "组件 CSS 文件合计覆盖 76/76；未逐条改写的图表细分与 KB 域文件经共享基座、token 与截图矩阵审查，确认无硬编码颜色、无失控几何。"
+    "inheritedTokenOnly": [],
+    "note": "76/76 组件 CSS 文件全部逐文件审查并落地；13 种图表（含并入 chart-heatmap / charts.css 的 chart-calendar / chart-map）与 KB 7 域均为逐文件精修，不再有「继承基座未改」项。"
   },
   "verification": {
     "baselineVerify": "pass (2026-10-20)",
@@ -49,15 +47,17 @@
     "playwright": "pass (308/308 tests; visual snapshots refreshed)",
     "themeMatrix": "48 screenshots (6 palettes × light/dark × 4 pages) in .ui-audit/matrix",
     "primitiveMatrix": "24 screenshots (4 primitives × light/dark × 3 pages) in .ui-audit/primitives",
+    "a11yMatrix": "42 screenshots (14 pages × forced-colors / reduced-transparency / 200% zoom) in .ui-audit/a11y-matrix",
+    "reflow": "0 horizontal overflow at a 720px CSS viewport (200% zoom of 1440px) across home, components, apps, kb and representative component pages",
     "visualComparisons": [
       "docs/redesign/visuals/buttons-before-after.png",
       "docs/redesign/visuals/table-before-after.png",
       "docs/redesign/visuals/apps-workspace.png"
     ],
     "knownGaps": [
-      "AI/KB domain CSS inherits the shared base without per-file geometry overrides; reviewed by screenshot matrix, not line-by-line rewrite.",
-      "Forced-colors and reduced-transparency were spot-checked via existing rules, not exhaustively screenshotted.",
-      "200% text zoom was not captured as a separate matrix."
+      "Homepage hero keeps its brand art direction by design; product/docs pages use the workspace grammar.",
+      "Charts intentionally omit numeric y-axis ticks on category charts (vbar/hbar); scatter exposes both axes.",
+      "Reduced-transparency is verified through emulated media and fallback rules, not per-theme screenshots."
     ]
   }
 }

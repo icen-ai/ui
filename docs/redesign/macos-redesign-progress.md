@@ -54,11 +54,20 @@
 | F2 | 表单族：btn/input/select/menu/segmented/switch/slider/form/date-picker/tree-select/tag-input/mentions/autocomplete/cascader/upload | ✅ 完成 | verify + 截图 |
 | F3 | 导航与数据：tabs/toolbar/nav/sidebar/breadcrumb/pagination/steps/table/datatable/list/tree/accordion/timeline/desc/card/panel/stat/empty/pill | ✅ 完成 | verify + after2 |
 | F4 | 浮层与反馈：modal/popover/tooltip/dropdown/context-menu/command-palette/toast/notification/alert/progress/spinner | ✅ 完成 | verify + after2 |
-| F5 | 图表族：charts 基座 + 13 种图 | ✅ 完成（细图继承基座，截图矩阵审查） | 6×2 主题矩阵 |
+| F5 | 图表族：charts 基座 + 13 种图 | ✅ 完成（13 种逐个精修 CSS + 几何增强） | 26 张明暗细图截图 |
 | F6 | AI 原生族：ai-chat/composer/tool/panel/diff/threads/feedback/branch | ✅ 完成 | 截图 + token 审查 |
-| F7 | 知识库族：kb 基座 + 7 域 32 组件 | ✅ 完成（域文件继承基座） | 截图 + token 审查 |
+| F7 | 知识库族：kb 基座 + 7 域 32 组件 | ✅ 完成（7 域逐文件精修） | 14 张明暗截图 + token 审查 |
 | F8 | 官方文档站：shell / 组件页 / 首页 / 应用组合 | ✅ 完成 | 138 页构建 |
-| F9 | 全量验证：六主题 × 明暗 × 四原语 × 密度 / a11y / 视觉回归 | ✅ 完成 | verify / axe 11/11 / 72 张矩阵 |
+| F9 | 全量验证：六主题 × 明暗 × 四原语 × 密度 / a11y / 视觉回归 | ✅ 完成 | verify / axe 11/11 / 72 张矩阵 + 42 张 a11y 矩阵 |
+
+### 1b. 收尾批次（2026-10-21）
+
+针对首轮报告中「图表细分与 KB 域继承基座、未逐文件重写」的缺口，做了一次完整收口：
+
+- **13 种图表**：基座统一图例/轴标/tooltip 材质；折线/面积补网格与基线分色、数据点白芯色环与 hover 放大（面积图新增可交互点与 9px 命中圆）；柱图轨道内置四档网格、堆叠段 2px 面色缝；环图多段留 2.5 单位白隙；雷达改实线蛛网；热力格 3px 角 + 色环 hover；日历月份/星期标签 10px；散点补横实纵虚网格与轴线；图谱边线提升、节点 hover/drag 分层；嵌入地图点 hover 放大。
+- **KB 7 域**：ground/ingest/search/data/ops/agent/perm 与共享基座逐文件精修——28px 控件、6px 控件圆角、13/12/11 字阶、`--icen-ring` 焦点、`fill-hover/pressed` 成对、浮层 raised + elevated、整行选中替代左侧竖条、compact 密度档、forced-colors 状态件；权限域的 deny/break-glass/受限列诚实呈现未改。
+- **残余组件**：back-top 36px 玻璃浮钮、icon 焦点与按压、form-validate 汇总卡、中式/苏式材料层的 reduced-transparency 回退。
+- **无障碍矩阵**：14 页 × forced-colors / reduced-transparency / 200% zoom；强制颜色下全局焦点框兜底、开关/勾选/单选/分段/表格/选择器/侧栏选中态、代码区与多表分页的 landmark 唯一名；720px 视口 0 横向溢出。
 
 ---
 
@@ -89,11 +98,13 @@
 
 ## 3. 剩余任务（按优先级）
 
-1. 视觉回归基线随设计改动刷新（Playwright snapshots），并把差异截图归档到 `docs/redesign/visuals/`。
-2. 逐主题复核 forced-colors、reduced-transparency 与 200% 文本缩放。
-3. 把 AI/KB 域文件中仍由共享基座承接的细节（表格密度、日志字号）在下一轮做逐文件审查。
-4. 更新 `AGENTS.md` 组件速查中仍引用旧尺寸的段落（如 32/36/40 输入档位）。
-5. 发布前更新 CHANGELOG 版本号并执行契约 diff。
+收尾批次已把原先的「继承基座」项全部落地，当前无阻断项。剩余属于发布/运营动作，不属于设计缺口：
+
+1. 合并 `pref/design` 到 main 前，按发布流程改版本号 + CHANGELOG 小节改名，并跑一次契约 diff。
+2. 视觉回归基线随最终设计刷新（本次已重跑 Playwright 全量，快照更新）。
+3. 主题级人工巡检（梵高亮色 / 钢琴深色）建议在合并前由人眼过一遍 `.ui-audit/matrix/`。
+4. 首页 Hero 保留品牌艺术层，若品牌侧要统一到工作区语法，另开品牌页专项。
+5. 图表 vbar/hbar 不显示数值纵轴刻度（类目图按设计省略）；若业务需要读数，走 tooltip 与图例。
 
 ---
 
@@ -107,6 +118,9 @@
 | Playwright e2e | 308/308 用例通过（视觉快照已刷新） |
 | 主题矩阵 | `.ui-audit/matrix/` 48 张（6 配色 × 明暗 × 4 页） |
 | 原语矩阵 | `.ui-audit/primitives/` 24 张（4 原语 × 明暗 × 3 页） |
+| a11y 矩阵 | `.ui-audit/a11y-matrix/` 42 张（14 页 × forced-colors / reduced-transparency / 200% zoom） |
+| 图表截图 | `.ui-audit/charts-after/` 26 张（13 图 × 明暗） |
+| KB 截图 | `.ui-audit/kb-after/` 14 张（工作台 + 6 个代表组件页 × 明暗） |
 | 前后对比 | `docs/redesign/visuals/buttons-before-after.png`、`table-before-after.png` |
 | 应用组合 | `docs/redesign/visuals/apps-workspace.png`、线上 `/apps/` |
 

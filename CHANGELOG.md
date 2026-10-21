@@ -24,6 +24,8 @@
 - 文档站改为原生应用式 shell：52px 工具栏、源列表侧栏（分组图标/计数/整行选中）、44px 内容工具栏、组件页 Preview 工具栏 + 右侧 Inspector、代码区 34px chrome 头 + 12px mono；新增 `/apps/` 四个真实应用组合（系统设置 / 文件与知识库 / AI 工作台 / 数据工作台）
 - 新增设计交付文档：`docs/redesign/macos-design-language.md`、`macos-component-mapping.md`、`macos-token-architecture.md`、`macos-redesign-progress.md`、`visual-quality-report.md`、`progress.json`
 - 设计规范同步：`docs/spec/design-philosophy.md` 圆角表与 `docs/spec/design-primitives.md` 作者旋钮改为 8px 基准 / 34px 控件 / 13px 界面字 / 24px 模糊；契约快照随新增 token 更新
+- 收尾补齐（原「继承基座」项全部落为逐文件精修）：13 种图表统一网格/基线/轴标/数据点/图例墨色，折线与面积图数据点可悬停放大，面积图补齐可交互数据点与命中圆，环图多段留 2.5 单位白隙，柱图轨道内置网格、堆叠段留面色缝，热力格 3px 圆角 + 色环 hover，日历月份/星期标签 10px，雷达蛛网改实线发丝，散点补坐标轴类，图谱边与节点 hover/drag 分层；KB 7 域逐文件统一 28px 控件、13/12/11 字阶、`--icen-ring` 焦点、`fill-hover/pressed` 成对、整行选中替代左侧竖条，并补 compact 密度档
+- 无障碍矩阵：高对比模式补全开关/勾选/单选/分段/表格选中行/选择器选中项/侧栏当前项/图表与 KB 状态件，全局补 `:focus-visible` 系统焦点兜底（强制颜色会丢弃 box-shadow）；`prefers-reduced-transparency` 下浮层回落实面；200% 缩放（720px CSS 视口）全站无横向溢出
 
 ### 修复
 
