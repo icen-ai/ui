@@ -295,6 +295,19 @@ export interface IcenLocale {
   'charts.type.scatter': string;
   'charts.type.sparkline': string;
   'charts.seriesName': string;
+  'charts.a11y.keyboardHint': string;
+  'charts.a11y.max': string;
+  'charts.a11y.min': string;
+  'charts.a11y.point': string;
+  'charts.a11y.pointSeries': string;
+  'charts.a11y.range': string;
+  'charts.a11y.scatterRange': string;
+  'charts.a11y.seriesCount': string;
+  'charts.a11y.tableCaption': string;
+  'charts.a11y.trend': string;
+  'charts.a11y.trendDown': string;
+  'charts.a11y.trendFlat': string;
+  'charts.a11y.trendUp': string;
   'charts.showLegend': string;
   'charts.value': string;
   /* ── themeSwitcher ── */
@@ -1122,6 +1135,19 @@ export const ICEN_LOCALE_ZH_CN: IcenLocale = {
   'charts.noData': '暂无数据',
   'charts.resetZoom': '重置缩放',
   'charts.sampled': '已抽样 {p0}→{p1} 点',
+  'charts.a11y.keyboardHint': '方向键逐点浏览，Home/End 跳首尾，Esc 重置缩放',
+  'charts.a11y.max': '最大 {p0}（{p1}）',
+  'charts.a11y.min': '最小 {p0}（{p1}）',
+  'charts.a11y.point': '{p0}：{p1}，第 {p2}/{p3} 点',
+  'charts.a11y.pointSeries': '{p0} · {p1}：{p2}，第 {p3}/{p4} 点',
+  'charts.a11y.range': '类目 {p0} 至 {p1}',
+  'charts.a11y.scatterRange': 'x 范围 {p0}–{p1}，y 范围 {p2}–{p3}',
+  'charts.a11y.seriesCount': '{p0} 个系列',
+  'charts.a11y.tableCaption': '{p0} 数据表',
+  'charts.a11y.trend': '首系列趋势{p0}',
+  'charts.a11y.trendDown': '下降',
+  'charts.a11y.trendFlat': '持平',
+  'charts.a11y.trendUp': '上升',
   'charts.type.area': '面积图',
   'charts.type.donut': '环形图',
   'charts.type.gauge': '仪表盘',
@@ -1960,6 +1986,19 @@ export const ICEN_LOCALE_EN_US: IcenLocale = {
   'charts.noData': 'No data',
   'charts.resetZoom': 'Reset zoom',
   'charts.sampled': 'Sampled → {p0} points',
+  'charts.a11y.keyboardHint': 'Arrow keys browse points, Home/End jump to ends, Esc resets zoom',
+  'charts.a11y.max': 'max {p0} ({p1})',
+  'charts.a11y.min': 'min {p0} ({p1})',
+  'charts.a11y.point': '{p0}: {p1}, point {p2} of {p3}',
+  'charts.a11y.pointSeries': '{p0} · {p1}: {p2}, point {p3} of {p4}',
+  'charts.a11y.range': 'categories {p0} to {p1}',
+  'charts.a11y.scatterRange': 'x {p0}–{p1}, y {p2}–{p3}',
+  'charts.a11y.seriesCount': '{p0} series',
+  'charts.a11y.tableCaption': '{p0} data table',
+  'charts.a11y.trend': 'first-series trend: {p0}',
+  'charts.a11y.trendDown': 'down',
+  'charts.a11y.trendFlat': 'flat',
+  'charts.a11y.trendUp': 'up',
   'charts.type.area': 'Area chart',
   'charts.type.donut': 'Donut chart',
   'charts.type.gauge': 'Gauge',

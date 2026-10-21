@@ -1587,6 +1587,18 @@ export interface ChartSpec {
   marks?: ChartMark[];
   /** 加载态：渲染骨架 shimmer（优先于空态） */
   loading?: boolean;
+  /** 无障碍层（全部可选；默认摘要开、键盘开、数据表关）：
+   * summary 生成 sr-only 自动摘要（图型/系列数/范围/最值/首系列趋势），经 aria-describedby 挂到图形；
+   * table 追加 sr-only 数据表替代视图（读屏与复制导出同源）；
+   * keyboard 为 line/area/vbar/hbar/scatter 开键盘游标（方向键逐点、Home/End 首尾、Esc 重置缩放） */
+  a11y?: ChartA11ySpec;
+}
+
+/** 图表无障碍层开关（纯 JSON，可序列化；缺省 = summary/keyboard 开、table 关） */
+export interface ChartA11ySpec {
+  summary?: boolean;
+  table?: boolean;
+  keyboard?: boolean;
 }
 
 /** 格式化描述符 → 函数（底层渲染器的 formatValue 槽） */
@@ -1798,6 +1810,14 @@ export function normalizeChartSpec(raw: unknown): ChartSpec {
   }
   if (s.zoom === 'x' || s.zoom === 'brush') spec.zoom = s.zoom;
   if (typeof s.loading === 'boolean') spec.loading = s.loading;
+  if (s.a11y && typeof s.a11y === 'object') {
+    const a = s.a11y as Record<string, unknown>;
+    const a11y: ChartA11ySpec = {};
+    if (typeof a.summary === 'boolean') a11y.summary = a.summary;
+    if (typeof a.table === 'boolean') a11y.table = a.table;
+    if (typeof a.keyboard === 'boolean') a11y.keyboard = a.keyboard;
+    if (Object.keys(a11y).length > 0) spec.a11y = a11y;
+  }
   if (Array.isArray(s.marks)) {
     const marks: ChartMark[] = [];
     for (const raw of s.marks) {
@@ -2169,6 +2189,79 @@ function paintVBarChartMarks(
 /** 图表 SVG 替代文本：标题优先，否则本地化类型名（role=img 的可访问名） */
 function chartAriaLabel(title: string | undefined, typeName: string): string {
   return title ? `${typeName}：${title}` : typeName;
+}
+
+/** 读屏自动摘要（sr-only）：系列数、类目/坐标范围、最值及其类目、首系列趋势。无有效数据返回空串。 */
+function summarizeChart(view: ChartSpec, type: ChartType, fmt: (v: number) => string): string {
+  const series = view.series && view.series.length > 0 ? view.series : [{ name: '', values: view.values ?? [] }];
+  const parts: string[] = [];
+  if (series.length > 1) parts.push(icenT('charts.a11y.seriesCount', { p0: series.length }));
+  if (type === 'scatter') {
+    const pts = view.points ?? [];
+    if (pts.length > 0) {
+      const xs = pts.map((p) => p.x);
+      const ys = pts.map((p) => p.y);
+      parts.push(icenT('charts.a11y.scatterRange', { p0: fmt(Math.min(...xs)), p1: fmt(Math.max(...xs)), p2: fmt(Math.min(...ys)), p3: fmt(Math.max(...ys)) }));
+    }
+    return parts.join('；');
+  }
+  const labels = view.labels ?? [];
+  if (labels.length > 1) parts.push(icenT('charts.a11y.range', { p0: labels[0]!, p1: labels[labels.length - 1]! }));
+  let min = Infinity;
+  let max = -Infinity;
+  let minAt = '';
+  let maxAt = '';
+  for (const s of series) {
+    s.values.forEach((v, i) => {
+      if (v < min) { min = v; minAt = labels[i] ?? String(i + 1); }
+      if (v > max) { max = v; maxAt = labels[i] ?? String(i + 1); }
+    });
+  }
+  if (Number.isFinite(min) && Number.isFinite(max)) {
+    parts.push(icenT('charts.a11y.min', { p0: fmt(min), p1: minAt }));
+    parts.push(icenT('charts.a11y.max', { p0: fmt(max), p1: maxAt }));
+  }
+  const first = series[0]?.values ?? [];
+  if (first.length > 1) {
+    const d = first[first.length - 1]! - first[0]!;
+    const key = Math.abs(d) < 1e-9 ? 'charts.a11y.trendFlat' : d > 0 ? 'charts.a11y.trendUp' : 'charts.a11y.trendDown';
+    parts.push(icenT('charts.a11y.trend', { p0: icenT(key) }));
+  }
+  return parts.join('；');
+}
+
+/** 数据表替代视图（sr-only）：caption + 明细行；scatter 为 x/y 两列。只写 textContent。 */
+function buildChartTable(view: ChartSpec, spec: ChartSpec, type: ChartType, fmt: (v: number) => string): HTMLElement {
+  const table = document.createElement('table');
+  table.className = 'icen-chart-table';
+  const caption = document.createElement('caption');
+  caption.textContent = icenT('charts.a11y.tableCaption', { p0: spec.title ?? String(type) });
+  table.appendChild(caption);
+  const addRow = (target: HTMLTableSectionElement, cells: string[], head: boolean): void => {
+    const tr = document.createElement('tr');
+    for (const c of cells) {
+      const cell = document.createElement(head ? 'th' : 'td');
+      if (head) cell.scope = target.tagName === 'THEAD' ? 'col' : 'row';
+      cell.textContent = c;
+      tr.appendChild(cell);
+    }
+    target.appendChild(tr);
+  };
+  const thead = table.createTHead();
+  const tbody = table.createTBody();
+  if (type === 'scatter') {
+    addRow(thead, ['x', 'y'], true);
+    for (const p of view.points ?? []) addRow(tbody, [fmt(p.x), fmt(p.y)], false);
+    return table;
+  }
+  const series = view.series && view.series.length > 0 ? view.series : [{ name: '', values: view.values ?? [] }];
+  const labels = view.labels ?? [];
+  addRow(thead, ['', ...series.map((s, i) => s.name || String(i + 1))], true);
+  const n = Math.max(labels.length, ...series.map((s) => s.values.length));
+  for (let i = 0; i < n; i++) {
+    addRow(tbody, [labels[i] ?? String(i + 1), ...series.map((s) => fmt(s.values[i] ?? 0))], false);
+  }
+  return table;
 }
 
 function svgDimsOf(svg: SVGSVGElement): { w: number; h: number } {
@@ -2640,6 +2733,8 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
       ? root.querySelector<HTMLElement>('.icen-chart-vbar')
       : root.querySelector<SVGSVGElement>('.icen-chart-line svg');
     if (!plot) return;
+    /* 触屏冲突：'x' 只拦水平拖选（垂直方向留给页面滚动）；'brush' 自由框选接管全部触点 */
+    plot.style.touchAction = current.zoom === 'x' ? 'pan-y' : 'none';
     const on = <T extends Event>(type: string, fn: (e: T) => void): void => {
       plot.addEventListener(type, fn as EventListener);
     };
@@ -2695,6 +2790,152 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
       zoomWindow = null;
       render();
     });
+  };
+
+  /* ── a11y 升级层：自动摘要（aria-describedby）+ 可选数据表 + 键盘游标 ──
+     键盘模型：line/area/vbar/hbar/scatter 图形可聚焦（tabindex=0），
+     方向键左右移点、上下切系列，Home/End 跳首尾，Esc 重置缩放；
+     播报走单个 polite live region（每次 render 后按需重建，避免打断进行中的播报）。 */
+  const KB_TYPES: ReadonlySet<string> = new Set(['line', 'area', 'vbar', 'hbar', 'scatter']);
+  const kbCursor = { si: 0, i: 0, active: false };
+  let liveRegion: HTMLElement | null = null;
+  let a11ySeq = 0;
+
+  const a11yOf = (): Required<ChartA11ySpec> => ({
+    summary: current.a11y?.summary !== false,
+    table: current.a11y?.table === true,
+    keyboard: current.a11y?.keyboard !== false,
+  });
+  const seriesViewOf = (view: ChartSpec): { name: string; values: number[] }[] =>
+    view.series && view.series.length > 0 ? view.series : [{ name: '', values: view.values ?? [] }];
+  const kbPointCount = (view: ChartSpec): number =>
+    typeOf() === 'scatter' ? view.points?.length ?? 0 : Math.max(0, ...seriesViewOf(view).map((s) => s.values.length), view.labels?.length ?? 0);
+
+  /* 游标目标元素：line/area 取系列主序的点圆；vbar 类目主序（track=类目，bar=系列）；scatter 点序 */
+  const kbCursorEl = (): Element | null => {
+    const t = typeOf();
+    const view = viewOf();
+    const series = seriesViewOf(view);
+    const n = kbPointCount(view);
+    if (n < 1) return null;
+    const si = clampNum(kbCursor.si, 0, Math.max(0, series.length - 1));
+    const i = clampNum(kbCursor.i, 0, n - 1);
+    if (t === 'line' || t === 'area') {
+      const svg = root.querySelector('.icen-chart-line svg');
+      if (!svg) return null;
+      const dots = svg.querySelectorAll('circle');
+      let base = 0;
+      for (let k = 0; k < si; k++) base += Math.min(series[k]!.values.length, n);
+      return dots.item(base + i) ?? null;
+    }
+    if (t === 'scatter') return root.querySelector('.icen-chart-scatter svg')?.querySelectorAll('circle').item(i) ?? null;
+    if (t === 'vbar') return root.querySelectorAll('.icen-chart-vbar-bar').item(series.length > 1 ? i * series.length + si : i) ?? null;
+    if (t === 'hbar') return root.querySelectorAll('.icen-chart-hbar-bar').item(i) ?? null;
+    return null;
+  };
+
+  const announceKb = (text: string): void => {
+    if (!liveRegion || !liveRegion.isConnected) {
+      liveRegion = document.createElement('div');
+      liveRegion.className = 'icen-chart-live';
+      liveRegion.setAttribute('aria-live', 'polite');
+      root.appendChild(liveRegion);
+    }
+    liveRegion.textContent = '';
+    liveRegion.textContent = text;
+  };
+
+  const applyKbCursor = (): void => {
+    for (const el of root.querySelectorAll('.icen-chart-kb-focus')) el.classList.remove('icen-chart-kb-focus');
+    if (!kbCursor.active) return;
+    kbCursorEl()?.classList.add('icen-chart-kb-focus');
+  };
+
+  const announceCursor = (): void => {
+    const view = viewOf();
+    const series = seriesViewOf(view);
+    const n = kbPointCount(view);
+    if (n < 1) return;
+    const si = clampNum(kbCursor.si, 0, Math.max(0, series.length - 1));
+    const i = clampNum(kbCursor.i, 0, Math.max(0, n - 1));
+    const fmt = chartFormatValue(current.format);
+    if (typeOf() === 'scatter') {
+      const p = view.points?.[i];
+      if (!p) return;
+      announceKb(icenT('charts.a11y.point', { p0: `x ${fmt(p.x)}`, p1: `y ${fmt(p.y)}`, p2: i + 1, p3: n }));
+      return;
+    }
+    const label = view.labels?.[i] ?? String(i + 1);
+    const value = series[si]?.values[i] ?? 0;
+    if (series.length > 1) announceKb(icenT('charts.a11y.pointSeries', { p0: series[si]!.name || String(si + 1), p1: label, p2: fmt(value), p3: i + 1, p4: n }));
+    else announceKb(icenT('charts.a11y.point', { p0: label, p1: fmt(value), p2: i + 1, p3: n }));
+  };
+
+  const onKbKeydown = (e: KeyboardEvent): void => {
+    const conf = a11yOf();
+    if (!conf.keyboard || !KB_TYPES.has(typeOf())) return;
+    const g = root.querySelector('[data-icen-chart-kb]');
+    if (!g || e.target !== g) return;
+    if (e.key === 'Escape') {
+      if (zoomWindow) {
+        zoomWindow = null;
+        kbCursor.active = false;
+        render();
+      }
+      return;
+    }
+    const view = viewOf();
+    const series = seriesViewOf(view);
+    const n = kbPointCount(view);
+    if (n < 1) return;
+    const siMax = Math.max(0, series.length - 1);
+    let moved = true;
+    switch (e.key) {
+      case 'ArrowRight': kbCursor.i = clampNum(kbCursor.i + 1, 0, n - 1); break;
+      case 'ArrowLeft': kbCursor.i = clampNum(kbCursor.i - 1, 0, n - 1); break;
+      case 'ArrowDown': kbCursor.si = clampNum(kbCursor.si + 1, 0, siMax); break;
+      case 'ArrowUp': kbCursor.si = clampNum(kbCursor.si - 1, 0, siMax); break;
+      case 'Home': kbCursor.i = 0; break;
+      case 'End': kbCursor.i = n - 1; break;
+      default: moved = false;
+    }
+    if (!moved) return;
+    e.preventDefault();
+    kbCursor.active = true;
+    applyKbCursor();
+    announceCursor();
+  };
+  root.addEventListener('keydown', onKbKeydown);
+
+  /* 渲染后调用：摘要/提示（describedby）+ tabindex + 数据表 + 游标重挂（DOM 每次 render 重建） */
+  const applyChartA11yPlus = (view: ChartSpec, spec: ChartSpec, type: ChartType, formatValue: (v: number) => string): void => {
+    const conf = a11yOf();
+    const graphic = root.querySelector<HTMLElement>('[role="img"]');
+    if (!graphic) return;
+    const body = root.querySelector<HTMLElement>('.icen-chart-body') ?? graphic.parentElement ?? root;
+    const summaryParts: string[] = [];
+    if (conf.summary) summaryParts.push(summarizeChart(view, type, formatValue));
+    if (conf.keyboard && KB_TYPES.has(type)) summaryParts.push(icenT('charts.a11y.keyboardHint'));
+    const summaryText = summaryParts.filter(Boolean).join('；');
+    if (summaryText) {
+      const p = document.createElement('p');
+      p.className = 'icen-chart-summary';
+      p.id = `icen-chart-a11y-${++a11ySeq}`;
+      p.textContent = summaryText;
+      body.appendChild(p);
+      graphic.setAttribute('aria-describedby', p.id);
+    } else {
+      graphic.removeAttribute('aria-describedby');
+    }
+    if (conf.keyboard && KB_TYPES.has(type)) {
+      graphic.setAttribute('tabindex', '0');
+      graphic.setAttribute('data-icen-chart-kb', '');
+    } else {
+      graphic.removeAttribute('tabindex');
+      graphic.removeAttribute('data-icen-chart-kb');
+    }
+    if (conf.table) body.appendChild(buildChartTable(view, spec, type, formatValue));
+    applyKbCursor();
   };
 
   const render = (): void => {
@@ -2783,6 +3024,7 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
       }
     }
     if (loading) return;
+    applyChartA11yPlus(view, spec, type, formatValue);
     paintChartMarks(root, view, spec, formatValue, warnedMarks);
     bindZoomGesture();
   };
@@ -2873,6 +3115,7 @@ export function renderChart(el: HTMLElement, raw: ChartSpec | unknown): ChartHan
       releaseFluidWidth(root);
       hiddenLegendKeys.delete(root);
       zoomDragCleanup?.();
+      root.removeEventListener('keydown', onKbKeydown);
       root.textContent = '';
       root.classList.remove('is-loading');
       unbindEvents();

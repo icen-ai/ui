@@ -36,13 +36,13 @@
     "method": "static-scan(test/it call sites; runner 实跑数以 bun test / playwright 输出为准)",
     "files": {
       "unit": 29,
-      "dom": 54,
+      "dom": 55,
       "conformance": 3,
       "root": 2,
       "e2e": 42
     },
     "cases": {
-      "bun": 914,
+      "bun": 921,
       "e2e": 166
     }
   },

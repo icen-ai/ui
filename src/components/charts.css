@@ -335,3 +335,32 @@ svg .icen-chart-mark-label {
     transition: none;
   }
 }
+
+/* ── 键盘游标与读屏层（spec.a11y：summary/keyboard/table） ──
+   自包含 sr-only 几何（kit 独立引入时 base.css 可能缺席，不依赖 .icen-sr-only） */
+.icen-chart-summary,
+.icen-chart-live,
+.icen-chart-table {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* 键盘游标入口：图形可聚焦，焦点环走统一 ring 令牌 */
+[data-icen-chart-kb] { outline: none; }
+[data-icen-chart-kb]:focus-visible { box-shadow: var(--icen-ring); border-radius: var(--icen-radius-xs); }
+/* 游标焦点：DOM 柱条用轮廓环；SVG 点圆放大描边（r 为 SVG2 几何属性，不支持时退化为描边加粗） */
+.icen-chart-kb-focus {
+  outline: 2px solid var(--icen-token-accent);
+  outline-offset: 1px;
+  border-radius: var(--icen-radius-xs);
+}
+circle.icen-chart-kb-focus {
+  outline: none;
+  stroke-width: 3px;
+  r: 5px;
+}

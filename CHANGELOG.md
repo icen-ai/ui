@@ -1,9 +1,17 @@
 # 更新日志
 
+格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)；
+0.x 纪律（破坏只进 minor、逐条公告、收敛期不留兼容层）见 [docs/versioning.md](docs/versioning.md)。
+契约面变化以 [docs/contracts/snapshot.json](docs/contracts/snapshot.json) 的机器 diff 为准
+（`bun run contracts:diff <tagA> <tagB>`，CI 强制破坏性条目必须在本文件留痕）。
+
 ## [Unreleased]
 
 ### 新增
 
+- 图表无障碍层（`ChartSpec.a11y`，纯 JSON）：自动摘要（系列数/范围/最值/趋势，sr-only + aria-describedby）、`table` 数据表替代视图、键盘游标（line/area/vbar/hbar/scatter：方向键逐点、↑↓ 切系列、Home/End 跳首尾、Esc 重置缩放，polite live region 播报，游标焦点指示不依赖颜色）；新增 13 个 `charts.a11y.*` i18n 键（中英）
+- 图表触屏手势冲突修正：zoom 启用时 plot 的 `touch-action`（'x' → `pan-y` 让出垂直滚动；'brush' → `none`）
+- 规格文档 `docs/spec/charts-scale-a11y.md`：数据规模四级渲染策略、读屏语义矩阵、手势与键盘等价、性能预算与基准方法、Canvas/Worker/sonification 接口草案；基准脚本 `scripts/bench-charts.mjs`（LTTB 1e6→1000 实测 5.25ms JS）
 - 动效令牌层 `tokens/motion.css`：时长阶梯（instant/fast/base/slow/deliberate）、缓动集（standard/enter/exit/emphasized/spring 的 linear() 阻尼近似）、位移缩放幅度与 stagger 编排令牌；`--icen-duration-*` / `--icen-ease-*` 语义别名映射到本层，pixel 原语缓动改写为 steps(1, end)
 - reduced-motion 手动覆盖：`<html data-icen-motion="reduce|full">`（优先级高于系统偏好）；新增 `behaviors/motion.ts` 运行时口径（`icenMotionReduced` / `onIcenMotionChange` / `setIcenMotion`，SSR 安全）；降级策略改为「令牌归零 + 循环动画单次瞬时」，保留状态反馈
 - 排版尺度：`--icen-type-*` 流体模块比例（1.250，clamp 插值，与控件密度档解耦）、`--icen-leading/tracking/weight` 族、`--icen-feature-data`；CJK 标点挤压 text-spacing-trim 渐进增强（@supports 守卫）
@@ -13,11 +21,6 @@
 ### 工程
 
 - 数字与版本统一由构建产物 `meta.json` 提供（`bun run meta` 生成）：版本、组件/行为/图表/预设/原语/令牌/测试计数与产物体积；README 走 `<!-- meta:* -->` 标记同步，文档站构建期插值；guard 新增「meta 一致性」检查（硬编码数量主张、版本不一致即红）。修正站点三处口径漂移：图表类型数（12/十三/十四 → 统一 14=发布 12+扩展 2）、kb 族（六域 27 → 七域 31）、组件数（站点注册表 129 与包 slug 122 混用 → 统一包口径 122）
-
-格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)；
-0.x 纪律（破坏只进 minor、逐条公告、收敛期不留兼容层）见 [docs/versioning.md](docs/versioning.md)。
-契约面变化以 [docs/contracts/snapshot.json](docs/contracts/snapshot.json) 的机器 diff 为准
-（`bun run contracts:diff <tagA> <tagB>`，CI 强制破坏性条目必须在本文件留痕）。
 
 ## [0.11.0] — 2026-10-21
 
