@@ -16,7 +16,7 @@ const SRC = join(ROOT, 'src');
 const DIST = join(ROOT, 'dist');
 
 // 进 tokens.css 拼合的核心 token 文件（按此顺序串接）
-const TOKEN_ORDER = ['colors.css', 'scrollbars.css', 'style-profiles.css', 'typography.css', 'design.css', 'chinese.css', 'soviet.css', 'pixel.css', 'icon-masks.css'];
+const TOKEN_ORDER = ['colors.css', 'scrollbars.css', 'style-profiles.css', 'typography.css', 'motion.css', 'design.css', 'chinese.css', 'soviet.css', 'pixel.css', 'icon-masks.css'];
 // 可选 token 文件：单独拷贝、暴露 exports，但不进 tokens.css / ui.css 默认拼合
 const TOKEN_EXTRAS: string[] = [];
 

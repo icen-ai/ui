@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### 新增
+
+- 动效令牌层 `tokens/motion.css`：时长阶梯（instant/fast/base/slow/deliberate）、缓动集（standard/enter/exit/emphasized/spring 的 linear() 阻尼近似）、位移缩放幅度与 stagger 编排令牌；`--icen-duration-*` / `--icen-ease-*` 语义别名映射到本层，pixel 原语缓动改写为 steps(1, end)
+- reduced-motion 手动覆盖：`<html data-icen-motion="reduce|full">`（优先级高于系统偏好）；新增 `behaviors/motion.ts` 运行时口径（`icenMotionReduced` / `onIcenMotionChange` / `setIcenMotion`，SSR 安全）；降级策略改为「令牌归零 + 循环动画单次瞬时」，保留状态反馈
+- 排版尺度：`--icen-type-*` 流体模块比例（1.250，clamp 插值，与控件密度档解耦）、`--icen-leading/tracking/weight` 族、`--icen-feature-data`；CJK 标点挤压 text-spacing-trim 渐进增强（@supports 守卫）
+- DTCG 导出 motion-duration/motion-ease/motion-shift/motion-scale/motion-stagger 与 leading/tracking/weight 族；clamp()/linear()/steps() 超经典版标量，明示记入 ai.icen.skipped
+- 规格文档 `docs/spec/motion-typography.md`（逐令牌场景/反例 + 降级策略 + 文档页信息结构）
+
 ### 工程
 
 - 数字与版本统一由构建产物 `meta.json` 提供（`bun run meta` 生成）：版本、组件/行为/图表/预设/原语/令牌/测试计数与产物体积；README 走 `<!-- meta:* -->` 标记同步，文档站构建期插值；guard 新增「meta 一致性」检查（硬编码数量主张、版本不一致即红）。修正站点三处口径漂移：图表类型数（12/十三/十四 → 统一 14=发布 12+扩展 2）、kb 族（六域 27 → 七域 31）、组件数（站点注册表 129 与包 slug 122 混用 → 统一包口径 122）

@@ -1,8 +1,7 @@
 // scripts/dtcg.mjs — 把设计 tokens 导出为 W3C DTCG **经典版**（第二版编辑草案 2022-06-14，生态实际部署版本）
 // 运行：bun run dtcg（或 node scripts/dtcg.mjs）→ dist/tokens/dtcg.json
 //
-// 解析来源：src/tokens/{colors,style-profiles,typography}.css（与 scripts/build-css.ts 的 TOKEN_ORDER
-// 同序拼接）——选源文件而非 dist/tokens.css：不依赖先跑 build，且 build 对这三份文件是原样拷贝，内容等价。
+// 解析来源：本文件 TOKEN_ORDER（与 scripts/build-css.ts 同序）——选源文件而非 dist/tokens.css：
 //
 // 结构：{ $description, $extensions, modern: { light: {…}, dark: {…} }, dongyun: {…}, … }
 //   - 每个 (预设, 明/暗) 是「有效级联结果」：:root → [data-icen-theme="dark"] / .预设 → .预设[data-icen-theme="dark"]（按特异性分层、同层按源序）
@@ -30,7 +29,7 @@ await generateThemeColors();
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 // ── 与 build-css.ts 的 TOKEN_ORDER 保持一致 ──
-const TOKEN_ORDER = ['colors.css', 'scrollbars.css', 'style-profiles.css', 'typography.css', 'design.css', 'pixel.css', 'chinese.css', 'soviet.css'];
+const TOKEN_ORDER = ['colors.css', 'scrollbars.css', 'style-profiles.css', 'typography.css', 'motion.css', 'design.css', 'pixel.css', 'chinese.css', 'soviet.css'];
 const PRESETS = themes.map((theme)=>theme.id);
 
 // 变量名前缀 → (子组, $type)。类型来自命名语义，不从值猜。
@@ -52,6 +51,17 @@ const GROUP_RULES = [
   ['icen-font-', 'font', 'fontFamily'],
   ['icen-line-height-', 'line-height', 'number'],
   ['icen-letter-spacing-', 'letter-spacing', 'dimension'],
+  // 动效令牌层（tokens/motion.css）：时长/缓动/幅度/编排
+  ['icen-motion-duration-', 'motion-duration', 'duration'],
+  ['icen-motion-ease-', 'motion-ease', 'cubicBezier'],
+  ['icen-motion-shift-', 'motion-shift', 'dimension'],
+  ['icen-motion-scale-', 'motion-scale', 'number'],
+  ['icen-motion-stagger-', 'motion-stagger', 'duration'],
+  // 内容排版尺度（tokens/typography.css）：clamp() 流体值超经典版标量 → 明示跳过
+  ['icen-type-', 'type-scale', 'dimension'],
+  ['icen-leading-', 'leading', 'number'],
+  ['icen-tracking-', 'tracking', 'dimension'],
+  ['icen-weight-', 'weight', 'number'],
 ];
 // 组级 $type 的例外（token 级 $type 覆盖组级——规范允许且优先级最高）
 const TYPE_OVERRIDES = {
@@ -62,6 +72,7 @@ const TYPE_OVERRIDES = {
   '--icen-token-scrollbar-idle-delay': 'duration',
   '--icen-token-scrollbar-fade-duration': 'duration',
   '--icen-control-focus-border': 'color',
+  '--icen-motion-stagger-count': 'number',
 };
 
 const GROUP_DESCRIPTIONS = {
@@ -78,6 +89,15 @@ const GROUP_DESCRIPTIONS = {
   font: '字体栈（--icen-font-*）',
   'line-height': '行高（--icen-line-height-*，无单位 number）',
   'letter-spacing': '字距（--icen-letter-spacing-*）',
+  'motion-duration': '动效时长阶梯（--icen-motion-duration-*）',
+  'motion-ease': '动效缓动集（--icen-motion-ease-*；linear()/steps() 超规范明示跳过）',
+  'motion-shift': '动效位移幅度（--icen-motion-shift-*）',
+  'motion-scale': '动效缩放幅度（--icen-motion-scale-*）',
+  'motion-stagger': '编排间隔（--icen-motion-stagger*）',
+  'type-scale': '内容排版尺度（--icen-type-*；clamp() 流体值超经典版标量，明示跳过）',
+  leading: '行高尺度（--icen-leading-*，无单位 number）',
+  tracking: '字距尺度（--icen-tracking-*）',
+  weight: '字重尺度（--icen-weight-*）',
 };
 
 const REASONS = {
@@ -254,7 +274,7 @@ const out = {
       'value-syntax': '经典版标量：color=#rrggbb[aa]、dimension="1rem"(px|rem)、duration="150ms"、fontFamily=string[]、cubicBezier=[x1,y1,x2,y2]、number；var() 引用导出为 {path.to.token} 别名',
       'type-inheritance': '组级 $type 下沉；token 级 $type 优先；别名类型随引用目标解析',
       generatedBy: 'scripts/dtcg.mjs（bun run dtcg）',
-      source: 'src/tokens/{colors,style-profiles,typography}.css（同 build-css.ts 的 TOKEN_ORDER）',
+      source: '本文件 TOKEN_ORDER（同 build-css.ts 的 TOKEN_ORDER）',
       exclusions: [
         'box-shadow 值与 color-mix() 派生色不可表示为经典版标量 → 跳过（见 ai.icen.skipped）',
         '现代/像素/中式/苏式原语与主题独立，预设×明暗矩阵导出默认现代原语',

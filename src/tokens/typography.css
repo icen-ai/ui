@@ -27,6 +27,33 @@
   --icen-line-height-body: 1.7;
   /* 独家定义（style-profiles.css 的 :root 不再重复；profile 差异化在各 .style-* 块覆盖） */
   --icen-line-height-heading: 1.2;
+
+  /* ── 内容排版尺度（模块比例 1.250 大三度，clamp 流体插值） ──
+     面向内容/文档排版（标题、正文、长文）；控件字号仍由 --icen-density-font-size-* 驱动，
+     两套尺度解耦：密度档只压缩控件，不挤压阅读。DTCG 无法表示 clamp() → 明示跳过。 */
+  --icen-type-ratio: 1.25;
+  --icen-type-xs: clamp(.6875rem, .66rem + .12vw, .75rem);
+  --icen-type-sm: clamp(.7813rem, .74rem + .18vw, .9rem);
+  --icen-type-md: clamp(.875rem, .82rem + .24vw, 1rem);
+  --icen-type-lg: clamp(1rem, .92rem + .36vw, 1.25rem);
+  --icen-type-xl: clamp(1.25rem, 1.1rem + .66vw, 1.5625rem);
+  --icen-type-2xl: clamp(1.5625rem, 1.32rem + 1.05vw, 1.9531rem);
+  --icen-type-3xl: clamp(1.9531rem, 1.56rem + 1.7vw, 2.4414rem);
+
+  /* ── 行高 / 字距 / 字重尺度（角色别名 --icen-line-height-body 等保留；本组供新组件与内容区） ── */
+  --icen-leading-tight: 1.3;   /* 大字号标题 */
+  --icen-leading-base: 1.6;    /* 正文：拉丁与 CJK 混排的安全下限 */
+  --icen-leading-loose: 1.8;   /* 长文/文档页 */
+  --icen-tracking-tight: -.02em;  /* 大号拉丁标题收紧；CJK 不用（CJK 字距一律 0） */
+  --icen-tracking-base: 0;
+  --icen-tracking-wide: .04em;    /* 眉标/小型大写 */
+  --icen-weight-regular: 400;
+  --icen-weight-medium: 500;
+  --icen-weight-semibold: 600;
+  --icen-weight-bold: 700;
+
+  /* ── 数据区 OpenType 特性（.icen-numeric / .icen-font-math 之外的增量入口） ── */
+  --icen-feature-data: "tnum" 1, "lnum" 1;
 }
 
 /* ── 全局排版 ── */
@@ -48,4 +75,10 @@ h1, h2, h3, h4, h5, h6 {
 .icen-font-math {
   font-family: "Numeric Math", math, var(--icen-font-body);
   font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* ── CJK 标点挤压：渐进增强（text-spacing-trim，Chrome 123+）。
+     不支持时保持浏览器默认——不 polyfill，不猜不静默，此处是有意声明的可降级增强。 ── */
+@supports (text-spacing-trim: trim-start) {
+  body { text-spacing-trim: trim-start; }
 }

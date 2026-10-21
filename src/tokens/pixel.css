@@ -45,6 +45,13 @@
   /* shadow-inset 被本原语置 none，base.css 合成的 error 版会变成非法的「none, …」
      列表 → 整条 box-shadow 失效：像素原语自持一份硬边错误光环 */
   --icen-control-error-shadow: 0 0 0 2px var(--icen-token-error);
+  /* 点阵逐帧美学：动效令牌层全部改写为 steps（时长已由 --icen-design-motion: 0 归零，
+     缓动改写面向直接消费 --icen-motion-ease-* 的新组件，双保险） */
+  --icen-motion-ease-standard: steps(1, end);
+  --icen-motion-ease-enter: steps(1, end);
+  --icen-motion-ease-exit: steps(1, end);
+  --icen-motion-ease-emphasized: steps(1, end);
+  --icen-motion-ease-spring: steps(1, end);
   --icen-ease-out: steps(1, end);
   --icen-ease-bounce: steps(1, end);
 }

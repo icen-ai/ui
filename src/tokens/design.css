@@ -47,15 +47,18 @@
   --icen-letter-spacing-caption: .01em;
 
   /* Motion: one-shot state changes are short; spatial entrances use the enter
-   * curve. No bouncy physics for ordinary controls. */
-  --icen-duration-fast: calc(110ms * var(--icen-design-motion));
-  --icen-duration-normal: calc(180ms * var(--icen-design-motion));
-  --icen-duration-slow: calc(260ms * var(--icen-design-motion));
-  --icen-ease-out: cubic-bezier(.22, .8, .24, 1);
+   * curve. No bouncy physics for ordinary controls.
+   * 语义别名 → tokens/motion.css 基值 × --icen-design-motion（reduced-motion / pixel 原语归零）。 */
+  --icen-duration-instant: calc(var(--icen-motion-duration-instant) * var(--icen-design-motion));
+  --icen-duration-fast: calc(var(--icen-motion-duration-fast) * var(--icen-design-motion));
+  --icen-duration-normal: calc(var(--icen-motion-duration-base) * var(--icen-design-motion));
+  --icen-duration-slow: calc(var(--icen-motion-duration-slow) * var(--icen-design-motion));
+  --icen-duration-deliberate: calc(var(--icen-motion-duration-deliberate) * var(--icen-design-motion));
+  --icen-ease-out: var(--icen-motion-ease-emphasized);
   --icen-ease-in: cubic-bezier(.5, 0, .8, .2);
-  --icen-ease-in-out: cubic-bezier(.45, 0, .25, 1);
-  --icen-ease-enter: cubic-bezier(.16, 1, .3, 1);
-  --icen-ease-exit: cubic-bezier(.4, 0, 1, 1);
+  --icen-ease-in-out: var(--icen-motion-ease-standard);
+  --icen-ease-enter: var(--icen-motion-ease-enter);
+  --icen-ease-exit: var(--icen-motion-ease-exit);
   --icen-ease-bounce: var(--icen-ease-out);
   --icen-hover-border: var(--icen-token-line);
   --icen-hover-border-strong: var(--icen-token-line-strong);

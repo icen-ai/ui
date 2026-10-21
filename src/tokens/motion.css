@@ -1,0 +1,48 @@
+/*
+ * @icen.ai/ui — Motion Tokens（动效令牌层）
+ * 时长阶梯 / 缓动集 / 位移与缩放幅度 / 编排间隔。组件只消费令牌，不写死时长与曲线。
+ *
+ * 消费路径：
+ *   组件读语义别名 --icen-duration-* / --icen-ease-*（design.css 映射到本层 × --icen-design-motion）；
+ *   新组件可直接读 --icen-motion-*（绝对基值，不经缩放）。
+ * 降级链：prefers-reduced-motion 或 <html data-icen-motion="reduce"> → base.css 把
+ *   --icen-design-motion 归零（过渡瞬时完成，状态反馈保留）+ 循环动画单次瞬时 + 平滑滚动关闭；
+ *   data-icen-motion="full" 可强制恢复（演示机 / 用户显式选择）。
+ * 原语联动：pixel 原语把本层缓动全部改写为 steps(1, end)（点阵逐帧美学）。
+ * DTCG：duration / cubicBezier / dimension / number 各族经 scripts/dtcg.mjs 导出；
+ *   linear() / steps() / clamp() 超经典版规范，明示跳过（记录在 dtcg.json 的 ai.icen.skipped）。
+ */
+:root {
+  /* ── 时长阶梯（基值；语义别名经 --icen-design-motion 缩放） ── */
+  --icen-motion-duration-instant: 0ms;        /* 即时：无动画状态切换（像素原语全量） */
+  --icen-motion-duration-fast: 110ms;         /* 微反馈：hover / press / 焦点环 */
+  --icen-motion-duration-base: 180ms;         /* 常规：展开收起、淡入淡出、勾选 */
+  --icen-motion-duration-slow: 260ms;         /* 浮层进出、面板滑入、modal */
+  --icen-motion-duration-deliberate: 420ms;   /* 页面级转场、强调入场（克制使用） */
+
+  /* ── 缓动集 ── */
+  --icen-motion-ease-standard: cubic-bezier(.45, 0, .25, 1);    /* 持续类状态变化 */
+  --icen-motion-ease-enter: cubic-bezier(.16, 1, .3, 1);        /* 入场：快出慢归 */
+  --icen-motion-ease-exit: cubic-bezier(.4, 0, 1, 1);           /* 离场：快进加速 */
+  --icen-motion-ease-emphasized: cubic-bezier(.22, .8, .24, 1); /* 强调：长减速弧 */
+  --icen-motion-ease-spring: cubic-bezier(.22, .8, .24, 1);     /* 弹簧近似；支持 linear() 时由下方覆盖 */
+
+  /* ── 幅度（位移/缩放令牌：编排一致的物理量） ── */
+  --icen-motion-shift-sm: 2px;   /* 行内微移（列表项 hover） */
+  --icen-motion-shift-md: 6px;   /* 浮层/气泡入场位移 */
+  --icen-motion-shift-lg: 12px;  /* 抽屉/面板入场位移 */
+  --icen-motion-scale-enter: .96;  /* 弹层入场起始缩放 */
+  --icen-motion-scale-press: .985; /* 按下形变 */
+
+  /* ── 编排（stagger：列表/卡片瀑布入场） ── */
+  --icen-motion-stagger-step: 24ms;    /* 相邻项延迟步长 */
+  --icen-motion-stagger-count: 5;      /* 最多级联项数（超出同拍，避免长尾等待） */
+}
+
+/* damped spring 近似（过冲 ≈8%）：linear() 停点语法（Chrome 113+ / Safari 17.2+ / FF 112+）。
+   不支持时保持上方 emphasized 回退——不猜不静默之外，这里是有意声明的可降级增强。 */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --icen-motion-ease-spring: linear(0, .42, .78, 1, 1.08, .96, 1.02, 1);
+  }
+}
