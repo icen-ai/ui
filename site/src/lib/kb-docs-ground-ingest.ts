@@ -8,6 +8,7 @@
  * done / running / fail、healthy / stale / failing）在任何时间查看都成立。
  */
 import type { ComponentDoc } from './components';
+import { META } from './meta';
 
 export const KB_DOCS_GROUND_INGEST: ComponentDoc[] = [
   /* ══════════ 知识库族 · umbrella ══════════ */
@@ -15,20 +16,20 @@ export const KB_DOCS_GROUND_INGEST: ComponentDoc[] = [
     slug: 'kb',
     name: '知识库总览',
     group: '知识库',
-    desc: 'kb 族伞形入口：呈现「知识从哪来、可信吗、怎么用」的证据界面，覆盖六域 27 个组件。',
+    desc: `kb 族伞形入口：呈现「知识从哪来、可信吗、怎么用」的证据界面，覆盖 ${META.kb.domains} 域 ${META.kb.components} 个组件。`,
     detail: {
       features: [
         '**定位**：呈现证据（知识从哪来、可信吗、怎么用），与 ai 族互补',
         '**数据**：契约与纯函数统一在 `kb-core`（类型 + 来源类型注册表）',
         '**样式**：视觉基座 `kb.css`（等宽数字 / 引用体 / 徽标）',
-        '**分域**：六域 27 个组件，各持一份合并 CSS',
+        `**分域**：${META.kb.domains} 域 ${META.kb.components} 个组件，各持一份合并 CSS`,
         '**安装**：`kit/kb` 一行装全家，细分 slug 可独立安装',
       ],
       notes: [
         '数字一律 `.kb-num` 等宽、引文一律 `.kb-quote` 引用体、来源 / 分数 / 日期只用语义色。',
       ],
     },
-    demo: `<p class="demo-label" style="margin:0 0 12px">ai 族描述思考，kb 族呈现证据。六域 27 个组件，共享数据契约 kb-core（类型 + 纯函数 + 来源类型注册表）与视觉基座 kb.css——数字一律等宽、引文一律引用体、来源 / 分数 / 日期只用语义色。</p>
+    demo: `<p class="demo-label" style="margin:0 0 12px">ai 族描述思考，kb 族呈现证据。${META.kb.domains} 域 ${META.kb.components} 个组件，共享数据契约 kb-core（类型 + 纯函数 + 来源类型注册表）与视觉基座 kb.css——数字一律等宽、引文一律引用体、来源 / 分数 / 日期只用语义色。</p>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;width:100%">
   <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-accent);border-radius:var(--icen-radius-md);padding:12px 14px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -78,17 +79,26 @@ export const KB_DOCS_GROUND_INGEST: ComponentDoc[] = [
     <p style="margin:0 0 8px;font-size:12.5px;color:var(--icen-token-text-muted);line-height:1.7">双栏画布（划词 AI 操作）、检查点（只回滚内容保留对话）、沙箱容器（postMessage JSON-RPC）、工具链条。</p>
     <div class="icen-mono" style="font-size:11.5px;color:var(--icen-token-text-faint)">kb-canvas · kb-checkpoint · kb-sandbox · kb-chain</div>
   </div>
+  <div style="border:1px solid var(--icen-token-line-soft);border-left:2px solid var(--icen-token-danger,var(--icen-token-warning));border-radius:var(--icen-radius-md);padding:12px 14px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <strong style="font-size:13px">权限域 · perm</strong>
+      <span class="icen-kb-badge">fail-closed</span>
+    </div>
+    <p style="margin:0 0 8px;font-size:12.5px;color:var(--icen-token-text-muted);line-height:1.7">访问边界：ACL 评估、谁能看矩阵、脱敏访问、权限审计日志、可见性徽标。对授权侧诚实、对受限侧沉默。</p>
+    <div class="icen-mono" style="font-size:11.5px;color:var(--icen-token-text-faint)">kb-acl · kb-who-can · kb-access · kb-audit · kb-visibility</div>
+  </div>
 </div>`,
-    usage: `// 一行装全家（kb.css 基座 + 六域 CSS 全带上；behavior 按需从各细分 kit 引入）
+    usage: `// 一行装全家（kb.css 基座 + ${META.kb.domains} 域 CSS 全带上；behavior 按需从各细分 kit 引入）
 import '@icen.ai/ui/kit/kb';
 
-// 六域一览（规格 docs/spec/kb-family.md；27 个组件）：
+// ${META.kb.domains} 域一览（规格 docs/spec/kb-family.md；${META.kb.components} 个组件）：
 // 证据 ground   kb-citation / kb-sources / kb-passage / kb-conflict
 // 摄取 ingest   kb-pipeline / kb-chunks / kb-segment / kb-connector / kb-metadata / kb-qa
 // 检索 search   kb-retrieval / kb-filter / kb-rerank / kb-hittest
 // 问数 data     kb-sql / kb-answer / kb-clarify / kb-explain
 // 治理 ops      kb-trace / kb-review / kb-gap / kb-eval
 // 工作台 agent  kb-canvas / kb-checkpoint / kb-sandbox / kb-chain
+// 权限 perm     kb-acl / kb-who-can / kb-access / kb-audit / kb-visibility
 
 // 共享数据契约与纯函数（引用 / 分数 / chunk / 分段 / 连接器健康，SSR 安全）：
 import { normalizeCitation, segmentText, connectorHealth, formatScore } from '@icen.ai/ui/behaviors/kb-core';`,

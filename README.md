@@ -39,7 +39,7 @@ renderLine(el, { labels, series }); // 函数式组件：无 init，直接渲染
 ## 里面有什么
 
 - **组件**：无框架组件库（表单 / 浮层 / 导航 / 数据展示 / 反馈），纯 CSS 契约 + 按需行为 JS。类名 `icen-*`、钩子 `data-icen-*`、变量 `--icen-*`，产物全部进 cascade layers，与任何第三方 CSS 共存零冲突。
-- **图表**：一份 JSON 十三种图，悬停/点击/图例开关内建，不依赖图表库。
+- **图表**：一份 JSON <!-- meta:charts.total -->14<!-- /meta:charts.total --> 种图，悬停/点击/图例开关内建，不依赖图表库。
 - **AI 界面**：对话 / 推理 / 工具调用 / 审批 / 输入台 / 用量审计；兼容 OpenAI / Anthropic / MCP / AI SDK 协议；UI 能力可注册成模型直接调用的工具。
 - **知识库**：覆盖 RAG 全链路的组件族（摄取 / 检索 / 问数 / 治理 / 权限），权限域 fail-closed。
 - **主题**：色彩预设 × 设计原语 × 明暗，全部挂在 `<html>` data 属性上；自建品牌只需在自家 CSS 写一块 token 面。

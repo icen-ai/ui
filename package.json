@@ -62,6 +62,7 @@
     "dtcg": "bun scripts/dtcg.mjs",
     "design-tokens": "bun scripts/design-tokens.mjs",
     "guard": "bun scripts/guard/index.ts",
+    "meta": "bun scripts/meta.mjs",
     "contracts": "bun scripts/contracts.ts --check",
     "contracts:update": "bun scripts/contracts.ts --write",
     "contracts:diff": "bun scripts/contracts.ts --diff",

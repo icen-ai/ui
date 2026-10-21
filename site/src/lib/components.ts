@@ -10,6 +10,7 @@ import { iconHTML, iconPath } from '../../../src/behaviors/icons';
 import { ICON_DOC } from './icon-docs';
 import { THEME_SWITCHER_DOC } from './theme-switcher-docs';
 import { cssOf } from '../../../scripts/slugs.mjs';
+import { META } from './meta';
 import { KB_DOCS_GROUND_INGEST } from './kb-docs-ground-ingest';
 import { KB_DOCS_SEARCH_DATA } from './kb-docs-search-data';
 import { KB_DOCS_OPS_AGENT } from './kb-docs-ops-agent';
@@ -2467,7 +2468,7 @@ return () => { disposed = true; timers.forEach((id) => { clearInterval(id); clea
         '**阅读**：代码区可聚焦并横向滚动；行号、换行和折叠同步读屏状态',
         '**渲染**：浏览器用 `renderCodeBlock`，构建期用 `codeBlockHTML`；共用 `initCodeBlock` 委托与销毁',
       ],
-      notes: ['`code` 是安全文本入口；`html` 只接收可信高亮结果，语法配色对比度由调用方负责。本站高亮已适配六套主题的明暗底色。'],
+      notes: [`\`code\` 是安全文本入口；\`html\` 只接收可信高亮结果，语法配色对比度由调用方负责。本站高亮已适配 ${META.presets} 套主题的明暗底色。`],
     },
     demo: CB_DEMO,
     usage: `import { renderCodeBlock, codeBlockHTML, initCodeBlock } from '@icen.ai/ui/behaviors/code-block';
@@ -2696,7 +2697,7 @@ initTree();
     demo: `<div class="icen-carousel">
   <div class="icen-carousel-track">
     <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-accent),var(--icen-token-accent-deep));color:var(--icen-token-on-accent)"><strong>随手的组件</strong><span style="font-size:12px;opacity:.85">一行引入，行为自动接上</span></div></div>
-    <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-success),var(--icen-token-info));color:#fff"><strong>六套主题</strong><span style="font-size:12px;opacity:.85">同一套令牌，六种气质</span></div></div>
+    <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-success),var(--icen-token-info));color:#fff"><strong>${META.presets} 套主题</strong><span style="font-size:12px;opacity:.85">同一套令牌，${META.presets} 种气质</span></div></div>
     <div class="icen-carousel-slide"><div style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--icen-token-accent-cold),var(--icen-token-accent));color:#fff"><strong>键盘与触屏</strong><span style="font-size:12px;opacity:.85">方向键、滑动、圆点直达</span></div></div>
   </div>
   <button class="icen-carousel-arrow icen-carousel-arrow--prev" type="button" aria-label="上一张">${iconHTML('chevron-left')}</button>
@@ -2834,7 +2835,7 @@ const dispose = initScrollArea(); // 页面一次；卸载时 dispose()
     slug: 'charts',
     name: '图表总览',
     group: '图表',
-    desc: '图表族总览：零依赖纯 SVG 渲染，12 种图型共用一份 JSON 规格。',
+    desc: `图表族总览：零依赖纯 SVG 渲染，${META.charts.total} 种图型共用一份 JSON 规格。`,
     detail: {
       features: [
         '**统一入口**：`renderChart` 吃一份纯 JSON 规格（ChartSpec）；`type` 缺省自动推断',

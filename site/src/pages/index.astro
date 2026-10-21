@@ -33,13 +33,12 @@ const GROUP_LINK: Record<string, string> = {
 
 /* 预设色板：展示内容为各预设自身的基值（色值即数据，非 UI 样式） */
 
-import { readdirSync } from 'node:fs';
-import { SLUGS } from '../../../scripts/slugs.mjs';
-/* 数字带全部构建期派生（src/behaviors 目录 + SLUGS 清单），发版永不漂移 */
-const behaviorCount = readdirSync(new URL('../../../src/behaviors', import.meta.url)).filter((f) => f.endsWith('.ts')).length;
-/* 图表类型 = ChartType 联合 12 种 + graph/map 两种图型（kit 入口是安装口径，不是类型口径） */
-const chartTypeCount = 14;
-const aiCount = SLUGS.filter((s) => s.startsWith('ai-')).length;
+import { META } from '../lib/meta';
+/* 数字带全部构建期派生（meta.json = 源码扫描产物，guard 保新鲜），发版永不漂移 */
+const behaviorCount = META.behaviors;
+/* 图表类型口径 = ChartType 联合 + graph/map 扩展（kit 入口是安装口径，不是类型口径） */
+const chartTypeCount = META.charts.total;
+const aiCount = META.aiComponents;
 
 const importCss = `/* 全量：一行（ui.css 已含 tokens + base + 全部组件，无需再引 tokens.css） */
 import '@icen.ai/ui/ui.css';
@@ -99,7 +98,7 @@ const featureIcons = {
       </a>
       <!-- 数字带：一眼看清规模（滚动入场时计数） -->
       <div class="hero-stats fade-up fade-up--4" role="list">
-        <div class="hero-stat" role="listitem"><b data-icen-count={SLUGS.length}>0</b><span>组件入口</span></div>
+        <div class="hero-stat" role="listitem"><b data-icen-count={META.components}>0</b><span>组件入口</span></div>
         <div class="hero-stat" role="listitem"><b data-icen-count={behaviorCount}>0</b><span>行为模块</span></div>
         <div class="hero-stat" role="listitem"><b data-icen-count={chartTypeCount}>0</b><span>图表类型</span></div>
         <div class="hero-stat" role="listitem"><b data-icen-count={aiCount}>0</b><span>AI 原生</span></div>
@@ -123,12 +122,12 @@ const featureIcons = {
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.chart} /></span>
         <h3 class="feature-title">图表通用层</h3>
-        <p class="feature-desc">一份 JSON，十四种图。悬停、点击、右键与图例开关全部内建，不依赖任何图表库。</p>
+        <p class="feature-desc">一份 JSON，{META.charts.total} 种图。悬停、点击、右键与图例开关全部内建，不依赖任何图表库。</p>
       </div>
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.layers} /></span>
         <h3 class="feature-title">三层正交</h3>
-        <p class="feature-desc">色彩、质感、明暗三层分开调，互不影响。{COMPONENTS.length} 个组件消费同一套令牌，换肤零改动。</p>
+        <p class="feature-desc">色彩、质感、明暗三层分开调，互不影响。{META.components} 个组件消费同一套令牌，换肤零改动。</p>
       </div>
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.box} /></span>
@@ -146,7 +145,7 @@ const featureIcons = {
       <p class="sec-desc">现代、东韵、巨构、钢琴、莫奈、梵高，各带明暗双模。点一张色卡，整站即刻换装。</p>
     </div>
     <Fragment set:html={themeSwitcherHTML({kind:"theme",layout:"inline",size:"lg"})} />
-    <p class="preset-hint">{COMPONENTS.length} 个组件共享同一套设计令牌（<code>--icen-token-*</code>）——换肤不改一行组件代码。</p>
+    <p class="preset-hint">{META.components} 个组件共享同一套设计令牌（<code>--icen-token-*</code>）——换肤不改一行组件代码。</p>
   </section>
 
   <!-- ═══ 袖珍组件群岛：19 个真实组件迷你卡，手工排布成有机云状（视差 × 呼吸 × 抬升三层变换互不冲突） ═══ -->

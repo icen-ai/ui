@@ -1,8 +1,8 @@
 ---
 import Docs from '../layouts/Docs.astro';
 import CodeBlock from '../components/CodeBlock.astro';
-import { COMPONENTS } from '../lib/components';
-const componentCount = COMPONENTS.length;
+import { META } from '../lib/meta';
+const componentCount = META.components;
 const appearanceStudies = [
   { style: 'modern', preset: 'modern', name: '现代', pairing: '现代', title: '日常，自有分寸。', note: '瓷白与柔光，轻盈的操作层。' },
   { style: 'chinese', preset: 'dongyun', name: '中式', pairing: '东韵', title: '留白之间，自有回响。', note: '纸、瓷与墨，让内容舒展生长。' },

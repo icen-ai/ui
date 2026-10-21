@@ -1,0 +1,75 @@
+{
+  "version": "0.11.0",
+  "components": 122,
+  "componentCss": 76,
+  "behaviors": 89,
+  "charts": {
+    "published": 12,
+    "extensions": 2,
+    "total": 14,
+    "types": [
+      "line",
+      "area",
+      "vbar",
+      "hbar",
+      "stack",
+      "donut",
+      "radar",
+      "heatmap",
+      "calendar",
+      "sparkline",
+      "gauge",
+      "scatter",
+      "graph",
+      "map"
+    ]
+  },
+  "presets": 6,
+  "primitives": 4,
+  "tokens": 726,
+  "kb": {
+    "domains": 7,
+    "components": 31
+  },
+  "aiComponents": 14,
+  "tests": {
+    "method": "static-scan(test/it call sites; runner 实跑数以 bun test / playwright 输出为准)",
+    "files": {
+      "unit": 28,
+      "dom": 54,
+      "conformance": 3,
+      "root": 2,
+      "e2e": 41
+    },
+    "cases": {
+      "bun": 909,
+      "e2e": 165
+    }
+  },
+  "size": {
+    "ui": {
+      "raw": 940659,
+      "gzip": 183846
+    },
+    "tokens": {
+      "raw": 119508,
+      "gzip": 21956
+    },
+    "base": {
+      "raw": 27632,
+      "gzip": 7815
+    },
+    "index": {
+      "raw": 1260616,
+      "gzip": 300880
+    },
+    "react": {
+      "raw": 344296,
+      "gzip": 85351
+    },
+    "vue": {
+      "raw": 328923,
+      "gzip": 81430
+    }
+  }
+}

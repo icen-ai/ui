@@ -9,6 +9,15 @@
 | `size-budget.json` | 构建产物体积预算（字节） | 超支即红；随 PR 提高预算（diff 即评审点） |
 | `coverage-floor.json` | src/** 覆盖率地板（lcov 口径） | 棘轮，只许升；CI `bun run test:coverage` 执行 |
 
+## 数字与版本（meta.json）
+
+仓库根 `meta.json` 是「数量与版本主张」的唯一产物：版本、组件/行为/图表/预设/原语/令牌计数、kb 域数、测试统计（静态扫描口径）、关键产物体积（raw + gzip）。
+
+- 生成：`bun run meta`（扫描 `scripts/slugs.mjs` / `src/behaviors/charts.ts` / `src/tokens/themes.json` / `tests/` / `dist/`）；手写数字一律视为漂移。
+- 消费：README 用 `<!-- meta:key -->值<!-- /meta:key -->` 标记（脚本同步）；文档站经 `site/src/lib/meta.ts` 构建期插值。
+- 守卫：`bun run guard` 的「meta 一致性」检查——meta.json 新鲜度、`package.json` 版本与描述、README 标记同步、站点文案硬编码数量主张（历史叙事行用 `meta-ok` 或版本号豁免）。
+- 统计口径全部写在 `scripts/meta-core.mjs` 注释里；改动口径 = 改脚本 + 随 PR 说明。
+
 ## 命令
 
 ```bash

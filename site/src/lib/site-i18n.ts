@@ -6,6 +6,7 @@ import {
 } from '../../../src/behaviors/i18n';
 import { refreshSelect } from '../../../src/behaviors/select';
 import { copyEn } from './site-i18n-en';
+import { META } from './meta';
 
 export type SiteLanguage = 'zh-CN' | 'en-US';
 
@@ -90,7 +91,7 @@ const copy: Record<string, string> = {
   '三层正交': 'Three independent layers', '零依赖无框架': 'Framework-agnostic, zero dependencies',
   '组件、图表和 AI 界面，共用一套设计令牌。 换肤不用改代码，UI 也能直接交给模型调用。': 'Components, charts, and AI interfaces share one design-token system. Restyle without code changes, and let models call UI capabilities directly.',
   '做 AI 界面要用的零件都在：对话、推理、工具调用、审批。兼容主流模型协议，token 和成本自动记账。': 'Everything you need for AI interfaces: chat, reasoning, tool calls, and approvals. Supports major model protocols, with automatic token and cost tracking.',
-  '一份 JSON，十四种图。悬停、点击、右键与图例开关全部内建，不依赖任何图表库。': 'One JSON spec, fourteen chart types. Hover, click, context-menu, and legend interactions are built in, with no charting dependency.',
+  [`一份 JSON，${META.charts.total} 种图。悬停、点击、右键与图例开关全部内建，不依赖任何图表库。`]: `One JSON spec, ${META.charts.total} chart types. Hover, click, context-menu, and legend interactions are built in, with no charting dependency.`,
   '色彩、质感、明暗三层分开调，互不影响。': 'Color, material, and light mode are independent layers.',
   '零运行时依赖，不挑框架：React、Vue、原生 JS 都行，SSR 安全。': 'No runtime dependencies and no framework lock-in: use React, Vue, or plain JavaScript, with SSR-safe behavior.',
   '一套令牌，色彩自由': 'One token system. Color your way.',

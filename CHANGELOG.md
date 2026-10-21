@@ -1,5 +1,11 @@
 # 更新日志
 
+## [Unreleased]
+
+### 工程
+
+- 数字与版本统一由构建产物 `meta.json` 提供（`bun run meta` 生成）：版本、组件/行为/图表/预设/原语/令牌/测试计数与产物体积；README 走 `<!-- meta:* -->` 标记同步，文档站构建期插值；guard 新增「meta 一致性」检查（硬编码数量主张、版本不一致即红）。修正站点三处口径漂移：图表类型数（12/十三/十四 → 统一 14=发布 12+扩展 2）、kb 族（六域 27 → 七域 31）、组件数（站点注册表 129 与包 slug 122 混用 → 统一包口径 122）
+
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本遵循 [SemVer](https://semver.org/lang/zh-CN/)；
 0.x 纪律（破坏只进 minor、逐条公告、收敛期不留兼容层）见 [docs/versioning.md](docs/versioning.md)。
 契约面变化以 [docs/contracts/snapshot.json](docs/contracts/snapshot.json) 的机器 diff 为准

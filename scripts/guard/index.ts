@@ -13,9 +13,10 @@ import { checkTokenReferences } from './token-references';
 import { checkContractsSnapshot } from './contracts-snapshot';
 import { checkTierDirection } from './tier-direction';
 import { checkDeprecation } from './deprecation';
+import { checkMeta } from './meta';
 import type { GuardResult } from './shared';
 
-const checks = [checkCssDiscipline, checkTokenReferences, checkRegistry, checkEvents, checkBehaviorDiscipline, checkNamespace, checkKbHonesty, checkRtl, checkClassSync, checkIconDiscipline, checkContractsSnapshot, checkTierDirection, checkDeprecation];
+const checks = [checkCssDiscipline, checkTokenReferences, checkRegistry, checkEvents, checkBehaviorDiscipline, checkNamespace, checkKbHonesty, checkRtl, checkClassSync, checkIconDiscipline, checkContractsSnapshot, checkTierDirection, checkDeprecation, checkMeta];
 
 console.log('── 设计纪律守卫 ──────────────────────────────────────');
 let failed = false;
