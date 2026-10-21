@@ -204,6 +204,9 @@
     --icen-density-item-height: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 6px));
   }
 }
+/* reduced-motion：本原语时长乘数归零（唯一的变量开关点；base.css 负责动画/滚动压制）。
+   手动覆盖：data-icen-motion="full" 在系统降级时恢复；"reduce" 无需系统设置即降级。 */
 @media (prefers-reduced-motion: reduce) {
-  :root { --icen-design-motion: 0; }
+  :root:not([data-icen-motion="full"]) { --icen-design-motion: 0; }
 }
+:root[data-icen-motion="reduce"] { --icen-design-motion: 0; }

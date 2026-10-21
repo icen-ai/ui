@@ -492,21 +492,15 @@ p { margin: 0 0 1em; }
    动效与无障碍兜底
    ══════════════════════════════════════════════════════════════ */
 
-/* reduced-motion 与手动覆盖：降级而非移除。
-   1) --icen-design-motion 归零 → 全部 --icen-duration-* 过渡瞬时完成（状态反馈保留，只是不再运动）；
-   2) 循环/环境动画（spinner / skeleton / 脉冲）单次瞬时——不持续运动，但仍完成一次状态表达；
-   3) 平滑滚动关闭。
-   <html data-icen-motion="reduce"> 手动降级（无需系统设置）；"full" 在系统降级时显式恢复（演示机/用户选择）。
-   JS 侧同口径：behaviors/motion.ts 的 icenMotionReduced() / onIcenMotionChange() / setIcenMotion()。 */
+/* reduced-motion 与手动覆盖的行为压制（变量开关在 design.css 自持）：
+   循环/环境动画单次瞬时 + 平滑滚动关闭；过渡时长经 --icen-design-motion 归零瞬时完成（状态反馈保留）。 */
 @media (prefers-reduced-motion: reduce) {
-  :root:not([data-icen-motion="full"]) { --icen-design-motion: 0; }
   :root:not([data-icen-motion="full"]) *, :root:not([data-icen-motion="full"]) *::before, :root:not([data-icen-motion="full"]) *::after {
     animation-duration: 0.01ms !important; /* guard:allow-important 动效守卫：降级需压制组件循环动画 */
     animation-iteration-count: 1 !important; /* guard:allow-important 动效守卫：降级需压制组件循环动画 */
     scroll-behavior: auto !important; /* guard:allow-important 动效守卫：降级需关闭平滑滚动 */
   }
 }
-:root[data-icen-motion="reduce"] { --icen-design-motion: 0; }
 :root[data-icen-motion="reduce"] *, :root[data-icen-motion="reduce"] *::before, :root[data-icen-motion="reduce"] *::after {
   animation-duration: 0.01ms !important; /* guard:allow-important 手动降级：与系统降级同口径 */
   animation-iteration-count: 1 !important; /* guard:allow-important 手动降级：与系统降级同口径 */

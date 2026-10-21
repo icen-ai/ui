@@ -50,7 +50,7 @@
 
 降级链（实现于 `base.css`，运行时口径 `behaviors/motion.ts`）：
 
-1. **默认遵循系统**：`@media (prefers-reduced-motion: reduce)` 时 `--icen-design-motion: 0` → 全部 `--icen-duration-*` 过渡瞬时完成；循环/环境动画（spinner、skeleton、脉冲）单次瞬时；平滑滚动关闭。
+1. **默认遵循系统**：`@media (prefers-reduced-motion: reduce)` 时 `--icen-design-motion: 0` → 全部 `--icen-duration-*` 过渡瞬时完成；循环/环境动画（spinner、skeleton、脉冲）单次瞬时；平滑滚动关闭。（Chromium 实测：reduce 下 0s 被钳制为 0.01ms 序列化，语义等同瞬时，保证 transitionend 派发。）
 2. **手动覆盖**：`<html data-icen-motion="reduce">` 无需系统设置即可降级；`"full"` 在系统降级时显式恢复（演示机、用户显式选择）。属性优先级高于系统偏好。
 3. **降级而非移除**：状态变化仍然可见，只是瞬时完成；一次性的状态表达保留。组件编写约定：入场动画应同时含 opacity 与 transform——顺畅时是"移动+淡入"，降级时是瞬时呈现，不会出现"什么都没发生"。
 4. **JS 同口径**：`icenMotionReduced()` 读取与 CSS 相同的判定（属性 > 系统）；`onIcenMotionChange(cb)` 统一订阅 matchMedia 与属性改写，返回销毁函数；`setIcenMotion(mode|null)` 写覆盖。JS 驱动的视差、autoplay、canvas 循环必须走此口径停止运动、保留状态。

@@ -18,6 +18,10 @@
 - DTCG 导出 motion-duration/motion-ease/motion-shift/motion-scale/motion-stagger 与 leading/tracking/weight 族；clamp()/linear()/steps() 超经典版标量，明示记入 ai.icen.skipped
 - 规格文档 `docs/spec/motion-typography.md`（逐令牌场景/反例 + 降级策略 + 文档页信息结构）
 
+### 修复
+
+- reduced-motion 变量开关收归 design.css 单点并补 `full` 逃生口（原先 design.css 的无条件降级块使手动覆盖失效）；文档站布局补齐 `tokens/motion.css` 引入（缺失会令 `--icen-motion-*` 未定义、时长 calc 失效）
+
 ### 工程
 
 - 官网文案规范 `docs/copy-guide.md`：事实优先、短句、少形容词、主张跟证据；审计并改写 10 处营销化/漂移表述（中英双语词典同步，数量一律 META 插值）：移除「万象共生」「为下一个十年的界面而生」等口号，特性卡改为可验证陈述
