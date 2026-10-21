@@ -34,7 +34,7 @@
 - 修正 controls 初始化函数的返回类型为销毁函数（运行时行为不变），支持框架生命周期正确清理
 - 应用组合页接通设置持久化、资料筛选/分页/本机导入、AI 本机流式发送/停止、真实图表切换；修正权限样例；文档换页销毁演示行为监听
 - 新增可重跑的全 Registry 截图清单与六配色、四原语、密度矩阵脚本 `scripts/design-review.mjs`
-
+- 设计工具导出修复：解析有限的带单位计算表达式；默认桌面矩阵排除媒体条件误覆盖；补全控件/字段/字号/字重分组，保留未知表达式的明确跳过记录
 - 站点语言自动检测（`navigator.languages`）使 e2e 在英文 locale 下全站变英文、中文断言全红——playwright 配置钉死 `locale: zh-CN`，验收舱与环境 locale 解耦
 - SiteHeader 语言切换器可访问名不含可见文本（axe `label-content-name-mismatch`）——改 `aria-labelledby` 复合命名
 - 六处展开态 axe 对比度违规修复：avatar 首字母与用户消息头像改用承文本档 `accent-text`（accent 亮档只做图形）、kb-pipeline 错误正文与站点 demo 色块由 muted 提为正文色、notification 操作钮去 muted 化

@@ -1,5 +1,7 @@
 # ICEN UI — macOS Native Design System Transformation
 
+> 2026-10-21 执行补充（用户最新要求优先）：参考成熟桌面界面的比例与交互，明确不采用 Liquid Glass。modern 标准操作面使用不透明表面，靠明度、细边、接触影与间距建立层次。控件、卡片、弹窗区分轮廓，不把所有组件统一压成方形，也不把表格与贴边分区一律圆角化。变量注释只说明设计语义，不加入平台模仿信息。
+
 ## 0. Role & Mission
 
 你是一位顶级 macOS Human Interface Designer、Apple Platform Design Specialist、Design System Architect 和 Senior Frontend Engineer。
@@ -72,7 +74,7 @@
 
 默认以现代 macOS 的稳定交互语义、控件层级和布局规律为基准。
 
-对于 Liquid Glass 等较新的视觉材质，按组件场景选择性采用，不要让所有组件无条件玻璃化。
+本轮不采用 Liquid Glass 等新式玻璃材质；既有 glass 参数仅为自有材料兼容保留，不用于 modern 标准组件。
 
 不要混淆 macOS、iOS、iPadOS 和 Apple 官网营销页面的设计语言。
 
@@ -331,11 +333,11 @@ Dialog、Sheet 和需要强烈聚焦的交互区域。
 
 但不要滥用 Glassmorphism。
 
-只有当组件确实具有悬浮、覆盖或工具层语义时，才考虑透明和模糊。
+本轮 modern 的悬浮、覆盖和工具层均采用不透明表面，不启用背景模糊。
 
 普通表格、正文面板、数据卡片和表单默认应该保持稳定、清晰的内容表面。
 
-模糊半径、透明度和阴影应由统一 Token 控制。
+表面与阴影由统一 Token 控制；旧模糊参数仅为自有材料保留兼容。
 
 必须提供 Reduced Transparency、Forced Colors 以及不支持 backdrop-filter 时的降级方案。
 

@@ -106,6 +106,8 @@
 - **零破坏**：所有新增 token 都有 fallback 使用点或仅在 modern 生效；既有 `--icen-design-*` 作者旋钮保留（radius / space / control-height / font-size / motion 仍可覆盖）。
 - **radius 联动**：xs/sm/md/lg/xl 仍由 `--icen-design-radius` 推导（-5/-2/0/+4/+10），作者改基准值仍整体缩放。
 - **密度联动**：控件高度、间距、字号继续走 density 三族；compact 下 28px，coarse pointer 下 44px 底线不变。
+- **行内操作**：KB 消费 `--icen-density-item-height`，normal/compact/comfortable 为 28/24/32px；嵌套密度重新计算字号角色。
+- **设计工具导出**：DTCG 默认导出桌面 normal，排除媒体条件的覆盖；有限算术支持带单位的 calc/min/max/clamp，未知表达式、单位冲突与循环引用明确跳过。font-size、font-weight、control、field 使用各自类型分组；不将字重导出为字体栈。
 - **主题联动**：表面、边界、阴影全部由当前主题的 ink/surface/shadow/edge/highlight 参数 `color-mix()` 派生，无硬编码色。
 - **构建**：`bun run build` 会重新生成 `colors.css`、`tokens.css`、`ui.css`、DTCG；本次新增 token 不需要手改生成产物。
 - **预算**：新增声明预计 < 8KB（ui.css/tokens.css 各有 ~12% 余量）；如超预算，按 `docs/contracts/size-budget.json` 评审点调整并记录。

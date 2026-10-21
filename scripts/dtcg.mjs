@@ -23,6 +23,7 @@ import themes from '../src/tokens/themes.json' with {type:'json'};
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveCssMath } from './css-math.mjs';
 
 import { generateThemeColors } from './theme-colors.mjs';
 await generateThemeColors();
@@ -41,15 +42,19 @@ const GROUP_RULES = [
   ['icen-border-', 'border', 'color'],
   ['icen-color-', 'color', 'color'],
   ['icen-radius-', 'radius', 'dimension'],
+  ['icen-control-', 'control', 'dimension'],
+  ['icen-field-', 'field', 'dimension'],
   ['icen-density-', 'density', 'dimension'],
   ['icen-duration-', 'duration', 'duration'],
   ['icen-ease-', 'ease', 'cubicBezier'],
+  ['icen-font-size-', 'font-size', 'dimension'],
+  ['icen-font-weight-', 'font-weight', 'number'],
   ['icen-font-', 'font', 'fontFamily'],
   ['icen-line-height-', 'line-height', 'number'],
   ['icen-letter-spacing-', 'letter-spacing', 'dimension'],
 ];
 // 组级 $type 的例外（token 级 $type 覆盖组级——规范允许且优先级最高）
-const TYPE_OVERRIDES = { '--icen-token-scrollbar-size': 'dimension' };
+const TYPE_OVERRIDES = { '--icen-token-scrollbar-size': 'dimension', '--icen-control-focus-border': 'color' };
 
 const GROUP_DESCRIPTIONS = {
   token: '语义色彩系统（--icen-token-*）',
@@ -86,7 +91,23 @@ if (version !== 'classic') {
 // ── 1. 解析 CSS：剥注释 → 平坦块扫描 → 声明序列（保留全局源序） ──
 let css = '';
 for (const f of TOKEN_ORDER) css += `\n/* ═ src/tokens/${f} ═ */\n` + await readFile(join(ROOT, 'src', 'tokens', f), 'utf8');
-const noComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+// The exported matrix describes the default desktop environment. Conditional
+// pointer/accessibility overrides must not silently replace its root values.
+let noComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+const conditional = /@(media|supports|container)\b[^{}]*\{/g;
+let conditionalMatch;
+while ((conditionalMatch = conditional.exec(noComments))) {
+  let depth = 1, end = conditional.lastIndex, quote = '';
+  for (; end < noComments.length && depth; end++) {
+    const char = noComments[end];
+    if (char === '\\') { end++; continue; }
+    if (quote) { if (char === quote) quote = ''; continue; }
+    if (char === '"' || char === "'") { quote = char; continue; }
+    if (char === '{') depth++; else if (char === '}') depth--;
+  }
+  noComments = noComments.slice(0, conditionalMatch.index) + ' '.repeat(end - conditionalMatch.index) + noComments.slice(end);
+  conditional.lastIndex = end;
+}
 
 /** @type {{idx:number, tier:number, kind:string, preset?:string, mode?:string, decls:Map<string,string>}[]} */
 const blocks = [];
@@ -199,12 +220,12 @@ function ruleFor(name) {
   // 名字里带 shadow 的（token-shadow-* / shadow-*）一律按 box-shadow 处理 → 不可表示
   if (name.startsWith('--icen-design-')) {
     const token=name.slice('--icen-design-'.length);
-    const dimensions=['radius','space','control-height','font-size','glass-blur'];
+    const dimensions=['radius','space','control-height','font-size','glass-blur','density-offset'];
     const colors=['canvas','surface','raised','ink','muted','faint','accent','accent-strong','accent-text','on-accent','cold','success','warning','error','info','light'];
     if(dimensions.includes(token)) return {group:'design',type:'dimension',token};
     if(colors.includes(token)) return {group:'design',type:'color',token};
     if(token==='font') return {group:'design',type:'fontFamily',token};
-    if(token==='motion') return {group:'design',type:'number',token};
+    if(token==='motion'||token==='density-scale') return {group:'design',type:'number',token};
     return null;
   }
   if (name.includes('shadow')) return { group: 'shadow', type: 'shadow' };
@@ -256,7 +277,12 @@ for (const preset of PRESETS) {
       if (am) { status.set(name, { kind: 'alias', target: am[1] }); continue; }
       if (rule.type === 'shadow') { status.set(name, { kind: 'skip', reason: REASONS.shadow }); continue; }
       const type = TYPE_OVERRIDES[name] ?? rule.type;
-      const conv = type === 'number' ? parseNumber(raw) : CONVERTERS[type]?.(raw);
+      let resolved = raw;
+      if (type === 'dimension' || type === 'duration') {
+        const value = resolveCssMath(raw, eff);
+        if (value) resolved = `${Number(value.number.toFixed(6))}${value.unit}`;
+      }
+      const conv = type === 'number' ? parseNumber(resolved) : CONVERTERS[type]?.(resolved);
       if (conv === null || conv === undefined) {
         status.set(name, { kind: 'skip', reason: type === 'color' && !ruleFor(name).type.startsWith('shadow') ? REASONS.color : REASONS.unparseable(type) });
       } else {

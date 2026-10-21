@@ -86,10 +86,10 @@ const navItems: Array<[string, string, string]> = [
             </div>
             <div class="icen-switch-row">
               <div class="icen-switch-row-label">
-                <span class="icen-switch-row-title">显示滚动指示器</span>
-                <span class="icen-switch-row-desc">仅在滚动时出现</span>
+                <span class="icen-switch-row-title">稳定内容宽度</span>
+                <span class="icen-switch-row-desc">为滚动条预留空间，减少布局位移</span>
               </div>
-              <button class="icen-switch" role="switch" aria-checked="true" aria-label="显示滚动指示器" id="app-scrollbars"><span class="icen-switch-thumb"></span></button>
+              <button class="icen-switch" role="switch" aria-checked="true" aria-label="稳定内容宽度" id="app-scrollbars"><span class="icen-switch-thumb"></span></button>
             </div>
             <fieldset class="icen-form-field">
               <label class="icen-form-label" for="app-motion">动效</label>
@@ -199,7 +199,7 @@ const navItems: Array<[string, string, string]> = [
       <div class="app-body">
         <div class="app-toolbar">
           <span class="app-toolbar-title">检索架构评审</span>
-          <span class="app-toolbar-meta">3 条消息</span>
+          <span class="app-toolbar-meta">本地会话</span>
         </div>
         <div class="app-content app-content--chat" id="app-messages" role="log" aria-label="本地演示对话" aria-live="polite">
           <div class="icen-ai-msg icen-ai-msg--user">
@@ -296,7 +296,7 @@ const navItems: Array<[string, string, string]> = [
   .apps-head { margin-bottom: 36px; }
   .apps-jump { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
   .apps-jump a {
-    font-size: 11.5px;
+    font-size: var(--icen-density-font-size-xs);
     color: var(--icen-token-text-muted);
     padding: 3px 8px;
     border: 1px solid var(--icen-token-control-border);
@@ -309,7 +309,6 @@ const navItems: Array<[string, string, string]> = [
   .app-scene-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
   .app-scene-title { font-size: 15px; font-weight: 600; margin: 0 0 3px; color: var(--icen-token-text); }
   .app-scene-desc { font-size: 12px; line-height: 1.55; color: var(--icen-token-text-muted); margin: 0; max-width: 560px; }
-  .app-scene-ref { flex: none; font-family: var(--icen-font-mono); font-size: 10px; color: var(--icen-token-text-muted); border: 1px solid var(--icen-token-separator-soft); border-radius: var(--icen-radius-full); padding: 3px 7px; }
 
   /* 应用窗口：chrome + 内容面，不画交通灯、不冒充真实窗口 */
   .app-window {
@@ -330,7 +329,7 @@ const navItems: Array<[string, string, string]> = [
     padding: 10px 8px;
   }
   .app-side-group { display: flex; flex-direction: column; gap: 1px; }
-  .app-side-label { font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--icen-token-text-muted); padding: 4px 8px 6px; }
+  .app-side-label { font-size: var(--icen-density-font-size-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--icen-token-text-muted); padding: 4px 8px 6px; }
   .app-body { display: flex; flex-direction: column; min-inline-size: 0; }
   .app-toolbar {
     display: flex;
@@ -342,7 +341,7 @@ const navItems: Array<[string, string, string]> = [
     border-bottom: 1px solid var(--icen-token-separator-soft);
   }
   .app-toolbar-title { font-size: 13px; font-weight: 600; color: var(--icen-token-text); }
-  .app-toolbar-meta { font-size: 11px; color: var(--icen-token-text-muted); font-variant-numeric: tabular-nums; }
+  .app-toolbar-meta { font-size: var(--icen-density-font-size-xs); color: var(--icen-token-text-muted); font-variant-numeric: tabular-nums; }
   .app-toolbar-actions { display: flex; align-items: center; gap: 6px; margin-inline-start: auto; }
   .app-content { flex: 1; min-block-size: 0; padding: 14px; }
   .app-content--form { max-width: 520px; padding: 24px; }
@@ -364,14 +363,14 @@ const navItems: Array<[string, string, string]> = [
     border-top: 1px solid var(--icen-token-separator-soft);
     justify-content: flex-end;
   }
-  .app-foot-note { margin-inline-end: auto; font-size: 11px; color: var(--icen-token-text-muted); }
+  .app-foot-note { margin-inline-end: auto; font-size: var(--icen-density-font-size-xs); color: var(--icen-token-text-muted); }
   .app-inspector {
     background: var(--icen-token-surface-sidebar);
     border-inline-start: 1px solid var(--icen-token-separator-soft);
     padding: 14px 12px;
     font-size: 12px;
   }
-  .app-inspector-label { display: block; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--icen-token-text-muted); margin-bottom: 8px; }
+  .app-inspector-label { display: block; font-size: var(--icen-density-font-size-xs); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--icen-token-text-muted); margin-bottom: 8px; }
   .app-inspector-title { font-size: 14px; font-weight: 600; margin: 0 0 8px; color: var(--icen-token-text); }
   .app-inspector-list { margin: 0 0 16px; }
   .app-inspector-list > div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--icen-token-separator-soft); }

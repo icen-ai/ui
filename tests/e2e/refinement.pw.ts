@@ -92,7 +92,7 @@ test('published CSS has working motion, distinct contours, opaque planes and nes
   await expect(page.locator('.icen-popover')).toHaveCSS('backdrop-filter', 'none');
   await expect(page.locator('.icen-modal-backdrop')).toHaveCSS('backdrop-filter', 'none');
   await expect(page.locator('.icen-nav')).toHaveCSS('backdrop-filter', 'none');
-  expect(await page.locator('.icen-nav').evaluate(el => {
+  await expect.poll(() => page.locator('.icen-nav').evaluate(el => {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
     const context = canvas.getContext('2d')!;
     context.fillStyle = getComputedStyle(el).backgroundColor; context.fillRect(0, 0, 1, 1);

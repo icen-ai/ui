@@ -57,6 +57,22 @@ beforeAll(() => {
 }, 120_000);
 
 describe('tokens-studio.json', () => {
+  test('computed geometry, density and motion reach design tools as real scalar values', () => {
+    for (const preset of PRESETS) {
+      for (const mode of ['light', 'dark']) {
+        const set = ts[`${preset}/${mode}`] as Record<string, any>;
+        expect(set.radius.sm.$value).toBe('8px');
+        expect(set.radius.lg.$value).toBe('14px');
+        expect(set.density['item-height'].$value).toBe('28px');
+        expect(set.duration.fast.$value).toBe('110ms');
+        expect(set['font-weight'].title.$value).toBe(600);
+        expect(set['font-size'].control.$value).toContain('.density.font-size-md}');
+        expect(set.control['padding-inline'].$value).toBe('12px');
+      }
+      const radius = fv.variableCollections.find(c => c.name === `icen / ${preset}`)!.variables.find(v => v.name === 'radius/lg');
+      expect(radius?.valuesByMode).toEqual({ light: 14, dark: 14 });
+    }
+  });
   test('$themes 恰 12 组（6 预设 × 明暗），命名与 set 键一一对应', () => {
     expect(ts.$themes).toHaveLength(12);
     const expected = PRESETS.flatMap((p) => [`${p} / light`, `${p} / dark`]);
@@ -157,7 +173,7 @@ describe('figma.variables.json', () => {
     expect(stringCount).toBeGreaterThan(0);
   });
 
-  test('dimension 保留原语空间种子 4px；计算式密度按诚实跳过规则处理', () => {
+  test('dimension 保留原语空间种子 4px', () => {
     const piano = fv.variableCollections.find((c) => c.name === 'icen / piano');
     const spaceXs = piano?.variables.find((v) => v.name === 'design/space');
     expect(spaceXs?.type).toBe('FLOAT');
