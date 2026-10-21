@@ -16,6 +16,14 @@
   display: block;
   width: 132px;
   height: 132px;
+  overflow: visible;
+}
+/* 轨道与进度同宽（10）；轨道压到 6 成，进度弧圆头收口 */
+.icen-chart-gauge svg circle {
+  stroke-width: 10;
+}
+.icen-chart-gauge svg circle:first-of-type {
+  opacity: 0.7;
 }
 .icen-chart-gauge-center {
   position: absolute;
@@ -24,15 +32,27 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
+  text-align: center;
 }
 .icen-chart-gauge-value {
   font-size: var(--icen-density-font-size-2xl);
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--icen-token-text);
 }
 .icen-chart-gauge-label {
-  font-size: var(--icen-density-font-size-xs);
+  max-width: 88px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  letter-spacing: 0.01em;
   color: var(--icen-token-text-faint);
+}
+
+@media (forced-colors: active) {
+  .icen-chart-gauge svg circle:first-of-type { stroke: CanvasText; }
 }

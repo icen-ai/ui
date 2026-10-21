@@ -6,8 +6,13 @@
  *   .icen-chart-radar > svg[viewBox="0 0 200 200"]（N 轴蛛网 + 数据多边形）
  *                > .icen-chart-legend
  * 多系列时各系列分配 chart-tone-1..6，图例由 behavior 生成。
+ * 蛛网：环与轴都是发丝实线（虚线在 200px 视觉尺寸下会碎），最外环略重。
  */
 
+.icen-chart-radar {
+  align-items: center;
+  gap: var(--icen-density-space-md);
+}
 .icen-chart-radar > svg {
   display: block;
   width: 100%;
@@ -16,4 +21,48 @@
   aspect-ratio: 1;
   overflow: visible;
 }
-.icen-chart-radar { gap: var(--icen-density-space-md); }
+
+/* 蛛网环：fill=none 的 polygon 即网格；虚线归一为实线，避免缩放后出现摩尔纹 */
+.icen-chart-radar svg polygon[fill='none'] {
+  stroke: var(--icen-token-line-soft);
+  stroke-dasharray: none;
+  opacity: 0.9;
+}
+.icen-chart-radar svg line {
+  stroke: var(--icen-token-line-soft);
+  opacity: 0.8;
+}
+.icen-chart-radar svg text {
+  font-size: 10px;
+  letter-spacing: 0.01em;
+  fill: var(--icen-token-text-muted);
+}
+/* 数据多边形：填充 12%，描边 1.75；hover 只加浓填充 */
+.icen-chart-radar svg polygon[fill-opacity] {
+  fill-opacity: 0.12;
+  stroke-width: 1.75;
+  transition: fill-opacity var(--icen-tx-fast);
+}
+.icen-chart-radar svg polygon[fill-opacity]:hover,
+.icen-chart-radar svg polygon[fill-opacity].is-hover {
+  fill-opacity: 0.2;
+}
+.icen-chart-radar svg circle[data-icen-chart-mark] {
+  stroke-width: 1.75;
+  transition: transform var(--icen-tx-fast) var(--icen-ease-out);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.icen-chart-radar svg circle[data-icen-chart-mark].is-hover {
+  transform: scale(1.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-chart-radar svg polygon[fill-opacity],
+  .icen-chart-radar svg circle[data-icen-chart-mark] { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .icen-chart-radar svg polygon[fill='none'],
+  .icen-chart-radar svg line { stroke: GrayText; }
+}

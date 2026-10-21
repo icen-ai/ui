@@ -10,9 +10,55 @@
  * 同样追加进 svg（样式属性直出，挡指针事件在基座 charts.css）。
  */
 
+.icen-chart-area {
+  position: relative;
+  min-width: 0;
+}
 .icen-chart-area > svg {
   display: block;
   width: 100%;
   height: 150px;
   overflow: visible;
+}
+
+.icen-chart-area svg .icen-chart-grid {
+  stroke: var(--icen-token-line-soft);
+  opacity: 0.9;
+}
+.icen-chart-area svg .icen-chart-baseline {
+  stroke: var(--icen-token-line);
+  opacity: 1;
+}
+
+/* 面积是主体：渐变略浓于折线（.3 → 0），但描边收细到 1.75 */
+.icen-chart-area svg > path[fill='none'] {
+  stroke-width: 1.75;
+}
+.icen-chart-area svg stop:first-child { stop-opacity: 0.3; }
+.icen-chart-area svg stop:last-child { stop-opacity: 0; }
+
+/* 数据点：小一号的白芯色环，hover 放大到 1.5×（与折线同一套手感） */
+.icen-chart-area svg circle[data-icen-chart-mark]:not([data-icen-chart-hit]) {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--icen-tx-fast) var(--icen-ease-out), opacity var(--icen-tx-fast);
+}
+.icen-chart-area svg circle[data-icen-chart-mark]:not([data-icen-chart-hit]):has(+ .is-hover) {
+  transform: scale(1.5);
+}
+.icen-chart-area svg circle[data-icen-chart-hit].is-hover {
+  fill: color-mix(in srgb, var(--icen-token-accent) 9%, transparent);
+}
+
+.icen-chart-area .icen-chart-labels {
+  margin-top: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-chart-area svg circle[data-icen-chart-mark] { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .icen-chart-area svg .icen-chart-grid,
+  .icen-chart-area svg .icen-chart-baseline { stroke: GrayText; }
 }

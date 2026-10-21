@@ -641,9 +641,12 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): HTMLEl
     fill: 'none', stroke: 'var(--icen-token-line-soft)', 'stroke-width': '14',
   }));
   let offset = 0;
+  /* 段间留 2.5 用户单位的白隙：多段环图靠缝隙分界，不靠描边色差（同色相邻段可辨） */
+  const gap = opts.segments.length > 1 ? 2.5 : 0;
   opts.segments.forEach((seg, segIndex) => {
     /* 负值段钳 0：负 dash 长度是非法 stroke-dasharray，浏览器会当未设置 → 画成整环盖住其他段 */
-    const dash = Math.max(0, (seg.value / total) * circumference);
+    const arcLength = Math.max(0, (seg.value / total) * circumference);
+    const dash = Math.max(0, arcLength - gap);
     const arc = svgEl('circle', {
       cx: '60', cy: '60', r: String(radius),
       fill: 'none',
@@ -655,7 +658,7 @@ export function renderDonut(el: HTMLElement, opts: ChartSegmentsOptions): HTMLEl
     });
     setMarkData(arc, { index: segIndex, label: seg.label, value: seg.value });
     svg.appendChild(arc);
-    offset += dash;
+    offset += arcLength;
   });
 
   const legend = document.createElement('div');
@@ -705,6 +708,7 @@ export function renderLine(el: HTMLElement, opts: ChartLineOptions): HTMLElement
     /* +0.5 对齐物理像素：1px 线落在整数位会被两格抗锯齿渲染成 2px 灰线 */
     const y = Math.round(pad + (i * (height - pad * 2)) / 3) + 0.5;
     svg.appendChild(svgEl('line', {
+      class: i === 3 ? 'icen-chart-grid icen-chart-baseline' : 'icen-chart-grid',
       x1: String(pad), x2: String(width - pad), y1: String(y), y2: String(y),
       stroke: 'var(--icen-token-line-soft)', 'stroke-width': '1',
     }));
@@ -804,6 +808,7 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
   const tone = toneVar(opts.tone);
 
   const points = values.map((value, i) => ({
+    i,
     x: values.length <= 1 ? width / 2 : pad + (i / (values.length - 1)) * (width - pad * 2),
     /* 负值钳到基线（与折线图同口径）：容器 overflow:visible，反向射出会压住下方内容 */
     y: height - pad - (Math.max(0, value) / max) * (height - pad * 2),
@@ -831,6 +836,7 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
     /* +0.5 对齐物理像素：1px 线落在整数位会被两格抗锯齿渲染成 2px 灰线 */
     const y = Math.round(pad + (i * (height - pad * 2)) / 3) + 0.5;
     svg.appendChild(svgEl('line', {
+      class: i === 3 ? 'icen-chart-grid icen-chart-baseline' : 'icen-chart-grid',
       x1: String(pad), x2: String(width - pad), y1: String(y), y2: String(y),
       stroke: 'var(--icen-token-line-soft)', 'stroke-width': '1',
     }));
@@ -845,12 +851,20 @@ export function renderArea(el: HTMLElement, opts: ChartSeriesOptions): HTMLEleme
   for (const p of points) {
     const title = svgEl('title', {});
     title.textContent = `${p.label}: ${fmt(opts, p.value)}`;
-    const inv = svgEl('circle', {
-      cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '2',
-      fill: 'transparent',
+    const dot = svgEl('circle', {
+      cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '2.6',
+      fill: 'var(--icen-token-card)', stroke: tone, 'stroke-width': '1.6',
     });
-    inv.appendChild(title);
-    svg.appendChild(inv);
+    dot.appendChild(title);
+    setMarkData(dot, { index: p.i, label: p.label, value: p.value });
+    svg.appendChild(dot);
+    /* 与折线同口径的 9px 透明命中圆：面积图也有 hover/click 手感 */
+    const hit = svgEl('circle', {
+      cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: '9', fill: 'transparent',
+      'data-icen-chart-hit': '1',
+    });
+    copyMarkData(hit, dot);
+    svg.appendChild(hit);
   }
 
   wrap.append(svg, pointLabelsRow(labels, width, pad));
@@ -1415,6 +1429,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
     /* +0.5 对齐物理像素：1px 线落在整数位会两格抗锯齿发虚 */
     const y = Math.round(pad + (i * (height - pad * 2)) / 3) + 0.5;
     svg.appendChild(svgEl('line', {
+      class: i === 3 ? 'icen-chart-grid icen-chart-baseline' : 'icen-chart-grid',
       x1: String(pad), x2: String(width - pad), y1: String(y), y2: String(y),
       stroke: 'var(--icen-token-line-soft)', 'stroke-width': '1',
     }));
@@ -1428,6 +1443,7 @@ export function renderScatter(el: HTMLElement, opts: ChartScatterOptions): HTMLE
   for (let i = 0; i <= 4; i++) {
     const x = Math.round(pad + (i * (width - pad * 2)) / 4) + 0.5;
     svg.appendChild(svgEl('line', {
+      class: i === 0 ? 'icen-chart-grid icen-chart-grid--v icen-chart-axis' : 'icen-chart-grid icen-chart-grid--v',
       x1: String(x), x2: String(x), y1: String(pad), y2: String(height - pad),
       stroke: 'var(--icen-token-line-soft)', 'stroke-width': '1', 'stroke-dasharray': '2 3',
     }));

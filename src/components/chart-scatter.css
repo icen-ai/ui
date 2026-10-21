@@ -4,21 +4,58 @@
  *
  * DOM 由 behaviors/charts.ts 的 renderScatter 构建：
  *   .icen-chart-scatter > svg（360×220 viewBox，网格 + 刻度 + circle[data-icen-chart-mark]）
+ * 横网格带 .icen-chart-grid、纵向带 .icen-chart-grid--v；左/下轴带 .icen-chart-axis。
  * 气泡第三维：points[].size 映射半径 3–10；hover/点击/右键走通用层委托。
  */
 
+.icen-chart-scatter {
+  min-width: 0;
+}
 .icen-chart-scatter svg {
   width: 100%;
   height: auto;
   display: block;
+  overflow: visible;
 }
+
+/* 网格：横实纵虚；轴线略重，刻度文字 10px（行为直出 8px，CSS 覆盖） */
+.icen-chart-scatter svg .icen-chart-grid {
+  stroke: var(--icen-token-line-soft);
+  opacity: 0.9;
+}
+.icen-chart-scatter svg .icen-chart-grid--v {
+  stroke-dasharray: 2 4;
+  opacity: 0.75;
+}
+.icen-chart-scatter svg .icen-chart-axis {
+  stroke: var(--icen-token-line);
+  stroke-dasharray: none;
+  opacity: 1;
+}
+.icen-chart-scatter svg text {
+  font-size: 10px;
+  letter-spacing: 0.01em;
+  fill: var(--icen-token-text-faint);
+}
+
+/* 数据点：半透明填充 + 细描边；hover 加浓不放大（气泡半径本身携带尺寸语义） */
 .icen-chart-scatter circle[data-icen-chart-mark] {
-  transition: fill-opacity var(--icen-tx-fast);
+  transition: fill-opacity var(--icen-tx-fast), stroke-width var(--icen-tx-fast);
 }
-.icen-chart-scatter circle[data-icen-chart-mark]:hover {
+.icen-chart-scatter circle[data-icen-chart-mark]:hover,
+.icen-chart-scatter circle[data-icen-chart-mark].is-hover {
   fill-opacity: 0.85;
+  stroke-width: 1.75;
+}
+.icen-chart-scatter circle[data-icen-chart-mark].is-off {
+  opacity: 0.14;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .icen-chart-scatter circle[data-icen-chart-mark] { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .icen-chart-scatter svg .icen-chart-grid,
+  .icen-chart-scatter svg .icen-chart-axis { stroke: GrayText; }
 }

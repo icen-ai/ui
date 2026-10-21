@@ -8,23 +8,34 @@
  */
 
 .icen-chart-stack {
-  height: 16px;
+  height: 14px;
   display: flex;
   overflow: hidden;
-  border-radius: var(--icen-radius-full);
-  background: var(--icen-token-fill-2);
+  border-radius: var(--icen-radius-xs);
+  background: color-mix(in srgb, var(--icen-token-fill-2) 70%, transparent);
   margin-bottom: var(--icen-density-space-sm);
+  margin-inline: 0;
 }
 .icen-chart-stack-seg {
   height: 100%;
   min-width: 3px;
   background: var(--chart-tone, var(--icen-token-accent));
-  transition: width var(--icen-tx-slow);
+  transition: width var(--icen-tx-slow) var(--icen-ease-out), filter var(--icen-tx-fast);
 }
-.icen-chart-stack-seg:hover {
+/* 段缝：2px 面色内阴影（不改宽度，不改百分比契约；同色相邻段也能分界） */
+.icen-chart-stack-seg + .icen-chart-stack-seg {
+  box-shadow: inset 2px 0 0 var(--icen-token-card);
+}
+.icen-chart-stack-seg:hover,
+.icen-chart-stack-seg.is-hover {
   filter: brightness(1.08);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .icen-chart-stack-seg { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .icen-chart-stack { border: 1px solid CanvasText; background: Canvas; }
+  .icen-chart-stack-seg + .icen-chart-stack-seg { box-shadow: inset 2px 0 0 Canvas; }
 }

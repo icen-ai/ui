@@ -5,13 +5,67 @@
  * DOM 由 behaviors/charts.ts 的 renderLine 构建：
  *   .icen-chart-line > svg[viewBox="0 0 360 150"]
  * 含面积渐变 + 网格线 + 数据点 + 底部 .icen-chart-labels。
+ * 网格线带 .icen-chart-grid，最底一条同时带 .icen-chart-baseline（轴基线加重）。
  * spec.marks 的 SVG 标记（.icen-chart-mark-line 参考线 / .icen-chart-mark-point
  * 标记点 + .icen-chart-mark-label 标注）直接追加进本 svg，样式属性直出（挡指针事件在基座）。
  */
 
+.icen-chart-line {
+  position: relative;
+  min-width: 0;
+}
 .icen-chart-line > svg {
   display: block;
   width: 100%;
   height: 150px;
   overflow: visible;
+}
+
+/* 网格：四档横向发丝线；基线略重（1 档灰差，不做粗黑轴） */
+.icen-chart-line svg .icen-chart-grid {
+  stroke: var(--icen-token-line-soft);
+  opacity: 0.9;
+}
+.icen-chart-line svg .icen-chart-baseline {
+  stroke: var(--icen-token-line);
+  opacity: 1;
+}
+
+/* 数据线：单/多系列统一 2px（行为给 2.5/2，CSS 归一保持同族粗细） */
+.icen-chart-line svg > path[fill='none'] {
+  stroke-width: 2;
+}
+/* 面积渐变压到克制档：首色 .22、尾色 0，避免大色块压过线本身 */
+.icen-chart-line svg stop:first-child { stop-opacity: 0.22; }
+.icen-chart-line svg stop:last-child { stop-opacity: 0; }
+
+/* 数据点：白芯 + 色环；hover 放大 1.45×（命中圆在点之后，用相邻选择器把放大
+   落到被盖住的实心点上；命中圆自身只铺一层极淡的 accent 晕） */
+.icen-chart-line svg circle[data-icen-chart-mark]:not([data-icen-chart-hit]) {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--icen-tx-fast) var(--icen-ease-out), opacity var(--icen-tx-fast);
+}
+.icen-chart-line svg circle[data-icen-chart-mark]:not([data-icen-chart-hit]):has(+ .is-hover) {
+  transform: scale(1.45);
+}
+.icen-chart-line svg circle[data-icen-chart-hit].is-hover {
+  fill: color-mix(in srgb, var(--icen-token-accent) 9%, transparent);
+}
+.icen-chart-line svg circle[data-icen-chart-mark].is-off {
+  opacity: 0.18;
+}
+
+/* 轴标签行与绘图区之间留一口气，不贴线 */
+.icen-chart-line .icen-chart-labels {
+  margin-top: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-chart-line svg circle[data-icen-chart-mark] { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .icen-chart-line svg .icen-chart-grid,
+  .icen-chart-line svg .icen-chart-baseline { stroke: GrayText; }
 }

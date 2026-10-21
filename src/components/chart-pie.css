@@ -5,11 +5,13 @@
  * DOM 由 behaviors/charts.ts 的 renderDonut 构建：
  *   .icen-chart-donut > svg[viewBox="0 0 120 120"]（-90° 起笔）
  *   .icen-chart-donut > .icen-chart-legend
+ * 多段时 behavior 在每段尾部留 2.5 用户单位白隙（同色相邻段可辨）。
  */
 
 .icen-chart-donut {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--icen-density-space-md);
   min-height: 150px;
 }
@@ -17,4 +19,31 @@
   width: 132px;
   height: 132px;
   flex-shrink: 0;
+  overflow: visible;
+}
+
+/* 环宽 13（轨道与弧一致）；hover 段加宽 2px 但不压邻段（底座已留 2.5 缝隙） */
+.icen-chart-donut svg circle {
+  stroke-width: 13;
+  transition: stroke-width var(--icen-tx-fast) var(--icen-ease-out), opacity var(--icen-tx-fast);
+}
+.icen-chart-donut svg circle[data-icen-chart-mark].is-hover {
+  stroke-width: 15;
+}
+.icen-chart-donut svg circle[data-icen-chart-mark].is-off {
+  opacity: 0.22;
+  stroke-width: 13;
+}
+
+.icen-chart-donut .icen-chart-legend {
+  gap: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-chart-donut svg circle { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .icen-chart-donut svg circle { forced-color-adjust: none; }
+  .icen-chart-donut svg circle:first-of-type { stroke: CanvasText; }
 }

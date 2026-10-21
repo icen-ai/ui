@@ -14,7 +14,7 @@
 .icen-chart-heatmap {
   display: flex;
   flex-direction: column;
-  gap: var(--icen-density-space-xs);
+  gap: 6px;
 }
 .icen-chart-heatmap-grid {
   display: grid;
@@ -26,30 +26,40 @@
 }
 .icen-chart-heatmap-cell {
   aspect-ratio: 1;
-  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
-  background: var(--icen-token-fill-2);
+  border-radius: var(--icen-radius-xs);
+  background: color-mix(in srgb, var(--icen-token-fill-2) 80%, transparent);
+  transition: box-shadow var(--icen-tx-fast), filter var(--icen-tx-fast);
 }
 .icen-chart-heatmap-cell.is-blank { background: transparent; }
-.icen-chart-heatmap-cell[data-icen-level='1'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 28%, var(--icen-token-fill-2)); }
-.icen-chart-heatmap-cell[data-icen-level='2'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 50%, var(--icen-token-fill-2)); }
-.icen-chart-heatmap-cell[data-icen-level='3'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 74%, var(--icen-token-fill-2)); }
+.icen-chart-heatmap-cell[data-icen-level='1'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 24%, var(--icen-token-fill-2)); }
+.icen-chart-heatmap-cell[data-icen-level='2'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 46%, var(--icen-token-fill-2)); }
+.icen-chart-heatmap-cell[data-icen-level='3'] { background: color-mix(in srgb, var(--chart-tone, var(--icen-token-accent)) 70%, var(--icen-token-fill-2)); }
 .icen-chart-heatmap-cell[data-icen-level='4'] { background: var(--chart-tone, var(--icen-token-accent)); }
+
+/* hover：面色内圈 + 色环外圈（不改变格子尺寸，网格不跳） */
 .icen-chart-heatmap-cell:not(.is-blank):hover {
-  outline: 1px solid var(--chart-tone, var(--icen-token-accent));
-  outline-offset: 0;
+  box-shadow:
+    0 0 0 1.5px var(--icen-token-card),
+    0 0 0 2.5px var(--chart-tone, var(--icen-token-accent));
 }
+.icen-chart-heatmap-cell:not(.is-blank):active {
+  filter: brightness(0.94);
+}
+
 .icen-chart-heatmap-legend {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 3px;
-  font-size: var(--icen-density-font-size-xs);
+  gap: 4px;
+  font-size: 11px;
+  letter-spacing: 0.01em;
   color: var(--icen-token-text-faint);
 }
 .icen-chart-heatmap-legend .icen-chart-heatmap-cell {
   width: 10px;
   height: 10px;
   aspect-ratio: auto;
+  border-radius: 2px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
 }
 .icen-chart-heatmap-legend > span:first-child { margin-right: 2px; }
 .icen-chart-heatmap-legend > span:last-child { margin-left: 2px; }
@@ -59,15 +69,16 @@
  * 月份标签按周列定位：left = col / columns * 100%。 */
 .icen-chart-calendar {
   display: grid;
-  grid-template-columns: 14px 1fr;
+  grid-template-columns: 16px 1fr;
   grid-template-rows: 14px auto auto;
-  column-gap: 4px;
-  row-gap: 3px;
+  column-gap: 6px;
+  row-gap: 4px;
 }
 .icen-chart-calendar-months {
   grid-column: 2;
   position: relative;
-  font-size: var(--icen-density-font-size-2xs);
+  font-size: 10px;
+  letter-spacing: 0.01em;
   color: var(--icen-token-text-faint);
 }
 .icen-chart-calendar-month {
@@ -81,15 +92,26 @@
   grid-row: 2;
   display: grid;
   grid-template-rows: repeat(7, 1fr);
-  font-size: var(--icen-density-font-size-2xs);
+  align-items: center;
+  font-size: 10px;
   color: var(--icen-token-text-faint);
   line-height: 1;
 }
 .icen-chart-calendar .icen-chart-heatmap-grid {
   grid-column: 2;
   grid-row: 2;
+  gap: 2px;
 }
 .icen-chart-calendar .icen-chart-heatmap-legend {
   grid-column: 2;
   grid-row: 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icen-chart-heatmap-cell { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .icen-chart-heatmap-cell { border: 1px solid CanvasText; }
+  .icen-chart-heatmap-cell.is-blank { border-color: transparent; }
 }

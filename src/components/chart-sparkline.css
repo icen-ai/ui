@@ -6,9 +6,29 @@
  *   .icen-chart-sparkline > svg[viewBox="0 0 96 28"]（无轴，末点高亮）
  */
 
+.icen-chart-sparkline {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 0;
+}
 .icen-chart-sparkline > svg {
   display: block;
   width: 96px;
   height: 28px;
   overflow: visible;
+}
+
+/* 迷你线不比正文抢眼：1.75px 圆头，渐变只做落影暗示 */
+.icen-chart-sparkline svg > path[fill='none'] {
+  stroke-width: 1.75;
+}
+.icen-chart-sparkline svg stop:first-child { stop-opacity: 0.22; }
+.icen-chart-sparkline svg stop:last-child { stop-opacity: 0; }
+.icen-chart-sparkline svg circle {
+  stroke-width: 1.6;
+}
+
+@media (forced-colors: active) {
+  .icen-chart-sparkline svg circle { fill: Canvas; }
 }
