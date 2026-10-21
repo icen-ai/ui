@@ -23,6 +23,7 @@
   min-height: 28px;
   padding: 2px 8px;
   border-radius: var(--icen-radius-xs);
+  transition: background-color var(--icen-tx-fast);
 }
 .icen-kb-row:hover { background: var(--icen-token-fill-hover); }
 .icen-kb-row-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -44,13 +45,14 @@
   font-family: var(--icen-font-mono);
   font-variant-numeric: tabular-nums;
   font-size: 12px;
+  letter-spacing: 0.01em;
   color: var(--icen-token-text-muted);
   white-space: nowrap;
 }
 .icen-kb-meta {
   font-family: var(--icen-font-mono);
   font-size: 11px;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   color: var(--icen-token-text-faint);
   white-space: nowrap;
   /* nowrap 必须配省略截断（诚实截断纪律）：裸 nowrap 会让长文本横向溢出盖到邻列 */
@@ -60,12 +62,13 @@
 
 /* 状态点（族内状态色的唯一入口） */
 .icen-kb-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex: 0 0 auto;
   background: var(--icen-token-text-faint);
   opacity: 0.6;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--icen-token-card) 70%, transparent);
 }
 .icen-kb-dot.is-ok { background: var(--icen-token-success); opacity: 1; }
 .icen-kb-dot.is-warn { background: var(--icen-token-warning); opacity: 1; }
@@ -95,8 +98,8 @@
   position: relative;
   padding-block: 2px;
   padding-inline-start: 12px;
-  font-size: 12.5px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.75;
   color: var(--icen-token-text-muted);
 }
 .icen-kb-quote::before {
@@ -130,13 +133,14 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-height: 22px;
+  padding: 0 7px;
   font-size: 11px;
   line-height: 1;
-  letter-spacing: .2px;
+  letter-spacing: .02em;
   color: var(--icen-token-text-muted);
   border: 1px solid var(--icen-token-separator-soft);
   border-radius: var(--icen-radius-full);
-  padding: 2px 6px;
   white-space: nowrap;
 }
 .icen-kb-badge svg { width: 11px; height: 11px; }
@@ -159,13 +163,15 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-height: 22px;
+  padding: 0 7px;
   font-family: var(--icen-font-mono);
   font-size: 11px;
+  letter-spacing: 0.01em;
   color: var(--icen-token-text-muted);
   background: var(--icen-token-bg-soft);
   border: 1px solid var(--icen-token-line-soft);
   border-radius: var(--icen-radius-sm);
-  padding: 2px 7px;
   max-inline-size: 220px;
   white-space: nowrap;
   overflow: hidden;
@@ -184,19 +190,21 @@
   background: none;
   border-radius: var(--icen-radius-sm);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--icen-token-text-muted);
   cursor: pointer;
   text-align: start;
+  transition: color var(--icen-tx-fast), background-color var(--icen-tx-fast);
 }
-.icen-kb-fold-head:hover { color: var(--icen-token-text); background: var(--icen-token-bg-soft); }
-.icen-kb-fold-head:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: -2px; }
+.icen-kb-fold-head:hover { color: var(--icen-token-text); background: var(--icen-token-fill-hover); }
+.icen-kb-fold-head:active { background: var(--icen-token-fill-pressed); }
+.icen-kb-fold-head:focus-visible { outline: none; box-shadow: var(--icen-ring); }
 .icen-kb-fold-caret {
   display: inline-block;
   width: 1em;
   color: var(--icen-token-text-faint);
   font-size: 10px;
-  transition: transform 0.16s ease-out;
+  transition: transform var(--icen-tx-fast);
   flex: 0 0 auto;
 }
 .icen-kb-fold-head[aria-expanded='true'] .icen-kb-fold-caret { transform: rotate(90deg); }
@@ -206,11 +214,12 @@
 .icen-kb-key {
   font-family: var(--icen-font-mono);
   font-size: 10px;
+  line-height: 1;
   color: var(--icen-token-text-faint);
   border: 1px solid var(--icen-token-line-soft);
   border-bottom-width: 2px;
   border-radius: 4px; /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面）  */
-  padding: 1px 5px;
+  padding: 3px 5px;
   background: var(--icen-token-bg-soft);
 }
 
@@ -222,7 +231,8 @@
   gap: 8px;
   padding: 28px 16px;
   color: var(--icen-token-text-faint);
-  font-size: 12.5px;
+  font-size: 12px;
+  line-height: 1.6;
   text-align: center;
 }
 
@@ -231,9 +241,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--icen-token-text-faint);
-  padding: 4px 8px;
+  padding: 6px 8px;
 }
 .icen-kb-notice svg { width: 12px; height: 12px; flex: 0 0 auto; }
 /* flex 容器内 hidden 会被 display 覆盖——notice 显隐必须显式归零 */
@@ -244,6 +255,7 @@
 .icen-kb-layer-chip {
   font-family: var(--icen-font-mono);
   font-size: 11px;
+  min-height: 22px;
   cursor: pointer;
 }
 .icen-kb-layer-chip[data-icen-layer='pre'] { color: var(--icen-token-success); border-color: color-mix(in srgb, var(--icen-token-success) 45%, transparent); }
@@ -255,6 +267,16 @@
 /* 动效守卫：kb-pulse（.icen-kb-dot.is-live 的存活脉冲）在减少动效偏好下停帧（保持静态高亮，不隐状态） */
 @media (prefers-reduced-motion: reduce) {
   .icen-kb-dot.is-live { animation: none; }
+}
+
+/* 高对比模式：状态与证据结构不能只靠底色差 */
+@media (forced-colors: active) {
+  .icen-kb-dot { border: 1px solid CanvasText; }
+  .icen-kb-badge,
+  .icen-kb-chip,
+  .icen-kb-key { border-color: CanvasText; }
+  .icen-kb-score-bar { border: 1px solid CanvasText; }
+  .icen-kb-quote::before { background: CanvasText; }
 }
 
 /* ── RTL：方向性折叠 caret 镜像（▸ 收起态指向行进方向） ── */
