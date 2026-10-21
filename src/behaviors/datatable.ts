@@ -1843,7 +1843,17 @@ export function createTable<Row = Record<string, unknown>>(
     const pages = Math.ceil(total / pageSize);
     const pager = document.createElement('nav');
     pager.className = 'icen-dt-pager';
-    pager.setAttribute('aria-label', t('datatable.paginationAria'));
+    /* 同页多表时分页 nav 的可访问名不能重名：base 相同则补序号（排除本表旧 pager） */
+    {
+      const base = t('datatable.paginationAria');
+      const used = new Set<string>();
+      for (const el of document.querySelectorAll<HTMLElement>('.icen-dt-pager[aria-label]')) {
+        if (!root.contains(el)) used.add(el.getAttribute('aria-label') ?? '');
+      }
+      let label = base, n = 2;
+      while (used.has(label)) label = `${base} ${n++}`;
+      pager.setAttribute('aria-label', label);
+    }
 
     const sizeSel = document.createElement('select');
     sizeSel.className = 'icen-dt-page-size';

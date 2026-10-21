@@ -990,14 +990,14 @@ const featureIcons = {
   /* 主题环境光晕：accent 暖团居中 + 冷团偏左下，双团错峰呼吸 */
   .isle-glow {
     position: absolute; left: 50%; top: 50%;
-    width: 880px; height: 880px;
+    width: min(880px, 100%); height: min(880px, 100%);
     translate: -50% -50%;
     background: radial-gradient(closest-side, var(--icen-token-accent-glow), transparent);
     pointer-events: none;
   }
   .isle-glow--cold {
     left: 22%; top: 68%;
-    width: 620px; height: 620px;
+    width: min(620px, 100%); height: min(620px, 100%);
     background: radial-gradient(closest-side, var(--icen-token-glow-cold, var(--icen-token-accent-glow)), transparent);
   }
   @media (prefers-reduced-motion: no-preference) {

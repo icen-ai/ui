@@ -298,3 +298,14 @@
   padding: 0;
   font-size: 0;
 }
+
+/* 高对比模式：当前项不能只靠填充色 */
+@media (forced-colors: active) {
+  .icen-sidebar-item.is-active,
+  .icen-sidebar-item[aria-current='page'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .icen-sidebar-item.is-active .icen-sidebar-item-icon,
+  .icen-sidebar-item[aria-current='page'] .icen-sidebar-item-icon { color: HighlightText; }
+}

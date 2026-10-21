@@ -60,6 +60,14 @@
 @media (prefers-reduced-motion: reduce) {
   :root[data-icen-style="chinese"] { --icen-press: none; --icen-press-soft: none; }
 }
+/* 减少透明偏好：玻璃面回落实底，文字不叠在内容上 */
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-icen-style="chinese"] :is(.icen-card--glass, [data-icen-material="floating"], .icen-command-palette) {
+    background: var(--icen-token-surface-raised);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
 @media (forced-colors: active) {
   :root[data-icen-style="chinese"] :is([data-icen-material],.icen-card,.icen-panel,.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-modal,.icen-nav) {
     background: Canvas;

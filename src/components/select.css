@@ -375,3 +375,12 @@
 /* Clear affordance replaces the popup glyph in the trailing slot; the two are
  * never shown together, so the trigger keeps one stable optical end. */
 .icen-select:has(.icen-select-clear:not([hidden])) .icen-select-chevron { display: none; }
+
+/* 高对比模式：选中项用系统高亮，勾选 glyph 保留在 HighlightText 上 */
+@media (forced-colors: active) {
+  .icen-select-option.is-selected {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .icen-select-option.is-selected::after { background: HighlightText; }
+}

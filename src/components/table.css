@@ -232,3 +232,15 @@
 @media (prefers-reduced-motion: reduce) {
   .icen-row-expand-content { animation: none; }
 }
+
+/* 高对比模式：选中行/语义行不能只靠底色差 */
+@media (forced-colors: active) {
+  .icen-table tbody tr.is-selected {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .icen-table tbody tr.is-selected :is(td, th) { color: HighlightText; }
+  .icen-table tbody tr.icen-row-success,
+  .icen-table tbody tr.icen-row-warning,
+  .icen-table tbody tr.icen-row-error { border-inline-start: 2px solid CanvasText; }
+}

@@ -76,17 +76,18 @@
 /* ── 提交失败汇总清单（form[data-icen-validate-summary]，表单顶部，锚点聚焦字段） ── */
 
 .icen-form-validate-summary {
-  border: 1px solid var(--icen-token-error);
+  border: 1px solid color-mix(in srgb, var(--icen-token-error) 45%, transparent);
   border-radius: var(--icen-radius-md);
-  background: var(--icen-token-error-soft, var(--icen-token-bg-soft));
+  background: var(--icen-token-error-soft, color-mix(in srgb, var(--icen-token-error) 6%, transparent));
   padding: var(--icen-density-space-sm) var(--icen-density-space-md);
   margin-bottom: var(--icen-density-space-md);
 }
 
 .icen-form-validate-summary-title {
   margin: 0 0 var(--icen-density-space-xs);
-  font-size: var(--icen-density-font-size-sm);
+  font-size: var(--icen-font-size-control);
   font-weight: 600;
+  line-height: 1.45;
   color: var(--icen-token-error);
 }
 
@@ -95,11 +96,12 @@
   padding-inline-start: 1.2em;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
-.icen-form-validate-summary-item { color: var(--icen-token-error); text-decoration: none; }
-.icen-form-validate-summary-item:hover { text-decoration: underline; }
+.icen-form-validate-summary-item { font-size: var(--icen-font-size-caption); line-height: 1.6; color: var(--icen-token-error); text-decoration: none; }
+.icen-form-validate-summary-item:hover { text-decoration: underline; text-underline-offset: 2px; }
+.icen-form-validate-summary-item:focus-visible { outline: none; box-shadow: var(--icen-ring); border-radius: var(--icen-radius-xs); }
 
 /* ── AI 工具 show_form 挂载体（嵌在 ai-tool 卡的 IO 区，窄宽单列） ── */
 
@@ -118,4 +120,12 @@
   display: flex;
   gap: var(--icen-density-space-sm);
   justify-content: flex-end;
+}
+
+@media (forced-colors: active) {
+  .icen-form-validate-summary {
+    border-color: CanvasText;
+    background: Canvas;
+  }
+  .icen-form-validate-summary-item:focus-visible { outline: 2px solid Highlight; outline-offset: 1px; box-shadow: none; }
 }

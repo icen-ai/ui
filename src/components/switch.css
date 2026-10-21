@@ -357,3 +357,36 @@
   .icen-radio-dot::after { transition: none; }
   .icen-radio-card { transition: none; }
 }
+
+/* 高对比模式：开关/勾选/单选靠底色与 mask 表达状态，强制颜色会抹平——
+   用系统高亮色 + forced-color-adjust:none 保住「开/关」的可辨差异。 */
+@media (forced-colors: active) {
+  .icen-switch {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+  .icen-switch[aria-checked='true'] {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: Highlight;
+  }
+  .icen-switch-thumb {
+    forced-color-adjust: none;
+    background: CanvasText;
+    border: 1px solid Canvas;
+  }
+  .icen-switch[aria-checked='true'] .icen-switch-thumb { background: HighlightText; }
+  .icen-checkbox[aria-checked='true'],
+  .icen-checkbox[aria-checked='mixed'] {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+  .icen-checkbox::before { forced-color-adjust: none; background: HighlightText; }
+  .icen-radio-dot::after { forced-color-adjust: none; background: Highlight; }
+  .icen-radio-item.is-selected,
+  .icen-radio-item[aria-checked='true'] { outline: 1px solid Highlight; outline-offset: -1px; }
+  .icen-radio-card.is-selected,
+  .icen-radio-card[aria-checked='true'] { border-color: Highlight; }
+}

@@ -222,6 +222,9 @@ function applySiteCopy(language: SiteLanguage): void {
     if (next !== node.nodeValue) node.nodeValue = next;
   }
   document.querySelectorAll<HTMLElement>('[aria-label],[title],[placeholder]').forEach((el) => {
+    /* 代码区 landmark 的 aria-label 由 code-block 行为按页去重（同页多块 html/js），
+       这里不能再按原文回写，否则唯一名会被抹掉。 */
+    if (el.tagName === 'PRE' && el.getAttribute('role') === 'region') return;
     for (const attr of ['aria-label', 'title', 'placeholder']) {
       const value = el.getAttribute(attr);
       if (!value) continue;

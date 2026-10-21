@@ -487,6 +487,13 @@ html {
     outline: 2px solid Highlight;
     outline-offset: 2px;
   }
+  /* 强制颜色会丢弃 box-shadow——本库多数焦点环正是 box-shadow(var(--icen-ring))。
+     组件普遍以 outline:none 关闭了默认焦点，所以这里必须提权兜底：
+     所有原生可聚焦元素在强制颜色下都拿到系统焦点框。 */
+  :where(a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+    outline: 2px solid Highlight !important; /* guard:allow-important 高对比模式焦点兜底：组件 outline:none 会吞掉默认焦点 */
+    outline-offset: 2px !important; /* guard:allow-important 高对比模式焦点兜底：组件 outline:none 会吞掉默认焦点 */
+  }
 }
 
 /* 打印：去掉阴影/背景/动效，节约墨水并避免打印截断 */

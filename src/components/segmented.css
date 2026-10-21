@@ -349,3 +349,14 @@
 .icen-otp.is-complete .icen-otp-cell.is-filled {
   background: color-mix(in srgb, var(--icen-token-success) 8%, transparent);
 }
+
+/* 高对比模式：分段/切换组的选中段不能只靠白面阴影 */
+@media (forced-colors: active) {
+  .icen-segmented-item.is-active,
+  .icen-segmented-item[aria-checked='true'],
+  .icen-toggle-item.is-active,
+  .icen-toggle-group-btn.is-active {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+}

@@ -10,6 +10,7 @@
  *      initBackTop({ autoCreate: true })   // 自动创建一个默认样式的按钮
  *
  * 默认滚动超过 320px 后出现；点击后 window.scrollTo({ top: 0, behavior: 'smooth' })。
+ * 视觉：36px 玻璃浮钮 + 发丝边；无 backdrop-filter 或减少透明偏好时回落实面。
  */
 
 .icen-back-top {
@@ -20,23 +21,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  background: var(--icen-token-card-strong);
+  background: var(--icen-token-surface-glass);
+  -webkit-backdrop-filter: blur(var(--icen-material-blur-floating)) saturate(var(--icen-material-saturate));
+  backdrop-filter: blur(var(--icen-material-blur-floating)) saturate(var(--icen-material-saturate));
   color: var(--icen-token-text-muted);
-  border: 1px solid var(--icen-token-outline-soft);
+  border: 1px solid var(--icen-token-material-edge);
   border-radius: var(--icen-radius-full);
-  box-shadow: var(--icen-token-shadow-overlay);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   opacity: 0;
-  transform: translateY(12px) scale(0.9);
+  transform: translateY(10px) scale(0.94);
   pointer-events: none;
   transition:
     opacity var(--icen-tx-normal),
     transform var(--icen-tx-normal),
     color var(--icen-tx-fast),
+    background-color var(--icen-tx-fast),
     border-color var(--icen-tx-fast);
 }
 .icen-back-top.is-shown {
@@ -45,30 +49,35 @@
   pointer-events: auto;
 }
 .icen-back-top:hover {
-  color: var(--icen-token-accent);
-  border-color: var(--icen-token-accent);
+  color: var(--icen-token-text);
+  border-color: var(--icen-token-line-strong);
+  background: var(--icen-token-surface-raised);
+}
+.icen-back-top:active {
+  transform: translateY(0) scale(0.97);
+  background: var(--icen-token-surface-pressed);
 }
 .icen-back-top:focus-visible {
   outline: none;
-  box-shadow: var(--icen-token-shadow-overlay), var(--icen-ring);
+  box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated), var(--icen-ring);
 }
 .icen-back-top svg {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   flex-shrink: 0;
 }
 
 /* 尺寸变体 */
 .icen-back-top--sm {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 }
 .icen-back-top--sm svg { width: 14px; height: 14px; }
 .icen-back-top--lg {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
 }
-.icen-back-top--lg svg { width: 22px; height: 22px; }
+.icen-back-top--lg svg { width: 20px; height: 20px; }
 
 /* 方向变体：箭头方向（默认上） */
 .icen-back-top[data-icen-dir='left'] svg { transform: rotate(90deg); }
@@ -79,6 +88,28 @@
   .icen-back-top {
     inset-inline-end: var(--icen-density-space-sm);
     bottom: var(--icen-density-space-sm);
+  }
+}
+
+/* 没有模糊能力时用实面，避免半透明底压字 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .icen-back-top { background: var(--icen-token-surface-raised); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .icen-back-top {
+    background: var(--icen-token-surface-raised);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .icen-back-top {
+    background: Canvas;
+    border-color: CanvasText;
+    box-shadow: none;
+    forced-color-adjust: none;
   }
 }
 

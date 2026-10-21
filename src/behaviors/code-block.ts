@@ -517,8 +517,17 @@ function syncFold(fig:HTMLElement,fold:boolean):void {
 function prepareFigure(fig:HTMLElement):void {
   const pre=fig.querySelector<HTMLElement>(':scope > pre');if(!pre)return;
   pre.tabIndex=0;pre.setAttribute('role','region');
-  if(!pre.hasAttribute('aria-label'))pre.setAttribute('aria-label',fig.querySelector('.icen-code-block-file,.icen-code-block-title,.icen-code-block-lang')?.textContent || t('codeBlock.region'));
   if(!pre.id){do{pre.id='icen-code-region-'+ ++regionSequence;}while(document.getElementById(pre.id) && document.getElementById(pre.id) !== pre);}
+  {
+    /* 同页多块代码常共用语言标签（HTML/JS）：landmark 需要唯一可访问名。
+       作者已写 aria-label 也参与去重；重名时补序号，首个保持原文。 */
+    const base=(pre.getAttribute('aria-label') || fig.querySelector('.icen-code-block-file,.icen-code-block-title,.icen-code-block-lang')?.textContent || t('codeBlock.region')).trim();
+    const used=new Set<string>();
+    for(const region of document.querySelectorAll<HTMLElement>('pre[role="region"][aria-label]')) if(region !== pre) used.add(region.getAttribute('aria-label') ?? '');
+    let label=base,n=2;
+    while(used.has(label)) label=`${base} ${n++}`;
+    if(label !== base || !pre.hasAttribute('aria-label')) pre.setAttribute('aria-label',label);
+  }
   fig.querySelectorAll('[data-icen-code-block-num],[data-icen-code-block-wrap],[data-icen-code-block-fold],.icen-code-block-tail').forEach((control)=>control.setAttribute('aria-controls',pre.id));
   syncFold(fig,fig.classList.contains('is-folded'));
 }
