@@ -2774,16 +2774,21 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
   {
     slug: 'scroll-area',
     name: '滚动容器',
+    behaviors: ['scroll-area'],
     group: '数据展示',
     desc: '显式滚动区：给「可滚动」一个看得见的边界。',
     detail: {
       features: [
         '**方向**：`icen-scroll-area--x` / `--y` / `--both` 限定滚动方向',
       ],
-      notes: ['全局已有细薄滚动条（base.css）；本组件用于强调「可滚动」或限定方向的场景。'],
+      notes: [
+        '全局 base.css 提供统一无箭头滚动条；调用 initScrollArea() 后启用闲置隐藏，未来插入的弹出面板也会接管。仅 CSS 时保持可见。',
+        '`data-icen-scrollbars="auto|scroll|visible|hidden"` 可在任意组件子树覆盖。默认 scroll 在滚动或聚焦时显示；auto 额外在悬停时显示；visible 始终显示；hidden 隐藏指示器但保留滚动。',
+        '`data-icen-scrollbar-delay="900"` 设置闲置毫秒；`data-icen-scrollbar-gutter="auto|stable|both-edges"` 独立控制留槽。--fade 是内容边缘遮罩，与滑块隐藏无关。',
+      ],
     },
     demo: `<div class="demo-row" style="align-items:flex-start">
-  <div class="icen-scroll-area icen-scroll-area--inset" tabindex="0" style="width:240px;height:140px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">
+  <div class="icen-scroll-area icen-scroll-area--inset" data-icen-scrollbars="auto" tabindex="0" style="width:240px;height:140px;font-size:var(--icen-density-font-size-sm);color:var(--icen-token-text-muted)">
     <p>inset 变体：内嵌阴影 + 背景色 + 圆角边框，<strong>强烈暗示可滚动</strong>。</p>
     <p>这里是一段超长内容，必须超出 140px 高度才能看到滚动条效果。</p>
     <p>第二条：overscroll-behavior: contain 已开启，不会把滚动传到外层。</p>
@@ -2792,7 +2797,7 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     <p>第五条：滚动条宽度随变体调整（sm 6px / 默认 8px / lg 12px）。</p>
     <p>第六条：可通过 tabindex="0" 让本容器可被键盘聚焦。</p>
   </div>
-  <div class="icen-scroll-area icen-scroll-area--y icen-scroll-area--sm" tabindex="0" style="width:160px;height:140px;padding:8px;background:var(--icen-token-bg-soft);border-radius:var(--icen-radius-md);font-size:var(--icen-density-font-size-sm)">
+  <div class="icen-scroll-area icen-scroll-area--y icen-scroll-area--sm" data-icen-scrollbars="scroll" data-icen-scrollbar-delay="600" tabindex="0" aria-label="仅滚动时显示，闲置 600 毫秒后隐藏" style="width:160px;height:140px;padding:8px;background:var(--icen-token-bg-soft);border-radius:var(--icen-radius-md);font-size:var(--icen-density-font-size-sm)">
     <div style="height:280px;display:flex;flex-direction:column;gap:6px">
       <div class="demo-box">条 1</div>
       <div class="demo-box">条 2</div>
@@ -2803,7 +2808,7 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
       <div class="demo-box">条 7</div>
     </div>
   </div>
-  <div class="icen-scroll-area icen-scroll-area--x icen-scroll-area--lg" tabindex="0" style="max-width:240px;padding-bottom:8px">
+  <div class="icen-scroll-area icen-scroll-area--x icen-scroll-area--lg" data-icen-scrollbars="visible" tabindex="0" aria-label="始终显示的横向滚动条" style="max-width:240px;padding-bottom:8px">
     <div style="display:flex;gap:8px;width:520px">
       <div class="demo-box" style="flex-shrink:0">横向 A</div>
       <div class="demo-box" style="flex-shrink:0">横向 B</div>
@@ -2813,10 +2818,17 @@ const dispose = initCarousel(); // 幂等；宿主卸载时 dispose()
     </div>
   </div>
 </div>`,
-    usage: `<div class="icen-scroll-area icen-scroll-area--inset" tabindex="0" style="height:200px">
+    usage: `import '@icen.ai/ui/ui.css';
+import { initScrollArea } from '@icen.ai/ui/behaviors/scroll-area';
+const dispose = initScrollArea(); // 页面一次；卸载时 dispose()
+
+<div class="icen-scroll-area icen-scroll-area--inset" tabindex="0"
+  data-icen-scrollbars="scroll" data-icen-scrollbar-delay="1200"
+  data-icen-scrollbar-gutter="stable" style="height:200px">
   超长内容…
 </div>
 <!-- 变体：--sm/--lg（滚动条宽度）/--x/--y/--both（轴向）/--inset（带边界）/--fade（渐隐遮罩）-->`,
+    behaviorInit: { 'scroll-area': 'initScrollArea' },
   },
   {
     slug: 'charts',

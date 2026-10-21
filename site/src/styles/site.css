@@ -379,8 +379,7 @@ a:hover { text-decoration: none; }
   padding: 14px 10px 48px;
   background: var(--icen-token-surface-sidebar);
   border-inline-end: 1px solid var(--icen-token-separator-soft);
-  /* 无滚动条：可滚方向由上面的渐隐提示 */
-  scrollbar-width: none;
+  /* Shared native scrollbar policy; masks only hint at clipped content. */
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
@@ -398,7 +397,6 @@ a:hover { text-decoration: none; }
   animation: docs-fade-top linear both, docs-fade-bottom linear both;
   animation-timeline: scroll(self block);
 }
-.docs-side::-webkit-scrollbar { display: none; }
 .docs-group { margin-bottom: 10px; }
 .docs-group-name {
   font-size: 11px;
@@ -540,7 +538,6 @@ a:hover { text-decoration: none; }
   border-inline-start: 0;
   background: transparent;
   font-size: 12px;
-  scrollbar-width: thin;
 }
 
 /* ═══════════ 文档页版式 ═══════════ */

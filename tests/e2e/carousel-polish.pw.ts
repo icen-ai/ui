@@ -28,6 +28,24 @@ test('dots stay readable over colored media in both primitives and modes', async
     expect(issues).toEqual([]);
   }
   await page.locator('.demo-stage').screenshot({path: '.ui-audit/carousel-desktop.png', animations: 'disabled'});
+  // Thumbnail navigation must honor the same policy as other native scrollers.
+  const bar = await page.locator('.demo-stage').evaluate(root => {
+    const el = document.createElement('div');
+    el.className = 'icen-carousel-thumbs';
+    el.style.width = '100px';
+    el.dataset.icenScrollbars = 'visible';
+    const content = document.createElement('span');
+    content.style.cssText = 'min-width:500px;height:20px';
+    el.append(content); root.append(el);
+    const visible = getComputedStyle(el, '::-webkit-scrollbar').display;
+    el.dataset.icenScrollbars = 'hidden';
+    const hidden = getComputedStyle(el, '::-webkit-scrollbar').display;
+    el.scrollLeft = 60;
+    const scrollable = el.scrollLeft;
+    el.remove();
+    return { visible, hidden, scrollable };
+  });
+  expect(bar).toEqual({ visible: 'block', hidden: 'none', scrollable: 60 });
 });
 
 test('keyboard mirrors RTL and the index slot and live status track navigation', async ({page}) => {

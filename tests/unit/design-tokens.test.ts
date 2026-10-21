@@ -68,6 +68,8 @@ describe('tokens-studio.json', () => {
         expect(set['font-weight'].title.$value).toBe(600);
         expect(set['font-size'].control.$value).toContain('.density.font-size-md}');
         expect(set.control['padding-inline'].$value).toBe('12px');
+        expect(set.token['scrollbar-size-sm'].$value).toBe('6px');
+        expect(set.token['scrollbar-idle-delay'].$value).toBe('900ms');
       }
       const radius = fv.variableCollections.find(c => c.name === `icen / ${preset}`)!.variables.find(v => v.name === 'radius/lg');
       expect(radius?.valuesByMode).toEqual({ light: 14, dark: 14 });

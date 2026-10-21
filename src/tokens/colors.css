@@ -354,6 +354,12 @@
   --icen-token-surface-glass: color-mix(in srgb, var(--icen-token-surface) var(--icen-design-glass-opacity), transparent);
   --icen-token-overlay-bg: var(--icen-token-surface-glass);
   --icen-token-scrollbar-size: 8px;
+  --icen-token-scrollbar-size-sm: 6px;
+  --icen-token-scrollbar-size-lg: 12px;
+  --icen-token-scrollbar-inset: 2px;
+  --icen-token-scrollbar-gutter: auto;
+  --icen-token-scrollbar-idle-delay: 900ms;
+  --icen-token-scrollbar-fade-duration: var(--icen-duration-normal);
   --icen-token-scrollbar-track: transparent;
   --icen-token-scrollbar-thumb: color-mix(in srgb, var(--icen-design-ink) 22%, transparent);
   --icen-token-scrollbar-thumb-hover: color-mix(in srgb, var(--icen-design-ink) 38%, transparent);

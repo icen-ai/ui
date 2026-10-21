@@ -18,6 +18,8 @@
 
 ### 设计（macOS-inspired 全仓库重构）
 
+- 全局原生滚动条统一无箭头路径，修复标准 scrollbar 属性覆盖伪元素皮肤；新增 `initScrollArea` 委托活动跟踪与 auto/scroll/visible/hidden 子树策略，支持尺寸、内距、轨道、滑块、留槽、闲置延时及过渡控制。键盘聚焦与强制颜色保留可见性，无脚本时保持可见；文档侧栏和 Inspector 统一接入，设置中的稳定宽度与显示策略解耦。规格见 `docs/spec/scrollbars.md`。
+
 - 默认 modern 原语升级为桌面精度体系：控件 28/34/42px、界面字号 13px、圆角 5/8/10/14/20px、表面层级 canvas→content→chrome→floating→modal、状态填充 hover/pressed/selected 分离、动效 110/180/260ms 与四种缓动；六套配色与中式/苏式/像素原语保持独立身份，全部经 token 覆盖继续工作
 - 组件覆盖：按钮/输入/选择/菜单/分段/开关/复选框/滑块/日期/级联/树选择/上传/标签输入/提及/自动补全；顶栏/侧栏/工具条/标签页/面包屑/分页/步骤/表格/DataTable/列表/树/折叠/时间线/描述/卡片/面板/指标/空态/徽标/键盘键；弹窗/菜单/popover/tooltip/命令面板/toast/通知/警示/进度/加载/骨架/复制；图表基座与 AI/KB 族表面语法。全部组件登记于 `docs/redesign/macos-component-mapping.md`
 - 行为增强：`select` / `tree-select` / `cascader` 不再移除作者提供的 chevron（弹出方向暗示恢复）；`checkbox` 选中改用勾选 glyph；`slider` 轨道/拇指桌面比例；`switch` 38×22；`modal` 表面/底栏/关闭钮收口

@@ -30,7 +30,7 @@ await generateThemeColors();
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 // ── 与 build-css.ts 的 TOKEN_ORDER 保持一致 ──
-const TOKEN_ORDER = ['colors.css', 'style-profiles.css', 'typography.css', 'design.css', 'pixel.css', 'chinese.css', 'soviet.css'];
+const TOKEN_ORDER = ['colors.css', 'scrollbars.css', 'style-profiles.css', 'typography.css', 'design.css', 'pixel.css', 'chinese.css', 'soviet.css'];
 const PRESETS = themes.map((theme)=>theme.id);
 
 // 变量名前缀 → (子组, $type)。类型来自命名语义，不从值猜。
@@ -54,7 +54,15 @@ const GROUP_RULES = [
   ['icen-letter-spacing-', 'letter-spacing', 'dimension'],
 ];
 // 组级 $type 的例外（token 级 $type 覆盖组级——规范允许且优先级最高）
-const TYPE_OVERRIDES = { '--icen-token-scrollbar-size': 'dimension', '--icen-control-focus-border': 'color' };
+const TYPE_OVERRIDES = {
+  '--icen-token-scrollbar-size': 'dimension',
+  '--icen-token-scrollbar-size-sm': 'dimension',
+  '--icen-token-scrollbar-size-lg': 'dimension',
+  '--icen-token-scrollbar-inset': 'dimension',
+  '--icen-token-scrollbar-idle-delay': 'duration',
+  '--icen-token-scrollbar-fade-duration': 'duration',
+  '--icen-control-focus-border': 'color',
+};
 
 const GROUP_DESCRIPTIONS = {
   token: '语义色彩系统（--icen-token-*）',

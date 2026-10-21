@@ -65,7 +65,9 @@ export function initAppsDemo(): () => void {
   const syncPreferences = (persist = false) => {
     root.dataset.icenDensity = prefs.density;
     document.documentElement.style.setProperty('--icen-design-motion', String(motionMedia.matches ? 0 : prefs.motion / 100));
-    root.dataset.icenScrollbars = prefs.scrollbars ? 'visible' : 'auto';
+    root.querySelectorAll<HTMLElement>('.app-content').forEach(el => {
+      el.dataset.icenScrollbarGutter = prefs.scrollbars ? 'stable' : 'auto';
+    });
     document.documentElement.toggleAttribute('data-icen-transparency', false);
     if (prefs.reduced) document.documentElement.dataset.icenTransparency = 'reduced';
     setTheme({ dark: prefs.mode === 'auto' ? darkMedia.matches : prefs.mode === 'dark' });

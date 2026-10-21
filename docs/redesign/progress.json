@@ -8,7 +8,7 @@
     "componentCssFiles": 76,
     "documentationEntries": 129,
     "documentationOnlyEntries": 7,
-    "behaviors": 90,
+    "behaviors": 89,
     "tiers": {
       "core": 52,
       "beta": 24,
@@ -26,7 +26,8 @@
     "ai": "complete",
     "kb": "complete",
     "site": "complete",
-    "validation": "complete"
+    "validation": "complete",
+    "scrollbars": "complete"
   },
   "coverage": {
     "explicitlyRestyledFiles": [
@@ -113,25 +114,27 @@
     "note": "延续已有 76 份组件 CSS 改造，本轮收口统一轮廓、材料、动效与 KB 密度；129 个文档页巡检覆盖全部 122 个可安装 slug。"
   },
   "verification": {
-    "latestVerify": "pass: 1037 tests; typecheck, guards, build and size budgets",
+    "latestVerify": "pass: 1040 tests; typecheck, guards, build and unchanged size budgets",
     "siteBuild": "pass: 138 pages; apps module also checked with strict TypeScript",
-    "contracts": "pass: 1837 classes / 220 data attributes / 318 CSS variables / 160 events / 343 JS exports / 648 types",
-    "coverage": "pass: src lines 77.19%, functions 79.57%; existing floors unchanged",
+    "contracts": "pass: 1837 classes / 225 data attributes / 331 CSS variables / 160 events / 344 JS exports / 650 types",
+    "coverage": "pass: src lines 77.23%, functions 79.62%; existing floors unchanged",
     "package": "pass: publint + attw",
-    "playwright": "pass: 321/321, chromium, workers=2; no retries",
-    "visualBaselines": "19 committed snapshots; refreshed with zero pixel tolerance, normal regression tolerance unchanged",
+    "playwright": "pass: 324/324, chromium, workers=2, retries=0, 8.0m",
+    "visualBaselines": "19 snapshots refreshed with zero pixel tolerance; final full suite passed with unchanged regression tolerance",
     "registryMatrix": "129 component pages; every Registry slug matched",
     "themeMatrix": "48 captures: 6 palettes × light/dark × 4 pages",
     "primitiveMatrix": "24 captures: 4 primitives × light/dark × 3 pages",
     "densityMatrix": "9 captures: 3 densities × 3 pages",
     "workspaceMatrix": "4 captures: light/dark × desktop/touch",
-    "matrixResult": "214/214 captures; no page errors or document overflow; .ui-audit/design-review/manifest.json",
+    "matrixResult": "214/214 captures from the preceding refinement batch; before scrollbar changes. Current registry health checked by the full browser suite; .ui-audit/design-review/manifest.json preserves the prior capture revision.",
     "reproduction": "scripts/design-review.mjs; docs/testing.md",
     "knownGaps": [
       "Windows Chromium only; Safari, Firefox, real devices and screen readers are not certified in this pass.",
       "Registry screenshots cover viewports and representative matrices, not every possible state.",
-      "Application examples run locally; production upload, retrieval and AI need consumer-owned services."
-    ]
+      "Application examples run locally; production upload, retrieval and AI need consumer-owned services.",
+      "Native thumb color transitions depend on browser support; idle hiding is reliable, cross-browser frame-by-frame fading is not certified."
+    ],
+    "scrollbars": "native arrowless skin; default scroll/900ms idle; auto/scroll/visible/hidden; scoped slots, gutter and cleanup; 3 DOM + 3 browser tests; carousel legacy override removed"
   },
   "remainingTasks": []
 }

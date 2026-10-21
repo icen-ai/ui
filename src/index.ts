@@ -41,6 +41,7 @@ export * from './behaviors/nav';
 export * from './behaviors/sidebar';
 export * from './behaviors/notification';
 export * from './behaviors/back-top';
+export * from './behaviors/scroll-area';
 export * from './behaviors/command-palette';
 export * from './behaviors/date-picker';
 export * from './behaviors/split-pane';

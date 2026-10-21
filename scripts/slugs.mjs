@@ -116,6 +116,7 @@ export const MERGED_CSS = {
 
 /** slug → behavior 的 init 函数名（有 init 契约的组件）。 */
 export const SLUG_INIT = {
+  'scroll-area': 'initScrollArea',
   panel: 'initPanel',
   'theme-switcher': 'initThemeSwitcher',
   accordion: 'initAccordion',

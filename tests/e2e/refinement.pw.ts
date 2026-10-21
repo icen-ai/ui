@@ -113,6 +113,8 @@ test('workspace stays accessible in light/dark and at touch widths with no glass
     await page.addScriptTag({ path: require.resolve('axe-core') });
     for (const dark of [false, true]) {
       await page.locator('html').evaluate((el, dark) => dark ? el.setAttribute('data-icen-theme', 'dark') : el.removeAttribute('data-icen-theme'), dark);
+      // Contrast is measured after theme colors settle, rather than a mixed transition frame.
+      await expect.poll(() => page.evaluate(() => document.getAnimations().filter(a => a.timeline === document.timeline && a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity).length)).toBe(0);
       const issues = await page.locator('#apps-workspace').evaluate(async root => (await (window as any).axe.run(root, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations.map((v: any) => ({ id: v.id, targets: v.nodes.map((n: any) => n.target) })));
       expect(issues).toEqual([]);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

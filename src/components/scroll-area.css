@@ -20,7 +20,7 @@
  *   --y  仅纵向滚动（横向裁剪）
  *   --both 双向滚动
  *   --sm  窄滚动条（6px 宽）
- *   --lg  正常滚动条（10px 宽，默认 8px）
+ *   --lg  正常滚动条（12px 宽，默认 8px）
  *   --inset  内嵌阴影式（类似 code 编辑器）
  */
 
@@ -35,38 +35,9 @@
 .icen-scroll-area--y { overflow-x: hidden; overflow-y: auto; }
 .icen-scroll-area--both { overflow: auto; }
 
-/* ── 尺寸变体：覆盖全局滚动条宽度 ── */
-.icen-scroll-area--sm {
-  scrollbar-width: thin;
-}
-.icen-scroll-area--sm::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.icen-scroll-area--sm::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--icen-token-text-faint) 28%, transparent);
-  /* guard:allow-radius 微构件（bar/dot/track/指示器等图形级，不属容器圆角面） */
-  border-radius: 3px;
-  border: 0;
-}
-
-.icen-scroll-area--lg {
-  scrollbar-width: auto;
-}
-.icen-scroll-area--lg::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-.icen-scroll-area--lg::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--icen-token-text-faint) 35%, transparent);
-  border-radius: var(--icen-radius-xs);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-.icen-scroll-area--lg::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--icen-token-text-faint) 50%, transparent);
-  background-clip: padding-box;
-}
+/* Size variants share the global track, thumb and visibility policy. */
+.icen-scroll-area--sm { --icen-token-scrollbar-size: var(--icen-token-scrollbar-size-sm); }
+.icen-scroll-area--lg { --icen-token-scrollbar-size: var(--icen-token-scrollbar-size-lg); }
 
 /* ── 内嵌变体：带视觉边界 ── */
 .icen-scroll-area--inset {

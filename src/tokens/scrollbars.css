@@ -1,0 +1,37 @@
+/* Policy slots inherit across a component subtree; activity never inherits.
+   Without the optional behavior, auto/scroll retain a visible fallback. */
+:where([data-icen-scrollbars-ready]) {
+  --icen-scrollbar-auto-idle: 0%;
+  --icen-scrollbar-idle: var(--icen-scrollbar-auto-idle);
+  --icen-scrollbar-hover: var(--icen-scrollbar-auto-idle);
+}
+:where([data-icen-scrollbars='auto'], [data-icen-scrollbars='scroll']) {
+  --icen-scrollbar-idle: var(--icen-scrollbar-auto-idle, 100%);
+  --icen-scrollbar-hover: 100%;
+  --icen-scrollbar-active: 100%;
+  --icen-scrollbar-width: thin;
+  --icen-scrollbar-webkit-width: auto;
+  --icen-scrollbar-display: block;
+}
+:where([data-icen-scrollbars='scroll']) {
+  --icen-scrollbar-hover: var(--icen-scrollbar-auto-idle, 100%);
+}
+:where([data-icen-scrollbars='visible']) {
+  --icen-scrollbar-idle: 100%;
+  --icen-scrollbar-hover: 100%;
+  --icen-scrollbar-active: 100%;
+  --icen-scrollbar-width: thin;
+  --icen-scrollbar-webkit-width: auto;
+  --icen-scrollbar-display: block;
+}
+:where([data-icen-scrollbars='hidden']) {
+  --icen-scrollbar-idle: 0%;
+  --icen-scrollbar-hover: 0%;
+  --icen-scrollbar-active: 0%;
+  --icen-scrollbar-width: none;
+  --icen-scrollbar-webkit-width: none;
+  --icen-scrollbar-display: none;
+}
+:where([data-icen-scrollbar-gutter='stable']) { --icen-token-scrollbar-gutter: stable; }
+:where([data-icen-scrollbar-gutter='both-edges']) { --icen-token-scrollbar-gutter: stable both-edges; }
+:where([data-icen-scrollbar-gutter='auto']) { --icen-token-scrollbar-gutter: auto; }

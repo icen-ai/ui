@@ -5,9 +5,7 @@
  * 规格源自 opengal data/display.tsx 的 Avatar、data/cartridge-card.tsx 的 hover overlay、
  * data/exhibit.tsx 的 Carousel 与 Rating。
  *
- * 例外声明（deliberate exception）：carousel-thumbs 隐藏滚动条是有意设计
- * （缩略图条视觉纯净，滚动仍可用）。违反「组件不写滚动条样式」纪律仅此处，
- * 先例参照 scroll-area.css 的尺寸变体。
+ * 滚动条沿用全局策略，缩略图容器可使用 data-icen-scrollbars 局部定制。
  */
 
 /* ══════════════ avatar · 头像 ══════════════ */
@@ -396,16 +394,14 @@
   transition: width var(--icen-tx-slow);
 }
 
-/* 缩略图导航条（deliberate exception：隐藏滚动条是设计意图，见文件头注释） */
+/* Thumbnail navigation shares the global scrollbar policy. */
 .icen-carousel-thumbs {
   display: flex;
   gap: var(--icen-density-space-xs);
   margin-top: var(--icen-density-space-sm);
   padding: var(--icen-density-space-xs);
   overflow-x: auto;
-  scrollbar-width: none;
 }
-.icen-carousel-thumbs::-webkit-scrollbar { display: none; }
 .icen-carousel-thumb {
   flex-shrink: 0;
   width: 56px;

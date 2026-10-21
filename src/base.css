@@ -172,30 +172,60 @@ p { margin: 0 0 1em; }
   background: color-mix(in srgb, var(--icen-token-accent) 35%, transparent);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   全局滚动条：细薄、无上下箭头、贴 token
-   尺寸/轨道/滑块/按钮全部走 --icen-token-scrollbar-*，
-   每个色彩预设可在自己的块里覆盖以表达品牌色差。
-   ══════════════════════════════════════════════════════════════ */
-
-::-webkit-scrollbar { width: var(--icen-token-scrollbar-size); height: var(--icen-token-scrollbar-size); }
+/* Native scrollbar paint; policy slots live in tokens/scrollbars.css. */
+* {
+  scrollbar-width: var(--icen-scrollbar-width, thin);
+  scrollbar-color: color-mix(in srgb, var(--icen-token-scrollbar-thumb) var(--icen-scrollbar-idle, 100%), transparent) var(--icen-token-scrollbar-track);
+  scrollbar-gutter: var(--icen-token-scrollbar-gutter);
+}
+:where(*:not(html):hover) {
+  scrollbar-color: color-mix(in srgb, var(--icen-token-scrollbar-thumb-hover) var(--icen-scrollbar-hover, 100%), transparent) var(--icen-token-scrollbar-track);
+}
+:where(*:focus-within, [data-icen-scroll-active]) {
+  scrollbar-color: color-mix(in srgb, var(--icen-token-scrollbar-thumb) var(--icen-scrollbar-active, 100%), transparent) var(--icen-token-scrollbar-track);
+}
+/* Keep native arrows disabled when standard properties would override the skin. */
+@supports selector(::-webkit-scrollbar) {
+  *, :where(*:hover, *:focus-within, [data-icen-scroll-active]) {
+    scrollbar-width: var(--icen-scrollbar-webkit-width, auto);
+    scrollbar-color: auto;
+  }
+}
+::-webkit-scrollbar {
+  width: var(--icen-token-scrollbar-size);
+  height: var(--icen-token-scrollbar-size);
+  display: var(--icen-scrollbar-display, block);
+}
 ::-webkit-scrollbar-track { background: var(--icen-token-scrollbar-track); }
 ::-webkit-scrollbar-thumb {
-  background: var(--icen-token-scrollbar-thumb);
+  background-color: color-mix(in srgb, var(--icen-token-scrollbar-thumb) var(--icen-scrollbar-idle, 100%), transparent);
   border-radius: var(--icen-radius-full);
-  border: 2px solid transparent;
+  border: var(--icen-token-scrollbar-inset) solid transparent;
   background-clip: padding-box;
+  transition: background-color var(--icen-token-scrollbar-fade-duration) var(--icen-ease-out);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--icen-token-scrollbar-thumb-hover);
-  background-clip: padding-box;
+:where(*:not(html):hover)::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--icen-token-scrollbar-thumb-hover) var(--icen-scrollbar-hover, 100%), transparent);
+}
+:is(*:focus-within, [data-icen-scroll-active])::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--icen-token-scrollbar-thumb) var(--icen-scrollbar-active, 100%), transparent);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--icen-token-scrollbar-thumb) var(--icen-scrollbar-active, 100%), transparent);
 }
 ::-webkit-scrollbar-button,
 ::-webkit-scrollbar-button:single-button { display: none; width: 0; height: 0; }
 ::-webkit-scrollbar-corner { background: transparent; }
-html {
-  scrollbar-width: thin;
-  scrollbar-color: var(--icen-token-scrollbar-thumb) var(--icen-token-scrollbar-track);
+@media (prefers-reduced-motion: reduce) {
+  ::-webkit-scrollbar-thumb { transition: none; }
+}
+@media (forced-colors: active) {
+  *, :where(*:hover, *:focus-within, [data-icen-scroll-active]) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+  ::-webkit-scrollbar { display: block; }
+  ::-webkit-scrollbar-thumb { background-color: CanvasText; }
 }
 
 /* ══════════════════════════════════════════════════════════════

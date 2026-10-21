@@ -97,12 +97,9 @@ const KEYFRAMES_ALLOWLIST: Record<string, { names: string[]; reason: string }> =
   'upload.css': { names: ['upload-item-in'], reason: KEYFRAMES_REASON },
 };
 
-/** ::-webkit-scrollbar 白名单（纪律：全局细薄滚动条由 base.css 统一负责）。
- *  例外：retro 风格全局换肤（风格配置层职责）、scroll-area 组件本体、轮播缩略图隐藏。 */
+/** 全局滚动条由 base.css 绘制；组件只通过 token / data 策略定制。 */
 const SCROLLBAR_ALLOWLIST: Record<string, string> = {
   'style-profiles.css': '.style-retro 全局滚动条换肤——风格配置层的本职，等同 token 定义',
-  'scroll-area.css': '组件本体职责：--sm/--lg 变体就是卖定制滚动条尺寸的',
-  'media.css': '轮播缩略图隐藏滚动条（display:none，无样式皮肤语义）',
 };
 
 /** !important 放行标记：同行或上一行出现该注释即视为已声明理由。 */
