@@ -4,7 +4,7 @@
 [![CI](https://github.com/icen-ai/ui/actions/workflows/ci.yml/badge.svg)](https://github.com/icen-ai/ui/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
-icen.ai 的设计系统。组件、图表和 AI 界面共用一套设计令牌——换肤不改代码，UI 可直接交给模型调用。无框架，零运行时依赖，MIT。
+icen.ai 的设计系统：<!-- meta:components -->122<!-- /meta:components --> 个组件入口、<!-- meta:charts.total -->14<!-- /meta:charts.total --> 种图表与 AI 原生组件族共用一套设计令牌——换肤不改代码，UI 可直接交给模型调用。无框架、零运行时依赖（`dependencies` 为空，可验证）、SSR 安全，MIT。
 
 - 文档与实时演示：<https://ui.icen.ai>
 - 安装：`bun add @icen.ai/ui`（或 `npm i`）

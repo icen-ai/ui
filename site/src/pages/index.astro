@@ -76,7 +76,7 @@ const featureIcons = {
       <!-- 原语艺术层：按 data-icen-style 显隐（苏式构成 / 中式题款 / 像素阶梯） -->
       <span class="hero-art hero-art--icen">ICEN</span>
       <span class="hero-art hero-art--ring"></span>
-      <span class="hero-art hero-art--vert">令牌同源 · 万象共生</span>
+      <span class="hero-art hero-art--vert">一处定义 · 处处生效</span>
       <span class="hero-art hero-art--seal">冰</span>
     </div>
     <div class="hero-inner">
@@ -111,13 +111,14 @@ const featureIcons = {
   <section class="features-sec" aria-label="设计哲学">
     <div class="sec-head">
       <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>WHY · 设计哲学</p>
-      <h2 class="sec-title">为下一个十年的界面而生</h2>
+      <h2 class="sec-title">同一套契约，四层能力</h2>
+      <p class="sec-desc">AI 界面、图表、主题与封装，各自独立可用，共用同一套设计令牌。</p>
     </div>
     <div class="features">
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.ai} /></span>
         <h3 class="feature-title">AI 原生族</h3>
-        <p class="feature-desc">做 AI 界面要用的零件都在：对话、推理、工具调用、审批。兼容主流模型协议，token 和成本自动记账。</p>
+        <p class="feature-desc">{META.aiComponents} 个组件：对话、推理、工具调用、审批、输入台、用量审计。兼容 OpenAI / Anthropic / MCP / AI SDK 协议，token 与成本自动记账。</p>
       </div>
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.chart} /></span>
@@ -132,7 +133,7 @@ const featureIcons = {
       <div class="feature">
         <span class="feature-icon" aria-hidden="true"><Fragment set:html={featureIcons.box} /></span>
         <h3 class="feature-title">零依赖无框架</h3>
-        <p class="feature-desc">零运行时依赖，不挑框架：React、Vue、原生 JS 都行，SSR 安全。</p>
+        <p class="feature-desc">零运行时依赖（package.json 的 dependencies 为空）。React / Vue / 原生 JS 均可，SSR 安全。</p>
       </div>
     </div>
   </section>
@@ -141,7 +142,7 @@ const featureIcons = {
   <section class="presets-sec" aria-label="色彩预设">
     <div class="sec-head">
       <p class="sec-over"><span class="sec-over-dot" aria-hidden="true"></span>TOKENS · 色彩预设</p>
-      <h2 class="sec-title">一套令牌，色彩自由</h2>
+      <h2 class="sec-title">{META.presets} 套预设，明暗各一套</h2>
       <p class="sec-desc">现代、东韵、巨构、钢琴、莫奈、梵高，各带明暗双模。点一张色卡，整站即刻换装。</p>
     </div>
     <Fragment set:html={themeSwitcherHTML({kind:"theme",layout:"inline",size:"lg"})} />
