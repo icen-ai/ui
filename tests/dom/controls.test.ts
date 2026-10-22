@@ -67,12 +67,12 @@ describe('initSwitch（委托骨架经 radio 路径验证；switch/checkbox 语�
     items[1]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     expect(details).toHaveLength(1); /* 已注销 */
 
-    initSwitch();
+    const redrive = initSwitch();
     fire(items[1]!, 'click');
     expect(details).toHaveLength(2); /* 重新接管 */
     items[1]!.getAttribute('aria-checked');
     expect(items[1]!.getAttribute('aria-checked')).toBe('true');
-    initSwitch()(); /* 收尾：重新 init 后也销毁，防跨用例残留 */
+    redrive(); /* 收尾：销毁重新 init 的委托，防跨用例残留（幂等早退的 no-op 销毁不了已挂监听） */
   });
 
   /* v0.10 已修复（迁移期 codemod 曾把 ARIA role 值误转为 role="icen-switch"，导致委托与分流分裂）：
@@ -139,10 +139,10 @@ describe('initSteps', () => {
     fire(step, 'click');
     expect(details).toEqual([2]); /* 已注销 */
 
-    initSteps();
+    const redrive = initSteps();
     fire(step, 'click');
     expect(details).toEqual([2, 2]); /* 重新接管 */
-    initSteps()(); /* 收尾销毁 */
+    redrive(); /* 收尾销毁 */
   });
 });
 
@@ -182,12 +182,12 @@ describe('initRating', () => {
     destroy();
 
     document.querySelector('.icen-rating')!.classList.remove('icen-rating--readonly'); /* 换成可点容器再验重 init */
-    initRating();
+    const redrive = initRating();
     const stars = Array.from(document.querySelectorAll<HTMLElement>('.icen-rating-star'));
     fire(stars[4]!, 'click');
     expect(details).toEqual([5]);
     expect(stars[3]!.classList.contains('is-filled')).toBe(true);
-    initRating()(); /* 收尾销毁 */
+    redrive(); /* 收尾销毁 */
   });
 });
 
@@ -244,10 +244,10 @@ describe('initPagination', () => {
     destroy();
     fire(document.querySelector<HTMLElement>('[data-icen-page="3"]')!, 'click');
     expect(pages).toEqual([2]); /* 已注销：不派发也不翻页 */
-    initPagination();
+    const redrive = initPagination();
     fire(document.querySelector<HTMLElement>('[data-icen-page="3"]')!, 'click');
     expect(pages).toEqual([2, 3]);
-    initPagination()(); /* 收尾销毁 */
+    redrive(); /* 收尾销毁 */
   });
 });
 
@@ -300,9 +300,9 @@ describe('initTableSort', () => {
     destroy();
     fire(th, 'click');
     expect(details).toEqual(['price:asc']); /* 已注销 */
-    initTableSort();
+    const redrive = initTableSort();
     fire(th, 'click');
     expect(details).toEqual(['price:asc', 'price:desc']); /* 重新接管：委托无状态，循环接着元素上的 asc 走 */
-    initTableSort()(); /* 收尾销毁 */
+    redrive(); /* 收尾销毁 */
   });
 });
