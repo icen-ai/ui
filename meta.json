@@ -1,5 +1,5 @@
 {
-  "version": "0.11.0",
+  "version": "0.11.1",
   "components": 122,
   "componentCss": 76,
   "behaviors": 90,
@@ -48,12 +48,12 @@
   },
   "size": {
     "ui": {
-      "raw": 948441,
-      "gzip": 187039
+      "raw": 948601,
+      "gzip": 187043
     },
     "tokens": {
-      "raw": 125735,
-      "gzip": 24785
+      "raw": 125867,
+      "gzip": 24799
     },
     "base": {
       "raw": 28183,
@@ -61,7 +61,7 @@
     },
     "index": {
       "raw": 1271477,
-      "gzip": 303553
+      "gzip": 303554
     },
     "react": {
       "raw": 354445,
