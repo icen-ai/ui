@@ -84,9 +84,9 @@ test('published CSS has working motion, distinct contours, opaque planes and nes
   await page.goto('/apps/');
   await page.setContent('<html><body><button class="icen-btn is-loading">保存</button><article class="icen-card">内容</article><div class="icen-modal"></div><div class="icen-modal-backdrop"></div><div class="icen-popover"></div><nav class="icen-nav is-scrolled"></nav><div class="icen-chart-vbar-bar"></div><div data-icen-density="compact"><button class="icen-kb-run">运行</button><div data-icen-density="comfortable"><button class="icen-kb-run">运行</button></div></div></body></html>');
   await page.addStyleTag({ content: readFileSync('dist/ui.css', 'utf8') });
-  await expect(page.locator('.icen-btn')).toHaveCSS('border-radius', '8px');
-  await expect(page.locator('.icen-card')).toHaveCSS('border-radius', '14px');
-  await expect(page.locator('.icen-modal')).toHaveCSS('border-radius', '20px');
+  await expect(page.locator('.icen-btn')).toHaveCSS('border-radius', '6px');
+  await expect(page.locator('.icen-card')).toHaveCSS('border-radius', '12px');
+  await expect(page.locator('.icen-modal')).toHaveCSS('border-radius', '16px');
   await expect(page.locator('.icen-chart-vbar-bar')).toHaveCSS('transition-duration', '0.26s, 0.11s');
   expect(await page.locator('.icen-popover').evaluate(el => getComputedStyle(el).animationDuration)).toBe('0.11s');
   await expect(page.locator('.icen-popover')).toHaveCSS('backdrop-filter', 'none');
@@ -99,7 +99,7 @@ test('published CSS has working motion, distinct contours, opaque planes and nes
     return context.getImageData(0, 0, 1, 1).data[3];
   })).toBe(255);
   await expect(page.locator('.icen-kb-run').first()).toHaveCSS('height', '24px');
-  await expect(page.locator('.icen-kb-run').last()).toHaveCSS('height', '32px');
+  await expect(page.locator('.icen-kb-run').last()).toHaveCSS('height', '34px');
   await page.locator('html').evaluate(el => el.style.setProperty('--icen-design-font-size', '17px'));
   await expect(page.locator('.icen-kb-run').last()).toHaveCSS('font-size', '17px');
   const spinner = await page.locator('.icen-btn').evaluate(el => getComputedStyle(el, '::after').borderTopColor);

@@ -1,104 +1,23 @@
 /*
- * @icen.ai/ui — Base（元素基线 + 交互基元 + 统一抽象层 + 滚动条）
+ * @icen.ai/ui — Base：元素基线、共享交互类、滚动条与层级标尺。
  *
- * 全部消费 --icen-token-*；任何 preset / 明暗 / style profile 下自洽。
- * 在 tokens 之后、components 之前引入。
+ * 在 tokens 之后、components 之前引入。几何、焦点、状态和动效值只由
+ * tokens/design.css 及当前原语提供；本文件不恢复第二套默认值。
  *
- * ════════════════════════════════════════════════════════════════════════
- * icen 组件契约（统一抽象）
- * ════════════════════════════════════════════════════════════════════════
- * 所有 56 个组件遵循同一套抽象，由两层共同支撑：
+ * 可组合的交互类：.icen-pressable / .icen-control / .icen-field /
+ * .icen-lift / .icen-surface-elevated / .icen-focus-ring / .icen-motion。
+ * 组件可以组合这些类，也可以直接消费同一组 --icen-* 变量。
  *
- * ── 层 1：--icen-* 原语 token（所有组件自洽消费）
- *    --icen-ring / --icen-ring-soft / --icen-ring-error /
- *    --icen-ring-warning / --icen-ring-inset          ← 聚焦环
- *    --icen-hover-border                                  ← 悬停边框过渡
- *    --icen-disabled-opacity                              ← 禁用透明度
- *    --icen-press                                         ← 按下形变
- *    --icen-control-focus-shadow / -border                ← 表单控件聚焦
- *    --icen-tx-fast / -normal / -slow                     ← 统一过渡时长+缓动
+ * 状态统一使用根类复合的 .is-* 与对应 aria/data 属性。禁用、加载、错误、
+ * 展开和选中不得只依赖颜色；可聚焦元素保留 :focus-visible。
  *
- *    组件直接写：
- *      .icen-btn:focus-visible { box-shadow: var(--icen-ring); }
- *      .icen-btn:disabled { opacity: var(--icen-disabled-opacity); }
- *
- *    原语覆盖反馈配方：
- *      [data-icen-style="chinese"] { --icen-press: scale(.995); --icen-hover-border: var(--icen-token-line); }
- *
- * ── 层 2：6 个交互基元 class（HTML 显式组合 API）
- *    .icen-pressable / .icen-control / .icen-field / .icen-lift / .icen-surface-elevated / .icen-focus-ring
- *
- *    用法（任选其一）：
- *      <button class="icen-btn icen-pressable icen-focus-ring">       ← 类组合，体积最小
- *      <button class="icen-btn">                            ← 自洽，CSS 引用同一原语 token
- *
- * ── 命名约定（所有组件统一）
- *    根类：       .component
- *    变体：       .component--variant / .component-primary（语义变体可省 --）
- *    尺寸：       .component--sm / --lg / --xl
- *    状态：       .is-loading / .is-error / .is-disabled / .is-open / .is-selected /
- *                 .is-focused / .is-active / .is-empty / .is-filled
- *    aria 等价：  [aria-busy=true]↔.is-loading、[data-icen-invalid=true]↔.is-error、
- *                 [aria-disabled=true]/[data-icen-disabled]↔.is-disabled、
- *                 [aria-expanded=true]↔.is-open、[aria-selected=true]/[aria-current=page]↔.is-active
- *
- * ── Token 纪律
- *    颜色：       仅 --icen-token-success / -warning / -error / -info / -accent（语义）
- *    间距：       --icen-density-space-*
- *    字号：       --icen-density-font-size-*
- *    控件高度：   --icen-density-input-height-*
- *    圆角：       --icen-radius-*
- *    阴影：       --icen-token-shadow-*
- *    时长/缓动：  --icen-duration-* / --icen-ease-*（或直接用 --icen-tx-*）
- *    z-index：    --icen-z-*
- *
- * 暴露的契约：
- *   - 元素基线：box-sizing / body / a / code / pre / img / ::selection
- *   - 滚动条：贴 --icen-token-scrollbar-*
- *   - 工具类：.icen-mono / .icen-serif / .icen-dim / .icen-faint / .icen-numeric / .icen-sr-only / .icen-skip-link
- *   - z-index 标尺：--icen-z-* （浮层一律 portal 到 body）
- *   - 共享 keyframes：icen-pop-in（弹层进场）/ icen-spin（旋转）/ icen-skeleton-pulse（骨架脉冲）
- *   - 交互基元 class：.icen-pressable / .icen-control / .icen-field / .icen-lift / .icen-surface-elevated / .icen-focus-ring / .icen-motion
- *   - 状态约定：[aria-disabled] / [aria-busy] / [data-icen-loading] / [data-icen-disabled] / [data-icen-invalid]
- *   - 触屏底线：@media (pointer: coarse) 下交互基元与控件目标尺寸 ≥40px
- *     （min-block/inline-size: max(var(--icen-density-input-height-md), 40px)；WCAG 2.5.5 的工程折中）
- *   - 悬停守卫：.icen-lift 的 hover 抬升包在 @media (hover: hover) and (pointer: fine)（触屏关闭）
+ * 层级使用 --icen-z-*；原生 portal 的菜单与弹层高于其 owner dialog。
+ * reduced-motion 由 design 乘数与本层的循环动画/滚动降级共同处理。
+ * 触屏目标至少 44px；精细指针以外不施加 hover 抬升。
  */
 
-/* ══════════════════════════════════════════════════════════════
-   icen 统一抽象层（--icen-* 原语 token）
-   ───────────────────────────────────────────────────────────────
-   所有组件消费的"原语级"变量：聚焦环、悬停、按下、禁用、过渡。
-   原语只需覆盖这里的少数变量即可让组件整体换肤；组件自身无需感知风格切换。
-   ══════════════════════════════════════════════════════════════ */
-:root {
-  /* ── 聚焦环（focus-visible） ── */
-  --icen-ring: 0 0 0 2px var(--icen-token-bg), 0 0 0 4px color-mix(in srgb, var(--icen-token-accent) 50%, transparent);
-  --icen-ring-soft: 0 0 0 3px color-mix(in srgb, var(--icen-token-accent) 16%, transparent);
-  --icen-ring-error: 0 0 0 2px var(--icen-token-bg), 0 0 0 4px color-mix(in srgb, var(--icen-token-error) 50%, transparent);
-  --icen-ring-success: 0 0 0 2px var(--icen-token-bg), 0 0 0 4px color-mix(in srgb, var(--icen-token-success) 50%, transparent);
-  --icen-ring-warning: 0 0 0 2px var(--icen-token-bg), 0 0 0 4px color-mix(in srgb, var(--icen-token-warning) 50%, transparent);
-  /* inset 聚焦环：空间受限的网格/表头单元格用内阴影聚焦（2px 内描边 + 3px 内光晕） */
-  --icen-ring-inset: inset 0 0 0 2px color-mix(in srgb, var(--icen-token-accent) 50%, transparent), inset 0 0 0 5px color-mix(in srgb, var(--icen-token-accent) 14%, transparent);
-
-  /* ── 悬停 / 按下 / 禁用 ── */
-  --icen-hover-border: color-mix(in srgb, var(--icen-token-accent) 30%, var(--icen-token-line));
-  --icen-hover-border-strong: color-mix(in srgb, var(--icen-token-accent) 55%, var(--icen-token-line));
-  --icen-press: translateY(1px) scale(0.985);
-  --icen-press-soft: translateY(1px);
-  --icen-disabled-opacity: 0.5;
-
-  /* ── 表单控件聚焦（wrapper 视角） ── */
-  --icen-control-focus-shadow: var(--icen-token-shadow-inset), 0 0 0 3px color-mix(in srgb, var(--icen-token-accent) 14%, transparent);
-  --icen-control-focus-border: color-mix(in srgb, var(--icen-token-accent) 55%, var(--icen-token-line));
-  --icen-control-error-shadow: var(--icen-token-shadow-inset), 0 0 0 3px color-mix(in srgb, var(--icen-token-error) 16%, transparent);
-
-  /* ── 统一过渡（时长 + 缓动打包） ── */
-  --icen-tx-fast: var(--icen-duration-fast) var(--icen-ease-out);
-  --icen-tx-normal: var(--icen-duration-normal) var(--icen-ease-out);
-  --icen-tx-slow: var(--icen-duration-slow) var(--icen-ease-out);
-  --icen-tx-bounce: var(--icen-duration-normal) var(--icen-ease-bounce);
-}
+/* Geometry, focus, state and motion values are owned by tokens/design.css.
+ * This layer consumes them; it never restores a second set of defaults. */
 
 /* ══════════════════════════════════════════════════════════════
    元素基线
@@ -115,17 +34,18 @@ html {
 }
 
 body {
-  background: var(--icen-token-bg);
+  background: var(--icen-token-canvas);
   color: var(--icen-token-text);
-  font-family: "Numeric Math", var(--icen-font-body);
-  font-size: 14px;
-  line-height: var(--icen-line-height-body, 1.6);
+  font-family: var(--icen-font-body);
+  font-size: var(--icen-density-font-size-md);
+  line-height: var(--icen-line-height-body);
+  letter-spacing: var(--icen-letter-spacing-body);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "rlig" 1, "calt" 1;
-  font-variant-numeric: lining-nums tabular-nums;
+  font-variant-numeric: normal;
 }
 
 a {
@@ -507,11 +427,6 @@ p { margin: 0 0 1em; }
   scroll-behavior: auto !important; /* guard:allow-important 手动降级：与系统降级同口径 */
 }
 
-/* 触屏设备（无精细指针）：压低 pressable 按下形变（hover 抬升已由 hover 守卫关闭） */
-@media (pointer: coarse) {
-  .icen-pressable:active { transform: translateY(0) scale(0.99); }
-}
-
 /* 高对比度模式（Windows High Contrast / 强制 colors） */
 @media (forced-colors: active) {
   .icen-pressable, .icen-control, .icen-lift, .icen-surface-elevated, .icen-focus-ring:focus-visible {
@@ -547,14 +462,8 @@ p { margin: 0 0 1em; }
   .icen-pressable, .icen-lift, .icen-surface-elevated { box-shadow: none !important; /* guard:allow-important 状态/守卫覆盖需压制变体优先级 */ transform: none !important; }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   触屏目标尺寸底线（@media pointer: coarse）
-   ───────────────────────────────────────────────────────────────
-   交互基元与控件的可点区域在触屏下抬到 ≥40px：WCAG 2.5.5（Target
-   Size AAA 44px）的工程折中。用 max() 保住密度 token 的调节权——
-   密度档高于 40px 时仍按 token 走；逻辑属性形态（block/inline）
-   与全库书写方向自洽。块与内联同时给底线（方形命中区）。
-   ══════════════════════════════════════════════════════════════ */
+/* Coarse-pointer targets keep the 44px floor without changing visual glyphs.
+ * Logical dimensions preserve writing direction and component density overrides. */
 @media (pointer: coarse) {
   .icen-pressable,
   .icen-control,
@@ -562,7 +471,7 @@ p { margin: 0 0 1em; }
   .icen-lift,
   button.icen-btn,
   a[role='button'] {
-    min-block-size: max(var(--icen-density-input-height-md), 40px);
-    min-inline-size: max(var(--icen-density-input-height-md), 40px);
+    min-block-size: max(var(--icen-density-input-height-md), 44px);
+    min-inline-size: max(var(--icen-density-input-height-md), 44px);
   }
 }

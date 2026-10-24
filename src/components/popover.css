@@ -31,19 +31,18 @@
   color: var(--icen-token-text);
   border: 1px solid var(--icen-token-material-edge);
   box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-elevated);
-  border-radius: var(--icen-radius-lg);
+  border-radius: var(--icen-surface-radius-floating);
   animation: icen-popover-in var(--icen-duration-fast) var(--icen-ease-enter);
   transform-origin: top center;
-  /* 退场走过渡（可中断回弹）；与菜单同收敛配方 */
   transition:
     opacity var(--icen-duration-fast) var(--icen-ease-out),
     transform var(--icen-duration-fast) var(--icen-ease-out);
 }
 .icen-popover[data-icen-state='closing'] {
-  animation: none; /* 打断可能仍在跑的进场 */
+  animation: none;
   pointer-events: none;
   opacity: 0;
-  transform: scale(0.99);
+  transform: scale(var(--icen-overlay-popover-scale));
 }
 .icen-popover[data-icen-side='top'] {
   animation-name: icen-popover-in-top;
@@ -124,24 +123,25 @@
   border-top: 1px solid var(--icen-token-separator-soft);
 }
 
-/* ── 进场动画（与菜单同配方：fade + scale(.98)，按侧别反向位移 2px） ── */
+/* Panels travel a short distance from the anchor and keep their own geometry. */
 @keyframes icen-popover-in {
-  from { opacity: 0; transform: scale(0.98) translateY(-2px); }
+  from { opacity: 0; transform: scale(var(--icen-overlay-popover-scale)) translateY(calc(-1 * var(--icen-overlay-panel-offset))); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes icen-popover-in-top {
-  from { opacity: 0; transform: scale(0.98) translateY(2px); }
+  from { opacity: 0; transform: scale(var(--icen-overlay-popover-scale)) translateY(var(--icen-overlay-panel-offset)); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes icen-popover-in-left {
-  from { opacity: 0; transform: scale(0.98) translateX(2px); }
+  from { opacity: 0; transform: scale(var(--icen-overlay-popover-scale)) translateX(var(--icen-overlay-panel-offset)); }
   to { opacity: 1; transform: scale(1) translateX(0); }
 }
 @keyframes icen-popover-in-right {
-  from { opacity: 0; transform: scale(0.98) translateX(-2px); }
+  from { opacity: 0; transform: scale(var(--icen-overlay-popover-scale)) translateX(calc(-1 * var(--icen-overlay-panel-offset))); }
   to { opacity: 1; transform: scale(1) translateX(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .icen-popover { animation: none; transition: none; }
+  :root:not([data-icen-motion='full']) .icen-popover { animation: none; transition: none; }
 }
+:root[data-icen-motion='reduce'] .icen-popover { animation: none; transition: none; }

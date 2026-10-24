@@ -5,7 +5,7 @@
  *   <button class="icen-btn [.icen-btn-primary|.icen-btn-danger|.icen-btn-ghost|.icen-btn-link] [.icen-btn-sm|.icen-btn-lg] [.icen-btn-block] [.icen-btn-icon]
  *           [.is-loading] [.is-error] [disabled]|[aria-disabled=true]|[data-icen-disabled]>
  *     [<svg class="icen-btn-icon-start">…</svg>]    可选前置图标（与 .icen-btn-icon 不同：.icen-btn-icon 是纯图标钮）
- *     <span class="btn-text">文本</span>
+ *     <span class="icen-btn-label">文本</span>
  *     [<svg class="icen-btn-icon-end">…</svg>]      可选后置图标
  *   </button>
  *
@@ -35,6 +35,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--icen-control-gap);
+  min-inline-size: 0;
+  max-inline-size: 100%;
   block-size: var(--icen-control-height-md);
   padding: 0 var(--icen-control-padding-inline);
   background: var(--btn-bg);
@@ -44,7 +46,7 @@
   font-family: var(--icen-font-body);
   font-size: var(--icen-font-size-control);
   font-weight: var(--icen-font-weight-control);
-  line-height: 1;
+  line-height: 1.2;
   letter-spacing: var(--icen-letter-spacing-control);
   white-space: nowrap;
   cursor: pointer;
@@ -135,7 +137,7 @@
   block-size: var(--icen-control-height-lg);
   padding: 0 var(--icen-control-padding-inline-lg);
   font-size: var(--icen-density-font-size-lg);
-  gap: 8px;
+  gap: var(--icen-control-gap);
   border-radius: var(--icen-control-radius-lg);
 }
 .icen-btn-icon {
@@ -147,6 +149,12 @@
 .icen-btn-icon.icen-btn-lg { inline-size: var(--icen-control-height-lg); }
 
 .icen-btn-block { display: flex; inline-size: 100%; }
+.icen-btn-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ── 状态 ── */
 .icen-btn.is-error {

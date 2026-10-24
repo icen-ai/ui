@@ -5,6 +5,14 @@
 契约面变化以 [docs/contracts/snapshot.json](docs/contracts/snapshot.json) 的机器 diff 为准
 （`bun run contracts:diff <tagA> <tagB>`，CI 强制破坏性条目必须在本文件留痕）。
 
+## [Unreleased]
+
+### 设计与组合
+
+- 统一 Design Tokens 的几何、表面、焦点、禁用和动效权威；默认 modern 使用 28/32/40px 控件、4/6/8/12/16px 语义轮廓和更克制的实面光影，compact/comfortable 与触屏继续独立推导。
+- 新增 control/option/toolbar/data-row/surface 角色与稳定槽位；Select 的清除和展开操作不再被尺寸变体覆盖，Toggle 使用真实类名，菜单与选项区分键盘当前项和持久选中，原生 checkbox 恢复清楚的勾选语言。
+- Menu、Popover、Dialog 与 Sheet 使用各自的位移/缩放语义；移除多套 reduced-motion 覆盖之间的竞争。新增全 Registry 可生成进度 `scripts/redesign-progress.mjs` 与基础几何浏览器验收。
+
 ## [0.11.1] — 2026-10-22
 
 ### 新增

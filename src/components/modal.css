@@ -51,8 +51,8 @@
   color: var(--icen-token-text);
   border: 1px solid var(--icen-token-material-edge);
   box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-overlay);
-  border-radius: var(--icen-radius-xl);
-  --modal-enter-transform: translateY(4px) scale(.985);
+  border-radius: var(--icen-surface-radius-modal);
+  --modal-enter-transform: translateY(var(--icen-overlay-dialog-offset)) scale(var(--icen-overlay-dialog-scale));
   opacity: 1;
   transform: translate(0, 0) scale(1);
   transition: opacity var(--icen-duration-fast) var(--icen-ease-out), transform var(--icen-duration-normal) var(--icen-ease-enter);
@@ -164,28 +164,28 @@
   width: 360px;
   height: 100%;
   border-radius: 0 var(--icen-radius-lg) var(--icen-radius-lg) 0; /* guard:allow-physical 圆角贴着物理左缘（sheet-left 变体），RTL 语义不变 */
-  --modal-enter-transform: translateX(-16px);
+  --modal-enter-transform: translateX(calc(-1 * var(--icen-overlay-sheet-offset)));
 }
 .icen-modal--sheet-right {
   right: 0; top: 0; bottom: 0; /* guard:allow-physical --sheet-right 是按物理侧边命名的变体（贴右缘抽屉），RTL 语义不变 */
   width: 360px;
   height: 100%;
   border-radius: var(--icen-radius-lg) 0 0 var(--icen-radius-lg); /* guard:allow-physical 圆角贴着物理右缘（sheet-right 变体），RTL 语义不变 */
-  --modal-enter-transform: translateX(16px);
+  --modal-enter-transform: translateX(var(--icen-overlay-sheet-offset));
 }
 .icen-modal--sheet-top {
   top: 0; inset-inline: 0;
   width: 100%;
   height: 300px;
   border-radius: 0 0 var(--icen-radius-lg) var(--icen-radius-lg);
-  --modal-enter-transform: translateY(-16px);
+  --modal-enter-transform: translateY(calc(-1 * var(--icen-overlay-sheet-offset)));
 }
 .icen-modal--sheet-bottom {
   bottom: 0; inset-inline: 0;
   width: 100%;
   height: 300px;
   border-radius: var(--icen-radius-lg) var(--icen-radius-lg) 0 0;
-  --modal-enter-transform: translateY(16px);
+  --modal-enter-transform: translateY(var(--icen-overlay-sheet-offset));
 }
 .icen-modal--sheet-left.icen-modal--sm, .icen-modal--sheet-right.icen-modal--sm { width: 280px; }
 .icen-modal--sheet-left.icen-modal--lg, .icen-modal--sheet-right.icen-modal--lg { width: 480px; }
@@ -203,6 +203,7 @@
   .icen-modal-close { min-inline-size: 44px; min-block-size: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .icen-modal-backdrop, .icen-modal { transition: none; }
+  :root:not([data-icen-motion='full']) :is(.icen-modal-backdrop,.icen-modal) { transition: none; }
 }
+:root[data-icen-motion='reduce'] :is(.icen-modal-backdrop,.icen-modal) { transition: none; }
 

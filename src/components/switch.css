@@ -79,7 +79,7 @@
 
 /* ── 勾选框（✓ 与半选横条均 ::before 自绘） ── */
 .icen-checkbox {
-  --checkbox-size: 15px;
+  --checkbox-size: var(--icen-choice-size);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -89,7 +89,7 @@
   padding: 0;
   background: var(--icen-token-control);
   color: transparent;
-  border: 1px solid var(--icen-token-control-border);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
   border-radius: var(--icen-radius-xs);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -110,8 +110,8 @@
 }
 .icen-checkbox::before {
   content: '';
-  inline-size: 11px;
-  block-size: 11px;
+  inline-size: calc(var(--icen-choice-size) - 4px);
+  block-size: calc(var(--icen-choice-size) - 4px);
   background: currentColor;
   opacity: 0;
   mask: var(--icen-token-icon-check) center / contain no-repeat;
@@ -121,8 +121,8 @@
 .icen-checkbox[aria-checked='true']::before { opacity: 1; }
 .icen-checkbox[aria-checked='mixed']::before {
   opacity: 1;
-  inline-size: 9px;
-  block-size: 9px;
+  inline-size: calc(var(--icen-choice-size) - 6px);
+  block-size: calc(var(--icen-choice-size) - 6px);
   mask-image: var(--icen-token-icon-minus);
   -webkit-mask-image: var(--icen-token-icon-minus);
 }
@@ -137,7 +137,7 @@
   box-shadow: var(--icen-ring);
 }
 
-.icen-checkbox--sm { --checkbox-size: 13px; }
+.icen-checkbox--sm { --checkbox-size: 14px; }
 .icen-checkbox--lg { --checkbox-size: 18px; }
 
 /* ── 单选行（radio item：整行可点） ── */
@@ -190,10 +190,10 @@
 
 .icen-radio-dot {
   position: relative;
-  width: 15px;
-  height: 15px;
+  width: var(--icen-choice-size);
+  height: var(--icen-choice-size);
   flex-shrink: 0;
-  border: 1px solid var(--icen-token-control-border);
+  border: var(--icen-control-border-width) solid var(--icen-token-control-border);
   border-radius: var(--icen-radius-full);
   background: var(--icen-token-control);
   transition: border-color var(--icen-tx-fast);
@@ -204,8 +204,8 @@
   content: '';
   position: absolute;
   top: 50%; left: 50%; /* guard:allow-physical 圆心居中：left 50% + translate(-50%) 任意方向下均为圆心 */
-  width: 7px;
-  height: 7px;
+  width: var(--icen-choice-dot-size);
+  height: var(--icen-choice-dot-size);
   border-radius: var(--icen-radius-full);
   background: var(--icen-token-accent-strong);
   transform: translate(-50%, -50%) scale(0);

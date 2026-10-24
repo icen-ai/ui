@@ -9,6 +9,8 @@ export const VERSION = pkg.version;
 
 export * from './behaviors/theme';
 export * from './behaviors/events';
+export * from './behaviors/operation';
+export * from './behaviors/slots';
 export * from './behaviors/i18n';
 export * from './behaviors/toast';
 export * from './behaviors/tabs';

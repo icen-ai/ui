@@ -61,18 +61,22 @@ describe('tokens-studio.json', () => {
     for (const preset of PRESETS) {
       for (const mode of ['light', 'dark']) {
         const set = ts[`${preset}/${mode}`] as Record<string, any>;
-        expect(set.radius.sm.$value).toBe('8px');
-        expect(set.radius.lg.$value).toBe('14px');
-        expect(set.density['item-height'].$value).toBe('28px');
+        expect(set.radius.sm.$value).toBe('6px');
+        expect(set.radius.lg.$value).toBe('12px');
+        expect(set.density['item-height'].$value).toBe(`{${preset}.${mode}.density.input-height-sm}`);
+        expect(set.density['input-height-sm'].$value).toBe('28px');
         expect(set.duration.fast.$value).toBe('110ms');
         expect(set['font-weight'].title.$value).toBe(600);
         expect(set['font-size'].control.$value).toContain('.density.font-size-md}');
         expect(set.control['padding-inline'].$value).toBe('12px');
+        expect(set.choice.size.$value).toBe('16px');
+        expect(set.toolbar.height.$value).toBe('40px');
+        expect(set.data.height.$value).toBe('32px');
         expect(set.token['scrollbar-size-sm'].$value).toBe('6px');
         expect(set.token['scrollbar-idle-delay'].$value).toBe('900ms');
       }
       const radius = fv.variableCollections.find(c => c.name === `icen / ${preset}`)!.variables.find(v => v.name === 'radius/lg');
-      expect(radius?.valuesByMode).toEqual({ light: 14, dark: 14 });
+      expect(radius?.valuesByMode).toEqual({ light: 12, dark: 12 });
     }
   });
   test('$themes 恰 12 组（6 预设 × 明暗），命名与 set 键一一对应', () => {

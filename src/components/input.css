@@ -161,12 +161,13 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 24px; height: 24px; /* WCAG 2.5.8 下限（22 → 24） */
+  inline-size: var(--icen-control-affix-size);
+  block-size: var(--icen-control-affix-size);
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
-  border-radius: var(--icen-radius-full);
+  border-radius: var(--icen-option-radius);
   color: var(--icen-token-text-faint);
   transition:
     color var(--icen-tx-fast),
@@ -175,14 +176,17 @@
 .icen-input-clear:hover,
 .icen-input-pw-toggle:hover {
   color: var(--icen-token-text);
-  background: var(--icen-token-surface-hover);
+  background: var(--icen-token-fill-hover);
 }
 .icen-input-clear:focus-visible,
 .icen-input-pw-toggle:focus-visible {
   outline: none;
   box-shadow: var(--icen-ring);
 }
-.icen-input-clear svg, .icen-input-pw-toggle svg { width: 12px; height: 12px; }
+.icen-input-clear svg, .icen-input-pw-toggle svg {
+  inline-size: var(--icen-control-affix-icon);
+  block-size: var(--icen-control-affix-icon);
+}
 
 /* ── 多行：同一 wrapper 视觉，内部 textarea 裸奔 ── */
 .icen-textarea-wrap {

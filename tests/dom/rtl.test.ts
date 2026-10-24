@@ -95,7 +95,7 @@ describe('RTL 静态断言：逻辑属性落在 CSS 源里', () => {
       ['components/menu.css', /margin-inline-start/],
       ['components/toast.css', /border-inline-start/],
       ['components/notification.css', /padding-block:\s*var\(--icen-density-space-md\)/],
-      ['components/select.css', /inset-inline-end:\s*var\(--icen-density-space-sm\)/],
+      ['components/select.css', /inset-inline-end:\s*calc\(var\(--icen-field-padding-inline\)/],
       ['components/table.css', /text-align:\s*start/],
       ['components/content.css', /inset-inline-start:\s*13\.5px/],
       ['components/kb.css', /padding-inline-start:\s*12px/],

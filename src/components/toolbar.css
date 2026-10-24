@@ -29,11 +29,11 @@
   align-items: center;
   gap: var(--icen-density-space-sm);
   flex-wrap: nowrap;
-  min-block-size: 44px;
-  padding: 6px 8px;
+  min-block-size: var(--icen-toolbar-height);
+  padding: var(--icen-density-space-xs) var(--icen-density-space-sm);
   background: var(--icen-token-surface-chrome);
-  border: 1px solid var(--icen-token-separator-soft);
-  border-radius: var(--icen-control-radius-lg);
+  border: var(--icen-control-border-width) solid var(--icen-token-separator-soft);
+  border-radius: var(--icen-surface-radius-content);
 }
 .icen-toolbar--wrap { flex-wrap: wrap; }
 .icen-toolbar--borderless {
@@ -48,17 +48,17 @@
 }
 
 /* ── 尺寸 ── */
-.icen-toolbar--sm { min-block-size: 36px; padding: 4px 6px; gap: var(--icen-density-space-xs); }
-.icen-toolbar--lg { min-block-size: 52px; padding: 8px 12px; gap: var(--icen-density-space-md); }
+.icen-toolbar--sm { min-block-size: var(--icen-toolbar-height-sm); padding-inline: var(--icen-density-space-xs); gap: var(--icen-density-space-xs); }
+.icen-toolbar--lg { min-block-size: var(--icen-toolbar-height-lg); padding-inline: var(--icen-density-space-md); gap: var(--icen-density-space-md); }
 
 /* ── 分组（紧贴一组按钮） ── */
 .icen-toolbar-group {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 2px;
+  padding: var(--icen-density-space-2xs);
   background: var(--icen-token-fill-hover);
-  border-radius: var(--icen-radius-xs);
+  border-radius: var(--icen-option-radius);
 }
 .icen-toolbar-group > .icen-btn { border-color: transparent; background: transparent; box-shadow: none; }
 .icen-toolbar-group > .icen-btn:hover { background: var(--icen-token-fill-hover); }
@@ -66,12 +66,12 @@
 /* ── 分隔符 ── */
 .icen-toolbar-separator {
   width: 1px;
-  height: 18px;
+  height: calc(var(--icen-control-height-sm) - var(--icen-density-space-sm));
   background: var(--icen-token-separator);
   flex-shrink: 0;
 }
-.icen-toolbar--sm .icen-toolbar-separator { height: 14px; }
-.icen-toolbar--lg .icen-toolbar-separator { height: 22px; }
+.icen-toolbar--sm .icen-toolbar-separator { height: calc(var(--icen-control-height-sm) - var(--icen-density-space-md)); }
+.icen-toolbar--lg .icen-toolbar-separator { height: calc(var(--icen-control-height-sm) - var(--icen-density-space-xs)); }
 
 /* 水平工具条里的垂直分隔（用于纵向 toolbar） */
 .icen-toolbar--vertical { flex-direction: column; align-items: stretch; }

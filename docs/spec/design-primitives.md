@@ -109,28 +109,28 @@ setDesign(brand.name);
 
 | 名称（均以 --icen-design- 开头） | 现代亮 / 暗默认 | 意义 |
 | --- | --- | --- |
-| canvas / surface | #f5f6f8 / #fff；#15171b / #25282e | 页面与内容面 |
-| ink / muted | #202124 / #616671；#f2f4f7 / #aeb5c2 | 正文与辅助字 |
-| accent / on-accent | #0062cc / #fff；#89b9ff / #10223c | 动作与按钮文字 |
+| canvas / surface | #f5f6f8 / #fff；#15171b / #22272f | 页面与内容面 |
+| ink / muted | #202124 / #606773；#f1f4f9 / #b1bbca | 正文与辅助字 |
+| accent / on-accent | #087bf5 / #fff；#8cbdff / #10223c | 图形强调与实心操作文字 |
 | success / warning / error / info | 明暗各有独立值，见源码 | 语义色 |
-| radius | 10px | 六档轮廓的共同起点 |
+| radius | 8px | 六档轮廓的共同起点 |
 | space | 4px | 布局节奏单位 |
-| control-height | 34px | 标准操作高度（density compact 28 / comfortable 38） |
+| control-height | 32px | 标准操作高度（density compact 28 / comfortable 38） |
 | font-size / font | 13px / 系统无衬线 | 界面阅读基准；中文下限 12px |
 | glass-opacity / glass-blur | 84% / 24px；90% / 24px | 自有材料的兼容参数，modern 标准组件不消费模糊 |
-| shadow-color / shadow-strength | 中性灰 11%；黑 28% | 接触影与环境影 |
-| light / highlight-strength | 白 70%；白 9% | 表面边缘光 |
-| edge-strength | 12% / 14% | 材料边界 |
+| shadow-color / shadow-strength | #182337 10%；#000 27% | 接触影与环境影 |
+| light / highlight-strength | 白 76%；白 8% | 表面边缘光 |
+| edge-strength | 11% / 13% | 材料边界 |
 | motion | 1 | 动效比例，0 为静止 |
 
 CSS 作者可以直接覆盖全部种子；类型 API 暴露常用旋钮，并对数值范围进行检查。需要新材料配方时，用自有 data 属性消费既有语义 token，或扩展材料文件中的角色；无需复制每个组件。
 
 ## 现代的具体判断
 
-- **文字**：界面系统无衬线；代码单独等宽；数据才使用 tabular-nums。取消全局 Numeric Math 混排。正文阅读可在业务排版中提高到 16px。
-- **几何**：xs/sm/md/lg/xl 为 5/8/10/14/20px，从共同基准推导。控件 8px、卡片与面板 14px、弹窗 20px；贴合内外轮廓同心，独立控件保留自身半径。分段选择内角扣掉外壳 padding 与边框。
-- **密度**：normal / compact / comfortable 改变间距和控件高度，不缩小文字；嵌套密度可恢复 normal。触摸环境控件至少 44px。KB 行内操作使用 `--icen-density-item-height`（normal 28 / compact 24 / comfortable 32px），嵌套密度重新计算字号角色。
-- **反馈**：hover 以中性变化为主，主要动作用品牌色；键盘焦点始终明确。按压轻缩放，减少位置漂移。
+- **文字**：界面系统无衬线；代码单独等宽；数据才使用 tabular-nums。普通文本不强制数字字体。正文阅读可在业务排版中提高到 16px。
+- **几何**：xs/sm/md/lg/xl 为 4/6/8/12/16px，从共同基准推导。控件 6px、卡片与面板 12px、弹窗 16px；贴合内外轮廓同心，独立控件保留自身半径。分段选择内角扣掉外壳 padding 与边框。
+- **密度**：normal / compact / comfortable 改变间距和控件高度，不缩小文字；嵌套密度可恢复 normal。触摸环境控件至少 44px。KB 行内操作使用 `--icen-density-item-height`（normal 28 / compact 24 / comfortable 34px），嵌套密度重新计算字号和组合角色。
+- **反馈**：hover 以中性变化为主，主要动作用品牌色；键盘焦点始终明确。按压使用填充与内影，不改变控件占位。
 - **选择**：分段选择使用中性表面和接触影，不把每次选择都变成品牌强调。
 - **光照**：暗色保留遮挡阴影，降低高光并重新设置边缘，避免照搬亮色投影。
 - **降级**：不支持 backdrop-filter、减少透明、减少动效、高对比度模式都有明确路径。

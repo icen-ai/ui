@@ -71,7 +71,6 @@ export function openDropdown(trigger: HTMLElement, edge: 'first' | 'last' = 'fir
     if(classDisabled.has(item)){item.removeAttribute('aria-disabled');classDisabled.delete(item);}
     if(item.classList.contains('is-disabled') && !item.hasAttribute('aria-disabled')){item.setAttribute('aria-disabled','true');classDisabled.add(item);}
     item.tabIndex=-1;
-    item.querySelector('.icen-menu-item-check')?.remove();
     item.querySelector('.icen-menu-item-shortcut')?.setAttribute('aria-hidden','true');
   });
   panel.querySelectorAll('.icen-menu-separator').forEach((separator)=>separator.setAttribute('role','separator'));

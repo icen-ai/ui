@@ -1,140 +1,1399 @@
 {
-  "schema": 1,
-  "updated": "2026-10-21",
+  "schema": 2,
+  "updated": "2026-10-24T18:54:33.948Z",
   "branch": "pref/design",
-  "objective": "默认 modern 的成熟桌面比例、实面材料与真实交互，保留六配色 × 四原语 × 明暗；覆盖全 Registry 与官方文档站。",
+  "revision": "d4089d6c8af4a1abd11330fd1d89a0217cbb04db",
   "registry": {
     "slugs": 122,
+    "primaryCssFiles": 73,
     "componentCssFiles": 76,
     "documentationEntries": 129,
     "documentationOnlyEntries": 7,
-    "behaviors": 89,
+    "behaviors": 92,
     "tiers": {
       "core": 52,
       "beta": 24,
       "lab": 0
     }
   },
+  "baseline": {
+    "revision": "d4089d6c8af4a1abd11330fd1d89a0217cbb04db",
+    "verify": "pass: typecheck, guards, 1052 tests, build and size budgets",
+    "siteBuild": "pass: 138 pages; existing duplicate i18n key warning recorded for correction",
+    "visualRegression": "pass: 19/19, Windows Chromium, existing tolerance unchanged",
+    "inventory": ".ui-audit/pref-design/baseline/manifest.json",
+    "inventoryResult": "pass: 214/214 first-screen captures; not full-state certification"
+  },
   "phases": {
-    "audit": "complete",
-    "mapping": "complete",
     "foundation": "complete",
-    "formControls": "complete",
-    "navigationData": "complete",
-    "overlaysFeedback": "complete",
-    "charts": "complete",
-    "ai": "complete",
-    "kb": "complete",
-    "site": "complete",
-    "validation": "complete",
-    "scrollbars": "complete"
+    "coreComposition": "pending",
+    "knowledgeBase": "pending",
+    "ai": "pending",
+    "remainingRegistry": "pending",
+    "documentation": "pending",
+    "validation": "pending"
   },
-  "coverage": {
-    "explicitlyRestyledFiles": [
-      "btn",
-      "input",
-      "select",
-      "menu",
-      "segmented",
-      "switch",
-      "slider",
-      "form",
-      "date-picker",
-      "tree-select",
-      "tag-input",
-      "mentions",
-      "autocomplete",
-      "cascader",
-      "upload",
-      "modal",
-      "popover",
-      "tooltip",
-      "command-palette",
-      "toast",
-      "notification",
-      "feedback",
-      "tabs",
-      "toolbar",
-      "nav",
-      "sidebar",
-      "breadcrumb",
-      "pagination",
-      "steps",
-      "table",
-      "datatable",
-      "content",
-      "card",
-      "panel",
-      "stat",
-      "empty",
-      "pill",
-      "tag",
-      "badge",
-      "theme-switcher",
-      "charts",
-      "chart-line",
-      "chart-bar",
-      "chart-pie",
-      "chart-radar",
-      "chart-heatmap",
-      "chart-area",
-      "chart-stack",
-      "chart-gauge",
-      "chart-sparkline",
-      "chart-scatter",
-      "chart-calendar",
-      "chart-graph",
-      "chart-map",
-      "code-block",
-      "copy",
-      "scroll-area",
-      "split-pane",
-      "layout",
-      "media",
-      "ai-chat",
-      "ai-tool",
-      "ai-panel",
-      "ai-diff",
-      "icon",
-      "back-top",
-      "form-validate",
-      "material",
-      "material-chinese",
-      "material-soviet",
-      "kb",
-      "kb-ground",
-      "kb-ingest",
-      "kb-search",
-      "kb-data",
-      "kb-ops",
-      "kb-agent",
-      "kb-perm"
-    ],
-    "inheritedTokenOnly": [],
-    "note": "延续已有 76 份组件 CSS 改造，本轮收口统一轮廓、材料、动效与 KB 密度；129 个文档页巡检覆盖全部 122 个可安装 slug。"
-  },
+  "components": [
+    {
+      "slug": "icon",
+      "css": "icon.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "theme-switcher",
+      "css": "theme-switcher.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "btn",
+      "css": "btn.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "panel",
+      "css": "panel.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "pill",
+      "css": "pill.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "tag",
+      "css": "tag.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "tabs",
+      "css": "tabs.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "stat",
+      "css": "stat.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "toast",
+      "css": "toast.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "toolbar",
+      "css": "toolbar.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "split-pane",
+      "css": "split-pane.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "form",
+      "css": "form.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "input",
+      "css": "input.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "select",
+      "css": "select.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "slider",
+      "css": "slider.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "tag-input",
+      "css": "tag-input.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "switch",
+      "css": "switch.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "segmented",
+      "css": "segmented.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "upload",
+      "css": "upload.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "date-picker",
+      "css": "date-picker.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "form-validate",
+      "css": "form-validate.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "cascader",
+      "css": "cascader.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "tree-select",
+      "css": "tree-select.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "mentions",
+      "css": "mentions.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "autocomplete",
+      "css": "autocomplete.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "modal",
+      "css": "modal.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "dropdown",
+      "css": "menu.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "context-menu",
+      "css": "menu.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "popover",
+      "css": "popover.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "tooltip",
+      "css": "tooltip.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "command-palette",
+      "css": "command-palette.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "card",
+      "css": "card.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "empty",
+      "css": "empty.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "avatar",
+      "css": "media.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "media-card",
+      "css": "media.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "rating",
+      "css": "media.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kbd",
+      "css": "content.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "list",
+      "css": "content.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "accordion",
+      "css": "content.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "timeline",
+      "css": "content.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "desc",
+      "css": "content.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "tree",
+      "css": "content.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "carousel",
+      "css": "media.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "badge",
+      "css": "badge.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "scroll-area",
+      "css": "scroll-area.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "code-block",
+      "css": "code-block.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "table",
+      "css": "table.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "datatable",
+      "css": "datatable.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "charts",
+      "css": "charts.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-line",
+      "css": "chart-line.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-bar",
+      "css": "chart-bar.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-pie",
+      "css": "chart-pie.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-radar",
+      "css": "chart-radar.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-heatmap",
+      "css": "chart-heatmap.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-area",
+      "css": "chart-area.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-stack",
+      "css": "chart-stack.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-gauge",
+      "css": "chart-gauge.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-sparkline",
+      "css": "chart-sparkline.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-scatter",
+      "css": "chart-scatter.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-calendar",
+      "css": "chart-heatmap.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "alert",
+      "css": "feedback.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "result",
+      "css": "feedback.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "progress",
+      "css": "feedback.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "spinner",
+      "css": "feedback.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "skeleton",
+      "css": "feedback.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "copy",
+      "css": "copy.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "notification",
+      "css": "notification.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "nav",
+      "css": "nav.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "sidebar",
+      "css": "sidebar.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "breadcrumb",
+      "css": "breadcrumb.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "pagination",
+      "css": "pagination.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "steps",
+      "css": "steps.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "back-top",
+      "css": "back-top.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "layout",
+      "css": "layout.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-chat",
+      "css": "ai-chat.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-message",
+      "css": "ai-chat.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-reasoning",
+      "css": "ai-chat.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-composer",
+      "css": "ai-chat.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-tool-call",
+      "css": "ai-tool.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-subagent",
+      "css": "ai-tool.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-diff",
+      "css": "ai-diff.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-files",
+      "css": "ai-diff.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-todo",
+      "css": "ai-panel.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-context",
+      "css": "ai-panel.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-usage",
+      "css": "ai-panel.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-threads",
+      "css": "ai-chat.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-feedback",
+      "css": "ai-panel.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "ai-branch",
+      "css": "ai-chat.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb",
+      "css": "kb.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-citation",
+      "css": "kb-ground.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-sources",
+      "css": "kb-ground.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-passage",
+      "css": "kb-ground.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-conflict",
+      "css": "kb-ground.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-pipeline",
+      "css": "kb-ingest.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-chunks",
+      "css": "kb-ingest.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-segment",
+      "css": "kb-ingest.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-connector",
+      "css": "kb-ingest.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-metadata",
+      "css": "kb-ingest.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-qa",
+      "css": "kb-ingest.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-retrieval",
+      "css": "kb-search.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-filter",
+      "css": "kb-search.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-rerank",
+      "css": "kb-search.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-hittest",
+      "css": "kb-search.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-sql",
+      "css": "kb-data.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-answer",
+      "css": "kb-data.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-clarify",
+      "css": "kb-data.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-explain",
+      "css": "kb-data.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-trace",
+      "css": "kb-ops.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-review",
+      "css": "kb-ops.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-gap",
+      "css": "kb-ops.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-eval",
+      "css": "kb-ops.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-canvas",
+      "css": "kb-agent.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-checkpoint",
+      "css": "kb-agent.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-sandbox",
+      "css": "kb-agent.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-chain",
+      "css": "kb-agent.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-acl",
+      "css": "kb-perm.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-who-can",
+      "css": "kb-perm.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-access",
+      "css": "kb-perm.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-audit",
+      "css": "kb-perm.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "kb-visibility",
+      "css": "kb-perm.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-graph",
+      "css": "chart-graph.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    },
+    {
+      "slug": "chart-map",
+      "css": "charts.css",
+      "status": "audited",
+      "scenarios": "review-required",
+      "behaviorEvidence": [],
+      "visualEvidence": [],
+      "remaining": [
+        "Verify the complete task scenario, composition contract and applicable interaction states in this refinement round."
+      ]
+    }
+  ],
   "verification": {
-    "latestVerify": "pass: 1040 tests; typecheck, guards, build and unchanged size budgets",
-    "siteBuild": "pass: 138 pages; apps module also checked with strict TypeScript",
-    "contracts": "pass: 1837 classes / 225 data attributes / 331 CSS variables / 160 events / 344 JS exports / 650 types",
-    "coverage": "pass: src lines 77.23%, functions 79.62%; existing floors unchanged",
-    "package": "pass: publint + attw",
-    "playwright": "pass: 324/324, chromium, workers=2, retries=0, 8.0m",
-    "visualBaselines": "19 snapshots refreshed with zero pixel tolerance; final full suite passed with unchanged regression tolerance",
-    "registryMatrix": "129 component pages; every Registry slug matched",
-    "themeMatrix": "48 captures: 6 palettes × light/dark × 4 pages",
-    "primitiveMatrix": "24 captures: 4 primitives × light/dark × 3 pages",
-    "densityMatrix": "9 captures: 3 densities × 3 pages",
-    "workspaceMatrix": "4 captures: light/dark × desktop/touch",
-    "matrixResult": "214/214 captures from the preceding refinement batch; before scrollbar changes. Current registry health checked by the full browser suite; .ui-audit/design-review/manifest.json preserves the prior capture revision.",
-    "reproduction": "scripts/design-review.mjs; docs/testing.md",
-    "knownGaps": [
-      "Windows Chromium only; Safari, Firefox, real devices and screen readers are not certified in this pass.",
-      "Registry screenshots cover viewports and representative matrices, not every possible state.",
-      "Application examples run locally; production upload, retrieval and AI need consumer-owned services.",
-      "Native thumb color transitions depend on browser support; idle hiding is reliable, cross-browser frame-by-frame fading is not certified."
-    ],
-    "scrollbars": "native arrowless skin; default scroll/900ms idle; auto/scroll/visible/hidden; scoped slots, gutter and cleanup; 3 DOM + 3 browser tests; carousel legacy override removed"
+    "foundation": {
+      "verify": "pass: typecheck, guards, 1060 tests, build and size budgets",
+      "siteBuild": "pass: 138 pages",
+      "focusedBrowser": "pass: 27/27 scenarios; 12/12 design-token tests",
+      "visualRegression": "pass: 19/19 baselines reviewed and refreshed",
+      "registryMatrix": "pass: 214/214 captures; representative screenshots manually reviewed",
+      "evidence": ".ui-audit/pref-design/foundation/manifest.json",
+      "boundary": "Windows Chromium; Registry first screens and representative states, not every possible state or assistive technology"
+    }
   },
-  "remainingTasks": []
+  "remainingTasks": [
+    "Complete composable core controllers, overlay ownership and asynchronous lifecycles.",
+    "Secure answer-scoped evidence and complete KB retrieval, permission and editing workflows.",
+    "Stabilize AI streaming, model/tool round trips and narrow-container layouts.",
+    "Review every remaining Registry component and its real documentation scenario.",
+    "Rebuild the scenario-led documentation workbench and application compositions.",
+    "Run full engineering, package, browser and visual validation; refresh reviewed baselines."
+  ]
 }

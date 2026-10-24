@@ -1,4 +1,4 @@
-// base.css 触屏适配层静态断言：目标尺寸底线块（pointer: coarse + ≥40px + 密度 token max()）
+// base.css 触屏适配层静态断言：目标尺寸底线块（pointer: coarse + ≥44px + 密度 token max()）
 // 与 hover 抬升守卫形态。静态读源文本（CSS 无运行时，文本即契约）。
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
@@ -15,15 +15,15 @@ function mediaBlocks(query: string): string[] {
 }
 
 describe('base.css 触屏目标尺寸底线', () => {
-  test('pointer: coarse 块含 40px 底线，密度 token 经 max() 继续生效', () => {
+  test('pointer: coarse 块含 44px 底线，密度 token 经 max() 继续生效', () => {
     const coarse = mediaBlocks('pointer: coarse').join('\n');
-    expect(coarse).toContain('min-block-size: max(var(--icen-density-input-height-md), 40px)');
-    expect(coarse).toContain('min-inline-size: max(var(--icen-density-input-height-md), 40px)');
+    expect(coarse).toContain('min-block-size: max(var(--icen-density-input-height-md), 44px)');
+    expect(coarse).toContain('min-inline-size: max(var(--icen-density-input-height-md), 44px)');
   });
 
   test('交互基元与控件全部进底线清单', () => {
     const target = mediaBlocks('pointer: coarse')
-      .filter((b) => b.includes('40px'))
+      .filter((b) => b.includes('44px'))
       .join('\n');
     for (const sel of ['.icen-pressable', '.icen-control', '.icen-field', 'button.icen-btn', "a[role='button']"]) {
       expect(target).toContain(sel);

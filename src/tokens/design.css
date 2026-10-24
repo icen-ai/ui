@@ -7,25 +7,24 @@
  * their own identity, so every rule here remains palette- and primitive-safe.
  */
 :root {
-  /* ── Control geometry ── */
-  --icen-design-radius: 10px;
+  /* Author inputs. Component roles below derive from these values. */
+  --icen-design-radius: 8px;
   --icen-design-space: 4px;
-  --icen-design-control-height: 34px;
+  --icen-design-control-height: 32px;
   --icen-design-font-size: 13px;
   --icen-design-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text',
     'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --icen-design-glass-blur: 24px;
   --icen-design-motion: 1;
 
-  /* Semantic aliases consumed by component CSS. The height scale follows the
-   * active density; the aliases exist so components read intent, not arithmetic. */
+  /* Control geometry and stable content slots. */
   --icen-control-height-sm: var(--icen-density-input-height-sm);
   --icen-control-height-md: var(--icen-density-input-height-md);
   --icen-control-height-lg: var(--icen-density-input-height-lg);
   --icen-control-radius-sm: var(--icen-radius-sm);
   --icen-control-radius: var(--icen-radius-sm);
   --icen-control-radius-lg: var(--icen-radius-md);
-  --icen-control-padding-inline-sm: 9px;
+  --icen-control-padding-inline-sm: 10px;
   --icen-control-padding-inline: 12px;
   --icen-control-padding-inline-lg: 16px;
   --icen-field-padding-inline: 9px;
@@ -33,7 +32,27 @@
   --icen-control-gap: 6px;
   --icen-control-gap-sm: 4px;
   --icen-control-icon: 15px;
+  --icen-control-affix-size: 24px;
+  --icen-control-affix-icon: 12px;
+  --icen-control-chevron-size: 12px;
+  --icen-control-trailing-slot: calc(var(--icen-field-padding-inline) + var(--icen-control-chevron-size) + var(--icen-control-gap));
+  --icen-control-clear-slot: calc(var(--icen-control-trailing-slot) + var(--icen-control-affix-size) + var(--icen-control-gap-sm));
+  --icen-choice-size: 16px;
+  --icen-choice-dot-size: 8px;
   --icen-control-border-width: 1px;
+  --icen-option-height: var(--icen-control-height-sm);
+  --icen-option-slot: 18px;
+  --icen-option-check-size: 14px;
+  --icen-option-radius: var(--icen-radius-xs);
+  --icen-option-font-weight: 400;
+  --icen-toolbar-height: calc(var(--icen-control-height-md) + var(--icen-density-space-sm));
+  --icen-toolbar-height-sm: calc(var(--icen-control-height-sm) + var(--icen-density-space-xs) * 2);
+  --icen-toolbar-height-lg: calc(var(--icen-control-height-lg) + var(--icen-density-space-sm));
+  --icen-data-row-height: max(28px, calc(var(--icen-control-height-sm) + var(--icen-density-space-2xs) * 2));
+  --icen-surface-radius-content: var(--icen-radius-md);
+  --icen-surface-radius-panel: var(--icen-radius-lg);
+  --icen-surface-radius-floating: var(--icen-radius-lg);
+  --icen-surface-radius-modal: var(--icen-radius-xl);
 
   /* Type roles. Sizes stay on the density scale; these aliases name the role. */
   --icen-font-size-title: var(--icen-density-font-size-lg);
@@ -43,12 +62,10 @@
   --icen-font-weight-control: 500;
   --icen-font-weight-title: 600;
   --icen-font-weight-label: 500;
-  --icen-letter-spacing-control: -.006em;
+  --icen-letter-spacing-control: 0;
   --icen-letter-spacing-caption: .01em;
 
-  /* Motion: one-shot state changes are short; spatial entrances use the enter
-   * curve. No bouncy physics for ordinary controls.
-   * 语义别名 → tokens/motion.css 基值 × --icen-design-motion（reduced-motion / pixel 原语归零）。 */
+  /* One motion and feedback authority. Component rules consume, never redefine. */
   --icen-duration-instant: calc(var(--icen-motion-duration-instant) * var(--icen-design-motion));
   --icen-duration-fast: calc(var(--icen-motion-duration-fast) * var(--icen-design-motion));
   --icen-duration-normal: calc(var(--icen-motion-duration-base) * var(--icen-design-motion));
@@ -60,17 +77,32 @@
   --icen-ease-enter: var(--icen-motion-ease-enter);
   --icen-ease-exit: var(--icen-motion-ease-exit);
   --icen-ease-bounce: var(--icen-ease-out);
+  --icen-tx-fast: var(--icen-duration-fast) var(--icen-ease-out);
+  --icen-tx-normal: var(--icen-duration-normal) var(--icen-ease-out);
+  --icen-tx-slow: var(--icen-duration-slow) var(--icen-ease-out);
+  --icen-tx-bounce: var(--icen-duration-normal) var(--icen-ease-bounce);
+  --icen-overlay-menu-offset: var(--icen-motion-shift-sm);
+  --icen-overlay-panel-offset: var(--icen-motion-shift-md);
+  --icen-overlay-dialog-offset: var(--icen-motion-shift-sm);
+  --icen-overlay-sheet-offset: var(--icen-motion-shift-lg);
+  --icen-overlay-popover-scale: .99;
+  --icen-overlay-dialog-scale: .985;
   --icen-hover-border: var(--icen-token-line);
   --icen-hover-border-strong: var(--icen-token-line-strong);
-  --icen-press: scale(.985);
+  --icen-press: none;
   --icen-press-soft: none;
-  --icen-disabled-opacity: .45;
-  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px color-mix(in srgb, var(--icen-token-accent) 62%, transparent);
-  --icen-ring-soft: 0 0 0 3px color-mix(in srgb, var(--icen-token-accent) 18%, transparent);
-  --icen-control-focus-border: color-mix(in srgb, var(--icen-token-accent) 62%, var(--icen-token-line));
-  --icen-control-focus-shadow: inset 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) 8%, transparent), 0 0 0 3px color-mix(in srgb, var(--icen-token-accent) 18%, transparent);
+  --icen-disabled-opacity: .48;
+  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-focus-indicator);
+  --icen-ring-soft: 0 0 0 3px var(--icen-token-accent-subtle);
+  --icen-ring-error: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-error);
+  --icen-ring-success: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-success);
+  --icen-ring-warning: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-warning);
+  --icen-ring-inset: inset 0 0 0 2px var(--icen-token-focus-indicator), inset 0 0 0 5px var(--icen-token-accent-subtle);
+  --icen-control-focus-border: var(--icen-token-focus-indicator);
+  --icen-control-focus-shadow: var(--icen-token-shadow-inset), var(--icen-ring-soft);
+  --icen-control-error-shadow: var(--icen-token-shadow-inset), 0 0 0 3px color-mix(in srgb, var(--icen-token-error) 16%, transparent);
 
-  /* Material motion: chrome and floating surfaces share a blur radius family. */
+  /* Optional custom material parameters; default surfaces do not consume blur. */
   --icen-material-blur-chrome: 18px;
   --icen-material-blur-floating: 28px;
   --icen-material-saturate: 1.4;
@@ -91,67 +123,64 @@
   --icen-token-surface-pressed: color-mix(in srgb, var(--icen-design-ink) 8%, var(--icen-design-surface));
   --icen-token-surface-selected: var(--icen-token-accent-subtle);
 
-  /* Interaction fills. Hover is a hint, pressed a physical push, selected a
-   * persistent state; none of them is used as a substitute for another. */
-  --icen-token-fill-hover: color-mix(in srgb, var(--icen-design-ink) 5%, transparent);
-  --icen-token-fill-pressed: color-mix(in srgb, var(--icen-design-ink) 9%, transparent);
-  --icen-token-fill-selected: color-mix(in srgb, var(--icen-design-accent) 13%, transparent);
+  /* Hover, pressed and selected are distinct; focus has its own outer boundary. */
+  --icen-token-fill-hover: color-mix(in srgb, var(--icen-design-ink) 4%, transparent);
+  --icen-token-fill-pressed: color-mix(in srgb, var(--icen-design-ink) 8%, transparent);
+  --icen-token-fill-selected: color-mix(in srgb, var(--icen-design-accent) 10%, transparent);
   --icen-token-separator-soft: var(--icen-token-line-soft);
   --icen-token-separator: var(--icen-token-line);
   --icen-token-separator-strong: var(--icen-token-line-strong);
-  --icen-token-focus-indicator: color-mix(in srgb, var(--icen-token-accent) 62%, transparent);
+  --icen-token-focus-indicator: color-mix(in srgb, var(--icen-token-accent) 78%, var(--icen-token-surface));
   --icen-token-control-border: color-mix(in srgb, var(--icen-design-ink) 19%, transparent);
   --icen-token-control-border-hover: color-mix(in srgb, var(--icen-design-ink) 28%, transparent);
   --icen-token-surface-glass: color-mix(in srgb, var(--icen-token-surface) var(--icen-design-glass-opacity), transparent);
   --icen-token-surface-glass-chrome: color-mix(in srgb, var(--icen-token-surface-toolbar) 88%, transparent);
 
-  /* Contact, near-field and ambient shadows share a light source. Negative
-   * spread keeps the shadow under the object instead of fogging its outline. */
+  /* Contact and ambient light stay subordinate to content and structure. */
   --icen-token-shadow-card:
-    0 1px 1px -1px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .5), transparent),
-    0 3px 8px -4px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .55), transparent),
-    0 10px 24px -16px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .45), transparent);
+    0 1px 1px -1px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .45), transparent),
+    0 3px 8px -4px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .5), transparent);
   --icen-token-shadow-elevated:
-    0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .55), transparent),
-    0 8px 20px -8px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .8), transparent),
-    0 26px 52px -22px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent);
+    0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .5), transparent),
+    0 6px 16px -6px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .7), transparent),
+    0 20px 36px -20px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent);
   --icen-token-shadow-overlay:
-    0 2px 6px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .7), transparent),
-    0 16px 36px -12px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * 1.1), transparent),
-    0 44px 88px -28px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * 1.15), transparent);
+    0 2px 4px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .65), transparent),
+    0 12px 28px -10px color-mix(in srgb, var(--icen-design-shadow-color) var(--icen-design-shadow-strength), transparent),
+    0 32px 64px -28px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * 1.1), transparent);
   --icen-token-shadow-control:
-    inset 0 1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 55%, transparent),
-    0 1px 1.5px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .38), transparent);
-  --icen-token-shadow-field: inset 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .3), transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 45%, transparent),
+    0 1px 1px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .3), transparent);
+  --icen-token-shadow-field: inset 0 1px 1px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .25), transparent);
   --icen-token-top-highlight: color-mix(in srgb, var(--icen-design-light) var(--icen-design-highlight-strength), transparent);
-  --icen-token-shadow-inset: inset 0 1px 2px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .35), transparent), inset 0 -1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 45%, transparent);
+  --icen-token-shadow-inset: inset 0 1px 1px color-mix(in srgb, var(--icen-design-shadow-color) calc(var(--icen-design-shadow-strength) * .3), transparent), inset 0 -1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 35%, transparent);
   --icen-token-shadow-popover: var(--icen-token-shadow-elevated);
   --icen-token-material-edge: color-mix(in srgb, var(--icen-token-text) var(--icen-design-edge-strength), transparent);
   --icen-token-material-light: inset 0 1px 0 var(--icen-token-top-highlight), inset 0 -1px 0 color-mix(in srgb, var(--icen-token-top-highlight) 18%, transparent);
-  --icen-token-scrim: color-mix(in srgb, var(--icen-design-shadow-color) 38%, transparent);
+  --icen-token-scrim: color-mix(in srgb, var(--icen-design-shadow-color) 32%, transparent);
 }
 
 :root {
   --icen-design-light: #ffffff;
-  --icen-radius-xs: max(0px, calc(var(--icen-design-radius) - 5px));
+  --icen-radius-xs: max(0px, calc(var(--icen-design-radius) - 4px));
   --icen-radius-sm: max(0px, calc(var(--icen-design-radius) - 2px));
   --icen-radius-md: var(--icen-design-radius);
   --icen-radius-lg: calc(var(--icen-design-radius) + 4px);
-  --icen-radius-xl: calc(var(--icen-design-radius) + 10px);
+  --icen-radius-xl: calc(var(--icen-design-radius) + 8px);
   --icen-radius-full: 999px;
   --icen-font-body: var(--icen-design-font);
   --icen-font-heading: var(--icen-design-font);
   --icen-font-cjk: var(--icen-design-font);
   --icen-font-mono: ui-monospace, 'SF Mono', SFMono-Regular, 'Cascadia Mono', 'Segoe UI Mono', Consolas, monospace;
   --icen-font-mono-paper: var(--icen-font-mono);
-  --icen-line-height-body: 1.5;
+  --icen-line-height-body: 1.55;
   --icen-line-height-heading: 1.25;
   --icen-letter-spacing-body: 0;
-  --icen-letter-spacing-heading: -.015em;
+  --icen-letter-spacing-heading: 0;
 }
 
 /* Density changes rhythm and row height, never shrinks reading text. Re-declare
- * recipes at the density boundary so inherited resolved variables cannot freeze. */
+ * every dependent role at this boundary so nested densities cannot freeze. */
 :root,
 :root [data-icen-density] {
   --icen-design-density-scale: 1;
@@ -165,15 +194,18 @@
   --icen-density-space-2xl: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 8);
   --icen-density-space-3xl: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 12);
   --icen-density-space-4xl: calc(var(--icen-design-space) * var(--icen-design-density-scale) * 16);
-  --icen-density-input-height-sm: max(28px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 8px));
+  --icen-density-input-height-sm: max(24px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 4px));
   --icen-density-input-height-md: calc(var(--icen-design-control-height) + var(--icen-design-density-offset));
   --icen-density-input-height-lg: calc(var(--icen-design-control-height) + var(--icen-design-density-offset) + 8px);
-  --icen-density-item-height: max(24px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 6px));
-  /* 控件高度别名必须在密度边界重新声明：只写在 :root 会在根上解析成固定值，
-   * 之后嵌套 [data-icen-density] 覆盖密度时不再联动。 */
+  --icen-density-item-height: var(--icen-density-input-height-sm);
   --icen-control-height-sm: var(--icen-density-input-height-sm);
   --icen-control-height-md: var(--icen-density-input-height-md);
   --icen-control-height-lg: var(--icen-density-input-height-lg);
+  --icen-option-height: var(--icen-control-height-sm);
+  --icen-toolbar-height: calc(var(--icen-control-height-md) + var(--icen-density-space-sm));
+  --icen-toolbar-height-sm: calc(var(--icen-control-height-sm) + var(--icen-density-space-xs) * 2);
+  --icen-toolbar-height-lg: calc(var(--icen-control-height-lg) + var(--icen-density-space-sm));
+  --icen-data-row-height: max(28px, calc(var(--icen-control-height-sm) + var(--icen-density-space-2xs) * 2));
   --icen-density-font-size-2xs: max(12px, calc(var(--icen-design-font-size) - 2px));
   --icen-density-font-size-xs: max(12px, calc(var(--icen-design-font-size) - 2px));
   --icen-density-font-size-sm: max(12px, calc(var(--icen-design-font-size) - 1px));
@@ -189,19 +221,20 @@
 :root[data-icen-density="compact"],
 :root [data-icen-density="compact"] {
   --icen-design-density-scale: .75;
-  --icen-design-density-offset: -6px;
+  --icen-design-density-offset: -4px;
 }
 :root[data-icen-density="comfortable"],
 :root [data-icen-density="comfortable"] {
   --icen-design-density-scale: 1.25;
-  --icen-design-density-offset: 4px;
+  --icen-design-density-offset: 6px;
 }
 @media (pointer: coarse) {
   :root, :root [data-icen-density] {
-    --icen-density-input-height-sm: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 8px));
+    --icen-density-input-height-sm: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 4px));
     --icen-density-input-height-md: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset)));
     --icen-density-input-height-lg: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) + 8px));
-    --icen-density-item-height: max(44px, calc(var(--icen-design-control-height) + var(--icen-design-density-offset) - 6px));
+    --icen-density-item-height: max(44px, var(--icen-density-input-height-sm));
+    --icen-control-affix-size: 44px;
   }
 }
 /* reduced-motion：本原语时长乘数归零（唯一的变量开关点；base.css 负责动画/滚动压制）。

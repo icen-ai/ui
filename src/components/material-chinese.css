@@ -48,7 +48,7 @@
   background: var(--icen-token-bg-soft);
   border-color: var(--icen-token-line-soft);
 }
-:root[data-icen-style="chinese"] :is(.icen-segmented-item.is-active,.icen-segmented-item[aria-checked="true"],.icen-toggle-group-btn.is-active) {
+:root[data-icen-style="chinese"] :is(.icen-segmented-item.is-active,.icen-segmented-item[aria-checked="true"],.icen-toggle-item.is-active) {
   box-shadow: inset 0 0 0 1px var(--icen-token-line), var(--icen-token-shadow-card);
 }
 /* A quiet ink rule makes navigation legible without changing its layout. */

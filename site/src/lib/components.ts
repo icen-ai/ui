@@ -172,7 +172,7 @@ export const COMPONENTS: ComponentDoc[] = [
 <!-- 图标 -->
 <button class="icen-btn icen-btn-primary">
   <svg class="icen-btn-icon-start">…</svg>
-  <span class="btn-text">文本</span>
+  <span class="icen-btn-label">文本</span>
 </button>
 <button class="icen-btn icen-btn-icon" aria-label="设置"><svg>…</svg></button>
 
@@ -635,7 +635,7 @@ initSplitPane();
     desc: '单行与多行输入的外壳族：前后缀、清除钮、密码切换、计数与掩码。',
     detail: {
       features: [
-        '**尺寸**：`icen-input-wrap--sm` / 默认 / `--lg`（28 / 34 / 42px）',
+        '**尺寸**：`icen-input-wrap--sm` / 默认 / `--lg`（28 / 32 / 40px）',
         '**前后缀**：`icen-input-leading` / `icen-input-trailing` 放图标或文字',
         '**内嵌动作**：`icen-input-clear` 清除钮、`icen-input-pw-toggle` 密码可见切换',
         '**计数与掩码**：`maxlength` 自动计数；`data-icen-mask` 按 `#` 数字 / `A` 字母 / `*` 任意格式化',
@@ -650,10 +650,10 @@ initSplitPane();
     <input class="icen-input" placeholder="小号（28px）" />
   </div>
   <div class="icen-input-wrap icen-control">
-    <input class="icen-input" placeholder="默认（34px）" />
+    <input class="icen-input" placeholder="默认（32px）" />
   </div>
   <div class="icen-input-wrap icen-control icen-input-wrap--lg">
-    <input class="icen-input" placeholder="大号（42px）" />
+    <input class="icen-input" placeholder="大号（40px）" />
   </div>
 </div>
 <div class="demo-col" style="margin-top:16px">

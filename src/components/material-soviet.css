@@ -50,7 +50,7 @@
 :root[data-icen-style="soviet"] .icen-panel.is-collapsed .icen-panel-title { border-block-end-color: transparent; }
 :root[data-icen-style="soviet"] .icen-modal { border: 2px solid var(--icen-token-line-strong); }
 :root[data-icen-style="soviet"] :is(.icen-switch,.icen-switch-thumb) { border-radius: var(--icen-radius-sm); }
-:root[data-icen-style="soviet"] :is(.icen-segmented-item.is-active,.icen-segmented-item[aria-checked="true"],.icen-toggle-group-btn.is-active) {
+:root[data-icen-style="soviet"] :is(.icen-segmented-item.is-active,.icen-segmented-item[aria-checked="true"],.icen-toggle-item.is-active) {
   background: var(--icen-token-surface);
   box-shadow: inset 0 -3px 0 var(--icen-token-accent), inset 0 0 0 1px var(--icen-token-line);
 }
@@ -77,7 +77,7 @@
     border-color: CanvasText;
     box-shadow: none;
   }
-  :root[data-icen-style="soviet"] :is(.icen-segmented-item[aria-checked="true"],.icen-segmented-item.is-active,.icen-toggle-group-btn.is-active) { outline: 2px solid Highlight; outline-offset: -2px; }
+  :root[data-icen-style="soviet"] :is(.icen-segmented-item[aria-checked="true"],.icen-segmented-item.is-active,.icen-toggle-item.is-active) { outline: 2px solid Highlight; outline-offset: -2px; }
   :root[data-icen-style="soviet"] :focus-visible { outline: 2px solid Highlight; outline-offset: 3px; }
   :root[data-icen-style="soviet"] :is(.icen-card.is-selected,.icen-card--interactive:focus-within) { box-shadow: none; outline: 2px solid Highlight; outline-offset: 2px; }
 }

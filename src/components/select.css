@@ -57,6 +57,7 @@
   inline-size: 100%;
   height: var(--select-height);
   padding: 0 var(--icen-field-padding-inline);
+  padding-inline-end: var(--icen-control-trailing-slot);
   font-family: var(--icen-font-body);
   font-size: var(--icen-font-size-control);
   line-height: 1.4;
@@ -71,7 +72,6 @@
     background-color var(--icen-tx-fast),
     border-color var(--icen-tx-fast),
     box-shadow var(--icen-tx-fast);
-  padding-inline-end: calc(var(--icen-field-padding-inline) + 18px);
 }
 .icen-select-trigger:hover:not(:disabled) {
   border-color: var(--icen-token-control-border-hover);
@@ -89,9 +89,9 @@
   pointer-events: none;
 }
 
-/* 尺寸变体（与 input-wrap 对齐） */
-.icen-select-trigger--sm { height: var(--icen-control-height-sm); padding-inline: var(--icen-field-padding-inline-sm); font-size: var(--icen-density-font-size-sm); }
-.icen-select-trigger--lg { height: var(--icen-control-height-lg); padding-inline: var(--icen-control-padding-inline-lg); font-size: var(--icen-density-font-size-lg); }
+/* Size variants only change their own inset; the trailing slot stays reserved. */
+.icen-select-trigger--sm { height: var(--icen-control-height-sm); padding-inline-start: var(--icen-field-padding-inline-sm); font-size: var(--icen-density-font-size-sm); }
+.icen-select-trigger--lg { height: var(--icen-control-height-lg); padding-inline-start: var(--icen-control-padding-inline-lg); font-size: var(--icen-density-font-size-lg); }
 
 .icen-select-leading {
   display: inline-flex;
@@ -109,7 +109,7 @@
   white-space: nowrap;
 }
 .icen-select-value.is-empty {
-  color: var(--icen-token-text-faint); /* 全量 faint：60% 混透浅色仅 ~2.4:1 低于 AA（faint 全量 ≥4.9:1） */
+  color: var(--icen-token-text-faint);
 }
 
 .icen-select-chevron {
@@ -117,8 +117,8 @@
   inset-inline-end: var(--icen-field-padding-inline);
   inset-block-start: 50%;
   translate: 0 -50%;
-  inline-size: 12px;
-  block-size: 12px;
+  inline-size: var(--icen-control-chevron-size);
+  block-size: var(--icen-control-chevron-size);
   flex: none;
   color: var(--icen-token-text-muted);
   opacity: .82;
@@ -145,20 +145,23 @@
 .icen-select-panel[data-icen-side='top'] { transform-origin: bottom center; }
 .icen-select-options { min-inline-size: 0; }
 
-/* 选项 */
+/* Options expose navigation and selection as separate, redundant states. */
 .icen-select-option {
   display: flex;
   align-items: center;
   gap: var(--icen-control-gap-sm);
   width: 100%;
-  min-block-size: var(--icen-control-height-sm);
-  padding: 4px var(--icen-density-space-sm);
+  min-inline-size: 0;
+  min-block-size: var(--icen-option-height);
+  padding: var(--icen-density-space-2xs) var(--icen-density-space-sm);
+  overflow: hidden;
   font-size: var(--icen-font-size-control);
+  font-weight: var(--icen-option-font-weight);
   text-align: start;
   border: none;
   background: transparent;
   color: var(--icen-token-text);
-  border-radius: var(--icen-radius-xs);
+  border-radius: var(--icen-option-radius);
   cursor: pointer;
   transition:
     background-color var(--icen-tx-fast),
@@ -166,11 +169,11 @@
 }
 .icen-select-option:hover:not(.is-disabled) { background: var(--icen-token-fill-hover); }
 .icen-select-option.is-focused {
-  background: var(--icen-token-fill-selected);
+  background: var(--icen-token-fill-hover);
   color: var(--icen-token-text);
+  outline: 2px solid var(--icen-token-focus-indicator);
+  outline-offset: -2px;
 }
-/* A checked popup item carries a trailing glyph, the desktop convention; color
- * and weight remain redundant signals rather than the only distinction. */
 .icen-select-option.is-selected {
   color: var(--icen-token-text);
   font-weight: var(--icen-font-weight-control);
@@ -178,21 +181,16 @@
 }
 .icen-select-option.is-selected::after {
   content: '';
-  inline-size: 12px;
-  block-size: 12px;
+  inline-size: var(--icen-option-check-size);
+  block-size: var(--icen-option-check-size);
   flex: none;
   margin-inline-start: auto;
   background: currentColor;
   mask: var(--icen-token-icon-check) center / contain no-repeat;
   -webkit-mask: var(--icen-token-icon-check) center / contain no-repeat;
 }
-.icen-select-option.is-selected.is-focused,
-.icen-select-option.is-selected:focus-visible {
-  outline: 2px solid var(--icen-token-accent);
-  outline-offset: -2px;
-}
 .icen-select-option.is-disabled {
-  opacity: 0.4;
+  opacity: var(--icen-disabled-opacity);
   cursor: not-allowed;
 }
 
@@ -230,20 +228,20 @@
 .icen-select-search-input { min-inline-size: 0; }
 
 
-/* ── 多选清除按钮（与 trigger 同级，绝对定位叠进 trigger 行内末端侧、chevron 内侧） ── */
+/* Clear and disclosure own separate, stable trailing slots. */
 .icen-select-clear {
   position: absolute;
   inset-block-start: 50%;
-  inset-inline-end: var(--icen-density-space-sm);
+  inset-inline-end: calc(var(--icen-field-padding-inline) + var(--icen-control-chevron-size) + var(--icen-control-gap-sm));
   translate: 0 -50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 24px;
-  block-size: 24px;
+  inline-size: var(--icen-control-affix-size);
+  block-size: var(--icen-control-affix-size);
   padding: 0;
   border: 0;
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-option-radius);
   background: transparent;
   color: var(--icen-token-text-muted);
   cursor: pointer;
@@ -251,17 +249,17 @@
 }
 .icen-select-clear:hover {
   color: var(--icen-token-text);
-  background: var(--icen-token-fill-1);
+  background: var(--icen-token-fill-hover);
 }
-/* 有清除钮时 trigger 行内末端侧让位（clear 18px + chevron 14px + 间距） */
-.icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: calc(var(--icen-density-space-sm) + var(--icen-density-input-height-sm) + var(--icen-density-space-xs)); }
+.icen-select-clear:focus-visible { outline: none; box-shadow: var(--icen-ring); }
+.icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: var(--icen-control-clear-slot); }
 
-/* ── 多选 chips（tag 式展示；× 仅 hover 对应 chip 时出现） ── */
+/* Chips remain siblings of the trigger, never nested interactive elements. */
 .icen-select-chips {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: var(--icen-control-gap-sm);
   flex: 1;
   min-width: 0;
 }
@@ -273,7 +271,7 @@
   line-height: 1.6;
   color: var(--icen-token-text);
   background: var(--icen-token-fill-2);
-  border-radius: var(--icen-radius-sm);
+  border-radius: var(--icen-option-radius);
   padding: 0 7px;
   white-space: nowrap;
 }
@@ -282,56 +280,43 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  inline-size: 24px; /* WCAG 2.5.8 下限：16px 的移除钮在桌面端也易误触（移除是删数据操作） */
-  block-size: 24px;
+  inline-size: var(--icen-control-affix-size);
+  block-size: var(--icen-control-affix-size);
   margin-inline-start: var(--icen-density-space-xs);
   padding: 0;
   border: 0;
-  border-radius: var(--icen-radius-xs);
+  border-radius: var(--icen-option-radius);
   background: transparent;
   color: var(--icen-token-text-muted);
   cursor: pointer;
   transition: opacity var(--icen-tx-fast), background-color var(--icen-tx-fast), color var(--icen-tx-fast);
 }
-.icen-select-chip-x:focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 1px; }
-.icen-select-chip-x:hover { color: var(--icen-token-error); }
+.icen-select-chip-x:focus-visible { outline: 2px solid var(--icen-token-focus-indicator); outline-offset: 1px; }
+.icen-select-chip-x:hover { color: var(--icen-token-error); background: var(--icen-token-error-muted); }
 .icen-select-chip--more { color: var(--icen-token-text-muted); background: var(--icen-token-fill-1); }
 
-/* ── 多选 trigger 高度自适应（chips 可能换行） ── */
 .icen-select[data-icen-select-multiple] .icen-select-trigger {
   min-height: var(--select-height);
   height: auto;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-block: var(--icen-density-space-2xs);
   flex-wrap: wrap;
-}
-/* sm 档的 chips 需要压到 24px 拇指高度内：24px chip + 2px×2 内距 = 28px 控件高。 */
-.icen-select[data-icen-select-multiple]:has(> .icen-select-trigger--sm) .icen-select-trigger {
-  padding-block: 2px;
-}
-.icen-select[data-icen-select-multiple]:has(> .icen-select-trigger--sm) > .icen-select-chips {
-  padding-block: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .icen-select-panel { animation: none; }
-  .icen-select-search-input,
-  .icen-select-chip-x,
-  .icen-select-clear { transition: none; }
+  :root:not([data-icen-motion='full']) .icen-select-panel { animation: none; }
+  :root:not([data-icen-motion='full']) :is(.icen-select-search-input,.icen-select-chip-x,.icen-select-clear) { transition: none; }
 }
+:root[data-icen-motion='reduce'] .icen-select-panel { animation: none; }
+:root[data-icen-motion='reduce'] :is(.icen-select-search-input,.icen-select-chip-x,.icen-select-clear) { transition: none; }
 
 @media (hover: hover) and (pointer: fine) {
   .icen-select-clear:not([hidden]) { opacity: 0; pointer-events: none; }
   .icen-select:is(:hover,:focus-within) .icen-select-clear:not([hidden]) { opacity: 1; pointer-events: auto; }
 }
 @media (pointer: coarse) {
-  .icen-select-clear { min-inline-size: 44px; min-block-size: 44px; inset-inline-end: var(--icen-density-space-sm); }
-  .icen-select:has(.icen-select-clear:not([hidden])) .icen-select-trigger { padding-inline-end: calc(var(--icen-density-input-height-sm) + var(--icen-density-space-sm) + var(--icen-density-space-xs)); }
+  .icen-select-clear { min-inline-size: 44px; min-block-size: 44px; }
 }
 
-.icen-select-trigger--sm, .icen-select-trigger--lg { padding-inline-end: var(--icen-density-space-sm); }
-
-/* The chips and trigger occupy one grid cell without nesting interactive elements. */
 .icen-select:has(> .icen-select-chips:not([hidden])) { display: grid; }
 .icen-select:has(> .icen-select-chips:not([hidden])) > .icen-select-trigger {
   grid-area: 1 / 1;
@@ -344,12 +329,12 @@
   grid-area: 1 / 1;
   align-self: center;
   min-block-size: var(--select-height);
-  padding-block: var(--icen-density-space-xs);
+  padding-block: var(--icen-density-space-2xs);
   padding-inline-start: var(--icen-density-space-sm);
-  padding-inline-end: var(--icen-density-space-sm);
+  padding-inline-end: var(--icen-control-trailing-slot);
   pointer-events: none;
 }
-.icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: calc(var(--icen-density-space-sm) + var(--icen-density-input-height-sm) + var(--icen-density-space-xs)); }
+.icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: var(--icen-control-clear-slot); }
 .icen-select-chip { pointer-events: auto; }
 .icen-select-chip > span { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; }
 @media (hover: hover) and (pointer: fine) {
@@ -358,7 +343,6 @@
 }
 @media (pointer: coarse) {
   .icen-select-chip-x { min-inline-size: 44px; min-block-size: 44px; }
-  .icen-select:has(.icen-select-clear:not([hidden])) > .icen-select-chips { padding-inline-end: calc(var(--icen-density-input-height-sm) + var(--icen-density-space-sm) + var(--icen-density-space-xs)); }
 }
 
 .icen-select-chips[hidden], .icen-select-clear[hidden] { display: none; }
@@ -372,9 +356,7 @@
 
 .icen-select-panel:has(> .icen-select-search) { scroll-padding-block-start: calc(var(--icen-density-input-height-sm) + 3 * var(--icen-density-space-xs) + var(--icen-density-space-sm) + 1px); }
 
-/* Clear affordance replaces the popup glyph in the trailing slot; the two are
- * never shown together, so the trigger keeps one stable optical end. */
-.icen-select:has(.icen-select-clear:not([hidden])) .icen-select-chevron { display: none; }
+/* Clear and disclosure remain simultaneously available in their own slots. */
 
 /* 高对比模式：选中项用系统高亮，勾选 glyph 保留在 HighlightText 上 */
 @media (forced-colors: active) {

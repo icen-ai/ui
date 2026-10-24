@@ -9,62 +9,40 @@
  * 配方覆盖 .icen-ai-composer-popup* 与 .icen-kb-checkpoint-menu-item 等 Beta 类名；
  * Beta 类名变更对本文件仅静默降级，不破坏 Core 用户，故允许 Core 引用 Beta。
  */
-/* The base layer also defines interaction defaults. Keep the primitive's
- * interaction recipe in the components layer so separately imported base.css
- * cannot quietly restore a different press/focus model. */
-:root:where(:not([data-icen-style]),[data-icen-style="modern"]) {
-  --icen-press: scale(.985);
-  --icen-press-soft: none;
-  --icen-hover-border: var(--icen-token-line);
-  --icen-hover-border-strong: var(--icen-token-line-strong);
-  --icen-ring: 0 0 0 2px var(--icen-token-surface), 0 0 0 4px var(--icen-token-accent);
-  --icen-ring-soft: 0 0 0 3px var(--icen-token-accent-subtle);
-  --icen-control-focus-border: var(--icen-token-accent);
-  --icen-control-focus-shadow: var(--icen-token-shadow-inset), var(--icen-ring-soft);
-  --icen-disabled-opacity: .48;
-}
-/* Selection is a contained surface, never a check glyph. ARIA remains the source
- * of truth for keyboard/assistive technology; focus has its own outer outline. */
+/* Persistent selection and keyboard position are separate states. A checked
+ * glyph identifies the value; a quiet fill identifies the active navigation row. */
 :root :is(.icen-theme-switcher-option[aria-pressed="true"], .icen-select-option.is-selected, .icen-cascader-item.is-selected, .icen-cascader-item.is-active, .icen-tree-select-row.is-selected, .icen-tree-select-row.is-checked, .icen-menu-item[aria-checked="true"], .icen-menu-item--checked:not([aria-checked="false"]), .icen-ai-composer-popup-option[aria-selected="true"], .icen-kb-checkpoint-menu-item.is-checked) {
-  background: var(--icen-token-accent-subtle);
+  background: var(--icen-token-fill-selected);
   color: var(--icen-token-text);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--icen-token-accent) 65%, var(--icen-token-line-soft));
+  box-shadow: none;
 }
-:root :is(.icen-select-option.is-focused, .icen-cascader-item.is-focused, .icen-tree-select-row.is-focused) { outline: 1px solid var(--icen-token-outline); outline-offset: -3px; }
+:root :is(.icen-select-option.is-focused, .icen-cascader-item.is-focused, .icen-tree-select-row.is-focused) {
+  background: var(--icen-token-fill-hover);
+}
 
-/* Native selection controls keep native values, keyboard behavior and mixed state,
- * but their selected geometry is an inset core rather than an OS check glyph. */
+/* Native inputs keep native form value, mixed state and keyboard behavior. The
+ * active palette supplies the checked color; forced colors remain system-owned. */
 :root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]) {
-  appearance: none;
+  appearance: auto;
+  accent-color: var(--icen-token-accent-strong);
   box-sizing: border-box;
-  inline-size: 16px;
-  block-size: 16px;
+  inline-size: var(--icen-choice-size);
+  block-size: var(--icen-choice-size);
   flex: 0 0 auto;
-  border: 1.5px solid var(--icen-token-outline);
-  border-radius: var(--icen-radius-xs);
-  padding: 3px;
-  background: var(--icen-token-surface);
-  background-clip: content-box;
+  margin: 0;
   cursor: pointer;
 }
-:root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]):checked {
-  border-color: var(--icen-token-accent);
-  background-color: var(--icen-token-accent);
+:root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]):focus-visible {
+  outline: 2px solid var(--icen-token-focus-indicator);
+  outline-offset: 2px;
 }
-:root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]):indeterminate {
-  border-color: var(--icen-token-accent);
-  background-color: transparent;
-  background-image: linear-gradient(var(--icen-token-accent),var(--icen-token-accent));
-  background-size: 8px 2px;
-  background-position: center;
-  background-repeat: no-repeat;
+:root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]):disabled {
+  opacity: var(--icen-disabled-opacity);
+  cursor: not-allowed;
 }
-:root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]):focus-visible { outline: 2px solid var(--icen-token-accent); outline-offset: 2px; }
 @media (forced-colors: active) {
   :root :is(.icen-theme-switcher-option[aria-pressed="true"], .icen-select-option.is-selected, .icen-cascader-item.is-selected, .icen-tree-select-row.is-selected, .icen-tree-select-row.is-checked, .icen-menu-item[aria-checked="true"], .icen-ai-composer-popup-option[aria-selected="true"], .icen-kb-checkpoint-menu-item.is-checked) { outline: 3px double Highlight; outline-offset: -3px; }
-  :root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]) { forced-color-adjust: none; border-color: CanvasText; background-color: Canvas; }
-  :root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]):checked { background-color: Highlight; }
-  :root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]):indeterminate { background-image: linear-gradient(Highlight,Highlight); }
+  :root :is(input.icen-dt-check, input.icen-choice-box, .icen-form input[type="checkbox"], input[data-icen-kb-segment-clean]) { accent-color: Highlight; }
 }
 
 /* Component display rules must not override native hidden semantics. Preserve
@@ -77,15 +55,6 @@
 :root[data-icen-design-changing] *::after {
   transition: none !important; /* guard:allow-important palette changes must not pass through unreadable intermediate colors */
 }
-:root body {
-  font-family: var(--icen-font-body);
-  font-variant-numeric: normal;
-  font-size: var(--icen-density-font-size-md);
-  line-height: var(--icen-line-height-body);
-  letter-spacing: var(--icen-letter-spacing-body);
-  background: var(--icen-token-canvas);
-  color: var(--icen-token-text);
-}
 :root :is(h1,h2,h3,h4,h5,h6) {
   font-family: var(--icen-font-heading);
   letter-spacing: var(--icen-letter-spacing-heading);
@@ -97,13 +66,13 @@
   background: var(--icen-token-surface);
   color: var(--icen-token-text);
   border: 1px solid var(--icen-token-outline-soft);
-  border-radius: var(--icen-radius-lg);
+  border-radius: var(--icen-surface-radius-panel);
 }
 :root :is([data-icen-material="content"],.icen-card) {
-  background: var(--icen-token-surface);
+  background: var(--icen-token-surface-content);
   box-shadow: none;
 }
-/* Opaque fallback is the default. Enable transparency only with browser support. */
+/* Custom materials may opt into transparency; the opaque path needs no support query. */
 :root :is([data-icen-material="chrome"],[data-icen-material="floating"],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
   background: var(--icen-token-surface);
   border-color: var(--icen-token-material-edge);
@@ -118,7 +87,7 @@
   -webkit-backdrop-filter: none;
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root :is([data-icen-material="chrome"],[data-icen-material="floating"],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
+  :root[data-icen-style]:not([data-icen-style="modern"]) :is([data-icen-material="chrome"],[data-icen-material="floating"],.icen-menu,.icen-popover,.icen-select-panel,.icen-date-picker-panel,.icen-autocomplete-panel,.icen-cascader-panel,.icen-tree-select-panel,.icen-mentions-panel,.icen-ai-composer-popup,.icen-command-palette,.icen-card--glass,.icen-nav) {
     background: var(--icen-token-surface-glass);
     backdrop-filter: blur(var(--icen-design-glass-blur)) saturate(1.15);
     -webkit-backdrop-filter: blur(var(--icen-design-glass-blur)) saturate(1.15);
@@ -135,16 +104,18 @@
 :root :is(.icen-btn-ghost,.icen-btn-link) { --btn-border-hover: transparent; }
 :root .icen-btn-link { --btn-fg: var(--icen-token-accent-text); }
 :root .icen-btn-danger:hover:not(:disabled) { color: var(--icen-token-error); background: var(--icen-token-error-muted); }
-:root .icen-segmented { padding: 3px; gap: 2px; }
-:root .icen-segmented-item { border-radius: max(0px, calc(var(--icen-radius-md) - 4px)); }
-:root :is(.icen-segmented-item.is-active,.icen-segmented-item[aria-checked="true"],.icen-toggle-group-btn.is-active) {
+:root :is(.icen-segmented,.icen-toggle-group) { padding: var(--icen-density-space-2xs); gap: 2px; }
+:root :is(.icen-segmented-item,.icen-toggle-item) {
+  border-radius: max(0px, calc(var(--icen-control-radius-lg) - var(--icen-density-space-2xs) - var(--icen-control-border-width)));
+}
+:root :is(.icen-segmented-item.is-active,.icen-segmented-item[aria-checked="true"],.icen-toggle-item.is-active,.icen-toggle-item[aria-checked="true"]) {
   background: var(--icen-token-surface);
   color: var(--icen-token-text);
-  box-shadow: var(--icen-token-shadow-control);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--icen-token-line) 72%, transparent), var(--icen-token-shadow-control);
 }
-:root :is(.icen-menu,.icen-popover,.icen-select-panel) { border-radius: var(--icen-radius-lg); }
+:root :is(.icen-menu,.icen-popover,.icen-select-panel) { border-radius: var(--icen-surface-radius-floating); }
 :root .icen-modal {
-  border-radius: var(--icen-radius-xl);
+  border-radius: var(--icen-surface-radius-modal);
   box-shadow: var(--icen-token-material-light), var(--icen-token-shadow-overlay);
 }
 :root :is(.icen-modal-backdrop,.icen-command-palette-backdrop) {
@@ -161,7 +132,7 @@
 :root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-btn:not(.icen-btn-ghost):not(.icen-btn-link) {
   background-image: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--icen-token-top-highlight) 32%, transparent),
+    color-mix(in srgb, var(--icen-token-top-highlight) 18%, transparent),
     transparent 52%
   );
   box-shadow: var(--icen-token-shadow-control);
@@ -169,7 +140,7 @@
 :root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-btn-primary {
   background-image: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--icen-token-top-highlight) 16%, transparent),
+    color-mix(in srgb, var(--icen-token-top-highlight) 8%, transparent),
     transparent 58%
   );
 }
@@ -212,11 +183,6 @@
   border-color: var(--icen-token-line-soft);
   box-shadow: none;
 }
-:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-segmented-item.is-active,
-:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-segmented-item[aria-checked="true"] {
-  border: 1px solid color-mix(in srgb, var(--icen-token-line) 72%, transparent);
-  margin: -1px;
-}
 :root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-toggle-group {
   background: var(--icen-token-surface-raised);
   border-color: var(--icen-token-line-soft);
@@ -234,13 +200,6 @@
     background: var(--icen-token-surface);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  :root *, :root *::before, :root *::after {
-    animation-duration: .01ms !important; /* guard:allow-important accessibility override must beat component animation */
-    transition-duration: .01ms !important; /* guard:allow-important accessibility override must beat component transition */
-    scroll-behavior: auto !important; /* guard:allow-important reduced motion includes scrolling */
   }
 }
 @media (pointer: coarse) {

@@ -2,7 +2,7 @@
   "version": "0.11.1",
   "components": 122,
   "componentCss": 76,
-  "behaviors": 90,
+  "behaviors": 92,
   "charts": {
     "published": 12,
     "extensions": 2,
@@ -26,7 +26,7 @@
   },
   "presets": 6,
   "primitives": 4,
-  "tokens": 770,
+  "tokens": 793,
   "kb": {
     "domains": 7,
     "components": 31
@@ -35,33 +35,33 @@
   "tests": {
     "method": "static-scan(test/it call sites; runner 实跑数以 bun test / playwright 输出为准)",
     "files": {
-      "unit": 29,
-      "dom": 55,
+      "unit": 30,
+      "dom": 56,
       "conformance": 3,
       "root": 2,
-      "e2e": 42
+      "e2e": 43
     },
     "cases": {
-      "bun": 921,
-      "e2e": 166
+      "bun": 929,
+      "e2e": 169
     }
   },
   "size": {
     "ui": {
-      "raw": 948601,
-      "gzip": 187043
+      "raw": 943107,
+      "gzip": 185260
     },
     "tokens": {
-      "raw": 125867,
-      "gzip": 24799
+      "raw": 125284,
+      "gzip": 24438
     },
     "base": {
-      "raw": 28183,
-      "gzip": 7964
+      "raw": 20981,
+      "gzip": 6530
     },
     "index": {
-      "raw": 1271477,
-      "gzip": 303554
+      "raw": 1271481,
+      "gzip": 303566
     },
     "react": {
       "raw": 354445,
