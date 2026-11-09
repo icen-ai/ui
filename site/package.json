@@ -11,6 +11,6 @@
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "astro": "^5",
     "misans": "^5.0.0",
-    "shiki": "^4.5.0"
+    "shiki": "^4.6.0"
   }
 }
