@@ -1,6 +1,6 @@
 // 视觉回归：对文档站静态产物全页截图，与提交在 __screenshots__/ 的基线比对。
 // 基线更新：bunx playwright test --update-snapshots（改动视觉的 PR 必须随 PR 更新基线）。
-// 注意：基线对 OS/字体敏感（本仓库基线在 Windows 生成，详见 docs/testing.md）。
+// 注意：基线对 OS/字体敏感（本仓库按 Linux CI 复核基线，详见 docs/testing.md）。
 import { test, expect, type Browser } from '@playwright/test';
 
 const PAGES = [

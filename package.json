@@ -69,7 +69,7 @@
     "size": "bun scripts/size.ts",
     "check:pkg": "bunx publint && bunx @arethetypeswrong/cli --pack . --ignore-rules no-resolution cjs-resolves-to-esm",
     "prepublishOnly": "bun run build",
-    "pretest:e2e": "cd site && bun run build",
+    "pretest:e2e": "bun run build && cd site && bun run build",
     "test": "bun test",
     "test:coverage": "bun scripts/coverage.ts",
     "test:e2e": "playwright test",

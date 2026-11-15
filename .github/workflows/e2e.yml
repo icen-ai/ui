@@ -1,8 +1,7 @@
 name: e2e
 
 # 浏览器验收舱：真实 chromium 跑视觉回归 + axe 无障碍扫描。
-# 视觉基线对 OS/字体敏感（基线在 Windows 生成）——CI 首次对比若因 Linux 字体渲染
-# 差异失败，在 CI 同构环境重生成基线后提交（见 docs/testing.md「基线更新流程」）。
+# 视觉基线按 Linux CI 复核，更新时在同构环境生成并评审（见 docs/testing.md）。
 on:
   push:
     branches: [main]
