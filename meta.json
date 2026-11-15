@@ -39,37 +39,37 @@
       "dom": 55,
       "conformance": 3,
       "root": 2,
-      "e2e": 42
+      "e2e": 43
     },
     "cases": {
       "bun": 921,
-      "e2e": 166
+      "e2e": 167
     }
   },
   "size": {
     "ui": {
-      "raw": 948601,
-      "gzip": 187043
+      "raw": 948738,
+      "gzip": 180393
     },
     "tokens": {
-      "raw": 125867,
-      "gzip": 24799
+      "raw": 126004,
+      "gzip": 23798
     },
     "base": {
       "raw": 28183,
-      "gzip": 7964
+      "gzip": 7753
     },
     "index": {
       "raw": 1271477,
-      "gzip": 303554
+      "gzip": 292901
     },
     "react": {
       "raw": 354445,
-      "gzip": 87792
+      "gzip": 84872
     },
     "vue": {
       "raw": 339072,
-      "gzip": 83856
+      "gzip": 81068
     }
   }
 }
