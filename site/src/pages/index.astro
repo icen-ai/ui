@@ -2,6 +2,7 @@
 import { themeSwitcherHTML } from '../../../src/behaviors/theme-switcher';
 import { iconHTML } from '../../../src/behaviors/icons';
 import Base from '../layouts/Base.astro';
+import BrandMark from '../components/BrandMark.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import PmInstall from '../components/PmInstall.astro';
 import { COMPONENTS, GROUPS } from '../lib/components';
@@ -50,11 +51,6 @@ const importLink = `<link rel="stylesheet" href="./node_modules/@icen.ai/ui/ui.c
 const htmlPreset = `<html class=" " data-icen-theme="dark" data-icen-preset="piano"> … </html>`;
 
 const searchSvg = `${iconHTML('search',{size:13})}`;
-/* hero 眉标的小雪晶：与品牌 logo 同几何，纯 accent 描边无底方 */
-const flakeArm = '<path d="M12 12V3.4"/><path d="M12 8.2 10 6.2"/><path d="M12 8.2 14 6.2"/><path d="M12 5.8 11 4.7"/><path d="M12 5.8 13 4.7"/>';
-const flakeArms = [0, 60, 120, 180, 240, 300].map((a) => '<g transform="rotate(' + a + ' 12 12)">' + flakeArm + '</g>').join('');
-/* hero 背景巨雪花：与品牌 logo 同几何，放大居中垫在整块内容之后，细臂半透明磨砂，缓慢恒转 */
-const heroFlakeBgSvg = `<svg class="hero-flake-bg" viewBox="0 0 24 24" fill="none" stroke="var(--icen-token-accent)" stroke-linecap="round" aria-hidden="true"><g stroke-width="0.45">${flakeArms}</g><circle cx="12" cy="12" r="0.9" fill="var(--icen-token-accent)" stroke="none"/></svg>`;
 const featureIcons = {
   ai: `${iconHTML('sparkle',{size:16})}`,
   chart: `${iconHTML('chart-line',{size:16})}`,
@@ -71,13 +67,13 @@ const featureIcons = {
       <span class="hero-orb hero-orb--b"></span>
       <span class="hero-orb hero-orb--c"></span>
       <span class="hero-grid"></span>
-      <Fragment set:html={heroFlakeBgSvg} />
+      <BrandMark class="hero-brand-bg" size={760} />
       <canvas class="hero-snake" aria-hidden="true"></canvas>
       <!-- 原语艺术层：按 data-icen-style 显隐（苏式构成 / 中式题款 / 像素阶梯） -->
       <span class="hero-art hero-art--icen">ICEN</span>
       <span class="hero-art hero-art--ring"></span>
       <span class="hero-art hero-art--vert">一处定义 · 处处生效</span>
-      <span class="hero-art hero-art--seal">冰</span>
+      <span class="hero-art hero-art--seal"><BrandMark size={32} /></span>
     </div>
     <div class="hero-inner">
       <p class="hero-eyebrow fade-up"><b>ICEN</b><i>DESIGN SYSTEM</i></p>
@@ -486,7 +482,7 @@ const featureIcons = {
 
     /* ── Hero 点阵贪吃蛇：背景趣味彩蛋 ──
        蛇活在 .hero-grid 的 26px 点阵上（画布同 inset 同相位，蛇像素踩在点上），
-       自动寻路吃小雪花：尾段透明度递减显动感，吃完一枚在点阵可见椭圆区内随机
+       自动寻路吃品牌标记：尾段透明度递减显动感，吃完一枚在点阵可见椭圆区内随机
        刷下一枚，永远闲逛。reduced-motion / 画布离屏 / 标签页后台时挂起；
        画布随 ClientRouter 换页离场即自停，回到首页随 astro:page-load 重启。 */
     const initHeroSnake = (): void => {
@@ -498,6 +494,9 @@ const featureIcons = {
       const MAX_LEN = 9;
       const ctx = snakeCanvas.getContext('2d');
       if (ctx) {
+        const brandPath = document.querySelector('.hero-brand-bg .icen-brand-ring')?.getAttribute('d');
+        if (!brandPath) return;
+        const foodMark = new Path2D(brandPath);
         let cols = 0, rows = 0, w = 0, h = 0;
         const resize = (): void => {
           const rect = snakeCanvas.getBoundingClientRect();
@@ -586,18 +585,16 @@ const featureIcons = {
           if (food) {
             const fx = cellPx(food.x);
             const fy = cellPx(food.y);
-            const ang = now / 2800;
             ctx.globalAlpha = 0.62 + 0.38 * Math.sin(now / 460);
-            ctx.strokeStyle = accent;
-            ctx.lineWidth = 1.6;
-            ctx.lineCap = 'round';
-            for (let i = 0; i < 6; i++) {
-              const a = ang + (i * Math.PI) / 3;
-              ctx.beginPath();
-              ctx.moveTo(fx, fy);
-              ctx.lineTo(fx + Math.cos(a) * 6, fy + Math.sin(a) * 6);
-              ctx.stroke();
-            }
+            ctx.fillStyle = accent;
+            ctx.save();
+            ctx.translate(fx - 6, fy - 6);
+            ctx.scale(12 / 64, 12 / 64);
+            ctx.fill(foodMark);
+            ctx.beginPath();
+            ctx.arc(32, 32, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
           }
           for (let i = eatFx.length - 1; i >= 0; i--) {
             const q = (now - eatFx[i].t) / 340;
@@ -795,9 +792,8 @@ const featureIcons = {
     margin-inline-start: 12px;
     color: var(--icen-token-accent-text);
   }
-  /* 背景巨雪花：品牌雪花的巨影，放大居中垫在整块 hero 后，半透明磨砂缓慢恒转；
-     居中用独立 translate 属性，不与 hero-spin 的 transform 旋转互相顶掉 */
-  .hero-flake-bg {
+  /* 品牌标识作为淡化背景，轮廓与页头、网站图标保持一致。 */
+  .hero-brand-bg {
     position: absolute;
     left: 50%; top: 38%;
     width: min(82vw, 90vh, 760px);
@@ -806,12 +802,7 @@ const featureIcons = {
     opacity: 0.07;
     filter: blur(18px);
   }
-  [data-icen-theme="dark"] .hero-flake-bg { opacity: 0.055; }
-  @media (prefers-reduced-motion: no-preference) {
-    .hero-flake-bg { animation: hero-spin 150s linear infinite; }
-    @keyframes hero-spin { to { transform: rotate(360deg); } }
-    [data-icen-style="pixel"] .hero-flake-bg { animation: hero-spin 48s steps(12) infinite; }
-  }
+  [data-icen-theme="dark"] .hero-brand-bg { opacity: 0.055; }
   /* 品牌眉标：拉丁字距全开，先于主标入场；fit-content 居中供各原语加装饰 */
   .hero-eyebrow {
     display: flex;
@@ -861,7 +852,7 @@ const featureIcons = {
   }
   [data-icen-style="soviet"] .hero-stats { border-top: 3px solid var(--icen-token-text); }
 
-  /* 中式 · 题款印章：竖排题字 + 冰字印 + 丝线框 */
+  /* 中式题款：竖排题字与统一品牌印记。 */
   [data-icen-style="chinese"] .hero-art--vert {
     display: block; left: 6%; top: 16%;
     writing-mode: vertical-rl;
@@ -874,10 +865,7 @@ const featureIcons = {
     display: flex; align-items: center; justify-content: center;
     width: 44px; height: 44px;
     right: 7%; bottom: 22%;
-    background: var(--icen-token-accent);
-    color: var(--icen-token-on-accent);
-    font-family: var(--icen-font-heading);
-    font-size: 24px;
+    background: var(--icen-token-surface);
     border-radius: 3px;
     transform: rotate(2deg);
     box-shadow: var(--icen-token-shadow-elevated);
@@ -891,10 +879,9 @@ const featureIcons = {
   }
   [data-icen-style="chinese"] .hero-stat span::before { width: 2px; height: 12px; }
 
-  /* 像素：背景巨雪花改步进机械转（见上 @media 内）并加粗臂线抗磨砂 */
+  /* 像素原语的文字括号。 */
   [data-icen-style="pixel"] .hero-eyebrow::before { content: '['; color: var(--icen-token-accent); }
   [data-icen-style="pixel"] .hero-eyebrow::after { content: ']'; color: var(--icen-token-accent); }
-  [data-icen-style="pixel"] .hero-flake-bg g { stroke-width: 0.6; }
   .reveal-line { display: block; overflow: hidden; padding: 0.06em 0.1em; }
   .reveal-line > span { display: inline-block; }
   @media (prefers-reduced-motion: no-preference) {

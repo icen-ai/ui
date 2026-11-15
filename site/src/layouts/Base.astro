@@ -25,6 +25,7 @@ import '../../../src/components/copy.css'; /* 首页安装命令使用同一复�
 import '../../../src/components/tooltip.css';
 import '../styles/site.css';
 import SiteHeader from '../components/SiteHeader.astro';
+import SiteIcons from '../components/SiteIcons.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ThemeRestore from '../components/ThemeRestore.astro';
 
@@ -45,7 +46,7 @@ const canonical = new URL(Astro.url.pathname, 'https://ui.icen.ai').toString();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <SiteIcons />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />

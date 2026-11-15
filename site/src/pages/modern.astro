@@ -1,6 +1,8 @@
 ---
 import themes from '../../../src/tokens/themes.json';
 import { iconHTML } from '../../../src/behaviors/icons';
+import SiteIcons from '../components/SiteIcons.astro';
+import BrandMark from '../components/BrandMark.astro';
 import '../../../src/tokens/colors.css';
 import '../../../src/tokens/style-profiles.css';
 import '../../../src/tokens/scrollbars.css';
@@ -29,13 +31,14 @@ import '../../../src/components/material-soviet.css';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <SiteIcons />
     <meta name="description" content="现代 · ICEN UI 原语体系。瓷白内容面、轻盈操作层，以及可以成为你品牌的设计规则。" />
     <title>现代 · ICEN UI 原语工作室</title>
   </head>
   <body>
     <a class="icen-skip-link" href="#studio-content">跳到内容</a>
     <header class="studio-header" data-icen-material="chrome">
-      <a href="/primitives/" class="studio-wordmark">icen<span> / 原语工作室</span></a>
+      <a href="/primitives/" class="studio-wordmark"><BrandMark size={24} /> ICEN<span> / 原语工作室</span></a>
       <div class="studio-header-actions"><span class="studio-muted">原语 <span class="icen-select studio-header-select" data-icen-select data-icen-value="modern"><button class="icen-select-trigger icen-pressable icen-focus-ring icen-select-trigger--sm" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="原语"><span class="icen-select-value">现代</span></button><div class="icen-select-panel" hidden><button class="icen-select-option" type="button" data-icen-value="modern">现代</button><button class="icen-select-option" type="button" data-icen-value="chinese">中式</button><button class="icen-select-option" type="button" data-icen-value="soviet">苏式</button><button class="icen-select-option" type="button" data-icen-value="pixel">像素</button></div><input type="hidden" data-icen-select-value value="modern" id="primitive-control" /></span></span><button class="icen-btn icen-btn-ghost" id="theme-toggle" aria-pressed="false">深色模式</button></div>
     </header>
     <main id="studio-content" class="studio-layout">
