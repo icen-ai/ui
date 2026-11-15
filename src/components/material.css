@@ -129,7 +129,7 @@
 /* 现代: small controls have a legible edge and a quiet, tactile surface. Keep
  * these optical refinements local to the default primitive; other primitives
  * supply their own surface physics without fighting a global component rule. */
-:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-btn:not(.icen-btn-ghost):not(.icen-btn-link) {
+:root:where(:not([data-icen-style]),[data-icen-style="modern"]) .icen-btn:where(:not(.icen-btn-ghost):not(.icen-btn-link)) {
   background-image: linear-gradient(
     to bottom,
     color-mix(in srgb, var(--icen-token-top-highlight) 18%, transparent),
