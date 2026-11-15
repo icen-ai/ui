@@ -7,12 +7,12 @@ const materialCss = readFileSync(new URL('../../src/components/material.css', im
 test('modern button surface preserves the keyboard focus ring', async ({ page }) => {
   await page.setContent(`<!doctype html><html data-icen-style="modern"><head><style>
     @layer icen.tokens, icen.base, icen.components;
+    ${buttonCss}
+    ${materialCss}
     :root {
       --icen-ring: 0 0 0 3px #315948;
       --icen-token-shadow-control: 0 1px 2px rgb(0 0 0 / .15);
     }
-    ${buttonCss}
-    ${materialCss}
     </style></head><body>
       <button class="icen-btn icen-btn-primary">允许并继续</button>
       <a href="#next">下一项</a>
